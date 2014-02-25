@@ -1,0 +1,9 @@
+# sxw input definition file STEPPEWAT - DLM 07-19-12
+# 6 files total... apparently it can also include the directory
+
+Input/sxw/sxwtimes.in		#times
+Input/sxw/sxwroots.in		#roots
+Input/sxw/sxwphen.in		#phen
+Input/sxw/sxwbvt.in			#bvt
+Input/sxw/sxwprod.in		#prod
+Input/sxw/files_v23dy.in	#soilwat files.in

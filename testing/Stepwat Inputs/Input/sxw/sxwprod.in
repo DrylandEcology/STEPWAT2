@@ -1,0 +1,29 @@
+# sxw prod definition file STEPPEWAT
+
+#Production Coefficients for STEPWAT
+
+# These values are used to convert yearly biomass
+# from STEPPE to monthly production values for SOILWAT
+
+# BMASS - convert STEPPE's total biomass values (g/m^2) to
+#         aboveground biomass (g/m^2). Needn't sum to 1.
+#         This is a percent of the total yearly biomass.
+#         (STEPPE's yearly vals are converted to monthly).
+# LITTER - use the maximum value from the converted biomass 
+#          to multiply by this number to compute a litter 
+#          value in g/m^2.  Needn't sum to 1.0.
+
+# BMASS  LITTER 
+ 0.38    0.75    # January            
+ 0.38    0.80    # February          
+ 0.38    0.85    # March            
+ 0.50    0.75    # April            
+ 0.72    0.36    # May            
+ 0.84    0.31    # June            
+ 0.94    0.28    # July            
+ 1.00    0.29    # August            
+ 0.45    0.38    # September            
+ 0.48    0.46    # October            
+ 0.52    0.58    # November            
+ 0.56    0.68    # December   
+

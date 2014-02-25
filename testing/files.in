@@ -1,0 +1,16 @@
+# List of files/folders for STEPWAT grid version - DLM 05-24-13
+
+Stepwat Inputs				# folder containing stepwat setup files
+
+g_logfile.log				# name of logfile (can also be stdout)
+
+Grid Inputs/grid_setup.in		# name of grid setup file
+Grid Inputs/grid_disturbances.csv	# name of grid disturbances input file
+Grid Inputs/grid_soils.csv		# name of grid soils input file
+Grid Inputs/grid_seed_dispersal.in	# name of grid seed dispersal setup file
+
+files.in				# name of stepwat files.in file
+
+Output/g_bmassavg			# name of the prefix given to the biomass output files
+Output/g_mortavg			# name of the prefix given to the mortuary output files
+Output/g_receivedprob			# name of the prefix given to the seed disperal received probability output files

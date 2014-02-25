@@ -1,0 +1,111 @@
+#--------------------------------------------------------------------
+#--------------------------------------------------------------------
+# DLM : 08-09-2012
+# STEPPEWAT CHANGES to make compatible with soilwat v.23 (soil temperature).  Most of the changes are in the sxw files (literally, almost all).
+#--------------------------------------------------------------------
+#--------------------------------------------------------------------
+
+makefile:
+	- made hella changes... but it works now, so don't mess it up.  Make sure to use the one that I've been editing and not the other ones.
+	- I removed the compiling of the tester into the executable... I'm not exactly sure how that will effect everything (if it will at all), but I was having major issues trying to get it to compile right with it in it (plus I'm not even sure how to use the tester at the moment).
+	- soilwat source must be kept in folder 'sw_src'... I put it there to separate the STEPPEWAT and SOILWAT sources so that there's not like 30 different C source files in the same directory because it gets confusing
+	
+sxw.c :
+	- changed n_transp_lyrs to n_transp_lyrs_tree
+	- commented out inbuf declaration, as it was already defined in soilwat
+	- changed instances of stricmp() to strcmp()
+	- changed all instrances of ForEachTranspLayer to ForEachTreeTranspLayer, for now, (did this for many files).  Will need updating to reflect changes in the transpirations in SOILWAT.
+	- made some changes in _print_debuginfo(void) function.  Made it so that it accumulates the monthly values and then outputs them, did this because there was a change in the VegProds in SOILWAT from monthlyValues to dailyValues...  It also accounts for the 3 different VegProd types now.
+	- changed line 498 from (++lineno == eOutput) to (++lineno == eOutput + 2) to reflect changes in the number of lines in the soilwat input file.
+	- added getNTranspLayers(int veg_prod_type) function...
+	- in sxw.c in SXW_Init(void) function changed the way SXW.NTrLyrs was computed to get the max of SW_Site.n_transp_lyrs_tree, SW_Site.n_transp_lyrs_shrub, and SW_Site.n_transp_lyrs_grass.  I think it should work doing it this way, but I'm not 100% certain.
+	
+sxw_soilwat.c :
+	- changed transp_coeff to transp_coeff_tree
+	- in update_productivity(void) updated the function to use the 3 different VegProds instead of the 1...
+	- in _update_transp_coeff(RealF relsize[]) updated the function to use the 3 different VegProds instead of the 1...
+	
+sxw_tester.c :
+	- commented out line 75
+	- line 211 changed n_transp_lyrs to n_transp_lyrs_tree
+	
+ST_structs.h :
+	- added veg_prod_type variable to resourcegroup_st struct.  The variable is used keep track of what type of VegProd the resource group is.  (1 for tree, 2 for shrub, 3 for grass).  
+
+ST_params.c :
+	- edited the reading in of the resource groups to include the new veg_prod_type variable.  Slightly edited _rgroup_add1() & _rgroup_init() functions.
+	- edited it to get rid of an error that wasn't showing up when ran on MAC, but was when ran on JANUS.  It was causing the sxw.in filename to be overridden.  The error (after a LOT of trial and error) was that the _files[] array was not big enough and needed to be 1 bigger.  
+	
+changed ForEachTranspLayer notation, it no longer uses the macro, and instead uses a two line combination of a function that gets the correct number of transp layers for the VegProd type and then a for loop that iterates correctly...  It no longer uses a macro, b/c I couldn't figure out how to use a macro with an if statement...
+haven't changed the notation in all spots yet, but it should be updated accordingly in the spots that it does actual computations... the only spots I'm not sure of have to change are the ones in the debug output which shouldn't affect any actual calculation anyways because the values are only output if debugging is specified...
+
+Resources: differences between when run with/without soilwat
+	- without soilwat: "Resource is computed by scaling the PPT according to the slope and intercept parameters in the groups input file."  More info about the specifics in the last few lines of the ST_resgroups.c file.
+	- with soilwat: based on transpiration values from soilwat.  See sxw_resource.c file.
+	
+#--------------------------------------------------------------------
+#--------------------------------------------------------------------
+# DLM : 6-12-2013 update
+# have been making some changes to add a gridded option for stepwat... most changes are in ST_stats.c and sxw.c
+#--------------------------------------------------------------------
+#--------------------------------------------------------------------
+
+First off, there is a new source file known as ST_grid.c.  It contains the majority of the code to make the gridded version work.  I added it in order to contain most of the new grid code to one place.  The file makes extensive use of allocating/freeing memory, so be careful when dealing with parts of it.  To make debugging the memory easier, I've been using this program called valgrind, it's probably loads more useful then the memory debugging features located in the code.
+
+ST_defines.h:
+	-added definition MAX_CELLS to define the maximum number of cells allowed in the grid (defined at 10000 for now, can change later if needed)
+	
+ST_main.c:
+	-added gridded option to be used when running the program.  the option is used by adding '-g' to the command line arguments.
+	-added UseGrid boolean variable
+	
+ST_params.c:
+	-added parm_SetName() function to facilitate changing filenames easily
+	-Found a bug... so for species that were defined to not have a max_age (ie they should never die because of age), there we errors being logged about them dieing because they had grown larger then the maximum_age.  However this should never happen based upon definition.  To remedy this bug what I have done is in ST_params.c in the _check_species() function I have changed the "if (s->max_age == 0) s->max_age = runyrs;" line to read "if (s->max_age == 0) s->max_age = runyrs+1;"
+	-added parm_free_memory() function to free memory allocated in the module
+	-added lines to _species_init() function to initialize new values added to species_st.
+
+ST_stats.c:
+	-added accumulators_grid_st struct
+	-added module level variable accumulators (grid_Stat) for the grid (to hold the accumulators for every cell) and functions to deal with them (stat_Load_Accumulators(), stat_Save_Accumulators() stat_Free_Accumulators(), and stat_Init_Accumulators()).  These functions are called from ST_grid.c and manage the output accumulators so that the gridded version can output correctly.  The accumulators are dynamically allocated, so be careful with them.	
+	-these accumulators were added so that I wouldn't have to make the already used ones global variables...
+	-all together this added quite a bit of code (230 lines or so)... this has been the source file that I've added the most to by far.
+	-added a new accumulator for the seed dispersal output called _Sreceived...	
+	-added a new function stat_Output_Seed_Dispersal()
+	
+ST_species.c:
+	-added code to species_Update_Kills() function to check that the species's age isn't larger then the max age before writing to the kills pointer as it was writing off the edge of the pointer in some obscure cases...
+	-added code to Species_NumEstablish() function to allow species to establish if the seeds are received in a germination year in seed dispersal...  
+
+makefile:
+	-updated to account for the new ST_grid.c source file.
+	-added using the dsymutil command on the resulting executable to properly get debugging symbols (they weren't being read correctly by valgrind otherwise)
+	
+filefuncs.c:
+	-fixed a nasty memory leak error in getfiles() function
+	
+SW_Weather.c:
+	-found a bug in the soilwat code while running stepwat using valgrind
+	-the bug is in the _runavg_temp() function in the "tail = (tail < SW_Weather.days_in_runavg) ? tail +1 : 0;" line
+	-the tail was being incremented one too high causing the runavg_list pointer to be indexed at a location that wasn't allocated in memory.  It needs to be checked against SW_Weather.days_in_runavg - 1 because array indexing starts from 0 not 1.
+	-changed the offending line to read: "tail = (tail < SW_Weather.days_in_runavg-1) ? tail +1 : 0;"
+	-added void SW_WTH_free_runavg(void); function in order to free memory allocated in SW_Weather.c
+	
+SW_Output.c:
+	-added void SW_OUT_free_outfile_mem(void); function in order to free memory allocated in SW_Output.c
+	
+sxw.c:
+	-added functions to load/save/free memory from the module(free_all_sxw_memory(), free_sxw_memory(), load_sxw_memory(), save_sxw_memory())
+	-these are used to deal with the memory that is local to the module without making more global variables
+
+generic.h:
+	-replaced macros (isless2(), iszero(), ismore(), & isequal()) with new faster macros... these new ones run a LOT faster and consequently sped up the program by about 4x or so.
+
+ST_resgroups.c:
+	-rewrote Rgroup_GetIndivs() function so that it no longer needs to call Mem_Realloc(), since it was giving an error sometimes when trying to reallocate memory.
+	-added a line to check if we're allowing growth for seed_dispersal in rgroup_Establish() function...
+	-added a line to check if we're allowing growth for seed_dispersal in rgroup_Grow() function...
+
+ST_structs.h:
+	-added use_dispersal and allow_growth Bool variables to species_st for use in seed dispersal.  
+	-also added received_prob variable for use in seed dispersal as well as parameters for seed dispersal (sd_PPTdry, sd_PPTwet, sd_PPTmin, sd_PPTmax, sd_H, sd_VT)

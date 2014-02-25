@@ -1,0 +1,80 @@
+==14774== Using Valgrind-3.7.0 and LibVEX; rerun with -h for copyright info
+==14774== Command: ./stepwat -f files.in -q -e -g
+==14774== 
+--14774-- Valgrind options:
+--14774--    -v
+--14774-- Contents of /proc/version:
+--14774--   can't open /proc/version
+--14774-- Arch and hwcaps: X86, x86-sse1-sse2
+--14774-- Page sizes: currently 4096, max supported 4096
+--14774-- Valgrind library directory: /sw/lib/valgrind
+--14774-- ./stepwat (0x1000)
+--14774--    reading syms   from primary file (354 1593)
+--14774--    dSYM= ./stepwat.dSYM/Contents/Resources/DWARF/stepwat
+--14774--    reading dwarf3 from dsyms file
+--14774-- /usr/lib/dyld (0x8fe00000)
+--14774--    reading syms   from primary file (6 1259)
+--14774-- Reading suppressions file: /sw/lib/valgrind/default.supp
+==14774== embedded gdbserver: reading from /var/folders/Ho/HoLqRNDPFryBAl2QaYsTVk+++TQ/-Tmp-//vgdb-pipe-from-vgdb-to-14774-by-lauenrothslabimac01-on-???
+==14774== embedded gdbserver: writing to   /var/folders/Ho/HoLqRNDPFryBAl2QaYsTVk+++TQ/-Tmp-//vgdb-pipe-to-vgdb-from-14774-by-lauenrothslabimac01-on-???
+==14774== embedded gdbserver: shared mem   /var/folders/Ho/HoLqRNDPFryBAl2QaYsTVk+++TQ/-Tmp-//vgdb-pipe-shared-mem-vgdb-14774-by-lauenrothslabimac01-on-???
+==14774== 
+==14774== TO CONTROL THIS PROCESS USING vgdb (which you probably
+==14774== don't want to do, unless you know exactly what you're doing,
+==14774== or are doing some strange experiment):
+==14774==   /sw/lib/valgrind/../../bin/vgdb --pid=14774 ...command...
+==14774== 
+==14774== TO DEBUG THIS PROCESS USING GDB: start GDB like this
+==14774==   /path/to/gdb ./stepwat
+==14774== and then give GDB the following command
+==14774==   target remote | /sw/lib/valgrind/../../bin/vgdb --pid=14774
+==14774== --pid is optional if only one valgrind process is running
+==14774== 
+--14774-- REDIR: 0x8fe2dac0 (strlen) redirected to 0x38045e26 (???)
+--14774-- REDIR: 0x8fe2db10 (strcpy) redirected to 0x38045e79 (???)
+--14774-- REDIR: 0x8fe2dc89 (strcat) redirected to 0x38045e37 (???)
+--14774-- REDIR: 0x8fe2dbd0 (strcmp) redirected to 0x38045e59 (???)
+--14774-- /sw/lib/valgrind/vgpreload_core-x86-darwin.so (0x9e000)
+--14774--    reading syms   from primary file (3 691)
+--14774--    dSYM= /sw/lib/valgrind/vgpreload_core-x86-darwin.so.dSYM/Contents/Resources/DWARF/vgpreload_core-x86-darwin.so
+--14774--    reading dwarf3 from dsyms file
+--14774-- /sw/lib/valgrind/vgpreload_memcheck-x86-darwin.so (0xa9000)
+--14774--    reading syms   from primary file (32 829)
+--14774--    dSYM= /sw/lib/valgrind/vgpreload_memcheck-x86-darwin.so.dSYM/Contents/Resources/DWARF/vgpreload_memcheck-x86-darwin.so
+--14774--    reading dwarf3 from dsyms file
+--14774-- /usr/lib/libSystem.B.dylib (0xb7000)
+--14774--    reading syms   from primary file (4719 3852)
+--14774-- REDIR: 0xb7c40 (memset) redirected to 0xabb20 (memset)
+--14774-- REDIR: 0xb9c46 (malloc) redirected to 0xab4fe (malloc)
+--14774-- REDIR: 0xbda21 (calloc) redirected to 0xab225 (calloc)
+--14774-- REDIR: 0xbaca0 (strlen) redirected to 0xab970 (strlen)
+--14774-- REDIR: 0xba2f0 (strncmp) redirected to 0xaba60 (strncmp)
+--14774-- REDIR: 0xbd060 (strcpy) redirected to 0xab990 (strcpy)
+--14774-- REDIR: 0xbe4f4 (free) redirected to 0xab3b8 (free)
+--14774-- REDIR: 0xc3adb (strchr) redirected to 0xab940 (strchr)
+--14774-- REDIR: 0xbaea6 (strrchr) redirected to 0xab910 (strrchr)
+--14774-- REDIR: 0xc9840 (strncpy) redirected to 0xac510 (strncpy)
+--14774-- REDIR: 0xbaed0 (strcmp) redirected to 0xabad0 (strcmp)
+--14774-- REDIR: 0xc0902 (realloc) redirected to 0xab6b5 (realloc)
+!
+==14774== 
+==14774== HEAP SUMMARY:
+==14774==     in use at exit: 8,493 bytes in 36 blocks
+==14774==   total heap usage: 150,302,335 allocs, 150,302,299 frees, 7,517,293,130 bytes allocated
+==14774== 
+==14774== Searching for pointers to 36 not-freed blocks
+==14774== Checked 636,760 bytes
+==14774== 
+==14774== LEAK SUMMARY:
+==14774==    definitely lost: 0 bytes in 0 blocks
+==14774==    indirectly lost: 0 bytes in 0 blocks
+==14774==      possibly lost: 0 bytes in 0 blocks
+==14774==    still reachable: 8,433 bytes in 35 blocks
+==14774==         suppressed: 60 bytes in 1 blocks
+==14774== Rerun with --leak-check=full to see details of leaked memory
+==14774== 
+==14774== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+--14774-- 
+--14774-- used_suppression:      1 libSystem-keymgr-leak-at-exit
+==14774== 
+==14774== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
