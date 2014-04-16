@@ -100,7 +100,7 @@ void CloseFile( FILE **f) {
    used as a check for whether the file is opened or not.
 */
   if(*f == NULL) {
-  	fprintf(logfp, "WARNING: Tried to close file that exist/isn't open!!!\n");
+  	fprintf(stdout, "\nWARNING: Tried to close file that exist/isn't open!!!\n");
   	return;
   }
   fclose(*f);
