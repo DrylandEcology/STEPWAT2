@@ -129,7 +129,7 @@ cleanall:	cleanobjs cleanbin
 #@# Dependency rules follow -----------------------------
 
 $(Bin)/stepwat: $(EXOBJS)
-	$(CC) -g -m32 -O2 -o $(Bin)/stepwat $(EXOBJS) $(incDirs) $(libDirs) $(LIBS)
+	$(CC) -g -m32 -O2 -o $(Bin)/stepwat $(EXOBJS) $(incDirs) $(libDirs) $(LIBS) -lm
 	
 $(oDir)/sw_src/filefuncs.o: sw_src/filefuncs.c sw_src/filefuncs.h \
  sw_src/generic.h

@@ -1,6 +1,6 @@
 # Grid setup for STEPWAT grid version - DLM 6-11-13
 
-100 100		# rows cols
+2 2		# rows cols
 1		# use disturbances csv file (0 or 1)... 0 means no, 1 means yes
 0		# use soils csv file (0 or 1)... 0 means no, 1 means yes
 1		# use seed dispersal (0 or 1)... 0 means no, 1 means yes

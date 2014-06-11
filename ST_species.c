@@ -59,17 +59,28 @@ IntS Species_NumEstablish( SppIndex sp) {
 /* Chris Bennett @ LTER-CSU 6/15/2000            */
 
 /*------------------------------------------------------*/
-  float biomass = Species[sp]->relsize * Species[sp]->mature_biomass;
-  if ( RGroup[Species[sp]->res_grp]->est_annually ||
-       LE( RandUni(), Species[sp]->seedling_estab_prob) || (Species[sp]->sd_sgerm)) {
-    if (Species[sp]->max_seed_estab <= 1)
-      return 1;
-    else
-      return (IntS) RandUniRange(1, Species[sp]->max_seed_estab);
-/*    return Species[sp]->max_seed_estab; */
-  } else  {
-    return 0 ;
-  }
+
+	//special conditions if we're using the grid and seed dispersal options
+	if(UseGrid && UseSeedDispersal)
+		if(Species[sp]->sd_sgerm) {
+			if(Species[sp]->max_seed_estab <= 1)
+				return 1;
+			else
+				return (IntS) RandUniRange(1, Species[sp]->max_seed_estab);		
+		} else
+			return 0;
+
+	float biomass = Species[sp]->relsize * Species[sp]->mature_biomass;
+	if ( RGroup[Species[sp]->res_grp]->est_annually ||
+			LE( RandUni(), Species[sp]->seedling_estab_prob) || (Species[sp]->sd_sgerm)) {
+		if (Species[sp]->max_seed_estab <= 1)
+			return 1;
+		else
+			return (IntS) RandUniRange(1, Species[sp]->max_seed_estab);
+		/*    return Species[sp]->max_seed_estab; */
+	} else  {
+		return 0 ;
+	}
 }
 
 /**************************************************************/

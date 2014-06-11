@@ -109,3 +109,20 @@ ST_resgroups.c:
 ST_structs.h:
 	-added use_dispersal and allow_growth Bool variables to species_st for use in seed dispersal.  
 	-also added received_prob variable for use in seed dispersal as well as parameters for seed dispersal (sd_PPTdry, sd_PPTwet, sd_PPTmin, sd_PPTmax, sd_H, sd_VT)
+
+#--------------------------------------------------------------------
+#--------------------------------------------------------------------
+# DLM : 2/6/2014 update - adding spinup and seed availability options
+#--------------------------------------------------------------------
+#--------------------------------------------------------------------
+
+ST_grid.c:
+	-added 'killfrq' and 'extirp' values to grid_Disturb struct this is to allow 'grid_Disturbances.csv' to enter in killfrq and extirp for each grid cell
+	-added code to _read_seed_dispersal_in() to account for new input options
+	-added a new grid input file: "grid_initSpecies.csv" for new input options 
+	-added _read_init_species() function to read "grid_initSpecies.csv" 
+	-added structure: 'Grid_Species_St' 
+	-added seed availiability option to seed dispersal
+
+ST_species.c:
+	-added code in Species_NumEstablish() to change the way establishment occurs when dispersal is turned on (so that establishment only occurs when seeds are present)   
