@@ -277,7 +277,7 @@ static void _make_disturbance( void) {
          Plot.disturbed = 0;
          break;
       case AntMound:
-       if (!Globals.pat.use) {event=NoDisturb; break;}
+       if (!Globals.mound.use) {event=NoDisturb; break;}
          event = (RandUni() <= Globals.mound.occur)
                ? event :NoDisturb;
          if (event == NoDisturb) break;
@@ -291,8 +291,8 @@ static void _make_disturbance( void) {
                ? event :NoDisturb;
          if (event == NoDisturb) break;
 
-         Plot.disturbed = (Globals.mound.minyr > 0)
-                        ? RandUniRange(1, Globals.mound.minyr)
+         Plot.disturbed = (Globals.burrow.minyr > 0)
+                        ? RandUniRange(1, Globals.burrow.minyr)
                         : 0;
          break;
      }
