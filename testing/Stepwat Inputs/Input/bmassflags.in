@@ -48,8 +48,9 @@
 #         For summary, this is the average value for a given
 #         year over all runs.
 # GrpPR == proportion of resources available to the group.
-#       Each group's pr value is reported immediately
-#       to the right of the group biomass.
+#       This is the ratio of resources required/resources available.
+#		Values >1 indicate resource limitation.Each group's pr value 
+#		is reported immediately to the right of the group biomass.
 #       summary:  average for the given year.  Can only be
 #       output if GrpBmass is specified.
 # GrpSize == relative size ("equivalent mature individuals")
