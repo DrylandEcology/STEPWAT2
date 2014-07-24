@@ -20,7 +20,7 @@
 # space = proportion of the resource space used by the group.
 #         this must sum to 1.0
 # density = relative number of mature individuals per plot
-# maxest = maximum species that can establish in a given year
+# maxest = maximum species that can establish in a given year, this value cannot be greater than the number of species assigned to the resource group in the species.in file
 # slow = slow growth rate, defines when to count stretched years
 # stretch  = max yrs resources can be stretched before low-resource
 #                    mortality occurs.
