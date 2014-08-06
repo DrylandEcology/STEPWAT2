@@ -1,0 +1,10 @@
+*~		#ignore files ending in ~ (vim likes to write these, but we don't need to commit them)
+*.swp		#ignore .swp files (vim also likes to write these)
+*.dll
+
+#some special cases of things to ignore
+testing_shortegrass/
+stepwat
+testing/stepwat
+testing/valgrind.out
+testing/stepwat.dSYM/
