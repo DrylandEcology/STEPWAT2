@@ -85,6 +85,12 @@
 # gint   = intercept ''     ''      ''
 # mslope = slope for mortality in wet years (eqn 16)
 # gint   = intercept ''     ''      ''
+# You must specify values here or the model will not run and will
+# throw an error. If you don't have succulents as resource group
+# in the model or don't want to use this part of the code, specify
+# any resource group you are using and then assign the slopes and 
+# intercepts to be 0. This should result in no modification of growth
+# or mortality in wet years for that resource group.
 
 # name            gslope  gint  mslope  gint 
  succulents      -0.0025 0.776 -0.0217 6.736
