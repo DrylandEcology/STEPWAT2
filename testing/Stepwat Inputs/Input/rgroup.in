@@ -11,7 +11,7 @@
 #        establish in a given year
 #
 # NGrpEstab
-     5
+     7
 [end]  # section end
 
 #=============================================================
@@ -49,11 +49,13 @@
 # veg_prod_type = 1 for tree, 2 for shrub, & 3 for grass.  Refer to soilwat's VegProd types in VegProd.h.
 
 # name            space   density maxest slow    stretch xres  estann  on  startyr killyr  killfrq  extirp  mort  xgrow  veg_prod_type  
- bouteloua        0.5100  1.0000      1  0.0500       2     0       0   1      1       0        0       0     0  0.00000   2
- p.graminoids     0.0700  0.3300      5  0.0500       2     1       0   1      1       0        0       0     1  0.00000   2
- p.forb/shrub     0.2800  1.5600      5  0.0500       2     1       0   1      1       0        0       0     1  0.00000   2
- a.gram/shrub     0.0700  1.6700      5  0.0500       2     1       1   1     10     175        0       0     0  0.00000   2
- succulents       0.0700  0.3300      1  0.0500       2     1       0   1      1       0        0       0     1  0.00000   2
+ PGC		  0.400   0.400       1  0.0500       2     1       0   1      1       0        0       0     0  0.00000   2
+ PGW		  0.025   0.030       1  0.0500       2     1       0   1      1       0        0       0     0  0.00000   2
+ AGC		  0.100   0.100       1  0.0500       2     1       0   1      1       0        0       0     0  0.00000   2
+ AGW		  0.050   0.050       1  0.0500       2     1       0   1      1       0        0       0     0  0.00000   2
+ SHRUB		  0.350   0.350       1  0.0500       2     1       0   1      1       0        0       0     0  0.00000   2
+ FORC		  0.050	  0.050	      1	 0.0500	      2	    1	    0   1      1       0        0       0     0	 0.00000   2		
+ FORW		  0.025	  0.020	      1	 0.0500	      2	    1	    0   1      1       0        0       0     0  0.00000   2
 
 [end]  # section end
 
@@ -69,12 +71,14 @@
 # dryint   = intercept of res.avail. in dry years
 
 # name            nslope   nint     wetslope wetint   dryslope dryint  
- bouteloua        0.00093  0.70935  0.00093  0.70935  0.00093  0.70935
- p.graminoids     0.00093  0.70935  0.00093  0.70935  0.00093  0.70935
- p.forb/shrub     0.00093  0.70935  0.00093  0.70935  0.00093  0.70935
- a.gram/shrub     0.00093  0.70935  0.00093  0.70935  0.00093  0.70935
- succulents       0.00093  0.70935  0.00093  0.70935  0.00093  0.70935
-
+ PGC	          0.00093  0.70935  0.00093  0.70935  0.00093  0.70935
+ PGW		  0.00093  0.70935  0.00093  0.70935  0.00093  0.70935
+ AGC		  0.00093  0.70935  0.00093  0.70935  0.00093  0.70935
+ AGW		  0.00093  0.70935  0.00093  0.70935  0.00093  0.70935
+ SHRUB            0.00093  0.70935  0.00093  0.70935  0.00093  0.70935
+ FORC             0.00093  0.70935  0.00093  0.70935  0.00093  0.70935
+ FORW             0.00093  0.70935  0.00093  0.70935  0.00093  0.70935
+ 
 [end]  # section end
 
 
@@ -87,7 +91,7 @@
 # gint   = intercept ''     ''      ''
 
 # name            gslope  gint  mslope  gint 
- succulents      -0.0025 6.736 -0.0217 6.736
+ FORW            -0.0025 6.736 -0.0217 6.736			
 
-[end]  # section end
+[end]  # section end     
 

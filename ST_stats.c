@@ -800,7 +800,7 @@ void stat_Output_AllBmass(void) {
 
   if (BmassFlags.header) {
     _make_header(buf);
-    fprintf(f, "%s\n", buf);
+    fprintf(f, "%s", buf);
   }
 
   for( yr=1; yr<= Globals.runModelYears; yr++) {

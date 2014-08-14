@@ -112,7 +112,7 @@ void parm_Initialize( Int iter) {
                         " in parm_Initialize()");
       }
       Globals.bmass.fp_year = OpenFile(filename, "w");
-      fprintf(Globals.bmass.fp_year, "%s\n", Globals.bmass.header_line);
+      fprintf(Globals.bmass.fp_year, "%s", Globals.bmass.header_line);
     }
 
     if (MortFlags.yearly) {
@@ -125,7 +125,7 @@ void parm_Initialize( Int iter) {
                         " in parm_Initialize()");
       }
       Globals.mort.fp_year = OpenFile(filename, "w");
-      fprintf(Globals.mort.fp_year, "%s\n", Globals.mort.header_line);
+      fprintf(Globals.mort.fp_year, "%s", Globals.mort.header_line);
     }
 
   } else {

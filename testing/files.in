@@ -1,17 +1,19 @@
-# List of files/folders for STEPWAT grid version - DLM 05-24-13
+# List of input files for STEPPEWAT - DLM 07-16-12
 
-Stepwat Inputs				# folder containing stepwat setup files
+logfile.log			#the logfile... can be stdout to print out to the terminal
 
-g_logfile.log				# name of logfile (can also be stdout)
+Stepwat Inputs/Input/model.in		#for the model
+Stepwat Inputs/Input/env.in		#for the environment
+Stepwat Inputs/Input/plot.in		#for the plot
+Stepwat Inputs/Input/rgroup.in		#for the rgroup (resource-group-level information)
+Stepwat Inputs/Input/species.in	#for the species information
 
-Grid Inputs/grid_setup.in		# name of grid setup file
-Grid Inputs/grid_disturbances.csv	# name of grid disturbances input file
-Grid Inputs/grid_soils.csv		# name of grid soils input file
-Grid Inputs/grid_seed_dispersal.in	# name of grid seed dispersal setup file
-Grid Inputs/grid_initSpecies.csv	# name of grid species input file
+Stepwat Inputs/Input/bmassflags.in	#biomass flags... (for setting up the output I think)
+Output/bmasspre.out #output
+Output/bmassavg.out	#output
 
-files.in				# name of stepwat files.in file
+Stepwat Inputs/Input/mortflags.in	#mort flags... (for setting up the output I think)
+Output/mortpre.out	#output
+Output/mortavg.out	#output
 
-Output/g_bmassavg			# name of the prefix given to the biomass output files
-Output/g_mortavg			# name of the prefix given to the mortuary output files
-Output/g_receivedprob			# name of the prefix given to the seed disperal received probability output files
+Stepwat Inputs/Input/sxw.in
