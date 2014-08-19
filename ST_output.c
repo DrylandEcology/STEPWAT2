@@ -117,6 +117,7 @@ void output_Bmass_Yearly( Int year ) {
 
   if (i) fprintf(Globals.bmass.fp_year,"%s\n", fields[i]);
 
+
 }
 
 
@@ -137,7 +138,6 @@ void output_Mort_Yearly( void ) {
   fprintf(f,"(Estabs)");
   if (MortFlags.group) {
     ForEachGroup(rg)
-
       fprintf(Globals.mort.fp_year,"%c%d",
               MortFlags.sep, RGroup[rg]->estabs);
   }

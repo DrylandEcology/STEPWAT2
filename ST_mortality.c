@@ -370,7 +370,7 @@ static void _slow_growth( const SppIndex sp) {
    is less than the "slow rate" which is defined by the
    user in the group-level parameters (max_slow) and in
    the species-level parameters (max_rate).  the slow rate
-   is max_slow * max_rate.
+   is growthrate <= max_slow * max_rate.
 
    Increment the counter for number of years of slow growth.
    If the number of years of slow growth is greater than
@@ -380,9 +380,7 @@ static void _slow_growth( const SppIndex sp) {
    to define it in the groups or species parameters.
 
    Of course, annuals aren't subject to this mortality,
-   nor are new plants.(This is covered by age == 1 continue
-
-
+   nor are new plants.
 
 /* HISTORY */
 /* Chris Bennett @ LTER-CSU 6/15/2000            */
@@ -401,10 +399,7 @@ static void _slow_growth( const SppIndex sp) {
     if ( ndv->age == 1) continue;
     if (ndv->growthrate <= slowrate) {
       ndv->slow_yrs++;
-      /* add to kill list if pm met, If slow years are > maximum
-       slow years and the random number is <= pm then fill in 0
-       otherwise compair the number of slow years - 1 to 0 and fill
-        in the higher values */
+      /* add to kill list if pm met*/
       if ( ndv->slow_yrs >= Species[sp]->max_slow
            && RandUni() <= pm)
          kills[++k] = ndv;

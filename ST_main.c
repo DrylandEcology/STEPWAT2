@@ -175,7 +175,7 @@ int main( int argc, char **argv) {
 
         /*Debug_AddByYear(year);*/
 
- /*printf("Iter=%d, Year=%d\n", iter, year);*/
+/* printf("Iter=%d, Year=%d\n", iter, year);  */
           Globals.currYear = year;
 
           rgroup_Establish();  /* excludes annuals */

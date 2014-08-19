@@ -109,7 +109,6 @@ ALLTGT	=	$(Bin)/stepwat
 
 all:	$(ALLTGT)
 		cp stepwat testing/stepwat
-		cp stepwat testing/Stepwat\ Inputs/stepwat
 		#dsymutil testing/stepwat
 
 objs:	$(ALLOBJS)
