@@ -9,11 +9,11 @@
 #
 #
 # Sumry Yearly Header Sep YrNum Disturb PPT PClass Temp GrpBmass GrpPR GrpSize SppBmass Indivs
-     y      y      y   t     y      y   y     n     n       y     y       y       y      y
+     y      y	   y   t     y      y   y     n     n       y     y       y       y      y
 #===================================================
 # The input line is a set of yes/no flags that define
 # whether that parameter will be output, except for
-# the separator character.  For the flags, 'y' or 'yes'
+# the separator character. For the flags, 'y' or 'yes'
 # (upper or lower case) indicates true. Anything else
 # (other than nothing) indicates false; ie, there must
 # be at least a place holder.
@@ -30,40 +30,40 @@
 #       such as , | : etc (excluding '#','t', and 's').
 # YrNum == year
 # Disturb == yearly: current disturbance for this year
-#         summary:  number of years with disturbances,
-#                 over all runs in this year
-# PPT ==  yearly: precip for this year
-#         summary:  average ppt for this year over all runs
+#           summary: number of years with disturbances,
+#           over all runs in this year
+# PPT == yearly: precip for this year
+#        summary: average ppt for this year over all runs
 # PClass = yearly: precip class (wet/dry/normal) for this year
-#          summary:  "NA", field is output because the same
-#                  header line is used for yearlies and stats
+#          summary: "NA", field is output because the same
+#          header line is used for yearlies and stats
 # Temp == yearly: temperature for this year
-#        summary:  average temp over all runs for this year
+#         summary: average temp over all runs for this year
 # GrpBmass == biomass for each resource group number, one
-#         field for each group.  The resource group
-#         number is defined by it's order of appearance
-#         in the group parameter definition file. If
-#         "head" is to be printed, the name of the
-#         resource group is output as the field name.
-#         For summary, this is the average value for a given
-#         year over all runs.
+#          field for each group. The resource group
+#          number is defined by it's order of appearance
+#          in the group parameter definition file. If
+#          "head" is to be printed, the name of the
+#          resource group is output as the field name.
+#          For summary, this is the average value for a given
+#          year over all runs.
 # GrpPR == proportion of resources available to the group.
-#       Each group's pr value is reported immediately
-#       to the right of the group biomass.
-#       summary:  average for the given year.  Can only be
+#       This is the ratio of resources required/resources available.
+#       Values >1 indicate resource limitation.Each group's pr value
+#       is reported immediately to the right of the group biomass.
+#       summary: average for the given year. Can only be
 #       output if GrpBmass is specified.
 # GrpSize == relative size ("equivalent mature individuals")
-#       of the group.  Each group's relative size is reported
-#       immediately to the right of the group biomass, unless
-#       pr (above) is turned on.
-#       summary:  average for the given year.  Can only be
-#       output if GrpBmass is specified.
+#         of the group. Each group's relative size is reported
+#         immediately to the right of the group biomass, unless
+#         pr (above) is turned on.
+#         summary: average for the given year. Can only be
+#         output if GrpBmass is specified.
 # SppBmass == net biomass for each species for the year.
-#         If "head" is true, species names are output as
-#         the field names.
-#         summary: average value for all runs.
+#          If "head" is true, species names are output as
+#          the field names.
+#          summary: average value for all runs.
 # Indivs == yearly: net number of individuals of this species
-#                 this year.
-#         summary: average number of individuals for this year.
-#                Can only be output if SppBmass specified.
-
+#        this year.
+#    summary: average number of individuals for this year.
+#           Can only be output if SppBmass specified.

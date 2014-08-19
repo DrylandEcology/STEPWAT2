@@ -4,9 +4,17 @@
 # Anything after the first pound sign is a comment
 # Blank lines, white space, and comments may be used freely,
 # however, the order of input is important
+# This file outputs the number of individuals killed by resource
+# group and species (if specified) by age class (how old they were).
+# It is not how many individuals were killed in each year of the simulation.
+# Instead, this file summarizes how many individuals were killed at 1 year old,
+# 2 years old, etc. However, the number of rows in this output files corresponds
+# to how many years the simulation was run. Do not let this confuse you.
+# Estabs (first row of output) is the number of individuals that got
+# established across all years of the simulation.
 
 # sumry yearly head  sep   group  species
-  y       y       y    t     y     y
+  y       n       y    t     y     y
 
 
 #===================================================

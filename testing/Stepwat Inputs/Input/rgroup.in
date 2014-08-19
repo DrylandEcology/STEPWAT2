@@ -20,7 +20,9 @@
 # space = proportion of the resource space used by the group.
 #         this must sum to 1.0
 # density = relative number of mature individuals per plot
-# maxest = maximum species that can establish in a given year
+# maxest = maximum species that can establish in a given year, 
+#          this value cannot be greater than the number of species assigned 
+#          to the resource group in the species.in file
 # slow = slow growth rate, defines when to count stretched years
 # stretch  = max yrs resources can be stretched before low-resource
 #                    mortality occurs.
@@ -50,10 +52,10 @@
 
 # name            space   density maxest slow    stretch xres  estann  on  startyr killyr  killfrq  extirp  mort  xgrow  veg_prod_type  
  bouteloua        0.5100  1.0000      1  0.0500       2     0       0   1      1       0        0       0     0  0.00000   2
- p.graminoids     0.0700  0.3300      4  0.0500       2     1       0   1      1       0        0       0     1  0.00000   2
+ p.graminoids     0.0700  0.3300      5  0.0500       2     1       0   1      1       0        0       0     1  0.00000   2
  p.forb/shrub     0.2800  1.5600      5  0.0500       2     1       0   1      1       0        0       0     1  0.00000   2
- a.gram/shrub     0.0700  1.6700      3  0.0500       2     1       1   1     10     175        0       0     0  0.00000   2
- succulents       0.0700  0.3300      1  0.0500       2     1       0   1      1       0        0       0     1  0.00000   2
+ a.gram/shrub     0.0700  1.6700      5  0.0500       2     1       1   1      1       0        0       0     0  0.00000   2
+ succulents       0.0700  0.3300      1  0.0500       2     0       0   1      1       0        0       0     1  0.00000   2
 
 [end]  # section end
 
@@ -69,12 +71,11 @@
 # dryint   = intercept of res.avail. in dry years
 
 # name            nslope   nint     wetslope wetint   dryslope dryint  
- bouteloua        0.00093  0.70935  0.00093  0.70935  0.00093  0.70935
- p.graminoids     0.00093  0.70935  0.00093  0.70935  0.00093  0.70935
- p.forb/shrub     0.00093  0.70935  0.00093  0.70935  0.00093  0.70935
- a.gram/shrub     0.00093  0.70935  0.00093  0.70935  0.00093  0.70935
- succulents       0.00093  0.70935  0.00093  0.70935  0.00093  0.70935
-
+ bouteloua 	  0.00093  0.70935  0.00093  0.70935  0.00093  0.70935
+ p.graminoids	  0.00093  0.70935  0.00093  0.70935  0.00093  0.70935
+ p.forb/shrub 	  0.00093  0.70935  0.00093  0.70935  0.00093  0.70935
+ a.gram/shrub 	  0.00093  0.70935  0.00093  0.70935  0.00093  0.70935
+ succulents 	  0.00093  0.70935  0.00093  0.70935  0.00093  0.70935
 [end]  # section end
 
 
@@ -85,6 +86,12 @@
 # gint   = intercept ''     ''      ''
 # mslope = slope for mortality in wet years (eqn 16)
 # gint   = intercept ''     ''      ''
+# You must specify values here or the model will not run and will
+# throw an error. If you don't have succulents as resource group
+# in the model or don't want to use this part of the code, specify
+# any resource group you are using and then assign the slopes and
+# intercepts to be 0. This should result in no modification of growth
+# or mortality in wet years for that resource group.
 
 # name            gslope  gint  mslope  gint 
  succulents      -0.0025 6.736 -0.0217 6.736
