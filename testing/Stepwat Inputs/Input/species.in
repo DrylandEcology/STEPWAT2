@@ -66,7 +66,11 @@
  vuoc       4    1  0.94700 0.900    2       1    0.27000    2   0.022   0.429      n       0       2  0.0000     1 
  chal       4    1  0.94700 0.900    2       2    0.27000    2   0.022   0.429      n       0       1  0.0000     1 
  lede       4    1  0.94700 0.900    2       2    0.27000    2   0.022   0.429      n       0       2  0.0000     1 
+<<<<<<< HEAD
+ oppo       5    0  0.28900 0.900    2       4    0.02000    3   2.250  15.000      y       3       1  0.0100     1 
+=======
  oppo       5    0  0.28900 0.900    2       4    0.02000    3   0.020  15.000      y       3       1  0.0100     1 
+>>>>>>> parent of 459bd7d... Changed the formatting of the Output files, ST_Params line 128, 115, and the ST_stats.c line 803 removed the \n
 
 [end]  # this marks the end of the species-specific parameters above
 
