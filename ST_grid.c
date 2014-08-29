@@ -164,6 +164,9 @@ Grid_Init_Species_St *grid_initSpecies;
 
 Grid_SD_St *grid_SD[MAX_SPECIES]; //for seed dispersal
 
+// these variables are used for the soil types in the spinup options
+int nSoilTypes, *soilTypes_Array, *grid_SoilTypes;
+
 // these are both declared and set in the ST_main.c module
 extern Bool UseSoilwat;
 extern Bool UseProgressBar;
@@ -239,12 +242,12 @@ static void _free_spinup_memory( void );
 static void _free_grid_globals( void );
 static void _free_spinup_globals( void );
 static void _load_cell( int row, int col, int year, Bool useAccumulators );
-static void _load_spinup_cell( int row, int col );
+static void _load_spinup_cell( int cell );
 static void _save_cell( int row, int col, int year, Bool useAccumulators );
-static void _save_spinup_cell(int row, int col );
+static void _save_spinup_cell(int cell );
 static void _read_disturbances_in( void );
 static void _read_soils_in( void );
-static void _init_soil_layers(int cell);
+static void _init_soil_layers(int cell, int isSpinup);
 static float _read_a_float(FILE *f, char *buf, const char *filename, const char *descriptor);
 static float _cell_dist(int row1, int row2, int col1, int col2, float cellLen);
 static void _read_seed_dispersal_in( void );
@@ -380,7 +383,12 @@ void runGrid( void ) {
 					
 					if(year == 1 && (sd_Option2a || sd_Option2b)) {
 						// finish this...
-						_load_spinup_cell(i, j);
+							
+						int cell = j + ( (i-1) * grid_Cols) - 1;  // converts the row/col into an array index
+						int spinup_cell = grid_SoilTypes[cell]; // gets us the actual cell we want to load up from the spinup
+
+						if( (sd_Option2b && grid_initSpecies[cell].use_SpinUp) || sd_Option2a )
+							_load_spinup_cell(spinup_cell); // loads the spinup cell into the global variables
 					}
 
 	          			Globals.currYear = year;
@@ -485,11 +493,18 @@ static void _run_spinup( void ) {
 
 	//does the spinup, it's pretty much like running the grid, except some differences like no seed dispersal and no need to deal with output accumulators
 
-	int i, j;
+	int i, j, spinup_Cell;
 	Bool killedany;
 	IntS year, iter;
 
 	DuringSpinup = TRUE;
+
+	if(!UseSoils || !UseSoilwat) { // if we're not using inputting soils then there is simply one soil type as all the soils are the same
+		nSoilTypes = 1;
+		soilTypes_Array[0] = 0;
+		for(i = 0; i < grid_Cells; i++)
+			grid_SoilTypes[i] = 0;
+	}
 
 	_init_spinup_globals();
 	_load_spinup_globals();
@@ -505,10 +520,13 @@ static void _run_spinup( void ) {
 		//_load_grid_globals(); //allocates/initializes grid variables (specifically the ones that are going to change every iter)
 
 		for( year=1; year <= Globals.runModelYears; year++) { //for each year
-			for(i = 1; i <= grid_Rows; i++)
-				for(j = 1; j <= grid_Cols; j++) { //for each cell
+			for(spinup_Cell = 0; spinup_Cell < nSoilTypes; spinup_Cell++) { // for each different soil type
 
-					_load_spinup_cell(i, j);
+					int cell = soilTypes_Array[spinup_Cell]; // this is the first cell of this soiltypes actual cell number
+					int j = cell % grid_Cols + 1; // this is the column of the first cell of this soiltype
+					int i = ((cell + 1 - j) / grid_Cols) + 1; // this is the row of the first cell of this soiltype 
+
+					_load_spinup_cell(spinup_Cell);
 	          			Globals.currYear = year;
 
 					_do_grid_disturbances(i, j);
@@ -528,7 +546,7 @@ static void _run_spinup( void ) {
          				stat_Collect(year);
 					mort_EndOfYear();
 
-					_save_spinup_cell(i, j);
+					_save_spinup_cell(spinup_Cell);
          				
     			} /* end model run for this cell*/
     			
@@ -618,13 +636,13 @@ static void _init_grid_inputs( void ) {
 	_init_grid_globals(); // initializes the global grid variables
 	if(UseDisturbances)	
 		_read_disturbances_in();
-	if(UseSoils && UseSoilwat)
-		_read_soils_in();
 	if(UseSeedDispersal) {
 		_read_seed_dispersal_in();
 		_read_init_species();
 	}
-	
+	if(UseSoils && UseSoilwat)
+		_read_soils_in();
+
 	DuringSpinup = FALSE;
 }
 
@@ -762,6 +780,12 @@ static void _init_grid_globals( void ) {
 		for(i = 0; i < grid_Cells; i++)
 			grid_initSpecies[i].species_seed_avail = Mem_Calloc(Globals.sppCount, sizeof(int), "_init_grid_globals()");
 	}
+
+
+	//if(sd_Option2a || sd_Option2b) {
+		soilTypes_Array = Mem_Calloc(grid_Cells, sizeof(int*), "_init_grid_globals()");
+		grid_SoilTypes = Mem_Calloc(grid_Cells, sizeof(int*), "_init_grid_globals()");
+	//}
 	
 	stat_Init_Accumulators();
 }
@@ -773,23 +797,23 @@ static void _init_spinup_globals( void ) {
 	GrpIndex c;
 	SppIndex s;
 	
-	spinup_Succulent = Mem_Calloc(grid_Cells, sizeof(SucculentType), "_init_spinup_globals()");
-	spinup_Env = Mem_Calloc(grid_Cells, sizeof(EnvType), "_init_spinup_globals()");
-	spinup_Plot = Mem_Calloc(grid_Cells, sizeof(PlotType), "_init_spinup_globals()");
-	spinup_Globals = Mem_Calloc(grid_Cells, sizeof(ModelType), "_init_spinup_globals()");
+	spinup_Succulent = Mem_Calloc(nSoilTypes, sizeof(SucculentType), "_init_spinup_globals()");
+	spinup_Env = Mem_Calloc(nSoilTypes, sizeof(EnvType), "_init_spinup_globals()");
+	spinup_Plot = Mem_Calloc(nSoilTypes, sizeof(PlotType), "_init_spinup_globals()");
+	spinup_Globals = Mem_Calloc(nSoilTypes, sizeof(ModelType), "_init_spinup_globals()");
 	
 	ForEachSpecies(s)
-		if(Species[s]->use_me) spinup_Species[s] = Mem_Calloc(grid_Cells, sizeof(SpeciesType), "_init_spinup_globals()");
+		if(Species[s]->use_me) spinup_Species[s] = Mem_Calloc(nSoilTypes, sizeof(SpeciesType), "_init_spinup_globals()");
 	ForEachGroup(c)
-		if(RGroup[c]->use_me) spinup_RGroup[c] = Mem_Calloc(grid_Cells, sizeof(GroupType), "_init_spinup_globals()");
+		if(RGroup[c]->use_me) spinup_RGroup[c] = Mem_Calloc(nSoilTypes, sizeof(GroupType), "_init_spinup_globals()");
 	
 	if(UseSoilwat) {
-		spinup_SXW = Mem_Calloc(grid_Cells, sizeof(SXW_t), "_init_spinup_globals()");
-		spinup_SW_Soilwat = Mem_Calloc(grid_Cells, sizeof(SW_SOILWAT), "_init_spinup_globals()");
-		spinup_SW_Site = Mem_Calloc(grid_Cells, sizeof(SW_SITE), "_init_spinup_globals()");
-		spinup_SW_VegProd = Mem_Calloc(grid_Cells, sizeof(SW_VEGPROD), "_init_spinup_globals()");
+		spinup_SXW = Mem_Calloc(nSoilTypes, sizeof(SXW_t), "_init_spinup_globals()");
+		spinup_SW_Soilwat = Mem_Calloc(nSoilTypes, sizeof(SW_SOILWAT), "_init_spinup_globals()");
+		spinup_SW_Site = Mem_Calloc(nSoilTypes, sizeof(SW_SITE), "_init_spinup_globals()");
+		spinup_SW_VegProd = Mem_Calloc(nSoilTypes, sizeof(SW_VEGPROD), "_init_spinup_globals()");
 		if(UseSoils) {
-			spinup_SXW_ptrs = Mem_Calloc(grid_Cells, sizeof(Grid_SXW_St), "_init_spinup_globals()");
+			spinup_SXW_ptrs = Mem_Calloc(nSoilTypes, sizeof(Grid_SXW_St), "_init_spinup_globals()");
 		}
 	}
 }
@@ -842,7 +866,7 @@ static void _load_grid_globals( void ) {
 			grid_Globals[i].burrow.use = grid_Disturb[i].choices[2];
 		}
 		if(UseSoils && UseSoilwat)
-			_init_soil_layers(i);
+			_init_soil_layers(i, 0);
 				
 		if(UseSoilwat) {
 			grid_SXW[i] = SXW; 
@@ -877,8 +901,10 @@ static void _load_spinup_globals( void ) {
 	SppIndex s;
 	
 	if(UseSoils && UseSoilwat) ChDir(grid_directories[0]); //change the directory for _init_soil_layers()
-	for(i = 0; i < grid_Cells; i++) {
-		
+	for(i = 0; i < nSoilTypes; i++) {
+	
+		int cell = soilTypes_Array[i]; //this is the cell number of the first cell representing this soil type
+
 		ForEachSpecies(s) { //macros defined in ST_defines.h
 			if(!Species[s]->use_me) continue;
 			spinup_Species[s][i] = *Species[s];
@@ -899,9 +925,9 @@ static void _load_spinup_globals( void ) {
 			
 			memcpy(spinup_RGroup[c][i].kills, RGroup[c]->kills, RGroup[c]->max_age * sizeof(IntUS));
 			if(UseDisturbances) { 
-				spinup_RGroup[c][i].killyr = grid_Disturb[i].kill_yr;
-				spinup_RGroup[c][i].killfreq = grid_Disturb[i].killfrq;
-				spinup_RGroup[c][i].extirp = grid_Disturb[i].extirp;
+				spinup_RGroup[c][i].killyr = grid_Disturb[cell].kill_yr;
+				spinup_RGroup[c][i].killfreq = grid_Disturb[cell].killfrq;
+				spinup_RGroup[c][i].extirp = grid_Disturb[cell].extirp;
 			}
 		}
 			
@@ -911,12 +937,12 @@ static void _load_spinup_globals( void ) {
 		spinup_Globals[i] = Globals;
 		
 		if(UseDisturbances) {
-			spinup_Globals[i].pat.use = grid_Disturb[i].choices[0];
-			spinup_Globals[i].mound.use = grid_Disturb[i].choices[1];
-			spinup_Globals[i].burrow.use = grid_Disturb[i].choices[2];
+			spinup_Globals[i].pat.use = grid_Disturb[cell].choices[0];
+			spinup_Globals[i].mound.use = grid_Disturb[cell].choices[1];
+			spinup_Globals[i].burrow.use = grid_Disturb[cell].choices[2];
 		}
 		if(UseSoils && UseSoilwat)
-			_init_soil_layers(i);
+			_init_soil_layers(i, 1);
 				
 		if(UseSoilwat) {
 			spinup_SXW[i] = SXW; 
@@ -989,7 +1015,7 @@ static void _free_spinup_globals( void ) {
 	GrpIndex c;
 	SppIndex s;
 	
-	for( i = 0; i < grid_Cells; i++ ) {
+	for( i = 0; i < nSoilTypes; i++ ) {
 	
 		ForEachSpecies(s) {
 			if(!Species[s]->use_me) continue;
@@ -1074,7 +1100,7 @@ static void _free_grid_memory( void ) {
 			Mem_Free(grid_initSpecies[i].species_seed_avail);
 		Mem_Free(grid_initSpecies);
 	}
-	
+
 	stat_Free_Accumulators(); //free our memory we allocated for all the accumulators now that they're unnecessary to have
 	
 	for(i = 0; i < N_GRID_DIRECTORIES; i++) //frees the strings allocated in _init_grid_files()
@@ -1110,7 +1136,6 @@ static void _free_grid_memory( void ) {
 static void _free_spinup_memory( void ) { 
 	// frees spinup memory	
 	
-	int i;
 	GrpIndex c;
 	SppIndex s;
 	
@@ -1136,6 +1161,10 @@ static void _free_spinup_memory( void ) {
 		Mem_Free(spinup_SXW_ptrs);
 	}
     
+	//if(sd_Option2a || sd_Option2b) {
+		Mem_Free(soilTypes_Array);
+		Mem_Free(grid_SoilTypes);
+	//}
 }
 
 /***********************************************************/
@@ -1212,14 +1241,13 @@ static void _load_cell( int row, int col, int year, Bool useAccumulators ) {
 }
 
 /***********************************************************/
-static void _load_spinup_cell( int row, int col ) {	
+static void _load_spinup_cell( int cell ) {	
 	// loads the specified cell into the global variables (from the spinup)
 	
-	int cell = col + ( (row-1) * grid_Cols) - 1;  // converts the row/col into an array index
 	int j;
 	GrpIndex c;
 	SppIndex s;
-	
+
 	ForEachSpecies(s) {
 		if(!Species[s]->use_me) continue;
 
@@ -1355,10 +1383,9 @@ static void _save_cell( int row, int col, int year, Bool useAccumulators ) {
 }
 
 /***********************************************************/
-static void _save_spinup_cell( int row, int col ) {	
+static void _save_spinup_cell( int cell ) {	
 	// saves the specified cell into the grid variables (from the spinup)
 
-	int cell = col + ( (row-1) * grid_Cols) - 1;  // converts the row/col into an array index
 	int j;
 	GrpIndex c;
 	SppIndex s;
@@ -1495,7 +1522,10 @@ static void _read_soils_in( void ) {
 	char buf[4096];
 	int i, j, k, cell, num, do_copy, copy_cell, num_layers, depth, depthMin;
 	float d[11];
-	
+
+	if(sd_Option2a || sd_Option2b) 
+		nSoilTypes = 0; //initialize our soil types counter
+
 	f = OpenFile(grid_files[3], "r");
 	
 	GetALine2(f, buf, 4096); // gets rid of the first line (since it just defines the columns)... it's only there for user readability
@@ -1515,9 +1545,19 @@ static void _read_soils_in( void ) {
 			for(j = 0; j < grid_Soils[copy_cell].num_layers; j++)
 				grid_Soils[i].lyr[j] = grid_Soils[copy_cell].lyr[j];
 			grid_Soils[i].num_layers = grid_Soils[copy_cell].num_layers;
+
+			if(sd_Option2a || sd_Option2b)
+				grid_SoilTypes[cell] = grid_SoilTypes[copy_cell];
+
 			continue;
 		} else if(do_copy == 1)
 			LogError(logfp, LOGFATAL, "Invalid %s file line %d invalid copy_cell attempt", grid_files[3], i+2);
+
+		if(sd_Option2a || sd_Option2b) {
+			grid_SoilTypes[cell] = nSoilTypes;
+			soilTypes_Array[nSoilTypes] = cell;
+			nSoilTypes++;
+		}
 
 		depthMin = 0;
 		grid_Soils[i].num_layers = num_layers;
@@ -1556,7 +1596,7 @@ static void _read_soils_in( void ) {
 }
 
 /***********************************************************/
-static void _init_soil_layers(int cell) {
+static void _init_soil_layers(int cell, int isSpinup) {
 	// initializes the soilwat soil layers for the cell correctly based upon the input gathered from our grid_soils input file
 	// pretty much takes the data from grid_Soils (read in in _read_soils_in()) and converts it to what SW_Site needs...
 	// this function does generally the same things that the _read_layers() function in SW_Site.c does, except that it does it in a way that lets us use it in the grid...
@@ -1623,18 +1663,31 @@ static void _init_soil_layers(int cell) {
 		water_eqn(SW_Site.lyr[j]->pct_sand, SW_Site.lyr[j]->pct_clay, j); //in SW_Site.c, called to initialize some layer data...
 	}
 	init_site_info(); //in SW_Site.c, called to initialize layer data...
-	    
+	
 	free_all_sxw_memory();
 	_init_SXW_inputs(FALSE); //we call this so that SXW can set the correct sizes/values up for the memory dynamically allocated in sxw.c
 
-	grid_SXW_ptrs[i].roots_max = Mem_Calloc(SXW.NGrps * SXW.NTrLyrs, sizeof(RealD), "_init_soil_layers()");
-	grid_SXW_ptrs[i].rootsXphen = Mem_Calloc(SXW.NGrps * SXW.NPds * SXW.NTrLyrs, sizeof(RealD), "_init_soil_layers()");
-	grid_SXW_ptrs[i].roots_active = Mem_Calloc(SXW.NGrps * SXW.NPds * SXW.NTrLyrs, sizeof(RealD), "_init_soil_layers()");
-	grid_SXW_ptrs[i].roots_active_rel = Mem_Calloc(SXW.NGrps * SXW.NPds * SXW.NTrLyrs, sizeof(RealD), "_init_soil_layers()");
-	grid_SXW_ptrs[i].roots_active_sum = Mem_Calloc(SXW.NPds * SXW.NTrLyrs, sizeof(RealD), "_init_soil_layers()");
-	grid_SXW_ptrs[i].phen = Mem_Calloc(SXW.NGrps * MAX_MONTHS, sizeof(RealD), "_init_soil_layers()");
-	
-	save_sxw_memory(grid_SXW_ptrs[i].roots_max, grid_SXW_ptrs[i].rootsXphen, grid_SXW_ptrs[i].roots_active, grid_SXW_ptrs[i].roots_active_rel, grid_SXW_ptrs[i].roots_active_sum, grid_SXW_ptrs[i].phen);
+	if(!isSpinup) {
+
+		grid_SXW_ptrs[i].roots_max = Mem_Calloc(SXW.NGrps * SXW.NTrLyrs, sizeof(RealD), "_init_soil_layers()");
+		grid_SXW_ptrs[i].rootsXphen = Mem_Calloc(SXW.NGrps * SXW.NPds * SXW.NTrLyrs, sizeof(RealD), "_init_soil_layers()");
+		grid_SXW_ptrs[i].roots_active = Mem_Calloc(SXW.NGrps * SXW.NPds * SXW.NTrLyrs, sizeof(RealD), "_init_soil_layers()");
+		grid_SXW_ptrs[i].roots_active_rel = Mem_Calloc(SXW.NGrps * SXW.NPds * SXW.NTrLyrs, sizeof(RealD), "_init_soil_layers()");
+		grid_SXW_ptrs[i].roots_active_sum = Mem_Calloc(SXW.NPds * SXW.NTrLyrs, sizeof(RealD), "_init_soil_layers()");
+		grid_SXW_ptrs[i].phen = Mem_Calloc(SXW.NGrps * MAX_MONTHS, sizeof(RealD), "_init_soil_layers()");
+
+		save_sxw_memory(grid_SXW_ptrs[i].roots_max, grid_SXW_ptrs[i].rootsXphen, grid_SXW_ptrs[i].roots_active, grid_SXW_ptrs[i].roots_active_rel, grid_SXW_ptrs[i].roots_active_sum, grid_SXW_ptrs[i].phen);
+	} else {
+
+		spinup_SXW_ptrs[i].roots_max = Mem_Calloc(SXW.NGrps * SXW.NTrLyrs, sizeof(RealD), "_init_soil_layers()");
+		spinup_SXW_ptrs[i].rootsXphen = Mem_Calloc(SXW.NGrps * SXW.NPds * SXW.NTrLyrs, sizeof(RealD), "_init_soil_layers()");
+		spinup_SXW_ptrs[i].roots_active = Mem_Calloc(SXW.NGrps * SXW.NPds * SXW.NTrLyrs, sizeof(RealD), "_init_soil_layers()");
+		spinup_SXW_ptrs[i].roots_active_rel = Mem_Calloc(SXW.NGrps * SXW.NPds * SXW.NTrLyrs, sizeof(RealD), "_init_soil_layers()");
+		spinup_SXW_ptrs[i].roots_active_sum = Mem_Calloc(SXW.NPds * SXW.NTrLyrs, sizeof(RealD), "_init_soil_layers()");
+		spinup_SXW_ptrs[i].phen = Mem_Calloc(SXW.NGrps * MAX_MONTHS, sizeof(RealD), "_init_soil_layers()");
+
+		save_sxw_memory(spinup_SXW_ptrs[i].roots_max, spinup_SXW_ptrs[i].rootsXphen, spinup_SXW_ptrs[i].roots_active, spinup_SXW_ptrs[i].roots_active_rel, spinup_SXW_ptrs[i].roots_active_sum, spinup_SXW_ptrs[i].phen);
+	}
 }
 
 /***********************************************************/

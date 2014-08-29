@@ -125,7 +125,7 @@ static TimeInt _debugyrs[100], _debugyrs_cnt;
 /*************** Local Function Declarations ***************/
 /***********************************************************/
 
-static void _read_files(void);
+static void _read_files( void );
 static void _read_times(void);
 static void _read_roots_max(void);
 static void _read_phen(void);
@@ -167,7 +167,6 @@ void SXW_Init( Bool init_SW ) {
      _Grp_BMass[Species[sp]->res_grp] += Species[sp]->mature_biomass;
    /* end code 2/14/03 */
 #endif
-
 
    _files[0] = &SXW.f_times;
    _files[1] = &SXW.f_roots;
@@ -213,6 +212,8 @@ void SXW_Init( Bool init_SW ) {
   _sxw_test();
   exit(0);
 #endif
+
+  _recover_names();
 }
 
 
@@ -297,7 +298,7 @@ void SXW_PrintDebug(void) {
 }
 
 
-static void  _read_files(void) {
+static void  _read_files( void ) {
 /*======================================================*/
   /* read list of input files.   */
   FILE *fin;
@@ -311,7 +312,7 @@ static void  _read_files(void) {
     if (!GetALine(fin, inbuf)) break;
     *_files[i] = Str_Dup(Str_TrimLeftQ(inbuf));
   }
-
+ 
   if (i < nfiles) {
     LogError(logfp, LOGFATAL, "STEPWAT: %s: Insufficient files found",
             MyFileName);
@@ -631,7 +632,7 @@ static void _recover_names(void) {
   int i, last = SXW_NFILES-1;  /* recall we skipped the first file */ // (DLM - 6-12-2013) ?? the first file isn't skipped at all and is Str_Duped...
   //for (i=0; i < last; i++) {
   for( i=0; i < last+1; i++) { 
-    Mem_Free(*_files[i]);
+	  Mem_Free(*_files[i]);
   }
 
 }
@@ -911,7 +912,6 @@ void free_all_sxw_memory( void ) {
 	free_sxw_memory();
 	Mem_Free(SXW.transp);
 	if (*SXW.debugfile) Mem_Free(SXW.swc);
-	_recover_names();
 }
 
 /***********************************************************/
