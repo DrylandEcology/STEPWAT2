@@ -123,6 +123,7 @@ MortFlagsType  MortFlags;
 Bool UseSoilwat; /* not used in every module */
 Bool UseGrid;
 Bool UseSeedDispersal;
+Bool DuringSpinup;
 Bool EchoInits;
 Bool UseProgressBar;
 

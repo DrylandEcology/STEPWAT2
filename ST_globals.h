@@ -30,3 +30,4 @@ extern MortFlagsType  MortFlags;
 
 extern Bool UseSeedDispersal;
 extern Bool UseGrid;
+extern Bool DuringSpinup;

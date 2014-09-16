@@ -16,5 +16,5 @@ t		# output seperator... specify one of the following as a separator: t = tab, s
 0		# option 1a) all cells and species.  1 means yes, 0 means no.
 0		# option 1b) input for each cell: seeds of which species are available during those first N years [names & order of all species in species.in].  1 means yes, 0 means no.
 # option 2) run one site without dispersal (ie, conditions of 1-site StepWat, ie, seeds available in every cell for every year) for inputted # of years x replications (eg, 500 years times 10 replications) as spinup
-0		# option 2a) use this spinup as init condition in all cells.  1 means yes, 0 means no.
+1		# option 2a) use this spinup as init condition in all cells.  1 means yes, 0 means no.
 0		# option 2b) input for each cell whether or not to use this spinup as inits.  1 means yes, 0 means no. 

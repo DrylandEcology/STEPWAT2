@@ -60,8 +60,8 @@ IntS Species_NumEstablish( SppIndex sp) {
 
 /*------------------------------------------------------*/
 
-	//special conditions if we're using the grid and seed dispersal options
-	if(UseGrid && UseSeedDispersal)
+	//special conditions if we're using the grid and seed dispersal options (as long as its not during the spinup, because we dont use seed dispersal during spinup)
+	if(UseGrid && UseSeedDispersal && !DuringSpinup)
 		if(Species[sp]->sd_sgerm) {
 			if(Species[sp]->max_seed_estab <= 1)
 				return 1;
