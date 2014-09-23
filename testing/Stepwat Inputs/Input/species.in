@@ -22,7 +22,8 @@
 #         not used for annuals.
 # slow  = number of years of slow growth before mortality begins
 #         not used for annuals.
-# disturb  = disturbance class:
+# disturb  = disturbance class: (this is defined differently in Coffin & Lauenroth 1990
+#			than it is here.
 #         1 = very sensitive to fecal pats and ant mounds
 #         2 = sensitive to pats, very sensitive to mounds
 #         3 = insensitive to pats, sensitive to mounds
@@ -63,9 +64,9 @@
  gaco       3   10  0.73700 0.900    2       2    0.01100    5   0.022   0.429      n       0       2  0.0100     1
  chna       3   35  0.47400 0.900    2 	     2 	  0.00200    2   0.986   19.726     n       0       2  0.0100     1
  gusa       3   10  0.73700 0.900    2       3    0.00100    5   0.106   2.126      n       0       2  0.0100     1
- vuoc       4    1  0.94700 0.900    2       1    0.27000    2   0.022   0.429      n       0       2  0.0000     1
- chal       4    1  0.94700 0.900    2       2    0.27000    2   0.022   0.429      n       0       1  0.0000     1
- lede       4    1  0.94700 0.900    2       2    0.27000    2   0.022   0.429      n       0       2  0.0000     1
+ vuoc       4    1  0.94700 0.900    2       1    0.17000    2   0.022   0.429      n       0       2  0.0000     1
+ chal       4    1  0.94700 0.900    2       2    0.17000    2   0.022   0.429      n       0       1  0.0000     1
+ lede       4    1  0.94700 0.900    2       2    0.17000    2   0.022   0.429      n       0       2  0.0000     1
  oppo       5    0  0.28900 0.900    2       4    0.02000    3   2.250  15.000      y       3       1  0.0100     1
 
 [end]  # this marks the end of the species-specific parameters above
@@ -141,7 +142,7 @@
  piop 	1		0.5	105	520	0.01	0.55	30.0	100.0 
  mata 	1		0.5	105	520	0.01	0.55	30.0	100.0 
  gaco 	1		0.5	105	520	0.01	0.55	30.0	100.0
- chna   1 		0.5 	105 	520 	0.01 	0.55 	30.0 	100.0 
+ chna   1 		0.5 105 520 0.01 	0.55 	30.0 	100.0 
  gusa 	1		0.5	105	520	0.01	0.55	30.0	100.0 
  vuoc 	1		0.5	105	520	0.01	0.55	30.0	100.0 
  chal 	1		0.5	105	520	0.01	0.55	30.0	100.0 
