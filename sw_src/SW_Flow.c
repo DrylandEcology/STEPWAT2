@@ -113,6 +113,8 @@ extern SW_SOILWAT SW_Soilwat;
 extern SW_WEATHER SW_Weather;
 extern SW_VEGPROD SW_VegProd;
 extern SW_SKY SW_Sky; // 
+extern unsigned int soil_temp_error;  // simply keeps track of whether or not an error has been reported in the soil_temperature function.  0 for no, 1 for yes.
+extern unsigned int soil_temp_init;   // simply keeps track of whether or not the regression values for the soil_temperature function have been initialized.  0 for no, 1 for yes.
 
 
 /* *************************************************** */
@@ -187,6 +189,24 @@ static void arrays2records(void);
 * not always occur.
 */
 void SW_Water_Flow(void);
+void SW_FLW_construct(void) {
+	int i=0;
+	soil_temp_error = 0;
+	soil_temp_init = 0;
+	//These only have to be cleared if a loop is wrong in the code.
+	for(i=0;i<MAX_LAYERS;i++) {
+		lyrSWC[i] = lyrTranspCo_Tree[i] = lyrTranspCo_Shrub[i] = lyrTranspCo_Grass[i] = lyrEvapCo[i] = lyrFieldCaps[i] = 0;
+		lyrHalfWiltpts[i] = lyrSWCMins[i] = lyrSWCatSWPcrit_Tree[i] = lyrSWCatSWPcrit_Shrub[i] = lyrSWCatSWPcrit_Grass[i] = lyrPsis[i] = 0;
+		lyrThetas[i] = lyrBetas[i] = lyrBetaInv[i] = lyrImpermeability[i] = lyrSWCsaturated[i] = lyroldsTemp[i] = lyrbDensity[i] = 0;
+
+		lyrDrain[i] = lyrTransp_Tree[i] = lyrTransp_Shrub[i] = lyrTransp_Grass[i] = lyrEvap_Tree[i] = lyrEvap_Shrub[i] = 0;
+		lyrEvap_Grass[i] = lyrHydRed_Tree[i] = lyrHydRed_Shrub[i] = lyrHydRed_Grass[i] = lyrsTemp[i] = 0;
+	}
+	//When running as a library make sure these are set to zero.
+	drainout = 0;
+	tree_h2o_qum[0]=shrub_h2o_qum[0]=grass_h2o_qum[0]=litter_h2o_qum[0]=standingWater[0]=0.0;
+	tree_h2o_qum[1]=shrub_h2o_qum[1]=grass_h2o_qum[1]=litter_h2o_qum[1]=standingWater[1]=0.0;
+}
 
 /* *************************************************** */
 /* *************************************************** */

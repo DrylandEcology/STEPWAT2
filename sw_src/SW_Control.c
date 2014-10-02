@@ -42,6 +42,7 @@
 /* --------------------------------------------------- */
 extern SW_MODEL SW_Model;
 extern SW_VEGESTAB SW_VegEstab;
+void SW_FLW_construct(void);
 
 /* =================================================== */
 /*                Module-Level Declarations            */
@@ -87,6 +88,7 @@ void SW_CTL_init_model(const char *firstfile) {
   SW_VPD_construct();
   SW_OUT_construct();
   SW_SWC_construct();
+  SW_FLW_construct();
 	
   _read_inputs();
 }
