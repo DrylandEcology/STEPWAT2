@@ -115,10 +115,12 @@ void SW_MDL_read(void) {
 
    /* ----- beginning year */
    if (!GetALine(f, inbuf)) {
+	 CloseFile(&f);
      LogError(logfp, LOGFATAL, "%s: No input.", MyFileName);
    }
    y = atoi(inbuf);
    if (y < 0) {
+	 CloseFile(&f);
      LogError(logfp, LOGFATAL,
               "%s: Negative start year (%d)", MyFileName, y);
    }
@@ -126,15 +128,18 @@ void SW_MDL_read(void) {
 
    /* ----- ending year */
    if (!GetALine(f, inbuf)) {
+	CloseFile(&f);
      LogError(logfp, LOGFATAL, "%s: Ending year not found.", MyFileName);
    }
    y = atoi(inbuf); assert( y > 0);
    if (y < 0) {
+	CloseFile(&f);
      LogError(logfp, LOGFATAL,
               "%s: Negative ending year (%d)", MyFileName, y);
    }
    m->endyr  = yearto4digit((TimeInt) y);
    if (m->endyr < m->startyr) {
+	CloseFile(&f);
      LogError(logfp, LOGFATAL, "%s: Start Year > End Year", MyFileName);
    }
 

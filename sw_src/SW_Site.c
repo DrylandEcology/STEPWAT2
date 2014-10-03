@@ -165,7 +165,6 @@ void SW_SIT_construct(void) {
 
 }
 
-
 void SW_SIT_read(void) {
 /* =================================================== */
 /* 5-Feb-2002 (cwb) Removed rgntop requirement in
@@ -230,6 +229,7 @@ void SW_SIT_read(void) {
             x = sscanf(inbuf, "%d %d",
                        &region, &rgnlow);
             if (x < 2) {
+              CloseFile(&f);
               LogError(logfp, LOGFATAL, "%s : Bad record %d.\n",
                         MyFileName, lineno);
             }
@@ -372,6 +372,7 @@ static void _read_layers( void) {
 
 
       if (lyrno == MAX_LAYERS) {
+		CloseFile(&f);
         LogError(logfp, LOGFATAL,
                         "%s : Too many layers specified (%d).\n"
                         "Maximum number of layers is %d\n",
@@ -441,7 +442,7 @@ void init_site_info(void) {
 			}
 		}
 	
-		if (curregion) {
+		if (curregion || ZRO(_TranspRgnBounds[curregion])) {
 			lyr->my_transp_rgn_tree = curregion;
 			sp->n_transp_lyrs_tree = max(sp->n_transp_lyrs_tree, s);
 	
@@ -467,7 +468,7 @@ void init_site_info(void) {
 			}
 		}
 	
-		if (curregion) {
+		if (curregion || ZRO(_TranspRgnBounds[curregion])) {
 			lyr->my_transp_rgn_shrub = curregion;
 			sp->n_transp_lyrs_shrub = max(sp->n_transp_lyrs_shrub, s);
 	
@@ -492,7 +493,7 @@ void init_site_info(void) {
 			}
 		}
 	
-		if (curregion) {
+		if (curregion || ZRO(_TranspRgnBounds[curregion])) {
 			lyr->my_transp_rgn_grass = curregion;
 			sp->n_transp_lyrs_grass = max(sp->n_transp_lyrs_grass, s);
 	
@@ -611,11 +612,29 @@ void init_site_info(void) {
 
 
 void SW_SIT_clear_layers( void) {
-/* =================================================== */
-  LyrIndex i;
+	/* =================================================== */
+		/*
+		 * For multiple runs with the shared library, the need to
+		 * remove the allocated soil layer arises to avoid leaks.(rjm 2013)
+		 */
+		LyrIndex i, j;
+		SW_SITE *s = &SW_Site;
 
-  ForEachSoilLayer(i) _clear_layer(i);
+		j = SW_Site.n_layers;
 
+		if (s->deepdrain) {
+			j++;
+		}
+
+		for ((i) = 0; (i) < j; (i)++) {
+			free(s->lyr[i]);
+			s->lyr[i] = NULL;
+		}
+		free(s->lyr);
+		s->lyr = NULL;
+
+  //LyrIndex i;
+  //ForEachSoilLayer(i) _clear_layer(i);
 }
 
 

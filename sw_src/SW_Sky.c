@@ -114,6 +114,7 @@ void SW_SKY_read(void) {
             break;
       }
       if (x<12) {
+		 CloseFile(&f);
          sprintf(errstr,"%s : invalid record %d.\n",
                  MyFileName, lineno );
          LogError(logfp, LOGFATAL, errstr);

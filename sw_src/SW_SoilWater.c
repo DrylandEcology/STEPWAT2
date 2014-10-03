@@ -72,9 +72,10 @@ static void _read_hist( TimeInt year);
 static void _clear_hist( void) {
 /* --------------------------------------------------- */
 TimeInt d;
+int i=0;
 LyrIndex z;
 for(d=0; d<MAX_DAYS; d++) {
-ForEachSoilLayer(z) {
+for(i=0;i<MAX_LAYERS;i++) {
 SW_Soilwat.hist.swc[d][z]     = SW_MISSING;
 SW_Soilwat.hist.std_err[d][z] = SW_MISSING;
 }
@@ -234,7 +235,6 @@ LogError(logfp, LOGFATAL,
 v->hist.yr.last = SW_Model.endyr;
 v->hist.yr.total = v->hist.yr.last - v->hist.yr.first +1;
 }
-
 
 static void _read_hist( TimeInt year) {
 /* =================================================== */
@@ -409,7 +409,6 @@ if ( GT(*snowpack, 0.) ) {
 
 }
 
-
 RealD SW_SnowDepth( RealD SWE, RealD snowdensity) {
 /*---------------------
 	08/22/2011	(drs)	calculates depth of snowpack
@@ -423,7 +422,6 @@ RealD SW_SnowDepth( RealD SWE, RealD snowdensity) {
 		return 0.;
 	}
 }
-
 
 RealD SW_SWC_vol2bars ( RealD lyrvolcm, LyrIndex n) {
 /**********************************************************************
