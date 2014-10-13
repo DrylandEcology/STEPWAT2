@@ -61,7 +61,7 @@ void _sxw_set_environs(void) {
    * need to convert ppt from cm to mm
   */
 
-  Env.ppt   = (IntS) (SXW.ppt *10 +.5);
+  Env.ppt   = (IntS) (SXW.ppt *10);
   Env.temp  = SXW.temp;
 
 
