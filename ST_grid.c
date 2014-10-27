@@ -220,7 +220,7 @@ void save_sxw_memory( RealD * grid_roots_max, RealD* grid_rootsXphen, RealD* gri
 void SXW_init( Bool init_SW );
 
 //from SW_Site.c (both needed to initialize the soil layers properly)
-void water_eqn( RealD sand, RealD clay, LyrIndex n);
+void water_eqn(RealD fractionGravel, RealD sand, RealD clay, LyrIndex n);
 void init_site_info(void); 
 
 /*********** Locally Used Function Declarations ************/
@@ -256,6 +256,8 @@ static void _set_sd_lyppt(int row, int col);
 static void _kill_groups_and_species( void );
 static int  _do_grid_disturbances(int row, int col);
 static void _read_init_species( void );
+
+//static void _copy_species(SpeciesType* to, SpeciesType* from, Bool deep);
 
 static IndivType* _create_empty_indv( void ); //these 5 functions are used for copying/freeing the linked list of individuals correctly...
 static void _free_individuals( IndivType *head );
@@ -493,7 +495,7 @@ static void _run_spinup( void ) {
 
 	//does the spinup, it's pretty much like running the grid, except some differences like no seed dispersal and no need to deal with output accumulators
 
-	int i, j, spinup_Cell;
+	int i, spinup_Cell;
 	Bool killedany;
 	IntS year, iter;
 
@@ -715,6 +717,7 @@ static IndivType* _copy_head( IndivType *head ) {
 }
 
 /**********************************************************/
+/*
 static void _copy_species(SpeciesType* to, SpeciesType* from, Bool deep) {
 	if(deep) {
 		Mem_Free(to->kills);
@@ -738,7 +741,7 @@ static void _copy_species(SpeciesType* to, SpeciesType* from, Bool deep) {
 		to->IndvHead = _copy_head(from->IndvHead); //copy_head() deep copies the linked list structure (allocating memory when needed)... it will even allocate memory for the head of the list
 	}
 }
-
+*/
 /***********************************************************/
 static void _init_grid_globals( void ) {
 	//initializes grid variables, allocating the memory necessary for them (this step is only needed to be done once)
@@ -1603,14 +1606,14 @@ static void _init_soil_layers(int cell, int isSpinup) {
 	int i, j;
 	i = cell;
 	
-	Bool evap_ok = TRUE, transp_ok_tree = TRUE, transp_ok_shrub = TRUE, transp_ok_grass = TRUE; /* mitigate gaps in layers */
+	Bool evap_ok = TRUE, transp_ok_forb = TRUE, transp_ok_tree = TRUE, transp_ok_shrub = TRUE, transp_ok_grass = TRUE; /* mitigate gaps in layers */
 	
 	for(j = 0; j < SW_Site.n_layers; j++)
 		Mem_Free(SW_Site.lyr[j]);
 	Mem_Free(SW_Site.lyr);
 			
 	SW_Site.n_layers = grid_Soils[i].num_layers;
-	SW_Site.n_evap_lyrs = SW_Site.n_transp_lyrs_tree = SW_Site.n_transp_lyrs_shrub = SW_Site.n_transp_lyrs_grass = 0;
+	SW_Site.n_evap_lyrs = SW_Site.n_transp_lyrs_forb = SW_Site.n_transp_lyrs_tree = SW_Site.n_transp_lyrs_shrub = SW_Site.n_transp_lyrs_grass = 0;
 			
 	SW_Site.lyr = Mem_Calloc(SW_Site.n_layers, sizeof(SW_LAYER_INFO *), "_init_grid_globals()");
     	for(j = 0; j < SW_Site.n_layers; j++) {
@@ -1620,15 +1623,15 @@ static void _init_soil_layers(int cell, int isSpinup) {
         	//0		   1		2		3	  4				5			6			7	   8		9		10
         	//bulkd   fieldc   wiltpt  evco  trco_grass  	trco_shrub  trco_tree  	%sand  %clay imperm soiltemp
         	SW_Site.lyr[j]->width = grid_Soils[i].lyr[j].width;
-        	SW_Site.lyr[j]->bulk_density = grid_Soils[i].lyr[j].data[0];
-        	SW_Site.lyr[j]->swc_fieldcap = grid_Soils[i].lyr[j].data[1] * SW_Site.lyr[j]->width;
-        	SW_Site.lyr[j]->swc_wiltpt = grid_Soils[i].lyr[j].data[2] * SW_Site.lyr[j]->width;
-        	SW_Site.lyr[j]->evap_coeff = grid_Soils[i].lyr[j].data[3];
-        	SW_Site.lyr[j]->transp_coeff_grass = grid_Soils[i].lyr[j].data[4];
-        	SW_Site.lyr[j]->transp_coeff_shrub = grid_Soils[i].lyr[j].data[5];
-        	SW_Site.lyr[j]->transp_coeff_tree = grid_Soils[i].lyr[j].data[6];
-        	SW_Site.lyr[j]->pct_sand = grid_Soils[i].lyr[j].data[7];
-        	SW_Site.lyr[j]->pct_clay = grid_Soils[i].lyr[j].data[8];
+        	SW_Site.lyr[j]->soilBulk_density = grid_Soils[i].lyr[j].data[0];
+        	SW_Site.lyr[j]->fractionVolBulk_gravel = grid_Soils[i].lyr[j].data[1];
+        	SW_Site.lyr[j]->evap_coeff = grid_Soils[i].lyr[j].data[2];
+        	SW_Site.lyr[j]->transp_coeff_grass = grid_Soils[i].lyr[j].data[3];
+        	SW_Site.lyr[j]->transp_coeff_shrub = grid_Soils[i].lyr[j].data[4];
+        	SW_Site.lyr[j]->transp_coeff_tree = grid_Soils[i].lyr[j].data[5];
+        	SW_Site.lyr[j]->transp_coeff_forb = grid_Soils[i].lyr[j].data[6];
+        	SW_Site.lyr[j]->fractionWeightMatric_sand = grid_Soils[i].lyr[j].data[7];
+        	SW_Site.lyr[j]->fractionWeightMatric_clay = grid_Soils[i].lyr[j].data[8];
         	SW_Site.lyr[j]->impermeability = grid_Soils[i].lyr[j].data[9];
         	SW_Site.lyr[j]->my_transp_rgn_tree = 0;
         	SW_Site.lyr[j]->my_transp_rgn_shrub = 0;
@@ -1659,8 +1662,13 @@ static void _init_soil_layers(int cell, int isSpinup) {
 			else
 				transp_ok_grass = FALSE;
 		}
-		
-		water_eqn(SW_Site.lyr[j]->pct_sand, SW_Site.lyr[j]->pct_clay, j); //in SW_Site.c, called to initialize some layer data...
+		if (transp_ok_forb) {
+			if (GT(SW_Site.lyr[j]->transp_coeff_forb, 0.0))
+				SW_Site.n_transp_lyrs_forb++;
+			else
+				transp_ok_forb = FALSE;
+		}
+		water_eqn(SW_Site.lyr[j]->fractionVolBulk_gravel, SW_Site.lyr[j]->fractionWeightMatric_sand, SW_Site.lyr[j]->fractionWeightMatric_clay, j);//in SW_Site.c, called to initialize some layer data...
 	}
 	init_site_info(); //in SW_Site.c, called to initialize layer data...
 	

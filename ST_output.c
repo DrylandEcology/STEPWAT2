@@ -52,16 +52,15 @@ void output_Bmass_Yearly( Int year ) {
   SppIndex sp;
   int i, fc=0;
   char s[MAX_FIELDLEN];
+  char filename[FILENAME_MAX];
 
 
   if (!BmassFlags.yearly) return;
 
   if (BmassFlags.yr) {
-    #ifdef STEPWAT
       if (UseSoilwat)
         sprintf(fields[fc++], "%d", SW_Model.year);
       else
-    #endif
         sprintf(fields[fc++], "%d", year);
   }
 
@@ -110,13 +109,18 @@ void output_Bmass_Yearly( Int year ) {
     }
   }
 
+  sprintf(filename, "%s%0*d.out", Parm_name(F_BMassPre),
+                                 Globals.bmass.suffixwidth,
+                                 Globals.currIter);
+  Globals.bmass.fp_year = OpenFile(filename, "a");
+
   /* Write data line to already opened file */
   for (i=0; i< fc-1; i++) {
-    fprintf(Globals.bmass.fp_year,"%s%c", fields[i], BmassFlags.sep);
+	  fprintf(Globals.bmass.fp_year,"%s%c", fields[i], BmassFlags.sep);
   }
 
   if (i) fprintf(Globals.bmass.fp_year,"%s\n", fields[i]);
-
+  fflush(Globals.bmass.fp_year);
 
 }
 

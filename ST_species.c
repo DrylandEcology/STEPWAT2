@@ -70,7 +70,7 @@ IntS Species_NumEstablish( SppIndex sp) {
 		} else
 			return 0;
 
-	float biomass = Species[sp]->relsize * Species[sp]->mature_biomass;
+	//float biomass = Species[sp]->relsize * Species[sp]->mature_biomass; //This line does nothing!
 	if ( RGroup[Species[sp]->res_grp]->est_annually ||
 			LE( RandUni(), Species[sp]->seedling_estab_prob) || (Species[sp]->sd_sgerm)) {
 		if (Species[sp]->max_seed_estab <= 1)

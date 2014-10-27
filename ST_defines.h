@@ -139,6 +139,7 @@ typedef enum {F_First, F_Log, F_Model, F_Env, F_Plot, F_RGroup, F_Species,
 #define ForEachEstSpp(s,g,i) for((i)=0,(s)=RGroup[g]->est_spp[i];\
                                   (i) < RGroup[g]->est_count;    \
                                   (s)=RGroup[g]->est_spp[++(i)])
+#define ForEachEstSpp2(g,i) for((i)=0; (i) < RGroup[g]->est_count; (i)++)
 
 /* loop over each possible species in the group established or not.
  * Works exactly like ForEachEstSpp() but looks up a group's

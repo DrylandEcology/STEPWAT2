@@ -37,6 +37,8 @@
   #include "sxw_vars.h"
 #endif
 
+extern Bool UseSoilwat;
+
 /******** Modular External Function Declarations ***********/
 /* -- truly global functions are declared in functions.h --*/
 /***********************************************************/
@@ -91,7 +93,7 @@ static void _recover_names(void);
   #define NFILES 14
 #endif
 
-char *_files[NFILES];
+static char *_files[NFILES];
 char *MyFileName;
 
 /**************************************************************/
@@ -113,6 +115,7 @@ void parm_Initialize( Int iter) {
       }
       Globals.bmass.fp_year = OpenFile(filename, "w");
       fprintf(Globals.bmass.fp_year, "%s", Globals.bmass.header_line);
+      fflush(Globals.bmass.fp_year);
     }
 
     if (MortFlags.yearly) {
@@ -126,6 +129,7 @@ void parm_Initialize( Int iter) {
       }
       Globals.mort.fp_year = OpenFile(filename, "w");
       fprintf(Globals.mort.fp_year, "%s", Globals.mort.header_line);
+      fflush(Globals.mort.fp_year);
     }
 
   } else {
@@ -144,7 +148,7 @@ void parm_Initialize( Int iter) {
     _morthdr_create();
     RandSeed(Globals.randseed);
 
-/*    _recover_names(); */
+	/*_recover_names();*/
     beenhere = TRUE;
   }
 
@@ -1077,11 +1081,10 @@ static void _species_init( void) {
          continue;
       }
 
-      x=sscanf( inbuf, "%s %hd %hd %f %f %hd %hd %f %hd %f %f %s %hd %hd %f %hd %hd",
-                name,
-                &rg, &age, &irate, &ratep, &slow, &dist,
-                &estab, &eind, &minb, &maxb, clonal,
-                &vegi, &temp, &cohort, &turnon);
+		x = sscanf(inbuf,
+				"%s %hd %hd %f %f %hd %hd %f %hd %f %f %s %hd %hd %f %hd",
+				name, &rg, &age, &irate, &ratep, &slow, &dist, &estab, &eind,
+				&minb, &maxb, clonal, &vegi, &temp, &cohort, &turnon);
       if (x != 16) {
         LogError(logfp, LOGFATAL, "%s: Wrong number of columns in species",
                 MyFileName);
@@ -1250,18 +1253,15 @@ static void _species_init( void) {
 }
 
 
-/**************************************************************/
-static void _recover_names( void) {
-/*======================================================*/
-int i, last =NFILES-1;
+static void _recover_names(void) {
+	int i, last = NFILES - 1;
 
-#ifdef STEPWAT
-  last--;  /* have to save sxw.in for later */
-#endif
+	if (UseSoilwat)
+		last--; /* have to save sxw.in for later */
 
-  for (i=0; i<=last; i++) {
-    Mem_Free(_files[i]);
-  }
+	for (i = 0; i <= last; i++) {
+		Mem_Free(_files[i]);
+	}
 
 }
 

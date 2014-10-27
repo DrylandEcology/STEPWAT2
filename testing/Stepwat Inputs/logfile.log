@@ -1,38 +1,40 @@
 NOTE: Max_Spp_Estab > Number of Spp for p.graminoids
 NOTE: Max_Spp_Estab > Number of Spp for a.gram/shrub
 NOTE: Continuing.
-WARNING: Input/sxw/Input/soils_v23.in : Evap coefficients were normalized, ev_co sum (1.0000) != 1.0.
+NOTE:   Layer 1 : curregion 1 _TranspRgnBounds 2
+NOTE:   Layer 2 : curregion 2 _TranspRgnBounds 4
+NOTE:   Layer 3 : curregion 3 _TranspRgnBounds 0
+NOTE:   Layer 4 : curregion 3 _TranspRgnBounds 0
+WARNING: Input/sxw/Input/soils_v30.in : Evap coefficients were normalized, ev_co sum (0.9990) != 1.0.
 New coefficients are:
-NOTE:   Layer 1 : 0.8122
-NOTE:   Layer 2 : 0.1534
-NOTE:   Layer 3 : 0.0344
-WARNING: Input/sxw/Input/soils_v23.in : Transp coefficients for trees were normalized, tr_co_tree sum (0.6666) != 1.0.
+NOTE:   Layer 1 : 0.8128
+NOTE:   Layer 2 : 0.1532
+NOTE:   Layer 3 : 0.0340
+WARNING: Input/sxw/Input/soils_v30.in : Transp coefficients for forbs were normalized, tr_co_forb sum (0.6890) != 1.0.
+New Coefficients are:
+NOTE:   Layer 1 : 0.1945
+NOTE:   Layer 2 : 0.1364
+NOTE:   Layer 3 : 0.2554
+NOTE:   Layer 4 : 0.2540
+NOTE:   Layer 5 : 0.1597
+WARNING: Input/sxw/Input/soils_v30.in : Transp coefficients for trees were normalized, tr_co_tree sum (0.2670) != 1.0.
 New coefficients are:
-NOTE:   Layer 1 : 0.0500
-NOTE:   Layer 2 : 0.0500
-NOTE:   Layer 3 : 0.1001
-NOTE:   Layer 4 : 0.1001
-NOTE:   Layer 5 : 0.1001
-NOTE:   Layer 6 : 0.2000
-NOTE:   Layer 7 : 0.2000
-NOTE:   Layer 8 : 0.2000
-WARNING: Input/sxw/Input/soils_v23.in : Transp coefficients for shrubs were normalized, tr_co_shrub sum (1.0687) != 1.0.
+NOTE:   Layer 1 : 0.1236
+NOTE:   Layer 2 : 0.1236
+NOTE:   Layer 3 : 0.2509
+NOTE:   Layer 4 : 0.2509
+NOTE:   Layer 5 : 0.2509
+WARNING: Input/sxw/Input/soils_v30.in : Transp coefficients for shrubs were normalized, tr_co_shrub sum (0.6890) != 1.0.
 New coefficients are:
-NOTE:   Layer 1 : 0.1250
-NOTE:   Layer 2 : 0.0876
-NOTE:   Layer 3 : 0.1649
-NOTE:   Layer 4 : 0.1634
-NOTE:   Layer 5 : 0.1027
-NOTE:   Layer 6 : 0.1672
-NOTE:   Layer 7 : 0.0946
-NOTE:   Layer 8 : 0.0946
-WARNING: Input/sxw/Input/soils_v23.in : Transp coefficients for grasses were normalized, tr_co_grass sum (0.6666) != 1.0.
+NOTE:   Layer 1 : 0.1945
+NOTE:   Layer 2 : 0.1364
+NOTE:   Layer 3 : 0.2554
+NOTE:   Layer 4 : 0.2540
+NOTE:   Layer 5 : 0.1597
+WARNING: Input/sxw/Input/soils_v30.in : Transp coefficients for grasses were normalized, tr_co_grass sum (0.3330) != 1.0.
 New coefficients are:
-NOTE:   Layer 1 : 0.0500
-NOTE:   Layer 2 : 0.0500
-NOTE:   Layer 3 : 0.1001
-NOTE:   Layer 4 : 0.1001
-NOTE:   Layer 5 : 0.1001
-NOTE:   Layer 6 : 0.2000
-NOTE:   Layer 7 : 0.2000
-NOTE:   Layer 8 : 0.2000
+NOTE:   Layer 1 : 0.0991
+NOTE:   Layer 2 : 0.0991
+NOTE:   Layer 3 : 0.2012
+NOTE:   Layer 4 : 0.2012
+NOTE:   Layer 5 : 0.3994

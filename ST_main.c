@@ -99,7 +99,7 @@ static void check_log(void);
 
 /* a couple of debugging routines */
 void check_sizes(const char *);
-static void check_sizes_final(void );
+//static void check_sizes_final(void );
 
 Bool QuietMode;
 
@@ -129,175 +129,178 @@ Bool UseProgressBar;
 
 /******************** Begin Model Code *********************/
 /***********************************************************/
-int main( int argc, char **argv) {
-  IntS year, iter, incr;
-  Bool killedany;
+int main(int argc, char **argv) {
+	IntS year, iter, incr;
+	Bool killedany;
 
-  logged = FALSE;
-  atexit(check_log);
-  /* provides a way to inform user that something
-   * was logged.  see generic.h */
+	logged = FALSE;
+	atexit(check_log);
+	/* provides a way to inform user that something
+	 * was logged.  see generic.h */
 
+	init_args(argc, argv);
 
-  init_args(argc, argv);
+	if (UseGrid == TRUE) {
+		runGrid();
+		return 0;
+	}
 
-  if(UseGrid == TRUE) {
-  	runGrid();
-  	return 0;
-  }
+	parm_Initialize(0);
 
-  parm_Initialize( 0);
+	if (UseSoilwat)
+		SXW_Init(TRUE);
 
-  if (UseSoilwat)
-    SXW_Init(TRUE);
+	incr = (IntS) ((float) Globals.runModelIterations / 10);
+	if (incr == 0)
+		incr = 1;
 
-  incr = (IntS) ((float)Globals.runModelIterations/10);
-  if (incr ==0) incr = 1;
+	/* --- Begin a new iteration ------ */
+	for (iter = 1; iter <= Globals.runModelIterations; iter++) {
 
-  /* --- Begin a new iteration ------ */
-  for (iter = 1; iter <= Globals.runModelIterations; iter++) {
+		if (progfp == stderr) {
+			if (iter % incr == 0)
+				fprintf(progfp, ".");
+		} else {
+			fprintf(progfp, "%d\n", iter);
+		}
 
-    if (progfp == stderr) {
-      if (iter % incr == 0)  fprintf(progfp, ".");
-    } else {
-      fprintf(progfp, "%d\n", iter);
-    }
+		if (BmassFlags.yearly || MortFlags.yearly)
+			parm_Initialize(iter);
 
-      if (BmassFlags.yearly || MortFlags.yearly)
-        parm_Initialize( iter);
+		Plot_Initialize();
+		Globals.currIter = iter;
 
-      Plot_Initialize();
-      Globals.currIter = iter;
+		/*Debug_AddByIter( iter); */
 
-   /*Debug_AddByIter( iter); */
+		/* ------  Begin running the model ------ */
+		for (year = 1; year <= Globals.runModelYears; year++) {
 
-      /* ------  Begin running the model ------ */
-      for( year=1; year <= Globals.runModelYears; year++) {
+			/*Debug_AddByYear(year);*/
 
-        /*Debug_AddByYear(year);*/
+			/* printf("Iter=%d, Year=%d\n", iter, year);  */
+			Globals.currYear = year;
 
-/* printf("Iter=%d, Year=%d\n", iter, year);  */
-          Globals.currYear = year;
+			rgroup_Establish(); /* excludes annuals */
+			chkmem_f;
 
-          rgroup_Establish();  /* excludes annuals */
-          chkmem_f;
+			Env_Generate();
 
-          Env_Generate();
+			rgroup_PartResources();
+			chkmem_f;
 
-          rgroup_PartResources();
-          chkmem_f;
-
-          rgroup_Grow();
+			rgroup_Grow();
 
 #ifdef STEPWAT
-         if (!isnull(SXW.debugfile) ) SXW_PrintDebug();
+			if (!isnull(SXW.debugfile) ) SXW_PrintDebug();
 #endif
 
-          mort_Main( &killedany);
-          chkmem_f;
+			mort_Main(&killedany);
+			chkmem_f;
 
-          rgroup_IncrAges();
+			rgroup_IncrAges();
 
-          stat_Collect( year);
+			stat_Collect(year);
 
-          if (BmassFlags.yearly)   output_Bmass_Yearly( year);
+			if (BmassFlags.yearly)
+				output_Bmass_Yearly(year);
 
-          chkmem_t;
-          mort_EndOfYear();
-          chkmem_t;
-          
-      } /* end model run for this year*/
+			chkmem_t;
+			mort_EndOfYear();
+			chkmem_t;
 
-      if (BmassFlags.yearly)
-        CloseFile(&Globals.bmass.fp_year);
-      if (MortFlags.summary) {
-        stat_Collect_GMort ();
-        stat_Collect_SMort ();
-      }
+		} /* end model run for this year*/
 
-      if (MortFlags.yearly)
-        output_Mort_Yearly();
+		if (BmassFlags.yearly)
+			CloseFile(&Globals.bmass.fp_year);
+		if (MortFlags.summary) {
+			stat_Collect_GMort();
+			stat_Collect_SMort();
+		}
 
-  } /* end model run for this iteration*/
+		if (MortFlags.yearly)
+			output_Mort_Yearly();
 
- /*------------------------------------------------------*/
-  if (MortFlags.summary)
-    stat_Output_AllMorts( );
-  if (BmassFlags.summary)
-    stat_Output_AllBmass();
+	} /* end model run for this iteration*/
 
-  fprintf(progfp,"\n");
-  return 0;
+	/*------------------------------------------------------*/
+	if (MortFlags.summary)
+		stat_Output_AllMorts();
+	if (BmassFlags.summary)
+		stat_Output_AllBmass();
+
+	fprintf(progfp, "\n");
+	return 0;
 }
 /* END PROGRAM */
 
 
 
 /**************************************************************/
-void Plot_Initialize( void) {
-  GrpIndex rg;
-  SppIndex sp;
+void Plot_Initialize(void) {
+	GrpIndex rg;
+	SppIndex sp;
 
-  /* Clear remaining individuals and
-     resource counters */
-  ForEachSpecies(sp) {
+	/* Clear remaining individuals and
+	 resource counters */
+	ForEachSpecies(sp)
+	{
 
-    if (! Species[sp]->use_me) continue;
+		if (!Species[sp]->use_me)
+			continue;
 
-  /* reset extirpated RGroups' species, if any */
-    if (RGroup[Species[sp]->res_grp]->extirpated) {
-        Species[sp]->seedling_estab_prob =
-          Species[sp]->seedling_estab_prob_old;
+		/* reset extirpated RGroups' species, if any */
+		if (RGroup[Species[sp]->res_grp]->extirpated) {
+			Species[sp]->seedling_estab_prob =
+					Species[sp]->seedling_estab_prob_old;
 
-    }
+		}
 
-    /* clear estab and kills information */
-    if ( !isnull(Species[sp]->kills) )
-      Mem_Set(Species[sp]->kills,0,
-         sizeof(IntUS) * (SppMaxAge(sp)));
+		/* clear estab and kills information */
+		if (!isnull(Species[sp]->kills))
+			Mem_Set(Species[sp]->kills, 0, sizeof(IntUS) * (SppMaxAge(sp)));
 
-    /* Kill all individuals of each species.
-       This should zero everything necessary (inc. estab&kilz) */
-    Species_Kill( sp);
+		/* Kill all individuals of each species.
+		 This should zero everything necessary (inc. estab&kilz) */
+		Species_Kill(sp);
 
-    /* programmer alert: INVESTIGATE WHY THIS OCCURS */
-    if ( !ZRO(Species[sp]->relsize) ) {
-      LogError(logfp, LOGNOTE, "%s relsize (%f) forced "
-                      "in Plot_Initialize",
-                      Species[sp]->name,
-                      Species[sp]->relsize);
-      Species[sp]->relsize = 0.0;
-    }
-    if (Species[sp]->est_count) {
-      LogError(logfp, LOGNOTE, "%s est_count (%d) forced "
-                      "in Plot_Initialize",
-                      Species[sp]->name,
-                      Species[sp]->est_count);
-      Species[sp]->est_count = 0;
-    }
-  }
+		/* programmer alert: INVESTIGATE WHY THIS OCCURS */
+		if (!ZRO(Species[sp]->relsize)) {
+			LogError(logfp, LOGNOTE, "%s relsize (%f) forced "
+					"in Plot_Initialize", Species[sp]->name,
+					Species[sp]->relsize);
+			Species[sp]->relsize = 0.0;
+		}
+		if (Species[sp]->est_count) {
+			LogError(logfp, LOGNOTE, "%s est_count (%d) forced "
+					"in Plot_Initialize", Species[sp]->name,
+					Species[sp]->est_count);
+			Species[sp]->est_count = 0;
+		}
+	}
 
-  ForEachGroup(rg) {
+	ForEachGroup(rg)
+	{
 
-    if (! RGroup[rg]->use_me) continue;
+		if (!RGroup[rg]->use_me)
+			continue;
 
-    /* Clearing kills-accounting for survival data */
-    if ( !isnull(RGroup[rg]->kills) )
-      Mem_Set(RGroup[rg]->kills, 0, sizeof(IntUS)*GrpMaxAge(rg) );
+		/* Clearing kills-accounting for survival data */
+		if (!isnull(RGroup[rg]->kills))
+			Mem_Set(RGroup[rg]->kills, 0, sizeof(IntUS) * GrpMaxAge(rg));
 
-    /* THIS NEVER SEEMS TO OCCUR */
-    if (RGroup[rg]->est_count) {
-      LogError(logfp, LOGNOTE, "%s est_count (%d) forced "
-                      "in Plot_Initialize",
-                      RGroup[rg]->name,
-                      RGroup[rg]->est_count);
-      RGroup[rg]->est_count = 0;
-    }
-    RGroup[rg]->yrs_neg_pr = 0;
-    RGroup[rg]->extirpated = FALSE;
-  }
+		/* THIS NEVER SEEMS TO OCCUR */
+		if (RGroup[rg]->est_count) {
+			LogError(logfp, LOGNOTE, "%s est_count (%d) forced "
+					"in Plot_Initialize", RGroup[rg]->name,
+					RGroup[rg]->est_count);
+			RGroup[rg]->est_count = 0;
+		}
+		RGroup[rg]->yrs_neg_pr = 0;
+		RGroup[rg]->extirpated = FALSE;
+	}
 
-  if (UseSoilwat) SXW_InitPlot();
+	if (UseSoilwat)
+		SXW_InitPlot();
 }
 
 
@@ -477,8 +480,8 @@ void check_sizes(const char *chkpt) {
 }
 
 
-static void check_sizes_final(void) {
-/* =================================================== */
+/*static void check_sizes_final(void) {
+//===================================================
 
   GrpIndex rg;
   SppIndex sp;
@@ -499,7 +502,7 @@ static void check_sizes_final(void) {
     }
   }
 
-}
+}*/
 
 /*===============================================================*/
 #ifdef DEBUG_MEM

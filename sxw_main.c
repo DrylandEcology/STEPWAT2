@@ -53,7 +53,7 @@ SucculentType  Succulent;
 EnvType        Env;
 PlotType       Plot;
 ModelType      Globals;
-FilesType      Files;
+//FilesType      Files;
 BmassFlagsType BmassFlags;
 MortFlagsType  MortFlags;
 
@@ -67,8 +67,5 @@ void main( int argc, char **argv) {
   Parms_Initialize( 0);
 
   SXW_Init();
-
-
-
 
 }

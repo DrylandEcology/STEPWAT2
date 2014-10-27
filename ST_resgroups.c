@@ -892,22 +892,26 @@ void rgroup_DropSpecies( SppIndex sp) {
 
 /*------------------------------------------------------*/
 
-  IntS i, j, x;
-  GrpIndex rg;
-  Bool f = FALSE;
+	IntS i, j;
+	GrpIndex rg;
+	Bool f = FALSE;
 
-  rg = Species[sp]->res_grp;
-  ForEachEstSpp( x, rg, i) {
-    if ( RGroup[rg]->est_spp[i] == sp) {f = TRUE; break;}
-  }
+	rg = Species[sp]->res_grp;
+	ForEachEstSpp2(rg, i)
+	{
+		if (RGroup[rg]->est_spp[i] == sp) {
+			f = TRUE;
+			break;
+		}
+	}
 
-  /* close up the array around the dead spp */
-  if (f) {  /* note the < symbol not <= */
-    for( j=i; j< RGroup[rg]->est_count; j++) {
-      RGroup[rg]->est_spp[j] = RGroup[rg]->est_spp[j+1];
-    }
-    RGroup[rg]->est_count--;
-  }
+	/* close up the array around the dead spp */
+	if (f) { /* note the < symbol not <= */
+		for (j = i; j < RGroup[rg]->est_count; j++) {
+			RGroup[rg]->est_spp[j] = RGroup[rg]->est_spp[j + 1];
+		}
+		RGroup[rg]->est_count--;
+	}
 }
 
 /***********************************************************/
@@ -922,15 +926,18 @@ void rgroup_AddSpecies( GrpIndex rg, SppIndex sp) {
 /* Chris Bennett @ LTER-CSU 6/15/2000            */
 
 /*------------------------------------------------------*/
-  Int i, x;
-  Bool  f = FALSE;
+	Int i;
+	Bool f = FALSE;
 
-    ForEachEstSpp( x, rg, i) {
-      if ( RGroup[rg]->est_spp[i] == sp) {f = TRUE; break;}
-    }
-    if (!f)
-      RGroup[rg]->est_spp[RGroup[rg]->est_count++] = sp;
-
+	ForEachEstSpp2( rg, i)
+	{
+		if (RGroup[rg]->est_spp[i] == sp) {
+			f = TRUE;
+			break;
+		}
+	}
+	if (!f)
+		RGroup[rg]->est_spp[RGroup[rg]->est_count++] = sp;
 }
 
 
@@ -976,12 +983,10 @@ void RGroup_Kill( GrpIndex rg) {
 /* Chris Bennett @ LTER-CSU 11/27/2000            */
 
 /*------------------------------------------------------*/
+	Int i;
 
-  Int i, x;
-
-  ForEachEstSpp( x, rg, i)
-    Species_Kill( RGroup[rg]->est_spp[i] );
-
+	ForEachEstSpp2( rg, i)
+		Species_Kill(RGroup[rg]->est_spp[i]);
 }
 
 /**********************************************************/

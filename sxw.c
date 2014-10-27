@@ -117,7 +117,7 @@ RealF _bvt;  /* ratio of biomass/m2 / transp/m2 */
 // static char inbuf[FILENAME_MAX];   /* reusable input buffer */
 static char _swOutDefName[FILENAME_MAX];
 static char *MyFileName;
-static char **_files[SXW_NFILES];
+static char **_sxwfiles[SXW_NFILES];
 static char _debugout[256];
 static TimeInt _debugyrs[100], _debugyrs_cnt;
 
@@ -126,7 +126,6 @@ static TimeInt _debugyrs[100], _debugyrs_cnt;
 /***********************************************************/
 
 static void _read_files( void );
-static void _read_times(void);
 static void _read_roots_max(void);
 static void _read_phen(void);
 static void _read_prod(void);
@@ -168,17 +167,16 @@ void SXW_Init( Bool init_SW ) {
    /* end code 2/14/03 */
 #endif
 
-   _files[0] = &SXW.f_times;
-   _files[1] = &SXW.f_roots;
-   _files[2] = &SXW.f_phen;
-   _files[3] = &SXW.f_bvt;
-   _files[4] = &SXW.f_prod;
-   _files[5] = &SXW.f_watin;
+   _sxwfiles[0] = &SXW.f_roots;
+   _sxwfiles[1] = &SXW.f_phen;
+   _sxwfiles[2] = &SXW.f_bvt;
+   _sxwfiles[3] = &SXW.f_prod;
+   _sxwfiles[4] = &SXW.f_watin;
 
   SXW.NGrps = Globals.grpCount;
 
   _read_files();
-  _read_times();
+  SXW.NPds = MAX_MONTHS;
   _read_watin();
 
   if (*SXW.debugfile) _read_debugfile();
@@ -191,6 +189,8 @@ void SXW_Init( Bool init_SW ) {
   	SXW.NTrLyrs = SW_Site.n_transp_lyrs_shrub;
   if(SW_Site.n_transp_lyrs_grass > SXW.NTrLyrs)
   	SXW.NTrLyrs = SW_Site.n_transp_lyrs_grass;
+  if(SW_Site.n_transp_lyrs_forb > SXW.NTrLyrs)
+	  SXW.NTrLyrs = SW_Site.n_transp_lyrs_forb;
   	
   if (*SXW.debugfile) SXW.NSoLyrs = SW_Site.n_layers;
 
@@ -201,12 +201,7 @@ void SXW_Init( Bool init_SW ) {
   _read_prod();
   _read_bvt();    /* 12/29/03 */
 
-
-/*  _recover_names(); */
-
   _sxw_root_phen();
-
-
 
 #ifdef TESTING
   _sxw_test();
@@ -259,23 +254,23 @@ void SXW_Run_SOILWAT (void) {
  */
 
 #ifndef SXW_BYMAXSIZE
-  GrpIndex g;
-  RealF sizes[MAX_RGROUPS];
-  /* compute production values for transp based on current plant sizes */
-  ForEachGroup(g) sizes[g] = RGroup[g]->relsize;
-  _sxw_update_root_tables(sizes);
-  _sxw_sw_setup(sizes);
+	GrpIndex g;
+	RealF sizes[MAX_RGROUPS];
+	/* compute production values for transp based on current plant sizes */
+	ForEachGroup(g)
+		sizes[g] = RGroup[g]->relsize;
+	//_sxw_update_root_tables(sizes);// Issue #5
+	_sxw_sw_setup(sizes);
 #endif
 
-  SXW.aet = 0.;  /* used to be in sw_setup() but it needs clearing each run */
-  _sxw_sw_run();
+	SXW.aet = 0.; /* used to be in sw_setup() but it needs clearing each run */
+	_sxw_sw_run();
 
-  /* now compute resource availability for the given plant sizes */
-  _sxw_update_resource();
+	/* now compute resource availability for the given plant sizes */
+	_sxw_update_resource();
 
-  /* and set environmental variables */
-  _sxw_set_environs();
-
+	/* and set environmental variables */
+	_sxw_set_environs();
 
 }
 
@@ -289,12 +284,14 @@ RealF SXW_GetPR( GrpIndex rg) {
 
 void SXW_PrintDebug(void) {
 /*======================================================*/
-  TimeInt i;
+	TimeInt i;
 
-  for(i=0; i<_debugyrs_cnt; i++) {
-    if (SW_Model.year == _debugyrs[i]) {_print_debuginfo(); break;}
-  }
-
+	for (i = 0; i < _debugyrs_cnt; i++) {
+		if (SW_Model.year == _debugyrs[i]) {
+			_print_debuginfo();
+			break;
+		}
+	}
 }
 
 
@@ -310,7 +307,7 @@ static void  _read_files( void ) {
 
   for(i=0; i < nfiles; i++) {
     if (!GetALine(fin, inbuf)) break;
-    *_files[i] = Str_Dup(Str_TrimLeftQ(inbuf));
+    *_sxwfiles[i] = Str_Dup(Str_TrimLeftQ(inbuf));
   }
  
   if (i < nfiles) {
@@ -323,67 +320,44 @@ static void  _read_files( void ) {
 
 }
 
-
-static void  _read_times(void) {
-/*======================================================*/
-/* transpiration and phenology periods are the same.    */
-
-  FILE *fp;
-
-  MyFileName = SXW.f_times;
-  fp = OpenFile(MyFileName,"r");
-
-  if (!GetALine(fp, inbuf)) {
-    LogError( logfp, LOGFATAL, "%s: No data found!", MyFileName);
-  }
-
-  if (strcmp(inbuf, "week") == 0)
-    SXW.NPds = MAX_WEEKS;
-  else if (strcmp(inbuf,"month") == 0)
-    SXW.NPds = MAX_MONTHS;
-  else if (strcmp(inbuf,"day") == 0)
-    SXW.NPds = MAX_DAYS;
-  else {
-    LogError(logfp, LOGFATAL, "%s: Invalid period", MyFileName);
-  }
-
-  CloseFile(&fp);
-
-}
-
-
 static void  _read_roots_max(void) {
 /*======================================================*/
-  GrpIndex g;
-  int cnt=0, lyr;
-  char *p;
-  FILE *fp;
+	GrpIndex g;
+	int cnt = 0, lyr;
+	char *p;
+	char name[MAX_GROUPNAMELEN];
+	FILE *fp;
 
-  MyFileName = SXW.f_roots;
-  fp = OpenFile(MyFileName,"r");
+	MyFileName = SXW.f_roots;
+	fp = OpenFile(MyFileName, "r");
 
-  while( GetALine(fp, inbuf) ) {
-    p = strtok(inbuf," \t"); /* g'teed to work via GetALine() */
+	while (GetALine(fp, inbuf)) {
+		p = strtok(inbuf, " \t"); /* g'teed to work via GetALine() */
 
-    if ( (g=RGroup_Name2Index(p)) <0 ) {
-      LogError(logfp, LOGFATAL, "%s: Invalid group name (%s) found.",
-              MyFileName, p);
-    }
-    cnt++;
-    lyr = 0;
-    while ( (p=strtok(NULL," \t")) ) {
-      _roots_max[Ilg(lyr,g)] = atof(p);
-      lyr++;
-    }
+		if ((g = RGroup_Name2Index(p)) < 0) {
+			LogError(logfp, LOGFATAL, "%s: Invalid group name (%s) found.",
+					MyFileName, p);
+		}
+		strcpy(name, p);
+		cnt++;
+		lyr = 0;
+		while ((p = strtok(NULL, " \t"))) {
+			_roots_max[Ilg(lyr, g)] = atof(p);
+			lyr++;
+		}
+		if (lyr != SXW.NTrLyrs) {
+			LogError(logfp, LOGFATAL,
+					"%s: Group : %s : Missing layer values. Match up with soils.in file. Include zeros if necessary. Layers needed %u. Layers defined %u",
+					MyFileName, name, SXW.NTrLyrs, lyr);
+		}
+	}
 
-  }
+	if (cnt < Globals.grpCount) {
+		LogError(logfp, LOGFATAL, "%s: Not enough valid groups found.",
+				MyFileName);
+	}
 
-  if (cnt < Globals.grpCount) {
-    LogError(logfp, LOGFATAL,
-             "%s: Not enough valid groups found.", MyFileName);
-  }
-
-  CloseFile(&fp);
+	CloseFile(&fp);
 }
 
 static void _read_phen(void) {
@@ -532,26 +506,30 @@ static void _write_sw_outin(void) {
  * output accumulation routines.  Refer to the Output.c
  * module of SOILWAT for more.
  */
+	FILE *fp;
+	char pd[3];
 
+	switch (SXW.NPds) {
+	case MAX_WEEKS:
+		strcpy(pd, "WK");
+		break;
+	case MAX_MONTHS:
+		strcpy(pd, "MO");
+		break;
+	case MAX_DAYS:
+		strcpy(pd, "DY");
+		break;
+	}
+	fp = OpenFile(_swOutDefName, "w");
+	fprintf(fp, "TRANSP  SUM  %s  1  end  transp\n", pd);
+	fprintf(fp, "PRECIP  SUM  YR  1  end  precip\n");
+	fprintf(fp, "TEMP    AVG  YR  1  end  temp\n");
+	if (*SXW.debugfile) {
+		fprintf(fp, "AET     SUM  YR  1  end  aet\n");
+		fprintf(fp, "SWC     FIN  MO  1  end  swc\n");
+	}
 
-  FILE *fp;
-  char pd[3];
-
-  switch(SXW.NPds) {
-    case MAX_WEEKS:  strcpy(pd, "WK"); break;
-    case MAX_MONTHS: strcpy(pd, "MO"); break;
-    case MAX_DAYS:   strcpy(pd, "DY"); break;
-  }
-  fp = OpenFile(_swOutDefName,"w");
-  fprintf(fp,"TRANSP  SUM  %s  1  end  transp\n", pd);
-  fprintf(fp,"PRECIP  SUM  YR  1  end  precip\n");
-  fprintf(fp,"TEMP    AVG  YR  1  end  temp\n");
-  if (*SXW.debugfile) {
-    fprintf(fp,"AET     SUM  YR  1  end  aet\n");
-    fprintf(fp,"SWC     FIN  MO  1  end  swc\n");
-  }
-
-  CloseFile(&fp);
+	CloseFile(&fp);
 }
 
 static void _make_arrays(void) {
@@ -629,10 +607,10 @@ static void _make_swc_array(void) {
 
 static void _recover_names(void) {
 /*======================================================*/
-  int i, last = SXW_NFILES-1;  /* recall we skipped the first file */ // (DLM - 6-12-2013) ?? the first file isn't skipped at all and is Str_Duped...
-  //for (i=0; i < last; i++) {
-  for( i=0; i < last+1; i++) { 
-	  Mem_Free(*_files[i]);
+  int i;
+
+  for( i=0; i < SXW_NFILES; i++) {
+	  Mem_Free(*_sxwfiles[i]);
   }
 
 }
@@ -875,7 +853,7 @@ void SXW_SetMemoryRefs( void) {
   int i, last = SXW_NFILES-1;  /* recall we skipped the first file */
 
    for (i=0; i < last; i++) {
-     NoteMemoryRef(*_files[i]);
+     NoteMemoryRef(*_sxwfiles[i]);
    }
    NoteMemoryRef(_roots_max);
    NoteMemoryRef(_roots_rel);
@@ -904,6 +882,8 @@ int getNTranspLayers(int veg_prod_type) {
 		return SW_Site.n_transp_lyrs_shrub;
 	else if(veg_prod_type == 3)
 		return SW_Site.n_transp_lyrs_grass;
+	else if(veg_prod_type == 4)
+		return SW_Site.n_transp_lyrs_forb;
 	return -1;
 }
 

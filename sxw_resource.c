@@ -101,19 +101,22 @@ void _sxw_root_phen(void) {
  * phenology tables are read
  */
 
-  LyrIndex y;
-  GrpIndex g;
-  TimeInt p;
+	LyrIndex y;
+	GrpIndex g;
+	TimeInt p;
 
-  ForEachGroup(g) {
-  	int nLyrs = getNTranspLayers(RGroup[g]->veg_prod_type);
-  	for( y=0; y<nLyrs; y++) {
-    //ForEachTranspLayer(y) {
-      ForEachTrPeriod(p) {
-        _rootsXphen[Iglp(g,y,p)] = _roots_max[Ilg(y,g)] * _phen[Igp(g,p)];
-      }
-    }
-  }
+	for (y = 0; y < (Globals.grpCount * SXW.NPds * SXW.NTrLyrs); y++)
+		_rootsXphen[y] = 0;
+
+	ForEachGroup(g)
+	{
+		int nLyrs = getNTranspLayers(RGroup[g]->veg_prod_type);
+		for (y = 0; y < nLyrs; y++) {
+			ForEachTrPeriod(p) {
+				_rootsXphen[Iglp(g, y, p)] = _roots_max[Ilg(y, g)] * _phen[Igp(g, p)];
+			}
+		}
+	}
 }
 
 void _sxw_update_resource(void) {
@@ -134,26 +137,26 @@ void _sxw_update_resource(void) {
       }
     }
   #else
-    ForEachGroup(g) {
-      sizes[g] = 0.;
-      if ( ! RGroup[g]->regen_ok) continue;
-      if (RGroup[g]->max_age == 1) {
-        ForEachGroupSpp(sp,g,i)
-          sizes[g] += Species[sp]->mature_biomass * .75;
-      } else {
-        sizes[g] = RGroup_GetBiomass(g);
-      }
-    }
+	ForEachGroup(g)
+	{
+		sizes[g] = 0.;
+		if (!RGroup[g]->regen_ok)
+			continue;
+		if (RGroup[g]->max_age == 1) {
+			ForEachGroupSpp(sp,g,i)
+				sizes[g] += Species[sp]->mature_biomass * .75;
+		} else {
+			sizes[g] = RGroup_GetBiomass(g);
+		}
+	}
   #endif
 
-  _sxw_update_root_tables(sizes);
+	_sxw_update_root_tables(sizes);
+	_transp_contribution_by_group(SXW.transp, _resource_cur);
 
-  _transp_contribution_by_group( SXW.transp,
-                                 _resource_cur);
-  ForEachGroup(g)
-    _resource_pr[g] = ZRO(sizes[g])
-                    ? 0.0
-                    : _resource_cur[g] * _bvt / sizes[g];
+	ForEachGroup(g)
+		_resource_pr[g] =
+				ZRO(sizes[g]) ? 0.0 : _resource_cur[g] * _bvt / sizes[g];
 
 
 /* _print_debuginfo(); */
@@ -167,44 +170,45 @@ void _sxw_update_root_tables( RealF sizes[] ) {
  *
  */
 
-  GrpIndex g;
-  LyrIndex l;
-  TimeInt p;
-  RealD x;
+	GrpIndex g;
+	LyrIndex l;
+	TimeInt p;
+	RealD x;
 
-  /* set some things to zero */
-  Mem_Set( _roots_active_sum, 0,
-           SXW.NPds * SXW.NTrLyrs * sizeof(RealD));
+	/* set some things to zero */
+	Mem_Set(_roots_active_sum, 0, SXW.NPds * SXW.NTrLyrs * sizeof(RealD));
 
-  ForEachGroup(g) {
-  	int nLyrs = getNTranspLayers(RGroup[g]->veg_prod_type);
-  	for( l=0; l<nLyrs; l++) {
-    //ForEachTranspLayer(l) {
-      ForEachTrPeriod(p) {
-        x = _rootsXphen[Iglp(g,l,p)] * sizes[g];
-        _roots_active[Iglp(g,l,p)] = x;
-        _roots_active_sum[Ilp(l,p)] += x;
-      }
-    }
-  }
+	ForEachGroup(g)
+	{
+		int nLyrs = getNTranspLayers(RGroup[g]->veg_prod_type);
+		for (l = 0; l < nLyrs; l++) {
+			ForEachTrPeriod(p)
+			{
+				x = _rootsXphen[Iglp(g, l, p)] * sizes[g];
+				_roots_active[Iglp(g, l, p)] = x;
+				_roots_active_sum[Ilp(l, p)] += x;
+			}
+		}
+	}
 
-  /* normalize the previous roots X phen table */
-  /* the relative "activity" of a group's roots in a
-   * given layer in a given month is obtained by dividing
-   * the cross product by the totals from above */
-  ForEachGroup(g) {
-  	int nLyrs = getNTranspLayers(RGroup[g]->veg_prod_type);
-  	for( l=0; l<nLyrs; l++) {
-    //ForEachTranspLayer(l) {
-      ForEachTrPeriod(p) {
-        _roots_active_rel[Iglp(g,l,p)] =
-                       ZRO(_roots_active_sum[Ilp(l,p)])
-                       ? 0.
-                       : _roots_active[Iglp(g,l,p)]
-                         / _roots_active_sum[Ilp(l,p)];
-      }
-    }
-  }
+	/* normalize the previous roots X phen table */
+	/* the relative "activity" of a group's roots in a
+	 * given layer in a given month is obtained by dividing
+	 * the cross product by the totals from above */
+	ForEachGroup(g)
+	{
+		int nLyrs = getNTranspLayers(RGroup[g]->veg_prod_type);
+		for (l = 0; l < nLyrs; l++) {
+			ForEachTrPeriod(p)
+			{
+				_roots_active_rel[Iglp(g, l, p)] =
+				ZRO(_roots_active_sum[Ilp(l,p)]) ?
+						0. :
+						_roots_active[Iglp(g, l, p)]
+								/ _roots_active_sum[Ilp(l, p)];
+			}
+		}
+	}
 
 }
 
@@ -232,18 +236,17 @@ static void _transp_contribution_by_group(
  TimeInt p;
  LyrIndex l;
 
-  ForEachGroup(g) {
-    use_by_group[g] = 0.;  /* clear */
-    ForEachTrPeriod(p) {
-    	int nLyrs = getNTranspLayers(RGroup[g]->veg_prod_type);
-  		for( l=0; l<nLyrs; l++) {
-      //ForEachTranspLayer(l) {
-        use_by_group[g] += (RealF)
-          (_roots_active_rel[Iglp(g,l,p)]
-          * transp[Ilp(l,p)]);
-      }
-    }
-  }
+	ForEachGroup(g)
+	{
+		use_by_group[g] = 0.; /* clear */
+		ForEachTrPeriod(p)
+		{
+			int nLyrs = getNTranspLayers(RGroup[g]->veg_prod_type);
+			for (l = 0; l < nLyrs; l++) {
+				use_by_group[g] += (RealF) (_roots_active_rel[Iglp(g, l, p)] * transp[Ilp(l, p)]);
+			}
+		}
+	}
 
 }
 

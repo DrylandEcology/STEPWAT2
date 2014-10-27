@@ -39,7 +39,6 @@ struct stepwat_st {
 
   /* These are file names */
   char  *f_files,  /* list of input files for sxw */
-        *f_times,  /* time-related parms */
         *f_roots,  /* root distributions */
         *f_phen,   /* phenology */
         *f_bvt,    /* biomass vs transpiration 12/29/03 */
@@ -55,7 +54,7 @@ struct stepwat_st {
 
 };
 
-#define SXW_NFILES 6
+#define SXW_NFILES 5
 
 
 
