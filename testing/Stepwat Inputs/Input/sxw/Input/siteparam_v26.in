@@ -69,7 +69,7 @@
 # Grasses	Shrubs		Trees		Forbs
 #        Layers are defined in soils.in.
 # ndx    layer
-	1	2
-	2	3
+	1	3
+	2	4
 	3	5
 

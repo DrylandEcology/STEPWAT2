@@ -2,7 +2,7 @@
 # Location: P1
 
 1979	# starting year (but see weather and swc inputs)
-1999	# ending year
+2042	# ending year
 1     # first day of first year
 end   # ending day of last year
 N     # hemisphere (N, S)
