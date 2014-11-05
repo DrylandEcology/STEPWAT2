@@ -26,7 +26,7 @@ libDirs	=	-Lsw_src
 incDirs	=	-Isw_src
 
 LIBS	=	
-C_FLAGS	=	-g -m32 -O2 -Wstrict-prototypes -Wmissing-prototypes -Wimplicit -Wunused -Wformat -Wredundant-decls -Wcast-align\
+C_FLAGS	=	-g -m32 -O0 -Wstrict-prototypes -Wmissing-prototypes -Wimplicit -Wunused -Wformat -Wredundant-decls -Wcast-align\
 	-DSTEPWAT
 
 SRCS	=\

@@ -217,8 +217,7 @@ static void _transp_contribution_by_group(
                RealD *transp,
                RealF use_by_group[]) {
 /*======================================================*/
-/* transp is usually SXW.transp but the first time is
- *        _transp_base,
+/*
  * use_by_group is the vector to be used in the resource
  *        availability calculation, ie, the output.
 

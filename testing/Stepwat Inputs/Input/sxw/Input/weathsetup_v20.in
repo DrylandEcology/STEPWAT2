@@ -17,7 +17,7 @@
 # Wind = multiplicative for mean monthly wind speed; max(0, scale * wind speed)
 # rH = additive for mean monthly relative humidity [%]; min(100, max(0, scale + rel. Humidity))
 # Transmissivity = multiplicative for mean monthly relative transmissivity; min(1, max(0, scale * transmissivity))
-#Mon	  PPT	 	MaxT		 MinT		SkyCover	 Wind	   	rH				Transmissivity
+#Mon	  PPT	 MaxT	 MinT	SkyCover	 Wind	   rH	Transmissivity
    1	1.000000	0.000000	0.000000	0.000000	1.000000	0.000000	      1.000000
    2	1.000000	0.000000	0.000000	0.000000	1.000000	0.000000	      1.000000
    3	1.000000	0.000000	0.000000	0.000000	1.000000	0.000000	      1.000000

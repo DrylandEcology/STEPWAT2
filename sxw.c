@@ -63,6 +63,7 @@
 #include "sxw_module.h"
 #include "SW_Control.h"
 #include "SW_Model.h"
+#include "sw_src/SW_VegProd.h"
 #include "SW_Site.h"
 #include "SW_SoilWater.h"
 #include "SW_Files.h"
@@ -73,6 +74,7 @@ SXW_t SXW;
 
 extern SW_SITE SW_Site;
 extern SW_MODEL SW_Model;
+extern SW_VEGPROD SW_VegProd;
 extern SW_SOILWAT SW_Soilwat;
 
 
@@ -140,6 +142,8 @@ static void _recover_names(void);
 static void _read_debugfile(void);
 void _print_debuginfo(void);
 static void _make_swc_array(void);
+static void SXW_SW_Setup_Echo(void);
+static void SXW_SW_Output_Echo(void);
 
 //these last four functions are to be used in ST_grid.c
 void load_sxw_memory( RealD * grid_roots_max, RealD* grid_rootsXphen, RealD* grid_roots_active, RealD* grid_roots_active_rel, RealD* grid_roots_active_sum, RealD* grid_phen );
@@ -218,23 +222,22 @@ void SXW_InitPlot (void) {
  * so the sxw tables will be reset.
  */
 #ifdef SXW_BYMAXSIZE
-  GrpIndex g;
-  RealF sizes[MAX_RGROUPS];
+	GrpIndex g;
+	RealF sizes[MAX_RGROUPS];
 #endif
 
- _sxw_sw_clear_transp();
- _sxw_update_resource();
-
+	_sxw_sw_clear_transp();
+	_sxw_update_resource();
 
 #ifdef SXW_BYMAXSIZE
-/* this stuff was taken from Run_Soilwat() but we're now trying
- * to minimize the dynamic effect, so resources are always based
- * on full-sized plants.  So we only need to do this at the
- * beginning of each steppe-model iteration.
- */
-  ForEachGroup(g) sizes[g] = 1.0;
-  _sxw_update_root_tables(sizes);
-  _sxw_sw_setup(sizes);
+	/* this stuff was taken from Run_Soilwat() but we're now trying
+	 * to minimize the dynamic effect, so resources are always based
+	 * on full-sized plants.  So we only need to do this at the
+	 * beginning of each steppe-model iteration.
+	 */
+	ForEachGroup(g) sizes[g] = 1.0;
+	_sxw_update_root_tables(sizes);
+	_sxw_sw_setup(sizes);
 #endif
 
 
@@ -264,6 +267,9 @@ void SXW_Run_SOILWAT (void) {
 #endif
 
 	SXW.aet = 0.; /* used to be in sw_setup() but it needs clearing each run */
+
+	//SXW_SW_Setup_Echo();
+
 	_sxw_sw_run();
 
 	/* now compute resource availability for the given plant sizes */
@@ -271,6 +277,57 @@ void SXW_Run_SOILWAT (void) {
 
 	/* and set environmental variables */
 	_sxw_set_environs();
+
+}
+
+void SXW_SW_Setup_Echo(void) {
+	int i;
+	printf("Fractions Grass:%f Shrub:%f Tree:%f Forb:%f BareGround:%f\n", SW_VegProd.fractionGrass, SW_VegProd.fractionShrub, SW_VegProd.fractionTree, SW_VegProd.fractionForb, SW_VegProd.fractionBareGround);
+	printf("Monthly Production Values\n");
+	printf("Grass\n");
+	printf("Month\tLitter\tBiomass\tPLive\tLAI_conv\n");
+	for (i = 0; i < 12; i++) {
+		printf("%u\t%f\t%f\t%f\t%f\n", i + 1, SW_VegProd.grass.litter[i],
+				SW_VegProd.grass.biomass[i], SW_VegProd.grass.pct_live[i],
+				SW_VegProd.grass.lai_conv[i]);
+	}
+
+	printf("Shrub\n");
+	printf("Month\tLitter\tBiomass\tPLive\tLAI_conv\n");
+	for (i = 0; i < 12; i++) {
+		printf("%u\t%f\t%f\t%f\t%f\n", i + 1, SW_VegProd.shrub.litter[i],
+				SW_VegProd.shrub.biomass[i], SW_VegProd.shrub.pct_live[i],
+				SW_VegProd.shrub.lai_conv[i]);
+	}
+
+	printf("Tree\n");
+	printf("Month\tLitter\tBiomass\tPLive\tLAI_conv\n");
+	for (i = 0; i < 12; i++) {
+		printf("%u\t%f\t%f\t%f\t%f\n", i + 1, SW_VegProd.tree.litter[i],
+				SW_VegProd.tree.biomass[i], SW_VegProd.tree.pct_live[i],
+				SW_VegProd.tree.lai_conv[i]);
+	}
+
+	printf("Forb\n");
+	printf("Month\tLitter\tBiomass\tPLive\tLAI_conv\n");
+	for (i = 0; i < 12; i++) {
+		printf("%u\t%f\t%f\t%f\t%f\n", i + 1, SW_VegProd.forb.litter[i],
+				SW_VegProd.forb.biomass[i], SW_VegProd.forb.pct_live[i],
+				SW_VegProd.forb.lai_conv[i]);
+	}
+
+	SW_SITE *s = &SW_Site;
+	printf("Forb\tTree\tShrub\tGrass\n");
+	ForEachSoilLayer(i)
+	{
+			printf("%6.2f %6.2f %6.2f %6.2f %u %u %u %u\n",
+					s->lyr[i]->transp_coeff_forb, s->lyr[i]->transp_coeff_tree, s->lyr[i]->transp_coeff_shrub, s->lyr[i]->transp_coeff_grass, s->lyr[i]->my_transp_rgn_forb,
+					s->lyr[i]->my_transp_rgn_tree, s->lyr[i]->my_transp_rgn_shrub, s->lyr[i]->my_transp_rgn_grass);
+
+	}
+}
+
+void SXW_SW_Output_Echo() {
 
 }
 
@@ -578,7 +635,6 @@ static void _make_phen_arrays(void) {
 static void _make_transp_arrays(void) {
 /*======================================================*/
 /* SXW.transp holds year-to-year values and is populated in SOILWAT.
- * _transp_base holds the "normal" values and is read from a file.
  * both are indexed by the macro Ilp().
  */
   char *fstr = "_make_transp_array()";
@@ -865,7 +921,6 @@ void SXW_SetMemoryRefs( void) {
    NoteMemoryRef(_phen_grp_rel);
    NoteMemoryRef(_transp_grp_totals);
    NoteMemoryRef(SXW.transp);
-   NoteMemoryRef(_transp_base);
 
 
    SW_CTL_SetMemoryRefs();

@@ -127,8 +127,9 @@ static void _update_transp_coeff(RealF relsize[]) {
 		y = SW_Site.lyr[t];
 		y->transp_coeff_tree = 0.;
 		ForEachGroup(g)
-			if (getNTranspLayers(RGroup[g]->veg_prod_type == 1))
-				y->transp_coeff_tree += (RealF) _roots_max[Ilg(t, g)] * relsize[g];
+			if(RGroup[g]->veg_prod_type == 1)
+				if (getNTranspLayers(RGroup[g]->veg_prod_type))
+					y->transp_coeff_tree += (RealF) _roots_max[Ilg(t, g)] * relsize[g];
 		sum1 += y->transp_coeff_tree;
 	}
 
@@ -137,8 +138,9 @@ static void _update_transp_coeff(RealF relsize[]) {
 		y = SW_Site.lyr[t];
 		y->transp_coeff_shrub = 0.;
 		ForEachGroup(g)
-			if (getNTranspLayers(RGroup[g]->veg_prod_type == 2))
-				y->transp_coeff_shrub += (RealF) _roots_max[Ilg(t, g)] * relsize[g];
+			if(RGroup[g]->veg_prod_type == 2)
+				if (getNTranspLayers(RGroup[g]->veg_prod_type))
+					y->transp_coeff_shrub += (RealF) _roots_max[Ilg(t, g)] * relsize[g];
 		sum2 += y->transp_coeff_shrub;
 	}
 
@@ -147,8 +149,9 @@ static void _update_transp_coeff(RealF relsize[]) {
 		y = SW_Site.lyr[t];
 		y->transp_coeff_grass = 0.;
 		ForEachGroup(g)
-			if (getNTranspLayers(RGroup[g]->veg_prod_type == 3))
-				y->transp_coeff_grass += (RealF) _roots_max[Ilg(t, g)] * relsize[g];
+			if(RGroup[g]->veg_prod_type == 3)
+				if (getNTranspLayers(RGroup[g]->veg_prod_type))
+					y->transp_coeff_grass += (RealF) _roots_max[Ilg(t, g)] * relsize[g];
 		sum3 += y->transp_coeff_grass;
 	}
 
@@ -157,20 +160,21 @@ static void _update_transp_coeff(RealF relsize[]) {
 		y = SW_Site.lyr[t];
 		y->transp_coeff_forb = 0.;
 		ForEachGroup(g)
-			if (getNTranspLayers(RGroup[g]->veg_prod_type == 4))
-				y->transp_coeff_forb += (RealF) _roots_max[Ilg(t, g)] * relsize[g];
+			if(RGroup[g]->veg_prod_type == 4)
+				if (getNTranspLayers(RGroup[g]->veg_prod_type))
+					y->transp_coeff_forb += (RealF) _roots_max[Ilg(t, g)] * relsize[g];
 		sum4 += y->transp_coeff_forb;
 	}
 
-  /* normalize coefficients to 1.0 */
+  /* normalize coefficients to 1.0 If sum is 0, then the transp_coeff is also 0. */
 	ForEachTreeTranspLayer(t)
-		SW_Site.lyr[t]->transp_coeff_tree /= sum1;
+		if(!ZRO(sum1)) SW_Site.lyr[t]->transp_coeff_tree /= sum1;
 	ForEachShrubTranspLayer(t)
-		SW_Site.lyr[t]->transp_coeff_shrub /= sum2;
+		if(!ZRO(sum2)) SW_Site.lyr[t]->transp_coeff_shrub /= sum2;
 	ForEachGrassTranspLayer(t)
-		SW_Site.lyr[t]->transp_coeff_grass /= sum3;
+		if(!ZRO(sum3)) SW_Site.lyr[t]->transp_coeff_grass /= sum3;
 	ForEachForbTranspLayer(t)
-		SW_Site.lyr[t]->transp_coeff_forb /= sum4;
+		if(!ZRO(sum4)) SW_Site.lyr[t]->transp_coeff_forb /= sum4;
 
 }
 
@@ -247,13 +251,13 @@ static void _update_productivity(void) {
 			cumprop3 += props3[m];
 			cumprop4 += props4[m];
 
-			v->tree.biomass[m] = (totbmass + v->tree.pct_live[m] * cumprop1 * totbmass);
+			v->tree.biomass[m] = (v->tree.pct_live[m] * cumprop1 * totbmass);
 			v->tree.litter[m] = (v->tree.biomass[m] * _prod_conv[m][PC_Litter]);
-			v->shrub.biomass[m] = (totbmass + v->shrub.pct_live[m] * cumprop2 * totbmass);
+			v->shrub.biomass[m] = (v->shrub.pct_live[m] * cumprop2 * totbmass);
 			v->shrub.litter[m] = (v->shrub.biomass[m] * _prod_conv[m][PC_Litter]);
-			v->grass.biomass[m] = (totbmass + v->grass.pct_live[m] * cumprop3 * totbmass);
+			v->grass.biomass[m] = (v->grass.pct_live[m] * cumprop3 * totbmass);
 			v->grass.litter[m] = (v->grass.biomass[m] * _prod_conv[m][PC_Litter]);
-			v->forb.biomass[m] = (totbmass + v->forb.pct_live[m] * cumprop4 * totbmass);
+			v->forb.biomass[m] = (v->forb.pct_live[m] * cumprop4 * totbmass);
 			v->forb.litter[m] = (v->forb.biomass[m] * _prod_conv[m][PC_Litter]);
 
 			biomass1 += v->tree.biomass[m];
