@@ -263,7 +263,6 @@ void SXW_Run_SOILWAT (void) {
   RealF sizes[MAX_RGROUPS];
   /* compute production values for transp based on current plant sizes */
   ForEachGroup(g) sizes[g] = RGroup[g]->relsize;
-  _sxw_update_root_tables(sizes);
   _sxw_sw_setup(sizes);
 #endif
 
