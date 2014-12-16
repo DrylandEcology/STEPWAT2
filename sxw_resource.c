@@ -122,7 +122,9 @@ void _sxw_update_resource(void) {
  *  the purpose is to set all root table and transp values to zero. In that case,
  * regen_ok=F, so it will skip getting biomass and move to sxw_update_root_tables
  and then to _transp_contribution_by_group to set those values to zero before 
- SOILWAT runs for the first year*/
+ SOILWAT runs for the first year. Futhermore, sizes for each rgroup is set to zero
+ *  every year that the model runs,so the roots_active, roots_active_sum, transp,
+ * roots_active_rel will all be cleared each year and recalculated */
     
   RealF sizes[MAX_RGROUPS] = {0.};
   GrpIndex g;
