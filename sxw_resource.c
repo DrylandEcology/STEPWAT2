@@ -118,7 +118,12 @@ void _sxw_root_phen(void) {
 
 void _sxw_update_resource(void) {
 /*======================================================*/
-
+/*Note that the first time this function is called in the model, by SXW_InitPlot,
+ *  the purpose is to set all root table and transp values to zero. In that case,
+ * regen_ok=F, so it will skip getting biomass and move to sxw_update_root_tables
+ and then to _transp_contribution_by_group to set those values to zero before 
+ SOILWAT runs for the first year*/
+    
   RealF sizes[MAX_RGROUPS] = {0.};
   GrpIndex g;
   SppIndex sp;
