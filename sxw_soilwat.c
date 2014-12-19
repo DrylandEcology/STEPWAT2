@@ -229,11 +229,11 @@ static void _update_productivity(void) {
       cumprop2 += props2[m];
       cumprop3 += props3[m];
       
-      v->tree.biomass[m] = (totbmass + v->tree.pct_live[m] * cumprop1 * totbmass);
+      v->tree.biomass[m] = (v->tree.pct_live[m] * cumprop1 * totbmass);
       v->tree.litter[m]  = (v->tree.biomass[m] * _prod_conv[m][PC_Litter]);
-      v->shrub.biomass[m] = (totbmass + v->shrub.pct_live[m] * cumprop2 * totbmass);
+      v->shrub.biomass[m] = (v->shrub.pct_live[m] * cumprop2 * totbmass);
       v->shrub.litter[m]  = (v->shrub.biomass[m] * _prod_conv[m][PC_Litter]);
-      v->grass.biomass[m] = (totbmass + v->grass.pct_live[m] * cumprop3 * totbmass);
+      v->grass.biomass[m] = (v->grass.pct_live[m] * cumprop3 * totbmass);
       v->grass.litter[m]  = (v->grass.biomass[m] * _prod_conv[m][PC_Litter]);
       
       biomass1 += v->tree.biomass[m];
