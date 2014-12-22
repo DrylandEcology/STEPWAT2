@@ -210,8 +210,8 @@ int main(int argc, char **argv) {
 
 		} /* end model run for this year*/
 
-		if (BmassFlags.yearly)
-			CloseFile(&Globals.bmass.fp_year);
+		//if (BmassFlags.yearly) //moved to output function
+		//	CloseFile(&Globals.bmass.fp_year);
 		if (MortFlags.summary) {
 			stat_Collect_GMort();
 			stat_Collect_SMort();

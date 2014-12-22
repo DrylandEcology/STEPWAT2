@@ -121,7 +121,7 @@ void output_Bmass_Yearly( Int year ) {
 
   if (i) fprintf(Globals.bmass.fp_year,"%s\n", fields[i]);
   fflush(Globals.bmass.fp_year);
-
+  CloseFile(&Globals.bmass.fp_year);
 }
 
 

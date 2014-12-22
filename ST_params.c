@@ -37,7 +37,7 @@
   #include "sxw_vars.h"
 #endif
 
-extern Bool UseSoilwat;
+//extern Bool UseSoilwat;
 
 /******** Modular External Function Declarations ***********/
 /* -- truly global functions are declared in functions.h --*/
@@ -81,7 +81,7 @@ static void _rgroup_addsucculent( char name[],
                                RealF wslope, RealF wint,
                                RealF dslope, RealF dint);
 
-static void _recover_names(void);
+//static void _recover_names(void);
 
 /************ Module Variable Declarations ******************/
 /***********************************************************/
@@ -113,9 +113,10 @@ void parm_Initialize( Int iter) {
                         "Globals.bmass.fp_year not null"
                         " in parm_Initialize()");
       }
-      Globals.bmass.fp_year = OpenFile(filename, "w");
+      Globals.bmass.fp_year = OpenFile(filename, "w");//moved to output function
       fprintf(Globals.bmass.fp_year, "%s", Globals.bmass.header_line);
       fflush(Globals.bmass.fp_year);
+      CloseFile(&Globals.bmass.fp_year);
     }
 
     if (MortFlags.yearly) {
@@ -1253,17 +1254,17 @@ static void _species_init( void) {
 }
 
 
-static void _recover_names(void) {
+/*static void _recover_names(void) {
 	int i, last = NFILES - 1;
 
 	if (UseSoilwat)
-		last--; /* have to save sxw.in for later */
+		last--; // have to save sxw.in for later //
 
 	for (i = 0; i <= last; i++) {
 		Mem_Free(_files[i]);
 	}
 
-}
+}*/
 
 /**************************************************************/
 void parm_free_memory( void ) {
