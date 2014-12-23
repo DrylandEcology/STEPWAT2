@@ -45,3 +45,6 @@ stepwat
 testing/stepwat
 testing/valgrind.out
 testing/stepwat.dSYM/
+
+*.out
+*.log

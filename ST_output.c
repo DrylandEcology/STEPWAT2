@@ -130,6 +130,12 @@ void output_Mort_Yearly( void ) {
 /*======================================================*/
 
   IntS age,rg,sp;
+  char filename[FILENAME_MAX];
+
+  sprintf(filename, "%s%0*d.out", Parm_name(F_MortPre),
+                                  Globals.mort.suffixwidth,
+                                  Globals.currIter);
+  Globals.mort.fp_year = OpenFile(filename, "a");
   FILE *f = Globals.mort.fp_year;
 
 

@@ -105,7 +105,7 @@ void _sxw_sw_run(void) {
 
 void _sxw_sw_clear_transp(void) {
 /*======================================================*/
-	Mem_Set(SXW.transp, 0, SXW.NPds * SXW.NTrLyrs * sizeof(RealD));
+	Mem_Set(SXW.transp, 0, SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
 }
 
 

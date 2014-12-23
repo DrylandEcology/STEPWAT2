@@ -131,6 +131,7 @@ void parm_Initialize( Int iter) {
       Globals.mort.fp_year = OpenFile(filename, "w");
       fprintf(Globals.mort.fp_year, "%s", Globals.mort.header_line);
       fflush(Globals.mort.fp_year);
+      CloseFile(&Globals.mort.fp_year);
     }
 
   } else {

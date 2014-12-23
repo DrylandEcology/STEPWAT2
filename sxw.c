@@ -196,7 +196,7 @@ void SXW_Init( Bool init_SW ) {
   if(SW_Site.n_transp_lyrs_forb > SXW.NTrLyrs)
 	  SXW.NTrLyrs = SW_Site.n_transp_lyrs_forb;
   	
-  if (*SXW.debugfile) SXW.NSoLyrs = SW_Site.n_layers;
+  SXW.NSoLyrs = SW_Site.n_layers;
 
   _make_arrays();
 
@@ -640,7 +640,7 @@ static void _make_transp_arrays(void) {
   char *fstr = "_make_transp_array()";
   int size;
 
-  size = SXW.NPds * SXW.NTrLyrs;
+  size = SXW.NPds * SXW.NSoLyrs;
   SXW.transp   = (RealD *) Mem_Calloc( size, sizeof(RealD), fstr);
 
 
@@ -778,7 +778,7 @@ void _print_debuginfo(void) {
   /* sum actual total transpiration */
   ForEachTrPeriod(p) {
     //ForEachTranspLayer(t) sum += SXW.transp[Ilp(t,p)];
-    for( t=0; t<SXW.NTrLyrs; t++) sum += SXW.transp[Ilp(t,p)];
+    for( t=0; t<SXW.NSoLyrs; t++) sum += SXW.transp[Ilp(t,p)];
   }
 
   fprintf(f,"\n================== %d =============================\n",
