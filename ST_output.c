@@ -129,57 +129,55 @@ void output_Bmass_Yearly( Int year ) {
 void output_Mort_Yearly( void ) {
 /*======================================================*/
 
-  IntS age,rg,sp;
-  char filename[FILENAME_MAX];
+	IntS age, rg, sp;
+	char filename[FILENAME_MAX];
 
-  sprintf(filename, "%s%0*d.out", Parm_name(F_MortPre),
-                                  Globals.mort.suffixwidth,
-                                  Globals.currIter);
-  Globals.mort.fp_year = OpenFile(filename, "a");
-  FILE *f = Globals.mort.fp_year;
+	sprintf(filename, "%s%0*d.out", Parm_name(F_MortPre), Globals.mort.suffixwidth, Globals.currIter);
+	Globals.mort.fp_year = OpenFile(filename, "a");
+	FILE *f = Globals.mort.fp_year;
 
+	if (!MortFlags.yearly)
+		return;
 
-  if (!MortFlags.yearly) return;
+	/* Note: Header line already printed */
 
-
-  /* Note: Header line already printed */
-
-  /* Print a line of establishments */
-  fprintf(f,"(Estabs)");
-  if (MortFlags.group) {
-    ForEachGroup(rg)
-      fprintf(Globals.mort.fp_year,"%c%d",
-              MortFlags.sep, RGroup[rg]->estabs);
-  }
-  if (MortFlags.species) {
-    ForEachSpecies(sp)
-      fprintf(f,"%c%d",MortFlags.sep, Species[sp]->estabs);
-  }
-  fprintf(f,"\n");
+	/* Print a line of establishments */
+	fprintf(f, "(Estabs)");
+	if (MortFlags.group) {
+		ForEachGroup(rg)
+			fprintf(Globals.mort.fp_year, "%c%d", MortFlags.sep, RGroup[rg]->estabs);
+	}
+	if (MortFlags.species) {
+		ForEachSpecies(sp)
+			fprintf(f, "%c%d", MortFlags.sep, Species[sp]->estabs);
+	}
+	fprintf(f, "\n");
 
 
   /* now print the kill data */
-  for(age=0; age < Globals.Max_Age; age++) {
-    fprintf(f,"%d", age+1);
-    if (MortFlags.group) {
-      ForEachGroup(rg){
-        if(age < GrpMaxAge(rg))
-          fprintf(f,"%c%d", MortFlags.sep, RGroup[rg]->kills[age]);
-        else
-          fprintf(f, "%c", MortFlags.sep);
-      }
-    }
-    if (MortFlags.species) {
-      ForEachSpecies(sp) {
-        if (age < SppMaxAge(sp))
-          fprintf(f,"%c%d", MortFlags.sep, Species[sp]->kills[age]);
-        else
-          fprintf(f, "%c", MortFlags.sep);
-      }
-    }
-    fprintf(f,"\n");
-  }
+	for (age = 0; age < Globals.Max_Age; age++) {
+		fprintf(f, "%d", age + 1);
+		if (MortFlags.group) {
+			ForEachGroup(rg)
+			{
+				if (age < GrpMaxAge(rg) && RGroup[rg]->use_me)
+					fprintf(f, "%c%d", MortFlags.sep, RGroup[rg]->kills[age]);
+				else
+					fprintf(f, "%c", MortFlags.sep);
+			}
+		}
+		if (MortFlags.species) {
+			ForEachSpecies(sp)
+			{
+				if (age < SppMaxAge(sp) && RGroup[Species[sp]->res_grp]->use_me)
+					fprintf(f, "%c%d", MortFlags.sep, Species[sp]->kills[age]);
+				else
+					fprintf(f, "%c", MortFlags.sep);
+			}
+		}
+		fprintf(f, "\n");
+	}
 
-  CloseFile(&Globals.mort.fp_year);
+	CloseFile(&Globals.mort.fp_year);
 }
 
