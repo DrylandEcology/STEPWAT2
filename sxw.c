@@ -75,7 +75,7 @@ SXW_t SXW;
 extern SW_SITE SW_Site;
 extern SW_MODEL SW_Model;
 extern SW_VEGPROD SW_VegProd;
-extern SW_SOILWAT SW_Soilwat;
+//extern SW_SOILWAT SW_Soilwat;
 
 
 /*************** Module/Local Variable Declarations ***************/
@@ -583,7 +583,7 @@ static void _write_sw_outin(void) {
 	fprintf(fp, "TEMP    AVG  YR  1  end  temp\n");
 	if (*SXW.debugfile) {
 		fprintf(fp, "AET     SUM  YR  1  end  aet\n");
-		fprintf(fp, "SWC     FIN  MO  1  end  swc\n");
+		fprintf(fp, "SWCBULK     FIN  MO  1  end  swc_bulk\n");
 	}
 
 	CloseFile(&fp);
@@ -594,15 +594,11 @@ static void _make_arrays(void) {
 /* central point to make all dynamically allocated arrays
  * now that the dimensions are known.
  */
-
-  _make_roots_arrays();
-  _make_phen_arrays();
-  _make_transp_arrays();
-  if (*SXW.debugfile)
-    _make_swc_array();
-
-
-
+	_make_roots_arrays();
+	_make_phen_arrays();
+	_make_transp_arrays();
+	if (*SXW.debugfile)
+		_make_swc_array();
 }
 
 static void _make_roots_arrays(void) {
@@ -653,22 +649,19 @@ static void _make_swc_array(void) {
  * it is indexed by the macro Ilp(). only used if soilwat option
  * specified with debugfile
  */
-  char *fstr = "_make_swc_array()";
-  int size = SXW.NPds * SXW.NSoLyrs;
-  SXW.swc   = (RealF *) Mem_Calloc( size, sizeof(RealF *), fstr);
-
-
+	char *fstr = "_make_swc_array()";
+	int size = SXW.NPds * SXW.NSoLyrs;
+	SXW.swc = (RealF *) Mem_Calloc(size, sizeof(RealF *), fstr);
 }
 
 
 static void _recover_names(void) {
 /*======================================================*/
-  int i;
+	int i;
 
-  for( i=0; i < SXW_NFILES; i++) {
-	  Mem_Free(*_sxwfiles[i]);
-  }
-
+	for (i = 0; i < SXW_NFILES; i++) {
+		Mem_Free(*_sxwfiles[i]);
+	}
 }
 
 static void _read_debugfile(void) {
@@ -696,44 +689,45 @@ static void _read_debugfile(void) {
    *   before continuing.
    */
 
-   FILE *f;
-   char *date, str[102];
-   int cnt =0;
-   TimeInt i;
+	FILE *f;
+	char *date, str[102];
+	int cnt = 0;
+	TimeInt i;
 
-   f = OpenFile(SXW.debugfile, "r");
+	f = OpenFile(SXW.debugfile, "r");
 
-   /* get name of output file */
-   if (!GetALine(f, inbuf)) { CloseFile(&f); return; }
-   strcpy(_debugout, inbuf);
+	/* get name of output file */
+	if (!GetALine(f, inbuf)) {
+		CloseFile(&f);
+		return;
+	}
+	strcpy(_debugout, inbuf);
 
-   /* get output years */
-   while( GetALine(f, inbuf) ) {
-     _debugyrs[cnt++] = atoi(strtok( inbuf, " \t")); /* g'teed via getaline() */
-     while (NULL != (date = strtok(NULL, " \t"))) {
-       _debugyrs[cnt++] = atoi(date);
-     }
-   }
-   _debugyrs_cnt = cnt;
+	/* get output years */
+	while (GetALine(f, inbuf)) {
+		_debugyrs[cnt++] = atoi(strtok(inbuf, " \t")); /* g'teed via getaline() */
+		while (NULL != (date = strtok(NULL, " \t"))) {
+			_debugyrs[cnt++] = atoi(date);
+		}
+	}
+	_debugyrs_cnt = cnt;
 
-   sprintf(errstr,"Debugging Transpiration turned on.\n%s will contain"
-                  " %d years of output:\n", _debugout, _debugyrs_cnt);
+	sprintf(errstr, "Debugging Transpiration turned on.\n%s will contain"
+			" %d years of output:\n", _debugout, _debugyrs_cnt);
 
-   for(i=0; i<_debugyrs_cnt; i++) {
-     sprintf(str, "%d\n", _debugyrs[i]);
-     strcat(errstr, str);
-   }
-   strcat(errstr, "Note that data will always be appended,\n");
-   strcat(errstr, "so clear file contents before re-use.\n");
-   LogError(logfp,LOGNOTE,errstr);
+	for (i = 0; i < _debugyrs_cnt; i++) {
+		sprintf(str, "%d\n", _debugyrs[i]);
+		strcat(errstr, str);
+	}
+	strcat(errstr, "Note that data will always be appended,\n");
+	strcat(errstr, "so clear file contents before re-use.\n");
+	LogError(logfp, LOGNOTE, errstr);
 
+	CloseFile(&f);
 
-   CloseFile(&f);
-
-   /* now empty the file prior to the run */
-   f = OpenFile(_debugout,"w");
-   CloseFile(&f);
-
+	/* now empty the file prior to the run */
+	f = OpenFile(_debugout, "w");
+	CloseFile(&f);
 }
 
 
@@ -742,153 +736,162 @@ extern SW_VEGPROD SW_VegProd;
 
 void _print_debuginfo(void) {
 /*======================================================*/
-  SW_VEGPROD *v = &SW_VegProd;
-  TimeInt p;
-  LyrIndex t;
-  FILE *f;
-  GrpIndex r;
-  RealF sum=0.;
-  static Bool beenhere=FALSE;
+	SW_VEGPROD *v = &SW_VegProd;
+	TimeInt p;
+	LyrIndex t;
+	FILE *f;
+	GrpIndex r;
+	RealF sum = 0.;
+	static Bool beenhere = FALSE;
 
+	f = OpenFile(_debugout, "a");
 
+	if (!beenhere) {
+		beenhere = TRUE;
+		fprintf(f, "\n------ Roots X Phen Array -------\n");
+		ForEachGroup(r)
+		{
+			fprintf(f, "         --- %s ---\n", RGroup[r]->name);
 
-  f = OpenFile(_debugout, "a");
-
-  if (!beenhere) {
-    beenhere = TRUE;
-    fprintf(f,"\n------ Roots X Phen Array -------\n");
-    ForEachGroup(r) {
-      fprintf(f, "         --- %s ---\n", RGroup[r]->name);
-
-      fprintf(f,"Layer:");
-      ForEachTrPeriod(p) fprintf(f, "\t%d", p+1);
-      fprintf(f,"\n");
-      int nLyrs = getNTranspLayers(RGroup[r]->veg_prod_type);
-  	  for( t=0; t<nLyrs; t++) {
-      //ForEachTranspLayer(t) {
-        fprintf(f, "%d", t+1);
-        ForEachTrPeriod(p)
-          fprintf(f, "\t%.4f",_rootsXphen[Iglp(r,t,p)]);
-        fprintf(f,"\n");
-      }
-    }
-  }
+			fprintf(f, "Layer:");
+			ForEachTrPeriod(p)
+				fprintf(f, "\t%d", p + 1);
+			fprintf(f, "\n");
+			int nLyrs = getNTranspLayers(RGroup[r]->veg_prod_type);
+			for (t = 0; t < nLyrs; t++) {
+				//ForEachTranspLayer(t) {
+				fprintf(f, "%d", t + 1);
+				ForEachTrPeriod(p)
+					fprintf(f, "\t%.4f", _rootsXphen[Iglp(r, t, p)]);
+				fprintf(f, "\n");
+			}
+		}
+	}
 
 
   /* sum actual total transpiration */
-  ForEachTrPeriod(p) {
-    //ForEachTranspLayer(t) sum += SXW.transp[Ilp(t,p)];
-    for( t=0; t<SXW.NSoLyrs; t++) sum += SXW.transp[Ilp(t,p)];
-  }
+	ForEachTrPeriod(p)
+	{
+		//ForEachTranspLayer(t) sum += SXW.transp[Ilp(t,p)];
+		for (t = 0; t < SXW.NSoLyrs; t++)
+			sum += SXW.transp[Ilp(t, p)];
+	}
 
-  fprintf(f,"\n================== %d =============================\n",
-          SW_Model.year);
-  fprintf(f,"MAP = %d(mm)\tMAT = %5.2f(C)\tAET = %5.4f(cm)\tAT = %5.4f(cm)\n\n",
-          Env.ppt, Env.temp, SXW.aet, sum);
+	fprintf(f, "\n================== %d =============================\n", SW_Model.year);
+	fprintf(f, "MAP = %d(mm)\tMAT = %5.2f(C)\tAET = %5.4f(cm)\tAT = %5.4f(cm)\n\n", Env.ppt, Env.temp, SXW.aet, sum);
 
-  fprintf(f,"Group     \tRelsize\tPR\tTransp\n");
-  fprintf(f,"-----     \t-------\t-----\t-----\n");
-  ForEachGroup(r)
-    fprintf(f, "%s\t%.4f\t%.4f\t%.4f\n",
-            RGroup[r]->name, RGroup[r]->relsize, RGroup[r]->pr,_resource_cur[r]);
+	fprintf(f, "Group     \tRelsize\tPR\tTransp\n");
+	fprintf(f, "-----     \t-------\t-----\t-----\n");
+	ForEachGroup(r)
+		fprintf(f, "%s\t%.4f\t%.4f\t%.4f\n", RGroup[r]->name, RGroup[r]->relsize, RGroup[r]->pr, _resource_cur[r]);
 
-  fprintf(f,"\n------ Production Values -------\n");
-  fprintf(f,"Month\tBMass\tPctLive\tLAIlive\tVegCov\tTotAGB\n");
-  fprintf(f,"-----\t-----\t-------\t-------\t------\t------\n");
+	fprintf(f, "\n------ Production Values -------\n");
+	fprintf(f, "Month\tBMass\tPctLive\tLAIlive\tVegCov\tTotAGB\n");
+	fprintf(f, "-----\t-----\t-------\t-------\t------\t------\n");
 
-  // DLM - 08/01/2012 edited the following block of code to get the monthly values from the daily values (now used in SOILWAT) to output as it was previously... also accounts for the 3 different VegProd types now
-  int doy = 1;
-  ForEachMonth(p) {
-  	int days = 31, i;
-  	double pct_live=0, lai_live=0, vegcov=0, total_agb=0, biomass=0; 
-  	
-  	if(p == Apr || p == Jun || p == Sep || p == Nov) //all these months have 30 days
-  		days = 30;
-  	else if(p == Feb) { //February has either 28 or 29 days
-  		days = 28;
-  		if(Is_LeapYear(SW_Model.year))
-  			days = 29;
-  	} // all the other months have 31 days
-  	
-  	for( i=doy; i<(doy+days); i++) { //accumulating the monthly values...
-  		lai_live += (v->tree.lai_live_daily[doy]) + (v->shrub.lai_live_daily[doy]) + (v->grass.lai_live_daily[doy]);
-  		vegcov += (v->tree.vegcov_daily[doy]) + (v->shrub.vegcov_daily[doy]) + (v->grass.vegcov_daily[doy]);
-  		total_agb += (v->tree.total_agb_daily[doy]) + (v->shrub.total_agb_daily[doy]) + (v->grass.total_agb_daily[doy]);
-  	}
-  	doy += days; //updating the doy
-  	biomass = (v->tree.biomass[p]) + (v->shrub.biomass[p]) + (v->grass.biomass[p]);		//getting the monthly biomass
-  	pct_live = (v->tree.pct_live[p]) + (v->shrub.pct_live[p]) + (v->grass.pct_live[p]);	//getting the monthly pct_live
-  	
-  	lai_live /= days; //getting the monthly averages...
-  	vegcov /= days;
-  	total_agb /= days;
-  	
-    // had to update this commented out code because the VegProds are now daily values instead of monthly ones...
-    //fprintf(f,"%4d\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n",
-      //      p+1,v->biomass[p], v->pct_live[p],v->lai_live[p],
-        //    v->vegcov[p], v->total_agb[p]);
-        
-    fprintf(f,"%4d\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n", p+1, biomass, pct_live, lai_live, vegcov, total_agb);
-  }
-  // end 08/01/2012 edit...
+	// DLM - 08/01/2012 edited the following block of code to get the monthly values from the daily values (now used in SOILWAT) to output as it was previously... also accounts for the 3 different VegProd types now
+	int doy = 1;
+	ForEachMonth(p)
+	{
+		int days = 31, i;
+		double pct_live = 0, lai_live = 0, vegcov = 0, total_agb = 0, biomass = 0;
 
-  fprintf(f,"\n------ Active Roots (sum) -------\n");
-  fprintf(f,"Layer:");
-  ForEachTrPeriod(p) fprintf(f, "\t%d", p+1);
-  fprintf(f,"\n");
-  //ForEachTranspLayer(t) {
-  for( t=0; t<SXW.NTrLyrs; t++) {
-    fprintf(f, "%d", t+1);
-    ForEachTrPeriod(p)
-      fprintf(f, "\t%.4f",_roots_active_sum[Ilp(t,p)]);
-    fprintf(f,"\n");
-  }
+		if (p == Apr || p == Jun || p == Sep || p == Nov) //all these months have 30 days
+			days = 30;
+		else if (p == Feb) { //February has either 28 or 29 days
+			days = 28;
+			if (Is_LeapYear(SW_Model.year))
+				days = 29;
+		} // all the other months have 31 days
 
+		for (i = doy; i < (doy + days); i++) { //accumulating the monthly values...
+			lai_live += (v->tree.lai_live_daily[doy])
+					+ (v->shrub.lai_live_daily[doy])
+					+ (v->grass.lai_live_daily[doy]);
+			vegcov += (v->tree.vegcov_daily[doy]) + (v->shrub.vegcov_daily[doy])
+					+ (v->grass.vegcov_daily[doy]);
+			total_agb += (v->tree.total_agb_daily[doy])
+					+ (v->shrub.total_agb_daily[doy])
+					+ (v->grass.total_agb_daily[doy]);
+		}
+		doy += days; //updating the doy
+		biomass = (v->tree.biomass[p]) + (v->shrub.biomass[p])
+				+ (v->grass.biomass[p]);		//getting the monthly biomass
+		pct_live = (v->tree.pct_live[p]) + (v->shrub.pct_live[p])
+				+ (v->grass.pct_live[p]);	//getting the monthly pct_live
 
+		lai_live /= days; //getting the monthly averages...
+		vegcov /= days;
+		total_agb /= days;
 
-  fprintf(f,"\n------ Active Roots (relative) -------\n");
-  ForEachGroup(r) {
-    fprintf(f, "         --- %s ---\n", RGroup[r]->name);
+		// had to update this commented out code because the VegProds are now daily values instead of monthly ones...
+		//fprintf(f,"%4d\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n",
+		//      p+1,v->biomass[p], v->pct_live[p],v->lai_live[p],
+		//    v->vegcov[p], v->total_agb[p]);
 
-    fprintf(f,"Layer:");
-    ForEachTrPeriod(p) fprintf(f, "\t%d", p+1);
-    fprintf(f,"\n");
-    int nLyrs = getNTranspLayers(RGroup[r]->veg_prod_type);
-  	for( t=0; t<nLyrs; t++) {
-    //ForEachTranspLayer(t) {
-      fprintf(f, "%d", t+1);
-      ForEachTrPeriod(p)
-        fprintf(f, "\t%.4f",_roots_active_rel[Iglp(r,t,p)]);
-      fprintf(f,"\n");
-    }
-  }
+		fprintf(f, "%4d\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n", p + 1, biomass,
+				pct_live, lai_live, vegcov, total_agb);
+	}
+	// end 08/01/2012 edit...
 
+	fprintf(f, "\n------ Active Roots (sum) -------\n");
+	fprintf(f, "Layer:");
+	ForEachTrPeriod(p)
+		fprintf(f, "\t%d", p + 1);
+	fprintf(f, "\n");
+	//ForEachTranspLayer(t) {
+	for (t = 0; t < SXW.NTrLyrs; t++) {
+		fprintf(f, "%d", t + 1);
+		ForEachTrPeriod(p)
+			fprintf(f, "\t%.4f", _roots_active_sum[Ilp(t, p)]);
+		fprintf(f, "\n");
+	}
 
-  fprintf(f,"\n------ Transpiration Values -------\nPeriod:");
-  //ForEachTranspLayer(t)
-  for( t=0; t<SXW.NTrLyrs; t++)
-    fprintf(f,"\t%d", t+1);
-  fprintf(f,"\n");
+	fprintf(f, "\n------ Active Roots (relative) -------\n");
+	ForEachGroup(r)
+	{
+		fprintf(f, "         --- %s ---\n", RGroup[r]->name);
 
-  ForEachTrPeriod(p) {
-    fprintf(f, "%d : ", p+1);
-    //ForEachTranspLayer(t)
-    for( t=0; t<SXW.NTrLyrs; t++)
-      fprintf(f,"\t%.4f", SXW.transp[Ilp(t,p)]);
-    fprintf(f,"\n");
-  }
+		fprintf(f, "Layer:");
+		ForEachTrPeriod(p)
+			fprintf(f, "\t%d", p + 1);
+		fprintf(f, "\n");
+		int nLyrs = getNTranspLayers(RGroup[r]->veg_prod_type);
+		for (t = 0; t < nLyrs; t++) {
+			//ForEachTranspLayer(t) {
+			fprintf(f, "%d", t + 1);
+			ForEachTrPeriod(p)
+				fprintf(f, "\t%.4f", _roots_active_rel[Iglp(r, t, p)]);
+			fprintf(f, "\n");
+		}
+	}
 
-  fprintf(f,"Current Soil Water Content:\n");
-  ForEachTrPeriod(p) {
-    fprintf(f, "%d : ", p+1);
-    ForEachSoilLayer(t)
-      fprintf(f,"\t%5.4f", SXW.swc[Ilp(t,p)]);
-    fprintf(f,"\n");
-  }
+	fprintf(f, "\n------ Transpiration Values -------\nPeriod:");
+	//ForEachTranspLayer(t)
+	for (t = 0; t < SXW.NTrLyrs; t++)
+		fprintf(f, "\t%d", t + 1);
+	fprintf(f, "\n");
 
-  fprintf(f,"\n");
-  CloseFile(&f);
+	ForEachTrPeriod(p)
+	{
+		fprintf(f, "%d : ", p + 1);
+		//ForEachTranspLayer(t)
+		for (t = 0; t < SXW.NTrLyrs; t++)
+			fprintf(f, "\t%.4f", SXW.transp[Ilp(t, p)]);
+		fprintf(f, "\n");
+	}
 
+	fprintf(f, "Current Soil Water Content:\n");
+	ForEachTrPeriod(p)
+	{
+		fprintf(f, "%d : ", p + 1);
+		ForEachSoilLayer(t)
+			fprintf(f, "\t%5.4f", SXW.swc[Ilp(t, p)]);
+		fprintf(f, "\n");
+	}
+
+	fprintf(f, "\n");
+	CloseFile(&f);
 }
 
 
