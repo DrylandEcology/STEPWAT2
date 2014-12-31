@@ -1620,8 +1620,8 @@ static void _init_soil_layers(int cell, int isSpinup) {
         	SW_Site.lyr[j] = Mem_Calloc(1, sizeof(SW_LAYER_INFO), "_init_grid_globals()");
         		
         	//indexes (for grid_Soils[i].lyr[j].data):
-        	//0		   1		2		3	  4				5			6			7	   8		9		10
-        	//bulkd   fieldc   wiltpt  evco  trco_grass  	trco_shrub  trco_tree  	%sand  %clay imperm soiltemp
+        	//0		   1				2		3	  		4			5			6			7	   8		9		10
+        	//matricd	gravel_content  evco  	trco_grass  trco_shrub  trco_tree  	trco_forb	%sand  %clay imperm soiltemp
         	SW_Site.lyr[j]->width = grid_Soils[i].lyr[j].width;
         	SW_Site.lyr[j]->soilBulk_density = grid_Soils[i].lyr[j].data[0];
         	SW_Site.lyr[j]->fractionVolBulk_gravel = grid_Soils[i].lyr[j].data[1];
