@@ -67,6 +67,7 @@
 #include "SW_Site.h"
 #include "SW_SoilWater.h"
 #include "SW_Files.h"
+#include "SW_VegProd.h"
 
 /*************** Global Variable Declarations ***************/
 /***********************************************************/
@@ -597,7 +598,7 @@ static void _make_arrays(void) {
 	_make_roots_arrays();
 	_make_phen_arrays();
 	_make_transp_arrays();
-	if (*SXW.debugfile)
+	if (*SXW.debugfile || UseGrid)
 		_make_swc_array();
 }
 
@@ -729,10 +730,6 @@ static void _read_debugfile(void) {
 	f = OpenFile(_debugout, "w");
 	CloseFile(&f);
 }
-
-
-#include "SW_VegProd.h" //very sneaky including this down here... you almost got me
-extern SW_VEGPROD SW_VegProd;
 
 void _print_debuginfo(void) {
 /*======================================================*/
@@ -949,7 +946,7 @@ int getNTranspLayers(int veg_prod_type) {
 void free_all_sxw_memory( void ) {
 	free_sxw_memory();
 	Mem_Free(SXW.transp);
-	if (*SXW.debugfile) Mem_Free(SXW.swc);
+	if (*SXW.debugfile || UseGrid) Mem_Free(SXW.swc);
 }
 
 /***********************************************************/
