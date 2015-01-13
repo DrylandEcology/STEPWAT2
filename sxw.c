@@ -184,7 +184,8 @@ void SXW_Init( Bool init_SW ) {
   SXW.NPds = MAX_MONTHS;
   _read_watin();
 
-  if (*SXW.debugfile) _read_debugfile();
+  if (SXW.debugfile)
+	  _read_debugfile();
   _write_sw_outin();
 
   if(init_SW) SW_CTL_init_model(SXW.f_watin);
@@ -582,7 +583,7 @@ static void _write_sw_outin(void) {
 	fprintf(fp, "TRANSP  SUM  %s  1  end  transp\n", pd);
 	fprintf(fp, "PRECIP  SUM  YR  1  end  precip\n");
 	fprintf(fp, "TEMP    AVG  YR  1  end  temp\n");
-	if (*SXW.debugfile) {
+	if (SXW.debugfile) {
 		fprintf(fp, "AET     SUM  YR  1  end  aet\n");
 		fprintf(fp, "SWCBULK     FIN  MO  1  end  swc_bulk\n");
 	}
@@ -598,7 +599,7 @@ static void _make_arrays(void) {
 	_make_roots_arrays();
 	_make_phen_arrays();
 	_make_transp_arrays();
-	if (*SXW.debugfile || UseGrid)
+	if (SXW.debugfile || UseGrid)
 		_make_swc_array();
 }
 
@@ -634,13 +635,15 @@ static void _make_transp_arrays(void) {
 /* SXW.transp holds year-to-year values and is populated in SOILWAT.
  * both are indexed by the macro Ilp().
  */
-  char *fstr = "_make_transp_array()";
-  int size;
+	char *fstr = "_make_transp_array()";
+	int size;
 
-  size = SXW.NPds * SXW.NSoLyrs;
-  SXW.transp   = (RealD *) Mem_Calloc( size, sizeof(RealD), fstr);
-
-
+	size = SXW.NPds * SXW.NSoLyrs;
+	SXW.transpTotal = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
+	SXW.transpTrees = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
+	SXW.transpShrubs = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
+	SXW.transpForbs = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
+	SXW.transpGrasses = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
 }
 
 
@@ -771,7 +774,7 @@ void _print_debuginfo(void) {
 	{
 		//ForEachTranspLayer(t) sum += SXW.transp[Ilp(t,p)];
 		for (t = 0; t < SXW.NSoLyrs; t++)
-			sum += SXW.transp[Ilp(t, p)];
+			sum += SXW.transpTotal[Ilp(t, p)];
 	}
 
 	fprintf(f, "\n================== %d =============================\n", SW_Model.year);
@@ -863,18 +866,18 @@ void _print_debuginfo(void) {
 		}
 	}
 
-	fprintf(f, "\n------ Transpiration Values -------\nPeriod:");
+	fprintf(f, "\n------ Transpiration Total Values -------\nPeriod:");
 	//ForEachTranspLayer(t)
-	for (t = 0; t < SXW.NTrLyrs; t++)
-		fprintf(f, "\t%d", t + 1);
+	for (t = 0; t < SXW.NSoLyrs; t++)
+		fprintf(f, "\t\tL%d", t + 1);
 	fprintf(f, "\n");
 
 	ForEachTrPeriod(p)
 	{
 		fprintf(f, "%d : ", p + 1);
 		//ForEachTranspLayer(t)
-		for (t = 0; t < SXW.NTrLyrs; t++)
-			fprintf(f, "\t%.4f", SXW.transp[Ilp(t, p)]);
+		for (t = 0; t < SXW.NSoLyrs; t++)
+			fprintf(f, "\t%.4f", SXW.transpTotal[Ilp(t, p)]);
 		fprintf(f, "\n");
 	}
 
@@ -945,7 +948,11 @@ int getNTranspLayers(int veg_prod_type) {
 /***********************************************************/
 void free_all_sxw_memory( void ) {
 	free_sxw_memory();
-	Mem_Free(SXW.transp);
+	Mem_Free(SXW.transpTotal);
+	Mem_Free(SXW.transpTrees);
+	Mem_Free(SXW.transpShrubs);
+	Mem_Free(SXW.transpForbs);
+	Mem_Free(SXW.transpGrasses);
 	if (*SXW.debugfile || UseGrid) Mem_Free(SXW.swc);
 }
 

@@ -30,7 +30,11 @@
 int getNTranspLayers(int veg_prod_type);
 
 struct stepwat_st {
-  RealD *transp; /* points to dynamic array indexed by Ilp() */
+  RealD *transpTotal; /* points to dynamic array indexed by Ilp() */
+  RealD *transpTrees;
+  RealD *transpShrubs;
+  RealD *transpForbs;
+  RealD *transpGrasses;
   RealF  temp,   /* soilwat's MAT */
          ppt;    /* soilwat's MAP */
   TimeInt NPds;  /* number of transp periods= maxdays, maxweeks, maxmonths */

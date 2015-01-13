@@ -401,7 +401,7 @@ static void init_args(int argc, char **argv) {
       case 2:  QuietMode = TRUE;           break;  /* -q */
 
       case 3:  UseSoilwat = TRUE;                  /* -s */
-               SXW.debugfile = (char *) Str_Dup(str);
+               SXW.debugfile = Str_Dup(str);
                break;
 
       case 4:  EchoInits = TRUE;           break;  /* -e */

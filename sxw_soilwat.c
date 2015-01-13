@@ -105,7 +105,11 @@ void _sxw_sw_run(void) {
 
 void _sxw_sw_clear_transp(void) {
 /*======================================================*/
-	Mem_Set(SXW.transp, 0, SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
+	Mem_Set(SXW.transpTotal, 0, SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
+	Mem_Set(SXW.transpTrees, 0, SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
+	Mem_Set(SXW.transpShrubs, 0, SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
+	Mem_Set(SXW.transpForbs, 0, SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
+	Mem_Set(SXW.transpGrasses, 0, SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
 }
 
 

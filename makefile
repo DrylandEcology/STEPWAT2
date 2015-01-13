@@ -27,7 +27,7 @@ incDirs	=	-Isw_src
 
 LIBS	=	
 C_FLAGS	=	-g -m32 -O0 -Wstrict-prototypes -Wmissing-prototypes -Wimplicit -Wunused -Wformat -Wredundant-decls -Wcast-align\
-	-DSTEPWAT
+	-DSTEPWAT -lm
 
 SRCS	=\
 	$(Src)/sw_src/filefuncs.c\

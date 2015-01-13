@@ -874,10 +874,10 @@ static void _load_grid_globals( void ) {
 		if(UseSoilwat) {
 			grid_SXW[i] = SXW; 
 		
-			grid_SXW[i].transp = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealD), "_init_grid_globals()");
+			grid_SXW[i].transpTotal = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealD), "_init_grid_globals()");
 			grid_SXW[i].swc = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealF), "_init_grid_globals()");
 			
-			memcpy(grid_SXW[i].transp, SXW.transp, SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
+			memcpy(grid_SXW[i].transpTotal, SXW.transpTotal, SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
 			memcpy(grid_SXW[i].swc, SXW.swc, SXW.NPds * SXW.NSoLyrs * sizeof(RealF));
 			
 			grid_SW_Soilwat[i] = SW_Soilwat;
@@ -950,10 +950,10 @@ static void _load_spinup_globals( void ) {
 		if(UseSoilwat) {
 			spinup_SXW[i] = SXW; 
 			
-			spinup_SXW[i].transp = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealD), "_init_spinup_globals()");
+			spinup_SXW[i].transpTotal = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealD), "_init_spinup_globals()");
 			spinup_SXW[i].swc = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealF), "_init_spinup_globals()");
 			
-			memcpy(spinup_SXW[i].transp, SXW.transp, SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
+			memcpy(spinup_SXW[i].transpTotal, SXW.transpTotal, SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
 			memcpy(spinup_SXW[i].swc, SXW.swc, SXW.NPds * SXW.NSoLyrs * sizeof(RealF));
 			
 			spinup_SW_Soilwat[i] = SW_Soilwat;
@@ -991,7 +991,7 @@ static void _free_grid_globals( void ) {
 			if(RGroup[c]->use_me) Mem_Free(grid_RGroup[c][i].kills);
 			
 		if(UseSoilwat) {
-			Mem_Free(grid_SXW[i].transp);
+			Mem_Free(grid_SXW[i].transpTotal);
 			Mem_Free(grid_SXW[i].swc);
 			if(UseSoils) {
 				Mem_Free(grid_SXW_ptrs[i].roots_max);
@@ -1031,7 +1031,7 @@ static void _free_spinup_globals( void ) {
 			if(RGroup[c]->use_me) Mem_Free(spinup_RGroup[c][i].kills);
 			
 		if(UseSoilwat) {
-			Mem_Free(spinup_SXW[i].transp);
+			Mem_Free(spinup_SXW[i].transpTotal);
 			Mem_Free(spinup_SXW[i].swc);
 			if(UseSoils) {
 				Mem_Free(spinup_SXW_ptrs[i].roots_max);
@@ -1216,7 +1216,7 @@ static void _load_cell( int row, int col, int year, Bool useAccumulators ) {
 	Globals = grid_Globals[cell];
 	
 	if(UseSoilwat) {
-		Mem_Free(SXW.transp);
+		Mem_Free(SXW.transpTotal);
 		if(SXW.swc != NULL) Mem_Free(SXW.swc);
 		for(j = 0; j < SW_Site.n_layers; j++)
 			Mem_Free(SW_Site.lyr[j]);
@@ -1227,10 +1227,10 @@ static void _load_cell( int row, int col, int year, Bool useAccumulators ) {
 		SW_Soilwat = grid_SW_Soilwat[cell];
 		SW_VegProd = grid_SW_VegProd[cell];
 		
-		SXW.transp = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealD), "_load_cell(SXW.transp)");
+		SXW.transpTotal = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealD), "_load_cell(SXW.transp)");
 		SXW.swc = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealF), "_load_cell(SXW.swc)");
 		
-		memcpy(SXW.transp, grid_SXW[cell].transp, SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
+		memcpy(SXW.transpTotal, grid_SXW[cell].transpTotal, SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
 		memcpy(SXW.swc, grid_SXW[cell].swc, SXW.NPds * SXW.NSoLyrs * sizeof(RealF));
 		
 		SW_Site.lyr = Mem_Calloc(grid_SW_Site[cell].n_layers, sizeof(SW_LAYER_INFO *), "_load_cell(SW_Site.lyr)");
@@ -1285,7 +1285,7 @@ static void _load_spinup_cell( int cell ) {
 	Globals = spinup_Globals[cell];
 	
 	if(UseSoilwat) {
-		Mem_Free(SXW.transp);
+		Mem_Free(SXW.transpTotal);
 		if(SXW.swc != NULL) Mem_Free(SXW.swc);
 		for(j = 0; j < SW_Site.n_layers; j++)
 			Mem_Free(SW_Site.lyr[j]);
@@ -1296,10 +1296,10 @@ static void _load_spinup_cell( int cell ) {
 		SW_Soilwat = spinup_SW_Soilwat[cell];
 		SW_VegProd = spinup_SW_VegProd[cell];
 		
-		SXW.transp = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealD), "_load_spinup_cell(SXW.transp)");
+		SXW.transpTotal = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealD), "_load_spinup_cell(SXW.transp)");
 		SXW.swc = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealF), "_load_spinup_cell(SXW.swc)");
 		
-		memcpy(SXW.transp, spinup_SXW[cell].transp, SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
+		memcpy(SXW.transpTotal, spinup_SXW[cell].transpTotal, SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
 		memcpy(SXW.swc, spinup_SXW[cell].swc, SXW.NPds * SXW.NSoLyrs * sizeof(RealF));
 		
 		SW_Site.lyr = Mem_Calloc(spinup_SW_Site[cell].n_layers, sizeof(SW_LAYER_INFO *), "_load_spinup_cell(SW_Site.lyr)");
@@ -1358,7 +1358,7 @@ static void _save_cell( int row, int col, int year, Bool useAccumulators ) {
 	grid_Globals[cell] = Globals;
 	
 	if(UseSoilwat) {
-		Mem_Free(grid_SXW[cell].transp);
+		Mem_Free(grid_SXW[cell].transpTotal);
 		Mem_Free(grid_SXW[cell].swc);
 		for(j = 0; j < SW_Site.n_layers; j++)
 			Mem_Free(grid_SW_Site[cell].lyr[j]);
@@ -1369,10 +1369,10 @@ static void _save_cell( int row, int col, int year, Bool useAccumulators ) {
 		grid_SW_Soilwat[cell] = SW_Soilwat;
 		grid_SW_VegProd[cell] = SW_VegProd;
 		
-		grid_SXW[cell].transp = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealD), "_save_cell(grid_SXW[cell].transp)");
+		grid_SXW[cell].transpTotal = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealD), "_save_cell(grid_SXW[cell].transp)");
 		grid_SXW[cell].swc = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealF), "_save_cell(grid_SXW[cell].swc)");
 		
-		memcpy(grid_SXW[cell].transp, SXW.transp, SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
+		memcpy(grid_SXW[cell].transpTotal, SXW.transpTotal, SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
 		memcpy(grid_SXW[cell].swc, SXW.swc, SXW.NPds * SXW.NSoLyrs * sizeof(RealF));
 		
 		grid_SW_Site[cell].lyr = Mem_Calloc(SW_Site.n_layers, sizeof(SW_LAYER_INFO *), "_save_cell(grid_SW_Site[cell].lyr[j])");
@@ -1426,7 +1426,7 @@ static void _save_spinup_cell( int cell ) {
 	spinup_Globals[cell] = Globals;
 	
 	if(UseSoilwat) {
-		Mem_Free(spinup_SXW[cell].transp);
+		Mem_Free(spinup_SXW[cell].transpTotal);
 		Mem_Free(spinup_SXW[cell].swc);
 		for(j = 0; j < SW_Site.n_layers; j++)
 			Mem_Free(spinup_SW_Site[cell].lyr[j]);
@@ -1437,10 +1437,10 @@ static void _save_spinup_cell( int cell ) {
 		spinup_SW_Soilwat[cell] = SW_Soilwat;
 		spinup_SW_VegProd[cell] = SW_VegProd;
 		
-		spinup_SXW[cell].transp = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealD), "_save_cell(grid_SXW[cell].transp)");
+		spinup_SXW[cell].transpTotal = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealD), "_save_cell(grid_SXW[cell].transp)");
 		spinup_SXW[cell].swc = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealF), "_save_cell(grid_SXW[cell].swc)");
 		
-		memcpy(spinup_SXW[cell].transp, SXW.transp, SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
+		memcpy(spinup_SXW[cell].transpTotal, SXW.transpTotal, SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
 		memcpy(spinup_SXW[cell].swc, SXW.swc, SXW.NPds * SXW.NSoLyrs * sizeof(RealF));
 		
 		spinup_SW_Site[cell].lyr = Mem_Calloc(SW_Site.n_layers, sizeof(SW_LAYER_INFO *), "_save_cell(grid_SW_Site[cell].lyr[j])");

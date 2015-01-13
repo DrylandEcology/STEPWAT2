@@ -139,6 +139,7 @@ void _sxw_update_resource(void) {
   #else
 	ForEachGroup(g)
 	{
+		//RGroup[g]->veg_prod_type
 		sizes[g] = 0.;
 		if (!RGroup[g]->regen_ok)
 			continue;
@@ -152,7 +153,7 @@ void _sxw_update_resource(void) {
   #endif
 
 	_sxw_update_root_tables(sizes);
-	_transp_contribution_by_group(SXW.transp, _resource_cur);
+	_transp_contribution_by_group(SXW.transpTotal, _resource_cur);
 
 	ForEachGroup(g)
 		_resource_pr[g] =

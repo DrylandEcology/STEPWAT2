@@ -30,7 +30,6 @@
 #include "filefuncs.h"
 #include "myMemory.h"
 #include "ST_steppe.h"
-#include "ST_Globals.h"
 #include "SW_Defines.h"
 #include "SW_Site.h"
 #include "sxw_funcs.h"
@@ -100,7 +99,7 @@ static void _print_results(void) {
   ForEachTrPeriod(pd) {
     LOG(fp,"%d", pd);
     ForEachTreeTranspLayer(lyr)
-      LOG(fp,"\t%5.4f", SXW.transp[Ilp(lyr,pd)]);
+      LOG(fp,"\t%5.4f", SXW.transpTotal[Ilp(lyr,pd)]);
     LOG_NL;
   }
 
@@ -166,7 +165,7 @@ static void _print_results(void) {
       sum = 0.;
       ForEachTreeTranspLayer(lyr) {
         sum += _roots_active[Iglp(g,lyr,pd)]
-            *  SXW.transp[Ilp(lyr,pd)];
+            *  SXW.transpTotal[Ilp(lyr,pd)];
       }
       LOG(fp,"\t%5.4f", sum);
     }
@@ -213,7 +212,7 @@ static void _read_test_data( void) {
                         "Compare with soil layer definitions for SOILWAT.",
                         fname);
       }
-      SXW.transp[Ilp(lyr,pd)] = atof(p);
+      SXW.transpTotal[Ilp(lyr,pd)] = atof(p);
       lyr++;
     }
 
