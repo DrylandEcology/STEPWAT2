@@ -71,6 +71,11 @@ typedef struct stepwat_st SXW_t;
    group/layer/phenology 3d table */
 #define Iglp(g,l,p) (((g)*SXW.NTrLyrs*SXW.NPds) + ((l)*SXW.NPds) + (p))
 
+/* convert 3-d index to actual array index for
+ * veg-prod-type/layer/phenology
+ */
+#define Itlp(t,l,p) (((t)*SXW.NTrLyrs*SXW.NPds) + ((l)*SXW.NPds) + (p))
+
 /* convert 2d layer by period indices to
   layer/phenology 1D index */
 #define Ilp(l,p) ((l)*SXW.NPds + (p))

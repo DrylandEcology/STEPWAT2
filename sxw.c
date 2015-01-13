@@ -143,8 +143,8 @@ static void _recover_names(void);
 static void _read_debugfile(void);
 void _print_debuginfo(void);
 static void _make_swc_array(void);
-static void SXW_SW_Setup_Echo(void);
-static void SXW_SW_Output_Echo(void);
+//static void SXW_SW_Setup_Echo(void);
+//static void SXW_SW_Output_Echo(void);
 
 //these last four functions are to be used in ST_grid.c
 void load_sxw_memory( RealD * grid_roots_max, RealD* grid_rootsXphen, RealD* grid_roots_active, RealD* grid_roots_active_rel, RealD* grid_roots_active_sum, RealD* grid_phen );
@@ -282,7 +282,7 @@ void SXW_Run_SOILWAT (void) {
 
 }
 
-void SXW_SW_Setup_Echo(void) {
+/*void SXW_SW_Setup_Echo(void) {
 	int i;
 	printf("Fractions Grass:%f Shrub:%f Tree:%f Forb:%f BareGround:%f\n", SW_VegProd.fractionGrass, SW_VegProd.fractionShrub, SW_VegProd.fractionTree, SW_VegProd.fractionForb, SW_VegProd.fractionBareGround);
 	printf("Monthly Production Values\n");
@@ -327,11 +327,11 @@ void SXW_SW_Setup_Echo(void) {
 					s->lyr[i]->my_transp_rgn_tree, s->lyr[i]->my_transp_rgn_shrub, s->lyr[i]->my_transp_rgn_grass);
 
 	}
-}
+}*/
 
-void SXW_SW_Output_Echo() {
-
-}
+//void SXW_SW_Output_Echo() {
+//
+//}
 
 RealF SXW_GetPR( GrpIndex rg) {
 /*======================================================*/
@@ -616,7 +616,8 @@ static void _make_roots_arrays(void) {
   _roots_active     = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
   _roots_active_rel = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
 
-  size = SXW.NPds * SXW.NTrLyrs;
+  //4 - Grass,Frob,Tree,Shrub
+  size = 4 * SXW.NPds * SXW.NTrLyrs;
   _roots_active_sum = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
 }
 
@@ -739,10 +740,19 @@ void _print_debuginfo(void) {
 	SW_VEGPROD *v = &SW_VegProd;
 	TimeInt p;
 	LyrIndex t;
+	int l;
 	FILE *f;
 	GrpIndex r;
 	RealF sum = 0.;
+	RealF sum1 = 0.;
+	RealF sum2 = 0.;
+	RealF sum3 = 0.;
 	static Bool beenhere = FALSE;
+	char vegProdNames[4][7];
+	strcpy(vegProdNames[0], "TREE");
+	strcpy(vegProdNames[1], "SHRUB");
+	strcpy(vegProdNames[2], "GRASS");
+	strcpy(vegProdNames[3], "FORB");
 
 	f = OpenFile(_debugout, "a");
 
@@ -782,8 +792,14 @@ void _print_debuginfo(void) {
 
 	fprintf(f, "Group     \tRelsize\tPR\tTransp\n");
 	fprintf(f, "-----     \t-------\t-----\t-----\n");
-	ForEachGroup(r)
+	ForEachGroup(r) {
+		sum1 += RGroup[r]->relsize;
+		sum2 += RGroup[r]->pr;
+		sum3 += _resource_cur[r];
 		fprintf(f, "%s\t%.4f\t%.4f\t%.4f\n", RGroup[r]->name, RGroup[r]->relsize, RGroup[r]->pr, _resource_cur[r]);
+	}
+	fprintf(f, "-----     \t-------\t-----\t-----\n");
+	fprintf(f, "%s\t%.4f\t%.4f\t%.4f\n", "Total", sum1, sum2, sum3);
 
 	fprintf(f, "\n------ Production Values -------\n");
 	fprintf(f, "Month\tBMass\tPctLive\tLAIlive\tVegCov\tTotAGB\n");
@@ -834,17 +850,18 @@ void _print_debuginfo(void) {
 	}
 	// end 08/01/2012 edit...
 
-	fprintf(f, "\n------ Active Roots (sum) -------\n");
-	fprintf(f, "Layer:");
-	ForEachTrPeriod(p)
-		fprintf(f, "\t%d", p + 1);
-	fprintf(f, "\n");
-	//ForEachTranspLayer(t) {
-	for (t = 0; t < SXW.NTrLyrs; t++) {
-		fprintf(f, "%d", t + 1);
+	for (t = 0; t < 4; t++) {
+		fprintf(f, "\n------ Active Roots (sum) %s -------\n", vegProdNames[t]);
+		fprintf(f, "Layer:");
 		ForEachTrPeriod(p)
-			fprintf(f, "\t%.4f", _roots_active_sum[Ilp(t, p)]);
+			fprintf(f, "\t%d", p + 1);
 		fprintf(f, "\n");
+		for (l = 0; l < SXW.NTrLyrs; l++) {
+			fprintf(f, "%d", t + 1);
+			ForEachTrPeriod(p)
+				fprintf(f, "\t%.4f", _roots_active_sum[Itlp(t, l, p)]);
+			fprintf(f, "\n");
+		}
 	}
 
 	fprintf(f, "\n------ Active Roots (relative) -------\n");

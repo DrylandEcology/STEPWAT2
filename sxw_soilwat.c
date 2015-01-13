@@ -99,7 +99,7 @@ void _sxw_sw_setup (RealF sizes[]) {
 
 void _sxw_sw_run(void) {
 /*======================================================*/
-	SW_Model.year = SW_Model.startyr + Globals.currYear -1;
+	SW_Model.year = SW_Model.startyr + Globals.currYear-1;
 	SW_CTL_run_current_year();
 }
 
