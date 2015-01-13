@@ -156,10 +156,7 @@ void _sxw_update_resource(void) {
 	ForEachGroup(g)
 		_resource_pr[g] =
 				ZRO(sizes[g]) ? 0.0 : _resource_cur[g] * _bvt / sizes[g];
-
-
 /* _print_debuginfo(); */
-
 }
 
 void _sxw_update_root_tables( RealF sizes[] ) {
@@ -236,6 +233,7 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
 	LyrIndex l;
 	int t;
 	RealD *transp;
+	RealF sumUsedByGroup = 0., sumTranspTotal = 0.;
 
 	ForEachGroup(g)
 	{
@@ -265,8 +263,19 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
 				use_by_group[g] += (RealF) (_roots_active_rel[Iglp(g, l, p)] * transp[Ilp(l, p)]);
 			}
 		}
+		sumUsedByGroup += use_by_group[g];
+	}
+	//Extra Transp is proportionately given to the Rgroups.
+	ForEachTrPeriod(p)
+	{
+		for (t = 0; t < SXW.NSoLyrs; t++)
+			sumTranspTotal += SXW.transpTotal[Ilp(t, p)];
 	}
 
+	ForEachGroup(g)
+	{
+		use_by_group[g] = (use_by_group[g]/sumUsedByGroup) * sumTranspTotal;
+	}
 }
 
 
