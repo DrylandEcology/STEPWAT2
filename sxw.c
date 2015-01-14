@@ -285,7 +285,7 @@ void SXW_Run_SOILWAT (void) {
 void SXW_SW_Setup_Echo(void) {
 	char name[256] = {0};
 	strcat(name, _debugout);
-	FILE *f = OpenFile(strcat(name, "_input.out"), "a");
+	FILE *f = OpenFile(strcat(name, ".input.out"), "a");
 	int i;
 	fprintf(f, "\n================== %d =============================\n", SW_Model.year);
 	fprintf(f,"Fractions Grass:%f Shrub:%f Tree:%f Forb:%f BareGround:%f\n", SW_VegProd.fractionGrass, SW_VegProd.fractionShrub, SW_VegProd.fractionTree, SW_VegProd.fractionForb, SW_VegProd.fractionBareGround);
@@ -737,12 +737,12 @@ static void _read_debugfile(void) {
 
 	/* now empty the file prior to the run */
 	strcat(name, _debugout);
-	f = OpenFile(strcat(name, "_output.out"), "w");
+	f = OpenFile(strcat(name, ".output.out"), "w");
 	CloseFile(&f);
 
 	name[0] = 0;
 	strcat(name, _debugout);
-	f = OpenFile(strcat(name, "_input.out"), "w");
+	f = OpenFile(strcat(name, ".input.out"), "w");
 	CloseFile(&f);
 }
 
@@ -766,7 +766,7 @@ void _print_debuginfo(void) {
 	strcpy(vegProdNames[3], "FORB");
 	char name[256] = {0};
 	strcat(name, _debugout);
-	f = OpenFile(strcat(name, "_output.out"), "a");
+	f = OpenFile(strcat(name, ".output.out"), "a");
 
 	if (!beenhere) {
 		beenhere = TRUE;
