@@ -271,10 +271,11 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
 		for (t = 0; t < SXW.NSoLyrs; t++)
 			sumTranspTotal += SXW.transpTotal[Ilp(t, p)];
 	}
-
-	ForEachGroup(g)
-	{
-		use_by_group[g] = (use_by_group[g]/sumUsedByGroup) * sumTranspTotal;
+	if(!ZRO(sumTranspTotal)) {
+		ForEachGroup(g)
+		{
+			use_by_group[g] = (use_by_group[g]/sumUsedByGroup) * sumTranspTotal;
+		}
 	}
 }
 
