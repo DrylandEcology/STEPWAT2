@@ -143,7 +143,7 @@ static void _recover_names(void);
 static void _read_debugfile(void);
 void _print_debuginfo(void);
 static void _make_swc_array(void);
-//static void SXW_SW_Setup_Echo(void);
+static void SXW_SW_Setup_Echo(void);
 //static void SXW_SW_Output_Echo(void);
 
 //these last four functions are to be used in ST_grid.c
@@ -282,52 +282,56 @@ void SXW_Run_SOILWAT (void) {
 
 }
 
-/*void SXW_SW_Setup_Echo(void) {
+void SXW_SW_Setup_Echo(void) {
+	char name[256] = {0};
+	strcat(name, _debugout);
+	FILE *f = OpenFile(strcat(name, "_input.out"), "a");
 	int i;
-	printf("Fractions Grass:%f Shrub:%f Tree:%f Forb:%f BareGround:%f\n", SW_VegProd.fractionGrass, SW_VegProd.fractionShrub, SW_VegProd.fractionTree, SW_VegProd.fractionForb, SW_VegProd.fractionBareGround);
-	printf("Monthly Production Values\n");
-	printf("Grass\n");
-	printf("Month\tLitter\tBiomass\tPLive\tLAI_conv\n");
+	fprintf(f, "\n================== %d =============================\n", SW_Model.year);
+	fprintf(f,"Fractions Grass:%f Shrub:%f Tree:%f Forb:%f BareGround:%f\n", SW_VegProd.fractionGrass, SW_VegProd.fractionShrub, SW_VegProd.fractionTree, SW_VegProd.fractionForb, SW_VegProd.fractionBareGround);
+	fprintf(f,"Monthly Production Values\n");
+	fprintf(f,"Grass\n");
+	fprintf(f,"Month\tLitter\tBiomass\tPLive\tLAI_conv\n");
 	for (i = 0; i < 12; i++) {
-		printf("%u\t%f\t%f\t%f\t%f\n", i + 1, SW_VegProd.grass.litter[i],
+		fprintf(f,"%u\t%f\t%f\t%f\t%f\n", i + 1, SW_VegProd.grass.litter[i],
 				SW_VegProd.grass.biomass[i], SW_VegProd.grass.pct_live[i],
 				SW_VegProd.grass.lai_conv[i]);
 	}
 
-	printf("Shrub\n");
-	printf("Month\tLitter\tBiomass\tPLive\tLAI_conv\n");
+	fprintf(f,"Shrub\n");
+	fprintf(f,"Month\tLitter\tBiomass\tPLive\tLAI_conv\n");
 	for (i = 0; i < 12; i++) {
-		printf("%u\t%f\t%f\t%f\t%f\n", i + 1, SW_VegProd.shrub.litter[i],
+		fprintf(f,"%u\t%f\t%f\t%f\t%f\n", i + 1, SW_VegProd.shrub.litter[i],
 				SW_VegProd.shrub.biomass[i], SW_VegProd.shrub.pct_live[i],
 				SW_VegProd.shrub.lai_conv[i]);
 	}
 
-	printf("Tree\n");
-	printf("Month\tLitter\tBiomass\tPLive\tLAI_conv\n");
+	fprintf(f,"Tree\n");
+	fprintf(f,"Month\tLitter\tBiomass\tPLive\tLAI_conv\n");
 	for (i = 0; i < 12; i++) {
-		printf("%u\t%f\t%f\t%f\t%f\n", i + 1, SW_VegProd.tree.litter[i],
+		fprintf(f,"%u\t%f\t%f\t%f\t%f\n", i + 1, SW_VegProd.tree.litter[i],
 				SW_VegProd.tree.biomass[i], SW_VegProd.tree.pct_live[i],
 				SW_VegProd.tree.lai_conv[i]);
 	}
 
-	printf("Forb\n");
-	printf("Month\tLitter\tBiomass\tPLive\tLAI_conv\n");
+	fprintf(f,"Forb\n");
+	fprintf(f,"Month\tLitter\tBiomass\tPLive\tLAI_conv\n");
 	for (i = 0; i < 12; i++) {
-		printf("%u\t%f\t%f\t%f\t%f\n", i + 1, SW_VegProd.forb.litter[i],
+		fprintf(f,"%u\t%f\t%f\t%f\t%f\n", i + 1, SW_VegProd.forb.litter[i],
 				SW_VegProd.forb.biomass[i], SW_VegProd.forb.pct_live[i],
 				SW_VegProd.forb.lai_conv[i]);
 	}
 
 	SW_SITE *s = &SW_Site;
-	printf("Forb\tTree\tShrub\tGrass\n");
+	fprintf(f,"Soils Transp_coeff\n");
+	fprintf(f,"Forb\tTree\tShrub\tGrass\n");
 	ForEachSoilLayer(i)
-	{
-			printf("%6.2f %6.2f %6.2f %6.2f %u %u %u %u\n",
-					s->lyr[i]->transp_coeff_forb, s->lyr[i]->transp_coeff_tree, s->lyr[i]->transp_coeff_shrub, s->lyr[i]->transp_coeff_grass, s->lyr[i]->my_transp_rgn_forb,
-					s->lyr[i]->my_transp_rgn_tree, s->lyr[i]->my_transp_rgn_shrub, s->lyr[i]->my_transp_rgn_grass);
-
+	{// %u %u %u %u s->lyr[i]->my_transp_rgn_forb, s->lyr[i]->my_transp_rgn_tree, s->lyr[i]->my_transp_rgn_shrub, s->lyr[i]->my_transp_rgn_grass
+		fprintf(f,"%6.2f %6.2f %6.2f %6.2f\n", s->lyr[i]->transp_coeff_forb, s->lyr[i]->transp_coeff_tree, s->lyr[i]->transp_coeff_shrub, s->lyr[i]->transp_coeff_grass);
 	}
-}*/
+	fprintf(f, "\n");
+	CloseFile(&f);
+}
 
 //void SXW_SW_Output_Echo() {
 //
@@ -344,9 +348,9 @@ RealF SXW_GetPR( GrpIndex rg) {
 void SXW_PrintDebug(void) {
 /*======================================================*/
 	TimeInt i;
-
 	for (i = 0; i < _debugyrs_cnt; i++) {
 		if (SW_Model.year == _debugyrs[i]) {
+			SXW_SW_Setup_Echo();
 			_print_debuginfo();
 			break;
 		}
@@ -698,6 +702,7 @@ static void _read_debugfile(void) {
 	char *date, str[102];
 	int cnt = 0;
 	TimeInt i;
+	char name[256] = {0};
 
 	f = OpenFile(SXW.debugfile, "r");
 
@@ -731,7 +736,13 @@ static void _read_debugfile(void) {
 	CloseFile(&f);
 
 	/* now empty the file prior to the run */
-	f = OpenFile(_debugout, "w");
+	strcat(name, _debugout);
+	f = OpenFile(strcat(name, "_output.out"), "w");
+	CloseFile(&f);
+
+	name[0] = 0;
+	strcat(name, _debugout);
+	f = OpenFile(strcat(name, "_input.out"), "w");
 	CloseFile(&f);
 }
 
@@ -753,8 +764,9 @@ void _print_debuginfo(void) {
 	strcpy(vegProdNames[1], "SHRUB");
 	strcpy(vegProdNames[2], "GRASS");
 	strcpy(vegProdNames[3], "FORB");
-
-	f = OpenFile(_debugout, "a");
+	char name[256] = {0};
+	strcat(name, _debugout);
+	f = OpenFile(strcat(name, "_output.out"), "a");
 
 	if (!beenhere) {
 		beenhere = TRUE;
