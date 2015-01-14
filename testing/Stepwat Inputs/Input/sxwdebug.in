@@ -2,4 +2,4 @@
 #must specify if you want to use via something like './stepwat -f files.in -ssxwdebug.in -q -e'.  There can't be a space between the -s and the name of the debug inputfile for some reason...
 
 Output/sxwdebug #name of file to write debug info to .out will be added.
-1997 1998 1999 2000 2001 2002 2003 2015 2020 2025 2030 2035 2040 2042 # 4-digit years to write output (see years.in), limit of 100, can be a multi-line continuation
+1997 1998 1999 2000 2001 2002 2003 2004 2005 2006 2007 2008 2009 2010 2011 2012 2013 2014 2015 2016 2017 2018 2019 2020 2021 2022 2023 2024 2025 2030 2035 2040 2042 # 4-digit years to write output (see years.in), limit of 100, can be a multi-line continuation
