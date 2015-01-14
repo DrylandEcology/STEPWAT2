@@ -1,0 +1,127 @@
+# Species input definition file STEPPEWAT
+
+# Anything after the first pound sign is a comment
+# Blank lines, white space, and comments may be used freely,
+# however, the order of input is important
+
+# name = 4 char genus/species name
+# rg = number of resource group to which this species belongs,
+#      based on the order they were entered in the rgroups input file,
+#      which is read before this file.  Note that a group cannot
+#      contain a mix of annuals and perennials, although there can 
+#      be more than one group for annuals, for example, one for
+#      invasives and one for natives.
+# age = maximum age in years, 0 = no limit
+#       because a group can be only annuals or only perennials,
+#       a 1 here implies this species belongs to an annual group.
+# irate = intrinsic growth rate (column 8, Table 2, C&L 1990)
+#         for annuals, this is the proportion of maximum biomass
+#         attainable with average resource availability, that is
+#         reported biomass = maxbio * irate / PR
+# ratep = prop of intrisic growth rate to use as maximum growth rate
+#         not used for annuals.
+# slow  = number of years of slow growth before mortality begins
+#         not used for annuals.
+# disturb  = disturbance class:
+#         1 = very sensitive to fecal pats and ant mounds
+#         2 = sensitive to pats, very sensitive to mounds
+#         3 = insensitive to pats, sensitive to mounds
+#         4 = insensitive to pats and mounds
+# pestab = seedling establishment probability for a given year
+#          for annuals, this is the probability that propagules
+#          will reach the plot in a given year.  Can be 1.0 for 
+#          native species, or < 1 for invasives.
+# eind  = maximum number of individuals that can establish in a year
+#         for annuals, max number of viable seeds that will grow to maturity
+#         on the plot. ie, fecundity.
+# minbio = biomass of an established seedling in grams
+#         meaningless for annuals.
+# maxbio = biomass of a mature individual in grams
+#         for annuals, see also irate definition.
+# clonal = can reproduce vegetatively (yes/no)
+#         placeholder required but ignored for annuals.
+# vegindv = number of seedling-sized units to add if vegprop occurs
+# tclass = temperature class (1=C4, 2=C3, 0=not applicable)
+# cosurv = proportion of a cohort surviving to maturity (0.0-1.0)
+#         meaningless for annuals.
+# onoff = turn on/off this species from the model. 1=use, 0=don't use.
+#      see also the same flag in group parameters file.
+# dispersal = turn on/off seed dispersal for this species. 1=use, 0=don't use.
+# 	dispersal is only applicable when using gridded option.
+#      
+#
+#
+# name     rg  age  irate    ratep slow disturb pestab     eind minbio  maxbio  clonal vegindv tclass  cosurv  onoff
+ PGC       	1   75  0.47400 0.900    2       2    0.12500    2   0.500   12.00      y       3       2  0.0100     1 	
+ PGW	    2   75  0.47400 0.900    2       2    0.12500    2   0.605   12.00      y       3       1  0.0100     1 
+ AGC        3   1   0.94700 0.900    2       2    0.10000    2   0.020   1.000      n       0       2  0.0100     1 
+ AGW        4   1   0.94700 0.900    2       2    0.10000    2   0.020   0.500      n       0       1  0.0100     1 
+ SHRUB      5   100 0.40000 0.900    2       2    1.00000    1   2.000   100.0      n       0       2  0.0100     1 
+ FORC       6   35  0.42600 0.900    2       2    1.00000    3   0.035   0.707      n       0       2  0.0100     1 
+ FORW       7   35  0.42600 0.900    2       2    0.01500    3   0.035   0.707      n       0       1  0.0100     1 
+ succulents 8   35  0.42600 0.900    2       2    0.01500    3   0.035   0.707      n       0       1  0.0100     1
+[end]  # this marks the end of the species-specific parameters above
+
+# ===============================================================================
+# Additional parameters for annuals-only establishment.
+#
+# name = name as found in previous table.  must be exactly the same.
+# viable = max years seed viability.  sets seedprod array size.
+# xdecay = decay exponent.  indivs established = SUM(1/seed_age^xdecay)
+#
+# name     viable xdecay 
+ AGC        10    1.00
+ AGW        10    1.00
+
+[end]  # end of additional annuals-only parameters.
+
+# ===============================================================================
+# Species-specific probabilities of vegetative propagation for
+# various mortality types.  In C&L 1990, the probabilities were the same
+# for all clonal species, however, the program design makes it easy to provide
+# species-level control.  If the species is not clonal, the numbers are ignored,
+# which makes it easy to just cut and paste.
+
+# name = 4 char name exactly as above (although order is not important)
+# vprop1 = probability if insufficient resources
+# vprop2 = probability if slow growth
+# vprop3 = probability if intrinsic mortality
+# vprop4 = probability if disturbance
+#
+# name     vprop1 vprop2 vprop3 vprop4
+ PGC     	0.7500 0.9000 0.9000 0.9000
+ PGW     	0.7500 0.9000 0.9000 0.9000
+ AGC     	0.7500 0.9000 0.9000 0.9000
+ AGW     	0.7500 0.9000 0.9000 0.9000
+ SHRUB   	0.7500 0.9000 0.9000 0.9000
+ FORC    	0.7500 0.9000 0.9000 0.9000
+ FORW    	0.7500 0.9000 0.9000 0.9000
+ succulents 0.7500 0.9000 0.9000 0.9000
+[end]  # this marks the end of the veg-prop parameters
+
+# ===============================================================================
+# Species-specific input for seed dispersal.
+# Seed dispersal based on Coffin & Lauenroth 1989 paper
+# NOTE: Seed dispersal requires running with gridded option.
+#
+# name = 4 char name exactly as above (although order is not important)
+# dispersal = flag to turn seed dispersal on/off for this species(0 is off, 1 is on)
+# param1 = % of maximum biomass required for an individual to produce seeds
+# PPTdry = ppt of a dry year (in mm)
+# PPTwet = ppt of a wet year (in mm)
+# Pmin = probability of producing seeds in a dry year
+# Pmax = probability of producing seeds in a wet year
+# H = the average release height of the inflorescences (cm) 
+# VT = the average sinking velocity of the seeds (cm/sec)
+#
+# name 		dispersal	param1	PPTdry	PPTwet	Pmin	Pmax	H	VT
+ PGC		1		0.9	105	520	0.01	0.55	30.0	100.0 
+ PGW 		1		0.5	105	520	0.01	0.55	30.0	100.0 
+ AGC 		1		0.5	105	520	0.01	0.55	30.0	100.0 
+ AGW 		1		0.5	105	520	0.01	0.55	30.0	100.0 
+ SHRUB 		1		0.5	105	520	0.01	0.55	30.0	100.0 
+ FORC 		1		0.5	105	520	0.01	0.55	30.0	100.0 
+ FORW 		1		0.5	105	520	0.01	0.55	30.0	100.0 
+ succulents 1		0.5	105	520	0.01	0.55	30.0	100.0
+
+[end]	# this marks the end of the seed-dispersal parameters
