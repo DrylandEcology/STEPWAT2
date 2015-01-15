@@ -45,6 +45,8 @@
 # ---- Intrinsic site params: CPER (40.816° N, 1646 m elevation) ----
 0.71	# latitude of the site in radians, site = 002_-119.415_39.046
 1646.	# altitude of site (m a.s.l.)
+0.0			# slope at site (degrees): no slope = 0
+0.0			# aspect at site (degrees): N=0, E=90, S=180, W=270, no slope:-1
 
 # ---- Soil Temperature Constants ----
 # from Parton 1978, ch. 2.2.2 Temperature-profile Submodel
@@ -69,5 +71,5 @@
 # ndx    layer
 	1		2
 	2		4
-	3		6
-	#4		10
+	3		5
+	4		6

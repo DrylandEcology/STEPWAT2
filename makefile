@@ -110,6 +110,8 @@ ALLTGT	=	$(Bin)/stepwat
 all:	$(ALLTGT)
 		cp stepwat testing/stepwat
 		cp stepwat testing/Stepwat\ Inputs/stepwat
+		cp stepwat testing.sagebrush.bradford
+		cp stepwat testing.shortgrass.bradford
 
 objs:	$(ALLOBJS)
 

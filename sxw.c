@@ -305,7 +305,7 @@ void SXW_SW_Setup_Echo(void) {
 				SW_VegProd.shrub.biomass[i], SW_VegProd.shrub.pct_live[i],
 				SW_VegProd.shrub.lai_conv[i]);
 	}
-
+/*
 	fprintf(f,"Tree\n");
 	fprintf(f,"Month\tLitter\tBiomass\tPLive\tLAI_conv\n");
 	for (i = 0; i < 12; i++) {
@@ -313,7 +313,7 @@ void SXW_SW_Setup_Echo(void) {
 				SW_VegProd.tree.biomass[i], SW_VegProd.tree.pct_live[i],
 				SW_VegProd.tree.lai_conv[i]);
 	}
-
+*/
 	fprintf(f,"Forb\n");
 	fprintf(f,"Month\tLitter\tBiomass\tPLive\tLAI_conv\n");
 	for (i = 0; i < 12; i++) {
