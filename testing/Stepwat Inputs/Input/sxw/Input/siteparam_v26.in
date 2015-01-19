@@ -66,7 +66,7 @@
 # ---- Transpiration regions ----
 # ndx  : 1=shallow, 2=medium, 3=deep, 4=very deep
 # layer: deepest layer number of the region. 
-# Grasses	Shrubs		Trees		Forbs
+# these layers and transpiration regions are used for all veg types (grasses, shrubs, forbs, trees)
 #        Layers are defined in soils.in.
 # ndx    layer
 	1	3
