@@ -21,15 +21,16 @@ VPATH	=	$(HOMEV)/include #no idea what this was used for either...
 oDir	=	./obj
 Bin	=	.
 Src	=	.
-libDirs	=	-Lsw_src
+libDirs	=	-Lsw_src -Lsqlite-amalgamation
 
-incDirs	=	-Isw_src
+incDirs	=	-Isw_src -Isqlite-amalgamation
 
 LIBS	=	
 C_FLAGS	=	-g -m32 -O0 -Wstrict-prototypes -Wmissing-prototypes -Wimplicit -Wunused -Wformat -Wredundant-decls -Wcast-align\
 	-DSTEPWAT -lm
 
 SRCS	=\
+	$(Src)/sqlite-amalgamation/sqlite3.c\
 	$(Src)/sw_src/filefuncs.c\
 	$(Src)/sw_src/generic.c\
 	$(Src)/sw_src/mymemory.c\
@@ -37,6 +38,7 @@ SRCS	=\
 	$(Src)/sw_src/rands.c\
 	$(Src)/sxw_environs.c\
 	$(Src)/sxw.c\
+	$(Src)/sxw_sql.c\
 	$(Src)/sxw_resource.c\
 	$(Src)/sxw_soilwat.c\
 	$(Src)/sw_src/SW_Markov.c\
@@ -65,12 +67,14 @@ SRCS	=\
 	#$(Src)/sxw_tester.c
 
 EXOBJS	=\
+	$(oDir)/sqlite-amalgamation/sqlite3.o\
 	$(oDir)/sw_src/filefuncs.o\
 	$(oDir)/sw_src/generic.o\
 	$(oDir)/sw_src/mymemory.o\
 	$(oDir)/sw_src/Times.o\
 	$(oDir)/sw_src/rands.o\
 	$(oDir)/sxw.o\
+	$(oDir)/sxw_sql.o\
 	$(oDir)/sxw_resource.o\
 	$(oDir)/sxw_soilwat.o\
 	$(oDir)/sw_src/SW_Markov.o\
@@ -132,7 +136,10 @@ cleanall:	cleanobjs cleanbin
 
 $(Bin)/stepwat: $(EXOBJS)
 	$(CC) -g -m32 -O2 -o $(Bin)/stepwat $(EXOBJS) $(incDirs) $(libDirs) $(LIBS) -lm
-	
+
+$(oDir)/sqlite-amalgamation/sqlite3.o: sqlite-amalgamation/sqlite3.c sqlite-amalgamation/sqlite3.h
+	$(CC) -DSQLITE_THREADSAFE=0 -DSQLITE_OMIT_LOAD_EXTENSION $(C_FLAGS) $(incDirs) -c -o $@ $<
+
 $(oDir)/sw_src/filefuncs.o: sw_src/filefuncs.c sw_src/filefuncs.h \
  sw_src/generic.h
 	$(CC) $(C_FLAGS) $(incDirs) -c -o $@ $<
@@ -163,6 +170,11 @@ $(oDir)/sxw.o: sxw.c sw_src/generic.h sw_src/filefuncs.h \
  sxw_module.h sw_src/SW_Control.h sw_src/SW_Model.h sw_src/SW_Site.h sw_src/SW_SoilWater.h \
  sw_src/SW_Files.h sw_src/SW_VegProd.h
 	$(CC) $(C_FLAGS) $(incDirs) -c -o $@ $<
+	
+$(oDir)/sxw_sql.o: sxw_sql.c ST_steppe.h \
+ ST_steppe.h sw_src/SW_Defines.h sxw.h\
+ sw_src/SW_Times.h sxw_module.h sw_src/SW_Model.h sw_src/SW_Site.h sw_src/SW_SoilWater.h
+	$(CC) $(C_FLAGS) $(incDirs) $(libDirs) -c -o $@ $<
 
 $(oDir)/sxw_resource.o: sxw_resource.c sw_src/generic.h \
  sw_src/filefuncs.h sw_src/myMemory.h ST_steppe.h \

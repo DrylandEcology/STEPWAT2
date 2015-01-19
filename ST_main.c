@@ -38,7 +38,7 @@
   void rgroup_Establish( void) ;
   void rgroup_IncrAges( void);
   void rgroup_PartResources( void);
-  void rgroup_ResPartIndiv(void);
+  //void rgroup_ResPartIndiv(void);
 
   void mort_Main( Bool *killed);
   void mort_EndOfYear( void);
@@ -52,7 +52,7 @@
   void stat_Collect( Int year ) ;
   void stat_Collect_GMort ( void ) ;
   void stat_Collect_SMort ( void ) ;
-  void stat_Output_YrMorts( void ) ;
+  //void stat_Output_YrMorts( void ) ;
   void stat_Output_AllMorts( void) ;
   void stat_Output_AllBmass(void) ;
   
@@ -79,8 +79,8 @@
 /*************** Local Function Declarations ***************/
 /***********************************************************/
 void Plot_Initialize( void);
-void Debug_AddByIter( Int iter);
-void Debug_AddByYear( Int year);
+//void Debug_AddByIter( Int iter);
+//void Debug_AddByYear( Int year);
 /*void chkmem(void);*/
 static void usage(void) {
   char *s ="STEPPE plant community dynamics (SGS-LTER Jan-04).\n"
@@ -227,6 +227,10 @@ int main(int argc, char **argv) {
 		stat_Output_AllMorts();
 	if (BmassFlags.summary)
 		stat_Output_AllBmass();
+
+#ifdef STEPWAT
+			if (!isnull(SXW.debugfile) ) debugCleanUp();
+#endif
 
 	fprintf(progfp, "\n");
 	return 0;

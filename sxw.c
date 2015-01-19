@@ -61,13 +61,12 @@
 #include "sxw.h"
 #include "sxw_funcs.h"
 #include "sxw_module.h"
-#include "SW_Control.h"
-#include "SW_Model.h"
+#include "sw_src/SW_Control.h"
+#include "sw_src/SW_Model.h"
 #include "sw_src/SW_VegProd.h"
-#include "SW_Site.h"
-#include "SW_SoilWater.h"
-#include "SW_Files.h"
-#include "SW_VegProd.h"
+#include "sw_src/SW_Site.h"
+#include "sw_src/SW_SoilWater.h"
+#include "sw_src/SW_Files.h"
 
 /*************** Global Variable Declarations ***************/
 /***********************************************************/
@@ -142,6 +141,7 @@ static void _write_sw_outin(void);
 static void _recover_names(void);
 static void _read_debugfile(void);
 void _print_debuginfo(void);
+void debugCleanUp(void);
 static void _make_swc_array(void);
 static void SXW_SW_Setup_Echo(void);
 //static void SXW_SW_Output_Echo(void);
@@ -305,7 +305,7 @@ void SXW_SW_Setup_Echo(void) {
 				SW_VegProd.shrub.biomass[i], SW_VegProd.shrub.pct_live[i],
 				SW_VegProd.shrub.lai_conv[i]);
 	}
-/*
+
 	fprintf(f,"Tree\n");
 	fprintf(f,"Month\tLitter\tBiomass\tPLive\tLAI_conv\n");
 	for (i = 0; i < 12; i++) {
@@ -313,7 +313,7 @@ void SXW_SW_Setup_Echo(void) {
 				SW_VegProd.tree.biomass[i], SW_VegProd.tree.pct_live[i],
 				SW_VegProd.tree.lai_conv[i]);
 	}
-*/
+
 	fprintf(f,"Forb\n");
 	fprintf(f,"Month\tLitter\tBiomass\tPLive\tLAI_conv\n");
 	for (i = 0; i < 12; i++) {
@@ -348,6 +348,8 @@ RealF SXW_GetPR( GrpIndex rg) {
 void SXW_PrintDebug(void) {
 /*======================================================*/
 	TimeInt i;
+	static Bool beenhere = FALSE;
+
 	for (i = 0; i < _debugyrs_cnt; i++) {
 		if (SW_Model.year == _debugyrs[i]) {
 			SXW_SW_Setup_Echo();
@@ -355,6 +357,21 @@ void SXW_PrintDebug(void) {
 			break;
 		}
 	}
+	if (!beenhere) {
+		beenhere = TRUE;
+		insertInfo();
+		insertRootsXphen(_rootsXphen);
+	}
+	insertInputVars();
+	insertInputProd();
+	insertInputSoils();
+	insertOutputVars(_resource_cur);
+	insertRgroupInfo(_resource_cur);
+	insertOutputProd(&SW_VegProd);
+	insertRootsSum(_roots_active_sum);
+	insertRootsRelative(_roots_active_rel);
+	insertTranspiration();
+	insertSWCBulk();
 }
 
 
@@ -744,6 +761,13 @@ static void _read_debugfile(void) {
 	strcat(name, _debugout);
 	f = OpenFile(strcat(name, ".input.out"), "w");
 	CloseFile(&f);
+
+	connect(_debugout);
+	createTables();
+}
+
+void debugCleanUp() {
+	disconnect();
 }
 
 void _print_debuginfo(void) {
@@ -813,11 +837,10 @@ void _print_debuginfo(void) {
 	fprintf(f, "-----     \t-------\t-----\t-----\n");
 	fprintf(f, "%s\t%.4f\t%.4f\t%.4f\n", "Total", sum1, sum2, sum3);
 
-	fprintf(f, "\n------ Production Values -------\n");
+	fprintf(f, "\n------ Production Values Daily Summed Across Types Monthly Averaged -------\n");
 	fprintf(f, "Month\tBMass\tPctLive\tLAIlive\tVegCov\tTotAGB\n");
 	fprintf(f, "-----\t-----\t-------\t-------\t------\t------\n");
 
-	// DLM - 08/01/2012 edited the following block of code to get the monthly values from the daily values (now used in SOILWAT) to output as it was previously... also accounts for the 3 different VegProd types now
 	int doy = 1;
 	ForEachMonth(p)
 	{
@@ -835,32 +858,38 @@ void _print_debuginfo(void) {
 		for (i = doy; i < (doy + days); i++) { //accumulating the monthly values...
 			lai_live += (v->tree.lai_live_daily[doy])
 					+ (v->shrub.lai_live_daily[doy])
-					+ (v->grass.lai_live_daily[doy]);
+					+ (v->grass.lai_live_daily[doy])
+					+ (v->forb.lai_live_daily[doy]);
 			vegcov += (v->tree.vegcov_daily[doy]) + (v->shrub.vegcov_daily[doy])
-					+ (v->grass.vegcov_daily[doy]);
+					+ (v->grass.vegcov_daily[doy]) + (v->forb.vegcov_daily[doy]);
 			total_agb += (v->tree.total_agb_daily[doy])
 					+ (v->shrub.total_agb_daily[doy])
-					+ (v->grass.total_agb_daily[doy]);
+					+ (v->grass.total_agb_daily[doy])
+					+ (v->forb.total_agb_daily[doy]);
+			pct_live += (v->tree.pct_live_daily[doy])
+					+ (v->shrub.pct_live_daily[doy])
+					+ (v->grass.pct_live_daily[doy])
+					+ (v->forb.pct_live_daily[doy]);
+			biomass += (v->tree.biomass_daily[doy])
+					+ (v->shrub.biomass_daily[doy])
+					+ (v->grass.biomass_daily[doy])
+					+ (v->forb.biomass_daily[doy]);
 		}
 		doy += days; //updating the doy
-		biomass = (v->tree.biomass[p]) + (v->shrub.biomass[p])
-				+ (v->grass.biomass[p]);		//getting the monthly biomass
-		pct_live = (v->tree.pct_live[p]) + (v->shrub.pct_live[p])
-				+ (v->grass.pct_live[p]);	//getting the monthly pct_live
+		//biomass = (v->tree.biomass[p]) + (v->shrub.biomass[p])
+		//		+ (v->grass.biomass[p]) + (v->forb.biomass[p]);		//getting the monthly biomass
+		//pct_live = (v->tree.pct_live[p]) + (v->shrub.pct_live[p])
+		//		+ (v->grass.pct_live[p]) + (v->forb.pct_live[p]);	//getting the monthly pct_live
 
+		pct_live /= days;
+		biomass /= days;
 		lai_live /= days; //getting the monthly averages...
 		vegcov /= days;
 		total_agb /= days;
 
-		// had to update this commented out code because the VegProds are now daily values instead of monthly ones...
-		//fprintf(f,"%4d\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n",
-		//      p+1,v->biomass[p], v->pct_live[p],v->lai_live[p],
-		//    v->vegcov[p], v->total_agb[p]);
-
-		fprintf(f, "%4d\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n", p + 1, biomass,
+		fprintf(f, "%4d\t%.2f\t%.3f\t%.3f\t%.2f\t%.2f\n", p + 1, biomass,
 				pct_live, lai_live, vegcov, total_agb);
 	}
-	// end 08/01/2012 edit...
 
 	for (t = 0; t < 4; t++) {
 		fprintf(f, "\n------ Active Roots (sum) %s -------\n", vegProdNames[t]);

@@ -40,6 +40,7 @@ struct stepwat_st {
   TimeInt NPds;  /* number of transp periods= maxdays, maxweeks, maxmonths */
   IntUS NTrLyrs, /* # transp. layers taken from SOILWAT */
         NGrps;   /* # plant groups taken from STEPPE */
+  IntUS NSoLyrs;  /* number of soil layers defined */
 
   /* These are file names */
   char  *f_files,  /* list of input files for sxw */
@@ -51,7 +52,6 @@ struct stepwat_st {
 
   /* DEBUG stuff */
   char *debugfile; /* added in ST_Main(), read to get debug instructions */
-  IntUS NSoLyrs;  /* number of soil layers defined */
   RealF *swc, /* dynamic array(Ilp) of SWC from SOILWAT */
          aet;     /* soilwat's evapotranspiration for the year */
 

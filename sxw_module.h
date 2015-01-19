@@ -19,6 +19,12 @@
 #ifndef SXW_MODULE_DEF
 #define SXW_MODULE_DEF
 
+#include "sw_src/SW_Control.h"
+#include "sw_src/SW_Model.h"
+#include "sw_src/SW_VegProd.h"
+#include "sw_src/SW_Site.h"
+#include "sw_src/SW_SoilWater.h"
+#include "sw_src/SW_Files.h"
 
 /* some macros for the production conversion array */
 #define PC_Bmass 0
@@ -43,7 +49,22 @@ void _sxw_set_environs(void);
 /* testing code-- see sxw_tester.c */
 void _sxw_test(void);
 
-
+//sql
+void connect(char *debugout);
+void createTables(void);
+void disconnect(void);
+void insertInfo(void);
+void insertRootsXphen(double * _rootsXphen);
+void insertInputVars(void);
+void insertInputProd(void);
+void insertInputSoils(void);
+void insertOutputVars(RealF * _resource_cur);
+void insertRgroupInfo(RealF * _resource_cur);
+void insertOutputProd(SW_VEGPROD *v);
+void insertRootsSum(RealD * _roots_active_sum);
+void insertRootsRelative(RealD * _roots_active_rel);
+void insertTranspiration(void);
+void insertSWCBulk(void);
 
 
 #endif

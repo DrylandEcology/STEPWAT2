@@ -86,13 +86,36 @@ static void _update_productivity(void);
 
 void _sxw_sw_setup (RealF sizes[]) {
 /*======================================================*/
+	int doy;
+	SW_VEGPROD *v = &SW_VegProd;
 
-
-  _update_transp_coeff(sizes);
-  _update_productivity();
+	_update_transp_coeff(sizes);
+	_update_productivity();
 
 #ifndef SXW_BYMAXSIZE
-  SW_VPD_init();
+	for (doy = 1; doy <= MAX_DAYS; doy++) {
+		v->tree.litter_daily[doy] = 0;
+		v->grass.litter_daily[doy] = 0;
+		v->shrub.litter_daily[doy] = 0;
+		v->forb.litter_daily[doy] = 0;
+
+		v->tree.biomass_daily[doy] = 0;
+		v->grass.biomass_daily[doy] = 0;
+		v->shrub.biomass_daily[doy] = 0;
+		v->forb.biomass_daily[doy] = 0;
+
+		v->tree.pct_live_daily[doy] = 0;
+		v->grass.pct_live_daily[doy] = 0;
+		v->shrub.pct_live_daily[doy] = 0;
+		v->forb.pct_live_daily[doy] = 0;
+
+		v->tree.lai_conv_daily[doy] = 0;
+		v->grass.lai_conv_daily[doy] = 0;
+		v->shrub.lai_conv_daily[doy] = 0;
+		v->forb.lai_conv_daily[doy] = 0;
+	}
+
+	SW_VPD_init();
 #endif
 
 }
