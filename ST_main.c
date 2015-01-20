@@ -191,7 +191,7 @@ int main(int argc, char **argv) {
 			rgroup_Grow();
 
 #ifdef STEPWAT
-			if (!isnull(SXW.debugfile) ) SXW_PrintDebug();
+			if (!isnull(SXW.debugfile) ) SXW_PrintDebug(0);
 #endif
 
 			mort_Main(&killedany);
@@ -229,7 +229,7 @@ int main(int argc, char **argv) {
 		stat_Output_AllBmass();
 
 #ifdef STEPWAT
-			if (!isnull(SXW.debugfile) ) debugCleanUp();
+			if (!isnull(SXW.debugfile) ) SXW_PrintDebug(1);
 #endif
 
 	fprintf(progfp, "\n");

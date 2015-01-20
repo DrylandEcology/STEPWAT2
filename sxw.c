@@ -345,33 +345,37 @@ RealF SXW_GetPR( GrpIndex rg) {
 
 }
 
-void SXW_PrintDebug(void) {
+void SXW_PrintDebug(Bool cleanup) {
 /*======================================================*/
 	TimeInt i;
 	static Bool beenhere = FALSE;
 
-	for (i = 0; i < _debugyrs_cnt; i++) {
-		if (SW_Model.year == _debugyrs[i]) {
-			SXW_SW_Setup_Echo();
-			_print_debuginfo();
-			break;
+	if(cleanup) {
+		debugCleanUp();
+	} else {
+		for (i = 0; i < _debugyrs_cnt; i++) {
+			if (SW_Model.year == _debugyrs[i]) {
+				SXW_SW_Setup_Echo();
+				_print_debuginfo();
+				break;
+			}
 		}
+		if (!beenhere) {
+			beenhere = TRUE;
+			insertInfo();
+			insertRootsXphen(_rootsXphen);
+		}
+		insertInputVars();
+		insertInputProd();
+		insertInputSoils();
+		insertOutputVars(_resource_cur);
+		insertRgroupInfo(_resource_cur);
+		insertOutputProd(&SW_VegProd);
+		insertRootsSum(_roots_active_sum);
+		insertRootsRelative(_roots_active_rel);
+		insertTranspiration();
+		insertSWCBulk();
 	}
-	if (!beenhere) {
-		beenhere = TRUE;
-		insertInfo();
-		insertRootsXphen(_rootsXphen);
-	}
-	insertInputVars();
-	insertInputProd();
-	insertInputSoils();
-	insertOutputVars(_resource_cur);
-	insertRgroupInfo(_resource_cur);
-	insertOutputProd(&SW_VegProd);
-	insertRootsSum(_roots_active_sum);
-	insertRootsRelative(_roots_active_rel);
-	insertTranspiration();
-	insertSWCBulk();
 }
 
 

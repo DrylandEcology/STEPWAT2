@@ -309,7 +309,7 @@ void insertOutputVars(RealF * _resource_cur) {
 	endTransaction();
 }
 
-static void insertSXWoutputRgroupRow(int year, int iter, int RGroupID, double Realsize, double PR, double Transpiration) {
+static void insertSXWoutputRgroupRow(int year, int iter, int RGroupID, double Biomass, double Realsize, double PR, double Transpiration) {
 	/*int rc;
 	char *zErrMsg = 0;
 	sql[0] = 0;
@@ -321,9 +321,10 @@ static void insertSXWoutputRgroupRow(int year, int iter, int RGroupID, double Re
 	sqlite3_bind_int(stmt_OutRgroup, 1, year);
 	sqlite3_bind_int(stmt_OutRgroup, 2, iter);
 	sqlite3_bind_int(stmt_OutRgroup, 3, RGroupID);
-	sqlite3_bind_double(stmt_OutRgroup, 4, Realsize);
-	sqlite3_bind_double(stmt_OutRgroup, 5, PR);
-	sqlite3_bind_double(stmt_OutRgroup, 6, Transpiration);
+	sqlite3_bind_double(stmt_OutRgroup, 4, Biomass);
+	sqlite3_bind_double(stmt_OutRgroup, 5, Realsize);
+	sqlite3_bind_double(stmt_OutRgroup, 6, PR);
+	sqlite3_bind_double(stmt_OutRgroup, 7, Transpiration);
 
 	sqlite3_step(stmt_OutRgroup);
 	sqlite3_clear_bindings(stmt_OutRgroup);
@@ -337,7 +338,7 @@ void insertRgroupInfo(RealF * _resource_cur) {
 
 	beginTransaction();
 	ForEachGroup(r) {
-		insertSXWoutputRgroupRow(Year, Iteration, r+1, RGroup[r]->relsize, RGroup[r]->pr, _resource_cur[r]);
+		insertSXWoutputRgroupRow(Year, Iteration, r+1, RGroup_GetBiomass(r),RGroup[r]->relsize, RGroup[r]->pr, _resource_cur[r]);
 	}
 	endTransaction();
 }
@@ -659,7 +660,7 @@ static void prepareStatements() {
 	sprintf(sql, "INSERT INTO sxwOutputVars (Year,Iteration,MAP_mm,MAT_C,AET_cm,AT_cm,TotalRelsize,TotalPR,TotalTransp) VALUES (@Year,@Iteration,@MAP_mm,@MAT_C,@AET_cm,@AT_cm,@TotalRelsize,@TotalPR,@TotalTransp);");
 	sqlite3_prepare_v2(db, sql, 1024, &stmt_OutVars, NULL);
 
-	sprintf(sql, "INSERT INTO sxwOutputRgroup (Year,Iteration,RGroupID,Realsize,PR,Transpiration) VALUES (@Year,@Iteration,@RGroupID,@Realsize,@PR,@Transpiration);");
+	sprintf(sql, "INSERT INTO sxwOutputRgroup (Year,Iteration,RGroupID,Biomass,Realsize,PR,Transpiration) VALUES (@Year,@Iteration,@RGroupID,@Biomass,@Realsize,@PR,@Transpiration);");
 	sqlite3_prepare_v2(db, sql, 1024, &stmt_OutRgroup, NULL);
 
 	sprintf(sql, "INSERT INTO sxwOutputProd (Year,Iteration,Month,BMass,PctLive,LAIlive,VegCov,TotAGB) VALUES (@Year,@Iteration,@Month,@BMass,@PctLive,@LAIlive,@VegCov,@TotAGB);");
@@ -709,7 +710,7 @@ void createTables() {
 	char *table_OutputVars =
 			"CREATE TABLE sxwOutputVars(Year INT NOT NULL, Iteration INT NOT NULL, MAP_mm INT, MAT_C REAL, AET_cm REAL, AT_cm REAL, TotalRelsize REAL, TotalPR REAL, TotalTransp REAL, PRIMARY KEY(Year, Iteration));";
 	char *table_OutputRgroup =
-			"CREATE TABLE sxwOutputRgroup(YEAR INT NOT NULL, Iteration INT NOT NULL, RGroupID INT NOT NULL, Realsize REAL, PR REAL, Transpiration REAL, PRIMARY KEY(Year, Iteration, RGroupID));";
+			"CREATE TABLE sxwOutputRgroup(YEAR INT NOT NULL, Iteration INT NOT NULL, RGroupID INT NOT NULL, Biomass REAL, Realsize REAL, PR REAL, Transpiration REAL, PRIMARY KEY(Year, Iteration, RGroupID));";
 	char *table_OutputProd =
 			"CREATE TABLE sxwOutputProd(YEAR INT NOT NULL, Iteration INT NOT NULL, Month INT NOT NULL, BMass REAL, PctLive REAL, LAIlive REAL, VegCov REAL, TotAGB REAL, PRIMARY KEY(Year, Iteration, Month));";
 	char *table_OutputRootsSum =

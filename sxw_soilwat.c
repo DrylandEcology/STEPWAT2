@@ -309,15 +309,23 @@ static void _update_productivity(void) {
 
 	}
 
-	biomass = biomass1 + biomass2 + biomass3 + biomass4;
-	if (ZRO(biomass))
-		biomass = 1;
-	v->fractionTree = (biomass1 / biomass);
-	v->fractionShrub = (biomass2 / biomass);
-	v->fractionGrass = (biomass3 / biomass);
-	v->fractionForb = (biomass4 / biomass);
-	//TODO: figure how to calculate bareground fraction.
-	v->fractionBareGround = 0;
+	if (GT(totbmass, 0.)) {
+		biomass = biomass1 + biomass2 + biomass3 + biomass4;
+		if (ZRO(biomass))
+			biomass = 1;
+		v->fractionTree = (biomass1 / biomass);
+		v->fractionShrub = (biomass2 / biomass);
+		v->fractionGrass = (biomass3 / biomass);
+		v->fractionForb = (biomass4 / biomass);
+		//TODO: figure how to calculate bareground fraction.
+		v->fractionBareGround = 0;
+	} else {
+		v->fractionTree = (0.0);
+		v->fractionShrub = (0.0);
+		v->fractionGrass = (0.0);
+		v->fractionForb = (0.0);
+		v->fractionBareGround = 1;
+	}
 #undef Biomass
 }
 
