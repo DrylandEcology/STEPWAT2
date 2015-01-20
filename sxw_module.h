@@ -55,6 +55,8 @@ void createTables(void);
 void disconnect(void);
 void insertInfo(void);
 void insertRootsXphen(double * _rootsXphen);
+void insertSXWPhen(void);
+void insertSXWProd(void);
 void insertInputVars(void);
 void insertInputProd(void);
 void insertInputSoils(void);

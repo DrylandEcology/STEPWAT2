@@ -18,6 +18,8 @@ extern SW_MODEL SW_Model;
 extern SXW_t SXW;
 extern SW_SITE SW_Site;
 extern SW_VEGPROD SW_VegProd;
+extern RealD *_phen;
+extern RealF _prod_conv[MAX_MONTHS][3];
 
 static sqlite3 *db;
 static char sql[1024];
@@ -100,7 +102,42 @@ static void insertRgroups(void) {
 	ForEachGroup(g)
 	{
 		sql[0] = 0;
-		sprintf(sql, "INSERT INTO RGroups (ID, NAME) VALUES (%d, '%s');", g+1, RGroup[g]->name);
+		sprintf(sql, "INSERT INTO RGroups (ID, NAME, VegProdType) VALUES (%d, '%s', %d);", g+1, RGroup[g]->name, RGroup[g]->veg_prod_type);
+		rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+		sqlcheck(rc, zErrMsg);
+	}
+	endTransaction();
+}
+
+void insertSXWPhen(void) {
+	int rc,m;
+	GrpIndex g;
+	char *zErrMsg = 0;
+	sql[0] = 0;
+
+	beginTransaction();
+	ForEachGroup(g)
+	{
+		for(m=0;m<12;m++) {
+			sql[0] = 0;
+			sprintf(sql, "INSERT INTO sxwphen (RGroupID, Month, GrowthPCT) VALUES (%d, %d, %f);", g+1, m+1,_phen[Igp(g,m)]);
+			rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+			sqlcheck(rc, zErrMsg);
+		}
+	}
+	endTransaction();
+}
+
+void insertSXWProd(void) {
+	int rc,m;
+	GrpIndex g;
+	char *zErrMsg = 0;
+	sql[0] = 0;
+
+	beginTransaction();
+	for(m=0;m<12;m++) {
+		sql[0] = 0;
+		sprintf(sql, "INSERT INTO sxwprod (Month, BMASS, LITTER) VALUES (%d, %f, %f);", m+1, _prod_conv[m][PC_Bmass], _prod_conv[m][PC_Litter]);
 		rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
 		sqlcheck(rc, zErrMsg);
 	}
@@ -113,7 +150,7 @@ void insertInfo() {
 	sql[0] = 0;
 
 	beginTransaction();
-	sprintf(sql, "INSERT INTO info (StartYear, Years, Iterations, RGroups, TranspirationLayers, SoilLayers) VALUES (%d, %d, %d, %d, %d, %d);", SW_Model.startyr, Globals.runModelYears, Globals.runModelIterations, Globals.grpCount, SXW.NTrLyrs, SXW.NSoLyrs);
+	sprintf(sql, "INSERT INTO info (StartYear, Years, Iterations, RGroups, TranspirationLayers, SoilLayers, PlotSize) VALUES (%d, %d, %d, %d, %d, %d, %f);", SW_Model.startyr, Globals.runModelYears, Globals.runModelIterations, Globals.grpCount, SXW.NTrLyrs, SXW.NSoLyrs, Globals.plotsize);
 	rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
 	sqlcheck(rc, zErrMsg);
 	endTransaction();
@@ -696,11 +733,11 @@ void createTables() {
 	int rc;
 	char *zErrMsg = 0;
 
-	char *table_PrjInfo = "CREATE TABLE info(StartYear INT, Years INT, Iterations INT, RGroups INT, TranspirationLayers INT, SoilLayers INT);";
-	char *table_rgroups =
-			"CREATE TABLE RGroups(ID INT PRIMARY KEY NOT NULL, NAME TEXT NOT NULL);";
-	char *table_rootsXphen =
-			"CREATE TABLE rootsXphen(RGroupID INT NOT NULL, Layer INT NOT NULL, January REAL, February REAL, March REAL, April REAL, May REAL, June REAL, July REAL, August REAL, September REAL, October REAL, November REAL, December REAL, PRIMARY KEY(RGroupID, Layer));";
+	char *table_PrjInfo = "CREATE TABLE info(StartYear INT, Years INT, Iterations INT, RGroups INT, TranspirationLayers INT, SoilLayers INT, PlotSize REAL);";
+	char *table_rgroups = "CREATE TABLE RGroups(ID INT PRIMARY KEY NOT NULL, NAME TEXT NOT NULL, VegProdType INT NOT NULL);";
+	char *table_phen = "CREATE TABLE sxwphen(RGroupID INT NOT NULL, Month INT NOT NULL, GrowthPCT REAL NOT NULL, PRIMARY KEY(RGroupID, Month));";
+	char *table_prod = "CREATE TABLE sxwprod(Month INT NOT NULL, BMASS REAL, LITTER REAL, PRIMARY KEY(Month));";
+	char *table_rootsXphen = "CREATE TABLE rootsXphen(RGroupID INT NOT NULL, Layer INT NOT NULL, January REAL, February REAL, March REAL, April REAL, May REAL, June REAL, July REAL, August REAL, September REAL, October REAL, November REAL, December REAL, PRIMARY KEY(RGroupID, Layer));";
 	char *table_InputVars =
 			"CREATE TABLE sxwInputVars(Year INT NOT NULL, Iteration INT NOT NULL, FracGrass REAL, FracShrub REAL, FracTree REAL, FracForb REAL, FracBareGround REAL, PRIMARY KEY(Year, Iteration));";
 	char *table_InputProd =
@@ -726,6 +763,12 @@ void createTables() {
 	sqlcheck(rc, zErrMsg);
 
 	rc = sqlite3_exec(db, table_rgroups, callback, 0, &zErrMsg);
+	sqlcheck(rc, zErrMsg);
+
+	rc = sqlite3_exec(db, table_phen, callback, 0, &zErrMsg);
+	sqlcheck(rc, zErrMsg);
+
+	rc = sqlite3_exec(db, table_prod, callback, 0, &zErrMsg);
 	sqlcheck(rc, zErrMsg);
 
 	rc = sqlite3_exec(db, table_rootsXphen, callback, 0, &zErrMsg);

@@ -363,6 +363,8 @@ void SXW_PrintDebug(Bool cleanup) {
 		if (!beenhere) {
 			beenhere = TRUE;
 			insertInfo();
+			insertSXWPhen();
+			insertSXWProd();
 			insertRootsXphen(_rootsXphen);
 		}
 		insertInputVars();
