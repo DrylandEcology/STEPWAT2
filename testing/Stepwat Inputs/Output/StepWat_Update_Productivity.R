@@ -99,7 +99,7 @@ for(m in 1:12) {
 }
 #These are the fractions that are written to soilwat
 fractions <- c(0,0,0,0,0)
-names(fractions) <- c("Tree","Shrub","Grass","Frob","BareGround")
+names(fractions) <- c("Tree","Shrub","Grass","Forb","BareGround")
 
 #Calculation of the fractions
 if(totbmass > 0) {
