@@ -114,7 +114,7 @@ struct _grid_sd_struct { //for seed dispersal
 } typedef Grid_SD_St;
 
 struct _grid_sxw_st { //holds pointers dynamically allocated by SXW.c
-	RealD *roots_max, *rootsXphen, *roots_active, *roots_active_rel, *roots_active_sum, *phen;
+	RealD *roots_max, *rootsXphen, *roots_active, *roots_active_rel, *roots_active_sum, *phen, *prod_bmass, *prod_pctlive;
 } typedef Grid_SXW_St;
 
 struct _grid_init_species_st {
@@ -215,8 +215,8 @@ void stat_Init_Accumulators( void );
 //functions from sxw.c
 void free_sxw_memory( void ); 
 void free_all_sxw_memory( void );
-void load_sxw_memory( RealD * grid_roots_max, RealD* grid_rootsXphen, RealD* grid_roots_active, RealD* grid_roots_active_rel, RealD* grid_roots_active_sum, RealD* grid_phen );
-void save_sxw_memory( RealD * grid_roots_max, RealD* grid_rootsXphen, RealD* grid_roots_active, RealD* grid_roots_active_rel, RealD* grid_roots_active_sum, RealD* grid_phen );
+void load_sxw_memory( RealD * grid_roots_max, RealD* grid_rootsXphen, RealD* grid_roots_active, RealD* grid_roots_active_rel, RealD* grid_roots_active_sum, RealD* grid_phen, RealD* grid_prod_bmass, RealD* grid_prod_pctlive );
+void save_sxw_memory( RealD * grid_roots_max, RealD* grid_rootsXphen, RealD* grid_roots_active, RealD* grid_roots_active_rel, RealD* grid_roots_active_sum, RealD* grid_phen, RealD* grid_prod_bmass, RealD* grid_prod_pctlive );
 void SXW_init( Bool init_SW );
 
 //from SW_Site.c (both needed to initialize the soil layers properly)
@@ -1239,7 +1239,7 @@ static void _load_cell( int row, int col, int year, Bool useAccumulators ) {
         	memcpy(SW_Site.lyr[j], grid_SW_Site[cell].lyr[j], sizeof(SW_LAYER_INFO));
         }
         
-        if(UseSoils) load_sxw_memory(grid_SXW_ptrs[cell].roots_max, grid_SXW_ptrs[cell].rootsXphen, grid_SXW_ptrs[cell].roots_active, grid_SXW_ptrs[cell].roots_active_rel, grid_SXW_ptrs[cell].roots_active_sum, grid_SXW_ptrs[cell].phen);
+        if(UseSoils) load_sxw_memory(grid_SXW_ptrs[cell].roots_max, grid_SXW_ptrs[cell].rootsXphen, grid_SXW_ptrs[cell].roots_active, grid_SXW_ptrs[cell].roots_active_rel, grid_SXW_ptrs[cell].roots_active_sum, grid_SXW_ptrs[cell].phen, grid_SXW_ptrs[cell].prod_bmass, grid_SXW_ptrs[cell].prod_pctlive);
 	}
 }
 
@@ -1308,7 +1308,7 @@ static void _load_spinup_cell( int cell ) {
         	memcpy(SW_Site.lyr[j], spinup_SW_Site[cell].lyr[j], sizeof(SW_LAYER_INFO));
         }
         
-        if(UseSoils) load_sxw_memory(spinup_SXW_ptrs[cell].roots_max, spinup_SXW_ptrs[cell].rootsXphen, spinup_SXW_ptrs[cell].roots_active, spinup_SXW_ptrs[cell].roots_active_rel, spinup_SXW_ptrs[cell].roots_active_sum, spinup_SXW_ptrs[cell].phen);
+        if(UseSoils) load_sxw_memory(spinup_SXW_ptrs[cell].roots_max, spinup_SXW_ptrs[cell].rootsXphen, spinup_SXW_ptrs[cell].roots_active, spinup_SXW_ptrs[cell].roots_active_rel, spinup_SXW_ptrs[cell].roots_active_sum, spinup_SXW_ptrs[cell].phen, spinup_SXW_ptrs[cell].prod_bmass, spinup_SXW_ptrs[cell].prod_pctlive);
 	}
 }
 
@@ -1381,7 +1381,7 @@ static void _save_cell( int row, int col, int year, Bool useAccumulators ) {
         		memcpy(grid_SW_Site[cell].lyr[j], SW_Site.lyr[j], sizeof(SW_LAYER_INFO));
         	}
         
-        if(UseSoils) save_sxw_memory(grid_SXW_ptrs[cell].roots_max, grid_SXW_ptrs[cell].rootsXphen, grid_SXW_ptrs[cell].roots_active, grid_SXW_ptrs[cell].roots_active_rel, grid_SXW_ptrs[cell].roots_active_sum, grid_SXW_ptrs[cell].phen);
+        if(UseSoils) save_sxw_memory(grid_SXW_ptrs[cell].roots_max, grid_SXW_ptrs[cell].rootsXphen, grid_SXW_ptrs[cell].roots_active, grid_SXW_ptrs[cell].roots_active_rel, grid_SXW_ptrs[cell].roots_active_sum, grid_SXW_ptrs[cell].phen, grid_SXW_ptrs[cell].prod_bmass, grid_SXW_ptrs[cell].prod_pctlive);
 	}
 }
 
@@ -1449,7 +1449,7 @@ static void _save_spinup_cell( int cell ) {
         		memcpy(spinup_SW_Site[cell].lyr[j], SW_Site.lyr[j], sizeof(SW_LAYER_INFO));
         	}
         
-        if(UseSoils) save_sxw_memory(spinup_SXW_ptrs[cell].roots_max, spinup_SXW_ptrs[cell].rootsXphen, spinup_SXW_ptrs[cell].roots_active, spinup_SXW_ptrs[cell].roots_active_rel, spinup_SXW_ptrs[cell].roots_active_sum, spinup_SXW_ptrs[cell].phen);
+        if(UseSoils) save_sxw_memory(spinup_SXW_ptrs[cell].roots_max, spinup_SXW_ptrs[cell].rootsXphen, spinup_SXW_ptrs[cell].roots_active, spinup_SXW_ptrs[cell].roots_active_rel, spinup_SXW_ptrs[cell].roots_active_sum, spinup_SXW_ptrs[cell].phen, grid_SXW_ptrs[cell].prod_bmass, grid_SXW_ptrs[cell].prod_pctlive);
 	}
 }
 
@@ -1694,8 +1694,10 @@ static void _init_soil_layers(int cell, int isSpinup) {
 		grid_SXW_ptrs[i].roots_active_rel = Mem_Calloc(SXW.NGrps * SXW.NPds * SXW.NTrLyrs, sizeof(RealD), "_init_soil_layers()");
 		grid_SXW_ptrs[i].roots_active_sum = Mem_Calloc(SXW.NPds * SXW.NTrLyrs, sizeof(RealD), "_init_soil_layers()");
 		grid_SXW_ptrs[i].phen = Mem_Calloc(SXW.NGrps * MAX_MONTHS, sizeof(RealD), "_init_soil_layers()");
+		grid_SXW_ptrs[i].prod_bmass = Mem_Calloc(SXW.NGrps * MAX_MONTHS, sizeof(RealD), "_init_soil_layers()");
+		grid_SXW_ptrs[i].prod_pctlive = Mem_Calloc(SXW.NGrps * MAX_MONTHS, sizeof(RealD), "_init_soil_layers()");
 
-		save_sxw_memory(grid_SXW_ptrs[i].roots_max, grid_SXW_ptrs[i].rootsXphen, grid_SXW_ptrs[i].roots_active, grid_SXW_ptrs[i].roots_active_rel, grid_SXW_ptrs[i].roots_active_sum, grid_SXW_ptrs[i].phen);
+		save_sxw_memory(grid_SXW_ptrs[i].roots_max, grid_SXW_ptrs[i].rootsXphen, grid_SXW_ptrs[i].roots_active, grid_SXW_ptrs[i].roots_active_rel, grid_SXW_ptrs[i].roots_active_sum, grid_SXW_ptrs[i].phen, grid_SXW_ptrs[i].prod_bmass, grid_SXW_ptrs[i].prod_pctlive);
 	} else {
 
 		spinup_SXW_ptrs[i].roots_max = Mem_Calloc(SXW.NGrps * SXW.NTrLyrs, sizeof(RealD), "_init_soil_layers()");
@@ -1704,8 +1706,10 @@ static void _init_soil_layers(int cell, int isSpinup) {
 		spinup_SXW_ptrs[i].roots_active_rel = Mem_Calloc(SXW.NGrps * SXW.NPds * SXW.NTrLyrs, sizeof(RealD), "_init_soil_layers()");
 		spinup_SXW_ptrs[i].roots_active_sum = Mem_Calloc(SXW.NPds * SXW.NTrLyrs, sizeof(RealD), "_init_soil_layers()");
 		spinup_SXW_ptrs[i].phen = Mem_Calloc(SXW.NGrps * MAX_MONTHS, sizeof(RealD), "_init_soil_layers()");
+		grid_SXW_ptrs[i].prod_bmass = Mem_Calloc(SXW.NGrps * MAX_MONTHS, sizeof(RealD), "_init_soil_layers()");
+		grid_SXW_ptrs[i].prod_pctlive = Mem_Calloc(SXW.NGrps * MAX_MONTHS, sizeof(RealD), "_init_soil_layers()");
 
-		save_sxw_memory(spinup_SXW_ptrs[i].roots_max, spinup_SXW_ptrs[i].rootsXphen, spinup_SXW_ptrs[i].roots_active, spinup_SXW_ptrs[i].roots_active_rel, spinup_SXW_ptrs[i].roots_active_sum, spinup_SXW_ptrs[i].phen);
+		save_sxw_memory(spinup_SXW_ptrs[i].roots_max, spinup_SXW_ptrs[i].rootsXphen, spinup_SXW_ptrs[i].roots_active, spinup_SXW_ptrs[i].roots_active_rel, spinup_SXW_ptrs[i].roots_active_sum, spinup_SXW_ptrs[i].phen, grid_SXW_ptrs[i].prod_bmass, grid_SXW_ptrs[i].prod_pctlive);
 	}
 }
 

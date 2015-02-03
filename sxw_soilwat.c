@@ -67,9 +67,10 @@ extern SW_VEGPROD SW_VegProd;
 
 /*********** Local/Module Variable Declarations ************/
 /***********************************************************/
-extern RealD *_roots_max,
-             *_phen;          /* phenology read from file */
-       RealF _prod_conv[MAX_MONTHS][3];
+extern RealD *_roots_max;
+extern RealD _prod_litter[MAX_MONTHS];
+extern RealD * _prod_bmass;
+extern RealD * _prod_pctlive;
 
 #ifdef SXW_BYMAXSIZE
 extern RealF _Grp_BMass[];  /* added 2/28/03 */
@@ -224,13 +225,8 @@ static void _update_productivity(void) {
   SW_VEGPROD *v = &SW_VegProd;
   RealF totbmass = 0.0,
         bmassg[MAX_RGROUPS] = {0.},
-        cumprop=0, cumprop1=0, cumprop2=0, cumprop3=0, cumprop4=0.,
-        biomass=0, biomass1=0, biomass2=0, biomass3=0, biomass4=0.,
-        props[MAX_MONTHS] = {0.},
-        props1[MAX_MONTHS] = {0.},
-        props2[MAX_MONTHS] = {0.},
-        props3[MAX_MONTHS] = {0.},
-  	  	props4[MAX_MONTHS] = {0.};
+        vegTypeBiomass[4] = {0.},
+        rgroupFractionOfVegTypeBiomass[MAX_RGROUPS] = {0.};
 
 #ifdef SXW_BYMAXSIZE
   #define Biomass(g)  _Grp_BMass[g]
@@ -243,80 +239,71 @@ static void _update_productivity(void) {
 	{
 		bmassg[g] = Biomass(g) / Globals.plotsize;
 		totbmass += bmassg[g];
+		if (1 == RGroup[g]->veg_prod_type) {				//tree
+			vegTypeBiomass[0] += bmassg[g];
+		} else if (2 == RGroup[g]->veg_prod_type) {			//shrub
+			vegTypeBiomass[1] += bmassg[g];
+		} else if (3 == RGroup[g]->veg_prod_type) {		//grass
+			vegTypeBiomass[2] += bmassg[g];
+		} else if (4 == RGroup[g]->veg_prod_type) {
+			vegTypeBiomass[3] += bmassg[g];
+		}
 	}
 
+	ForEachGroup(g) {
+		if(GT(vegTypeBiomass[RGroup[g]->veg_prod_type-1],0.))
+			rgroupFractionOfVegTypeBiomass[g] = bmassg[g]/vegTypeBiomass[RGroup[g]->veg_prod_type-1];
+		else
+			rgroupFractionOfVegTypeBiomass[g] = 0;
+	}
 	/* compute monthly biomass, litter, and pct live per month */
 	ForEachMonth(m)
 	{
+		v->tree.pct_live[m] = 0.;
+		v->tree.biomass[m] = 0.;
+		v->tree.litter[m] = 0.;
+		v->shrub.pct_live[m] = 0.;
+		v->shrub.biomass[m] = 0.;
+		v->shrub.litter[m] = 0.;
+		v->grass.pct_live[m] = 0.;
+		v->grass.biomass[m] = 0.;
+		v->grass.litter[m] = 0.;
+		v->forb.pct_live[m] = 0.;
+		v->forb.biomass[m] = 0.;
+		v->forb.litter[m] = 0.;
+
 		if (GT(totbmass, 0.)) {
 			ForEachGroup(g)
 			{
-				props[m] += _phen[Igp(g, m)] * bmassg[g];
-				if (1 == RGroup[g]->veg_prod_type)				//tree
-					props1[m] += _phen[Igp(g, m)] * bmassg[g];
-				else if (2 == RGroup[g]->veg_prod_type)			//shrub
-					props2[m] += _phen[Igp(g, m)] * bmassg[g];
-				else if (3 == RGroup[g]->veg_prod_type)			//grass
-					props3[m] += _phen[Igp(g, m)] * bmassg[g];
-				else if (4 == RGroup[g]->veg_prod_type)
-					props4[m] += _phen[Igp(g, m)] * bmassg[g];
+				if (1 == RGroup[g]->veg_prod_type) {	//tree
+					v->tree.pct_live[m] += _prod_pctlive[Igp(g, m)] * rgroupFractionOfVegTypeBiomass[g];
+					v->tree.biomass[m] += _prod_bmass[Igp(g, m)] * bmassg[g];
+				} else if (2 == RGroup[g]->veg_prod_type) {	 //shrub
+					v->shrub.pct_live[m] += _prod_pctlive[Igp(g, m)] * rgroupFractionOfVegTypeBiomass[g];
+					v->shrub.biomass[m] += _prod_bmass[Igp(g, m)] * bmassg[g];
+				} else if (3 == RGroup[g]->veg_prod_type) {	 //grass
+					v->grass.pct_live[m] += _prod_pctlive[Igp(g, m)] * rgroupFractionOfVegTypeBiomass[g];
+					v->grass.biomass[m] += _prod_bmass[Igp(g, m)] * bmassg[g];
+				} else if (4 == RGroup[g]->veg_prod_type) {   //forb
+					v->forb.pct_live[m] += _prod_pctlive[Igp(g, m)] * rgroupFractionOfVegTypeBiomass[g];
+					v->forb.biomass[m] += _prod_bmass[Igp(g, m)] * bmassg[g];
+				}
 			}
-			props[m] /= totbmass;
-			props1[m] /= totbmass;
-			props2[m] /= totbmass;
-			props3[m] /= totbmass;
-			props4[m] /= totbmass;
 
-			v->tree.pct_live[m] = pow(props1[m], 0.2);
-			v->shrub.pct_live[m] = pow(props2[m], 0.2);
-			v->grass.pct_live[m] = pow(props3[m], 0.2);
-			v->forb.pct_live[m] = pow(props4[m], 0.2);
-
-			cumprop += props[m];
-			cumprop1 += props1[m];
-			cumprop2 += props2[m];
-			cumprop3 += props3[m];
-			cumprop4 += props4[m];
-
-			v->tree.biomass[m] = (v->tree.pct_live[m] * cumprop1 * totbmass);
-			v->tree.litter[m] = (v->tree.biomass[m] * _prod_conv[m][PC_Litter]);
-			v->shrub.biomass[m] = (v->shrub.pct_live[m] * cumprop2 * totbmass);
-			v->shrub.litter[m] = (v->shrub.biomass[m] * _prod_conv[m][PC_Litter]);
-			v->grass.biomass[m] = (v->grass.pct_live[m] * cumprop3 * totbmass);
-			v->grass.litter[m] = (v->grass.biomass[m] * _prod_conv[m][PC_Litter]);
-			v->forb.biomass[m] = (v->forb.pct_live[m] * cumprop4 * totbmass);
-			v->forb.litter[m] = (v->forb.biomass[m] * _prod_conv[m][PC_Litter]);
-
-			biomass1 += v->tree.biomass[m];
-			biomass2 += v->shrub.biomass[m];
-			biomass3 += v->grass.biomass[m];
-			biomass4 += v->forb.biomass[m];
-
-		} else {
-			v->tree.pct_live[m] = 0.;
-			v->tree.biomass[m] = 0.;
-			v->tree.litter[m] = 0.;
-			v->shrub.pct_live[m] = 0.;
-			v->shrub.biomass[m] = 0.;
-			v->shrub.litter[m] = 0.;
-			v->grass.pct_live[m] = 0.;
-			v->grass.biomass[m] = 0.;
-			v->grass.litter[m] = 0.;
-			v->forb.pct_live[m] = 0.;
-			v->forb.biomass[m] = 0.;
-			v->forb.litter[m] = 0.;
+			v->tree.litter[m] = (vegTypeBiomass[0] * _prod_litter[m]);
+			v->shrub.litter[m] = (vegTypeBiomass[1] * _prod_litter[m]);
+			v->grass.litter[m] = (vegTypeBiomass[2] * _prod_litter[m]);
+			v->forb.litter[m] = (vegTypeBiomass[3] * _prod_litter[m]);
 		}
-
 	}
 
 	if (GT(totbmass, 0.)) {
-		biomass = biomass1 + biomass2 + biomass3 + biomass4;
-		if (ZRO(biomass))
-			biomass = 1;
-		v->fractionTree = (biomass1 / biomass);
-		v->fractionShrub = (biomass2 / biomass);
-		v->fractionGrass = (biomass3 / biomass);
-		v->fractionForb = (biomass4 / biomass);
+		//if (ZRO(biomass))
+		//	biomass = 1;
+		v->fractionTree = (vegTypeBiomass[0] / totbmass);
+		v->fractionShrub = (vegTypeBiomass[1] / totbmass);
+		v->fractionGrass = (vegTypeBiomass[2] / totbmass);
+		v->fractionForb = (vegTypeBiomass[3] / totbmass);
 		//TODO: figure how to calculate bareground fraction.
 		v->fractionBareGround = 0;
 	} else {

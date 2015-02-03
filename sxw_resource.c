@@ -143,9 +143,9 @@ void _sxw_update_resource(void) {
 			continue;
 		if (RGroup[g]->max_age == 1) {
 			ForEachGroupSpp(sp,g,i)
-				sizes[g] += Species[sp]->mature_biomass * .75;
+				sizes[g] += Species[sp]->mature_biomass * .75;// / Globals.plotsize;
 		} else {
-			sizes[g] = RGroup_GetBiomass(g);
+			sizes[g] = RGroup_GetBiomass(g);// / Globals.plotsize;
 		}
 	}
   #endif
@@ -154,8 +154,7 @@ void _sxw_update_resource(void) {
 	_transp_contribution_by_group(_resource_cur);
 
 	ForEachGroup(g)
-		_resource_pr[g] =
-				ZRO(sizes[g]) ? 0.0 : _resource_cur[g] * _bvt / sizes[g];
+		_resource_pr[g] = ZRO(sizes[g]) ? 0.0 : _resource_cur[g] * _bvt / sizes[g];
 /* _print_debuginfo(); */
 }
 

@@ -19,7 +19,9 @@ extern SXW_t SXW;
 extern SW_SITE SW_Site;
 extern SW_VEGPROD SW_VegProd;
 extern RealD *_phen;
-extern RealF _prod_conv[MAX_MONTHS][3];
+extern RealD _prod_litter[MAX_MONTHS];
+extern RealD * _prod_bmass;
+extern RealD * _prod_pctlive;
 
 static sqlite3 *db;
 static char sql[1024];
@@ -135,11 +137,14 @@ void insertSXWProd(void) {
 	sql[0] = 0;
 
 	beginTransaction();
+	ForEachGroup(g)
+	{
 	for(m=0;m<12;m++) {
 		sql[0] = 0;
-		sprintf(sql, "INSERT INTO sxwprod (Month, BMASS, LITTER) VALUES (%d, %f, %f);", m+1, _prod_conv[m][PC_Bmass], _prod_conv[m][PC_Litter]);
+		sprintf(sql, "INSERT INTO sxwprod (RGroupID, Month, BMASS, LITTER, PCTLIVE) VALUES (%d, %d, %f, %f, %f);", g+1, m+1, _prod_bmass[Igp(g,m)], _prod_litter[m], _prod_pctlive[Igp(g,m)]);
 		rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
 		sqlcheck(rc, zErrMsg);
+	}
 	}
 	endTransaction();
 }
@@ -413,12 +418,14 @@ void insertOutputProd(SW_VEGPROD *v) {
 		for (i = doy; i < (doy + days); i++) { //accumulating the monthly values...
 			lai_live += (v->tree.lai_live_daily[doy])
 					+ (v->shrub.lai_live_daily[doy])
-					+ (v->grass.lai_live_daily[doy]);
+					+ (v->grass.lai_live_daily[doy])
+					+ (v->forb.lai_live_daily[doy]);
 			vegcov += (v->tree.vegcov_daily[doy]) + (v->shrub.vegcov_daily[doy])
-					+ (v->grass.vegcov_daily[doy]);
+					+ (v->grass.vegcov_daily[doy]) + (v->forb.vegcov_daily[doy]);
 			total_agb += (v->tree.total_agb_daily[doy])
 					+ (v->shrub.total_agb_daily[doy])
-					+ (v->grass.total_agb_daily[doy]);
+					+ (v->grass.total_agb_daily[doy])
+					+ (v->forb.total_agb_daily[doy]);
 			pct_live += (v->tree.pct_live_daily[doy])
 					+ (v->shrub.pct_live_daily[doy])
 					+ (v->grass.pct_live_daily[doy])
@@ -736,7 +743,7 @@ void createTables() {
 	char *table_PrjInfo = "CREATE TABLE info(StartYear INT, Years INT, Iterations INT, RGroups INT, TranspirationLayers INT, SoilLayers INT, PlotSize REAL);";
 	char *table_rgroups = "CREATE TABLE RGroups(ID INT PRIMARY KEY NOT NULL, NAME TEXT NOT NULL, VegProdType INT NOT NULL);";
 	char *table_phen = "CREATE TABLE sxwphen(RGroupID INT NOT NULL, Month INT NOT NULL, GrowthPCT REAL NOT NULL, PRIMARY KEY(RGroupID, Month));";
-	char *table_prod = "CREATE TABLE sxwprod(Month INT NOT NULL, BMASS REAL, LITTER REAL, PRIMARY KEY(Month));";
+	char *table_prod = "CREATE TABLE sxwprod(RGroupID INT NOT NULL, Month INT NOT NULL, BMASS REAL, LITTER REAL, PCTLIVE REAL, PRIMARY KEY(RGroupID, Month));";
 	char *table_rootsXphen = "CREATE TABLE rootsXphen(RGroupID INT NOT NULL, Layer INT NOT NULL, January REAL, February REAL, March REAL, April REAL, May REAL, June REAL, July REAL, August REAL, September REAL, October REAL, November REAL, December REAL, PRIMARY KEY(RGroupID, Layer));";
 	char *table_InputVars =
 			"CREATE TABLE sxwInputVars(Year INT NOT NULL, Iteration INT NOT NULL, FracGrass REAL, FracShrub REAL, FracTree REAL, FracForb REAL, FracBareGround REAL, PRIMARY KEY(Year, Iteration));";

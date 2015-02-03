@@ -188,11 +188,11 @@ int main(int argc, char **argv) {
 			rgroup_PartResources();
 			chkmem_f;
 
-			rgroup_Grow();
-
 #ifdef STEPWAT
 			if (!isnull(SXW.debugfile) ) SXW_PrintDebug(0);
 #endif
+
+			rgroup_Grow();
 
 			mort_Main(&killedany);
 			chkmem_f;

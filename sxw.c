@@ -110,8 +110,10 @@ RealF _resource_cur[MAX_RGROUPS],  /* current resource utilization */
 RealF _Grp_BMass[MAX_RGROUPS];
 #endif
 
-/* and one 2D vector for the production constants */
-RealF _prod_conv[MAX_MONTHS][3];
+/* and one vector for the production constants */
+RealD _prod_litter[MAX_MONTHS];
+RealD * _prod_bmass;
+RealD * _prod_pctlive;
 
 RealF _bvt;  /* ratio of biomass/m2 / transp/m2 */
 
@@ -136,6 +138,7 @@ static void _read_watin(void);
 static void _make_arrays(void);
 static void _make_roots_arrays(void);
 static void _make_phen_arrays(void);
+static void _make_prod_arrays(void);
 static void _make_transp_arrays(void);
 static void _write_sw_outin(void);
 static void _recover_names(void);
@@ -147,8 +150,8 @@ static void SXW_SW_Setup_Echo(void);
 //static void SXW_SW_Output_Echo(void);
 
 //these last four functions are to be used in ST_grid.c
-void load_sxw_memory( RealD * grid_roots_max, RealD* grid_rootsXphen, RealD* grid_roots_active, RealD* grid_roots_active_rel, RealD* grid_roots_active_sum, RealD* grid_phen );
-void save_sxw_memory( RealD * grid_roots_max, RealD* grid_rootsXphen, RealD* grid_roots_active, RealD* grid_roots_active_rel, RealD* grid_roots_active_sum, RealD* grid_phen );
+void load_sxw_memory( RealD * grid_roots_max, RealD* grid_rootsXphen, RealD* grid_roots_active, RealD* grid_roots_active_rel, RealD* grid_roots_active_sum, RealD* grid_phen, RealD* grid_prod_bmass, RealD* grid_prod_pctlive );
+void save_sxw_memory( RealD * grid_roots_max, RealD* grid_rootsXphen, RealD* grid_roots_active, RealD* grid_roots_active_rel, RealD* grid_roots_active_sum, RealD* grid_phen, RealD* grid_prod_bmass, RealD* grid_prod_pctlive );
 void free_sxw_memory( void );
 void free_all_sxw_memory( void );
 
@@ -341,8 +344,8 @@ RealF SXW_GetPR( GrpIndex rg) {
 /*======================================================*/
 /* see _sxw_update_resource() for _resource_cur[]
 */
-  return ZRO(_resource_pr[rg]) ? 0.0 : 1./ _resource_pr[rg];
-
+	RealF pr = ZRO(_resource_pr[rg]) ? 0.0 : 1. / _resource_pr[rg];
+	return pr > 10 ? 10 : pr;
 }
 
 void SXW_PrintDebug(Bool cleanup) {
@@ -517,34 +520,103 @@ static void _read_bvt(void) {
 
 
 static void _read_prod(void) {
-/*======================================================*/
-  int x;
-  FILE *fp;
-  Months mon=Jan;
+	int x;
+	FILE *fp;
+	Months mon = Jan;
 
-  MyFileName = SXW.f_prod;
-  fp = OpenFile(MyFileName,"r");
+	GrpIndex g;
+	IntUS cnt = 0;
+	char *p;
+	char * pch;
+	MyFileName = SXW.f_prod;
+	fp = OpenFile(MyFileName, "r");
 
-  while(GetALine(fp, inbuf) ) {
-      x=sscanf( inbuf, "%f %f",
-                      &_prod_conv[mon][PC_Bmass],
-                      &_prod_conv[mon][PC_Litter]);
-      if (x<2) {
-         LogError(logfp, LOGFATAL, "%s: invalid record %d.",
-                 MyFileName, mon +1);
-      }
+	while (GetALine(fp, inbuf)) {
+		x = sscanf(inbuf, "%lf", &_prod_litter[mon]);
+		if (x < 1) {
+			LogError(logfp, LOGFATAL, "%s: invalid record for litter %d.", MyFileName,
+					mon + 1);
+		}
 
-      if (++mon > Dec)
-        break;
-   }
-   CloseFile(&fp);
+		if (++mon > Dec)
+			break;
+	}
 
-   if (mon <= Dec ) {
-     LogError(logfp, LOGWARN,
-              "%s: No Veg Production values found after month %d",
-              MyFileName, mon +1);
-   }
+	if (mon <= Dec) {
+		LogError(logfp, LOGWARN,
+				"%s: No Veg Production values found after month %d", MyFileName,
+				mon + 1);
+	}
 
+	GetALine(fp,inbuf); /* toss [end] keyword */
+	mon = Jan;
+
+	while (GetALine(fp, inbuf)) {
+		pch = strstr(inbuf, "[end]");
+		if(pch != NULL)
+			break;
+		p = strtok(inbuf, " \t"); /* g'teed to work via GetALine() */
+
+		if ((g = RGroup_Name2Index(p)) < 0) {
+			LogError(logfp, LOGFATAL, "%s: Invalid group name for biomass (%s) found.",
+					MyFileName, p);
+		}
+		mon = Jan;
+		while ((p = strtok(NULL, " \t"))) {
+			if (mon > Dec) {
+				LogError(logfp, LOGFATAL,
+						"%s: More than 12 months of data found.", MyFileName);
+			}
+			_prod_bmass[Igp(g, mon)] = atof(p);
+			mon++;
+		}
+		cnt++;
+		if(cnt == SXW.NGrps)
+			break;
+	}
+
+	if (cnt < Globals.grpCount) {
+		LogError(logfp, LOGFATAL, "%s: Not enough valid groups found.",
+				MyFileName);
+	}
+
+
+	GetALine(fp, inbuf); /* toss [end] keyword */
+	mon = Jan;
+	cnt=0;
+
+	while (GetALine(fp, inbuf)) {
+		pch = strstr(inbuf, "[end]");
+		if (pch != NULL)
+			break;
+		p = strtok(inbuf, " \t"); /* g'teed to work via GetALine() */
+
+		if ((g = RGroup_Name2Index(p)) < 0) {
+			LogError(logfp, LOGFATAL,
+					"%s: Invalid group name for pctlive (%s) found.",
+					MyFileName, p);
+		}
+		mon = Jan;
+		while ((p = strtok(NULL, " \t"))) {
+			if (mon > Dec) {
+				LogError(logfp, LOGFATAL,
+						"%s: More than 12 months of data found.", MyFileName);
+			}
+			_prod_pctlive[Igp(g, mon)] = atof(p);
+			mon++;
+		}
+		cnt++;
+		if (cnt == SXW.NGrps)
+			break;
+	}
+
+	if (cnt < Globals.grpCount) {
+		LogError(logfp, LOGFATAL, "%s: Not enough valid groups found.",
+				MyFileName);
+	}
+
+	GetALine(fp, inbuf); /* toss [end] keyword */
+	CloseFile(&fp);
 }
 
 static void _read_watin(void) {
@@ -625,6 +697,7 @@ static void _make_arrays(void) {
  */
 	_make_roots_arrays();
 	_make_phen_arrays();
+	_make_prod_arrays();
 	_make_transp_arrays();
 	if (SXW.debugfile || UseGrid)
 		_make_swc_array();
@@ -656,6 +729,15 @@ static void _make_phen_arrays(void) {
   size = SXW.NGrps * MAX_MONTHS;
   _phen = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
 
+}
+
+static void _make_prod_arrays(void) {
+	int size;
+	char *fstr = "_make_phen_arrays()";
+
+	size = SXW.NGrps * MAX_MONTHS;
+	_prod_bmass = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
+	_prod_pctlive = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
 }
 
 static void _make_transp_arrays(void) {
@@ -1028,10 +1110,12 @@ void free_sxw_memory( void ) {
 	Mem_Free(_roots_active_rel);
 	Mem_Free(_roots_active_sum);
 	Mem_Free(_phen);
+	Mem_Free(_prod_bmass);
+	Mem_Free(_prod_pctlive);
 }
 
 /***********************************************************/
-void load_sxw_memory( RealD* grid_roots_max, RealD* grid_rootsXphen, RealD* grid_roots_active, RealD* grid_roots_active_rel, RealD* grid_roots_active_sum, RealD* grid_phen ) {
+void load_sxw_memory( RealD* grid_roots_max, RealD* grid_rootsXphen, RealD* grid_roots_active, RealD* grid_roots_active_rel, RealD* grid_roots_active_sum, RealD* grid_phen, RealD* grid_prod_bmass, RealD* grid_prod_pctlive ) {
 	//load memory from the grid
 	free_sxw_memory();
 	_roots_max = Mem_Calloc(SXW.NGrps * SXW.NTrLyrs, sizeof(RealD), "load_sxw_memory()");
@@ -1040,6 +1124,8 @@ void load_sxw_memory( RealD* grid_roots_max, RealD* grid_rootsXphen, RealD* grid
 	_roots_active_rel = Mem_Calloc(SXW.NGrps * SXW.NPds * SXW.NTrLyrs, sizeof(RealD), "load_sxw_memory()");
 	_roots_active_sum = Mem_Calloc(SXW.NPds * SXW.NTrLyrs, sizeof(RealD), "load_sxw_memory()");
 	_phen = Mem_Calloc(SXW.NGrps * MAX_MONTHS, sizeof(RealD), "load_sxw_memory()");
+	_prod_bmass = Mem_Calloc(SXW.NGrps * MAX_MONTHS, sizeof(RealD), "load_sxw_memory()");
+	_prod_pctlive = Mem_Calloc(SXW.NGrps * MAX_MONTHS, sizeof(RealD), "load_sxw_memory()");
 	
 	memcpy(_roots_max, grid_roots_max, SXW.NGrps * SXW.NTrLyrs * sizeof(RealD));
 	memcpy(_rootsXphen, grid_rootsXphen, SXW.NGrps * SXW.NPds * SXW.NTrLyrs * sizeof(RealD));
@@ -1047,10 +1133,12 @@ void load_sxw_memory( RealD* grid_roots_max, RealD* grid_rootsXphen, RealD* grid
 	memcpy(_roots_active_rel, grid_roots_active_rel, SXW.NGrps * SXW.NPds * SXW.NTrLyrs * sizeof(RealD));
 	memcpy(_roots_active_sum, grid_roots_active_sum, SXW.NPds * SXW.NTrLyrs * sizeof(RealD));
 	memcpy(_phen, grid_phen, SXW.NGrps * MAX_MONTHS * sizeof(RealD));
+	memcpy(_prod_bmass, grid_prod_bmass, SXW.NGrps * MAX_MONTHS * sizeof(RealD));
+	memcpy(_prod_pctlive, grid_prod_pctlive, SXW.NGrps * MAX_MONTHS * sizeof(RealD));
 }
 
 /***********************************************************/
-void save_sxw_memory( RealD * grid_roots_max, RealD* grid_rootsXphen, RealD* grid_roots_active, RealD* grid_roots_active_rel, RealD* grid_roots_active_sum, RealD* grid_phen ) {
+void save_sxw_memory( RealD * grid_roots_max, RealD* grid_rootsXphen, RealD* grid_roots_active, RealD* grid_roots_active_rel, RealD* grid_roots_active_sum, RealD* grid_phen, RealD* grid_prod_bmass, RealD* grid_prod_pctlive ) {
 	//save memory to the grid
 	memcpy(grid_roots_max, _roots_max, SXW.NGrps * SXW.NTrLyrs * sizeof(RealD));
 	memcpy(grid_rootsXphen, _rootsXphen, SXW.NGrps * SXW.NPds * SXW.NTrLyrs * sizeof(RealD));
@@ -1058,4 +1146,6 @@ void save_sxw_memory( RealD * grid_roots_max, RealD* grid_rootsXphen, RealD* gri
 	memcpy(grid_roots_active_rel, _roots_active_rel, SXW.NGrps * SXW.NPds * SXW.NTrLyrs * sizeof(RealD));
 	memcpy(grid_roots_active_sum, _roots_active_sum, SXW.NPds * SXW.NTrLyrs * sizeof(RealD));
 	memcpy(grid_phen, _phen, SXW.NGrps * MAX_MONTHS * sizeof(RealD));
+	memcpy(grid_prod_bmass, _prod_bmass, SXW.NGrps * MAX_MONTHS * sizeof(RealD));
+	memcpy(grid_prod_pctlive, _prod_pctlive, SXW.NGrps * MAX_MONTHS * sizeof(RealD));
 }

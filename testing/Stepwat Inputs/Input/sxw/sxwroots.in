@@ -6,10 +6,10 @@
 # that roots occupy must match the number of soil layers where
 # transpiration occurs in soils_v23.in)
 
-#GrpName       %L1   %L2    %L3    %L4    %L5
-bouteloua       .2     .5    .1     .1	  .1
-p.graminoids    .2     .5    .1     .1	  .1
-p.forb/shrub    .1     .1    .2     .2    .4
-a.gram/shrub    .5     .2    .1		.1	  .1
-succulents      1.0    0.0   0.0    0.0   0.0
+#GrpName       %L1   %L2    %L3    %L4    %L5	%L6	%L7
+bouteloua       .1     .1    .2     .2	  .2	.1	.1
+p.graminoids    .2     .3    .1     .1	  .1	.1	.1
+p.forb/shrub    .1     .2    .2     .2    .1	.1	.1
+a.gram/shrub    .1     .2    .2		.2	  .2	.1	.1
+succulents      1.0    0.0   0.0    0.0   0.0	0.0	0.0
 
