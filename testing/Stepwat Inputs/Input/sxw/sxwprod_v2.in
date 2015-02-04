@@ -1,0 +1,69 @@
+# sxw prod definition file STEPPEWAT
+
+#Production Coefficients for STEPWAT
+
+# These values are used to convert yearly biomass
+# from STEPPE to monthly production values for SOILWAT
+
+# LITTER - use the maximum value from the converted biomass 
+#          to multiply by this number to compute a litter 
+#          value in g/m^2.  Needn't sum to 1.0.
+# BMASS -  STEPPE's yearly vals are converted to monthly.
+# PCT_LIVE - RGroups pct live each month is used to calc
+#            VegProdTypes pct live for soilwat.
+
+# LITTER 
+0.75    # January            
+0.80    # February          
+0.85    # March            
+0.75    # April            
+0.36    # May            
+0.31    # June            
+0.28    # July            
+0.29    # August            
+0.38    # September            
+0.46    # October            
+0.58    # November            
+0.68    # December
+
+[end]  # section end
+
+# BMASS
+# This is the percent of yearly biomass that each month has
+# Example of how Grass (bouteloua,p.graminoids,a.gram/shrub) biomass is calculated
+# Biomass (150,50,10) for the RGroups above
+# bouteloua    90  	90	 90   102  114  132  150  132  114   108  102  96
+# p.graminoids 30   30   30   34   38   44   50   44   38    36   34   32
+#a.gram/shrub  6    6     6   6.8  7.6  8.8  10   8.8  7.6   7.2  6.8  6.4
+#-------------------------------------------------------------------------
+#Grass Biomass 126 126 126  142.8 159.6 184.8 210 184  159.6 151.2 142.8 134.4
+#The above value would be converted to above ground biomass by sxwprod.in Biomass column
+
+# Group        Jan  Feb  Mar  Apr  May  Jun  Jul  Aug  Sep   Oct  Nov  Dec
+bouteloua      .38  .38  .38  .50  .72  .84  .94  1.0  .45  .48  .52   .56
+p.graminoids   .38  .38  .38  .50  .72  .84  .94  1.0  .45  .48  .52   .56
+p.forb/shrub   .38  .38  .38  .50  .72  .84  .94  1.0  .45  .48  .52   .56
+a.gram/shrub   .38  .38  .38  .50  .72  .84  .94  1.0  .45  .48  .52   .56   
+succulents     .38  .38  .38  .50  .72  .84  .94  1.0  .45  .48  .52   .56
+
+[end]  # section end
+
+# PCTLive
+# Proportion of Biomass that is actually living (0-1) for each month for each RGroup
+# This table is used to calculate the %Live for SoilWat. The %Live for each VegType group is the weighted average of the Groups in the vegtype by
+# their fraction of biomass. For example bouteloua, p.graminoids, and a.gram/shrub are in the same group. If they had biomass 150,50,10 respectively.
+# July the Grass %Live value would be .40 * (150/210) + .40 * (50/210) + .40 * (10/210) = .40
+# 
+# First column is the group name as defined in the 
+# group parameters file for STEPPE.  The name must be
+# spelled exactly the same.
+#
+# Group        Jan  Feb  Mar  Apr  May  Jun  Jul  Aug  Sep   Oct  Nov  Dec
+bouteloua      .00  .00  .10  .20  .40  .60  .40  .60  .40  .20  .10   .00
+p.graminoids   .00  .00  .10  .20  .40  .60  .40  .60  .40  .20  .10   .00
+p.forb/shrub   .00  .00  .10  .20  .40  .60  .40  .60  .40  .20  .10   .00
+a.gram/shrub   .00  .00  .10  .20  .40  .60  .40  .60  .40  .20  .10   .00   
+succulents     .00  .00  .10  .20  .40  .60  .40  .60  .40  .20  .10   .00
+
+[end]  # section end
+
