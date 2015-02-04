@@ -12,7 +12,7 @@
 # PCT_LIVE - RGroups pct live each month is used to calc
 #            VegProdTypes pct live for soilwat.
 
-LITTER 
+#LITTER 
 0.75    # January            
 0.80    # February          
 0.85    # March            
