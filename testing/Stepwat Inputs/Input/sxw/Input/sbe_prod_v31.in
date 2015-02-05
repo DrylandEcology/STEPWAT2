@@ -81,7 +81,9 @@
 # %Live    - proportion of Biomass that is actually living (0-1.0).
 # LAI_conv - monthly amount of biomass needed to produce LAI=1.0 (g/m^2).
 # There should be 12 rows, one for each month, starting with January.
-#
+# Note: litter,biomass, and %Live columns are not currently used, but need
+# to remain here because SOILWAT expects them to be read in. Biomass, litter,
+# and %Live all calculated in the update_productivity function.
 #Litter	Biomass	%Live	LAI_conv
 75.0	150.0	0.0	300.0	# January
 80.0	150.0	0.0	300.0	# February
