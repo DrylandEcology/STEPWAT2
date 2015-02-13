@@ -115,38 +115,42 @@ void rgroup_PartResources( void) {
   
 
   /* ----- distribute basic (minimum) resources */
-  ForEachGroup(rg) {  g = RGroup[rg];
+	ForEachGroup(rg)
+	{
+		g = RGroup[rg];
 
-    if (g->max_age == 1 )
-      g->relsize = _add_annuals(rg, 1.0, no_seeds);
-
-#ifdef STEPWAT
-    if (!UseSoilwat) {  /* use by-mm method */
-#endif
-      resource = _ppt2resource( Env.ppt, g);
-      g->res_required = g->relsize / g->max_density;
-      g->res_avail    = fmin(1., fmin(g->res_required, resource) );
-      xtra_base  += fmax(0., fmin(1., resource) - g->res_avail)
-                    * g->min_res_req;
-      xtra_obase += fmax( 0., resource - 1.)
-                    * g->min_res_req;
-
-
-
-    size_base[rg]  = g->relsize * g->min_res_req;
-    size_obase[rg] = (g->use_extra_res) ? size_base[rg] : 0.;
+		if (g->max_age == 1)
+			g->relsize = _add_annuals(rg, 1.0, no_seeds);
 
 #ifdef STEPWAT
-    } else {
-      /* trick for later pr calc */
-      g->res_required = SXW_GetPR(rg);
-      g->res_avail = 1.0;
-    }
+		if (!UseSoilwat) { /* use by-mm method */
+#endif
+		resource = _ppt2resource(Env.ppt, g);
+		g->res_required = g->relsize / g->max_density;
+		g->res_avail = fmin(1., fmin(g->res_required, resource));
+		xtra_base += fmax(0., fmin(1., resource) - g->res_avail) * g->min_res_req;
+		xtra_obase += fmax( 0., resource - 1.) * g->min_res_req;
+
+		size_base[rg] = g->relsize * g->min_res_req;
+		size_obase[rg] = (g->use_extra_res) ? size_base[rg] : 0.;
+
+#ifdef STEPWAT
+	} else {
+		/* trick for later pr calc */
+
+		g->res_required = RGroup_GetBiomass(rg);
+		g->res_avail = SXW_GetTranspiration(rg);//1.0;
+		if(!ZRO(g->res_avail) && g->res_required / g->res_avail > 10) {
+			g->res_required = 10;
+			g->res_avail = 1;
+		}
+	}
 #endif
 
-    if ( GT(g->relsize, 0.) )  noplants = FALSE;
+		if (GT(g->relsize, 0.))
+			noplants = FALSE;
 
-  }  /* End ForEachGroup(rg) */
+	}  /* End ForEachGroup(rg) */
 
   if (noplants) return;
 

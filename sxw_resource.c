@@ -154,7 +154,10 @@ void _sxw_update_resource(void) {
 	_transp_contribution_by_group(_resource_cur);
 
 	ForEachGroup(g)
-		_resource_pr[g] = ZRO(sizes[g]) ? 0.0 : _resource_cur[g] * _bvt / sizes[g];
+	{
+		//_resource_pr[g] = ZRO(sizes[g]) ? 0.0 : _resource_cur[g] * _bvt / sizes[g];
+		_resource_cur[g] = _resource_cur[g] * _bvt;
+	}
 /* _print_debuginfo(); */
 }
 
@@ -228,16 +231,34 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
 	 */
 
 	GrpIndex g;
+	SppIndex s;
 	TimeInt p;
 	LyrIndex l;
-	int t;
+	int t,i;
 	RealD *transp;
 	RealF sumUsedByGroup = 0., sumTranspTotal = 0.;
+
+	RealD sumMaxBioByType[4] = {0.};
+	RealD avgMaxBioByGroup[MAX_RGROUPS] = {0.};
+	RealD fracGroupsMaxBioFromType = 0;
+
+
+	ForEachGroup(g)
+	{
+		t = RGroup[g]->veg_prod_type-1;
+		ForEachGroupSpp(s,g,i) {
+			if(Species[s]->use_me)
+				avgMaxBioByGroup[g] += Species[s]->mature_biomass;
+		}
+		avgMaxBioByGroup[g] /= RGroup[g]->max_spp;
+		sumMaxBioByType[t] += avgMaxBioByGroup[g];
+	}
 
 	ForEachGroup(g)
 	{
 		use_by_group[g] = 0.; /* clear */
 		t = RGroup[g]->veg_prod_type-1;
+		fracGroupsMaxBioFromType = avgMaxBioByGroup[g]/sumMaxBioByType[t];
 		switch(t) {
 		case 0://Tree
 			transp = SXW.transpTrees;
@@ -259,7 +280,7 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
 		{
 			int nLyrs = getNTranspLayers(RGroup[g]->veg_prod_type);
 			for (l = 0; l < nLyrs; l++) {
-				use_by_group[g] += (RealF) (_roots_active_rel[Iglp(g, l, p)] * transp[Ilp(l, p)]);
+				use_by_group[g] += (RealF) (_roots_active_rel[Iglp(g, l, p)] * fracGroupsMaxBioFromType * transp[Ilp(l, p)]);
 			}
 		}
 		sumUsedByGroup += use_by_group[g];

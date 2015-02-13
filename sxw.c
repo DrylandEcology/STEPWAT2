@@ -345,7 +345,15 @@ RealF SXW_GetPR( GrpIndex rg) {
 /* see _sxw_update_resource() for _resource_cur[]
 */
 	RealF pr = ZRO(_resource_pr[rg]) ? 0.0 : 1. / _resource_pr[rg];
-	return pr > 10 ? 10 : pr;
+	return pr;
+	//return pr > 10 ? 10 : pr;
+}
+
+RealF SXW_GetTranspiration( GrpIndex rg) {
+/*======================================================*/
+/* see _sxw_update_resource() for _resource_cur[]
+*/
+	return _resource_cur[rg];
 }
 
 void SXW_PrintDebug(Bool cleanup) {

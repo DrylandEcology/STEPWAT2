@@ -539,19 +539,23 @@ static void insertSXWoutputRootsRelativeRow(int Year, int Iteration, int Layer, 
 void insertRootsRelative(RealD * _roots_active_rel) {
 	int l;
 	int p;
-	int r;
+	int g;
+	int t;
+	int nLyrs;
 	double m[12];
 	int Year = SW_Model.year;
 	int Iteration = Globals.currIter;
 
 	beginTransaction();
-	ForEachGroup(r)
+	ForEachGroup(g)
 	{
-		for (l = 0; l < SXW.NSoLyrs; l++) {
+		t = RGroup[g]->veg_prod_type-1;
+		nLyrs = getNTranspLayers(RGroup[g]->veg_prod_type);
+		for (l = 0; l < nLyrs; l++) {
 			for (p = 0; p < 12; p++) {
-				m[p] = _roots_active_rel[Iglp(r, l, p)];
+				m[p] = _roots_active_rel[Iglp(g, l, p)];
 			}
-			insertSXWoutputRootsRelativeRow(Year, Iteration, l+1, r+1, m[0], m[1],
+			insertSXWoutputRootsRelativeRow(Year, Iteration, l+1, g+1, m[0], m[1],
 					m[2], m[3], m[4], m[5], m[6], m[7], m[8], m[9], m[10],
 					m[11]);
 		}

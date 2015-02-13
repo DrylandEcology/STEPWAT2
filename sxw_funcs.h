@@ -18,6 +18,8 @@
 #include "sxw.h"
 
 RealF SXW_GetPR( GrpIndex rg) ;
+RealF SXW_GetTranspiration( GrpIndex rg);
+
 
 RealF SXW_ResourceAvailable (void);
 void SXW_Init( Bool init_SW );
