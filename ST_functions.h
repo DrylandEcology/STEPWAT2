@@ -43,7 +43,7 @@ RealF Species_GetBiomass (SppIndex sp);
 void Species_Add_Indiv( SppIndex sp, Int new_indivs);
 void Species_Update_Newsize( SppIndex sp, RealF newsize );
 SppIndex Species_Name2Index (const char *name);
-void Species_Kill (const SppIndex sp);
+void Species_Kill (const SppIndex sp, int killType);
 IntS Species_NumEstablish( SppIndex sp);
 
 void Indiv_SortSize( const byte sorttype,

@@ -38,7 +38,7 @@ Bool indiv_New( SppIndex sp);
 Bool indiv_Kill_Partial( MortalityType code,
                           IndivType *ndv,
                           RealF killamt);
-void indiv_Kill_Complete( IndivType *ndv);
+void indiv_Kill_Complete( IndivType *ndv, int killType);
 
 /*********** Locally Used Function Declarations ************/
 /***********************************************************/
@@ -82,6 +82,7 @@ Bool indiv_New( SppIndex sp) {
 
 
   IndivType *p;
+  static int id=0;
 
   if (Species[sp]->est_count == MAX_INDIVS_PER_SPP) {
     LogError(logfp, LOGWARN, "Limit reached: %s is about to get %d "
@@ -91,7 +92,7 @@ Bool indiv_New( SppIndex sp) {
   }
 
   p = _create();
-
+  p->id = id;
   p->myspecies = sp;
   p->killed = FALSE;
   p->age = 1;
@@ -106,6 +107,9 @@ Bool indiv_New( SppIndex sp) {
   p->Prev = NULL;
   Species[sp]->IndvHead = p;
 
+  //sql for inserting new indiv
+  insertIndiv(p);
+  id++;
   return( TRUE);
 }
 
@@ -188,7 +192,7 @@ Bool indiv_Kill_Partial( MortalityType code,
 }
 
 /**************************************************************/
-void indiv_Kill_Complete( IndivType *ndv) {
+void indiv_Kill_Complete( IndivType *ndv, int killType) {
 /*======================================================*/
 /* PURPOSE */
 /* Remove individual and adjust relative sizes of the
@@ -206,6 +210,7 @@ void indiv_Kill_Complete( IndivType *ndv) {
                     ndv->age, Species[ndv->myspecies]->max_age,
                     Globals.currIter, Globals.currYear);
   }
+  insertIndivKill(ndv->id,killType);
   species_Update_Kills(ndv->myspecies, ndv->age);
   Species_Update_Newsize(ndv->myspecies, -ndv->relsize);
   _delete(ndv);

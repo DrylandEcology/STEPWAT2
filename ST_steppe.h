@@ -19,3 +19,10 @@
 
 #define DFLT_FIRSTFILE "files.in"
 
+void ST_connect(char *stdbName);
+void ST_disconnect(void);
+void insertIndivKill(int IndivID, int KillTypeID);
+void insertIndivYearInfo(IndivType *ind);
+void insertIndiv(IndivType *ind);
+void insertSpecieYearInfo(SppIndex s);
+void insertRGroupYearInfo(GrpIndex g);

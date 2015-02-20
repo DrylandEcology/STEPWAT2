@@ -34,7 +34,7 @@ void rgroup_Extirpate( GrpIndex rg) ;
 Bool indiv_Kill_Partial( MortalityType code,
                           IndivType *ndv,
                           RealF killamt);
-void indiv_Kill_Complete( IndivType *ndv);
+void indiv_Kill_Complete( IndivType *ndv, int killType);
 void check_sizes(const char *); /* found in main */
 
 /*------------------------------------------------------*/
@@ -246,13 +246,13 @@ static void _pat( const SppIndex sp) {
           kills[++k] = p;
       }
       for( i=0; i<= k; i++)
-        indiv_Kill_Complete( kills[i]);
+        indiv_Kill_Complete( kills[i], 1);
 
     } else { /* kill according to disturbance class*/
       switch ( Species[sp]->disturbclass) {
         case VerySensitive:
         case Sensitive:
-             Species_Kill(sp);
+             Species_Kill(sp,1);
              k=1;
              break;
         case Insensitive:
@@ -284,7 +284,7 @@ static void _mound( const SppIndex sp) {
       case VerySensitive:
       case Sensitive:
       case Insensitive:
-           Species_Kill(sp);
+           Species_Kill(sp,2);
            k = TRUE;
            break;
       case VeryInsensitive:
@@ -316,7 +316,7 @@ static void _burrow( const SppIndex sp) {
       case Sensitive:
       case Insensitive:
       case VeryInsensitive:
-           Species_Kill(sp);
+           Species_Kill(sp,3);
            k = TRUE;
     }
 
@@ -356,7 +356,7 @@ static void _succulents( const SppIndex sp) {
   }
 
   for (i=0; i < k; i++)
-    indiv_Kill_Complete(kills[i]);
+    indiv_Kill_Complete(kills[i], 7);
 
 
   if (Species[sp]->est_count) _SomeKillage = TRUE;
@@ -409,7 +409,7 @@ static void _slow_growth( const SppIndex sp) {
   }
 
   for( n=0; n <= k; n++ )
-    indiv_Kill_Complete(kills[n]);
+    indiv_Kill_Complete(kills[n], 8);
 
   if (k >= 0) _SomeKillage = TRUE;
 }
@@ -457,7 +457,7 @@ static void _age_independent( const SppIndex sp) {
   }
 
   for( n=0; n <= k; n++ ) {
-    indiv_Kill_Complete(kills[n]);
+    indiv_Kill_Complete(kills[n], 9);
   }
 
 
@@ -510,7 +510,7 @@ static void _no_resources( GrpIndex rg) {
   /* kill until nk reached   (EQN 7)    */
   nk = (IntS) ( (n * (1.0 - 1.0/RGroup[rg]->pr)) +.5);
   for( i=0; i < nk; i++)
-    indiv_Kill_Complete(indv_list[i]);
+    indiv_Kill_Complete(indv_list[i], 10);
 
   if (nk) _SomeKillage = TRUE;
 
@@ -542,7 +542,7 @@ static void _stretched_clonal( GrpIndex rg, Int start, Int last,
       y,  /* number of years of stretched resources*/
       np, /* number of clonal plants in this resource group*/
       nk; /* number of clonal plants to kill if pm met*/
-  RealF pm; /* probablity of mortality (eqn 8)*/
+  RealF pm; /* Probability of mortality (eqn 8)*/
 
   /* these are used if reducing proportionally (pm not met)*/
   RealF total_size,
@@ -578,7 +578,7 @@ static void _stretched_clonal( GrpIndex rg, Int start, Int last,
       /*  kill until we reach quota or number of plants*/
       nk = min( nk, (np+1));
       for( i = 0; i < nk; i++) {
-        indiv_Kill_Complete(clist[i]);
+        indiv_Kill_Complete(clist[i], 11);
       }
 
       if (nk >= 0) _SomeKillage = TRUE;
@@ -653,7 +653,7 @@ static void _kill_annuals( void) {
   ForEachGroup(rg) {
     if (RGroup[rg]->max_age == 1) {
       ForEachEstSpp(sp, rg, i)
-        Species_Kill( sp);
+        Species_Kill(sp,4);
     }
   }
 

@@ -47,7 +47,8 @@
 
 /* structure for indiv of perennial species */
 struct indiv_st {
-  IntUS age,
+  IntUS id,
+  	  age,
       mm_extra_res,
       slow_yrs,  /* number of years this individual has slow growth */
       myspecies,

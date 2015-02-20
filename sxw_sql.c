@@ -22,6 +22,7 @@ extern RealD *_phen;
 extern RealD _prod_litter[MAX_MONTHS];
 extern RealD * _prod_bmass;
 extern RealD * _prod_pctlive;
+extern RealF _bvt;
 
 static sqlite3 *db;
 static char sql[1024];
@@ -155,7 +156,7 @@ void insertInfo() {
 	sql[0] = 0;
 
 	beginTransaction();
-	sprintf(sql, "INSERT INTO info (StartYear, Years, Iterations, RGroups, TranspirationLayers, SoilLayers, PlotSize) VALUES (%d, %d, %d, %d, %d, %d, %f);", SW_Model.startyr, Globals.runModelYears, Globals.runModelIterations, Globals.grpCount, SXW.NTrLyrs, SXW.NSoLyrs, Globals.plotsize);
+	sprintf(sql, "INSERT INTO info (StartYear, Years, Iterations, RGroups, TranspirationLayers, SoilLayers, PlotSize, BVT) VALUES (%d, %d, %d, %d, %d, %d, %f, %f);", SW_Model.startyr, Globals.runModelYears, Globals.runModelIterations, Globals.grpCount, SXW.NTrLyrs, SXW.NSoLyrs, Globals.plotsize, _bvt);
 	rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
 	sqlcheck(rc, zErrMsg);
 	endTransaction();
@@ -167,7 +168,7 @@ static void insertRootsXphenRow(GrpIndex g, int Layer, double Jan, double Feb, d
 
 	sql[0] = 0;
 
-	sprintf(sql, "INSERT INTO rootsXphen (RGroupID,Layer,January,February,March,April,May,June,July,August,September,October,November,December) VALUES (%d, %d, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f);", g, Layer, Jan, Feb, March, April, May, June, July, Aug, Sept, Oct, November, December);
+	sprintf(sql, "INSERT INTO sxwRootsXphen (RGroupID,Layer,January,February,March,April,May,June,July,August,September,October,November,December) VALUES (%d, %d, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f);", g, Layer, Jan, Feb, March, April, May, June, July, Aug, Sept, Oct, November, December);
 	rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
 	sqlcheck(rc, zErrMsg);
 }
@@ -493,11 +494,11 @@ void insertRootsSum(RealD * _roots_active_sum) {
 
 	beginTransaction();
 	for(i=1; i<=4; i++) {
-		for (l = 0; l < SXW.NSoLyrs; l++) {
+		for (l = 0; l < SXW.NTrLyrs; l++) {
 			for (p = 0; p < 12; p++) {
 				m[p] = _roots_active_sum[Itlp(i-1,l, p)];
 			}
-			insertSXWoutputRootsSumRow(Year, Iteration, l+1, i+1, m[0], m[1],
+			insertSXWoutputRootsSumRow(Year, Iteration, l+1, i, m[0], m[1],
 					m[2], m[3], m[4], m[5], m[6], m[7], m[8], m[9], m[10],
 					m[11]);
 		}
@@ -540,7 +541,6 @@ void insertRootsRelative(RealD * _roots_active_rel) {
 	int l;
 	int p;
 	int g;
-	int t;
 	int nLyrs;
 	double m[12];
 	int Year = SW_Model.year;
@@ -549,7 +549,6 @@ void insertRootsRelative(RealD * _roots_active_rel) {
 	beginTransaction();
 	ForEachGroup(g)
 	{
-		t = RGroup[g]->veg_prod_type-1;
 		nLyrs = getNTranspLayers(RGroup[g]->veg_prod_type);
 		for (l = 0; l < nLyrs; l++) {
 			for (p = 0; p < 12; p++) {
@@ -714,10 +713,10 @@ static void prepareStatements() {
 	sprintf(sql, "INSERT INTO sxwOutputProd (Year,Iteration,Month,BMass,PctLive,LAIlive,VegCov,TotAGB) VALUES (@Year,@Iteration,@Month,@BMass,@PctLive,@LAIlive,@VegCov,@TotAGB);");
 	sqlite3_prepare_v2(db, sql, 1024, &stmt_OutProd, NULL);
 
-	sprintf(sql, "INSERT INTO sxwOutputRootsSum (Year,Iteration,Layer,VegProdType,January,February,March,April,May,June,July,August,September,October,November,December) VALUES (@Year,@Iteration,@Layer,@VegProdType,@January,@February,@March,@April,@May,@June,@July,@August,@September,@October,@November,@December);");
+	sprintf(sql, "INSERT INTO sxwRootsSum (Year,Iteration,Layer,VegProdType,January,February,March,April,May,June,July,August,September,October,November,December) VALUES (@Year,@Iteration,@Layer,@VegProdType,@January,@February,@March,@April,@May,@June,@July,@August,@September,@October,@November,@December);");
 	sqlite3_prepare_v2(db, sql, 1024, &stmt_OutRootsSum, NULL);
 
-	sprintf(sql, "INSERT INTO sxwOutputRootsRelative (Year,Iteration,Layer,RGroupID,January,February,March,April,May,June,July,August,September,October,November,December) VALUES (@Year,@Iteration,@Layer,@RGroupID,@January,@February,@March,@April,@May,@June,@July,@August,@September,@October,@November,@December);");
+	sprintf(sql, "INSERT INTO sxwRootsRelative (Year,Iteration,Layer,RGroupID,January,February,March,April,May,June,July,August,September,October,November,December) VALUES (@Year,@Iteration,@Layer,@RGroupID,@January,@February,@March,@April,@May,@June,@July,@August,@September,@October,@November,@December);");
 	sqlite3_prepare_v2(db, sql, 1024, &stmt_OutRootsRel, NULL);
 
 	sprintf(sql, "INSERT INTO sxwOutputTranspiration (Year,Iteration,Layer,VegProdType,January,February,March,April,May,June,July,August,September,October,November,December) VALUES (@Year,@Iteration,@Layer,@VegProdType,@January,@February,@March,@April,@May,@June,@July,@August,@September,@October,@November,@December);");
@@ -744,11 +743,16 @@ void createTables() {
 	int rc;
 	char *zErrMsg = 0;
 
-	char *table_PrjInfo = "CREATE TABLE info(StartYear INT, Years INT, Iterations INT, RGroups INT, TranspirationLayers INT, SoilLayers INT, PlotSize REAL);";
+	char *table_PrjInfo = "CREATE TABLE info(StartYear INT, Years INT, Iterations INT, RGroups INT, TranspirationLayers INT, SoilLayers INT, PlotSize REAL, BVT REAL);";
 	char *table_rgroups = "CREATE TABLE RGroups(ID INT PRIMARY KEY NOT NULL, NAME TEXT NOT NULL, VegProdType INT NOT NULL);";
 	char *table_phen = "CREATE TABLE sxwphen(RGroupID INT NOT NULL, Month INT NOT NULL, GrowthPCT REAL NOT NULL, PRIMARY KEY(RGroupID, Month));";
 	char *table_prod = "CREATE TABLE sxwprod(RGroupID INT NOT NULL, Month INT NOT NULL, BMASS REAL, LITTER REAL, PCTLIVE REAL, PRIMARY KEY(RGroupID, Month));";
-	char *table_rootsXphen = "CREATE TABLE rootsXphen(RGroupID INT NOT NULL, Layer INT NOT NULL, January REAL, February REAL, March REAL, April REAL, May REAL, June REAL, July REAL, August REAL, September REAL, October REAL, November REAL, December REAL, PRIMARY KEY(RGroupID, Layer));";
+	char *table_rootsXphen = "CREATE TABLE sxwRootsXphen(RGroupID INT NOT NULL, Layer INT NOT NULL, January REAL, February REAL, March REAL, April REAL, May REAL, June REAL, July REAL, August REAL, September REAL, October REAL, November REAL, December REAL, PRIMARY KEY(RGroupID, Layer));";
+	char *table_rootsSum =
+			"CREATE TABLE sxwRootsSum(YEAR INT NOT NULL, Iteration INT NOT NULL, Layer INT NOT NULL, VegProdType INT NOT NULL, January REAL, February REAL, March REAL, April REAL, May REAL, June REAL, July REAL, August REAL, September REAL, October REAL, November REAL, December REAL, PRIMARY KEY(Year, Iteration, Layer, VegProdType));";
+	char *table_rootsRelative =
+			"CREATE TABLE sxwRootsRelative(YEAR INT NOT NULL, Iteration INT NOT NULL, Layer INT NOT NULL, RGroupID INT NOT NULL, January REAL, February REAL, March REAL, April REAL, May REAL, June REAL, July REAL, August REAL, September REAL, October REAL, November REAL, December REAL, PRIMARY KEY(Year, Iteration, Layer, RGroupID));";
+
 	char *table_InputVars =
 			"CREATE TABLE sxwInputVars(Year INT NOT NULL, Iteration INT NOT NULL, FracGrass REAL, FracShrub REAL, FracTree REAL, FracForb REAL, FracBareGround REAL, PRIMARY KEY(Year, Iteration));";
 	char *table_InputProd =
@@ -761,10 +765,6 @@ void createTables() {
 			"CREATE TABLE sxwOutputRgroup(YEAR INT NOT NULL, Iteration INT NOT NULL, RGroupID INT NOT NULL, Biomass REAL, Realsize REAL, PR REAL, Transpiration REAL, PRIMARY KEY(Year, Iteration, RGroupID));";
 	char *table_OutputProd =
 			"CREATE TABLE sxwOutputProd(YEAR INT NOT NULL, Iteration INT NOT NULL, Month INT NOT NULL, BMass REAL, PctLive REAL, LAIlive REAL, VegCov REAL, TotAGB REAL, PRIMARY KEY(Year, Iteration, Month));";
-	char *table_OutputRootsSum =
-			"CREATE TABLE sxwOutputRootsSum(YEAR INT NOT NULL, Iteration INT NOT NULL, Layer INT NOT NULL, VegProdType INT NOT NULL, January REAL, February REAL, March REAL, April REAL, May REAL, June REAL, July REAL, August REAL, September REAL, October REAL, November REAL, December REAL, PRIMARY KEY(Year, Iteration, Layer, VegProdType));";
-	char *table_OutputRootsRelative =
-			"CREATE TABLE sxwOutputRootsRelative(YEAR INT NOT NULL, Iteration INT NOT NULL, Layer INT NOT NULL, RGroupID INT NOT NULL, January REAL, February REAL, March REAL, April REAL, May REAL, June REAL, July REAL, August REAL, September REAL, October REAL, November REAL, December REAL, PRIMARY KEY(Year, Iteration, Layer, RGroupID));";
 	char *table_OutputTransp =
 			"CREATE TABLE sxwOutputTranspiration(YEAR INT NOT NULL, Iteration INT NOT NULL, Layer INT NOT NULL, VegProdType INT NOT NULL, January REAL, February REAL, March REAL, April REAL, May REAL, June REAL, July REAL, August REAL, September REAL, October REAL, November REAL, December REAL, PRIMARY KEY(Year, Iteration, Layer, VegProdType));";
 	char *table_OutputSWCBulk =
@@ -785,6 +785,12 @@ void createTables() {
 	rc = sqlite3_exec(db, table_rootsXphen, callback, 0, &zErrMsg);
 	sqlcheck(rc, zErrMsg);
 
+	rc = sqlite3_exec(db, table_rootsSum, callback, 0, &zErrMsg);
+	sqlcheck(rc, zErrMsg);
+
+	rc = sqlite3_exec(db, table_rootsRelative, callback, 0, &zErrMsg);
+	sqlcheck(rc, zErrMsg);
+
 	rc = sqlite3_exec(db, table_InputVars, callback, 0, &zErrMsg);
 	sqlcheck(rc, zErrMsg);
 
@@ -801,12 +807,6 @@ void createTables() {
 	sqlcheck(rc, zErrMsg);
 
 	rc = sqlite3_exec(db, table_OutputProd, callback, 0, &zErrMsg);
-	sqlcheck(rc, zErrMsg);
-
-	rc = sqlite3_exec(db, table_OutputRootsSum, callback, 0, &zErrMsg);
-	sqlcheck(rc, zErrMsg);
-
-	rc = sqlite3_exec(db, table_OutputRootsRelative, callback, 0, &zErrMsg);
 	sqlcheck(rc, zErrMsg);
 
 	rc = sqlite3_exec(db, table_OutputTransp, callback, 0, &zErrMsg);

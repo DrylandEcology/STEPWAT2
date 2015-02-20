@@ -140,9 +140,30 @@ void rgroup_PartResources( void) {
 
 		g->res_required = RGroup_GetBiomass(rg);
 		g->res_avail = SXW_GetTranspiration(rg);//1.0;
-		if(!ZRO(g->res_avail) && g->res_required / g->res_avail > 10) {
-			g->res_required = 10;
+		//PR limit can be really high see mort no_resource I limit to the groups estab indiv because that is what we can kill.
+		//This was at 10 but ten might be to low or high in some cases.
+		if(!ZRO(g->res_avail) && g->res_required / g->res_avail > g->estabs) {
+			g->res_required = g->estabs;
 			g->res_avail = 1;
+		}
+		//A check
+		if(ZRO(g->res_avail) && g->res_required > 0) {
+			g->res_required = g->estabs;
+			g->res_avail = 1;
+			LogError(logfp, LOGWARN, "RGroup %s : res_avail is Zero and res_required > 0", g->name);
+		}
+		//Annuals seem to have a artificial limit of 20. We do Annuals here differently.
+		if(g->max_age == 1) {
+			g->res_required = RGroup_GetBiomass(rg);
+			g->res_avail = SXW_GetTranspiration(rg);
+			if(!ZRO(g->res_avail) && g->res_required / g->res_avail > 20) {
+				g->res_required = 20;
+				g->res_avail = 1;
+			}
+			if(ZRO(g->res_avail) && g->res_required > 0) {
+				g->res_required = 20;
+				g->res_avail = 1;
+			}
 		}
 	}
 #endif
@@ -966,7 +987,7 @@ void rgroup_Extirpate( GrpIndex rg) {
   SppIndex sp, i;
 
   ForEachGroupSpp(sp, rg, i) {
-    Species_Kill( sp);
+    Species_Kill( sp, 5);
     Species[sp]->seedling_estab_prob = 0.0;
   }
 
@@ -990,7 +1011,7 @@ void RGroup_Kill( GrpIndex rg) {
 	Int i;
 
 	ForEachEstSpp2( rg, i)
-		Species_Kill(RGroup[rg]->est_spp[i]);
+		Species_Kill(RGroup[rg]->est_spp[i], 6);
 }
 
 /**********************************************************/

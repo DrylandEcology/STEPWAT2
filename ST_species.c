@@ -30,7 +30,7 @@
 void rgroup_AddSpecies( GrpIndex rg, SppIndex sp) ;
 void rgroup_DropSpecies( SppIndex sp) ;
 Bool indiv_New( SppIndex sp);
-void indiv_Kill_Complete( IndivType *ndv);
+void indiv_Kill_Complete( IndivType *ndv, int killType);
 
 /*------------------------------------------------------*/
 /* Modular functions only used on one or two specific   */
@@ -357,7 +357,7 @@ SppIndex Species_Name2Index (const char *name) {
 
 
 /**************************************************************/
-void Species_Kill (const SppIndex sp) {
+void Species_Kill (const SppIndex sp, int killType) {
 /*======================================================*/
 /* PURPOSE */
 /* Kill all established individuals in a species.
@@ -381,7 +381,7 @@ void Species_Kill (const SppIndex sp) {
   } else {
     while(p) {
       t = p->Next;
-      indiv_Kill_Complete( p);
+      indiv_Kill_Complete( p, killType);
       p = t;
     }
   }

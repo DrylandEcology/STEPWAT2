@@ -58,7 +58,6 @@
   
   void runGrid( void ); //for the grid... declared in ST_grid.c
 
-
 #ifdef DEBUG_MEM
   #define chkmem_f CheckMemoryIntegrity(FALSE);
   #define chkmem_t CheckMemoryIntegrity(TRUE);
@@ -130,7 +129,8 @@ Bool UseProgressBar;
 /******************** Begin Model Code *********************/
 /***********************************************************/
 int main(int argc, char **argv) {
-	IntS year, iter, incr;
+	IntS year, iter, incr, g, s;
+	IndivType *i;
 	Bool killedany;
 
 	logged = FALSE;
@@ -149,6 +149,9 @@ int main(int argc, char **argv) {
 
 	if (UseSoilwat)
 		SXW_Init(TRUE);
+
+	//Connect to ST db and insert static data
+	ST_connect("Output/stdebug");
 
 	incr = (IntS) ((float) Globals.runModelIterations / 10);
 	if (incr == 0)
@@ -208,6 +211,15 @@ int main(int argc, char **argv) {
 			mort_EndOfYear();
 			chkmem_t;
 
+			ForEachGroup(g) {
+				insertRGroupYearInfo(g);
+			}
+			ForEachSpecies(s) {
+				insertSpecieYearInfo(s);
+				for ((i) = Species[s]->IndvHead; (i) != NULL; (i) = (i)->Next) {
+					insertIndivYearInfo(i);
+				}
+			}
 		} /* end model run for this year*/
 
 		//if (BmassFlags.yearly) //moved to output function
@@ -219,6 +231,9 @@ int main(int argc, char **argv) {
 
 		if (MortFlags.yearly)
 			output_Mort_Yearly();
+
+		if (UseSoilwat)
+			SXW_Reset();
 
 	} /* end model run for this iteration*/
 
@@ -265,7 +280,7 @@ void Plot_Initialize(void) {
 
 		/* Kill all individuals of each species.
 		 This should zero everything necessary (inc. estab&kilz) */
-		Species_Kill(sp);
+		Species_Kill(sp, 0);
 
 		/* programmer alert: INVESTIGATE WHY THIS OCCURS */
 		if (!ZRO(Species[sp]->relsize)) {

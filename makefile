@@ -64,6 +64,7 @@ SRCS	=\
 	$(Src)/ST_species.c\
 	$(Src)/ST_stats.c\
 	$(Src)/ST_grid.c\
+	$(Src)/ST_sql.c
 	#$(Src)/sxw_tester.c
 
 EXOBJS	=\
@@ -101,6 +102,7 @@ EXOBJS	=\
 	$(oDir)/ST_stats.o\
 	$(oDir)/sxw_environs.o\
 	$(oDir)/ST_grid.o\
+	$(oDir)/ST_sql.o
 	#$(oDir)/sxw_tester.o
 
 ALLOBJS	=	$(EXOBJS)
@@ -116,6 +118,7 @@ all:	$(ALLTGT)
 		cp stepwat testing/Stepwat\ Inputs/stepwat
 		cp stepwat testing.sagebrush.bradford
 		cp stepwat testing.shortgrass.bradford
+		cp stepwat /home/ryan/go/src/github.com/ryanmurf/steppeViewer/Projects/Stepwat/
 
 objs:	$(ALLOBJS)
 
@@ -314,4 +317,7 @@ $(oDir)/sw_src/SW_VegEstab.o: sw_src/SW_VegEstab.c sw_src/generic.h sw_src/filef
 $(oDir)/ST_grid.o: ST_grid.c ST_steppe.h ST_defines.h sw_src/generic.h \
  ST_globals.h \
  sw_src/myMemory.h ST_globals.h
+	$(CC) $(C_FLAGS) $(incDirs) -c -o $@ $<
+	
+$(oDir)/ST_sql.o: ST_sql.c ST_steppe.h ST_globals.h
 	$(CC) $(C_FLAGS) $(incDirs) -c -o $@ $<

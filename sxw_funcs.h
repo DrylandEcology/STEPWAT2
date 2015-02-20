@@ -23,6 +23,7 @@ RealF SXW_GetTranspiration( GrpIndex rg);
 
 RealF SXW_ResourceAvailable (void);
 void SXW_Init( Bool init_SW );
+void SXW_Reset(void);
 void SXW_Run_SOILWAT (void);
 void SXW_InitPlot (void);
 void SXW_PrintDebug(Bool cleanup) ;

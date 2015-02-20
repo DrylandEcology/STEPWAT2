@@ -67,6 +67,7 @@
 #include "sw_src/SW_Site.h"
 #include "sw_src/SW_SoilWater.h"
 #include "sw_src/SW_Files.h"
+#include "sw_src/SW_Weather.h"
 
 /*************** Global Variable Declarations ***************/
 /***********************************************************/
@@ -165,6 +166,7 @@ void SXW_Init( Bool init_SW ) {
    * 2/14/03 - cwb - Added the summation for each group's biomass
    *     as per the notes at the top of the file.
    */
+	char * temp;
 
 #ifdef SXW_BYMAXSIZE
    GrpIndex rg; SppIndex sp;
@@ -191,8 +193,13 @@ void SXW_Init( Bool init_SW ) {
 	  _read_debugfile();
   _write_sw_outin();
 
-  if(init_SW) SW_CTL_init_model(SXW.f_watin);
   
+  if(init_SW) {
+	  temp = strdup(SXW.f_watin);
+	  SW_CTL_init_model(temp);
+	  free(temp);
+  }
+
   SXW.NTrLyrs = SW_Site.n_transp_lyrs_tree;
   if(SW_Site.n_transp_lyrs_shrub > SXW.NTrLyrs)
   	SXW.NTrLyrs = SW_Site.n_transp_lyrs_shrub;
@@ -217,9 +224,22 @@ void SXW_Init( Bool init_SW ) {
   exit(0);
 #endif
 
-  _recover_names();
+  //_recover_names();
 }
 
+/**
+ * This function resets the model to default conditions
+ */
+void SXW_Reset(void) {
+	char * temp;
+
+	SW_SIT_clear_layers();
+	SW_WTH_clear_runavg_list();
+
+	temp = strdup(SXW.f_watin);
+	SW_CTL_init_model(temp);
+	free(temp);
+}
 
 void SXW_InitPlot (void) {
 /*======================================================*/
