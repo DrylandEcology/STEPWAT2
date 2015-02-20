@@ -91,13 +91,13 @@ static void prepareStatements() {
 	sprintf(sql, "INSERT INTO SpeciesYearInfo (Year, Iteration, SpeciesID, EstabCount, Estabs, RelSize, ExtraGrowth, ReceivedProb, AllowGrowth, sdSGerm) VALUES (@Year, @Iteration, @SpeciesID, @EstabCount, @Estabs, @RelSize, @ExtraGrowth, @ReceivedProb, @AllowGrowth, @sdSGerm);");
 	sqlite3_prepare_v2(db, sql, 1024, &stmt_SpeciesYearInfo, NULL);
 
-	sprintf(sql, "INSERT INTO Indiv (IndivID, Iteration, Year, SpeciesID, RGroupID) VALUES (@IndivID, @Iteration, @Year, @SpeciesID, @RGroupID);");
+	sprintf(sql, "INSERT INTO Indiv (IndivID, Iteration, CreatedYear, SpeciesID, RGroupID) VALUES (@IndivID, @Iteration, @CreatedYear, @SpeciesID, @RGroupID);");
 	sqlite3_prepare_v2(db, sql, 1024, &stmt_Indiv, NULL);
 
 	sprintf(sql, "INSERT INTO IndivYearInfo(Year, IndivID, MortalityTypeID, age, mmExtraRes, SlowYrs, YrsNegPR, Killed, RelSize, GrpResProp, ResRequired, ResAvail, ResExtra, PR, GrowthRate, ProbVeggrow) VALUES (@Year, @IndivID, @MortalityTypeID, @age, @mmExtraRes, @SlowYrs, @YrsNegPR, @Killed, @RelSize, @GrpResProp, @ResRequired, @ResAvail, @ResExtra, @PR, @GrowthRate, @ProbVeggrow);");
 	sqlite3_prepare_v2(db, sql, 1024, &stmt_IndivYearInfo, NULL);
 
-	sprintf(sql, "INSERT INTO IndivKill(Year, IndivID, KillTypeID) VALUES (@Year, @IndivID, @KillTypeID);");
+	sprintf(sql, "UPDATE Indiv SET KilledYear=?, KillTypeID=? WHERE IndivID=?;");
 	sqlite3_prepare_v2(db, sql, 1024, &stmt_IndivKill, NULL);
 }
 
@@ -110,8 +110,8 @@ static void finalizeStatements() {
 
 void insertIndivKill(int IndivID, int KillTypeID) {
 	sqlite3_bind_int(stmt_IndivKill, 1, Globals.currYear);
-	sqlite3_bind_int(stmt_IndivKill, 2, IndivID);
-	sqlite3_bind_int(stmt_IndivKill, 3, KillTypeID);
+	sqlite3_bind_int(stmt_IndivKill, 2, KillTypeID);
+	sqlite3_bind_int(stmt_IndivKill, 3, IndivID);
 
 	sqlite3_step(stmt_IndivKill);
 	sqlite3_clear_bindings(stmt_IndivKill);
@@ -145,10 +145,10 @@ void insertIndivYearInfo(IndivType *ind) {
 	insertIndivYearInfoRow(Globals.currYear, ind->id, ind->killedby, (ind->age - 1), ind->mm_extra_res, ind->slow_yrs, ind->yrs_neg_pr, ind->killed, ind->relsize, ind->grp_res_prop, ind->res_required, ind->res_avail, ind->res_extra, ind->pr, ind->growthrate, ind->prob_veggrow);
 }
 
-static void insertIndivRow(int IndivID, int Iteration, int Year, int SpeciesID, int RGroupID) {
+static void insertIndivRow(int IndivID, int Iteration, int CreatedYear, int SpeciesID, int RGroupID) {
 	sqlite3_bind_int(stmt_Indiv, 1, IndivID);
 	sqlite3_bind_int(stmt_Indiv, 2, Iteration);
-	sqlite3_bind_int(stmt_Indiv, 3, Year);
+	sqlite3_bind_int(stmt_Indiv, 3, CreatedYear);
 	sqlite3_bind_int(stmt_Indiv, 4, SpeciesID);
 	sqlite3_bind_int(stmt_Indiv, 5, RGroupID);
 	sqlite3_step(stmt_Indiv);
@@ -398,9 +398,9 @@ static void createTables(void) {
 	char *table_species = "CREATE TABLE Species(SpeciesID INT PRIMARY KEY NOT NULL, RGroupID INT NOT NULL, NAME TEXT NOT NULL, MaxAge INT, ViableYrs INT, MaxSeedEstab INT, MaxVegUnits INT, MaxSlow INT, SPnum INT, MaxRate REAL, IntrinRate REAL, RelSeedlingsSize REAL, SeedlingBiomass REAL, MatureBiomass REAL, SeedlingEstabProbOld REAL, SeedlingEstabProb REAL, AnnMortProb REAL, CohortSurv REAL, ExpDecay REAL, ProbVeggrow1 REAL, ProbVeggrow2 REAL, ProbVeggrow3 REAL, ProbVeggrow4 REAL, sdParam1 REAL, sdPPTdry REAL, sdPPTwet REAL, sdPmin REAL, sdPmax REAL, sdH REAL, sdVT REAL, TempClassID INT, DisturbClassID INT, isClonal INT, UseTempResponse INT, UseMe INT, UseDispersal INT);";
 	char *table_speciesYearInfo = "CREATE TABLE SpeciesYearInfo(Year INT NOT NULL, Iteration INT NOT NULL, SpeciesID INT NOT NULL, EstabCount INT, Estabs INT, RelSize REAL, ExtraGrowth REAL, ReceivedProb REAL, AllowGrowth INT, sdSGerm INT, PRIMARY KEY(Year, Iteration, SpeciesID));";
 
-	char *table_indiv = "CREATE TABLE Indiv(IndivID INT NOT NULL, Iteration INT NOT NULL, Year INT NOT NULL, SpeciesID INT NOT NULL, RGroupID INT NOT NULL, PRIMARY KEY(IndivID, Iteration, Year, SpeciesID));";
+	char *table_indiv = "CREATE TABLE Indiv(IndivID INT NOT NULL, Iteration INT NOT NULL, CreatedYear INT NOT NULL, SpeciesID INT NOT NULL, RGroupID INT NOT NULL, KilledYear INT, KillTypeID INT, PRIMARY KEY(IndivID, Iteration, CreatedYear, SpeciesID));";
 	char *table_indivYearInfo = "CREATE TABLE IndivYearInfo(Year INT NOT NULL, IndivID INT NOT NULL, MortalityTypeID INT, age INT, mmExtraRes INT, SlowYrs INT, YrsNegPR INT, Killed INT, RelSize REAL, GrpResProp REAL, ResRequired REAL, ResAvail REAL, ResExtra REAL, PR REAL, GrowthRate REAL, ProbVeggrow REAL, PRIMARY KEY(Year, IndivID));";
-	char *table_indivKill = "CREATE TABLE IndivKill(Year INT NOT NULL, IndivID INT NOT NULL, KillTypeID INT NOT NULL, PRIMARY KEY(Year, IndivID));";
+	//char *table_indivKill = "CREATE TABLE IndivKill(Year INT NOT NULL, IndivID INT NOT NULL, KillTypeID INT NOT NULL, PRIMARY KEY(Year, IndivID));";
 
 
 	rc = sqlite3_exec(db, table_PrjInfo, callback, 0, &zErrMsg);
@@ -433,8 +433,8 @@ static void createTables(void) {
 	rc = sqlite3_exec(db, table_indivYearInfo, callback, 0, &zErrMsg);
 	sqlcheck(rc, zErrMsg);
 
-	rc = sqlite3_exec(db, table_indivKill, callback, 0, &zErrMsg);
-	sqlcheck(rc, zErrMsg);
+	//rc = sqlite3_exec(db, table_indivKill, callback, 0, &zErrMsg);
+	//sqlcheck(rc, zErrMsg);
 
 	rc = sqlite3_exec(db, table_killTypes, callback, 0, &zErrMsg);
 	sqlcheck(rc, zErrMsg);
