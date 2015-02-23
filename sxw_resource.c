@@ -143,9 +143,9 @@ void _sxw_update_resource(void) {
 			continue;
 		if (RGroup[g]->max_age == 1) {
 			ForEachGroupSpp(sp,g,i)
-				sizes[g] += Species[sp]->mature_biomass * .75;// / Globals.plotsize;
+				sizes[g] += Species[sp]->mature_biomass * .75;
 		} else {
-			sizes[g] = RGroup_GetBiomass(g);// / Globals.plotsize;
+			sizes[g] = RGroup_GetBiomass(g);
 		}
 	}
   #endif
@@ -280,7 +280,7 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
 		{
 			int nLyrs = getNTranspLayers(RGroup[g]->veg_prod_type);
 			for (l = 0; l < nLyrs; l++) {
-				use_by_group[g] += (RealF) (fracGroupsMaxBioFromType * transp[Ilp(l, p)]);//(_roots_active_rel[Iglp(g, l, p)] *
+				use_by_group[g] += (RealF) (_roots_active_rel[Iglp(g, l, p)] * fracGroupsMaxBioFromType * transp[Ilp(l, p)]);
 			}
 		}
 		sumUsedByGroup += use_by_group[g];

@@ -99,6 +99,7 @@ struct _grid_soil_lyr_st { // represents a single soil layer
 
 struct _grid_soil_st { //represents the input data for all the soil layers of a cell
 	int num_layers;
+	char rootsFile[20];
 	Grid_Soil_Lyr* lyr;
 } typedef Grid_Soil_St;
 
@@ -185,7 +186,7 @@ void rgroup_Grow( void);
 void rgroup_Establish( void) ;
 void rgroup_IncrAges( void);
 void rgroup_PartResources( void);
-void rgroup_ResPartIndiv(void);
+//void rgroup_ResPartIndiv(void);
 
 //from ST_mortality.c
 void mort_Main( Bool *killed);
@@ -213,11 +214,11 @@ void stat_Free_Accumulators( void );
 void stat_Init_Accumulators( void );
 
 //functions from sxw.c
-void free_sxw_memory( void ); 
+//void free_sxw_memory( void );
 void free_all_sxw_memory( void );
 void load_sxw_memory( RealD * grid_roots_max, RealD* grid_rootsXphen, RealD* grid_roots_active, RealD* grid_roots_active_rel, RealD* grid_roots_active_sum, RealD* grid_phen, RealD* grid_prod_bmass, RealD* grid_prod_pctlive );
 void save_sxw_memory( RealD * grid_roots_max, RealD* grid_rootsXphen, RealD* grid_roots_active, RealD* grid_roots_active_rel, RealD* grid_roots_active_sum, RealD* grid_phen, RealD* grid_prod_bmass, RealD* grid_prod_pctlive );
-void SXW_init( Bool init_SW );
+//void SXW_init( Bool init_SW );
 
 //from SW_Site.c (both needed to initialize the soil layers properly)
 void water_eqn(RealD fractionGravel, RealD sand, RealD clay, LyrIndex n);
@@ -231,7 +232,7 @@ static double _time_remaining(clock_t start, char* timeChar, double percentDone)
 static void _run_spinup( void );
 static void _init_grid_files( void );
 static void _init_grid_inputs( void );
-static void _init_SXW_inputs( Bool init_SW );
+static void _init_SXW_inputs( Bool init_SW, char *f_roots );
 static void _init_stepwat_inputs( void );
 static void _init_grid_globals( void );
 static void _init_spinup_globals( void );
@@ -348,6 +349,9 @@ void runGrid( void ) {
 	
 	_init_grid_files();				// reads in files.in file
 	_init_stepwat_inputs();				// reads the stepwat inputs in
+	//SWC hist file prefix needs to be cleared
+	Mem_Free(SW_Soilwat.hist.file_prefix);
+	SW_Soilwat.hist.file_prefix = NULL;
 	_init_grid_inputs();				// reads the grid inputs in & initializes the global grid variables
 	
 	if(sd_Option2a || sd_Option2b)
@@ -384,7 +388,7 @@ void runGrid( void ) {
 					_load_cell(i, j, year, TRUE);
 					
 					if(year == 1 && (sd_Option2a || sd_Option2b)) {
-						// finish this...
+						//TODO: DM finish this...
 							
 						int cell = j + ( (i-1) * grid_Cols) - 1;  // converts the row/col into an array index
 						int spinup_cell = grid_SoilTypes[cell]; // gets us the actual cell we want to load up from the spinup
@@ -429,7 +433,7 @@ void runGrid( void ) {
 			if(UseSeedDispersal)
 				_do_seed_dispersal();
 		}/* end model run for this year*/	
-    	
+
 		// collects the data appropriately for the mort output... (ie. fills the accumulators in ST_stats.c with the values that they need)
 		if(MortFlags.summary)
 			for( i = 1; i <= grid_Rows; i++)
@@ -439,6 +443,14 @@ void runGrid( void ) {
         				stat_Collect_SMort();
    					_save_cell(i, j, Globals.runModelYears, TRUE);
    				}
+		//reset soilwat to initial condition
+		if (UseSoilwat) {
+			ChDir(grid_directories[0]);
+			SXW_Reset();
+			Mem_Free(SW_Soilwat.hist.file_prefix);
+			SW_Soilwat.hist.file_prefix = NULL;
+			ChDir("..");
+		}
    					
 	} /*end iterations */
 
@@ -553,7 +565,15 @@ static void _run_spinup( void ) {
     			} /* end model run for this cell*/
     			
 		}/* end model run for this year*/	
-    		
+
+		if (UseSoilwat) {
+			ChDir(grid_directories[0]);
+			SXW_Reset();
+			//TODO: This is a shortcut. swc history is not used and shouldn't be until this is fixed.
+			Mem_Free(SW_Soilwat.hist.file_prefix);
+			SW_Soilwat.hist.file_prefix = NULL;
+			ChDir("..");
+		}
 		//_free_grid_globals(); //free's the grid variables that change every iter
 	} /*end iterations */
 
@@ -649,8 +669,8 @@ static void _init_grid_inputs( void ) {
 }
 
 /***********************************************************/
-static void _init_SXW_inputs( Bool init_SW ) {
-    	SXW_Init(init_SW);	// initializes soilwat
+static void _init_SXW_inputs( Bool init_SW, char *f_roots  ) {
+    	SXW_Init(init_SW, f_roots);	// initializes soilwat
     	if(init_SW == TRUE) {
     		char aString[2048];
     		sprintf(aString, "%s/%s", grid_directories[0], SW_Weather.name_prefix);
@@ -667,7 +687,7 @@ static void _init_stepwat_inputs( void ) {
 	parm_Initialize( 0);				// loads stepwat input files
 	
 	if(UseSoilwat)
-		_init_SXW_inputs(TRUE);
+		_init_SXW_inputs(TRUE, NULL);
 	
 	ChDir("..");					// goes back to the folder that we were in
 }
@@ -872,20 +892,34 @@ static void _load_grid_globals( void ) {
 			_init_soil_layers(i, 0);
 				
 		if(UseSoilwat) {
-			grid_SXW[i] = SXW; 
+			grid_SXW[i] = SXW;
+
+			grid_SXW[i].f_roots = Str_Dup(SXW.f_roots);
+			grid_SXW[i].f_phen = Str_Dup(SXW.f_phen);
+			grid_SXW[i].f_bvt = Str_Dup(SXW.f_bvt);
+			grid_SXW[i].f_prod = Str_Dup(SXW.f_prod);
+			grid_SXW[i].f_watin = Str_Dup(SXW.f_watin);
 		
 			grid_SXW[i].transpTotal = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealD), "_init_grid_globals()");
+			grid_SXW[i].transpTrees = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealD), "_init_grid_globals()");
+			grid_SXW[i].transpShrubs = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealD), "_init_grid_globals()");
+			grid_SXW[i].transpGrasses = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealD), "_init_grid_globals()");
+			grid_SXW[i].transpForbs = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealD), "_init_grid_globals()");
 			grid_SXW[i].swc = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealF), "_init_grid_globals()");
 			
 			memcpy(grid_SXW[i].transpTotal, SXW.transpTotal, SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
+			memcpy(grid_SXW[i].transpTrees, SXW.transpTrees, SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
+			memcpy(grid_SXW[i].transpShrubs, SXW.transpShrubs, SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
+			memcpy(grid_SXW[i].transpGrasses, SXW.transpGrasses, SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
+			memcpy(grid_SXW[i].transpForbs, SXW.transpForbs, SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
 			memcpy(grid_SXW[i].swc, SXW.swc, SXW.NPds * SXW.NSoLyrs * sizeof(RealF));
 			
 			grid_SW_Soilwat[i] = SW_Soilwat;
 			grid_SW_Site[i] = SW_Site;
 			grid_SW_VegProd[i] = SW_VegProd;
 			
-        		grid_SW_Site[i].lyr = Mem_Calloc(SW_Site.n_layers, sizeof(SW_LAYER_INFO *), "_init_grid_globals()");
-        		for(j = 0; j < SW_Site.n_layers; j++) {
+        		grid_SW_Site[i].lyr = Mem_Calloc(SW_Site.n_layers+SW_Site.deepdrain, sizeof(SW_LAYER_INFO *), "_init_grid_globals()");
+        		for(j = 0; j < SW_Site.n_layers+SW_Site.deepdrain; j++) {
         			grid_SW_Site[i].lyr[j] = Mem_Calloc(1, sizeof(SW_LAYER_INFO), "_init_grid_globals()");
         			memcpy(grid_SW_Site[i].lyr[j], SW_Site.lyr[j], sizeof(SW_LAYER_INFO));
         		}
@@ -944,24 +978,38 @@ static void _load_spinup_globals( void ) {
 			spinup_Globals[i].mound.use = grid_Disturb[cell].choices[1];
 			spinup_Globals[i].burrow.use = grid_Disturb[cell].choices[2];
 		}
-		if(UseSoils && UseSoilwat)//TODO: should i be cell value after lookup from soilTypes_Array
+		if(UseSoils && UseSoilwat)//TODO: DM should i be cell value after lookup from soilTypes_Array
 			_init_soil_layers(i, 1);
 				
 		if(UseSoilwat) {
-			spinup_SXW[i] = SXW; 
+			spinup_SXW[i] = SXW;
+
+			spinup_SXW[i].f_roots = Str_Dup(SXW.f_roots);
+			spinup_SXW[i].f_phen = Str_Dup(SXW.f_phen);
+			spinup_SXW[i].f_bvt = Str_Dup(SXW.f_bvt);
+			spinup_SXW[i].f_prod = Str_Dup(SXW.f_prod);
+			spinup_SXW[i].f_watin = Str_Dup(SXW.f_watin);
 			
 			spinup_SXW[i].transpTotal = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealD), "_init_spinup_globals()");
-			spinup_SXW[i].swc = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealF), "_init_spinup_globals()");
-			
+			spinup_SXW[i].transpTrees = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealD), "_init_grid_globals()");
+			spinup_SXW[i].transpShrubs = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealD), "_init_grid_globals()");
+			spinup_SXW[i].transpGrasses = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealD), "_init_grid_globals()");
+			spinup_SXW[i].transpForbs = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealD), "_init_grid_globals()");
+			spinup_SXW[i].swc = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealF), "_init_grid_globals()");
+
 			memcpy(spinup_SXW[i].transpTotal, SXW.transpTotal, SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
+			memcpy(spinup_SXW[i].transpTrees, SXW.transpTrees, SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
+			memcpy(spinup_SXW[i].transpShrubs, SXW.transpShrubs, SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
+			memcpy(spinup_SXW[i].transpGrasses, SXW.transpGrasses, SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
+			memcpy(spinup_SXW[i].transpForbs, SXW.transpForbs, SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
 			memcpy(spinup_SXW[i].swc, SXW.swc, SXW.NPds * SXW.NSoLyrs * sizeof(RealF));
 			
 			spinup_SW_Soilwat[i] = SW_Soilwat;
 			spinup_SW_Site[i] = SW_Site;
 			spinup_SW_VegProd[i] = SW_VegProd;
 			
-        		spinup_SW_Site[i].lyr = Mem_Calloc(SW_Site.n_layers, sizeof(SW_LAYER_INFO *), "_init_grid_globals()");
-        		for(j = 0; j < SW_Site.n_layers; j++) {
+        		spinup_SW_Site[i].lyr = Mem_Calloc(SW_Site.n_layers+SW_Site.deepdrain, sizeof(SW_LAYER_INFO *), "_init_grid_globals()");
+        		for(j = 0; j < SW_Site.n_layers+SW_Site.deepdrain; j++) {
         			spinup_SW_Site[i].lyr[j] = Mem_Calloc(1, sizeof(SW_LAYER_INFO), "_init_grid_globals()");
         			memcpy(spinup_SW_Site[i].lyr[j], SW_Site.lyr[j], sizeof(SW_LAYER_INFO));
         		}
@@ -991,7 +1039,16 @@ static void _free_grid_globals( void ) {
 			if(RGroup[c]->use_me) Mem_Free(grid_RGroup[c][i].kills);
 			
 		if(UseSoilwat) {
+			Mem_Free(grid_SXW[i].f_roots);
+			Mem_Free(grid_SXW[i].f_phen);
+			Mem_Free(grid_SXW[i].f_bvt);
+			Mem_Free(grid_SXW[i].f_prod);
+			Mem_Free(grid_SXW[i].f_watin);
 			Mem_Free(grid_SXW[i].transpTotal);
+			Mem_Free(grid_SXW[i].transpTrees);
+			Mem_Free(grid_SXW[i].transpShrubs);
+			Mem_Free(grid_SXW[i].transpGrasses);
+			Mem_Free(grid_SXW[i].transpForbs);
 			Mem_Free(grid_SXW[i].swc);
 			if(UseSoils) {
 				Mem_Free(grid_SXW_ptrs[i].roots_max);
@@ -1000,9 +1057,11 @@ static void _free_grid_globals( void ) {
 				Mem_Free(grid_SXW_ptrs[i].roots_active_rel);
 				Mem_Free(grid_SXW_ptrs[i].roots_active_sum);
 				Mem_Free(grid_SXW_ptrs[i].phen);
+				Mem_Free(grid_SXW_ptrs[i].prod_bmass);
+				Mem_Free(grid_SXW_ptrs[i].prod_pctlive);
 			}
 			
-			for(j = 0; j < grid_SW_Site[i].n_layers; j++)
+			for(j = 0; j < grid_SW_Site[i].n_layers+grid_SW_Site[i].deepdrain; j++)
 				Mem_Free(grid_SW_Site[i].lyr[j]);
 			Mem_Free(grid_SW_Site[i].lyr);
 		}
@@ -1031,7 +1090,16 @@ static void _free_spinup_globals( void ) {
 			if(RGroup[c]->use_me) Mem_Free(spinup_RGroup[c][i].kills);
 			
 		if(UseSoilwat) {
+			Mem_Free(spinup_SXW[i].f_roots);
+			Mem_Free(spinup_SXW[i].f_phen);
+			Mem_Free(spinup_SXW[i].f_bvt);
+			Mem_Free(spinup_SXW[i].f_prod);
+			Mem_Free(spinup_SXW[i].f_watin);
 			Mem_Free(spinup_SXW[i].transpTotal);
+			Mem_Free(spinup_SXW[i].transpTrees);
+			Mem_Free(spinup_SXW[i].transpShrubs);
+			Mem_Free(spinup_SXW[i].transpGrasses);
+			Mem_Free(spinup_SXW[i].transpForbs);
 			Mem_Free(spinup_SXW[i].swc);
 			if(UseSoils) {
 				Mem_Free(spinup_SXW_ptrs[i].roots_max);
@@ -1040,9 +1108,11 @@ static void _free_spinup_globals( void ) {
 				Mem_Free(spinup_SXW_ptrs[i].roots_active_rel);
 				Mem_Free(spinup_SXW_ptrs[i].roots_active_sum);
 				Mem_Free(spinup_SXW_ptrs[i].phen);
+				Mem_Free(spinup_SXW_ptrs[i].prod_bmass);
+				Mem_Free(spinup_SXW_ptrs[i].prod_pctlive);
 			}
 			
-			for(j = 0; j < grid_SW_Site[i].n_layers; j++)
+			for(j = 0; j < spinup_SW_Site[i].n_layers+spinup_SW_Site[i].deepdrain; j++)
 				Mem_Free(spinup_SW_Site[i].lyr[j]);
 			Mem_Free(spinup_SW_Site[i].lyr);
 		}
@@ -1126,9 +1196,7 @@ static void _free_grid_memory( void ) {
 			Mem_Free(RGroup[c]->kills);
 	    
 	if(UseSoilwat) {
-		Mem_Free(SXW.swc);
-		Mem_Free(SXW.debugfile);
-		for(i = 0; i < SW_Site.n_layers; i++)
+		for(i = 0; i < SW_Site.n_layers+SW_Site.deepdrain; i++)
 			Mem_Free(SW_Site.lyr[i]);
 		Mem_Free(SW_Site.lyr);
 	}
@@ -1216,9 +1284,19 @@ static void _load_cell( int row, int col, int year, Bool useAccumulators ) {
 	Globals = grid_Globals[cell];
 	
 	if(UseSoilwat) {
+		Mem_Free(SXW.f_roots);
+		Mem_Free(SXW.f_phen);
+		Mem_Free(SXW.f_bvt);
+		Mem_Free(SXW.f_prod);
+		Mem_Free(SXW.f_watin);
 		Mem_Free(SXW.transpTotal);
+		Mem_Free(SXW.transpTrees);
+		Mem_Free(SXW.transpShrubs);
+		Mem_Free(SXW.transpGrasses);
+		Mem_Free(SXW.transpForbs);
+
 		if(SXW.swc != NULL) Mem_Free(SXW.swc);
-		for(j = 0; j < SW_Site.n_layers; j++)
+		for(j = 0; j < SW_Site.n_layers + SW_Site.deepdrain; j++)
 			Mem_Free(SW_Site.lyr[j]);
 		Mem_Free(SW_Site.lyr);
 			
@@ -1228,13 +1306,26 @@ static void _load_cell( int row, int col, int year, Bool useAccumulators ) {
 		SW_VegProd = grid_SW_VegProd[cell];
 		
 		SXW.transpTotal = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealD), "_load_cell(SXW.transp)");
+		SXW.transpTrees = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealD), "_load_cell(SXW.transp)");
+		SXW.transpShrubs = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealD), "_load_cell(SXW.transp)");
+		SXW.transpGrasses = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealD), "_load_cell(SXW.transp)");
+		SXW.transpForbs = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealD), "_load_cell(SXW.transp)");
 		SXW.swc = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealF), "_load_cell(SXW.swc)");
 		
+		SXW.f_roots = Str_Dup(grid_SXW[cell].f_roots);
+		SXW.f_phen = Str_Dup(grid_SXW[cell].f_phen);
+		SXW.f_bvt = Str_Dup(grid_SXW[cell].f_bvt);
+		SXW.f_prod = Str_Dup(grid_SXW[cell].f_prod);
+		SXW.f_watin = Str_Dup(grid_SXW[cell].f_watin);
 		memcpy(SXW.transpTotal, grid_SXW[cell].transpTotal, SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
+		memcpy(SXW.transpTrees, grid_SXW[cell].transpTrees, SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
+		memcpy(SXW.transpShrubs, grid_SXW[cell].transpShrubs, SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
+		memcpy(SXW.transpGrasses, grid_SXW[cell].transpGrasses, SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
+		memcpy(SXW.transpForbs, grid_SXW[cell].transpForbs, SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
 		memcpy(SXW.swc, grid_SXW[cell].swc, SXW.NPds * SXW.NSoLyrs * sizeof(RealF));
 		
-		SW_Site.lyr = Mem_Calloc(grid_SW_Site[cell].n_layers, sizeof(SW_LAYER_INFO *), "_load_cell(SW_Site.lyr)");
-        for(j = 0; j < grid_SW_Site[cell].n_layers; j++) {
+		SW_Site.lyr = Mem_Calloc(grid_SW_Site[cell].n_layers + grid_SW_Site[cell].deepdrain, sizeof(SW_LAYER_INFO *), "_load_cell(SW_Site.lyr)");
+        for(j = 0; j < grid_SW_Site[cell].n_layers + grid_SW_Site[cell].deepdrain; j++) {
         	SW_Site.lyr[j] = Mem_Calloc(1, sizeof(SW_LAYER_INFO), "_load_cell(SW_Site.lyr[j])");
         	memcpy(SW_Site.lyr[j], grid_SW_Site[cell].lyr[j], sizeof(SW_LAYER_INFO));
         }
@@ -1285,9 +1376,18 @@ static void _load_spinup_cell( int cell ) {
 	Globals = spinup_Globals[cell];
 	
 	if(UseSoilwat) {
+		Mem_Free(SXW.f_roots);
+		Mem_Free(SXW.f_phen);
+		Mem_Free(SXW.f_bvt);
+		Mem_Free(SXW.f_prod);
+		Mem_Free(SXW.f_watin);
 		Mem_Free(SXW.transpTotal);
+		Mem_Free(SXW.transpTrees);
+		Mem_Free(SXW.transpShrubs);
+		Mem_Free(SXW.transpGrasses);
+		Mem_Free(SXW.transpForbs);
 		if(SXW.swc != NULL) Mem_Free(SXW.swc);
-		for(j = 0; j < SW_Site.n_layers; j++)
+		for(j = 0; j < SW_Site.n_layers+SW_Site.deepdrain; j++)
 			Mem_Free(SW_Site.lyr[j]);
 		Mem_Free(SW_Site.lyr);
 			
@@ -1296,14 +1396,27 @@ static void _load_spinup_cell( int cell ) {
 		SW_Soilwat = spinup_SW_Soilwat[cell];
 		SW_VegProd = spinup_SW_VegProd[cell];
 		
-		SXW.transpTotal = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealD), "_load_spinup_cell(SXW.transp)");
+		SXW.transpTotal = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealD), "_load_spinup_cell(SXW.transpTotal)");
+		SXW.transpTrees = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealD), "_load_spinup_cell(SXW.transpTrees)");
+		SXW.transpShrubs = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealD), "_load_spinup_cell(SXW.transpShrubs)");
+		SXW.transpGrasses = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealD), "_load_spinup_cell(SXW.transpGrasses)");
+		SXW.transpForbs = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealD), "_load_spinup_cell(SXW.transpForbs)");
 		SXW.swc = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealF), "_load_spinup_cell(SXW.swc)");
 		
+		SXW.f_roots = Str_Dup(spinup_SXW[cell].f_roots);
+		SXW.f_phen = Str_Dup(spinup_SXW[cell].f_phen);
+		SXW.f_bvt = Str_Dup(spinup_SXW[cell].f_bvt);
+		SXW.f_prod = Str_Dup(spinup_SXW[cell].f_prod);
+		SXW.f_watin = Str_Dup(spinup_SXW[cell].f_watin);
 		memcpy(SXW.transpTotal, spinup_SXW[cell].transpTotal, SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
+		memcpy(SXW.transpTrees, spinup_SXW[cell].transpTrees, SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
+		memcpy(SXW.transpShrubs, spinup_SXW[cell].transpShrubs, SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
+		memcpy(SXW.transpGrasses, spinup_SXW[cell].transpGrasses, SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
+		memcpy(SXW.transpForbs, spinup_SXW[cell].transpForbs, SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
 		memcpy(SXW.swc, spinup_SXW[cell].swc, SXW.NPds * SXW.NSoLyrs * sizeof(RealF));
 		
-		SW_Site.lyr = Mem_Calloc(spinup_SW_Site[cell].n_layers, sizeof(SW_LAYER_INFO *), "_load_spinup_cell(SW_Site.lyr)");
-        for(j = 0; j < spinup_SW_Site[cell].n_layers; j++) {
+		SW_Site.lyr = Mem_Calloc(spinup_SW_Site[cell].n_layers+spinup_SW_Site[cell].deepdrain, sizeof(SW_LAYER_INFO *), "_load_spinup_cell(SW_Site.lyr)");
+        for(j = 0; j < spinup_SW_Site[cell].n_layers+spinup_SW_Site[cell].deepdrain; j++) {
         	SW_Site.lyr[j] = Mem_Calloc(1, sizeof(SW_LAYER_INFO), "_load_spinup_cell(SW_Site.lyr[j])");
         	memcpy(SW_Site.lyr[j], spinup_SW_Site[cell].lyr[j], sizeof(SW_LAYER_INFO));
         }
@@ -1358,9 +1471,18 @@ static void _save_cell( int row, int col, int year, Bool useAccumulators ) {
 	grid_Globals[cell] = Globals;
 	
 	if(UseSoilwat) {
+		Mem_Free(grid_SXW[cell].f_roots);
+		Mem_Free(grid_SXW[cell].f_phen);
+		Mem_Free(grid_SXW[cell].f_bvt);
+		Mem_Free(grid_SXW[cell].f_prod);
+		Mem_Free(grid_SXW[cell].f_watin);
 		Mem_Free(grid_SXW[cell].transpTotal);
+		Mem_Free(grid_SXW[cell].transpTrees);
+		Mem_Free(grid_SXW[cell].transpShrubs);
+		Mem_Free(grid_SXW[cell].transpGrasses);
+		Mem_Free(grid_SXW[cell].transpForbs);
 		Mem_Free(grid_SXW[cell].swc);
-		for(j = 0; j < SW_Site.n_layers; j++)
+		for(j = 0; j < grid_SW_Site[cell].n_layers+grid_SW_Site[cell].deepdrain; j++)
 			Mem_Free(grid_SW_Site[cell].lyr[j]);
 		Mem_Free(grid_SW_Site[cell].lyr);	
 	
@@ -1370,13 +1492,26 @@ static void _save_cell( int row, int col, int year, Bool useAccumulators ) {
 		grid_SW_VegProd[cell] = SW_VegProd;
 		
 		grid_SXW[cell].transpTotal = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealD), "_save_cell(grid_SXW[cell].transp)");
+		grid_SXW[cell].transpTrees = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealD), "_save_cell(grid_SXW[cell].transp)");
+		grid_SXW[cell].transpShrubs = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealD), "_save_cell(grid_SXW[cell].transp)");
+		grid_SXW[cell].transpGrasses = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealD), "_save_cell(grid_SXW[cell].transp)");
+		grid_SXW[cell].transpForbs = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealD), "_save_cell(grid_SXW[cell].transp)");
 		grid_SXW[cell].swc = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealF), "_save_cell(grid_SXW[cell].swc)");
 		
+		grid_SXW[cell].f_roots = Str_Dup(SXW.f_roots);
+		grid_SXW[cell].f_phen = Str_Dup(SXW.f_phen);
+		grid_SXW[cell].f_bvt = Str_Dup(SXW.f_bvt);
+		grid_SXW[cell].f_prod = Str_Dup(SXW.f_prod);
+		grid_SXW[cell].f_watin = Str_Dup(SXW.f_watin);
 		memcpy(grid_SXW[cell].transpTotal, SXW.transpTotal, SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
+		memcpy(grid_SXW[cell].transpTrees, SXW.transpTotal, SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
+		memcpy(grid_SXW[cell].transpShrubs, SXW.transpTotal, SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
+		memcpy(grid_SXW[cell].transpGrasses, SXW.transpTotal, SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
+		memcpy(grid_SXW[cell].transpForbs, SXW.transpTotal, SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
 		memcpy(grid_SXW[cell].swc, SXW.swc, SXW.NPds * SXW.NSoLyrs * sizeof(RealF));
 		
-		grid_SW_Site[cell].lyr = Mem_Calloc(SW_Site.n_layers, sizeof(SW_LAYER_INFO *), "_save_cell(grid_SW_Site[cell].lyr[j])");
-       		for(j = 0; j < SW_Site.n_layers; j++) {
+		grid_SW_Site[cell].lyr = Mem_Calloc(SW_Site.n_layers+SW_Site.deepdrain, sizeof(SW_LAYER_INFO *), "_save_cell(grid_SW_Site[cell].lyr[j])");
+       		for(j = 0; j < SW_Site.n_layers+SW_Site.deepdrain; j++) {
         		grid_SW_Site[cell].lyr[j] = Mem_Calloc(1, sizeof(SW_LAYER_INFO), "_save_cell(grid_SW_Site[cell].lyr[j])");
         		memcpy(grid_SW_Site[cell].lyr[j], SW_Site.lyr[j], sizeof(SW_LAYER_INFO));
         	}
@@ -1426,9 +1561,18 @@ static void _save_spinup_cell( int cell ) {
 	spinup_Globals[cell] = Globals;
 	
 	if(UseSoilwat) {
+		Mem_Free(spinup_SXW[cell].f_roots);
+		Mem_Free(spinup_SXW[cell].f_phen);
+		Mem_Free(spinup_SXW[cell].f_bvt);
+		Mem_Free(spinup_SXW[cell].f_prod);
+		Mem_Free(spinup_SXW[cell].f_watin);
 		Mem_Free(spinup_SXW[cell].transpTotal);
+		Mem_Free(spinup_SXW[cell].transpTrees);
+		Mem_Free(spinup_SXW[cell].transpShrubs);
+		Mem_Free(spinup_SXW[cell].transpGrasses);
+		Mem_Free(spinup_SXW[cell].transpForbs);
 		Mem_Free(spinup_SXW[cell].swc);
-		for(j = 0; j < SW_Site.n_layers; j++)
+		for(j = 0; j < spinup_SW_Site[cell].n_layers+spinup_SW_Site[cell].deepdrain; j++)
 			Mem_Free(spinup_SW_Site[cell].lyr[j]);
 		Mem_Free(spinup_SW_Site[cell].lyr);	
 	
@@ -1438,18 +1582,31 @@ static void _save_spinup_cell( int cell ) {
 		spinup_SW_VegProd[cell] = SW_VegProd;
 		
 		spinup_SXW[cell].transpTotal = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealD), "_save_cell(grid_SXW[cell].transp)");
+		spinup_SXW[cell].transpTrees = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealD), "_save_cell(grid_SXW[cell].transp)");
+		spinup_SXW[cell].transpShrubs = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealD), "_save_cell(grid_SXW[cell].transp)");
+		spinup_SXW[cell].transpGrasses = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealD), "_save_cell(grid_SXW[cell].transp)");
+		spinup_SXW[cell].transpForbs = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealD), "_save_cell(grid_SXW[cell].transp)");
 		spinup_SXW[cell].swc = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealF), "_save_cell(grid_SXW[cell].swc)");
 		
+		spinup_SXW[cell].f_roots = Str_Dup(SXW.f_roots);
+		spinup_SXW[cell].f_phen = Str_Dup(SXW.f_phen);
+		spinup_SXW[cell].f_bvt = Str_Dup(SXW.f_bvt);
+		spinup_SXW[cell].f_prod = Str_Dup(SXW.f_prod);
+		spinup_SXW[cell].f_watin = Str_Dup(SXW.f_watin);
 		memcpy(spinup_SXW[cell].transpTotal, SXW.transpTotal, SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
+		memcpy(spinup_SXW[cell].transpTrees, SXW.transpTotal, SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
+		memcpy(spinup_SXW[cell].transpShrubs, SXW.transpTotal, SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
+		memcpy(spinup_SXW[cell].transpGrasses, SXW.transpTotal, SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
+		memcpy(spinup_SXW[cell].transpForbs, SXW.transpTotal, SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
 		memcpy(spinup_SXW[cell].swc, SXW.swc, SXW.NPds * SXW.NSoLyrs * sizeof(RealF));
 		
-		spinup_SW_Site[cell].lyr = Mem_Calloc(SW_Site.n_layers, sizeof(SW_LAYER_INFO *), "_save_cell(grid_SW_Site[cell].lyr[j])");
-       		for(j = 0; j < SW_Site.n_layers; j++) {
+		spinup_SW_Site[cell].lyr = Mem_Calloc(SW_Site.n_layers+SW_Site.deepdrain, sizeof(SW_LAYER_INFO *), "_save_cell(grid_SW_Site[cell].lyr[j])");
+       		for(j = 0; j < SW_Site.n_layers+SW_Site.deepdrain; j++) {
         		spinup_SW_Site[cell].lyr[j] = Mem_Calloc(1, sizeof(SW_LAYER_INFO), "_save_cell(grid_SW_Site[cell].lyr[j])");
         		memcpy(spinup_SW_Site[cell].lyr[j], SW_Site.lyr[j], sizeof(SW_LAYER_INFO));
         	}
         
-        if(UseSoils) save_sxw_memory(spinup_SXW_ptrs[cell].roots_max, spinup_SXW_ptrs[cell].rootsXphen, spinup_SXW_ptrs[cell].roots_active, spinup_SXW_ptrs[cell].roots_active_rel, spinup_SXW_ptrs[cell].roots_active_sum, spinup_SXW_ptrs[cell].phen, grid_SXW_ptrs[cell].prod_bmass, grid_SXW_ptrs[cell].prod_pctlive);
+        if(UseSoils) save_sxw_memory(spinup_SXW_ptrs[cell].roots_max, spinup_SXW_ptrs[cell].rootsXphen, spinup_SXW_ptrs[cell].roots_active, spinup_SXW_ptrs[cell].roots_active_rel, spinup_SXW_ptrs[cell].roots_active_sum, spinup_SXW_ptrs[cell].phen, spinup_SXW_ptrs[cell].prod_bmass, spinup_SXW_ptrs[cell].prod_pctlive);
 	}
 }
 
@@ -1514,6 +1671,19 @@ static int _get_value_index( char* s, char seperator, int nSeperators ) {
 	return i;
 }
 
+static int _get_value_index2(char* s, int nSeperators) {
+	//pretty much this function goes through s until it find nSeperators worth of seperators and then returns the index of the next character
+	//this is used to do most of the parsing in the _read_soils_in() function
+	int i = 0, sep = 0;
+	while(1) {
+		i++;
+		if(*s++ == '\0') //checks if the current char equals the seperator... and then increments the char pointer
+			if(++sep == nSeperators) //needs ++sep, not sep++
+				break;
+	}
+	return i;
+}
+
 /***********************************************************/
 static void _read_soils_in( void ) {
 	// reads the grid soils input
@@ -1523,7 +1693,10 @@ static void _read_soils_in( void ) {
 		
 	FILE *f;
 	char buf[4096];
-	int i, j, k, cell, num, do_copy, copy_cell, num_layers, depth, depthMin;
+	char rootsin[20];
+	char seps[] = ",";
+	char *token;
+	int i, j, k, cell, num, do_copy, copy_cell, num_layers, depth, depthMin,stringIndex;
 	float d[11];
 
 	if(sd_Option2a || sd_Option2b) 
@@ -1535,10 +1708,39 @@ static void _read_soils_in( void ) {
 	for(i = 0; i < grid_Cells; i++) {
 		if(!GetALine2(f, buf, 4096)) break;
 		
-		num = sscanf( buf, "%d,%d,%d,%d", &cell, &do_copy, &copy_cell, &num_layers );
-		if(num != 4)
-			LogError(logfp, LOGFATAL, "Invalid %s file", grid_files[3]);
-		int stringIndex = _get_value_index(buf, ',', 4); //gets us the index of the string that is right after what we just parsed in
+		grid_Soils[i].rootsFile[0] = '\0';
+		rootsin[0] = '\0';
+
+		num = 0;
+		token = strtok(buf, seps);
+		while(token != NULL && num < 5) {
+			switch (num) {
+			case 0:
+				cell = atoi(token);
+				break;
+			case 1:
+				do_copy = atoi(token);
+				break;
+			case 2:
+				copy_cell = atoi(token);
+				break;
+			case 3:
+				num_layers = atoi(token);
+				break;
+			case 4:
+				strcpy(rootsin, token);
+				break;
+			}
+			num++;
+			if(num !=5)
+				token = strtok (NULL, seps);
+		}
+
+		if(num < 5)
+			if(!do_copy)
+				LogError(logfp, LOGFATAL, "Invalid %s file", grid_files[3]);
+		if(!do_copy)
+			stringIndex = _get_value_index2(buf,5); //gets us the index of the string that is right after what we just parsed in
 		
 		if(num_layers > MAX_LAYERS)
 			LogError(logfp, LOGFATAL, "Invalid %s file line %d num_layers (%d) exceeds MAX_LAYERS (%d)", grid_files[3], i+2, num_layers, MAX_LAYERS); 
@@ -1552,6 +1754,8 @@ static void _read_soils_in( void ) {
 			if(sd_Option2a || sd_Option2b)
 				grid_SoilTypes[cell] = grid_SoilTypes[copy_cell];
 
+			strcpy(grid_Soils[i].rootsFile, grid_Soils[copy_cell].rootsFile);
+
 			continue;
 		} else if(do_copy == 1)
 			LogError(logfp, LOGFATAL, "Invalid %s file line %d invalid copy_cell attempt", grid_files[3], i+2);
@@ -1564,12 +1768,13 @@ static void _read_soils_in( void ) {
 
 		depthMin = 0;
 		grid_Soils[i].num_layers = num_layers;
+		strcpy(grid_Soils[i].rootsFile, rootsin);
 		grid_Soils[i].lyr = Mem_Calloc(num_layers, sizeof(Grid_Soil_Lyr), "_read_soils_in()");
 		for(j = 0; j < num_layers; j++) {
 			 //the idea behind using &buf[stringIndex] is that we start scanning at the point in the string that is right after what we just parsed... the & is there because we have to send sscanf the pointer that points to that location
 			num = sscanf( &buf[stringIndex], "%d,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f", &depth, &d[0], &d[1], &d[2], &d[3], &d[4], &d[5], &d[6], &d[7], &d[8], &d[9], &d[10] );
 			if(num != 12)
-				LogError(logfp, LOGFATAL, "Invalid %s file line %d invalid soil layer input", grid_files[3], i+2);
+				LogError(logfp, LOGFATAL, "Invalid '%s' file line %d invalid soil layer input", grid_files[3], i+2);
 			
 			k = stringIndex;
 			stringIndex += _get_value_index(&buf[stringIndex], ',', 12); //updates the index of the string that we are at
@@ -1605,25 +1810,54 @@ static void _init_soil_layers(int cell, int isSpinup) {
 	// this function does generally the same things that the _read_layers() function in SW_Site.c does, except that it does it in a way that lets us use it in the grid...
 	int i, j;
 	i = cell;
-	
+	char *errtype = '\0';
 	Bool evap_ok = TRUE, transp_ok_forb = TRUE, transp_ok_tree = TRUE, transp_ok_shrub = TRUE, transp_ok_grass = TRUE; /* mitigate gaps in layers */
+	Bool fail = FALSE;
+	RealF fval = 0;
 	
-	for(j = 0; j < SW_Site.n_layers+SW_Site.deepdrain; j++)
+	if(SW_Site.deepdrain)
+		SW_Site.n_layers++;
+	for(j = 0; j < SW_Site.n_layers; j++)
 		Mem_Free(SW_Site.lyr[j]);
 	Mem_Free(SW_Site.lyr);
 			
 	SW_Site.n_layers = grid_Soils[i].num_layers;
 	SW_Site.n_evap_lyrs = SW_Site.n_transp_lyrs_forb = SW_Site.n_transp_lyrs_tree = SW_Site.n_transp_lyrs_shrub = SW_Site.n_transp_lyrs_grass = 0;
 			
-	SW_Site.lyr = Mem_Calloc(SW_Site.n_layers+SW_Site.deepdrain, sizeof(SW_LAYER_INFO *), "_init_grid_globals()");
-    	for(j = 0; j < SW_Site.n_layers; j++) {
-        	SW_Site.lyr[j] = Mem_Calloc(1, sizeof(SW_LAYER_INFO), "_init_grid_globals()");
+	SW_Site.lyr = Mem_Calloc(SW_Site.n_layers + SW_Site.deepdrain, sizeof(SW_LAYER_INFO *), "_init_grid_globals()");
+    for(j = 0; j < SW_Site.n_layers; j++) {
+        if (LT(grid_Soils[i].lyr[j].data[0], 0.)) {
+			fail = TRUE;
+			fval = grid_Soils[i].lyr[j].data[0];
+			errtype = Str_Dup("bulk density");
+		} else if (LT(grid_Soils[i].lyr[j].data[1],0.) || GT(grid_Soils[i].lyr[j].data[1], 1)) {
+			fail = TRUE;
+			fval = grid_Soils[i].lyr[j].data[1];
+			errtype = Str_Dup("gravel content");
+		} else if (LE(grid_Soils[i].lyr[j].data[7], 0.)) {
+			fail = TRUE;
+			fval = grid_Soils[i].lyr[j].data[7];
+			errtype = Str_Dup("sand proportion");
+		} else if (LE(grid_Soils[i].lyr[j].data[8], 0.)) {
+			fail = TRUE;
+			fval = grid_Soils[i].lyr[j].data[8];
+			errtype = Str_Dup("clay proportion");
+		} else if (LT(grid_Soils[i].lyr[j].data[9], 0.)) {
+			fail = TRUE;
+			fval = grid_Soils[i].lyr[j].data[9];
+			errtype = Str_Dup("impermeability");
+		}
+		if (fail) {
+			LogError(logfp, LOGFATAL, "Invalid %s (%5.4f) in layer %d.\n", errtype, fval, j + 1);
+		}
+
+        SW_Site.lyr[j] = Mem_Calloc(1, sizeof(SW_LAYER_INFO), "_init_grid_globals()");
         		
         	//indexes (for grid_Soils[i].lyr[j].data):
         	//0		   1				2		3	  		4			5			6			7	   8		9		10
         	//matricd	gravel_content  evco  	trco_grass  trco_shrub  trco_tree  	trco_forb	%sand  %clay imperm soiltemp
         	SW_Site.lyr[j]->width = grid_Soils[i].lyr[j].width;
-        	SW_Site.lyr[j]->soilBulk_density = grid_Soils[i].lyr[j].data[0];
+        	SW_Site.lyr[j]->soilMatric_density = grid_Soils[i].lyr[j].data[0];
         	SW_Site.lyr[j]->fractionVolBulk_gravel = grid_Soils[i].lyr[j].data[1];
         	SW_Site.lyr[j]->evap_coeff = grid_Soils[i].lyr[j].data[2];
         	SW_Site.lyr[j]->transp_coeff_grass = grid_Soils[i].lyr[j].data[3];
@@ -1634,6 +1868,7 @@ static void _init_soil_layers(int cell, int isSpinup) {
         	SW_Site.lyr[j]->fractionWeightMatric_clay = grid_Soils[i].lyr[j].data[8];
         	SW_Site.lyr[j]->impermeability = grid_Soils[i].lyr[j].data[9];
         	SW_Site.lyr[j]->my_transp_rgn_tree = 0;
+        	SW_Site.lyr[j]->my_transp_rgn_forb = 0;
         	SW_Site.lyr[j]->my_transp_rgn_shrub = 0;
         	SW_Site.lyr[j]->my_transp_rgn_grass = 0;
         	SW_Site.lyr[j]->sTemp = grid_Soils[i].lyr[j].data[10];
@@ -1684,7 +1919,7 @@ static void _init_soil_layers(int cell, int isSpinup) {
 	init_site_info(); //in SW_Site.c, called to initialize layer data...
 	
 	free_all_sxw_memory();
-	_init_SXW_inputs(FALSE); //we call this so that SXW can set the correct sizes/values up for the memory dynamically allocated in sxw.c
+	_init_SXW_inputs(FALSE, grid_Soils[i].rootsFile); //we call this so that SXW can set the correct sizes/values up for the memory dynamically allocated in sxw.c
 
 	if(!isSpinup) {
 
@@ -1692,7 +1927,7 @@ static void _init_soil_layers(int cell, int isSpinup) {
 		grid_SXW_ptrs[i].rootsXphen = Mem_Calloc(SXW.NGrps * SXW.NPds * SXW.NTrLyrs, sizeof(RealD), "_init_soil_layers()");
 		grid_SXW_ptrs[i].roots_active = Mem_Calloc(SXW.NGrps * SXW.NPds * SXW.NTrLyrs, sizeof(RealD), "_init_soil_layers()");
 		grid_SXW_ptrs[i].roots_active_rel = Mem_Calloc(SXW.NGrps * SXW.NPds * SXW.NTrLyrs, sizeof(RealD), "_init_soil_layers()");
-		grid_SXW_ptrs[i].roots_active_sum = Mem_Calloc(SXW.NPds * SXW.NTrLyrs, sizeof(RealD), "_init_soil_layers()");
+		grid_SXW_ptrs[i].roots_active_sum = Mem_Calloc(4 * SXW.NPds * SXW.NTrLyrs, sizeof(RealD), "_init_soil_layers()");
 		grid_SXW_ptrs[i].phen = Mem_Calloc(SXW.NGrps * MAX_MONTHS, sizeof(RealD), "_init_soil_layers()");
 		grid_SXW_ptrs[i].prod_bmass = Mem_Calloc(SXW.NGrps * MAX_MONTHS, sizeof(RealD), "_init_soil_layers()");
 		grid_SXW_ptrs[i].prod_pctlive = Mem_Calloc(SXW.NGrps * MAX_MONTHS, sizeof(RealD), "_init_soil_layers()");
@@ -1704,12 +1939,12 @@ static void _init_soil_layers(int cell, int isSpinup) {
 		spinup_SXW_ptrs[i].rootsXphen = Mem_Calloc(SXW.NGrps * SXW.NPds * SXW.NTrLyrs, sizeof(RealD), "_init_soil_layers()");
 		spinup_SXW_ptrs[i].roots_active = Mem_Calloc(SXW.NGrps * SXW.NPds * SXW.NTrLyrs, sizeof(RealD), "_init_soil_layers()");
 		spinup_SXW_ptrs[i].roots_active_rel = Mem_Calloc(SXW.NGrps * SXW.NPds * SXW.NTrLyrs, sizeof(RealD), "_init_soil_layers()");
-		spinup_SXW_ptrs[i].roots_active_sum = Mem_Calloc(SXW.NPds * SXW.NTrLyrs, sizeof(RealD), "_init_soil_layers()");
+		spinup_SXW_ptrs[i].roots_active_sum = Mem_Calloc(4 * SXW.NPds * SXW.NTrLyrs, sizeof(RealD), "_init_soil_layers()");
 		spinup_SXW_ptrs[i].phen = Mem_Calloc(SXW.NGrps * MAX_MONTHS, sizeof(RealD), "_init_soil_layers()");
-		grid_SXW_ptrs[i].prod_bmass = Mem_Calloc(SXW.NGrps * MAX_MONTHS, sizeof(RealD), "_init_soil_layers()");
-		grid_SXW_ptrs[i].prod_pctlive = Mem_Calloc(SXW.NGrps * MAX_MONTHS, sizeof(RealD), "_init_soil_layers()");
+		spinup_SXW_ptrs[i].prod_bmass = Mem_Calloc(SXW.NGrps * MAX_MONTHS, sizeof(RealD), "_init_soil_layers()");
+		spinup_SXW_ptrs[i].prod_pctlive = Mem_Calloc(SXW.NGrps * MAX_MONTHS, sizeof(RealD), "_init_soil_layers()");
 
-		save_sxw_memory(spinup_SXW_ptrs[i].roots_max, spinup_SXW_ptrs[i].rootsXphen, spinup_SXW_ptrs[i].roots_active, spinup_SXW_ptrs[i].roots_active_rel, spinup_SXW_ptrs[i].roots_active_sum, spinup_SXW_ptrs[i].phen, grid_SXW_ptrs[i].prod_bmass, grid_SXW_ptrs[i].prod_pctlive);
+		save_sxw_memory(spinup_SXW_ptrs[i].roots_max, spinup_SXW_ptrs[i].rootsXphen, spinup_SXW_ptrs[i].roots_active, spinup_SXW_ptrs[i].roots_active_rel, spinup_SXW_ptrs[i].roots_active_sum, spinup_SXW_ptrs[i].phen, spinup_SXW_ptrs[i].prod_bmass, spinup_SXW_ptrs[i].prod_pctlive);
 	}
 }
 
@@ -1987,7 +2222,7 @@ static void _kill_groups_and_species( void ) {
 									
 	ForEachSpecies(sp) {
 		if(!Species[sp]->use_me) continue;
-		Species_Kill(sp);
+		Species_Kill(sp,0);
 		Species[sp]->relsize = 0.0;
 	}
 }

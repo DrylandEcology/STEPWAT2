@@ -68,6 +68,7 @@
 #include "sw_src/SW_SoilWater.h"
 #include "sw_src/SW_Files.h"
 #include "sw_src/SW_Weather.h"
+#include "sw_src/SW_Markov.h"
 
 /*************** Global Variable Declarations ***************/
 /***********************************************************/
@@ -76,6 +77,8 @@ SXW_t SXW;
 extern SW_SITE SW_Site;
 extern SW_MODEL SW_Model;
 extern SW_VEGPROD SW_VegProd;
+extern SW_WEATHER SW_Weather;
+extern SW_MARKOV SW_Markov;
 //extern SW_SOILWAT SW_Soilwat;
 
 
@@ -142,7 +145,7 @@ static void _make_phen_arrays(void);
 static void _make_prod_arrays(void);
 static void _make_transp_arrays(void);
 static void _write_sw_outin(void);
-static void _recover_names(void);
+//static void _recover_names(void);
 static void _read_debugfile(void);
 void _print_debuginfo(void);
 void debugCleanUp(void);
@@ -158,15 +161,20 @@ void free_all_sxw_memory( void );
 
 /****************** Begin Function Code ********************/
 /***********************************************************/
-void SXW_Init( Bool init_SW ) {
+void SXW_Init( Bool init_SW, char *f_roots ) {
   /* read SOILWAT's input files and initialize some variables */
   /* The shorthand table dimensions are set at the point
    * at which they become defined in _read_files().
    *
    * 2/14/03 - cwb - Added the summation for each group's biomass
    *     as per the notes at the top of the file.
+   *
+   * 2/21/15 - rjm - new param f_roots is a replacement for the regular
+   * 	roots file. This is for the gridded version where soils needs to
+   * 	match sxwroots.in
    */
 	char * temp;
+	char roots[512] = { '\0' };
 
 #ifdef SXW_BYMAXSIZE
    GrpIndex rg; SppIndex sp;
@@ -186,6 +194,14 @@ void SXW_Init( Bool init_SW ) {
   SXW.NGrps = Globals.grpCount;
 
   _read_files();
+  if(f_roots != NULL) {
+	  //Copy the directory for the sxwroots files
+	  strcpy(roots, DirName(*_sxwfiles[0]));
+	  strcat(roots, f_roots);
+	  Mem_Free(*_sxwfiles[0]);
+	  _sxwfiles[0] = &SXW.f_roots;
+	  *_sxwfiles[0] = Str_Dup(roots);
+  }
   SXW.NPds = MAX_MONTHS;
   _read_watin();
 
@@ -232,6 +248,13 @@ void SXW_Init( Bool init_SW ) {
  */
 void SXW_Reset(void) {
 	char * temp;
+
+	if (SW_Weather.use_markov) {
+		free(SW_Markov.avg_ppt);
+		free(SW_Markov.dryprob);
+		free(SW_Markov.std_ppt);
+		free(SW_Markov.wetprob);
+	}
 
 	SW_SIT_clear_layers();
 	SW_WTH_clear_runavg_list();
@@ -797,14 +820,14 @@ static void _make_swc_array(void) {
 }
 
 
-static void _recover_names(void) {
-/*======================================================*/
+/*static void _recover_names(void) {
+======================================================
 	int i;
 
 	for (i = 0; i < SXW_NFILES; i++) {
 		Mem_Free(*_sxwfiles[i]);
 	}
-}
+}*/
 
 static void _read_debugfile(void) {
 /*======================================================*/
@@ -1122,12 +1145,17 @@ int getNTranspLayers(int veg_prod_type) {
 /***********************************************************/
 void free_all_sxw_memory( void ) {
 	free_sxw_memory();
+	Mem_Free(SXW.f_roots);
+	Mem_Free(SXW.f_phen);
+	Mem_Free(SXW.f_bvt);
+	Mem_Free(SXW.f_prod);
+	Mem_Free(SXW.f_watin);
 	Mem_Free(SXW.transpTotal);
 	Mem_Free(SXW.transpTrees);
 	Mem_Free(SXW.transpShrubs);
 	Mem_Free(SXW.transpForbs);
 	Mem_Free(SXW.transpGrasses);
-	if (*SXW.debugfile || UseGrid) Mem_Free(SXW.swc);
+	if (SXW.debugfile || UseGrid) Mem_Free(SXW.swc);
 }
 
 /***********************************************************/
@@ -1150,7 +1178,7 @@ void load_sxw_memory( RealD* grid_roots_max, RealD* grid_rootsXphen, RealD* grid
 	_rootsXphen = Mem_Calloc(SXW.NGrps * SXW.NPds * SXW.NTrLyrs, sizeof(RealD), "load_sxw_memory()");
 	_roots_active = Mem_Calloc(SXW.NGrps * SXW.NPds * SXW.NTrLyrs, sizeof(RealD), "load_sxw_memory()");
 	_roots_active_rel = Mem_Calloc(SXW.NGrps * SXW.NPds * SXW.NTrLyrs, sizeof(RealD), "load_sxw_memory()");
-	_roots_active_sum = Mem_Calloc(SXW.NPds * SXW.NTrLyrs, sizeof(RealD), "load_sxw_memory()");
+	_roots_active_sum = Mem_Calloc(4 * SXW.NPds * SXW.NTrLyrs, sizeof(RealD), "load_sxw_memory()");
 	_phen = Mem_Calloc(SXW.NGrps * MAX_MONTHS, sizeof(RealD), "load_sxw_memory()");
 	_prod_bmass = Mem_Calloc(SXW.NGrps * MAX_MONTHS, sizeof(RealD), "load_sxw_memory()");
 	_prod_pctlive = Mem_Calloc(SXW.NGrps * MAX_MONTHS, sizeof(RealD), "load_sxw_memory()");
@@ -1159,7 +1187,7 @@ void load_sxw_memory( RealD* grid_roots_max, RealD* grid_rootsXphen, RealD* grid
 	memcpy(_rootsXphen, grid_rootsXphen, SXW.NGrps * SXW.NPds * SXW.NTrLyrs * sizeof(RealD));
 	memcpy(_roots_active, grid_roots_active, SXW.NGrps * SXW.NPds * SXW.NTrLyrs * sizeof(RealD));
 	memcpy(_roots_active_rel, grid_roots_active_rel, SXW.NGrps * SXW.NPds * SXW.NTrLyrs * sizeof(RealD));
-	memcpy(_roots_active_sum, grid_roots_active_sum, SXW.NPds * SXW.NTrLyrs * sizeof(RealD));
+	memcpy(_roots_active_sum, grid_roots_active_sum, 4 * SXW.NPds * SXW.NTrLyrs * sizeof(RealD));
 	memcpy(_phen, grid_phen, SXW.NGrps * MAX_MONTHS * sizeof(RealD));
 	memcpy(_prod_bmass, grid_prod_bmass, SXW.NGrps * MAX_MONTHS * sizeof(RealD));
 	memcpy(_prod_pctlive, grid_prod_pctlive, SXW.NGrps * MAX_MONTHS * sizeof(RealD));
@@ -1172,7 +1200,7 @@ void save_sxw_memory( RealD * grid_roots_max, RealD* grid_rootsXphen, RealD* gri
 	memcpy(grid_rootsXphen, _rootsXphen, SXW.NGrps * SXW.NPds * SXW.NTrLyrs * sizeof(RealD));
 	memcpy(grid_roots_active, _roots_active, SXW.NGrps * SXW.NPds * SXW.NTrLyrs * sizeof(RealD));
 	memcpy(grid_roots_active_rel, _roots_active_rel, SXW.NGrps * SXW.NPds * SXW.NTrLyrs * sizeof(RealD));
-	memcpy(grid_roots_active_sum, _roots_active_sum, SXW.NPds * SXW.NTrLyrs * sizeof(RealD));
+	memcpy(grid_roots_active_sum, _roots_active_sum, 4 * SXW.NPds * SXW.NTrLyrs * sizeof(RealD));
 	memcpy(grid_phen, _phen, SXW.NGrps * MAX_MONTHS * sizeof(RealD));
 	memcpy(grid_prod_bmass, _prod_bmass, SXW.NGrps * MAX_MONTHS * sizeof(RealD));
 	memcpy(grid_prod_pctlive, _prod_pctlive, SXW.NGrps * MAX_MONTHS * sizeof(RealD));

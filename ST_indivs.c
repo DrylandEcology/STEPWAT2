@@ -108,7 +108,8 @@ Bool indiv_New( SppIndex sp) {
   Species[sp]->IndvHead = p;
 
   //sql for inserting new indiv
-  insertIndiv(p);
+  if(!UseGrid)
+	  insertIndiv(p);
   id++;
   return( TRUE);
 }
@@ -210,7 +211,8 @@ void indiv_Kill_Complete( IndivType *ndv, int killType) {
                     ndv->age, Species[ndv->myspecies]->max_age,
                     Globals.currIter, Globals.currYear);
   }
-  insertIndivKill(ndv->id,killType);
+  if(!UseGrid)
+	  insertIndivKill(ndv->id,killType);
   species_Update_Kills(ndv->myspecies, ndv->age);
   Species_Update_Newsize(ndv->myspecies, -ndv->relsize);
   _delete(ndv);

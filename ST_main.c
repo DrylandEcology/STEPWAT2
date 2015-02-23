@@ -70,7 +70,7 @@
 
 
 #ifndef STEPWAT
- void SXW_Init( Bool init_SW ) {}
+ void SXW_Init( Bool init_SW, char *f_roots ) {}
  void SXW_Run_SOILWAT(void) {}
  void SXW_InitPlot( void ) {}
 #endif
@@ -148,7 +148,7 @@ int main(int argc, char **argv) {
 	parm_Initialize(0);
 
 	if (UseSoilwat)
-		SXW_Init(TRUE);
+		SXW_Init(TRUE, NULL);
 
 	//Connect to ST db and insert static data
 	ST_connect("Output/stdebug");
@@ -184,12 +184,10 @@ int main(int argc, char **argv) {
 			Globals.currYear = year;
 
 			rgroup_Establish(); /* excludes annuals */
-			chkmem_f;
 
 			Env_Generate();
 
 			rgroup_PartResources();
-			chkmem_f;
 
 #ifdef STEPWAT
 			if (!isnull(SXW.debugfile) ) SXW_PrintDebug(0);
@@ -198,7 +196,6 @@ int main(int argc, char **argv) {
 			rgroup_Grow();
 
 			mort_Main(&killedany);
-			chkmem_f;
 
 			rgroup_IncrAges();
 
@@ -207,9 +204,7 @@ int main(int argc, char **argv) {
 			if (BmassFlags.yearly)
 				output_Bmass_Yearly(year);
 
-			chkmem_t;
 			mort_EndOfYear();
-			chkmem_t;
 
 			ForEachGroup(g) {
 				insertRGroupYearInfo(g);
@@ -243,6 +238,8 @@ int main(int argc, char **argv) {
 	if (BmassFlags.summary)
 		stat_Output_AllBmass();
 
+	//Needed to disconnect from database
+	ST_disconnect();
 #ifdef STEPWAT
 			if (!isnull(SXW.debugfile) ) SXW_PrintDebug(1);
 #endif
@@ -420,7 +417,8 @@ static void init_args(int argc, char **argv) {
       case 2:  QuietMode = TRUE;           break;  /* -q */
 
       case 3:  UseSoilwat = TRUE;                  /* -s */
-               SXW.debugfile = Str_Dup(str);
+      	  	   if(strlen(str) > 1)
+      	  		   SXW.debugfile = Str_Dup(str);
                break;
 
       case 4:  EchoInits = TRUE;           break;  /* -e */
