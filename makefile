@@ -118,7 +118,7 @@ all:	$(ALLTGT)
 		cp stepwat testing/Stepwat\ Inputs/stepwat
 		cp stepwat testing.sagebrush.bradford
 		cp stepwat testing.shortgrass.bradford
-		cp stepwat /home/ryan/go/src/github.com/ryanmurf/steppeViewer/Projects/Stepwat/
+
 
 objs:	$(ALLOBJS)
 
