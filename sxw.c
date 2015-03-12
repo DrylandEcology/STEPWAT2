@@ -995,24 +995,24 @@ void _print_debuginfo(void) {
 		} // all the other months have 31 days
 
 		for (i = doy; i < (doy + days); i++) { //accumulating the monthly values...
-			lai_live += (v->tree.lai_live_daily[doy])
-					+ (v->shrub.lai_live_daily[doy])
-					+ (v->grass.lai_live_daily[doy])
-					+ (v->forb.lai_live_daily[doy]);
-			vegcov += (v->tree.vegcov_daily[doy]) + (v->shrub.vegcov_daily[doy])
-					+ (v->grass.vegcov_daily[doy]) + (v->forb.vegcov_daily[doy]);
-			total_agb += (v->tree.total_agb_daily[doy])
-					+ (v->shrub.total_agb_daily[doy])
-					+ (v->grass.total_agb_daily[doy])
-					+ (v->forb.total_agb_daily[doy]);
-			pct_live += (v->tree.pct_live_daily[doy])
-					+ (v->shrub.pct_live_daily[doy])
-					+ (v->grass.pct_live_daily[doy])
-					+ (v->forb.pct_live_daily[doy]);
-			biomass += (v->tree.biomass_daily[doy])
-					+ (v->shrub.biomass_daily[doy])
-					+ (v->grass.biomass_daily[doy])
-					+ (v->forb.biomass_daily[doy]);
+			lai_live += (v->tree.lai_live_daily[i])
+					+ (v->shrub.lai_live_daily[i])
+					+ (v->grass.lai_live_daily[i])
+					+ (v->forb.lai_live_daily[i]);
+			vegcov += (v->tree.vegcov_daily[i]) + (v->shrub.vegcov_daily[i])
+					+ (v->grass.vegcov_daily[i]) + (v->forb.vegcov_daily[i]);
+			total_agb += (v->tree.total_agb_daily[i])
+					+ (v->shrub.total_agb_daily[i])
+					+ (v->grass.total_agb_daily[i])
+					+ (v->forb.total_agb_daily[i]);
+			pct_live += (v->tree.pct_live_daily[i])
+					+ (v->shrub.pct_live_daily[i])
+					+ (v->grass.pct_live_daily[i])
+					+ (v->forb.pct_live_daily[i]);
+			biomass += (v->tree.biomass_daily[i])
+					+ (v->shrub.biomass_daily[i])
+					+ (v->grass.biomass_daily[i])
+					+ (v->forb.biomass_daily[i]);
 		}
 		doy += days; //updating the doy
 		//biomass = (v->tree.biomass[p]) + (v->shrub.biomass[p])
