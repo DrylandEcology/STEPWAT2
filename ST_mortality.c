@@ -652,8 +652,9 @@ static void _kill_annuals( void) {
 
   ForEachGroup(rg) {
     if (RGroup[rg]->max_age == 1) {
-      ForEachEstSpp(sp, rg, i)
+      for(i=RGroup[rg]->est_count, sp=RGroup[rg]->est_spp[i-1]; i>0; sp=RGroup[rg]->est_spp[(--i) - 1]){
         Species_Kill(sp,4);
+      }
     }
   }
 
