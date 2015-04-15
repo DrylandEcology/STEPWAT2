@@ -12,7 +12,7 @@
 # spelled exactly the same.
 # Remaining columns are monthly activity values.  
 # All the activity values for a group must sum to 100
-# Note, need to find values here for a.cool.forb, a.warm.forb, shrub
+# Note, need to find values here for all forbs, shrub
 
 # Group     	Jan   Feb   Mar  Apr  May  Jun  Jul  Aug  Sep   Oct   Nov   Dec
 sagebrush	   	.0125 .0125 .10  .125 .15  .25  .15  .10  .0625 .0125 .0125 .0125
