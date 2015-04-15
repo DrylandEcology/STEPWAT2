@@ -12,12 +12,16 @@
 # spelled exactly the same.
 # Remaining columns are monthly activity values.  
 # All the activity values for a group must sum to 100
+# Note, need to find values here for a.cool.forb, a.warm.forb, shrub
 
-# Group     Jan   Feb   Mar  Apr  May  Jun  Jul  Aug  Sep   Oct   Nov   Dec
-PGC	       .025  .075  .15  .20  .25  .20  .075 .00  .00   .00   .0125 .0125
-PGW		   .00   .00   .00  .05  .15  .40  .20  .15  .05   .00   .00   .00
-AGC		   .05   .10   .15  .20  .30  .05  .00  .00  .00   .05   .05   .05
-AGW		   .00   .00   .05  .10  .25  .35  .15  .10  .00   .00   .00   .00   
-SHRUB	   .0125 .0125 .10  .125 .15  .25  .15  .10  .0625 .0125 .0125 .0125
-FORC	   .00	 .05   .10	.20	 .30  .15  .10	.05  .025  .025	 .00   .00
-FORW       .00	 .00   .00	.10	 .25  .35  .20  .10  .00   .00   .00   .00
+# Group     	Jan   Feb   Mar  Apr  May  Jun  Jul  Aug  Sep   Oct   Nov   Dec
+sagebrush	   	.0125 .0125 .10  .125 .15  .25  .15  .10  .0625 .0125 .0125 .0125
+a.cool.forb	    .00	  .05   .10	 .20  .30  .15  .10	 .05  .025  .025  .00   .00
+a.warm.forb     .00	  .00   .00	 .10  .25  .35  .20  .10  .00   .00   .00   .00
+p.cool.forb	    .00	  .05   .10	 .20  .30  .15  .10	 .05  .025  .025  .00   .00
+p.warm.forb     .00	  .00   .00	 .10  .25  .35  .20  .10  .00   .00   .00   .00
+a.cool.grass	.05   .10   .15  .20  .30  .05  .00  .00  .00   .05   .05   .05
+a.warm.grass	.00   .00   .05  .10  .25  .35  .15  .10  .00   .00   .00   .00
+p.cool.grass	.025  .075  .15  .20  .25  .20  .075 .00  .00   .00   .0125 .0125
+p.warm.grass	.00   .00   .00  .05  .15  .40  .20  .15  .05   .00   .00   .00
+shrub	   	    .0125 .0125 .10  .125 .15  .25  .15  .10  .0625 .0125 .0125 .0125
