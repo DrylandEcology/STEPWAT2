@@ -1,6 +1,11 @@
-#GrpName       %L1   %L2    %L3    %L4    %L5	%L6 %L7	%L8 %L9
-bouteloua       .1     .1    .1     .3	  .2	.1	.1	0	0
-p.graminoids    .1     .1    .3     .2	  .1	.1	.1	0	0
-p.forb/shrub    .1     .1    .1     .1    .2	.1	.1	.1	.1
-a.gram/shrub    .3     .2    .1		.1	  .1	.1	.1	0	0
-succulents      1      0   	 0    	0     0		0	0	0	0
+#GrpName       %L1   %L2    %L3    %L4    %L5		%L6 %L7	%L8 %L9
+sagebrush      	.05	   .20	 .25	.25	   .15	   .10
+a.cool.forb		.15    .30	 .35	.20	   .00	   .00
+a.warm.forb		.15    .30	 .35	.20	   .00	   .00
+p.cool.forb		.05    .20	 .40	.30	   .05	   .00
+p.warm.forb		.15    .30	 .35	.20	   .00	   .00
+a.cool.grass    .35    .275  .15    .125   .10	   .00
+a.warm.grass    .30    .40   .20    .10	   .00	   .00
+p.cool.grass    .20    .35   .25    .15	   .05     .00
+p.warm.grass 	.20    .50   .20    .10	   .00	   .00
+shrub			.15    .30	 .35	.20	   .00	   .00
