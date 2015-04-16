@@ -4,7 +4,7 @@
 # layer definitions for transpiration
 # Note, need to change values for shrub, and forbs
 
-#GrpName       %L1   %L2    %L3    %L4    %L5     %L6
+#GrpName         %L1   %L2    %L3    %L4    %L5     %L6
 sagebrush      	.05	   .20	 .25	.25	   .15	   .10
 a.cool.forb		.15    .30	 .35	.20	   .00	   .00
 a.warm.forb		.15    .30	 .35	.20	   .00	   .00
