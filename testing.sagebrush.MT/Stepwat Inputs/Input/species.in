@@ -22,7 +22,8 @@
 #         not used for annuals.
 # slow  = number of years of slow growth before mortality begins
 #         not used for annuals.
-# disturb  = disturbance class:
+# disturb  = disturbance class: (this is defined differently in Coffin & Lauenroth 1990
+#			than it is here.
 #         1 = very sensitive to fecal pats and ant mounds
 #         2 = sensitive to pats, very sensitive to mounds
 #         3 = insensitive to pats, sensitive to mounds
@@ -49,16 +50,40 @@
 # dispersal = turn on/off seed dispersal for this species. 1=use, 0=don't use.
 # 	dispersal is only applicable when using gridded option.
 #      
+#TM - eind values are density values taken from Adler datasets from Idaho. (species arfr, gusa, vuoc, spp1, spp2, 
+#	bogr, spcr are TM's best guesses)
+#TM - irate is from Bradford and Launeroth 2006 Table A1.4.  If a species fell in those functional groups it was
+#	given the irate values. All forbs recieved the same values
+#
+#TM - maxbio for sagebrush is mean biomass from site B (calculated using Cleary et al 2008)
+#
+#TM - changed all "disturb" to 3
+#
+#TM - minbio & vegindv(used values from Bradford and Lauenroth 2006, Table A1.4)
+#
 #
 #
 # name     rg  age  irate    ratep slow disturb pestab     eind minbio  maxbio  clonal vegindv tclass  cosurv  onoff
- PGC       	1   75  0.47400 0.900    2       2    0.12500    2   0.500   12.00      y       3       2  0.0100     1 	
- PGW	    2   75  0.47400 0.900    2       2    0.12500    2   0.605   12.00      y       3       1  0.0100     1 
- AGC        3   1   0.94700 0.900    2       2    0.10000    2   0.020   1.000      n       0       2  0.0100     1 
- AGW        4   1   0.94700 0.900    2       2    0.10000    2   0.020   0.500      n       0       1  0.0100     1 
- SHRUB      5   100 0.40000 0.900    2       2    1.00000    1   2.000   100.0      n       0       2  0.0100     1 
- FORC       6   35  0.42600 0.900    2       2    1.00000    3   0.035   0.707      n       0       2  0.0100     1 
- FORW       7   35  0.42600 0.900    2       2    0.01500    3   0.035   0.707      n       0       1  0.0100     1 
+ artr       1    0  0.47000 0.900    2       3    0.12500    1   2.000  856.52      n       0       1  0.0100     1
+ trdu       2    1  0.94700 0.900    2       3    0.17000    3   0.035   3.055      n       0       1  0.0100     1
+ cryp       2    1  0.94700 0.900    2       3    0.12000    9   0.035   1.399      n       0       2  0.0100     1
+ amre       3    1  0.94700 0.900    2       3    0.19000    10  0.035   3.055      n       0       2  0.0100     1
+ chen       3    1  0.94700 0.900    2       3    0.01000    22  0.035   3.055      n       0       1  0.0100     1
+ acmi       4    5  0.42600 0.900    2       3    0.01500    6   0.035   0.707      y       3       2  0.0100     1
+ phho       4   15  0.42600 0.900    2       3    0.00100    6   0.035   0.707      y       3       1  0.0100     1
+ arfr       5   15  0.42600 0.900    2       3    0.06000    2   0.035   0.429      y       3       1  0.0100     1
+ grsq       5   15  0.42600 0.900    2       3    0.01100    4   0.035   0.429      n       0       2  0.0100     1
+ brar       6    1  0.94700 0.900    2       3    0.00200    38  0.020   19.726     n       0       2  0.0100     1
+ vuoc       6    1  0.94700 0.900    2       3    0.00100    30  0.020   2.126      n       0       2  0.0100     1
+ spp1       7    1  0.94700 0.900    2       3    0.00200    2   0.020   19.726     n       0       2  0.0100     0
+ spp2       7    1  0.94700 0.900    2       3    0.00100    2   0.020   2.126      n       0       2  0.0100     0
+ pose       8   15  0.47400 0.900    2       3    0.17000    2   0.500   0.429      y       3       2  0.0000     1
+ koma       8   15  0.47400 0.900    2       3    0.17000    2   0.500   0.429      y       3       1  0.0000     1
+ bogr       9    0  0.47400 0.900    2       3    0.17000    2   0.605   0.429      y       3       2  0.0000     1
+ spcr       9   15  0.47400 0.900    2       3    0.02000    2   0.605   15.000      y       3       1  0.0100     1
+ gusa       10  20  0.40000 0.900    2       3    0.17000    2   2.000   0.429      y       3       2  0.0000     1
+ chvi       10  20  0.40000 0.900    2       3    0.02000    2   2.000   15.000      y       3       1  0.0100     1
+
 [end]  # this marks the end of the species-specific parameters above
 
 # ===============================================================================
@@ -69,8 +94,14 @@
 # xdecay = decay exponent.  indivs established = SUM(1/seed_age^xdecay)
 #
 # name     viable xdecay 
- AGC        10    1.00
- AGW        10    1.00
+ vuoc        10    1.00
+ brar        10    1.00
+ cryp        10    1.00
+ trdu        10    1.00
+ amre        10    1.00
+ chen        10    1.00
+ spp1        10    1.00
+ spp2        10    1.00
 
 [end]  # end of additional annuals-only parameters.
 
@@ -88,13 +119,26 @@
 # vprop4 = probability if disturbance
 #
 # name     vprop1 vprop2 vprop3 vprop4
- PGC     	0.7500 0.9000 0.9000 0.9000
- PGW     	0.7500 0.9000 0.9000 0.9000
- AGC     	0.7500 0.9000 0.9000 0.9000
- AGW     	0.7500 0.9000 0.9000 0.9000
- SHRUB   	0.7500 0.9000 0.9000 0.9000
- FORC    	0.7500 0.9000 0.9000 0.9000
- FORW    	0.7500 0.9000 0.9000 0.9000
+ artr     0.7500 0.9000 0.9000 0.9000
+ trdu     0.7500 0.9000 0.9000 0.9000
+ cryp     0.7500 0.9000 0.9000 0.9000
+ poyl     0.7500 0.9000 0.9000 0.9000
+ chen     0.7500 0.9000 0.9000 0.9000
+ acmi     0.7500 0.9000 0.9000 0.9000
+ phho     0.7500 0.9000 0.9000 0.9000
+ arfr     0.7500 0.9000 0.9000 0.9000
+ grsq     0.7500 0.9000 0.9000 0.9000
+ brar     0.7500 0.9000 0.9000 0.9000
+ vuoc     0.7500 0.9000 0.9000 0.9000
+ spp1     0.7500 0.9000 0.9000 0.9000
+ spp2     0.7500 0.9000 0.9000 0.9000
+ pose     0.7500 0.9000 0.9000 0.9000
+ koma     0.7500 0.9000 0.9000 0.9000
+ bogr     0.7500 0.9000 0.9000 0.9000
+ spcr     0.7500 0.9000 0.9000 0.9000
+ gusa     0.7500 0.9000 0.9000 0.9000
+ chvi     0.7500 0.9000 0.9000 0.9000
+
 [end]  # this marks the end of the veg-prop parameters
 
 # ===============================================================================
@@ -112,13 +156,26 @@
 # H = the average release height of the inflorescences (cm) 
 # VT = the average sinking velocity of the seeds (cm/sec)
 #
-# name 		dispersal	param1	PPTdry	PPTwet	Pmin	Pmax	H	VT
- PGC		1		0.9	105	520	0.01	0.55	30.0	100.0 
- PGW 		1		0.5	105	520	0.01	0.55	30.0	100.0 
- AGC 		1		0.5	105	520	0.01	0.55	30.0	100.0 
- AGW 		1		0.5	105	520	0.01	0.55	30.0	100.0 
- SHRUB 		1		0.5	105	520	0.01	0.55	30.0	100.0 
- FORC 		1		0.5	105	520	0.01	0.55	30.0	100.0 
- FORW 		1		0.5	105	520	0.01	0.55	30.0	100.0 
+# name 	dispersal	param1	PPTdry	PPTwet	Pmin	Pmax	H	VT
+ artr	1		0.5	105	520	0.01	0.55	30.0	100.0 
+ trdu 	1		0.5	105	520	0.01	0.55	30.0	100.0 
+ cryp 	1		0.5	105	520	0.01	0.55	30.0	100.0 
+ amre 	1		0.5	105	520	0.01	0.55	30.0	100.0 
+ chen 	1		0.5	105	520	0.01	0.55	30.0	100.0 
+ acmi 	1		0.5	105	520	0.01	0.55	30.0	100.0 
+ phho 	1		0.5	105	520	0.01	0.55	30.0	100.0 
+ arfr 	1		0.5	105	520	0.01	0.55	30.0	100.0 
+ grsq 	1		0.5	105	520	0.01	0.55	30.0	100.0 
+ brar 	1		0.5	105	520	0.01	0.55	30.0	100.0 
+ vuoc 	1		0.5	105	520	0.01	0.55	30.0	100.0 
+ spp1 	1		0.5	105	520	0.01	0.55	30.0	100.0 
+ spp2 	1		0.5	105	520	0.01	0.55	30.0	100.0 
+ pose 	1		0.5	105	520	0.01	0.55	30.0	100.0 
+ koma 	1		0.5	105	520	0.01	0.55	30.0	100.0 
+ bogr 	1		0.5	105	520	0.01	0.55	30.0	100.0 
+ spcr 	1		0.5	105	520	0.01	0.55	30.0	100.0 
+ gusa 	1		0.5	105	520	0.01	0.55	30.0	100.0 
+ chvi 	1		0.5	105	520	0.01	0.55	30.0	100.0 
 
 [end]	# this marks the end of the seed-dispersal parameters
+
