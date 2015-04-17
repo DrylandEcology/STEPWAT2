@@ -42,8 +42,8 @@
 0.5			# inflection point
 1.1			# range
 
-# ---- Intrinsic site params: Richland, WA (46.31667° N, -119.26667° E, 113.7 m elevation) ----
-0.81	# latitude of the site in radians
+# ---- Intrinsic site params: MT (47.06581° N, -108.5826° E,  m elevation) ----
+0.8214533	# latitude of the site in radians
 113.7	# altitude of site (m a.s.l.)
 0.0			# slope at site (degrees): no slope = 0
 0.0			# aspect at site (degrees): N=0, E=90, S=180, W=270, no slope:-1
