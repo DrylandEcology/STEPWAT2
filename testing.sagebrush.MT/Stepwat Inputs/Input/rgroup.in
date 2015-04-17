@@ -11,7 +11,7 @@
 #        establish in a given year
 #
 # NGrpEstab
-     7
+     10
 [end]  # section end
 
 #=============================================================
@@ -19,8 +19,10 @@
 # name = a name to give the group (12 chars)
 # space = proportion of the resource space used by the group.
 #         this must sum to 1.0
-# density = relative number of mature individuals per plot
-# maxest = maximum species that can establish in a given year
+# density = relative number of mature individuals per plot, reassigned to max_density in the model code
+# maxest = maximum species that can establish in a given year, 
+#          this value cannot be greater than the number of species assigned 
+#          to the resource group in the species.in file
 # slow = slow growth rate, defines when to count stretched years
 # stretch  = max yrs resources can be stretched before low-resource
 #                    mortality occurs.
@@ -48,14 +50,19 @@
 #         grams_extra_biomass = mm_extra_ppt * xgrow_factor
 # veg_prod_type = 1 for tree, 2 for shrub, & 3 for grass.  Refer to soilwat's VegProd types in VegProd.h.
 
-# name           space  density  maxest   slow    stretch xres  estann  on  startyr killyr  killfrq  extirp  mort  xgrow  veg_prod_type  
- PGC		      0.400  0.400     1    0.0500       2     1       0   1      1       0        0       0     0  0.00000   3
- PGW			  0.025  0.030     1    0.0500       2     1       0   1      1       0        0       0     0  0.00000   3
- AGC			  0.100  0.100     1    0.0500       2     1       0   1      1       0        0       0     0  0.00000   3
- AGW			  0.050  0.050     1    0.0500       2     1       0   1      1       0        0       0     0  0.00000   3
- SHRUB		      0.350  0.350     1    0.0500       2     1       0   1      1       0        0       0     0  0.00000   2
- FORC			  0.050	 0.050	   1	0.0500		 2	   1	   0   1	  1	   	  0		   0	   0	 0	0.00000   4		
- FORW			  0.025	 0.020	   1	0.0500		 2	   1	   0   1	  1	      0		   0	   0	 0  0.00000   4
+# name            space   density maxest slow    stretch xres  estann  on  startyr killyr  killfrq  extirp  mort  xgrow  veg_prod_type  
+ sagebrush       0.5100  1.0000      1  0.0500       2     0       0   1      1       0        0       0     0  0.00000   2
+ a.cool.forb     0.0700  0.3300      4  0.0500       2     1       0   1      1       0        0       0     1  0.00000   2
+ a.warm.forb     0.0700  0.3300      4  0.0500       2     1       0   1      1       0        0       0     1  0.00000   2
+ p.cool.forb     0.0700  0.3300      4  0.0500       2     1       0   1      1       0        0       0     1  0.00000   2
+ p.warm.forb     0.0700  0.3300      4  0.0500       2     1       0   1      1       0        0       0     1  0.00000   2
+ a.cool.grass    0.2800  1.5600      6  0.0500       2     1       0   1      1       0        0       0     1  0.00000   2
+ a.warm.grass    0.2800  1.5600      6  0.0500       2     1       0   1      1       0        0       0     1  0.00000   2
+ p.cool.grass    0.2800  1.5600      6  0.0500       2     1       0   1      1       0        0       0     1  0.00000   2
+ p.warm.grass    0.2800  1.5600      6  0.0500       2     1       0   1      1       0        0       0     1  0.00000   2
+ shrub    	 0.0700  1.6700      3  0.0500       2     1       1   1      1       0        0       0     0  0.00000   2
+ 
+
 [end]  # section end
 
 
@@ -70,14 +77,17 @@
 # dryint   = intercept of res.avail. in dry years
 
 # name            nslope   nint     wetslope wetint   dryslope dryint  
- PGC	          0.00093  0.70935  0.00093  0.70935  0.00093  0.70935
- PGW			  0.00093  0.70935  0.00093  0.70935  0.00093  0.70935
- AGC			  0.00093  0.70935  0.00093  0.70935  0.00093  0.70935
- AGW			  0.00093  0.70935  0.00093  0.70935  0.00093  0.70935
- SHRUB            0.00093  0.70935  0.00093  0.70935  0.00093  0.70935
- FORC             0.00093  0.70935  0.00093  0.70935  0.00093  0.70935
- FORW             0.00093  0.70935  0.00093  0.70935  0.00093  0.70935
- 
+sagebrush 	  	  0.00093  0.70935  0.00093  0.70935  0.00093  0.70935
+a.cool.forb 	  0.00093  0.70935  0.00400  -0.5800  0.00400  0.08000
+a.warm.forb 	  0.00093  0.70935  0.00400  -0.5800  0.00400  0.08000
+p.cool.forb 	  0.00093  0.70935  0.00400  -0.5800  0.00400  0.08000
+p.warm.forb 	  0.00093  0.70935  0.00400  -0.5800  0.00400  0.08000
+a.cool.grass	  0.00093  0.70935  0.00093  0.70935  0.00400  0.08000
+a.warm.grass	  0.00093  0.70935  0.00093  0.70935  0.00400  0.08000
+p.cool.grass	  0.00093  0.70935  0.00093  0.70935  0.00400  0.08000
+p.warm.grass	  0.00093  0.70935  0.00093  0.70935  0.00400  0.08000
+shrub    	  0.00093  0.70935  0.00093  0.70935  0.00400  0.08000
+
 [end]  # section end
 
 
@@ -88,9 +98,15 @@
 # gint   = intercept ''     ''      ''
 # mslope = slope for mortality in wet years (eqn 16)
 # gint   = intercept ''     ''      ''
+# You must specify values here or the model will not run and will
+# throw an error. If you don't have succulents as resource group
+# in the model or don't want to use this part of the code, specify
+# any resource group you are using and then assign the slopes and
+# intercepts to be 0. This should result in no modification of growth
+# or mortality in wet years for that resource group.
 
 # name            gslope  gint  mslope  gint 
-	FORC    0 0 0 0			
+shrubs		0.0	0.0	0.0	0.0
 
-[end]  # section end     
+[end]  # section end
 
