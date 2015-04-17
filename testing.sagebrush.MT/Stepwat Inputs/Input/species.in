@@ -50,8 +50,9 @@
 # dispersal = turn on/off seed dispersal for this species. 1=use, 0=don't use.
 # 	dispersal is only applicable when using gridded option.
 #      
-#TM - eind values are density values taken from Adler datasets from Idaho. (species arfr, gusa, vuoc, spp1, spp2, 
-#	bogr, spcr are TM's best guesses)
+#TM - eind values are density values taken from Adler datasets from Idaho. Species vuoc, bogr, spcr, brar, are from Karl et al 1999.
+#	 Species arfr, gusa, spp1, spp2, are TM's best guesses)
+#
 #TM - irate is from Bradford and Launeroth 2006 Table A1.4.  If a species fell in those functional groups it was
 #	given the irate values. All forbs recieved the same values
 #
@@ -73,16 +74,16 @@
  phho       4   15  0.42600 0.900    2       3    0.00100    6   0.035   0.707      y       3       1  0.0100     1
  arfr       5   15  0.42600 0.900    2       3    0.06000    2   0.035   0.429      y       3       1  0.0100     1
  grsq       5   15  0.42600 0.900    2       3    0.01100    4   0.035   0.429      n       0       2  0.0100     1
- brar       6    1  0.94700 0.900    2       3    0.00200    38  0.020   19.726     n       0       2  0.0100     1
- vuoc       6    1  0.94700 0.900    2       3    0.00100    30  0.020   2.126      n       0       2  0.0100     1
+ brar       6    1  0.94700 0.900    2       3    0.00200    2080  0.020   19.726   n       0       2  0.0100     1
+ vuoc       6    1  0.94700 0.900    2       3    0.00100    1090  0.020   2.126    n       0       2  0.0100     1
  spp1       7    1  0.94700 0.900    2       3    0.00200    2   0.020   19.726     n       0       2  0.0100     0
  spp2       7    1  0.94700 0.900    2       3    0.00100    2   0.020   2.126      n       0       2  0.0100     0
  pose       8   15  0.47400 0.900    2       3    0.17000    2   0.500   0.429      y       3       2  0.0000     1
  koma       8   15  0.47400 0.900    2       3    0.17000    2   0.500   0.429      y       3       1  0.0000     1
- bogr       9    0  0.47400 0.900    2       3    0.17000    2   0.605   0.429      y       3       2  0.0000     1
- spcr       9   15  0.47400 0.900    2       3    0.02000    2   0.605   15.000      y       3       1  0.0100     1
+ bogr       9    0  0.47400 0.900    2       3    0.17000    25  0.605   0.429      y       3       2  0.0000     1
+ spcr       9   15  0.47400 0.900    2       3    0.02000    3   0.605   15.000     y       3       1  0.0100     1
  gusa       10  20  0.40000 0.900    2       3    0.17000    2   2.000   0.429      y       3       2  0.0000     1
- chvi       10  20  0.40000 0.900    2       3    0.02000    2   2.000   15.000      y       3       1  0.0100     1
+ chvi       10  20  0.40000 0.900    2       3    0.02000    2   2.000   15.000     y       3       1  0.0100     1
 
 [end]  # this marks the end of the species-specific parameters above
 
