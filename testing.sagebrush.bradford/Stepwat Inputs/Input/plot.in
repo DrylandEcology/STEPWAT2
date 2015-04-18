@@ -15,7 +15,9 @@
 #   Vertices=number of vertices in plot boundary. Plots can be
 #        a tesselation of regular polygons.
 #
-
+#
+#TM - changes plot size to 1m2 4.18.15
+#
 # plotsize
-.125
+1
 
