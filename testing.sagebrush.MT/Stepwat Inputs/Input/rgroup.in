@@ -62,16 +62,16 @@
 
 # name            space   density maxest slow    stretch xres  estann  on  startyr killyr  killfrq  extirp  mort  xgrow  veg_prod_type  
  sagebrush       0.5100  1.0000      1  0.0500       2     0       0   1      1       0        0       0     0  0.00000   2
- a.cool.forb     0.0700  0.3300*      4  0.0500       2     1       0   1      1       0        0       0     1  0.00000   2
- a.warm.forb     0.0700  0.3300*      4  0.0500       2     1       0   1      1       0        0       0     1  0.00000   2
- p.cool.forb     0.0700  18.000      4  0.0500       2     1       0   1      1       0        0       0     1  0.00000   2
- p.warm.forb     0.0700  5.0000      4  0.0500       2     1       0   1      1       0        0       0     1  0.00000   2
- a.cool.grass    0.2800  602.00      6  0.0500       2     1       0   1      1       0        0       0     1  0.00000   2
- a.warm.grass    0.2800  1.5600*      6  0.0500       2     1       0   1      1       0        0       0     1  0.00000   2
- p.cool.grass    0.2800  1.5600*      6  0.0500       2     1       0   1      1       0        0       0     1  0.00000   2
- p.warm.grass    0.2800  11.000      6  0.0500       2     1       0   1      1       0        0       0     1  0.00000   2
- shrub    	 0.0700  1.6700      3  0.0500       2     1       1   1      1       0        0       0     0  0.00000   2
- 
+ a.cool.forb     0.0700  0.3300*      4  0.0500       2     1       1   1      1       0        0       0     1  0.00000   4
+ a.warm.forb     0.0700  0.3300*      4  0.0500       2     1       1   1      1       0        0       0     1  0.00000   4
+ p.cool.forb     0.0700  18.000      4  0.0500       2     1       0   1      1       0        0       0     1  0.00000   4
+ p.warm.forb     0.0700  5.0000      4  0.0500       2     1       0   1      1       0        0       0     1  0.00000   4
+ a.cool.grass    0.2800  602.00      6  0.0500       2     1       1   1      1       0        0       0     1  0.00000   3
+ a.warm.grass    0.2800  1.5600*      6  0.0500       2     1       1   1      1       0        0       0     1  0.00000   3
+ p.cool.grass    0.2800  1.5600*      6  0.0500       2     1       0   1      1       0        0       0     1  0.00000   3
+ p.warm.grass    0.2800  11.000      6  0.0500       2     1       0   1      1       0        0       0     1  0.00000   3
+ shrub    	 0.0700  1.6700*      3  0.0500       2     1       0   1      1       0        0       0     0  0.00000   2
+
 
 [end]  # section end
 
@@ -86,9 +86,10 @@
 # dryslope = slope of res.avail. in dry years (EQN 3)
 # dryint   = intercept of res.avail. in dry years
 #
-#TM - these are the values from the testing.sagebrush.bradford
+#TM - these are the values from the testing.sagebrush.bradford folder
 
 # name            nslope   nint     wetslope wetint   dryslope dryint  
+
 sagebrush 	  0.00093  0.70935  0.00093  0.70935  0.00093  0.70935
 a.cool.forb 	  0.00093  0.70935  0.00093  0.70935  0.00093  0.70935
 a.warm.forb 	  0.00093  0.70935  0.00093  0.70935  0.00093  0.70935
@@ -101,7 +102,6 @@ p.warm.grass	  0.00093  0.70935  0.00093  0.70935  0.00093  0.70935
 shrub    	  0.00093  0.70935  0.00093  0.70935  0.00400  0.70935
 
 [end]  # section end
-
 
 #=============================================================
 # Parameters for wet-year growth modifiers (usu. succulents) 
