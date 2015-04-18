@@ -57,6 +57,8 @@
 #
 #TM - density for perennial warm grasses from (http://www.fs.fed.us/database/feis/plants/graminoid/koemac/all.html#4) 
 #  used 1052 KOMA per 2 rod squar and converted to 11 per meter square
+#
+#TM - need space, density for starred groups, 
 
 # name            space   density maxest slow    stretch xres  estann  on  startyr killyr  killfrq  extirp  mort  xgrow  veg_prod_type  
  sagebrush       0.5100  1.0000      1  0.0500       2     0       0   1      1       0        0       0     0  0.00000   2
@@ -83,18 +85,20 @@
 # wetint = intercept of resource availability in wet years
 # dryslope = slope of res.avail. in dry years (EQN 3)
 # dryint   = intercept of res.avail. in dry years
+#
+#TM - these are the values from the testing.sagebrush.bradford
 
 # name            nslope   nint     wetslope wetint   dryslope dryint  
 sagebrush 	  0.00093  0.70935  0.00093  0.70935  0.00093  0.70935
-a.cool.forb 	  0.00093  0.70935  0.00400  -0.5800  0.00400  0.08000
-a.warm.forb 	  0.00093  0.70935  0.00400  -0.5800  0.00400  0.08000
-p.cool.forb 	  0.00093  0.70935  0.00400  -0.5800  0.00400  0.08000
-p.warm.forb 	  0.00093  0.70935  0.00400  -0.5800  0.00400  0.08000
-a.cool.grass	  0.00093  0.70935  0.00093  0.70935  0.00400  0.08000
-a.warm.grass	  0.00093  0.70935  0.00093  0.70935  0.00400  0.08000
-p.cool.grass	  0.00093  0.70935  0.00093  0.70935  0.00400  0.08000
-p.warm.grass	  0.00093  0.70935  0.00093  0.70935  0.00400  0.08000
-shrub    	  0.00093  0.70935  0.00093  0.70935  0.00400  0.08000
+a.cool.forb 	  0.00093  0.70935  0.00093  0.70935  0.00093  0.70935
+a.warm.forb 	  0.00093  0.70935  0.00093  0.70935  0.00093  0.70935
+p.cool.forb 	  0.00093  0.70935  0.00093  0.70935  0.00093  0.70935
+p.warm.forb 	  0.00093  0.70935  0.00093  0.70935  0.00093  0.70935
+a.cool.grass	  0.00093  0.70935  0.00093  0.70935  0.00093  0.70935
+a.warm.grass	  0.00093  0.70935  0.00093  0.70935  0.00093  0.70935
+p.cool.grass	  0.00093  0.70935  0.00093  0.70935  0.00093  0.70935
+p.warm.grass	  0.00093  0.70935  0.00093  0.70935  0.00093  0.70935
+shrub    	  0.00093  0.70935  0.00093  0.70935  0.00400  0.70935
 
 [end]  # section end
 
