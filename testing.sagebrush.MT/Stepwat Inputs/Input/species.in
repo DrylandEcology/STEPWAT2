@@ -82,14 +82,14 @@
 #
 #TM - acmi biomass Higgins and Mack 1987, spcr biomass luecro et al 2008, trdu biomass Reichman and Smith 1991 figure 2
 #
-#TM - best guesses phho, brar, pose, koma
+#TM - best guesses biomass phho, brar, pose, koma
 #
 #TM - arfr and lipu from LTER ANPP mean value for all years in 0.25m2 plot
 #
 # pestab for bogr, vuoc, chna, gusa from testing folder for shortgrass steppe 
 #
 # name     rg  age  irate    ratep slow disturb pestab     eind minbio  maxbio  clonal vegindv tclass  cosurv  onoff
- artr       1   100  0.47000 0.900    2       3    0.12500    1   2.000  856.52      n       0       2  0.0100     1
+ artr       1   100 0.47000 0.900    2       3    0.12500    1   2.000  856.52      n       0       2  0.0100     1
  trdu       2    1  0.42600 0.900    2       3    0.17000    3   0.035   3.700      n       0       2  0.0000     1
  cryp       2    1  0.42600 0.900    2       3    0.12000    9   0.035   1.399      n       0       2  0.0000     1
  amre       3    1  0.42600 0.900    2       3    0.19000    10  0.035   3.055      n       0       2  0.0000     1
@@ -105,7 +105,7 @@
  pose       8   35  0.47400 0.900    2       3    0.17000    2   0.500   1.500      y       3       2  0.0100     1
  koma       8    5  0.47400 0.900    2       3    0.17000    2   0.500   1.000      y       3       2  0.0100     1
  bogr       9    0  0.47400 1.000    2       2    0.12500    25  0.605   12.096      y       3       1  0.0100     1
- spcr       9   29  0.47400 0.900    2       3    0.02000    3   0.605   7.0000     n       0       1  0.0100     1
+ spcr       9   29  0.47400 0.900    2       3    0.02000    3   0.605   1.39     n       0       1  0.0100     1
  gusa       10  10  0.40000 0.900    2       3    0.00100    2   0.106   12.126      n       0       2  0.0100     1
  chvi       10  35  0.40000 0.900    2 	     2 	  0.00200    2   0.986   19.726     n       0       2  0.0100     1
 
