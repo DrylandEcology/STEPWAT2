@@ -42,11 +42,11 @@
 0.5			# inflection point
 1.1			# range
 
-# ---- Intrinsic site params: MT (47.06581° N, -108.5826° E,  m elevation) ----
+# ---- Intrinsic site params: Blak, MT (47.06581° N, -108.5826° E,  m elevation) ----
 0.8214533	# latitude of the site in radians
-113.7	# altitude of site (m a.s.l.)
-0.0			# slope at site (degrees): no slope = 0
-0.0			# aspect at site (degrees): N=0, E=90, S=180, W=270, no slope:-1
+1039.06	# altitude of site (m a.s.l.)
+2			# slope at site (degrees): no slope = 0
+3409			# aspect at site (degrees): N=0, E=90, S=180, W=270, no slope:-1
 
 # ---- Soil Temperature Constants ----
 # from Parton 1978, ch. 2.2.2 Temperature-profile Submodel
