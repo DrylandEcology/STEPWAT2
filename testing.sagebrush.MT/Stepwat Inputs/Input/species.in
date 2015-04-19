@@ -91,6 +91,7 @@
 #TM - gusa and chvi rates from C&L 1990
 # need to re-assess maxbio values for pose and koma
 # name     rg  age  irate    ratep slow disturb pestab     eind minbio  maxbio  clonal vegindv tclass  cosurv  onoff
+
  artr       1   100 0.47400 0.900    2       3    1.00000    1   2.000  856.52      n       0       2  0.0100     1
  trdu       2    1  0.42600 0.900    2       3    0.01500    1   0.035   0.700      n       0       2  0.0000     1
  cryp       2    1  0.42600 0.900    2       3    0.01500    1   0.035   0.700      n       0       2  0.0000     1
@@ -110,6 +111,7 @@
  spcr       9   29  0.47400 0.900    2       3    0.2500     3   0.605    6.000     n       0       1  0.0100     1
  gusa       10  10  0.73700 0.900    2       3    0.01000    2   0.106   12.126     n       0       2  0.0100     1
  chvi       10  35  0.47400 0.900    2 	     2 	  0.02000    2   0.986   19.726     n       0       2  0.0100     1
+
 
 [end]  # this marks the end of the species-specific parameters above
 
