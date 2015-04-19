@@ -119,6 +119,7 @@ all:	$(ALLTGT)
 		cp stepwat testing.sagebrush.bradford
 		cp stepwat testing.shortgrass.bradford
 		cp stepwat testing.sagebrush.MT
+		cp stepwat testing.sagebrush.MT/Stepwat\ Inputs
 
 
 objs:	$(ALLOBJS)
