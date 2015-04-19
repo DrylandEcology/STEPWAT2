@@ -261,16 +261,16 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
 		fracGroupsMaxBioFromType = avgMaxBioByGroup[g]/sumMaxBioByType[t];
 		switch(t) {
 		case 0://Tree
-			transp = SXW.transpTrees;
+			transp = SXW.transpTotal;
 			break;
 		case 1://Shrub
-			transp = SXW.transpShrubs;
+			transp = SXW.transpTotal;
 			break;
 		case 2://Grass
-			transp = SXW.transpGrasses;
+			transp = SXW.transpTotal;
 			break;
 		case 3://Forb
-			transp = SXW.transpForbs;
+			transp = SXW.transpTotal;
 			break;
 		default:
 			transp = SXW.transpTotal;
@@ -280,7 +280,7 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
 		{
 			int nLyrs = getNTranspLayers(RGroup[g]->veg_prod_type);
 			for (l = 0; l < nLyrs; l++) {
-				use_by_group[g] += (RealF) (_roots_active_rel[Iglp(g, l, p)] * fracGroupsMaxBioFromType * transp[Ilp(l, p)]);
+				use_by_group[g] += (RealF) (_roots_active_rel[Iglp(g, l, p)] * min_res_req * transp[Ilp(l, p)]);
 			}
 		}
 		sumUsedByGroup += use_by_group[g];
