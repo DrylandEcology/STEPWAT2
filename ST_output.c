@@ -22,6 +22,7 @@
 #include "ST_globals.h"
 #include "filefuncs.h"
 
+
 /******** Modular External Function Declarations ***********/
 /* -- truly global functions are declared in functions.h --*/
 /***********************************************************/
@@ -169,7 +170,11 @@ void output_Mort_Yearly( void ) {
 		if (MortFlags.species) {
 			ForEachSpecies(sp)
 			{
-				if (age < SppMaxAge(sp) && RGroup[Species[sp]->res_grp]->use_me)
+				/*adding fix for bus error while on/off some species:
+				 *  Reason proper species use-me boolean values were not use in check so added the same
+				 *  Modify By: Ashish
+				 */
+				if (age < SppMaxAge(sp) && Species[sp]->use_me && RGroup[Species[sp]->res_grp]->use_me)
 					fprintf(f, "%c%d", MortFlags.sep, Species[sp]->kills[age]);
 				else
 					fprintf(f, "%c", MortFlags.sep);
