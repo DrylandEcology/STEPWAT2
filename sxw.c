@@ -965,7 +965,7 @@ void _print_debuginfo(void) {
 	fprintf(f, "\n================== %d =============================\n", SW_Model.year);
 	fprintf(f, "MAP = %d(mm)\tMAT = %5.2f(C)\tAET = %5.4f(cm)\tAT = %5.4f(cm)\n\n", Env.ppt, Env.temp, SXW.aet, sum);
 
-	fprintf(f, "Group     \tRelsize\tPR\tTransp\n");
+	fprintf(f, "Group     \tRelsize\tPR\tResource_cur\n");
 	fprintf(f, "-----     \t-------\t-----\t-----\n");
 	ForEachGroup(r) {
 		sum1 += RGroup[r]->relsize;
