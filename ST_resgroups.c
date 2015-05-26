@@ -989,7 +989,22 @@ void rgroup_Extirpate( GrpIndex rg) {
   ForEachGroupSpp(sp, rg, i) {
     Species_Kill( sp, 5);
     Species[sp]->seedling_estab_prob = 0.0;
-  }
+    /*TMartyn 5.26.2015 - added the following section because annual biomass
+     values were not being updated to 0 even if seedling establishment 
+     probability was chaged to 0. The following code says if the max age of 
+     * a species is 1 it will change the seed establishment to 0 and will
+     * vastly increase the exp_decay value so that the seeds in the 
+     * seed bank will decay within 1 year.  This is a work around and we 
+     * should look more into this to make biomass values absolutely 0 at the
+     * year of expiration implementation. */
+      if (Species[sp]->max_age == 1) {
+      Species[sp]->max_seed_estab = 0.0;
+      Species[sp]->exp_decay = 1000000;
+        
+      }
+    }
+  
+  
 
 
   RGroup[rg]->extirpated = TRUE;
