@@ -3,5 +3,5 @@
 #
 0		# 1=use swcdata history data file, 0= don't use
 swcdata		# input data file prefix
-98		# first year of measurement data files
-2		# first year of measurement data files 
+1912		# first year of measurement data files
+1912		# first year of measurement data files 
