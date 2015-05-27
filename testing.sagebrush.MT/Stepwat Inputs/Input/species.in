@@ -89,6 +89,7 @@
 # pestab for bogr, vuoc, chna, gusa from testing folder for shortgrass steppe 
 #
 #TM - gusa and chvi rates from C&L 1990
+#ARTR age from Ferguson 1964- Annual rings in big sagebrush
 # need to re-assess maxbio values for pose and koma
 # name     rg  age  irate    ratep slow disturb pestab     eind minbio  maxbio  clonal vegindv tclass  cosurv  onoff
 
