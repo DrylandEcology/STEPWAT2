@@ -92,7 +92,7 @@
 # need to re-assess maxbio values for pose and koma
 # name     rg  age  irate    ratep slow disturb pestab     eind minbio  maxbio  clonal vegindv tclass  cosurv  onoff
 
- artr       1   100 0.47400 0.900    2       3    1.00000    1   2.000  375.00      n       0       2  0.0100     1
+ artr       1   100 0.47400 0.900    2       3    1.00000    1   2.000  825.00      n       0       2  0.0100     1
  trdu       2    1  0.94700 0.900    2       3    0.01500    5   0.035   0.700      n       0       2  0.0000     0
  cryp       2    1  0.94700 0.900    2       3    0.01500    5   0.035   0.700      n       0       2  0.0000     1
  amre       3    1  0.94700 0.900    2       3    0.01500    5   0.035   0.700      n       0       2  0.0000     0
