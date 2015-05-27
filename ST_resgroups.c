@@ -18,11 +18,13 @@
 
 #include <math.h>
 #include <string.h>
+#include <stdio.h>
 #include "ST_steppe.h"
 #include "ST_globals.h"
 #include "myMemory.h"
 #include "rands.h"
 #include "generic.h"
+
 
 #include "ST_functions.h"
 #include "sxw_funcs.h"
@@ -224,16 +226,21 @@ static RealF _add_annuals( const GrpIndex rg, const RealF g_pr,
 
 
    g = RGroup[rg];
+ 
 
    assert(g->max_age == 1);
 
    if (!g->use_me ) return 0.0;
+  
+  
 
    sumsize = 0.0;
-   ForEachGroupSpp(sp,rg,i) { s = Species[sp];
+   ForEachGroupSpp(sp,rg,i) { s = Species[sp]; 
      newsize = 0.0;
      forced = FALSE;
-
+     
+     if (!s->use_me) continue;
+     
      if (!add_seeds && RandUni() <= s->seedling_estab_prob) {
        /* force addition of new propagules */
        _add_annual_seedprod(sp, (g->regen_ok) ? g_pr: -1.);
@@ -257,7 +264,14 @@ static RealF _add_annuals( const GrpIndex rg, const RealF g_pr,
      sumsize += newsize;
    }
 
+   /*if (g->regen_ok == TRUE) {
+       printf("Regen_ok %u\n",rg);}*/
+   
+   /*will print out a flag of Regen_ok with the resourse group number (numbered
+    * in the order of turned on groups in the "rgroup.in" file */
+   
    return (sumsize / (RealF) g->max_spp);
+   
 
 
 }

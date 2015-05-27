@@ -151,7 +151,11 @@ struct resourcegroup_st {
   SppIndex est_count, /* number of species actually established in group*/
            est_spp[MAX_SPP_PER_GRP]; /*list of spp actually estab in grp*/
   Bool extirpated,    /* group extirpated, no more regen */
-       regen_ok;      /* annuals: comb. of startyr, etc means we can regen this year */
+       regen_ok;      /* annuals: startyr; TM this is a flag for annuals.  When
+                       * you set the start year for the group this will flag all
+                       * species within that group that establishment will start.
+                       * EG start year = 96 I will have 5 flags for one annual species
+                       * for year 96,97,98,99,100. BUT exptirpate will not un-flag this*/
 
   /**** Quantities that DO NOT change during model runs *****/
 
@@ -175,7 +179,8 @@ struct resourcegroup_st {
         ppt_intcpt[3];/* res. space eqn: intercept for "" ""*/
   Bool succulent,
        use_extra_res, /* responds to other groups' unused resources */
-       use_me,        /* establish no species of this group if false */
+       use_me,        /* establish no species of this group if false; TMartyn5.26.15 - this
+                       * is 0 of the onoff in species.in and of the on in rgroup.in */
        use_mort,      /* use age-independent+slowgrowth mortality?  */
        est_annually;  /* establish this group every year if true  */
   DepthClass depth;  /* rooting depth class */
