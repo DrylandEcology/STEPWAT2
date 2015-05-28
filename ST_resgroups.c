@@ -100,6 +100,7 @@ void rgroup_PartResources( void) {
 /*------------------------------------------------------*/
 
   GrpIndex rg;
+  SppIndex sp;
   RealF resource,  /* amt of "resource" == 1 when ppt is avg */
        xtra_base = 0., /* pooled extra resource up to 1.0 */
        xtra_obase = 0., /* pooled resource > 1.0 */
@@ -112,6 +113,7 @@ void rgroup_PartResources( void) {
              add_seeds = TRUE, /* monikers for pass 1 & 2 _add_annuals() */
              no_seeds  = FALSE;
   GroupType *g; /* shorthand for RGroup[rg] */
+    int i;
 
   /*----------------------------------------------------*/
   
@@ -156,7 +158,8 @@ void rgroup_PartResources( void) {
 		}
 		//Annuals seem to have a artificial limit of 20. We do Annuals here differently.
 		if(g->max_age == 1) {
-			g->res_required = RGroup_GetBiomass(rg);
+			{ForEachGroupSpp(sp,rg,i)
+                g->res_required += Species[sp]->mature_biomass * .75;}
 			g->res_avail = SXW_GetTranspiration(rg);
 			if(!ZRO(g->res_avail) && g->res_required / g->res_avail > 20) {
 				g->res_required = 20;
