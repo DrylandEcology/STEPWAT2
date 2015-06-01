@@ -144,6 +144,14 @@ void rgroup_PartResources( void) {
 
 		g->res_required = RGroup_GetBiomass(rg);
 		g->res_avail = SXW_GetTranspiration(rg);//1.0;
+                
+                xtra_base += fmax(0., fmin(1., resource) - g->res_avail) * g->min_res_req;
+		xtra_obase += fmax( 0., resource - 1.) * g->min_res_req;
+
+		size_base[rg] = g->relsize * g->min_res_req;
+		size_obase[rg] = (g->use_extra_res) ? size_base[rg] : 0.;
+                
+                
 		//PR limit can be really high see mort no_resource I limit to the groups estab indiv because that is what we can kill.
 		//This was at 10 but ten might be to low or high in some cases.
 		if(!ZRO(g->res_avail) && g->res_required / g->res_avail > g->estabs) {
