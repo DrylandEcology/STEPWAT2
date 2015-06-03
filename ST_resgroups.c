@@ -188,9 +188,11 @@ void rgroup_PartResources( void) {
 
   if (noplants) return;
 
+  if (!UseSoilwat) {
     _res_part_extra( do_base,  xtra_base,  size_base );
     _res_part_extra( do_extra, xtra_obase, size_obase );
-  
+  }
+
   /* reset annuals' "true" relative size here */
   ForEachGroup(rg) { g = RGroup[rg];
     g->pr = ZRO(g->res_avail) ? 0. : g->res_required / g->res_avail;
