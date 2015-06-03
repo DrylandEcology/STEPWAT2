@@ -220,7 +220,7 @@ void mort_EndOfYear( void) {
        RGroup_Kill( rg );
   }
 
-  // _kill_extra_growth();
+   _kill_extra_growth();
    _kill_annuals();
 
 }
