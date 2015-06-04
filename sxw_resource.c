@@ -236,7 +236,7 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
 	LyrIndex l;
 	int t,i;
 	RealD *transp;
-	RealF sumUsedByGroup = 0., sumTranspTotal = 0.;
+	RealF sumUsedByGroup = 0., sumTranspTotal = 0., TranspRemaining = 0.;
 
 	RealD sumMaxBioByType[4] = {0.};
 	RealD avgMaxBioByGroup[MAX_RGROUPS] = {0.};
@@ -291,10 +291,12 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
 		for (t = 0; t < SXW.NSoLyrs; t++)
 			sumTranspTotal += SXW.transpTotal[Ilp(t, p)];
 	}
-	if(!ZRO(sumTranspTotal)) {
+    TranspRemaining = sumTranspTotal - sumUsedByGroup;
+	
 		ForEachGroup(g)
 		{
-			use_by_group[g] = (use_by_group[g]/sumUsedByGroup) * sumTranspTotal;
+			if(!ZRO(use_by_group[g])) {
+                use_by_group[g] += (use_by_group[g]/sumUsedByGroup) * TranspRemaining;
 		}
 	}
 }
