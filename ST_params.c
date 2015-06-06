@@ -105,7 +105,7 @@ void parm_Initialize( Int iter) {
 
   if (beenhere) {
     if (BmassFlags.yearly) {
-      sprintf(filename, "%s%0*d.out", Parm_name(F_BMassPre),
+      sprintf(filename, "%s%0*d.csv", Parm_name(F_BMassPre),
                                 Globals.bmass.suffixwidth,
                                 iter);
       if (Globals.bmass.fp_year != NULL) {
@@ -120,7 +120,7 @@ void parm_Initialize( Int iter) {
     }
 
     if (MortFlags.yearly) {
-      sprintf(filename, "%s%0*d.out", Parm_name(F_MortPre),
+      sprintf(filename, "%s%0*d.csv", Parm_name(F_MortPre),
                                 Globals.mort.suffixwidth,
                                 iter);
       if (Globals.mort.fp_year != NULL) {
@@ -620,7 +620,7 @@ static void _bmassflags_init( void) {
 
    if (DirExists(DirName(Parm_name(F_BMassPre)))) {
      strcpy(inbuf, Parm_name(F_BMassPre));
-     strcat(inbuf, "*.out");
+     strcat(inbuf, "*.csv");
      if (!RemoveFiles(inbuf) )
        LogError(logfp, LOGWARN, "Can't remove old biomass output files %s\n%s",
                 inbuf, strerror(errno) );
@@ -784,7 +784,7 @@ static void _mortflags_init( void) {
 
    if (DirExists(DirName(Parm_name(F_MortPre)))) {
      strcpy(inbuf, Parm_name(F_MortPre));
-     strcat(inbuf, "*.out");
+     strcat(inbuf, "*.csv");
      if (!RemoveFiles(inbuf) )
        LogError(logfp, LOGWARN, "Can't remove old biomass output files %s\n%s",
                 inbuf, strerror(errno) );
@@ -1313,3 +1313,4 @@ void Parm_SetMemoryRefs( void) {
 }
 
 #endif
+
