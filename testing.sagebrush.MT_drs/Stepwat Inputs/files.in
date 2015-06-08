@@ -9,11 +9,11 @@ Input/rgroup.in		#for the rgroup (resource-group-level information)
 Input/species.in	#for the species information
 
 Input/bmassflags.in	#biomass flags... (for setting up the output I think)
-Output/bmasspre.out #output
-Output/bmassavg.out	#output
+Output/bmasspre.csv #output
+Output/bmassavg.csv	#output
 
 Input/mortflags.in	#mort flags... (for setting up the output I think)
-Output/mortpre.out	#output
-Output/mortavg.out	#output
+Output/mortpre.csv	#output
+Output/mortavg.csv	#output
 
 Input/sxw.in
