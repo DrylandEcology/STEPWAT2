@@ -501,7 +501,7 @@ void rgroup_Grow( void) {
   SppIndex sp;
   GroupType *g;
   SpeciesType *s;
-  const RealF OPT_SLOPE = .05;
+  const RealF OPT_SLOPE = .95;
   RealF growth1, /* growth of one individual*/
         sppgrowth,  /* sum of growth for a species' indivs */
         rate1, /* rate of growth for an individual*/
