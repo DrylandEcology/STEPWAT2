@@ -54,7 +54,7 @@ struct stepwat_st {
   char *debugfile; /* added in ST_Main(), read to get debug instructions */
   RealF *swc, /* dynamic array(Ilp) of SWC from SOILWAT */
          aet;     /* soilwat's evapotranspiration for the year */
-
+  RealD  surfaceTemp;   /* soilwat's surfaceTemp */
 
 };
 
