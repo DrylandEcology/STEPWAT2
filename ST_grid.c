@@ -474,9 +474,9 @@ void runGrid( void ) {
   				
   			char fileMort[1024], fileBMass[1024], fileReceivedProb[1024];
   		
-			sprintf(fileReceivedProb, "%s%d.out", grid_files[9], cell);
-  			sprintf(fileMort, "%s%d.out", grid_files[8], cell);
-  			sprintf(fileBMass, "%s%d.out", grid_files[7], cell);
+			sprintf(fileReceivedProb, "%s%d.csv", grid_files[9], cell);
+  			sprintf(fileMort, "%s%d.csv", grid_files[8], cell);
+  			sprintf(fileBMass, "%s%d.csv", grid_files[7], cell);
   			parm_SetName(fileMort, F_MortAvg);
   			parm_SetName(fileBMass, F_BMassAvg);
   		

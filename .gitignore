@@ -53,5 +53,7 @@ testing/valgrind.out
 testing/stepwat.dSYM/
 testing/Output
 
+testing.sagebrush.MT_drs/Output
+
 *.out
 *.log

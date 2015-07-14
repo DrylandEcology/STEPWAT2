@@ -1,3 +1,4 @@
 [submodule "sw_src"]
 	path = sw_src
 	url = https://github.com/Burke-Lauenroth-Lab/SOILWAT.git
+        ignore = dirty
