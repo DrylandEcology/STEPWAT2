@@ -104,35 +104,36 @@ void parm_Initialize( Int iter) {
   char filename[FILENAME_MAX];
 
   if (beenhere) {
-    if (BmassFlags.yearly) {
-      sprintf(filename, "%s%0*d.csv", Parm_name(F_BMassPre),
-                                Globals.bmass.suffixwidth,
-                                iter);
-      if (Globals.bmass.fp_year != NULL) {
-        LogError(logfp, LOGFATAL, "Programmer error: "
-                        "Globals.bmass.fp_year not null"
-                        " in parm_Initialize()");
-      }
-      Globals.bmass.fp_year = OpenFile(filename, "w");//moved to output function
-      fprintf(Globals.bmass.fp_year, "%s", Globals.bmass.header_line);
-      fflush(Globals.bmass.fp_year);
-      CloseFile(&Globals.bmass.fp_year);
-    }
-
-    if (MortFlags.yearly) {
-      sprintf(filename, "%s%0*d.csv", Parm_name(F_MortPre),
-                                Globals.mort.suffixwidth,
-                                iter);
-      if (Globals.mort.fp_year != NULL) {
-        LogError(logfp, LOGFATAL, "Programmer error: "
-                        "Globals.mort.fp_year not null"
-                        " in parm_Initialize()");
-      }
-      Globals.mort.fp_year = OpenFile(filename, "w");
-      fprintf(Globals.mort.fp_year, "%s", Globals.mort.header_line);
-      fflush(Globals.mort.fp_year);
-      CloseFile(&Globals.mort.fp_year);
-    }
+//    if (BmassFlags.yearly) {
+//      sprintf(filename, "%s%0*d.csv", Parm_name(F_BMassPre),
+//                                Globals.bmass.suffixwidth,
+//                                iter);
+//      printf("parm_Initialize: %s\n",filename, filename);
+//      if (Globals.bmass.fp_year != NULL) {
+//        LogError(logfp, LOGFATAL, "Programmer error: "
+//                        "Globals.bmass.fp_year not null"
+//                        " in parm_Initialize()");
+//      }
+//      Globals.bmass.fp_year = OpenFile(filename, "w");//moved to output function
+//      fprintf(Globals.bmass.fp_year, "%s", Globals.bmass.header_line);
+//      fflush(Globals.bmass.fp_year);
+//      CloseFile(&Globals.bmass.fp_year);
+//    }
+//
+//    if (MortFlags.yearly) {
+//      sprintf(filename, "%s%0*d.csv", Parm_name(F_MortPre),
+//                                Globals.mort.suffixwidth,
+//                                iter);
+//      if (Globals.mort.fp_year != NULL) {
+//        LogError(logfp, LOGFATAL, "Programmer error: "
+//                        "Globals.mort.fp_year not null"
+//                        " in parm_Initialize()");
+//      }
+//      Globals.mort.fp_year = OpenFile(filename, "w");
+//      fprintf(Globals.mort.fp_year, "%s", Globals.mort.header_line);
+//      fflush(Globals.mort.fp_year);
+//      CloseFile(&Globals.mort.fp_year);
+//    }
 
   } else {
     _globals_init();
@@ -146,8 +147,8 @@ void parm_Initialize( Int iter) {
     _species_init();
     _check_species();
 	
-    _bmasshdr_init();
-    _morthdr_create();
+//    _bmasshdr_init();
+//    _morthdr_create();
     RandSeed(Globals.randseed);
 
 	/*_recover_names();*/
@@ -635,60 +636,61 @@ static void _bmassflags_init( void) {
 
 /**************************************************************/
 static void _bmasshdr_init( void) {
-/*======================================================*/
-/* Writes to Globals.header */
 
-  char fields[MAX_OUTFIELDS][MAX_FIELDLEN+1];
-  Int rg, sp, i, fc=0;
-
-
-  if (!BmassFlags.header) return;
-
-  /* Set up headers */
-  if (BmassFlags.yr)
-    strcpy(fields[fc++], "Year");
-  if (BmassFlags.dist)
-    strcpy(fields[fc++], "Disturb");
-  if (BmassFlags.ppt)
-    strcpy(fields[fc++], "PPT");
-  if (BmassFlags.pclass)
-    strcpy(fields[fc++], "PPTClass");
-  if (BmassFlags.tmp)
-    strcpy(fields[fc++], "Temp");
-
-  if (BmassFlags.grpb) {
-    ForEachGroup(rg) {
-      strcpy(fields[fc++], RGroup[rg]->name);
-      if (BmassFlags.size) {
-        strcpy(fields[fc], RGroup[rg]->name);
-        strcat(fields[fc++], "_RSize");
-      }
-      if (BmassFlags.pr) {
-        strcpy(fields[fc], RGroup[rg]->name);
-        strcat(fields[fc++], "_PR");
-      }
-    }
-  }
-
-  if (BmassFlags.sppb) {
-    ForEachSpecies(sp) {
-      strcpy(fields[fc++], Species[sp]->name);
-      if (BmassFlags.indv) {
-        strcpy(fields[fc], Species[sp]->name);
-        strcat(fields[fc++], "_Indv");
-      }
-    }
-  }
-
-
-
-  /* Put header line in global variable */
-    for (i=0; i< fc-1; i++) {
-      sprintf(inbuf,"%s%c", fields[i], BmassFlags.sep);
-      strcat(Globals.bmass.header_line, inbuf);
-    }
-    sprintf(inbuf,"%s\n", fields[i]);
-    strcat(Globals.bmass.header_line, inbuf);
+///*======================================================*/
+///* Writes to Globals.header */
+//
+//  char fields[MAX_OUTFIELDS][MAX_FIELDLEN+1];
+//  Int rg, sp, i, fc=0;
+//
+//
+//  if (!BmassFlags.header) return;
+//
+//  /* Set up headers */
+//  if (BmassFlags.yr)
+//    strcpy(fields[fc++], "Year");
+//  if (BmassFlags.dist)
+//    strcpy(fields[fc++], "Disturb");
+//  if (BmassFlags.ppt)
+//    strcpy(fields[fc++], "PPT");
+//  if (BmassFlags.pclass)
+//    strcpy(fields[fc++], "PPTClass");
+//  if (BmassFlags.tmp)
+//    strcpy(fields[fc++], "Temp");
+//
+//  if (BmassFlags.grpb) {
+//    ForEachGroup(rg) {
+//      strcpy(fields[fc++], RGroup[rg]->name);
+//      if (BmassFlags.size) {
+//        strcpy(fields[fc], RGroup[rg]->name);
+//        strcat(fields[fc++], "_RSize");
+//      }
+//      if (BmassFlags.pr) {
+//        strcpy(fields[fc], RGroup[rg]->name);
+//        strcat(fields[fc++], "_PR");
+//      }
+//    }
+//  }
+//
+//  if (BmassFlags.sppb) {
+//    ForEachSpecies(sp) {
+//      strcpy(fields[fc++], Species[sp]->name);
+//      if (BmassFlags.indv) {
+//        strcpy(fields[fc], Species[sp]->name);
+//        strcat(fields[fc++], "_Indv");
+//      }
+//    }
+//  }
+//
+//
+//
+//  /* Put header line in global variable */
+//    for (i=0; i< fc-1; i++) {
+//      sprintf(inbuf,"%s%c", fields[i], BmassFlags.sep);
+//      strcat(Globals.bmass.header_line, inbuf);
+//    }
+//    sprintf(inbuf,"%s\n", fields[i]);
+//    strcat(Globals.bmass.header_line, inbuf);
 }
 
 /**************************************************************/
@@ -804,30 +806,30 @@ static void _morthdr_create( void) {
 /*======================================================*/
 /* Writes to Globals.header */
 
-  char fields[MAX_OUTFIELDS][MAX_FIELDLEN];
-  Int rg, sp, i, fc=0;
-
-
-  if (!MortFlags.header) return;
-
-  /* Set up headers */
-  sprintf(fields[fc++],"Age");
-  if (MortFlags.group) {
-    ForEachGroup(rg)
-      sprintf(fields[fc++],"%s", RGroup[rg]->name);
-  }
-  if (MortFlags.species) {
-    ForEachSpecies(sp)
-      sprintf(fields[fc++],"%s",Species[sp]->name);
-  }
-
-  /* Put header line in global variable */
-    for (i=0; i< fc-1; i++) {
-      sprintf(inbuf,"%s%c", fields[i], MortFlags.sep);
-      strcat(Globals.mort.header_line, inbuf);
-    }
-    sprintf(inbuf,"%s\n", fields[i]);
-    strcat(Globals.mort.header_line, inbuf);
+//  char fields[MAX_OUTFIELDS][MAX_FIELDLEN];
+//  Int rg, sp, i, fc=0;
+//
+//
+//  if (!MortFlags.header) return;
+//
+//  /* Set up headers */
+//  sprintf(fields[fc++],"Age");
+//  if (MortFlags.group) {
+//    ForEachGroup(rg)
+//      sprintf(fields[fc++],"%s", RGroup[rg]->name);
+//  }
+//  if (MortFlags.species) {
+//    ForEachSpecies(sp)
+//      sprintf(fields[fc++],"%s",Species[sp]->name);
+//  }
+//
+//  /* Put header line in global variable */
+//    for (i=0; i< fc-1; i++) {
+//      sprintf(inbuf,"%s%c", fields[i], MortFlags.sep);
+//      strcat(Globals.mort.header_line, inbuf);
+//    }
+//    sprintf(inbuf,"%s\n", fields[i]);
+//    strcat(Globals.mort.header_line, inbuf);
 
 }
 
