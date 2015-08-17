@@ -8,7 +8,7 @@
 #SEED DISPERSAL OUTPUTS
 1		# output seed dispersal (ie. the total probability that a cell received seeds for each cell for each year for each species)?  1 means yes, 0 means no
 1		# output header (ie. the names of all the species)?  1 means yes, 0 means no.  Suggested: yes, as it's hard to figure out what all the numbers mean elsewise.
-t		# output seperator... specify one of the following as a separator: t = tab, s = space, or any single character such as , | : etc (excluding '#','t', and 's').  Suggested: tab.
+,		# output seperator... specify one of the following as a separator: t = tab, s = space, or any single character such as , | : etc (excluding '#','t', and 's').  Suggested: tab.
 
 #Spinup and Seed Availability options
 #NOTE: options 1a, 2a, and Xb are mutually exclusive.  Options 1b and 2b can be combined.  Cells can be empty of plants.
