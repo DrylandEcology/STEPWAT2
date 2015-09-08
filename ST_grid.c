@@ -126,7 +126,7 @@ struct _grid_init_species_st {
 /************ Module Variable Declarations ***************/
 /***********************************************************/
 
-#define N_GRID_FILES 10
+#define N_GRID_FILES 11
 #define N_GRID_DIRECTORIES 1
 
 char *grid_files[N_GRID_FILES], *grid_directories[N_GRID_DIRECTORIES], sd_Sep;
@@ -207,6 +207,9 @@ void stat_Collect_GMort( void );
 void stat_Collect_SMort( void );
 void stat_Output_AllMorts( void) ;
 void stat_Output_AllBmass(void) ;
+//Adding functions for creating grid cells avg values output file
+void stat_Output_AllBmassAvg(void) ;
+void stat_Output_AllCellAvgBmass(const char * filename);
 void stat_Output_Seed_Dispersal(const char * filename, const char sep, Bool makeHeader); 
 void stat_Load_Accumulators(int cell, int year);
 void stat_Save_Accumulators(int cell, int year);
@@ -483,7 +486,7 @@ void runGrid( void ) {
   			if (MortFlags.summary)
     				stat_Output_AllMorts();
   			if (BmassFlags.summary)
-    				stat_Output_AllBmass();
+  				    stat_Output_AllBmassAvg();
 			if (UseSeedDispersal && sd_DoOutput)
 				stat_Output_Seed_Dispersal(fileReceivedProb, sd_Sep, sd_MakeHeader); 
 
@@ -496,6 +499,12 @@ void runGrid( void ) {
          		}
     		
     	}
+   //Here creating grid cells avg values output file
+	char fileBMassCellAvg[1024];
+	sprintf(fileBMassCellAvg, "%s.csv", grid_files[10]);
+	if (BmassFlags.summary)
+		stat_Output_AllCellAvgBmass(fileBMassCellAvg);
+
 	if(UseProgressBar) printf("\routputting files took approximately %.2f seconds\n", ((double)(clock() - prog_Time) / CLOCKS_PER_SEC));
 	_free_grid_memory(); // free our allocated memory since we do not need it anymore
 	/*if(UseProgressBar)*/ printf("!\n");

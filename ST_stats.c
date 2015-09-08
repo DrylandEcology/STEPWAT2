@@ -44,6 +44,9 @@
   void stat_Output_YrMorts( void ) ;
   void stat_Output_AllMorts( void) ;
   void stat_Output_AllBmass(void) ;
+  //Adding below two functions for creating grid cells avg values output file
+  void stat_Output_AllBmassAvg(void) ;
+  void stat_Output_AllCellAvgBmass(const char * filename);
   void stat_Output_Seed_Dispersal(const char * filename, const char sep, Bool makeHeader); 
   void stat_free_mem( void ) ;
   
@@ -74,11 +77,32 @@ typedef struct  {
 accumulators_grid_st *grid_Stat;
 
 
+// Local Structure for holding sum values of all the grid cells
+
+struct accumulators_grid_cell_st {
+  double sum, sum_std;
+  unsigned long nobs;
+};
+
+struct stat_grid_cell_st {
+  char *name; /* array of ptrs to names in RGroup & Species */
+  struct accumulators_grid_cell_st *s;    /* array of holding all the years values */
+} _Dist_grid_cell, _Ppt_grid_cell, _Temp_grid_cell,
+  *_Grp_grid_cell, *_Gsize_grid_cell, *_Gpr_grid_cell, *_Gmort_grid_cell, *_Gestab_grid_cell,
+  *_Spp_grid_cell, *_Indv_grid_cell, *_Smort_grid_cell, *_Sestab_grid_cell, *_Sreceived_grid_cell;
+
+
+
+
 /*************** Local Function Declarations ***************/
 /***********************************************************/
 static void _init( void);
 static RealF _get_avg( struct accumulators_st *p);
 static RealF _get_std( struct accumulators_st *p);
+//Adding below three functions copying grid cell values and calculating avg and SD will be used in grid cells avg values output file
+static void copyStruct(RealF val,RealF std_val,struct accumulators_grid_cell_st *p );
+static RealF _get_gridcell_avg( struct accumulators_grid_cell_st *p);
+static RealF _get_gridcell_std( struct accumulators_grid_cell_st *p);
 static void _make_header( char *buf);
 
 /* I'm making this a macro because it gets called a lot, but
@@ -180,6 +204,72 @@ static void _init( void) {
 /* must be called after model is initialized */
   SppIndex sp;
   GrpIndex rg;
+
+// Memory allocation for local structures that will hold grid cells values 
+  if (UseGrid)
+   {
+
+	  if (BmassFlags.dist)
+	      _Dist_grid_cell.s = (struct accumulators_grid_cell_st *)
+	                 Mem_Calloc( Globals.runModelYears,
+	                             sizeof(struct accumulators_grid_cell_st),
+	                            "_stat_init(Dist)");
+	    if (BmassFlags.ppt)
+	      _Ppt_grid_cell.s = (struct accumulators_grid_cell_st *)
+	                 Mem_Calloc( Globals.runModelYears,
+	                             sizeof(struct accumulators_grid_cell_st),
+	                            "_stat_init(PPT)");
+	    if (BmassFlags.tmp)
+	      _Temp_grid_cell.s = (struct accumulators_grid_cell_st *)
+	                 Mem_Calloc( Globals.runModelYears,
+	                             sizeof(struct accumulators_grid_cell_st),
+	                            "_stat_init(Temp)");
+
+		if (BmassFlags.grpb)
+		{
+			_Grp_grid_cell = (struct stat_grid_cell_st *)
+					 Mem_Calloc( Globals.grpCount, sizeof(struct stat_grid_cell_st), "_stat_init(Grp)");
+			ForEachGroup(rg)
+				_Grp_grid_cell[rg].s = (struct accumulators_grid_cell_st *)
+					 Mem_Calloc( Globals.runModelYears, sizeof(struct accumulators_grid_cell_st), "_stat_init(Grp[rg].s)");
+
+			if (BmassFlags.size)
+			{
+				_Gsize_grid_cell = (struct stat_grid_cell_st *)
+						Mem_Calloc( Globals.grpCount, sizeof(struct stat_grid_cell_st), "_stat_init(GSize)");
+				ForEachGroup(rg)
+					_Gsize_grid_cell[rg].s = (struct accumulators_grid_cell_st *)
+					    Mem_Calloc( Globals.runModelYears, sizeof(struct accumulators_grid_cell_st), "_stat_init(GSize[rg].s)");
+			}
+			if (BmassFlags.pr)
+			{
+				_Gpr_grid_cell = (struct stat_grid_cell_st *)
+						Mem_Calloc( Globals.grpCount, sizeof(struct stat_grid_cell_st), "_stat_init(Gpr)");
+				ForEachGroup(rg)
+					_Gpr_grid_cell[rg].s = (struct accumulators_grid_cell_st *)
+					    Mem_Calloc( Globals.runModelYears, sizeof(struct accumulators_grid_cell_st), "_stat_init(Gpr[rg].s)");
+			}
+		}
+
+		 if (BmassFlags.sppb)
+		{
+			_Spp_grid_cell = (struct stat_grid_cell_st *)
+					Mem_Calloc( Globals.sppCount, sizeof(struct stat_grid_cell_st), "_stat_init(Spp)");
+			ForEachSpecies(sp)
+				_Spp_grid_cell[sp].s = (struct accumulators_grid_cell_st *)
+				    Mem_Calloc( Globals.runModelYears, sizeof(struct accumulators_grid_cell_st), "_stat_init(Spp[sp].s)");
+
+			if (BmassFlags.indv)
+			{
+				_Indv_grid_cell = (struct stat_grid_cell_st *)
+						Mem_Calloc( Globals.sppCount, sizeof(struct stat_grid_cell_st), "_stat_init(Indv)");
+				ForEachSpecies(sp)
+					_Indv_grid_cell[sp].s = (struct accumulators_grid_cell_st *)
+					   Mem_Calloc( Globals.runModelYears, sizeof(struct accumulators_grid_cell_st), "_stat_init(Indv[sp].s)");
+			}
+		}
+
+  }
 
   if (BmassFlags.dist)
     _Dist.s = (struct accumulators_st *)
@@ -783,6 +873,224 @@ void stat_Output_AllMorts( void) {
 }
 
 
+//This function will create individual grid cell output file and copy values to calculate for calculating grid cell avg values
+/***********************************************************/
+void stat_Output_AllBmassAvg() {
+	  char buf[1024], tbuf[80], sep = BmassFlags.sep;
+	  IntS yr;
+	  GrpIndex rg;
+	  SppIndex sp;
+	  FILE *f;
+
+	  if (!BmassFlags.summary) return;
+
+	  f = OpenFile( Parm_name( F_BMassAvg), "w");
+
+	  buf[0]='\0';
+
+	  if (BmassFlags.header) {
+	    _make_header(buf);
+	    fprintf(f, "%s", buf);
+	  }
+
+	  for( yr=1; yr<= Globals.runModelYears; yr++) {
+	    *buf = '\0';
+	    if (BmassFlags.yr)
+	      sprintf(buf, "%d%c", yr, sep);
+
+	    if (BmassFlags.dist) {
+	      sprintf(tbuf, "%ld%c", _Dist.s[yr-1].nobs, sep);
+	      _Dist_grid_cell.s[yr-1].nobs = _Dist.s[yr-1].nobs;
+	      strcat(buf, tbuf);
+	    }
+
+		if (BmassFlags.ppt)
+		{
+			RealF avg = _get_avg(&_Ppt.s[yr - 1]);
+			RealF std = _get_std(&_Ppt.s[yr - 1]);
+			sprintf(tbuf, "%f%c%f%c", avg, sep, std, sep);
+			copyStruct(avg, std, &_Ppt_grid_cell.s[yr - 1]);
+			strcat(buf, tbuf);
+		}
+
+		if (BmassFlags.pclass)
+		{
+			sprintf(tbuf, "\"NA\"%c", sep);
+			strcat(buf, tbuf);
+		}
+
+		if (BmassFlags.tmp)
+		{
+			RealF avg = _get_avg(&_Temp.s[yr - 1]);
+			RealF std = _get_std(&_Temp.s[yr - 1]);
+			sprintf(tbuf, "%f%c%f%c", avg, sep, std, sep);
+			copyStruct(avg,std, &_Temp_grid_cell.s[yr - 1]);
+			strcat(buf, tbuf);
+		}
+
+		if (BmassFlags.grpb)
+		{
+			ForEachGroup(rg)
+			{
+				RealF avg = _get_avg(&_Grp[rg].s[yr - 1]);
+				sprintf(tbuf, "%f%c", avg, sep);
+				copyStruct(avg,0.0, &_Grp_grid_cell[rg].s[yr - 1]);
+				strcat(buf, tbuf);
+
+				if (BmassFlags.size)
+				{
+					RealF sizeAvg = _get_avg(&_Gsize[rg].s[yr - 1]);
+					sprintf(tbuf, "%f%c",sizeAvg , sep);
+					copyStruct(sizeAvg,0.0,&_Gsize_grid_cell[rg].s[yr - 1]);
+					strcat(buf, tbuf);
+				}
+
+				if (BmassFlags.pr)
+				{
+					RealF prAvg = _get_avg(&_Gpr[rg].s[yr - 1]);
+					RealF std = _get_std(&_Gpr[rg].s[yr - 1]);
+					sprintf(tbuf, "%f%c%f%c", prAvg, sep,std , sep);
+					copyStruct(prAvg,std,&_Gpr_grid_cell[rg].s[yr - 1]);
+					strcat(buf, tbuf);
+				}
+			}
+		}
+
+
+		if (BmassFlags.sppb)
+		{
+			ForEachSpecies(sp)
+			{
+				RealF spAvg = _get_avg(&_Spp[sp].s[yr - 1]);
+				sprintf(tbuf, "%f%c", spAvg, sep);
+				copyStruct(spAvg,0.0,&_Spp_grid_cell[sp].s[yr - 1]);
+				strcat(buf, tbuf);
+
+				if (BmassFlags.indv)
+				{
+					RealF indvAvg = _get_avg(&_Indv[sp].s[yr - 1]);
+					sprintf(tbuf, "%f%c", indvAvg, sep);
+				    copyStruct(indvAvg,0.0,&_Indv_grid_cell[sp].s[yr - 1]);
+					strcat(buf, tbuf);
+				}
+
+			}
+		}
+
+	    fprintf( f, "%s\n", buf);
+	  }  /* end of foreach year */
+	  CloseFile(&f);
+
+}
+
+//This function will create grid cell avg values output file
+void stat_Output_AllCellAvgBmass(const char * filename)
+{
+
+	char buf[1024], tbuf[80], sep = BmassFlags.sep;
+	IntS yr;
+	GrpIndex rg;
+	SppIndex sp;
+	FILE *f;
+
+	if (!BmassFlags.summary)
+		return;
+
+	f = OpenFile(filename, "w");
+
+	buf[0] = '\0';
+
+	if (BmassFlags.header)
+	{
+		_make_header(buf);
+		fprintf(f, "%s", buf);
+	}
+
+	for (yr = 1; yr <= Globals.runModelYears; yr++)
+	{
+
+		*buf = '\0';
+		if (BmassFlags.yr)
+			sprintf(buf, "%d%c", yr, sep);
+
+		if (BmassFlags.dist)
+		{
+			sprintf(tbuf, "%ld%c", _Dist_grid_cell.s[yr - 1].nobs, sep);
+			strcat(buf, tbuf);
+		}
+
+		if (BmassFlags.ppt)
+		{
+			sprintf(tbuf, "%f%c%f%c",
+					_get_gridcell_avg(&_Ppt_grid_cell.s[yr - 1]), sep,
+					_get_gridcell_std(&_Ppt_grid_cell.s[yr - 1]), sep);
+			strcat(buf, tbuf);
+		}
+
+		if (BmassFlags.pclass)
+		{
+			sprintf(tbuf, "\"NA\"%c", sep);
+			strcat(buf, tbuf);
+		}
+
+		if (BmassFlags.tmp)
+		{
+			sprintf(tbuf, "%f%c%f%c",
+					_get_gridcell_avg(&_Temp_grid_cell.s[yr - 1]), sep,
+					_get_gridcell_std(&_Temp_grid_cell.s[yr - 1]), sep);
+			strcat(buf, tbuf);
+		}
+
+		if (BmassFlags.grpb)
+		{
+			ForEachGroup(rg)
+			{
+				sprintf(tbuf, "%f%c", _get_gridcell_avg(&_Grp_grid_cell[rg].s[yr - 1]), sep);
+				strcat(buf, tbuf);
+
+				if (BmassFlags.size)
+				{
+					sprintf(tbuf, "%f%c", _get_gridcell_avg(&_Gsize_grid_cell[rg].s[yr - 1]), sep);
+					strcat(buf, tbuf);
+				}
+
+				if (BmassFlags.pr)
+				{
+					sprintf(tbuf, "%f%c%f%c",
+							_get_gridcell_avg(&_Gpr_grid_cell[rg].s[yr - 1]), sep,
+							_get_gridcell_std(&_Gpr_grid_cell[rg].s[yr - 1]), sep);
+					strcat(buf, tbuf);
+				}
+			}
+		}
+
+		if (BmassFlags.sppb)
+		{
+			ForEachSpecies(sp)
+			{
+		        sprintf(tbuf, "%f%c",_get_gridcell_avg( &_Spp_grid_cell[sp].s[yr-1]), sep);
+		        strcat( buf, tbuf);
+
+				if (BmassFlags.indv)
+				{
+		          sprintf(tbuf, "%f%c", _get_gridcell_avg( &_Indv_grid_cell[sp].s[yr-1]), sep);
+		          strcat( buf, tbuf);
+				}
+
+			}
+		}
+
+		fprintf(f, "%s\n", buf);
+	} /* end of foreach year */
+	CloseFile(&f);
+
+}
+
+
+
+
+
+
 /***********************************************************/
 void stat_Output_AllBmass(void) {
 
@@ -875,6 +1183,7 @@ void stat_Output_AllBmass(void) {
 
 }
 
+
 /***********************************************************/
 void stat_Output_Seed_Dispersal(const char * filename, const char sep, Bool makeHeader) {
 	//do stuff...
@@ -931,6 +1240,35 @@ static RealF _get_std( struct accumulators_st *p) {
 
 	return (RealF) sqrt(s);
 
+}
+
+
+
+static void copyStruct(RealF val,RealF std_val,struct accumulators_grid_cell_st *p)
+{
+	p->sum = p->sum + val;
+	p->sum_std = p->sum_std + std_val;
+
+}
+
+/***********************************************************/
+static RealF _get_gridcell_avg(struct accumulators_grid_cell_st *p)
+{
+
+	if (Globals.nCells == 0)
+		return 0.0;
+	RealF avg = (RealF) (p->sum / (double) Globals.nCells);
+	return avg;
+}
+
+
+/***********************************************************/
+static RealF _get_gridcell_std(struct accumulators_grid_cell_st *p)
+{
+	if (Globals.nCells == 0)
+			return 0.0;
+		RealF avg = (RealF) (p->sum_std / (double) Globals.nCells);
+		return avg;
 }
 
 

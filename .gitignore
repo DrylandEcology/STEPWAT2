@@ -1,8 +1,11 @@
-#eclipse project files
+# Eclipse project files
 ###################
-.cproject
 .project
 .settings/
+
+# CDT-specific
+###################
+.cproject
 
 # Compiled source #
 ###################
