@@ -99,7 +99,7 @@ struct stat_grid_cell_st {
 static void _init( void);
 static RealF _get_avg( struct accumulators_st *p);
 static RealF _get_std( struct accumulators_st *p);
-//Adding below three functions copying grid cell values and calculating avg and SD will be used in grid cells avg values output file
+//Adding below three functions for copying grid cell values,calculating avg and SD,these values will be used in grid cells avg output file
 static void copyStruct(RealF val,RealF std_val,struct accumulators_grid_cell_st *p );
 static RealF _get_gridcell_avg( struct accumulators_grid_cell_st *p);
 static RealF _get_gridcell_std( struct accumulators_grid_cell_st *p);
@@ -205,7 +205,7 @@ static void _init( void) {
   SppIndex sp;
   GrpIndex rg;
 
-// Memory allocation for local structures that will hold grid cells values 
+// Memory allocation for local structures that will hold grid cells values for calculating avg
   if (UseGrid)
    {
 
@@ -265,7 +265,7 @@ static void _init( void) {
 						Mem_Calloc( Globals.sppCount, sizeof(struct stat_grid_cell_st), "_stat_init(Indv)");
 				ForEachSpecies(sp)
 					_Indv_grid_cell[sp].s = (struct accumulators_grid_cell_st *)
-					   Mem_Calloc( Globals.runModelYears, sizeof(struct accumulators_grid_cell_st), "_stat_init(Indv[sp].s)");
+					    Mem_Calloc( Globals.runModelYears, sizeof(struct accumulators_grid_cell_st), "_stat_init(Indv[sp].s)");
 			}
 		}
 
@@ -970,7 +970,7 @@ void stat_Output_AllBmassAvg() {
 				{
 					RealF indvAvg = _get_avg(&_Indv[sp].s[yr - 1]);
 					sprintf(tbuf, "%f%c", indvAvg, sep);
-				    copyStruct(indvAvg,0.0,&_Indv_grid_cell[sp].s[yr - 1]);
+					copyStruct(indvAvg,0.0,&_Indv_grid_cell[sp].s[yr - 1]);
 					strcat(buf, tbuf);
 				}
 

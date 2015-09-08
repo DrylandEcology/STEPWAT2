@@ -57,7 +57,7 @@ Issues could possibly arise if you're trying to run a simulation that requires m
 	If any of the concepts I have been discussing seem confusing (or your knowledge of pointers feels rusty) I would suggest brushing up on your pointers/memory management.
 Some things to go over would be correct free/alloc/memcpy usage (keep in mind that a free is needed for every corresponding alloc call, some people seem not to comprehend that a pointer of pointers (ie. int**) must be freed in multiple steps, otherwise you lose memory), pointer arithmetic, and the difference between arrays & pointers in C.	
 ----------------------------------------------------------------------------------------------------------------	
-
+(AKT) : 9-7-2015 : Added extra Grid Cell Avg Output file for biomass values
 */
 /********************************************************/
 
