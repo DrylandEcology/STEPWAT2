@@ -49,6 +49,8 @@
 #         into ephemeral (this year's) biomass by
 #         grams_extra_biomass = mm_extra_ppt * xgrow_factor
 # veg_prod_type = 1 for tree, 2 for shrub, & 3 for grass.  Refer to soilwat's VegProd types in VegProd.h.
+# proportion_killed = 
+# proportion_recovered =
 #
 #TM - density values from Biondini et al 1998 - used density% in Table 2 for p.cool.forb (Achillea millefolium) and
 #	p.warm.forb (Grindelia squarrosa)
@@ -60,18 +62,18 @@
 # space parameter for sagebrush, p.cool.grass, p.warm.grass, a.cool.grass, a.warm.grass, forbs from Bradford & Lauenroth 2006
 # space parameter for shrubs was a guess (KP) 
 
-# name            space   density maxest slow    stretch xres  estann  on  startyr killyr  killfrq  extirp  mort  xgrow  veg_prod_type  
+# name            space   density maxest slow    stretch xres  estann  on  startyr killyr  killfrq  extirp  mort  xgrow  veg_prod_type  proportion_killed proportion_recovered
 
- sagebrush       0.325  1.0000      1  0.0500       1     1       0   1      1       0        0       0     0  0.00000   2
- a.cool.forb     0.030  5.0000      1  0.0500       2     1       0   1      1       0        0       0     1  0.00000   4
- a.warm.forb     0.020  5.0000      1  0.0500       2     1       0   1      1       0        0       0     1  0.00000   4
- p.cool.forb     0.100  5.0000      1  0.0500       2     1       0   1      1       0        0       0     1  0.00000   4
- p.warm.forb     0.075  5.0000      1  0.0500       2     1       0   1      1       0        0       0     1  0.00000   4
- a.cool.grass    0.050  50.000      1  0.0500       2     1       0   1      1       0        0       0     1  0.00000   3
- a.warm.grass    0.000  5.0000      1  0.0500       2     1       0   0      1       0        0       0     1  0.00000   3
- p.cool.grass    0.250  17.000      1  0.0500       2     1       0   1      1       0        0       0     1  0.00000   3
- p.warm.grass    0.050  11.000      1  0.0500       2     1       0   1      1       0        0       0     1  0.00000   3
- shrub    	     0.100  1.0000      1  0.0500       2     1       0   1      1       0        0       0     1  0.00000   2
+ sagebrush       0.325  1.0000      1  0.0500       1     1       0   1      1       0        0       0     0  0.00000   2  0.50  0.75
+ a.cool.forb     0.030  5.0000      1  0.0500       2     1       0   1      1       0        0       0     1  0.00000   4  0.60  0.50
+ a.warm.forb     0.020  5.0000      1  0.0500       2     1       0   1      1       0        0       0     1  0.00000   4  0.70  0.60
+ p.cool.forb     0.100  5.0000      1  0.0500       2     1       0   1      1       0        0       0     1  0.00000   4  0.80  0.80
+ p.warm.forb     0.075  5.0000      1  0.0500       2     1       0   1      1       0        0       0     1  0.00000   4  0.50  0.20
+ a.cool.grass    0.050  50.000      1  0.0500       2     1       0   1      1       0        0       0     1  0.00000   3  0.40  0.90
+ a.warm.grass    0.000  5.0000      1  0.0500       2     1       0   0      1       0        0       0     1  0.00000   3  0.20  0.80
+ p.cool.grass    0.250  17.000      1  0.0500       2     1       0   1      1       0        0       0     1  0.00000   3  0.30  0.70
+ p.warm.grass    0.050  11.000      1  0.0500       2     1       0   1      1       0        0       0     1  0.00000   3  0.40  0.90
+ shrub    	 0.100  1.0000      1  0.0500       2     1       0   1      1       0        0       0     1  0.00000   2  0.80  0.40
 
 [end]  # section end
 
