@@ -176,7 +176,9 @@ struct resourcegroup_st {
         xgrow,        /* ephemeral growth = mm extra ppt * xgrow */
         slowrate,     /* user-defined growthrate that triggers mortality */
         ppt_slope[3], /* res. space eqn: slope for wet/dry/norm yrs*/
-        ppt_intcpt[3];/* res. space eqn: intercept for "" ""*/
+        ppt_intcpt[3],/* res. space eqn: intercept for "" ""*/
+		proportion_killed,      /* proportion killing  */
+		proportion_recovered;        /* proportion re-growth */
   Bool succulent,
        use_extra_res, /* responds to other groups' unused resources */
        use_me,        /* establish no species of this group if false; TMartyn5.26.15 - this

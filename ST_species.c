@@ -355,6 +355,40 @@ SppIndex Species_Name2Index (const char *name) {
   return( (SppIndex)sp);
 }
 
+void Species_Proportion_Kill (const SppIndex sp, int killType, RealF proportionKilled ){
+	/*======================================================*/
+	/* PURPOSE */
+	/* Proportion Killed all established individuals in a species.
+	 *
+	 * Note the special loop construct.  we have to save the
+	 * pointer to next prior to killing because the object
+	 * is deleted.
+
+	/* HISTORY */
+	/* Chris Bennett @ LTER-CSU 11/15/2000            */
+	/*   8/3/01 - cwb - added linked list processing.
+	 *   09/23/15 -AT  -Added proportionKilled
+	 */
+
+	/*------------------------------------------------------*/
+	  IndivType *p = Species[sp]->IndvHead,
+	            *t;
+
+
+	  if (Species[sp]->max_age == 1) {
+	    Species_Update_Newsize(sp, -Species[sp]->relsize);
+	  } else {
+	    while(p) {
+	      t = p->Next;
+	      //indiv_Kill_Complete( p, killType);
+	      indiv_proportion_Kill( p, killType,proportionKilled);
+	      p = t;
+	    }
+	  }
+
+	  rgroup_DropSpecies(sp);
+
+}
 
 /**************************************************************/
 void Species_Kill (const SppIndex sp, int killType) {

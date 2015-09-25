@@ -1043,7 +1043,8 @@ void RGroup_Kill( GrpIndex rg) {
 	Int i;
 
 	ForEachEstSpp2( rg, i)
-		Species_Kill(RGroup[rg]->est_spp[i], 6);
+	      Species_Proportion_Kill(RGroup[rg]->est_spp[i], 6,RGroup[rg]->proportion_killed);
+		//Species_Kill(RGroup[rg]->est_spp[i], 6);
 }
 
 /**********************************************************/
