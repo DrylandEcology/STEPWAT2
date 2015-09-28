@@ -1,0 +1,62 @@
+# Mortflags input definition file STEPPEWAT
+# to control output quantities etc.
+
+# Anything after the first pound sign is a comment
+# Blank lines, white space, and comments may be used freely,
+# however, the order of input is important
+# This file outputs the number of individuals killed by resource
+# group and species (if specified) by age class (how old they were).
+# It is not how many individuals were killed in each year of the simulation.
+# Instead, this file summarizes how many individuals were killed at 1 year old,
+# 2 years old, etc. However, the number of rows in this output files corresponds
+# to how many years the simulation was run. Do not let this confuse you.
+# Estabs (first row of output) is the number of individuals that got
+# established across all years of the simulation.
+
+# sumry yearly head  sep   group  species
+  y       y       y    ,     y     y
+
+
+#===================================================
+# The input line is a set of yes/no flags that define
+# whether that parameter will be output, except for
+# the separator character.  For the flags, 'y' or 'yes'
+# (upper or lower case) indicates true. Anything else
+# (other than nothing) indicates false; ie, there must
+# be at least a place holder.
+#
+# sumry == y if mortality data summary to be output, 
+#     == n if mortality data summary not to be output. If 'n' then
+#     the rest of the flags are not processed.
+#      
+# yearly == if 'n', suppress printing yearly results.
+#          important if you've specified many iterations.
+#          if 'y', each output file contains a full run
+#          of the model with the iteration number as part
+#          of the filename.
+# head == output a line of field names as the first line of
+#      the output file.  Affects both yearly and summary output.
+# sep == specify one of the following as a separator
+#       t = tab, s = space, or any single character
+#       such as , | : etc (excluding '#','t', and 's').
+#
+# group == y if group level output desired
+#
+# species == y if species-level output desired
+#
+#===================================================================
+# Suggested future output.  Categories of output are written to
+# separate files. Preceed each entry with a hash mark # to turn it
+# off.  Items in a group without a filename are written as a separate
+# column in the last-specified file.
+#
+# all output is one or two columns preceeded by Iter, Year, Spp
+#
+# Estab(1) - number of indivs of spp established this year
+
+#ESTAB estabs/estabs.out  # number indivs of spp estab this year
+#MortAll   mort/kills.out
+#MortIntrin    mort/intrin.out #
+#MortNoRes     #output goes in intrin.out if none specified here
+#Mort
+
