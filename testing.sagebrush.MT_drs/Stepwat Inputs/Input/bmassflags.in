@@ -9,7 +9,7 @@
 #
 #
 # Sumry Yearly Header Sep YrNum Disturb PPT PClass Temp GrpBmass GrpPR GrpSize SppBmass Indivs
-     y      y	   y   ,     y      y   y     y     y       y     y       y       y      y
+     y      n	   y   ,     y      y   y     y     y       y     y       y       y      y
 #===================================================
 # The input line is a set of yes/no flags that define
 # whether that parameter will be output, except for

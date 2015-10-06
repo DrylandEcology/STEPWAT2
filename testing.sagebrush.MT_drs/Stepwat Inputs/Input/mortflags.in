@@ -14,7 +14,7 @@
 # established across all years of the simulation.
 
 # sumry yearly head  sep   group  species
-  y       y       y    ,     y     y
+  y       n       y    ,     y     y
 
 
 #===================================================
