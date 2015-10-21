@@ -798,7 +798,9 @@ void RGroup_Update_Newsize( GrpIndex rg) {
   /* ie, groupsize=1 when 1 indiv of each species is present */
   /* ie each indiv is an equivalent contributor, not based on biomass */
   ForEachEstSpp( sp, rg, n) sumsize += Species[sp]->relsize;
-  RGroup[rg]->relsize = sumsize / (RealF) RGroup[rg]->max_spp;
+
+//For calculating rgroup relSize, sumsize should be divide by no of current established species in rgroup rather than total no of species in rgroup.
+  RGroup[rg]->relsize = sumsize / (RealF) RGroup[rg]->est_count;
 
   if (RGroup[rg]->max_age != 1) {
     /* compute the contribution of each indiv to the group's size */

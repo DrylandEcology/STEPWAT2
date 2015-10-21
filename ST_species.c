@@ -33,6 +33,8 @@ Bool indiv_New( SppIndex sp);
 void indiv_Kill_Complete( IndivType *ndv, int killType);
 void indiv_proportion_Kill( IndivType *ndv, int killType,RealF proportionKilled);
 
+void _delete (IndivType *ndv);
+
 /*------------------------------------------------------*/
 /* Modular functions only used on one or two specific   */
 /* places; that is, they are not generally useful       */
@@ -270,6 +272,12 @@ void Species_Update_Newsize( SppIndex sp, RealF newsize ) {
     newsize = -Species[sp]->relsize;
 
   Species[sp]->relsize += newsize;
+
+  if(LT(Species[sp]->relsize, 0.0) || ZERO(Species[sp]->relsize)){
+	 //Warning:ST_Species.c Species_Update_Newsize() Species[sp]->relsize is either zero or negative
+	  Species[sp]->relsize = 0.0;
+  }
+
   RGroup_Update_Newsize(rg);
 
   if ( Species[sp]->max_age != 1) {
@@ -372,6 +380,13 @@ void Species_Proportion_Kill (const SppIndex sp, int killType, RealF proportionK
 	 */
 
 	/*------------------------------------------------------*/
+#define xF_DELTA (20*F_DELTA)
+#define xD_DELTA (20*D_DELTA)
+#define ZERO(x) \
+( (sizeof(x) == sizeof(float)) \
+  ? ((x)>-xF_DELTA && (x)<xF_DELTA) \
+  : ((x)>-xD_DELTA && (x)<xD_DELTA) )
+
 	  IndivType *p = Species[sp]->IndvHead, *t;
 	
 	  if (Species[sp]->max_age == 1) {
@@ -382,13 +397,26 @@ void Species_Proportion_Kill (const SppIndex sp, int killType, RealF proportionK
 	      indiv_proportion_Kill( p, killType,proportionKilled);
 	      p = t;
 	    }
-	  }
+	  }	
 
-	  if (proportionKilled > 0.999)
-	  	{
-		  rgroup_DropSpecies(sp);
-	  	}
+  if ( LT(Species[sp]->relsize, 0.0)  || ZERO(Species[sp]->relsize) )
+	{
+	//"Warning:ST_species.c Species_Proportion_Kill()  Species[sp]->relsize is either zero or negative so deleting all the individual in species and making species rel_size to zero
+	    Species[sp]->relsize = 0.0 ;
+		IndivType *p1 = Species[sp]->IndvHead, *t1;
 
+		while (p1)
+		{
+			t1 = p1->Next;
+			_delete(p);
+			p1 = t1;
+		}
+		rgroup_DropSpecies(sp);
+	}
+
+#undef xF_DELTA
+#undef xD_DELTA
+#undef ZERO
 
 }
 
