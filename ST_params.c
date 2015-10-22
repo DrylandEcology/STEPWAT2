@@ -900,6 +900,7 @@ static void _rgroup_init( void) {
        LogError(logfp, LOGFATAL, "%s: Too few columns in groups",
                MyFileName);
      }
+   //  printf("prop_killed= %0.6f, prop_recovery=%0.6f \n",prop_killed,prop_recovered );
      _rgroup_add1( name, space, density, estab,
                    slow, stretch, xres, estann,
                    turnon, styr, killyr, killfreq,
@@ -982,7 +983,7 @@ static void _rgroup_add1( char name[], RealF space, RealF density,
   RGroup[rg]->veg_prod_type = veg_prod_type;
   RGroup[rg]->proportion_killed = prop_killed;
   RGroup[rg]->proportion_recovered = prop_recovered;
-  printf("grp= %d prop_killed= %f, prop_recovery=%f \n",rg, RGroup[rg]->proportion_killed,RGroup[rg]->proportion_recovered );
+  //printf("grp= %d prop_killed= %0.6f, prop_recovery=%0.6f \n",rg, RGroup[rg]->proportion_killed,RGroup[rg]->proportion_recovered );
 
 
   RGroup[rg]->extirpated    = FALSE;

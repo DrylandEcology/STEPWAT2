@@ -171,6 +171,7 @@ int main(int argc, char **argv) {
 			parm_Initialize(iter);
 
 		Plot_Initialize();
+		RandSeed(Globals.randseed);
 		Globals.currIter = iter;
 
 		/*Debug_AddByIter( iter); */

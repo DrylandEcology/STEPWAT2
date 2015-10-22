@@ -31,6 +31,7 @@ void rgroup_AddSpecies( GrpIndex rg, SppIndex sp) ;
 void rgroup_DropSpecies( SppIndex sp) ;
 Bool indiv_New( SppIndex sp);
 void indiv_Kill_Complete( IndivType *ndv, int killType);
+void indiv_proportion_Kill( IndivType *ndv, int killType,RealF proportionKilled);
 
 /*------------------------------------------------------*/
 /* Modular functions only used on one or two specific   */
