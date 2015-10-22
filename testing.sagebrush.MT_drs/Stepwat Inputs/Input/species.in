@@ -91,13 +91,9 @@
 #TM - gusa and chvi rates from C&L 1990
 #ARTR age from Ferguson 1964- Annual rings in big sagebrush
 # need to re-assess maxbio values for pose and koma
-#
-#TM 10.6.2015 - testing different irate for ARTR: found 0.02 or 0.03 works best for ARTR
-#		ALSO tested max biomass for ARTR - found 400 worked best but is flexible 200-500 with above irates
-#		ALSO tested max age for ARTR - found that model is not very sensitive to max age but literature shows 100-150 max age
 # name     rg  age  irate    ratep slow disturb pestab     eind minbio  maxbio  clonal vegindv tclass  cosurv  onoff
 
- artr       1   150 0.02000 0.900    2       3    0.05000    2   2.000  400.00      n       0       2  0.0100     1
+ artr       1   150 0.03000 0.900    2       3    0.05000    2   2.000  500.00      n       0       2  0.0100     1
  trdu       2    1  0.94700 0.900    2       3    0.01500    5   0.035   4.700      n       0       2  0.0000     0
  cryp       2    1  0.94700 0.900    2       3    0.01500    5   0.035   4.700      n       0       2  0.0000     1
  amre       3    1  0.94700 0.900    2       3    0.01500    5   0.035   4.700      n       0       2  0.0000     0
