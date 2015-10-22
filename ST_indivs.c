@@ -44,7 +44,7 @@ void indiv_proportion_Kill( IndivType *ndv, int killType,RealF proportKilled);
 /*********** Locally Used Function Declarations ************/
 /***********************************************************/
 static IndivType *_create ( void);
-void _delete (IndivType *ndv);
+static void _delete (IndivType *ndv);
 
 /***********************************************************/
 /****************** Begin Function Code ********************/
@@ -204,8 +204,9 @@ void indiv_proportion_Kill( IndivType *ndv, int killType, RealF proportKilled){
 	/* Chris Bennett @ LTER-CSU 6/15/2000
 	 * 09/23/15 -AT  -Added proportionKilled           */
 	/*------------------------------------------------------*/
-   
-   if (ndv->age > Species[ndv->myspecies]->max_age)
+
+
+	if (ndv->age > Species[ndv->myspecies]->max_age)
 	{
 		LogError(logfp, LOGWARN,
 				"%s dies older than max_age (%d > %d). Iter=%d, Year=%d\n",
@@ -219,7 +220,7 @@ void indiv_proportion_Kill( IndivType *ndv, int killType, RealF proportKilled){
 
 	species_Update_Kills(ndv->myspecies, ndv->age);
 
-	if (proportKilled > 0.99)
+	if (proportKilled > 0.999)
 	{
 		Species_Update_Newsize(ndv->myspecies, -ndv->relsize);
 		_delete(ndv);
@@ -227,7 +228,6 @@ void indiv_proportion_Kill( IndivType *ndv, int killType, RealF proportKilled){
 	else
 	{
 		RealF newSize = -(ndv->relsize * proportKilled);
-		ndv->relsize = ndv->relsize + newSize;
 		Species_Update_Newsize(ndv->myspecies, newSize);
 	}
 }
@@ -260,7 +260,7 @@ void indiv_Kill_Complete( IndivType *ndv, int killType) {
 }
 
 /**************************************************************/
-void _delete (IndivType *ndv) {
+static void _delete (IndivType *ndv) {
 /*======================================================*/
 /* PURPOSE */
 /* Local routine to remove the data object of an individual.

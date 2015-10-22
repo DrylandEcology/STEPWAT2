@@ -981,7 +981,8 @@ static void _rgroup_add1( char name[], RealF space, RealF density,
   RGroup[rg]->use_mort      = itob(mort);
   RGroup[rg]->veg_prod_type = veg_prod_type;
   RGroup[rg]->proportion_killed = prop_killed;
-  RGroup[rg]->proportion_recovered = prop_recovered;  
+  RGroup[rg]->proportion_recovered = prop_recovered;
+  printf("grp= %d prop_killed= %f, prop_recovery=%f \n",rg, RGroup[rg]->proportion_killed,RGroup[rg]->proportion_recovered );
 
 
   RGroup[rg]->extirpated    = FALSE;
