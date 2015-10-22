@@ -31,7 +31,6 @@ void rgroup_AddSpecies( GrpIndex rg, SppIndex sp) ;
 void rgroup_DropSpecies( SppIndex sp) ;
 Bool indiv_New( SppIndex sp);
 void indiv_Kill_Complete( IndivType *ndv, int killType);
-void indiv_proportion_Kill( IndivType *ndv, int killType,RealF proportionKilled);
 
 /*------------------------------------------------------*/
 /* Modular functions only used on one or two specific   */
@@ -368,27 +367,26 @@ void Species_Proportion_Kill (const SppIndex sp, int killType, RealF proportionK
 	/* HISTORY */
 	/* Chris Bennett @ LTER-CSU 11/15/2000            */
 	/*   8/3/01 - cwb - added linked list processing.
-	 *   09/23/15 - AT  -Added proportionKilled
+	 *   09/23/15 -AT  -Added proportionKilled
 	 */
 
 	/*------------------------------------------------------*/
-	  IndivType *p = Species[sp]->IndvHead, *t;
-	
+	  IndivType *p = Species[sp]->IndvHead,
+	            *t;
+
+
 	  if (Species[sp]->max_age == 1) {
 	    Species_Update_Newsize(sp, -Species[sp]->relsize);
 	  } else {
 	    while(p) {
 	      t = p->Next;
+	      //indiv_Kill_Complete( p, killType);
 	      indiv_proportion_Kill( p, killType,proportionKilled);
 	      p = t;
 	    }
 	  }
 
-	  if (proportionKilled > 0.999)
-	  	{
-		  rgroup_DropSpecies(sp);
-	  	}
-
+	  rgroup_DropSpecies(sp);
 
 }
 

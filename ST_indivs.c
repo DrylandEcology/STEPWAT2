@@ -39,7 +39,7 @@ Bool indiv_Kill_Partial( MortalityType code,
                           IndivType *ndv,
                           RealF killamt);
 void indiv_Kill_Complete( IndivType *ndv, int killType);
-void indiv_proportion_Kill( IndivType *ndv, int killType,RealF proportKilled);
+void indiv_proportion_Kill( IndivType *ndv, int killType,RealF proportionKilled);
 
 /*********** Locally Used Function Declarations ************/
 /***********************************************************/
@@ -193,7 +193,7 @@ Bool indiv_Kill_Partial( MortalityType code,
   return( result);
 }
 
-void indiv_proportion_Kill( IndivType *ndv, int killType, RealF proportKilled){
+void indiv_proportion_Kill( IndivType *ndv, int killType,RealF proportionKilled){
 	/*======================================================*/
 	/* PURPOSE */
 	/* Remove individual proportionally and adjust relative sizes of the
@@ -202,34 +202,30 @@ void indiv_proportion_Kill( IndivType *ndv, int killType, RealF proportKilled){
 	*/
 	/* HISTORY */
 	/* Chris Bennett @ LTER-CSU 6/15/2000
-	 * 09/23/15 -AT  -Added proportionKilled           */
+	 *  09/23/15 -AT  -Added proportionKilled           */
+
 	/*------------------------------------------------------*/
 
+	  if( ndv->age > Species[ndv->myspecies]->max_age ) {
+	    LogError(logfp, LOGWARN, "%s dies older than max_age (%d > %d). Iter=%d, Year=%d\n",
+	                    Species[ndv->myspecies]->name,
+	                    ndv->age, Species[ndv->myspecies]->max_age,
+	                    Globals.currIter, Globals.currYear);
+	  }
+	  if(!UseGrid)
+		  insertIndivKill(ndv->id,killType);
 
-	if (ndv->age > Species[ndv->myspecies]->max_age)
-	{
-		LogError(logfp, LOGWARN,
-				"%s dies older than max_age (%d > %d). Iter=%d, Year=%d\n",
-				Species[ndv->myspecies]->name, ndv->age,
-				Species[ndv->myspecies]->max_age, Globals.currIter,
-				Globals.currYear);
-	}
+	  species_Update_Kills(ndv->myspecies, ndv->age);
 
-	if (!UseGrid)
-		insertIndivKill(ndv->id, killType);
+	  if(proportionKilled >0.999){
+		   Species_Update_Newsize(ndv->myspecies, -ndv->relsize);
+		  _delete(ndv);
+	  }else{
+		  RealF newSize = -(ndv->relsize * proportionKilled);
+		  printf("\n proportionKilled = %f, oldSize = %f, newSize for reduction = %f \n", ndv->relsize, newSize);
+		  Species_Update_Newsize(ndv->myspecies, newSize);
+	  }
 
-	species_Update_Kills(ndv->myspecies, ndv->age);
-
-	if (proportKilled > 0.999)
-	{
-		Species_Update_Newsize(ndv->myspecies, -ndv->relsize);
-		_delete(ndv);
-	}
-	else
-	{
-		RealF newSize = -(ndv->relsize * proportKilled);
-		Species_Update_Newsize(ndv->myspecies, newSize);
-	}
 }
 
 /**************************************************************/

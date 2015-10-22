@@ -1040,12 +1040,11 @@ void RGroup_Kill( GrpIndex rg) {
 /* Chris Bennett @ LTER-CSU 11/27/2000            */
 
 /*------------------------------------------------------*/
-	RealF proportion_killed= RGroup[rg]->proportion_killed;	
-	Int j;
-	SppIndex sp;
-	ForEachEstSpp( sp, rg, j) {		
-		    Species_Proportion_Kill(RGroup[rg]->est_spp[j], 6,proportion_killed);
-    }
+	Int i;
+
+	ForEachEstSpp2( rg, i)
+	      Species_Proportion_Kill(RGroup[rg]->est_spp[i], 6,RGroup[rg]->proportion_killed);
+		//Species_Kill(RGroup[rg]->est_spp[i], 6);
 }
 
 /**********************************************************/
