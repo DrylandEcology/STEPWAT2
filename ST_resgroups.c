@@ -797,8 +797,21 @@ void RGroup_Update_Newsize( GrpIndex rg) {
   /* first get group's relative size adjusted for num indivs */
   /* ie, groupsize=1 when 1 indiv of each species is present */
   /* ie each indiv is an equivalent contributor, not based on biomass */
-  ForEachEstSpp( sp, rg, n) sumsize += Species[sp]->relsize;
-  RGroup[rg]->relsize = sumsize / (RealF) RGroup[rg]->max_spp;
+	ForEachEstSpp( sp, rg, n)
+		sumsize += Species[sp]->relsize;
+
+	if (RGroup[rg]->est_count < 0)
+		RGroup[rg]->est_count = 0;
+
+	if (RGroup[rg]->est_count == 0 || LT(sumsize, 0.0))
+	{
+		RGroup[rg]->relsize = 0.0;
+	}
+	else
+	{
+		//For calculating rgroup relSize, sumsize should be divide by no of current established species in rgroup rather than total no of species in rgroup.
+		RGroup[rg]->relsize = sumsize / (RealF) RGroup[rg]->est_count;
+	}
 
   if (RGroup[rg]->max_age != 1) {
     /* compute the contribution of each indiv to the group's size */
@@ -1044,7 +1057,6 @@ void RGroup_Kill( GrpIndex rg) {
 
 	ForEachEstSpp2( rg, i)
 	      Species_Proportion_Kill(RGroup[rg]->est_spp[i], 6,RGroup[rg]->proportion_killed);
-		//Species_Kill(RGroup[rg]->est_spp[i], 6);
 }
 
 /**********************************************************/

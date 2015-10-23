@@ -44,7 +44,9 @@ void indiv_proportion_Kill( IndivType *ndv, int killType,RealF proportionKilled)
 /*********** Locally Used Function Declarations ************/
 /***********************************************************/
 static IndivType *_create ( void);
-static void _delete (IndivType *ndv);
+
+//_delete function also called from ST_species.c
+void _delete (IndivType *ndv);
 
 /***********************************************************/
 /****************** Begin Function Code ********************/
@@ -193,7 +195,7 @@ Bool indiv_Kill_Partial( MortalityType code,
   return( result);
 }
 
-void indiv_proportion_Kill( IndivType *ndv, int killType,RealF proportionKilled){
+void indiv_proportion_Kill( IndivType *ndv, int killType,RealF proportKilled){
 	/*======================================================*/
 	/* PURPOSE */
 	/* Remove individual proportionally and adjust relative sizes of the
@@ -212,19 +214,23 @@ void indiv_proportion_Kill( IndivType *ndv, int killType,RealF proportionKilled)
 	                    ndv->age, Species[ndv->myspecies]->max_age,
 	                    Globals.currIter, Globals.currYear);
 	  }
-	  if(!UseGrid)
-		  insertIndivKill(ndv->id,killType);
 
-	  species_Update_Kills(ndv->myspecies, ndv->age);
+	  if (!UseGrid)
+	  		insertIndivKill(ndv->id, killType);
 
-	  if(proportionKilled >0.999){
-		   Species_Update_Newsize(ndv->myspecies, -ndv->relsize);
-		  _delete(ndv);
-	  }else{
-		  RealF newSize = -(ndv->relsize * proportionKilled);
-		  printf("\n proportionKilled = %f, oldSize = %f, newSize for reduction = %f \n", ndv->relsize, newSize);
-		  Species_Update_Newsize(ndv->myspecies, newSize);
-	  }
+	  	species_Update_Kills(ndv->myspecies, ndv->age);
+
+	  	if (proportKilled > 0.999)
+	  	{
+	  		Species_Update_Newsize(ndv->myspecies, -ndv->relsize);
+	  		_delete(ndv);
+	  	}
+	  	else
+	  	{
+	  		RealF newSize = -(ndv->relsize * proportKilled);
+	  		ndv->relsize = ndv->relsize + newSize;
+	  		Species_Update_Newsize(ndv->myspecies, newSize);
+	  	}
 
 }
 
@@ -256,7 +262,7 @@ void indiv_Kill_Complete( IndivType *ndv, int killType) {
 }
 
 /**************************************************************/
-static void _delete (IndivType *ndv) {
+void _delete (IndivType *ndv) {
 /*======================================================*/
 /* PURPOSE */
 /* Local routine to remove the data object of an individual.

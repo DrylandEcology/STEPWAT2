@@ -49,7 +49,9 @@
 #         into ephemeral (this year's) biomass by
 #         grams_extra_biomass = mm_extra_ppt * xgrow_factor
 # veg_prod_type = 1 for tree, 2 for shrub, & 3 for grass.  Refer to soilwat's VegProd types in VegProd.h.
-#
+# proportion_killed = proportionally killed all members of the group at end of the given kill year.
+# proportion_recovered =
+
 #TM - density values from Biondini et al 1998 - used density% in Table 2 for p.cool.forb (Achillea millefolium) and
 #	p.warm.forb (Grindelia squarrosa)
 #TM - density values for annual cool grasses from (http://www.fs.fed.us/database/feis/plants/graminoid/brojap/all.html) converted 56 stems/sqft to stems/sqmeter

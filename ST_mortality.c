@@ -209,7 +209,7 @@ void mort_EndOfYear( void) {
       if ( LT(g->killfreq, 1.0) ) {
         if (RandUni() <= g->killfreq)
           g->killyr = Globals.currYear;
-      } else if ( (Globals.currYear - g->startyr) % (IntU)g->killfreq == 0) {
+      } else if ( (Globals.currYear - (g->startyr-1)) % (IntU)g->killfreq == 0) {
         g->killyr = Globals.currYear;
       }
     }
