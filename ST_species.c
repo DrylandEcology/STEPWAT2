@@ -403,7 +403,7 @@ void Species_Proportion_Kill (const SppIndex sp, int killType, RealF proportionK
 			while (p1)
 			{
 				t1 = p1->Next;
-				_delete(p);
+				_delete(p1);
 				p1 = t1;
 			}
 			rgroup_DropSpecies(sp);
