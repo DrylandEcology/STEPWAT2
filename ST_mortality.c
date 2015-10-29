@@ -213,15 +213,15 @@ void mort_EndOfYear( void) {
         g->killyr = Globals.currYear;
       }
     }
-
+  
     if (Globals.currYear == RGroup[rg]->extirp)
        rgroup_Extirpate( rg );
     else if (Globals.currYear == RGroup[rg]->killyr)
        RGroup_Kill( rg );
   }
 
-   _kill_extra_growth();
-   _kill_annuals();
+ _kill_extra_growth();
+ _kill_annuals();
 
 }
 
@@ -653,10 +653,11 @@ static void _kill_annuals( void) {
   ForEachGroup(rg) {
     if (RGroup[rg]->max_age == 1) {
       for(i=RGroup[rg]->est_count, sp=RGroup[rg]->est_spp[i-1]; i>0; sp=RGroup[rg]->est_spp[(--i) - 1]){
-        Species_Kill(sp,4);
+              Species_Proportion_Kill(sp, 4, RGroup[rg]->proportion_killed);
+              //above calls new function and kill all annual individuals (TEM 10-27-2015))
+          }
       }
     }
-  }
 
 }
 

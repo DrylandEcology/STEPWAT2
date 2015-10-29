@@ -126,7 +126,7 @@ void Species_Add_Indiv( SppIndex sp, Int new_indivs) {
     Species[sp]->est_count++;
     newsize += Species[sp]->relseedlingsize;
   }
-
+  
   /* add species to species group if new*/
   rgroup_AddSpecies( rg, sp);
 
@@ -176,7 +176,7 @@ void species_Update_Estabs( SppIndex sp, IntS num ) {
 
    Species[sp]->estabs += num;
    RGroup[Species[sp]->res_grp]->estabs += num;
-
+   
 }
 
 /**************************************************************/
@@ -272,12 +272,26 @@ void Species_Update_Newsize( SppIndex sp, RealF newsize ) {
     newsize = -Species[sp]->relsize;
 
   Species[sp]->relsize += newsize;
+  
+  // if (Species[sp]->max_age == 1) 
+  //  printf("before hard reset: indiv =%d, sp relSize=%0.6f\n\n",Species[sp]->est_count,Species[sp]->relsize );
+  
+  /* this is a hard coded reset - if relsize is greater than 100 
+   the code will set the species relsize to 100 */
+  // (TEM 10-27-2015)
+  if ( GT(Species[sp]->relsize, 100.) ) {
+      Species[sp]->relsize = 100;
+  }
+  
+  //if (Species[sp]->max_age == 1) 
+  // printf("after hard reset: indiv =%d, sp relSize=%0.6f\n\n",Species[sp]->est_count,Species[sp]->relsize );
   RGroup_Update_Newsize(rg);
 
-  if ( Species[sp]->max_age != 1) {
+  //if ( Species[sp]->max_age != 1) {
+  //above deleted to include annuals (TEM 10-27-2015)
     /* make sure zeros are actually zeroed */
     if (Species[sp]->est_count < 0) Species[sp]->est_count = 0;
-  }
+  //}
   if (ZERO(Species[sp]->relsize))  Species[sp]->relsize = 0.0;
 
 
@@ -385,7 +399,7 @@ void Species_Proportion_Kill (const SppIndex sp, int killType, RealF proportionK
 	            *t;
 
 	  if (Species[sp]->max_age == 1) {
-	    Species_Update_Newsize(sp, -Species[sp]->relsize);
+              Species_Update_Newsize(sp, -Species[sp]->relsize);
 	  } else {
 	    while(p) {
 	      t = p->Next;

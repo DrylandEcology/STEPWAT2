@@ -288,7 +288,7 @@ static RealF _get_annual_maxestab( SppIndex sp) {
 
   for (i=1; i <= s->viable_yrs; i++)
     sum += s->seedprod[i-1] / pow(i, s->exp_decay);
-
+ 
   return sum;
 }
 
@@ -303,7 +303,9 @@ static void _add_annual_seedprod(SppIndex sp, RealF pr) {
     s->seedprod[i] = s->seedprod[i-1];
   }
 
-  s->seedprod[i] = LT(pr, 0.) ? 0. : s->max_seed_estab * exp(-pr);
+ s->seedprod[i] = LT(pr, 0.) ? 0. : s->max_seed_estab * exp(-pr) ;
+  //s->seedprod[i] = LT(pr, 0.) ? 0. : s->max_seed_estab * 1/pr ;
+  //s->seedprod[i] = LT(pr, 0.) ? 0. : s->max_seed_estab * s->relsize;
 }
 
 static RealF _ppt2resource( RealF ppt, GroupType *g ) {
@@ -422,7 +424,8 @@ void rgroup_ResPartIndiv( void ) {
 
   /* -- apportion each group's resources to individuals */
   ForEachGroup(rg) { g = RGroup[rg];
-    if (g->max_age == 1 ) continue;  /* annuals don't have indivs */
+    //if (g->max_age == 1 ) continue;  /* annuals don't have indivs */
+  // removed to give annuals individuals (TEM 10-27-2015)
     if ( !g->est_count ) continue;
 
 
@@ -509,8 +512,9 @@ void rgroup_Grow( void) {
         gmod; /* growth factor modifier*/
   IndivType *ndv;  /* temp pointer for current indiv */
 /*------------------------------------------------------*/
-   ForEachGroup(rg) { g = RGroup[rg];
-     if (g->max_age == 1) continue; /* annuals already taken care of */
+  ForEachGroup(rg) { g = RGroup[rg];
+     //if (g->max_age == 1) continue; /* annuals already taken care of */
+    // removed to allow annuals to grow (TEM 10-27-2015))
 
     if (! g->est_count)
       continue;
@@ -524,8 +528,8 @@ void rgroup_Grow( void) {
     /* grow individuals and increment size */
     /* all groups are either all annual or all perennial */
     ForEachEstSpp(sp, rg, j) {  s = Species[sp];
-
-      sppgrowth = 0.0;
+    
+        sppgrowth = 0.0;
 	if(!Species[sp]->allow_growth)
 		continue;
 
@@ -566,11 +570,11 @@ void rgroup_Grow( void) {
       } /*END ForEachIndiv */
 
       Species_Update_Newsize(sp, sppgrowth);
-
+    
     } /* ENDFOR j (for each species)*/
 
     _extra_growth(rg);
-
+     
   } /* END ForEachGroup(rg)*/
 
 
@@ -611,7 +615,8 @@ static void _extra_growth( GrpIndex rg ) {
 
 
 
-    if ( RGroup[rg]->max_age == 1) return;
+    //if ( RGroup[rg]->max_age == 1) return;
+    // removed to allow extra growth in annuals (TEM 10-27-2015))
     if ( ZRO(RGroup[rg]->xgrow) ) return;
     if (!RGroup[rg]->use_extra_res) return;
 
@@ -691,26 +696,34 @@ void rgroup_Establish( void) {
     if (Globals.currYear < RGroup[rg]->startyr) {
       g->regen_ok = FALSE;
 
-    } else  if ( g->max_age == 1 ) {
+    } else  ///if ( g->max_age == 1 ) {
       /* see similar logic in mort_EndOfYear() for perennials */
-      if ( GT( g->killfreq, 0.) ) {
-        if ( LT(g->killfreq, 1.0) ) {
-          if (RandUni() <= g->killfreq)
-            g->regen_ok = FALSE;
-        } else if ( (Globals.currYear - g->startyr) % (IntU)g->killfreq == 0) {
-          g->regen_ok = FALSE;
-        }
-      }
+     /// if ( GT( g->killfreq, 0.) ) {
+     ///   if ( LT(g->killfreq, 1.0) ) {
+     ///     if (RandUni() <= g->killfreq)
+     ///       g->regen_ok = FALSE;
+     ///   } else if ( (Globals.currYear - g->startyr) % (IntU)g->killfreq == 0) {
+     ///     g->regen_ok = FALSE;
+     ///   }
+     /// }
 
-    } else {
-
-
+    ///} else 
+        
+        //above removed allow annuals to establish with other species (TEM 10-27-2015)
+    {
+    
       ForEachGroupSpp(sp,rg,i) {
         if (! Species[sp]->use_me) continue;
 	if(! Species[sp]->allow_growth)
 		continue;
-
-        num_est = Species_NumEstablish(sp);
+        if (Species[sp]->max_age==1) {
+            num_est = _get_annual_maxestab(sp);
+            // above inserted to establish individuals for annuals
+            // num_est for individuals is the number called from the seedbank in 
+            //     _get_annual_maxestab() (TEM 10-27-2015)
+        } else {
+        
+        num_est = Species_NumEstablish(sp);}
 
         if (num_est) {
           /* printf("%d %d %d %d\n",
@@ -813,13 +826,13 @@ void RGroup_Update_Newsize( GrpIndex rg) {
 		RGroup[rg]->relsize = sumsize / (RealF) RGroup[rg]->est_count;
 	}
 
-  if (RGroup[rg]->max_age != 1) {
+  ///if (RGroup[rg]->max_age != 1) {
     /* compute the contribution of each indiv to the group's size */
     indivs = RGroup_GetIndivs( rg, SORT_0, &numindvs);
     for(n=0; n < numindvs; n++)
       indivs[n]->grp_res_prop = indivs[n]->relsize / sumsize;
     Mem_Free(indivs);
-  }
+  ///}
 
   /* double check some assumptions */
   if (RGroup[rg]->est_count < 0)   RGroup[rg]->est_count = 0;
