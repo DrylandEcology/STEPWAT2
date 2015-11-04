@@ -42,6 +42,8 @@
 
   void mort_Main( Bool *killed);
   void mort_EndOfYear( void);
+  void proportion_Recovery(void);
+  void grazing_EndOfYear( void);
 
   void parm_Initialize( Int);
   void parm_SetFirstName( char *s);
@@ -57,6 +59,9 @@
   void stat_Output_AllBmass(void) ;
   
   void runGrid( void ); //for the grid... declared in ST_grid.c
+
+  void _kill_annuals(void);
+  void _kill_extra_growth(void);
 
 #ifdef DEBUG_MEM
   #define chkmem_f CheckMemoryIntegrity(FALSE);
@@ -200,12 +205,20 @@ int main(int argc, char **argv) {
 
 			rgroup_IncrAges();
 
+           // Added functions for Grazing and mort_end_year as proportional killing effect before exporting biomass end of the year
+			grazing_EndOfYear();
+
+			mort_EndOfYear();
+
 			stat_Collect(year);
 
 			if (BmassFlags.yearly)
 				output_Bmass_Yearly(year);
 
-			mort_EndOfYear();
+            // Moved kill annual and kill extra growth after we export biomass, we also doing recoverly after killing year
+			_kill_annuals();
+			 proportion_Recovery();
+			_kill_extra_growth();
 
 			ForEachGroup(g) {
 				insertRGroupYearInfo(g);

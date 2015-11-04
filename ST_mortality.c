@@ -43,6 +43,8 @@ void check_sizes(const char *); /* found in main */
 /* (like C++ friend functions) but have to be declared. */
 void mort_Main( Bool *killed);
 void mort_EndOfYear( void);
+void proportion_Recovery(void);
+void grazing_EndOfYear( void);
 
 /*********** Locally Used Function Declarations ************/
 /***********************************************************/
@@ -55,8 +57,9 @@ static void _no_resources( GrpIndex rg);
 static void _age_independent( const SppIndex sp);
 static void _stretched_clonal( GrpIndex rg, Int start, Int last,
                            IndivType *nlist[]);
-static void _kill_annuals(void);
-static void _kill_extra_growth(void);
+//Nov 4th 15 -AT - Made below two function non-static as they also getting call from main.c
+void _kill_annuals(void);
+void _kill_extra_growth(void);
 
 
 /************ File-Level Variable Declarations *************/
@@ -203,13 +206,16 @@ void mort_EndOfYear( void) {
   GrpIndex rg;
   GroupType *g;
 
-  ForEachGroup(rg) { g = RGroup[rg];
+  ForEachGroup(rg) {
+	g = RGroup[rg];
 
     if ( GT( g->killfreq, 0.) ) {
       if ( LT(g->killfreq, 1.0) ) {
         if (RandUni() <= g->killfreq)
           g->killyr = Globals.currYear;
       } else if ( (Globals.currYear - (g->startyr-1)) % (IntU)g->killfreq == 0) {
+    	  //In above condition added (g->startyr-1) for making absolute killing year from killing frequency
+    	  // other wise kill year will set to next year
         g->killyr = Globals.currYear;
       }
     }
@@ -220,9 +226,92 @@ void mort_EndOfYear( void) {
        RGroup_Kill( rg );
   }
 
- _kill_extra_growth();
- _kill_annuals();
+}
 
+void grazing_EndOfYear( void){
+
+	/*======================================================*/
+    /* PURPOSE */
+	/* Perform the sorts of grazing one might expect at end of year, it is based on grazing frequency
+    /* HISTORY */
+	/* 1st Nov 2015 -AT  -Added Species grazing EndOfYear  */
+	/*======================================================*/
+
+	GrpIndex rg;
+	GroupType *g;
+
+	ForEachGroup(rg)
+	{
+		IntU grazingyr =0;
+		g = RGroup[rg];
+		if (GT(g->grazingfrq, 0.))
+		{
+			if (LT(g->grazingfrq, 1.0))
+			{
+				if (RandUni() <= g->grazingfrq)
+					grazingyr = Globals.currYear;
+			}
+			else if ((Globals.currYear - (g->startyr - 1)) % (IntU) g->grazingfrq == 0)
+			{
+				//In above condition added (g->startyr-1) for making grazing year from grazing frequency
+				// other wise grazing year will set to next year
+				grazingyr = Globals.currYear;
+			}
+		}
+
+		//rgroup grazing
+		if (Globals.currYear == grazingyr)
+		{	
+			Int i;
+			ForEachEstSpp2( rg, i)
+			{
+				Species_Proportion_Grazing(RGroup[rg]->est_spp[i],RGroup[rg]->proportion_grazing );
+			}
+		}
+
+	}
+
+
+}
+
+void proportion_Recovery(void)
+{
+	/*======================================================*/
+    /* PURPOSE */
+	/* Perform the sorts of proportion_Recovery one might expect at next year after the killing year
+    /* HISTORY */
+	/* 1st Nov 2015 -AT -Added Species Proportion Recovery  */
+	/*======================================================*/
+
+	  GrpIndex rg;
+	  GroupType *g;
+
+	  ForEachGroup(rg)
+	  {
+		g = RGroup[rg];
+
+	    if ( GT( g->killfreq, 0.) ) {
+	      if ( LT(g->killfreq, 1.0) ) {
+	        if (RandUni() <= g->killfreq)
+	          g->killyr = Globals.currYear;
+	      } else if ( (Globals.currYear - (g->startyr-1)) % (IntU)g->killfreq == 0) {
+	    	  g->killyr = Globals.currYear;
+	      }
+	    }
+
+	    //rgroup proportion recovery
+	   if (Globals.currYear == RGroup[rg]->killyr)
+		{
+			Int i;
+			ForEachEstSpp2( rg, i)
+			{
+				Species_Proportion_Recovery(RGroup[rg]->est_spp[i], 6,
+						RGroup[rg]->proportion_recovered,
+						RGroup[rg]->proportion_killed);
+			}
+		}
+
+	  }
 }
 
 
@@ -621,7 +710,7 @@ static void _stretched_clonal( GrpIndex rg, Int start, Int last,
 }
 
 /***********************************************************/
-static void _kill_annuals( void) {
+void _kill_annuals( void) {
 /*======================================================*/
 /* PURPOSE */
 /* Loop through all species and kill the annuals.  This
@@ -653,7 +742,7 @@ static void _kill_annuals( void) {
   ForEachGroup(rg) {
     if (RGroup[rg]->max_age == 1) {
       for(i=RGroup[rg]->est_count, sp=RGroup[rg]->est_spp[i-1]; i>0; sp=RGroup[rg]->est_spp[(--i) - 1]){
-              Species_Proportion_Kill(sp, 4, RGroup[rg]->proportion_killed);
+               Species_Annual_Kill(sp, 4);
               //above calls new function and kill all annual individuals (TEM 10-27-2015))
           }
       }
@@ -663,7 +752,7 @@ static void _kill_annuals( void) {
 
 
 /***********************************************************/
-static void _kill_extra_growth( void) {
+void _kill_extra_growth( void) {
 /*======================================================*/
 /* PURPOSE */
 /* Remove any extra growth accumulated during the growing

@@ -56,6 +56,7 @@ struct indiv_st {
   MortalityType killedby;
   Bool killed;        /* only for clonal plants, means veggrow possible*/
   RealF relsize,      /* relative to full-sized individual -- 0-1.0) */
+       prv_yr_relsize, /*previous year real rize relative to full-sized individual, saving before killing, used for proportional recovery calculation) */
        grp_res_prop,  /* prop'l contribution this indiv makes to group relsize */
        res_required, /* min_res_req * relsize */
        res_avail,    /* resource * min_res_req */
@@ -167,7 +168,8 @@ struct resourcegroup_st {
         killfreq,       /* kill group at this frequency: <1=prob, >1=# years */
         extirp,         /* year in which group is extirpated (0==ignore) */
         grp_num,        /* index number of this group */
-        veg_prod_type;  /* type of VegProd.  1 for tree, 2 for shrub, 3 for grass, 4 for forb */
+        veg_prod_type,  /* type of VegProd.  1 for tree, 2 for shrub, 3 for grass, 4 for forb */
+		grazingfrq;     /* grazing effect on group at this frequency: <1=prob, >1=# years */
   SppIndex species[MAX_SPP_PER_GRP]; /*list of spp belonging to this grp*/
   RealF min_res_req,  /* input from table */
         max_density,  /* number of mature plants per plot allowed */
@@ -178,7 +180,8 @@ struct resourcegroup_st {
         ppt_slope[3], /* res. space eqn: slope for wet/dry/norm yrs*/
         ppt_intcpt[3],/* res. space eqn: intercept for "" ""*/
 		proportion_killed,      /* proportion killing  */
-		proportion_recovered;        /* proportion re-growth */
+		proportion_recovered,   /* proportion recovery after killing year */
+        proportion_grazing;     /* proportion grazing on grazing year */
   Bool succulent,
        use_extra_res, /* responds to other groups' unused resources */
        use_me,        /* establish no species of this group if false; TMartyn5.26.15 - this

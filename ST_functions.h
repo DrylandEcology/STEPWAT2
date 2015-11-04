@@ -45,6 +45,9 @@ void Species_Update_Newsize( SppIndex sp, RealF newsize );
 SppIndex Species_Name2Index (const char *name);
 void Species_Kill (const SppIndex sp, int killType);
 void Species_Proportion_Kill (const SppIndex sp, int killType, RealF proportionKilled );
+void Species_Proportion_Recovery (const SppIndex sp, int killType, RealF proportionRecovery,RealF proportionKilled);
+void Species_Proportion_Grazing(const SppIndex sp,RealF proportionGrazing );
+void Species_Annual_Kill(const SppIndex sp, int killType);
 IntS Species_NumEstablish( SppIndex sp);
 
 void Indiv_SortSize( const byte sorttype,

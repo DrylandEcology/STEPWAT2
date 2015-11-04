@@ -32,6 +32,8 @@ void rgroup_DropSpecies( SppIndex sp) ;
 Bool indiv_New( SppIndex sp);
 void indiv_Kill_Complete( IndivType *ndv, int killType);
 void indiv_proportion_Kill( IndivType *ndv, int killType,RealF proportionKilled);
+void indiv_proportion_Recovery( IndivType *ndv, int killType,RealF proportionRecovery,RealF proportionKilled);
+void indiv_proportion_Grazing( IndivType *ndv, RealF proportionGrazing);
 
 void _delete (IndivType *ndv);
 
@@ -372,6 +374,45 @@ SppIndex Species_Name2Index (const char *name) {
   return( (SppIndex)sp);
 }
 
+void Species_Annual_Kill(const SppIndex sp, int killType)
+{
+/*======================================================*/
+/* PURPOSE */  
+/* To kill all the annual species and their individuals */
+/* HISTORY */
+/* Added - Nov 4th 2015 -AT */
+
+/*------------------------------------------------------*/
+
+	#define xF_DELTA (20*F_DELTA)
+	#define xD_DELTA (20*D_DELTA)
+	#define ZERO(x) \
+		( (sizeof(x) == sizeof(float)) \
+				? ((x)>-xF_DELTA && (x)<xF_DELTA) \
+						: ((x)>-xD_DELTA && (x)<xD_DELTA) )
+
+    //make species size to 0
+	 Species_Update_Newsize(sp, -Species[sp]->relsize);
+
+	 //kill all the species individuals free their memory and finally drop the species itself
+	 if (ZERO(Species[sp]->relsize) || LT(Species[sp]->relsize, 0.0))
+	 {
+		IndivType *p1 = Species[sp]->IndvHead, *t1;
+		while (p1)
+		{
+			t1 = p1->Next;
+			_delete(p1);
+			p1 = t1;
+		}
+		rgroup_DropSpecies(sp);
+	 }
+
+	#undef xF_DELTA
+	#undef xD_DELTA
+	#undef ZERO
+
+}
+
 void Species_Proportion_Kill (const SppIndex sp, int killType, RealF proportionKilled ){
 	/*======================================================*/
 	/* PURPOSE */
@@ -384,49 +425,121 @@ void Species_Proportion_Kill (const SppIndex sp, int killType, RealF proportionK
 	/* HISTORY */
 	/* Chris Bennett @ LTER-CSU 11/15/2000            */
 	/*   8/3/01 - cwb - added linked list processing.
-	 *   09/23/15 -AT  -Added proportionKilled
+	 *   09/23/15 -AT  -Added proportionKilled for all even for annual
+	 *   now deletion of species and indiviual is hold till recovery function
 	 */
 
 	/*------------------------------------------------------*/
-#define xF_DELTA (20*F_DELTA)
-#define xD_DELTA (20*D_DELTA)
-#define ZERO(x) \
-( (sizeof(x) == sizeof(float)) \
-  ? ((x)>-xF_DELTA && (x)<xF_DELTA) \
-  : ((x)>-xD_DELTA && (x)<xD_DELTA) )
+	#define xF_DELTA (20*F_DELTA)
+	#define xD_DELTA (20*D_DELTA)
+	#define ZERO(x) \
+		( (sizeof(x) == sizeof(float)) \
+				? ((x)>-xF_DELTA && (x)<xF_DELTA) \
+						: ((x)>-xD_DELTA && (x)<xD_DELTA) )
 
-	  IndivType *p = Species[sp]->IndvHead,
-	            *t;
+	IndivType *p = Species[sp]->IndvHead, *t;
+	//kill  all the species individuals  proportionally or adjust their real size irrespective of being annual or perennial, both will have this effect
+	while (p)
+	{
+		t = p->Next;
+		indiv_proportion_Kill(p, killType, proportionKilled);
+		p = t;
+	}
 
-	  if (Species[sp]->max_age == 1) {
-              Species_Update_Newsize(sp, -Species[sp]->relsize);
-	  } else {
-	    while(p) {
-	      t = p->Next;
-	      indiv_proportion_Kill( p, killType,proportionKilled);
-	      p = t;
-	    }
-	  }
-
-	  if ( LT(Species[sp]->relsize, 0.0)  || ZERO(Species[sp]->relsize) )
-		{
-		//"Warning:ST_species.c Species_Proportion_Kill()  Species[sp]->relsize is either zero or negative so deleting all the individual in species and making species rel_size to zero
-		    Species[sp]->relsize = 0.0 ;
-			IndivType *p1 = Species[sp]->IndvHead, *t1;
-
-			while (p1)
-			{
-				t1 = p1->Next;
-				_delete(p1);
-				p1 = t1;
-			}
-			rgroup_DropSpecies(sp);
-		}
+	if (ZERO(Species[sp]->relsize) || LT(Species[sp]->relsize, 0.0))
+	{
+		Species[sp]->relsize = 0.0;
+	}
 
 	#undef xF_DELTA
 	#undef xD_DELTA
 	#undef ZERO
 
+}
+
+void Species_Proportion_Grazing(const SppIndex sp,RealF proportionGrazing )
+{
+
+	/*======================================================*/
+    /* PURPOSE */
+	/* Proportion Grazing all established individuals in a species at Grazing year.
+	 * Note the special loop construct.  we have to save the
+	 * pointer to next prior to killing because the object
+	 * is deleted.
+    /* HISTORY */
+	/* AT  1st Nov 2015 -Added Species Proportion Grazing for all even for annual */
+	/*------------------------------------------------------*/
+	#define xF_DELTA (20*F_DELTA)
+	#define xD_DELTA (20*D_DELTA)
+	#define ZERO(x) \
+		( (sizeof(x) == sizeof(float)) \
+				? ((x)>-xF_DELTA && (x)<xF_DELTA) \
+						: ((x)>-xD_DELTA && (x)<xD_DELTA) )
+
+	IndivType *p = Species[sp]->IndvHead, *t;
+	//do proportional Grazing adjustment for all the species individuals irrespective of being annual or perennial, both will have this effect
+	while (p)
+	{
+		t = p->Next;
+		indiv_proportion_Grazing(p, proportionGrazing);
+		p = t;
+	}
+
+	if (ZERO(Species[sp]->relsize) || LT(Species[sp]->relsize, 0.0))
+	{
+		Species[sp]->relsize = 0.0;
+	}
+
+	#undef xF_DELTA
+	#undef xD_DELTA
+	#undef ZERO
+
+}
+
+void Species_Proportion_Recovery(const SppIndex sp, int killType,RealF proportionRecovery,RealF proportionKilled)
+{
+	 /*======================================================*/
+     /* PURPOSE */
+	 /* Proportion Recovery all established individuals in a species after killing year.
+
+      * Note the special loop construct.  we have to save the
+	  * pointer to next prior to killing because the object
+	  * is deleted.
+     /* HISTORY */
+	 /* AT  1st Nov 2015 -Added Species Proportion Recovery  */
+	 /*------------------------------------------------------*/
+	#define xF_DELTA (20*F_DELTA)
+	#define xD_DELTA (20*D_DELTA)
+	#define ZERO(x) \
+		( (sizeof(x) == sizeof(float)) \
+				? ((x)>-xF_DELTA && (x)<xF_DELTA) \
+						: ((x)>-xD_DELTA && (x)<xD_DELTA) )
+
+	IndivType *p = Species[sp]->IndvHead, *t;
+	//Recover all the species individuals  proportionally or adjust their real size irrespective of being annual or perennial, both will have this effect
+    while (p)
+	{
+		t = p->Next;
+		indiv_proportion_Recovery(p, killType, proportionRecovery,proportionKilled);
+		p = t;
+	}
+
+	//Kill all the species individuals and free the assigned memory and finally drop the species as well if real size is zero
+	if (ZERO(Species[sp]->relsize) || LT(Species[sp]->relsize, 0.0))
+	{
+		IndivType *p1 = Species[sp]->IndvHead, *t1;
+		while (p1)
+		{
+			t1 = p1->Next;
+			_delete(p1);
+			p1 = t1;
+		}
+		rgroup_DropSpecies(sp);
+	}
+
+	#undef xF_DELTA
+	#undef xD_DELTA
+	#undef ZERO
 }
 
 /**************************************************************/

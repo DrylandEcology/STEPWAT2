@@ -72,7 +72,7 @@ static void _rgroup_add1( char name[], RealF space, RealF density,
                       Int estab, RealF slow, Int stretch,
                       Int xres, Int estann, Int turnon,
                       Int styr, Int killyr, RealF killfreq,
-                      Int extirp, Int mort, RealF xgro, Int veg_prod_type, RealF prop_killed, RealF prop_recovered);
+                      Int extirp, Int mort, RealF xgro, Int veg_prod_type, RealF prop_killed, RealF prop_recovered,RealF grazing_frq,RealF prop_grazing);
 static void _rgroup_add2( char name[],
                       RealF nslope, RealF nint,
                       RealF wslope, RealF wint,
@@ -864,7 +864,7 @@ static void _rgroup_init( void) {
    Int estab, stretch, xres, turnon, extirp, mort, estann,
        styr, killyr, veg_prod_type;
    RealF space, density, slow, killfreq, xgro,
-         nslope, nint, wslope, wint, dslope, dint,prop_killed, prop_recovered ;
+         nslope, nint, wslope, wint, dslope, dint,prop_killed, prop_recovered,grazing_frq, prop_grazing ;
 
    MyFileName = Parm_name(F_RGroup);
    f = OpenFile(MyFileName, "r");
@@ -891,20 +891,20 @@ static void _rgroup_init( void) {
         groupsok = TRUE;
         break;
      }
-     x=sscanf( inbuf, "%s %f %f %d %f %d %d %d %d %d %d %f %d %d %f %d %f %f",
+     x=sscanf( inbuf, "%s %f %f %d %f %d %d %d %d %d %d %f %d %d %f %d %f %f %f %f",
                name,
                &space, &density, &estab, &slow, &stretch,
                &xres, &estann, &turnon, &styr, &killyr, &killfreq,
-               &extirp, &mort, &xgro, &veg_prod_type, &prop_killed, &prop_recovered);
+               &extirp, &mort, &xgro, &veg_prod_type, &prop_killed, &prop_recovered,&grazing_frq, &prop_grazing );
      if (x < 16) {
        LogError(logfp, LOGFATAL, "%s: Too few columns in groups",
                MyFileName);
      }
-   //  printf("prop_killed= %0.6f, prop_recovery=%0.6f \n",prop_killed,prop_recovered );
+   
      _rgroup_add1( name, space, density, estab,
                    slow, stretch, xres, estann,
                    turnon, styr, killyr, killfreq,
-                   extirp, mort, xgro, veg_prod_type,prop_killed, prop_recovered);
+                   extirp, mort, xgro, veg_prod_type,prop_killed, prop_recovered,grazing_frq,prop_grazing);
    }/* end while*/
 
    if (!groupsok) {
@@ -957,7 +957,7 @@ static void _rgroup_add1( char name[], RealF space, RealF density,
                       Int estab, RealF slow, Int stretch,
                       Int xres, Int estann, Int turnon,
                       Int styr, Int killyr, RealF killfreq,
-                      Int extirp, Int mort, RealF xgro, Int veg_prod_type, RealF prop_killed, RealF prop_recovered) {
+                      Int extirp, Int mort, RealF xgro, Int veg_prod_type, RealF prop_killed, RealF prop_recovered,RealF grazing_frq,RealF prop_grazing) {
 /*======================================================*/
   GrpIndex rg;
 
@@ -981,13 +981,12 @@ static void _rgroup_add1( char name[], RealF space, RealF density,
   RGroup[rg]->use_me        = itob(turnon);
   RGroup[rg]->use_mort      = itob(mort);
   RGroup[rg]->veg_prod_type = veg_prod_type;
-  RGroup[rg]->proportion_killed = prop_killed;
+  RGroup[rg]->proportion_killed    = prop_killed;
   RGroup[rg]->proportion_recovered = prop_recovered;
-  //printf("grp= %d prop_killed= %0.6f, prop_recovery=%0.6f \n",rg, RGroup[rg]->proportion_killed,RGroup[rg]->proportion_recovered );
-
-
+  RGroup[rg]->grazingfrq           = grazing_frq;
+  RGroup[rg]->proportion_grazing   = prop_grazing;
+  
   RGroup[rg]->extirpated    = FALSE;
-
 }
 
 

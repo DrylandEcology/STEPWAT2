@@ -40,6 +40,8 @@ Bool indiv_Kill_Partial( MortalityType code,
                           RealF killamt);
 void indiv_Kill_Complete( IndivType *ndv, int killType);
 void indiv_proportion_Kill( IndivType *ndv, int killType,RealF proportionKilled);
+void indiv_proportion_Recovery( IndivType *ndv, int killType,RealF proportionRecovery,RealF proportionKilled);
+void indiv_proportion_Grazing( IndivType *ndv, RealF proportionGrazing);
 
 /*********** Locally Used Function Declarations ************/
 /***********************************************************/
@@ -195,43 +197,123 @@ Bool indiv_Kill_Partial( MortalityType code,
   return( result);
 }
 
-void indiv_proportion_Kill( IndivType *ndv, int killType,RealF proportKilled){
+void indiv_proportion_Kill(IndivType *ndv, int killType, RealF proportKilled)
+{
 	/*======================================================*/
 	/* PURPOSE */
 	/* Remove individual proportionally and adjust relative sizes of the
 	 * RGroup and Species downward proportionally by the size of the indiv.
 	 * Also keep up with survivorship data.
-	*/
+	 */
 	/* HISTORY */
 	/* Chris Bennett @ LTER-CSU 6/15/2000
-	 *  09/23/15 -AT  -Added proportionKilled           */
+	 *  09/23/15 -AT  -Added proportionKilled
+	 *  Nov 4 2015- AT - Modified code for doing proportional kill for annual as well and not deleting species 
+	 *  and indi from memory only adjusting their real size  */
 
 	/*------------------------------------------------------*/
 
-	  if( ndv->age > Species[ndv->myspecies]->max_age ) {
-	    LogError(logfp, LOGWARN, "%s dies older than max_age (%d > %d). Iter=%d, Year=%d\n",
-	                    Species[ndv->myspecies]->name,
-	                    ndv->age, Species[ndv->myspecies]->max_age,
-	                    Globals.currIter, Globals.currYear);
-	  }
+    #define xF_DELTA (20*F_DELTA)
+	#define xD_DELTA (20*D_DELTA)
+	#define ZERO(x) \
+		( (sizeof(x) == sizeof(float)) \
+				? ((x)>-xF_DELTA && (x)<xF_DELTA) \
+						: ((x)>-xD_DELTA && (x)<xD_DELTA) )
 
-	  if (!UseGrid)
-	  		insertIndivKill(ndv->id, killType);
+	if( ndv->age > Species[ndv->myspecies]->max_age )
+	{
+	     LogError(logfp, LOGWARN, "%s dies older than max_age (%d > %d). Iter=%d, Year=%d\n",
+			                    Species[ndv->myspecies]->name,
+			                    ndv->age, Species[ndv->myspecies]->max_age,
+			                    Globals.currIter, Globals.currYear);
+	}
 
-	  	species_Update_Kills(ndv->myspecies, ndv->age);
+	if (!UseGrid)
+		insertIndivKill(ndv->id, killType);
 
-	  	if (proportKilled > 0.999)
-	  	{
-	  		Species_Update_Newsize(ndv->myspecies, -ndv->relsize);
-	  		_delete(ndv);
-	  	}
-	  	else
-	  	{
-	  		RealF newSize = -(ndv->relsize * proportKilled);
-	  		ndv->relsize = ndv->relsize + newSize;
-	  		Species_Update_Newsize(ndv->myspecies, newSize);
-	  	}
+    //kill indiv Proportionally or adjust their real size irrespective of being annual or perennial, both will have this effect
+	species_Update_Kills(ndv->myspecies, ndv->age);
+	// saving killing year real size here that is going to use for calculating next year proportional recovery
+	ndv->prv_yr_relsize = ndv->relsize;
 
+	RealF reduction = -(ndv->relsize * proportKilled);
+	ndv->relsize = ndv->relsize + reduction;
+	Species_Update_Newsize(ndv->myspecies, reduction);
+
+	if (ZERO(ndv->relsize) || LT(ndv->relsize, 0.0))
+	{
+		ndv->relsize =0.0;
+	}
+
+	#undef xF_DELTA
+	#undef xD_DELTA
+	#undef ZERO
+}
+void indiv_proportion_Grazing( IndivType *ndv, RealF proportionGrazing)
+{
+	/*======================================================*/
+	/* PURPOSE */
+	/* Do individual grazing proportionally and adjust relative sizes of the
+	 * RGroup and Species downward proportionally by the size of the indiv.
+	 * Also keep up with survivorship data.
+	 */
+	/* HISTORY */
+	/* 1st Nov 2015- AT
+	/*------------------------------------------------------*/
+
+	#define xF_DELTA (20*F_DELTA)
+	#define xD_DELTA (20*D_DELTA)
+	#define ZERO(x) \
+	( (sizeof(x) == sizeof(float)) \
+			? ((x)>-xF_DELTA && (x)<xF_DELTA) \
+					: ((x)>-xD_DELTA && (x)<xD_DELTA) )
+
+
+	RealF grazing_reduce = -(ndv->relsize * proportionGrazing);
+	ndv->relsize = ndv->relsize + grazing_reduce;
+	Species_Update_Newsize(ndv->myspecies, grazing_reduce);
+
+	if (ZERO(ndv->relsize) || LT(ndv->relsize, 0.0))
+	{
+		ndv->relsize = 0.0;
+	}
+	#undef xF_DELTA
+	#undef xD_DELTA
+	#undef ZERO
+}
+
+void indiv_proportion_Recovery( IndivType *ndv, int killType,RealF proportionRecovery,RealF proportionKilled)
+{
+	/*======================================================*/
+	/* PURPOSE */
+	/* Recover individual proportionally and adjust relative sizes of the
+	 * RGroup and Species upward proportionally by the size of the indiv.
+	 * Also keep up with survivorship data.
+	 */
+	/* HISTORY */
+	/* 1st Nov 2015- AT
+	/*------------------------------------------------------*/
+
+	#define xF_DELTA (20*F_DELTA)
+	#define xD_DELTA (20*D_DELTA)
+	#define ZERO(x) \
+	( (sizeof(x) == sizeof(float)) \
+			? ((x)>-xF_DELTA && (x)<xF_DELTA) \
+					: ((x)>-xD_DELTA && (x)<xD_DELTA) )
+
+   // using  individual killing year old real size and reduction for making base for calculating proportional recovery
+	RealF prev_reduction = ndv->prv_yr_relsize * proportionKilled;
+  	RealF increase = prev_reduction * proportionRecovery;
+	ndv->relsize = ndv->relsize + increase;
+	Species_Update_Newsize(ndv->myspecies, increase);
+
+	if (ZERO(ndv->relsize) || LT(ndv->relsize, 0.0))
+	{
+		_delete(ndv);
+	}
+	#undef xF_DELTA
+	#undef xD_DELTA
+	#undef ZERO
 }
 
 /**************************************************************/
