@@ -115,13 +115,13 @@ ALLTGT	=	$(Bin)/stepwat
 
 all:	$(ALLTGT)
 		cp stepwat testing/stepwat
-		cp stepwat testing/Stepwat\ Inputs/stepwat
+		cp stepwat testing/Stepwat_Inputs/stepwat
 		cp stepwat testing.sagebrush.bradford
 		cp stepwat testing.shortgrass.bradford
 		cp stepwat testing.sagebrush.MT
-		cp stepwat testing.sagebrush.MT/Stepwat\ Inputs
+		cp stepwat testing.sagebrush.MT/Stepwat_Inputs
 		cp stepwat testing.sagebrush.MT_drs
-		cp stepwat testing.sagebrush.MT_drs/Stepwat\ Inputs
+		cp stepwat testing.sagebrush.MT_drs/Stepwat_Inputs
 
 
 objs:	$(ALLOBJS)

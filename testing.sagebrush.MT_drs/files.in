@@ -1,6 +1,6 @@
 # List of files/folders for STEPWAT grid version - DLM 05-24-13
 
-Stepwat Inputs				# folder containing stepwat setup files
+Stepwat_Inputs				# folder containing stepwat setup files
 
 g_logfile.log				# name of logfile (can also be stdout)
 
