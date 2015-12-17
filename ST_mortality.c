@@ -737,7 +737,7 @@ void _kill_annuals( void) {
 
   GrpIndex rg;
   SppIndex sp;
-  IntU i;
+  Int i;
 
   ForEachGroup(rg) {
     if (RGroup[rg]->max_age == 1) {
