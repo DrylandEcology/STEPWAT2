@@ -26,7 +26,7 @@ libDirs	=	-Lsw_src -Lsqlite-amalgamation
 incDirs	=	-Isw_src -Isqlite-amalgamation
 
 LIBS	=	
-C_FLAGS	=	-g -m32 -O0 -Wstrict-prototypes -Wmissing-prototypes -Wimplicit -Wunused -Wformat -Wredundant-decls -Wcast-align\
+C_FLAGS	=	-g  -O0 -Wstrict-prototypes -Wmissing-prototypes -Wimplicit -Wunused -Wformat -Wredundant-decls -Wcast-align\
 	-DSTEPWAT -lm
 
 SRCS	=\
@@ -142,7 +142,7 @@ cleanall:	cleanobjs cleanbin
 #@# Dependency rules follow -----------------------------
 
 $(Bin)/stepwat: $(EXOBJS)
-	$(CC) -g -m32 -O2 -o $(Bin)/stepwat $(EXOBJS) $(incDirs) $(libDirs) $(LIBS) -lm
+	$(CC) -g  -O2 -o $(Bin)/stepwat $(EXOBJS) $(incDirs) $(libDirs) $(LIBS) -lm
 
 $(oDir)/sqlite-amalgamation/sqlite3.o: sqlite-amalgamation/sqlite3.c sqlite-amalgamation/sqlite3.h
 	$(CC) -DSQLITE_THREADSAFE=0 -DSQLITE_OMIT_LOAD_EXTENSION $(C_FLAGS) $(incDirs) -c -o $@ $<
