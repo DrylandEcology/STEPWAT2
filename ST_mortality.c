@@ -185,7 +185,8 @@ void mort_Main( Bool *killed) {
 }
 
 /***********************************************************/
-void mort_EndOfYear( void) {
+void mort_EndOfYear( void)
+{
 /*======================================================*/
 /* PURPOSE */
 /* Perform the sorts of mortality one might expect at the
@@ -203,28 +204,45 @@ void mort_EndOfYear( void) {
  *       year of non-existance.
 /*------------------------------------------------------*/
 
-  GrpIndex rg;
-  GroupType *g;
+	GrpIndex rg;
+	GroupType *g;
 
-  ForEachGroup(rg) {
-	g = RGroup[rg];
+	ForEachGroup(rg)
+	{
+		g = RGroup[rg];
 
-    if ( GT( g->killfreq, 0.) ) {
-      if ( LT(g->killfreq, 1.0) ) {
-        if (RandUni() <= g->killfreq)
-          g->killyr = Globals.currYear;
-      } else if ( (Globals.currYear - (g->startyr-1)) % (IntU)g->killfreq == 0) {
-    	  //In above condition added (g->startyr-1) for making absolute killing year from killing frequency
-    	  // other wise kill year will set to next year
-        g->killyr = Globals.currYear;
-      }
-    }
-  
-    if (Globals.currYear == RGroup[rg]->extirp)
-       rgroup_Extirpate( rg );
-    else if (Globals.currYear == RGroup[rg]->killyr)
-       RGroup_Kill( rg );
-  }
+
+		if ((Globals.currYear >= g->killfreq_startyr) && GT(g->killfreq, 0.))
+		{
+			printf("\n Globals.currYear: %d, RGroup[%d]->killfreq_startyr : %d , killfreq: %d \n",Globals.currYear,rg, g->killfreq_startyr,g->killfreq);
+			if (LT(g->killfreq, 1.0))
+			{
+				if (RandUni() <= g->killfreq)
+				{
+					g->killyr = Globals.currYear;
+				}
+
+			}
+			else if ((Globals.currYear - (g->startyr - 1)) % (IntU) g->killfreq == 0)
+			{
+				//In above condition added (g->startyr-1) for making absolute killing year from killing frequency
+				// other wise kill year will set to next year
+				g->killyr = Globals.currYear;
+			}
+
+			printf("\n kill year calculated = %d \n", g->killyr);
+		}
+
+		if (Globals.currYear == RGroup[rg]->extirp)
+		{
+			rgroup_Extirpate(rg);
+		}
+		else if (Globals.currYear == RGroup[rg]->killyr)
+		{
+			RGroup_Kill(rg);
+		}
+
+	}
 
 }
 
