@@ -988,8 +988,6 @@ static void _rgroup_add1( char name[], RealF space, RealF density,
   RGroup[rg]->proportion_grazing   = prop_grazing;
   
   RGroup[rg]->extirpated    = FALSE;
-
-  printf("\nkillfreq_startyr : %d, RGroup[%d]->killfreq_startyr : %d \n \n \n",killfreq_startyr,rg, RGroup[rg]->killfreq_startyr);
 }
 
 

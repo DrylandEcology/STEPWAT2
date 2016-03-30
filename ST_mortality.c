@@ -211,10 +211,8 @@ void mort_EndOfYear( void)
 	{
 		g = RGroup[rg];
 
-
 		if ((Globals.currYear >= g->killfreq_startyr) && GT(g->killfreq, 0.))
 		{
-			printf("\n Globals.currYear: %d, RGroup[%d]->killfreq_startyr : %d , killfreq: %d \n",Globals.currYear,rg, g->killfreq_startyr,g->killfreq);
 			if (LT(g->killfreq, 1.0))
 			{
 				if (RandUni() <= g->killfreq)
@@ -223,14 +221,11 @@ void mort_EndOfYear( void)
 				}
 
 			}
-			else if ((Globals.currYear - (g->startyr - 1)) % (IntU) g->killfreq == 0)
+			else if ((Globals.currYear - g->killfreq_startyr) % (IntU) g->killfreq == 0)
 			{
-				//In above condition added (g->startyr-1) for making absolute killing year from killing frequency
-				// other wise kill year will set to next year
 				g->killyr = Globals.currYear;
 			}
 
-			printf("\n kill year calculated = %d \n", g->killyr);
 		}
 
 		if (Globals.currYear == RGroup[rg]->extirp)
@@ -239,6 +234,7 @@ void mort_EndOfYear( void)
 		}
 		else if (Globals.currYear == RGroup[rg]->killyr)
 		{
+			printf("\n RGroup_Kill() method called for group name=%s , now at year RGroup[%d]->killyr = %d \n", RGroup[rg]->name, rg,RGroup[rg]->killyr);
 			RGroup_Kill(rg);
 		}
 

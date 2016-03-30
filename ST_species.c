@@ -426,7 +426,7 @@ void Species_Proportion_Kill (const SppIndex sp, int killType, RealF proportionK
 	/* Chris Bennett @ LTER-CSU 11/15/2000            */
 	/*   8/3/01 - cwb - added linked list processing.
 	 *   09/23/15 -AT  -Added proportionKilled for all even for annual
-	 *   now deletion of species and indiviual is hold till recovery function
+	 *   now deletion of species and individual is hold till recovery function
 	 */
 
 	/*------------------------------------------------------*/
