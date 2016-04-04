@@ -234,7 +234,6 @@ void mort_EndOfYear( void)
 		}
 		else if (Globals.currYear == RGroup[rg]->killyr)
 		{
-			printf("\n RGroup_Kill() method called for group name=%s , now at year RGroup[%d]->killyr = %d \n", RGroup[rg]->name, rg,RGroup[rg]->killyr);
 			RGroup_Kill(rg);
 		}
 
