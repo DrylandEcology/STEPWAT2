@@ -31,6 +31,8 @@
   extern SXW_t SXW;
 #endif
 
+extern Bool isPartialSoilwatOutput;
+
 /************* External Function Declarations **************/
 /***********************************************************/
 
@@ -138,6 +140,35 @@ int main(int argc, char **argv) {
 	IndivType *i;
 	Bool killedany;
 
+	if (argc>=6)
+	{
+		isPartialSoilwatOutput = FALSE;
+		printf( "inside stepwat main setting files options for soilwat full output: isPartialSoilwatOutput=%d \n",isPartialSoilwatOutput);
+		int argc_soilwat = 3;
+		char **array;
+		array = malloc(sizeof(char*) * (argc_soilwat + 1));
+
+		array[0] = "test.exe";
+
+		array[1] = malloc(strlen(argv[4]) + 1); // add one for the \0
+		strcpy(array[1], argv[4]);
+
+		array[2] = malloc(strlen(argv[5]) + 1); // add one for the \0
+		strcpy(array[2], argv[5]);
+
+		array[3] = NULL;/* end of array so later you can do while (array[i++]!=NULL) {...} */
+
+		printf( "inside stepwat main setting files options for soilwat: argc=%d array[0]=%s ,array[1]=%s,array[2]=%s \n ", argc_soilwat, array[0], array[1], array[2]);
+
+		main_function(argc_soilwat, array);
+		argc = argc - 2;
+		argv[4] = NULL;
+		argv[5] = NULL;
+		printf("soilwat main function executed successfully isPartialSoilwatOutput=%d \n",isPartialSoilwatOutput);
+	}
+
+	isPartialSoilwatOutput = TRUE;
+
 	logged = FALSE;
 	atexit(check_log);
 	/* provides a way to inform user that something
@@ -145,6 +176,7 @@ int main(int argc, char **argv) {
 
 	init_args(argc, argv);
 
+	printf("STEPWAT  init_args() executed successfully \n ");
 	if (UseGrid == TRUE) {
 		runGrid();
 		return 0;
