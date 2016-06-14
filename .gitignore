@@ -1,5 +1,6 @@
 # Eclipse project files
 ###################
+.cproject
 .project
 .settings/
 
@@ -57,6 +58,7 @@ testing/stepwat.dSYM/
 testing/Output
 
 testing.sagebrush.MT_drs/Output
-
+testing.sagebrush.MT_drs/Stepwat_Inputs/Output
+testing.sagebrush.MT_drs/Stepwat_Inputs/Input/sxw/Input/outsetup_v30.in
 *.out
 *.log
