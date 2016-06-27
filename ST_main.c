@@ -133,41 +133,43 @@ Bool DuringSpinup;
 Bool EchoInits;
 Bool UseProgressBar;
 
+/* Added By: AKT  06/27/2016
+ * Function for printing all the SOILWAT output in the STEPWAT,
+ * it will work in both grid and non-grid version
+ *
+ */
+void print_soilwat_output(char* str)
+{
+	isPartialSoilwatOutput = FALSE;
+
+	printf( "inside stepwat main setting files options for soilwat full output, so now isPartialSoilwatOutput=%d \n", isPartialSoilwatOutput);
+
+	int argc_soilwat = 3;
+	char **array;
+	array = malloc(sizeof(char*) * (argc_soilwat + 1));
+
+	array[0] = "sw_v31"; //Just for name sake SOILWAT exe name given here, though it will never getting use
+	array[1] = "-f";
+	array[2] = Str_Dup(str);
+	array[3] = NULL;/* end of array so later you can do while (array[i++]!=NULL) {...} */
+
+	printf( "inside stepwat main setting files options for soilwat: argc=%d array[0]=%s ,array[1]=%s,array[2]=%s \n ",
+			argc_soilwat, array[0], array[1], array[2]);
+
+	main_function(argc_soilwat, array);
+
+	isPartialSoilwatOutput = TRUE;
+
+	printf( "Soilwat main function executed successfully and now isPartialSoilwatOutput=%d \n", isPartialSoilwatOutput);
+
+}
+
 /******************** Begin Model Code *********************/
 /***********************************************************/
 int main(int argc, char **argv) {
 	IntS year, iter, incr, g, s;
 	IndivType *i;
 	Bool killedany;
-
-	if (argc>=6)
-	{
-		isPartialSoilwatOutput = FALSE;
-		printf( "inside stepwat main setting files options for soilwat full output: isPartialSoilwatOutput=%d \n",isPartialSoilwatOutput);
-		int argc_soilwat = 3;
-		char **array;
-		array = malloc(sizeof(char*) * (argc_soilwat + 1));
-
-		array[0] = "test.exe";
-
-		array[1] = malloc(strlen(argv[4]) + 1); // add one for the \0
-		strcpy(array[1], argv[4]);
-
-		array[2] = malloc(strlen(argv[5]) + 1); // add one for the \0
-		strcpy(array[2], argv[5]);
-
-		array[3] = NULL;/* end of array so later you can do while (array[i++]!=NULL) {...} */
-
-		printf( "inside stepwat main setting files options for soilwat: argc=%d array[0]=%s ,array[1]=%s,array[2]=%s \n ", argc_soilwat, array[0], array[1], array[2]);
-
-		main_function(argc_soilwat, array);
-		argc = argc - 2;
-		argv[4] = NULL;
-		argv[5] = NULL;
-		printf("soilwat main function executed successfully isPartialSoilwatOutput=%d \n",isPartialSoilwatOutput);
-	}
-
-	isPartialSoilwatOutput = TRUE;
 
 	logged = FALSE;
 	atexit(check_log);
@@ -381,6 +383,9 @@ static void init_args(int argc, char **argv) {
    *                -s=soilwat model-derived resource
    *                   optional parm debugfile for pgmr testing; see code.
    *                -e=echo init values to logfile.
+   * 06/27/16 -AKT  -o= Print all the Soilwat output as well while running with STEPWAT
+   *                  This option is required to have soilwat_input_files is next path after this
+   *                  like  -o ../../sw_src/testing/files_step_soilwat_grid.in
    * 1/8/04 - cwb - Added -p option to help the GUI with a progress bar.
    *         This is another "secret" option, insofar as the
    *         command-line user doesn't need it.  The option directs
@@ -389,8 +394,8 @@ static void init_args(int argc, char **argv) {
    *         stderr.
    */
   char str[1024],
-       *opts[]  = {"-d","-f","-q","-s","-e", "-p", "-g"};  /* valid options */
-  int valopts[] = {  1,   1,   0,  -1,   0,    0 ,   0};  /* indicates options with values */
+       *opts[]  = {"-d","-f","-q","-s","-e", "-p", "-g", "-o"};  /* valid options */
+  int valopts[] = {  1,   1,   0,  -1,   0,    0 ,   0, 1};  /* indicates options with values */
                  /* 0=none, 1=required, -1=optional */
   int i, /* looper through all cmdline arguments */
       a, /* current valid argument-value position */
@@ -406,82 +411,120 @@ static void init_args(int argc, char **argv) {
 
 
   a=1;
-  for( i=1; i<=nopts; i++) {
-    if (a >= argc) break;
+	for (i = 1; i <= nopts; i++)
+	{
+		if (a >= argc)
+			break;
 
-    /* figure out which option by its position 0-(nopts-1) */
-    for(op=0; op<nopts; op++) {
-      if (strncmp(opts[op], argv[a], 2) == 0)
-        break;  /* found it, move on */
-    }
-    if (op==nopts) {
-      fprintf(stderr, "Invalid option %s\n", argv[a]);
-      usage();
-      exit(-1);
-    }
-    if (a==argc-1 && strlen(argv[a]) == 2)
-      lastop_noval = TRUE;
+		/* figure out which option by its position 0-(nopts-1) */
+		for (op = 0; op < nopts; op++)
+		{
+			if (strncmp(opts[op], argv[a], 2) == 0)
+				break; /* found it, move on */
+		}
+		if (op == nopts)
+		{
+			fprintf(stderr, "Invalid option %s\n", argv[a]);
+			usage();
+			exit(-1);
+		}
+		if (a == argc - 1 && strlen(argv[a]) == 2)
+			lastop_noval = TRUE;
 
-    *str = '\0';
-    /* extract value part of option-value pair */
-    if ( valopts[op] ) {
-      if        (lastop_noval && valopts[op] < 0 ) {
-        /* break out, optional value not available */
-        /* avoid checking past end of array */
+		*str = '\0';
+		/* extract value part of option-value pair */
+		if (valopts[op])
+		{
+			if (lastop_noval && valopts[op] < 0)
+			{
+				/* break out, optional value not available */
+				/* avoid checking past end of array */
 
-      } else if (lastop_noval && valopts[op] > 0 ) {
-        fprintf(stderr, "Incomplete option %s\n", opts[op]);
-        usage();
-        exit(-1);
+			}
+			else if (lastop_noval && valopts[op] > 0)
+			{
+				fprintf(stderr, "Incomplete option %s\n", opts[op]);
+				usage();
+				exit(-1);
 
-      } else if ('\0' == argv[a][2] && valopts[op] < 0) {
-        /* break out, optional value not available */
+			}
+			else if ('\0' == argv[a][2] && valopts[op] < 0)
+			{
+				/* break out, optional value not available */
 
-      } else if ('\0' != argv[a][2]) {        /* no space betw opt-value */
-        strcpy(str, (argv[a]+2));
+			}
+			else if ('\0' != argv[a][2])
+			{ /* no space betw opt-value */
+				strcpy(str, (argv[a] + 2));
 
-      } else if ('-' != *argv[a+1]) {  /* space betw opt-value */
-        strcpy(str, argv[++a]);
+			}
+			else if ('-' != *argv[a + 1])
+			{ /* space betw opt-value */
+				strcpy(str, argv[++a]);
 
-      } else if ( 0 < valopts[op]) {      /* required opt-val not found */
-        fprintf(stderr, "Incomplete option %s\n", opts[op]);
-        usage();
-        exit(-1);
-      }                                /* opt-val not required */
-    }
+			}
+			else if (0 < valopts[op])
+			{ /* required opt-val not found */
+				fprintf(stderr, "Incomplete option %s\n", opts[op]);
+				usage();
+				exit(-1);
+			} /* opt-val not required */
+		}
 
-    /* set indicators/variables based on results */
-    switch (op) {
-      case 0:                                      /* -d */
-               if (!ChDir(str)) {
-                 LogError(stderr, LOGFATAL,
-                 "Invalid project directory (%s)",str);
-               }
-               break;
-      case 1:  parm_SetFirstName( str);    break;  /* -f */
+		/* set indicators/variables based on results */
+		switch (op)
+		{
+		case 0: /* -d */
+			if (!ChDir(str))
+			{
+				LogError(stderr, LOGFATAL, "Invalid project directory (%s)",
+						str);
+			}
+			break;
+		case 1:
+			parm_SetFirstName(str);
+			break; /* -f */
 
-      case 2:  QuietMode = TRUE;           break;  /* -q */
+		case 2:
+			QuietMode = TRUE;
+			break; /* -q */
 
-      case 3:  UseSoilwat = TRUE;                  /* -s */
-      	  	   if(strlen(str) > 1)
-      	  		   SXW.debugfile = Str_Dup(str);
-               break;
+		case 3:
+			UseSoilwat = TRUE; /* -s */
+			if (strlen(str) > 1)
+				SXW.debugfile = Str_Dup(str);
+			break;
 
-      case 4:  EchoInits = TRUE;           break;  /* -e */
+		case 4:
+			EchoInits = TRUE;
+			break; /* -e */
 
-      case 5:  progfp = stdout;   					/* -p */ 
-      		   UseProgressBar = TRUE;        
-      			break;  
-      
-      case 6:  UseGrid = TRUE;				break; /* -g */
+		case 5:
+			progfp = stdout; /* -p */
+			UseProgressBar = TRUE;
+			break;
 
-      default:
-        LogError(logfp, LOGFATAL, "Programmer: bad option in main:init_args:switch");
-    }
+		case 6:
+			UseGrid = TRUE;
+			break; /* -g */
 
-    a++;  /* move to next valid option-value position */
+		case 7:
+			printf("Get all the Soilwat option called, with file=%s  \n", str);
+			if (strlen(str) > 1)
+			{
+				print_soilwat_output(str);
+			}
 
-  }  /* end for(i) */
+			break; /* -o    also get all the soilwat output*/
+
+		default:
+			LogError(logfp, LOGFATAL,
+					"Programmer: bad option in main:init_args:switch");
+		}
+
+		a++; /* move to next valid option-value position */
+
+	} /* end for(i) */
 
 
 }
