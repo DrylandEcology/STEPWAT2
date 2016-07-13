@@ -496,6 +496,8 @@ void rgroup_Grow( void) {
  *     aren't subject to the growth mechanism here, so they
  *     are now excluded from this code.  All of the annual
  *     generation occurs in the PartResources() function.
+ *  7/13/2016 This comment by cwb is now outdated. We had added
+    functionality so that annuals now grow on an annaul basis.
 
 /*------------------------------------------------------*/
 
@@ -543,7 +545,9 @@ void rgroup_Grow( void) {
       ForEachIndiv(ndv, s) {
 
       /* modify growth rate based on resource availability*/
-      /* deleted EQN 5 because it's wrong.  gmod==.05 is too low */
+      /* deleted EQN 5 because it's wrong. OPT_SLOPE was formerly 0.05, which resulted in gmod values that were too low */
+      /* Now the values fro gmod range between 0.05 and 0.99 similiar to Coffin and Lauenroth 1990 */
+          
         gmod = 1.0 - OPT_SLOPE * min(1.0, ndv->pr);
         if ( GT(ndv->pr, 1.0) )
           gmod /= ndv->pr;
@@ -559,7 +563,7 @@ void rgroup_Grow( void) {
           ndv->killed = FALSE;
 
         } else {
-        /* normal growth: modifier times optimal growth rate (EQN 1)*/
+        /* normal growth: modifier times optimal growth rate (EQN 1)in Coffin and Lauenroth 1990 */
           rate1 = gmod * s->intrin_rate
                 * ( 1.0 - ndv->relsize);
           growth1 = rate1 * (1.0 - ndv->relsize);
