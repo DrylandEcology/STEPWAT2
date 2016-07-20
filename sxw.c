@@ -386,6 +386,9 @@ void SXW_SW_Setup_Echo(void) {
 RealF SXW_GetPR( GrpIndex rg) {
 /*======================================================*/
 /* see _sxw_update_resource() for _resource_cur[]
+This function is no longer utilized, SXW_GetTranspiration has replaced it
+_resource_pr is no longer used as a parameter. We remain the code for the time being
+KAP 7/20/2016
 */
 	RealF pr = ZRO(_resource_pr[rg]) ? 0.0 : 1. / _resource_pr[rg];
 	return pr;

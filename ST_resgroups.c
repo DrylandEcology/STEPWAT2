@@ -125,7 +125,8 @@ void rgroup_PartResources( void) {
 
 		if (g->max_age == 1)
 			g->relsize = _add_annuals(rg, 1.0, no_seeds);
-
+			
+/*this piece of the code is only used when SOILWAT is NOT running*/
 #ifdef STEPWAT
 		if (!UseSoilwat) { /* use by-mm method */
 #endif
@@ -137,7 +138,8 @@ void rgroup_PartResources( void) {
 
 		size_base[rg] = g->relsize * g->min_res_req;
 		size_obase[rg] = (g->use_extra_res) ? size_base[rg] : 0.;
-
+		
+/*this is how res_required and res_avail are set if SOILWAT is running*/
 #ifdef STEPWAT
 	} else {
 		/* trick for later pr calc */
@@ -180,6 +182,7 @@ void rgroup_PartResources( void) {
 
   if (noplants) return;
 
+/*these functions are not used if using SOILWAT*/
   if (!UseSoilwat) {
     _res_part_extra( do_base,  xtra_base,  size_base );
     _res_part_extra( do_extra, xtra_obase, size_obase );
