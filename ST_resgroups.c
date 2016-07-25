@@ -182,7 +182,8 @@ void rgroup_PartResources( void) {
 
   if (noplants) return;
 
-/*these functions are not used if using SOILWAT*/
+/*these functions are not used if using SOILWAT,
+extra resource partitioning does not occur when running SOILWAT*/
   if (!UseSoilwat) {
     _res_part_extra( do_base,  xtra_base,  size_base );
     _res_part_extra( do_extra, xtra_obase, size_obase );
@@ -352,6 +353,10 @@ static void _res_part_extra( Bool isextra, RealF extra, RealF size[] ) {
 
    15-May-03 (cwb) Adding code to accomodate resource-by-mm
              when used with Soilwat, esp, see inclusion of 'space'.
+             
+    16-July-16 (kap) These functions are not called when using SOILWAT,
+    			despite the fact that their is separate code below for
+    			when SOILWAT is running.
 */
 
 /*------------------------------------------------------*/
