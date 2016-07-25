@@ -90,12 +90,13 @@ void Plot_Initialize( void);
 /*void chkmem(void);*/
 static void usage(void) {
   char *s ="STEPPE plant community dynamics (SGS-LTER Jan-04).\n"
-           "Usage: steppe [-d startdir] [-f files.in] [-q] [-s] [-e] [-g]\n"
+           "Usage: steppe [-d startdir] [-f files.in] [-q] [-s] [-e] [-o] [-g]\n"
            "  -d : supply working directory (default=.)\n"
            "  -f : supply list of input files (default=files.in)\n"
            "  -q : quiet mode, don't print message to check logfile.\n"
            "  -s : use SOILWAT model for resource partitioning.\n"
            "  -e : echo initialization results to logfile\n"
+           "  -o : print all the soilwat output as well like standalone soilwat running\n"
            "  -g : use gridded mode\n";
   fprintf(stderr,"%s", s);
   exit(0);
@@ -179,6 +180,9 @@ int main(int argc, char **argv) {
 	init_args(argc, argv);
 
 	printf("STEPWAT  init_args() executed successfully \n ");
+
+	isPartialSoilwatOutput = TRUE;
+
 	if (UseGrid == TRUE) {
 		runGrid();
 		return 0;
