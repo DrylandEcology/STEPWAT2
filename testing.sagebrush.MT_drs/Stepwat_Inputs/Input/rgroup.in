@@ -13,7 +13,8 @@
 # NGrpEstab
      10
 [end]  # section end
-
+# NOTE: only 10 RGs can be established at a time. Below there are 11 RG possibilities. One always has
+# to be turned off. As a default, annual warm-season grasses are turned off.
 #=============================================================
 #                Group definitions
 # name = a name to give the group (12 chars)
@@ -71,19 +72,19 @@
 #TM 10.6.2015 - tested various stretch values for sagebrush and found stretch of 8 to be best paired with irate 0.02
 # name     space  density maxest slow stretch xres  estann  on  startyr killyr killfreq_startyr killfrq  extirp  mort  xgrow  veg_prod_type  proportion_killed proportion_recovered grazing_frq proportion_grazing
 
- sagebrush     0.325  1.0000   1  0.0500   8     1       0   1      1        0      30       20       0     0  0.00000   2  0.50  0.80 0  0.50
- a.cool.forb   0.030  5.0000   1  0.0500   2     1       0   1      1        0      50       30       0     1  0.00000   4  0.60  0.50 0  0.40
- a.warm.forb   0.020  5.0000   1  0.0500   2     1       0   1      1        0      30       20       0     1  0.00000   4  0.70  0.60 0  0.30
- p.cool.forb   0.100  5.0000   1  0.0500   2     1       0   1      1        0      80       10       0     1  0.00000   4  0.80  0.80 0  0.50
- p.warm.forb   0.075  5.0000   1  0.0500   2     1       0   1      1        0      60       20       0     1  0.00000   4  0.50  0.20 0  0.40
- a.cool.grass  0.050  50.000   1  0.0500   2     1       0   1      1        0      70       20       0     1  0.00000   3  0.40  0.90 0  0.30
- a.warm.grass  0.000  5.0000   1  0.0500   2     1       0   0      1        0      90       10       0     1  0.00000   3  0.20  0.80 0  0.20
- p.cool.grass  0.250  17.000   1  0.0500   2     1       0   1      1        0      50       30       0     1  0.00000   3  0.30  0.70 0  0.40
- p.warm.grass  0.050  11.000   1  0.0500   2     1       0   1      1        0      40       35       0     1  0.00000   3  0.40  0.90 0  0.30
- shrub         0.100  1.0000   1  0.0500   2     1       0   1      1        0      35       30       0     1  0.00000   2  0.80  0.40 0  0.40
+ sagebrush     0.320  1.0000   1  0.0500   8     1       0   1      1        0      0       0       0     0  0.00000   2  0.50  0.80 0  0.50
+ a.cool.forb   0.030  5.0000   1  0.0500   2     1       0   1      1        0      0       0       0     1  0.00000   4  0.60  0.50 0  0.40
+ a.warm.forb   0.020  5.0000   1  0.0500   2     1       0   1      1        0      0       0       0     1  0.00000   4  0.70  0.60 0  0.30
+ p.cool.forb   0.100  5.0000   1  0.0500   2     1       0   1      1        0      0       0       0     1  0.00000   4  0.80  0.80 0  0.50
+ p.warm.forb   0.070  5.0000   1  0.0500   2     1       0   1      1        0      0       0       0     1  0.00000   4  0.50  0.20 0  0.40
+ a.cool.grass  0.050  50.000   1  0.0500   2     1       0   1      1        0      0       0       0     1  0.00000   3  0.40  0.90 0  0.30
+ p.cool.grass  0.220  17.000   1  0.0500   2     1       0   1      1        0      0       0       0     1  0.00000   3  0.30  0.70 0  0.40
+ p.warm.grass  0.070  11.000   1  0.0500   2     1       0   1      1        0      0       0       0     1  0.00000   3  0.40  0.90 0  0.30
+ shrub         0.090  1.0000   1  0.0500   2     1       0   1      1        0      0       0       0     1  0.00000   2  0.80  0.40 0  0.40
+ succulents	   0.030  0.3100   1  0.0500   2     1       0   1		1		 0		0		0	    0     0  0.00000   2  0.80  0.40 0  0.40
+# a.warm.grass 0.000  5.0000   1  0.0500   2     1       0   0      1        0      0       0       0     1  0.00000   3  0.20  0.80 0  0.20
 
 [end]  # section end
-
 
 #=============================================================
 # Parameters for resource availability in wet/dry/normal years
@@ -99,16 +100,17 @@
 
 # name            nslope   nint     wetslope wetint   dryslope dryint  
 
-sagebrush 	  0.00093  0.70935  0.00093  0.70935  0.00093  0.70935
+sagebrush 	      0.00093  0.70935  0.00093  0.70935  0.00093  0.70935
 a.cool.forb 	  0.00093  0.70935  0.00093  0.70935  0.00093  0.70935
 a.warm.forb 	  0.00093  0.70935  0.00093  0.70935  0.00093  0.70935
 p.cool.forb 	  0.00093  0.70935  0.00093  0.70935  0.00093  0.70935
 p.warm.forb 	  0.00093  0.70935  0.00093  0.70935  0.00093  0.70935
 a.cool.grass	  0.00093  0.70935  0.00093  0.70935  0.00093  0.70935
-a.warm.grass	  0.00093  0.70935  0.00093  0.70935  0.00093  0.70935
 p.cool.grass	  0.00093  0.70935  0.00093  0.70935  0.00093  0.70935
 p.warm.grass	  0.00093  0.70935  0.00093  0.70935  0.00093  0.70935
-shrub    	  0.00093  0.70935  0.00093  0.70935  0.00400  0.70935
+shrub    	      0.00093  0.70935  0.00093  0.70935  0.00400  0.70935
+succulents        0.00093  0.70935  0.00093  0.70935  0.00400  0.70935
+#a.warm.grass	  0.00093  0.70935  0.00093  0.70935  0.00093  0.70935
 
 [end]  # section end
 
@@ -127,7 +129,7 @@ shrub    	  0.00093  0.70935  0.00093  0.70935  0.00400  0.70935
 # or mortality in wet years for that resource group.
 
 # name            gslope  gint  mslope  gint 
-shrub		0.0	0.0	0.0	0.0
+succulents		-0.0025 6.736 -0.0217 6.736
 
 [end]  # section end
 
