@@ -72,14 +72,14 @@
 #TM 10.6.2015 - tested various stretch values for sagebrush and found stretch of 8 to be best paired with irate 0.02
 # name     space  density maxest slow stretch xres  estann  on  startyr killyr killfreq_startyr killfrq  extirp  mort  xgrow  veg_prod_type  proportion_killed proportion_recovered grazing_frq proportion_grazing
 
- sagebrush     0.320  1.0000   1  0.0500   8     1       0   1      1        0      0       0       0     0  0.00000   2  0.50  0.80 0  0.50
+ sagebrush     0.320  1.0000   1  0.0500   8     1       0   1      1        0      0       0       0     1  0.00000   2  0.50  0.80 0  0.50
  a.cool.forb   0.030  5.0000   1  0.0500   2     1       0   1      1        0      0       0       0     1  0.00000   4  0.60  0.50 0  0.40
  a.warm.forb   0.020  5.0000   1  0.0500   2     1       0   1      1        0      0       0       0     1  0.00000   4  0.70  0.60 0  0.30
  p.cool.forb   0.100  5.0000   1  0.0500   2     1       0   1      1        0      0       0       0     1  0.00000   4  0.80  0.80 0  0.50
  p.warm.forb   0.070  5.0000   1  0.0500   2     1       0   1      1        0      0       0       0     1  0.00000   4  0.50  0.20 0  0.40
  a.cool.grass  0.050  50.000   1  0.0500   2     1       0   1      1        0      0       0       0     1  0.00000   3  0.40  0.90 0  0.30
  p.cool.grass  0.220  17.000   1  0.0500   2     1       0   1      1        0      0       0       0     1  0.00000   3  0.30  0.70 0  0.40
- p.warm.grass  0.070  11.000   1  0.0500   2     1       0   1      1        0      0       0       0     1  0.00000   3  0.40  0.90 0  0.30
+ p.warm.grass  0.070  11.000   1  0.0500   2     1       0   1      1        0      0       0       0     0  0.00000   3  0.40  0.90 0  0.30
  shrub         0.090  1.0000   1  0.0500   2     1       0   1      1        0      0       0       0     1  0.00000   2  0.80  0.40 0  0.40
  succulents	   0.030  0.3100   1  0.0500   2     1       0   1		1		 0		0		0	    0     0  0.00000   2  0.80  0.40 0  0.40
 # a.warm.grass 0.000  5.0000   1  0.0500   2     1       0   0      1        0      0       0       0     1  0.00000   3  0.20  0.80 0  0.20
