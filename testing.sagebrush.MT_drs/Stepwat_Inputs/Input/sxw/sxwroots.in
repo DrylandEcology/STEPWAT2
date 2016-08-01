@@ -9,4 +9,4 @@ p.cool.grass    .20    .35   .25    .15	   .05     .00
 p.warm.grass 	.25    .25   .25    .20	   .05	   .00
 shrub			.15    .20	 .20	.35	   .10	   .00
 succulents       1      0     0      0      0		 0
-#a.warm.grass    .15    .40   .10    .05	   .00	   .00
+#a.warm.grass    .40    .35   .15    .10	   .00	   .00
