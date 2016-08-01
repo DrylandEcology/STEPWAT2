@@ -1,5 +1,5 @@
 #GrpName       %L1   %L2    %L3    %L4    %L5		%L6
-sagebrush      	.05	   .20	 .25	.25	   .35	   .05
+sagebrush      	.05	   .10	 .20	.25	   .35	   .05
 a.cool.forb		.40    .30	 .20	.10	   .00	   .00
 a.warm.forb		.40    .25	 .25	.10	   .00	   .00
 p.cool.forb		.15    .20	 .40	.20	   .05	   .00
