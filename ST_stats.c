@@ -9,7 +9,6 @@
 //     (6/15/2000) -- INITIAL CODING - cwb
 //   1/9/01 - revised to make extensive use of malloc() */
 //	5/28/2013 (DLM) - added module level variable accumulators (grid_Stat) for the grid and functions to deal with them (stat_Load_Accumulators(), stat_Save_Accumulators() stat_Free_Accumulators(), and stat_Init_Accumulators()).  These functions are called from ST_grid.c and manage the output accumulators so that the gridded version can output correctly.  The accumulators are dynamically allocated, so be careful with them.
-// 07/30/2016 (AKT) Fixed bug at std_dev calculation
 //
 /********************************************************/
 /********************************************************/
@@ -1231,28 +1230,13 @@ static RealF _get_avg( struct accumulators_st *p) {
 
 
 /***********************************************************/
-static RealF _get_std(struct accumulators_st *p)
-{
+static RealF _get_std( struct accumulators_st *p) {
 	double s;
 
-	/* Change: Jul 30 2016 (AKT)
-	 * Fixing bug at std_dev calculation, as this function was giving wrong result.
-	 * Whenever intermediate calcuation value of s coming negative result become NAN.
-	 * So added check for negative number and floating point calculation.
-	 * Also this std_dev calculation function is a derivation of actual mathematical std_dev calculation function,
-	 * however while dividing intermediate s value with ( p->nobs * (p->nobs -1)) was wrong,
-	 * it should be dividing by square of p->nobs (no of iteration).
-	 */
+	if (p->nobs <= 1) return 0.0;
 
-	if (p->nobs <= 1)
-		return 0.0;
-
-	s = (p->nobs * p->sum_sq) - (p->sum * p->sum);
-
-	if ((int) s <= 0)
-		return 0.0;
-
-	s = s / (p->nobs * p->nobs);
+	s  = (p->nobs * p->sum_sq) - (p->sum * p->sum);
+	s /= p->nobs * (p->nobs -1);
 
 	return (RealF) sqrt(s);
 
