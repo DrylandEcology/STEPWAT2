@@ -610,7 +610,7 @@ static void _no_resources( GrpIndex rg) {
 
   /*----------------------------------------------------*/
   /* kill until nk reached   (EQN 7)    */
-  nk = (IntS) ( (n * (1.0 - 1.0/RGroup[rg]->pr)) +.5);
+  nk = (IntS) ( (n * (1.0 - 1.0/RGroup[rg]->pr)));
   for( i=0; i < nk; i++)
     indiv_Kill_Complete(indv_list[i], 10);
 
