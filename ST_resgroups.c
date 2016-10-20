@@ -192,7 +192,7 @@ extra resource partitioning does not occur when running SOILWAT*/
   /* reset annuals' "true" relative size here */
   ForEachGroup(rg) { g = RGroup[rg];
     g->pr = ZRO(g->res_avail) ? 0. : g->res_required / g->res_avail;
-    if (g->max_age == 1) {
+   if (g->max_age == 1) {
       g->relsize = _add_annuals(rg, g->pr, add_seeds);
     }
   }
@@ -245,17 +245,21 @@ static RealF _add_annuals( const GrpIndex rg, const RealF g_pr,
    ForEachGroupSpp(sp,rg,i) { s = Species[sp]; 
      newsize = 0.0;
      forced = FALSE;
-     
+    // printf("add_seeds=%d \n",add_seeds);
      if (!s->use_me) continue;
-     
+     //if add seeds is F and a random number drawn from the uniform distribution is less than prob of seed establishment
      if (!add_seeds && RandUni() <= s->seedling_estab_prob) {
        /* force addition of new propagules */
-       _add_annual_seedprod(sp, (g->regen_ok) ? g_pr: -1.);
+         //if regen_ok is True, pass the g_pr parameter, if regen_ok is False, pass -1
+                _add_annual_seedprod(sp, (g->regen_ok) ? g_pr: -1.);
        forced = TRUE;
      }
 
+     //if regen_ok is T then x = values coming from _get_annual_maxestab, if regen ok is F then
+     //x=0.
      x = (g->regen_ok) ? _get_annual_maxestab(sp) : 0.;
-     if ( GT(x, 0.) ) {
+     if ( GT(x, 0.) )
+     {
        estabs = (x - (x / PR_0_est * g_pr)) * exp(-g_pr);
        pr_inv = 1.0 / g_pr;
        newsize = fmin(pr_inv, estabs);
@@ -302,11 +306,13 @@ static void _add_annual_seedprod(SppIndex sp, RealF pr) {
 
   SpeciesType *s = Species[sp];
   IntU i;
-
+// incrementing the number of viable years
   for( i = s->viable_yrs -1; i > 0; i--) {
     s->seedprod[i] = s->seedprod[i-1];
   }
 
+  //compare pr (actual value or -1) to zero, if less than zero, then make it zero. If greater than 0
+  //than multiple max_seed_estab * exp(-pr)
  s->seedprod[i] = LT(pr, 0.) ? 0. : s->max_seed_estab * exp(-pr) ;
   //s->seedprod[i] = LT(pr, 0.) ? 0. : s->max_seed_estab * 1/pr ;
   //s->seedprod[i] = LT(pr, 0.) ? 0. : s->max_seed_estab * s->relsize;
@@ -730,12 +736,15 @@ void rgroup_Establish( void) {
 		continue;
         if (Species[sp]->max_age==1) {
             num_est = _get_annual_maxestab(sp);
+          //  printf("num_est for annuals=%d \n",num_est);
+
             // above inserted to establish individuals for annuals
             // num_est for individuals is the number called from the seedbank in 
             //     _get_annual_maxestab() (TEM 10-27-2015)
         } else {
         
-        num_est = Species_NumEstablish(sp);}
+        num_est = Species_NumEstablish(sp);
+        }
 
         if (num_est) {
           /* printf("%d %d %d %d\n",
