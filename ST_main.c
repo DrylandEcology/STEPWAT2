@@ -227,7 +227,7 @@ int main(int argc, char **argv) {
 			/* printf("Iter=%d, Year=%d\n", iter, year);  */
 			Globals.currYear = year;
 
-			rgroup_Establish(); /* excludes annuals */
+			rgroup_Establish(); 
 
 			Env_Generate();
 
