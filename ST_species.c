@@ -128,7 +128,7 @@ void Species_Add_Indiv(SppIndex sp, Int new_indivs)
 
 	rg = Species[sp]->res_grp;
 
-	printf("Inside Species_Add_Indiv() spIndex=%d, new_indivs=%d \n ",sp,  new_indivs);
+	//printf("Inside Species_Add_Indiv() spIndex=%d, new_indivs=%d \n ",sp,  new_indivs);
 
 	/* add individuals until max indivs */
 	for (i = 1; i <= new_indivs; i++)
@@ -140,13 +140,13 @@ void Species_Add_Indiv(SppIndex sp, Int new_indivs)
 
 		Species[sp]->est_count++;
 		newsize += Species[sp]->relseedlingsize;
-		printf("Loop Index i=%d, Species[sp]->relseedlingsize=%.5f now newsize=%.5f \n ",i,  Species[sp]->relseedlingsize,newsize);
+		//printf("Loop Index i=%d, Species[sp]->relseedlingsize=%.5f now newsize=%.5f \n ",i,  Species[sp]->relseedlingsize,newsize);
 	}
 
 	/* add species to species group if new*/
 	rgroup_AddSpecies(rg, sp);
 
-	printf("Inside Species_Add_Indiv() calculated total newsize=%.5f \n ",newsize);
+	//printf("Inside Species_Add_Indiv() calculated total newsize=%.5f \n ",newsize);
 	/* accumulate sizes and resources used/available*/
 	Species_Update_Newsize(sp, newsize);
 }
@@ -290,13 +290,13 @@ void Species_Update_Newsize(SppIndex sp, RealF newsize)
 				Species[sp]->relsize, Globals.currYear, Globals.currIter);
 	}
 
-	printf("Inside Species_Update_Newsize() spIndex=%d, name =%s,Species[sp]->relsize=%.5f, newsize=%.5f \n ",sp, Species[sp]->name,Species[sp]->relsize, newsize);
+	//printf("Inside Species_Update_Newsize() spIndex=%d, name =%s,Species[sp]->relsize=%.5f, newsize=%.5f \n ",sp, Species[sp]->name,Species[sp]->relsize, newsize);
 	/* if this cond. true, we're off a bit from zeroing. fix it */
 	if (Species[sp]->est_count == 1 && LT(newsize, -Species[sp]->relsize))
 		newsize = -Species[sp]->relsize;
 
 	Species[sp]->relsize += newsize;
-	printf("After adding or sub relsize Species[sp]->relsize=%.5f \n ",Species[sp]->relsize);
+	//printf("After adding or sub relsize Species[sp]->relsize=%.5f \n ",Species[sp]->relsize);
 
 	// if (Species[sp]->max_age == 1)
 	//  printf("before hard reset: indiv =%d, sp relSize=%0.6f\n\n",Species[sp]->est_count,Species[sp]->relsize );
