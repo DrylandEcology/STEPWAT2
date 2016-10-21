@@ -128,19 +128,25 @@ void Species_Add_Indiv(SppIndex sp, Int new_indivs)
 
 	rg = Species[sp]->res_grp;
 
+	printf("Inside Species_Add_Indiv() spIndex=%d, new_indivs=%d \n ",sp,  new_indivs);
+
 	/* add individuals until max indivs */
 	for (i = 1; i <= new_indivs; i++)
 	{
 		if (!indiv_New(sp))
-			LogError(logfp, LOGFATAL,
-					"Unable to add new individual in Species_Add_Indiv()");
+		{
+			LogError(logfp, LOGFATAL, "Unable to add new individual in Species_Add_Indiv()");
+		}
+
 		Species[sp]->est_count++;
 		newsize += Species[sp]->relseedlingsize;
+		printf("Loop Index i=%d, Species[sp]->relseedlingsize=%.5f now newsize=%.5f \n ",i,  Species[sp]->relseedlingsize,newsize);
 	}
 
 	/* add species to species group if new*/
 	rgroup_AddSpecies(rg, sp);
 
+	printf("Inside Species_Add_Indiv() calculated total newsize=%.5f \n ",newsize);
 	/* accumulate sizes and resources used/available*/
 	Species_Update_Newsize(sp, newsize);
 }
