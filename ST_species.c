@@ -290,11 +290,13 @@ void Species_Update_Newsize(SppIndex sp, RealF newsize)
 				Species[sp]->relsize, Globals.currYear, Globals.currIter);
 	}
 
+	printf("Inside Species_Update_Newsize() spIndex=%d, name =%s,Species[sp]->relsize=%.5f, newsize=%.5f \n ",sp, Species[sp]->name,Species[sp]->relsize, newsize);
 	/* if this cond. true, we're off a bit from zeroing. fix it */
 	if (Species[sp]->est_count == 1 && LT(newsize, -Species[sp]->relsize))
 		newsize = -Species[sp]->relsize;
 
 	Species[sp]->relsize += newsize;
+	printf("After adding or sub relsize Species[sp]->relsize=%.5f \n ",Species[sp]->relsize);
 
 	// if (Species[sp]->max_age == 1)
 	//  printf("before hard reset: indiv =%d, sp relSize=%0.6f\n\n",Species[sp]->est_count,Species[sp]->relsize );
