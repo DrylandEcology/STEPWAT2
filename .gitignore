@@ -50,6 +50,7 @@ Thumbs.db
 *.swp		#ignore .swp files (vim also likes to write these)
 
 #some special cases of things to ignore
+*outsetup_v30.in
 testing_shortegrass/
 stepwat
 testing/stepwat
