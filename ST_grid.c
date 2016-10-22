@@ -108,7 +108,17 @@ struct _grid_soil_st
 struct _grid_disturb_st
 {
 	int choices[3]; //used as boolean values (ie flags as to whether or not to use the specified disturbance)
-	int kill_yr, killfrq, extirp;
+	int kill_yr, /* kill the group in this year; if 0, don't kill, but see killfreq */
+	    killfreq_startyr,/* start year for kill frequency*/
+	    killfrq, /* kill group at this frequency: <1=prob, >1=# years */
+	    extirp, /* year in which group is extirpated (0==ignore) */
+	    veg_prod_type, /* type of VegProd.  1 for tree, 2 for shrub, 3 for grass, 4 for forb */
+	    grazing_frq; /* grazing effect on group at this frequency: <1=prob, >1=# years */
+
+	RealF xgrow, /* ephemeral growth = mm extra ppt * xgrow */
+	      proportion_killed, /* proportion killing  */
+	      proportion_recovered, /* proportion recovery after killing year */
+	      proportion_grazing; /* proportion grazing on grazing year */
 }typedef Grid_Disturb_St;
 
 struct _grid_sd_struct
@@ -463,6 +473,7 @@ void runGrid(void)
 					rgroup_IncrAges();
 
 					stat_Collect(year);
+					printf("inside run Grid() calling mort_EndofYear()\n");
 					mort_EndOfYear();
 
 					_save_cell(i, j, year, TRUE);
@@ -2048,11 +2059,22 @@ static void _read_disturbances_in(void)
 		if (!GetALine2(f, buf, 1024))
 			break;
 
-		num = sscanf(buf, "%d,%d,%d,%d,%d,%d,%d", &cell,
+		num = sscanf(buf, "%d,%d,%d,%d,%d,%d,%d,%d,%f,%d,%f,%f,%d,%f", &cell,
 				&grid_Disturb[i].choices[0], &grid_Disturb[i].choices[1],
 				&grid_Disturb[i].choices[2], &grid_Disturb[i].kill_yr,
-				&grid_Disturb[i].killfrq, &grid_Disturb[i].extirp);
-		if (num != 7)
+				&grid_Disturb[i].killfrq, &grid_Disturb[i].extirp,
+				&grid_Disturb[i].killfreq_startyr,&grid_Disturb[i].xgrow,&grid_Disturb[i].veg_prod_type,
+				&grid_Disturb[i].proportion_killed,&grid_Disturb[i].proportion_recovered,
+				&grid_Disturb[i].grazing_frq,&grid_Disturb[i].proportion_grazing);
+
+		printf("values :  %d ,%d ,%d ,%d ,%d ,%d ,%d ,%d ,%f ,%d ,%f ,%f ,%d ,%f \n", cell,
+						grid_Disturb[i].choices[0], grid_Disturb[i].choices[1],
+						grid_Disturb[i].choices[2], grid_Disturb[i].kill_yr,
+						grid_Disturb[i].killfrq, grid_Disturb[i].extirp,
+						grid_Disturb[i].killfreq_startyr,grid_Disturb[i].xgrow,grid_Disturb[i].veg_prod_type,
+						grid_Disturb[i].proportion_killed,grid_Disturb[i].proportion_recovered,
+						grid_Disturb[i].grazing_frq,grid_Disturb[i].proportion_grazing);
+		if (num != 14)
 			LogError(logfp, LOGFATAL, "Invalid %s file line %d wrong",
 					grid_files[2], i + 2);
 	}
@@ -2806,12 +2828,55 @@ static void _kill_groups_and_species(void)
 		Species_Kill(sp, 0);
 		Species[sp]->relsize = 0.0;
 	}
+
+	GrpIndex rg;
+		GroupType *g;
+		printf("inside mort_EndofYear()\n");
+		ForEachGroup(rg)
+		{
+			g = RGroup[rg];
+			printf("mort_EndofYear()  rgroup no:%d,current Year: %d, group killYear:%d \n",rg, Globals.currYear,g->killyr);
+
+			if ((Globals.currYear >= g->killfreq_startyr) && GT(g->killfreq, 0.))
+			{
+				if (LT(g->killfreq, 1.0))
+				{
+					if (RandUni() <= g->killfreq)
+					{
+						g->killyr = Globals.currYear;
+					}
+
+				}
+				else if ((Globals.currYear - g->killfreq_startyr) % (IntU) g->killfreq == 0)
+				{
+					g->killyr = Globals.currYear;
+				}
+
+			}
+
+			if (Globals.currYear == RGroup[rg]->extirp)
+			{
+				rgroup_Extirpate(rg);
+			}
+			else if (Globals.currYear == RGroup[rg]->killyr)
+			{
+				printf("calling RGroup_Kill()\n");
+				RGroup_Kill(rg);
+			}
+
+		}
+
 }
 
 /***********************************************************/
 static int _do_grid_disturbances(int row, int col)
 {
 	// return 1 if a disturbance occurs, else return 0
+	int c = col + ((row - 1) * grid_Cols) - 1;
+	printf("inside _do_grid_disturbances,UseDisturbances=%d, grid_Disturb[%d].kill_yr =%d \n",
+			    UseDisturbances,
+				c,
+				grid_Disturb[c].kill_yr);
 	if (UseDisturbances)
 	{
 		int cell = col + ((row - 1) * grid_Cols) - 1;
