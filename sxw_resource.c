@@ -141,12 +141,7 @@ void _sxw_update_resource(void) {
 		sizes[g] = 0.;
 		if (!RGroup[g]->regen_ok)
 			continue;
-		if (RGroup[g]->max_age == 1) {
-			ForEachGroupSpp(sp,g,i)
-				sizes[g] += Species[sp]->mature_biomass * .75;
-		} else {
-			sizes[g] = RGroup_GetBiomass(g);
-		}
+		sizes[g] = RGroup_GetBiomass(g);
 	}
   #endif
 
