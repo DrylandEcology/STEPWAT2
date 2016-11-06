@@ -162,9 +162,9 @@ void rgroup_PartResources(void)
 		//Annuals seem to have a artificial limit of 20. We do Annuals here differently.
 		if(g->max_age == 1)
 		{
-			{	ForEachGroupSpp(sp,rg,i)
-				g->res_required += Species[sp]->mature_biomass * .75;}
-			g->res_avail = SXW_GetTranspiration(rg);
+			//{	ForEachGroupSpp(sp,rg,i)
+			//	g->res_required += Species[sp]->mature_biomass * .75;}
+			//g->res_avail = SXW_GetTranspiration(rg);
 			if(!ZRO(g->res_avail) && g->res_required / g->res_avail > 20)
 			{
 				g->res_required = 20;
@@ -200,10 +200,10 @@ void rgroup_PartResources(void)
 	{
 		g = RGroup[rg];
 		g->pr = ZRO(g->res_avail) ? 0. : g->res_required / g->res_avail;
-		if (g->max_age == 1)
-		{
-			g->relsize = _add_annuals(rg, g->pr, add_seeds);
-		}
+		//if (g->max_age == 1)
+		//{
+		//	g->relsize = _add_annuals(rg, g->pr, add_seeds);
+		//}
 	}
 
 	rgroup_ResPartIndiv();
