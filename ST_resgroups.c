@@ -769,8 +769,15 @@ void rgroup_Establish(void)
 					continue;
 				if (Species[sp]->max_age == 1)
 				{
+				if (RandUni() <= Species[sp]->seedling_estab_prob)
+				{
 					num_est = _get_annual_maxestab(sp);
-					  printf("num_est for annuals=%d \n",num_est);
+				}
+				else
+				{
+				num_est = 0;
+				}	
+					  //printf("num_est for annuals=%d \n",num_est);
 
 					// above inserted to establish individuals for annuals
 					// num_est for individuals is the number called from the seedbank in
