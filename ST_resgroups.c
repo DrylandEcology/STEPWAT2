@@ -159,7 +159,10 @@ void rgroup_PartResources(void)
 			g->res_avail = 1;
 			LogError(logfp, LOGWARN, "RGroup %s : res_avail is Zero and res_required > 0", g->name);
 		}
-		//Annuals seem to have a artificial limit of 20. We do Annuals here differently.
+        //KAP:Previously, a seperate set of code was used to determine resource availability for annual species
+        //Now, resource paritioning for annuals occurs in the same way as for perennials, by getting the RGroup Biomass
+        //and the resource_cur from SXW_GetTranspiration
+		//Annuals seem to have a artificial limit of 20. We do Annuals here differently
 		if(g->max_age == 1)
 		{
 			//{	ForEachGroupSpp(sp,rg,i)
@@ -196,6 +199,8 @@ void rgroup_PartResources(void)
 	}
 
 	/* reset annuals' "true" relative size here */
+    //KAP: formely, this call established annual species. We have moved annual establishment to the Rgroup_Establish function,
+    //where all other resource groups establish (e.g. perennials). This function is no longer required.
 	ForEachGroup(rg)
 	{
 		g = RGroup[rg];
@@ -767,6 +772,9 @@ void rgroup_Establish(void)
 					continue;
 				if (!Species[sp]->allow_growth)
 					continue;
+            //KAP:The below RandUni function has been added to now only establish annuals here, but allow establishment to be stochastic.
+            //A random number is drawn from the uniform distribution and if that number is equal to or less than the probability of establishment,
+            //then annual species will establish via the get_annual_maxestab function.
 				if (Species[sp]->max_age == 1)
 				{
 				if (RandUni() <= Species[sp]->seedling_estab_prob)
