@@ -310,7 +310,7 @@ void SXW_Run_SOILWAT (void) {
 	/* compute production values for transp based on current plant sizes */
 	ForEachGroup(g)
 		sizes[g] = RGroup[g]->relsize;
-	//_sxw_update_root_tables(sizes);// Issue #5
+	_sxw_update_root_tables(sizes);// Issue #5
 	_sxw_sw_setup(sizes);
 #endif
 
@@ -399,6 +399,7 @@ RealF SXW_GetTranspiration( GrpIndex rg) {
 /*======================================================*/
 /* see _sxw_update_resource() for _resource_cur[]
 */
+	//printf("SXW_GetTranspiration _resource_cur[%d] = %.5f \n", rg, _resource_cur[rg]);
 	return _resource_cur[rg];
 }
 

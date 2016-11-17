@@ -304,10 +304,11 @@ void Species_Update_Newsize(SppIndex sp, RealF newsize)
 	/* this is a hard coded reset - if relsize is greater than 100
 	 the code will set the species relsize to 100 */
 	// (TEM 10-27-2015)
-	if (GT(Species[sp]->relsize, 100.))
-	{
-		Species[sp]->relsize = 100;
-	}
+	//KAP: since changes in the annual code, this hard coded reset is no longer necessary 11-10-16
+	//if (GT(Species[sp]->relsize, 100.))
+	//{
+	//	Species[sp]->relsize = 100;
+	//}
 
 	//if (Species[sp]->max_age == 1)
 	// printf("after hard reset: indiv =%d, sp relSize=%0.6f\n\n",Species[sp]->est_count,Species[sp]->relsize );

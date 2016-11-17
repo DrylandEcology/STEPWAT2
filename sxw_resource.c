@@ -139,14 +139,10 @@ void _sxw_update_resource(void) {
 	{
 		//RGroup[g]->veg_prod_type
 		sizes[g] = 0.;
+		//printf("_sxw_update_resource()RGroup Name= %s, RGroup[g]->regen_ok=%d \n ", RGroup[g]->name, RGroup[g]->regen_ok);
 		if (!RGroup[g]->regen_ok)
 			continue;
-		if (RGroup[g]->max_age == 1) {
-			ForEachGroupSpp(sp,g,i)
-				sizes[g] += Species[sp]->mature_biomass * .75;
-		} else {
-			sizes[g] = RGroup_GetBiomass(g);
-		}
+		sizes[g] = RGroup_GetBiomass(g);
 	}
   #endif
 
