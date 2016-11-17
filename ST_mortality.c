@@ -204,6 +204,7 @@ void mort_EndOfYear( void)
  *       year of non-existance.
 /*------------------------------------------------------*/
 
+	printf("inside mort_EndOfYear() \n");
 	GrpIndex rg;
 	GroupType *g;
 

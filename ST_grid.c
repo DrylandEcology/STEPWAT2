@@ -170,6 +170,10 @@ extern SW_SITE SW_Site;
 extern SW_VEGPROD SW_VegProd;
 extern SW_WEATHER SW_Weather;
 
+//This is Rgroup structure pointer that will read rgroup disturbance value, will be used in
+// grid disturbance
+extern GroupType     *RGroup [MAX_RGROUPS];
+
 // these are grids to store the SOILWAT variables... also dynamically allocated/freed
 SW_SOILWAT *grid_SW_Soilwat, *spinup_SW_Soilwat;
 SW_SITE *grid_SW_Site, *spinup_SW_Site;
@@ -286,6 +290,7 @@ static void _set_sd_lyppt(int row, int col);
 static void _kill_groups_and_species(void);
 static int _do_grid_disturbances(int row, int col);
 static void _read_init_species(void);
+static void _do_groups_and_species_extirpate(void);
 
 //static void _copy_species(SpeciesType* to, SpeciesType* from, Bool deep);
 
@@ -473,8 +478,8 @@ void runGrid(void)
 					rgroup_IncrAges();
 
 					stat_Collect(year);
-					printf("inside run Grid() calling mort_EndofYear()\n");
-					mort_EndOfYear();
+					//printf("inside run Grid() calling mort_EndofYear()\n");
+					//mort_EndOfYear();
 
 					_save_cell(i, j, year, TRUE);
 
@@ -639,7 +644,7 @@ static void _run_spinup(void)
 				rgroup_IncrAges();
 
 				stat_Collect(year);
-				mort_EndOfYear();
+				//mort_EndOfYear();
 
 				_save_spinup_cell(spinup_Cell);
 
@@ -2047,6 +2052,17 @@ static void _read_disturbances_in(void)
 	// there should be no spaces in between, just commas separating the values
 	// kill_yr will overwrite the kill year for each RGroup in the cell (0 means don't use, a # > 0 means kill everything at this year)
 
+
+	GrpIndex rg;
+	GroupType *g;
+	printf("inside _read_disturbances_in ()\n");
+	ForEachGroup(rg)
+	{
+		g = RGroup[rg];
+		printf(" rgroup name= %s , killYear:%d, proportion_killed=%f,proportion_recovered=%f ,proportion_grazing=%f \n",
+				g->name, g->killyr, g->proportion_killed, g->proportion_recovered, g->proportion_grazing);
+	}
+
 	FILE *f;
 	char buf[1024];
 	int i, cell, num;
@@ -2067,13 +2083,15 @@ static void _read_disturbances_in(void)
 				&grid_Disturb[i].proportion_killed,&grid_Disturb[i].proportion_recovered,
 				&grid_Disturb[i].grazing_frq,&grid_Disturb[i].proportion_grazing);
 
-		printf("values :  %d ,%d ,%d ,%d ,%d ,%d ,%d ,%d ,%f ,%d ,%f ,%f ,%d ,%f \n", cell,
+		printf("values :  cell=%d ,choices[0]=%d ,choices[1]=%d ,choices[2]=%d ,kill_yr=%d ,killfrq=%d ,extirp=%d ,killfreq_startyr=%d ,xgrow=%f ,veg_prod_type=%d ,proportion_killed=%f ,proportion_recovered=%f ,grazing_frq=%d ,proportion_grazing=%f \n", cell,
 						grid_Disturb[i].choices[0], grid_Disturb[i].choices[1],
 						grid_Disturb[i].choices[2], grid_Disturb[i].kill_yr,
 						grid_Disturb[i].killfrq, grid_Disturb[i].extirp,
 						grid_Disturb[i].killfreq_startyr,grid_Disturb[i].xgrow,grid_Disturb[i].veg_prod_type,
 						grid_Disturb[i].proportion_killed,grid_Disturb[i].proportion_recovered,
 						grid_Disturb[i].grazing_frq,grid_Disturb[i].proportion_grazing);
+
+
 		if (num != 14)
 			LogError(logfp, LOGFATAL, "Invalid %s file line %d wrong",
 					grid_files[2], i + 2);
@@ -2810,61 +2828,62 @@ static void _set_sd_lyppt(int row, int col)
 			grid_SD[s][cell].lyppt = grid_Env[cell].ppt;
 }
 
+
+/*
+ *
+ */
+
+static void _do_groups_and_species_extirpate(void)
+{
+	printf("inside _do_groups_and_species_extirpate()\n");
+	GrpIndex rg;
+	ForEachGroup(rg)
+	{
+		rgroup_Extirpate(rg);
+	}
+}
+
 /***********************************************************/
 static void _kill_groups_and_species(void)
 {
 	// kills all groups and species, leaving the ability to regenerate at a later time...
 	// I first assumed that killing all of the RGroups would also kill all of the Species, but for some reason it wasn't getting everything in very rare cases (which is weird, b/c I thought that a Species should always belong to an RGroup)... so instead we are now just killing all of the species individually
-	GrpIndex c;
-	SppIndex sp;
+//	GrpIndex c;
+//	SppIndex sp;
+//
+//	ForEachGroup(c)
+//		RGroup[c]->pr = 0.0; // reset the pr, so our output doesn't look weird
+//
+//	ForEachSpecies(sp)
+//	{
+//		if (!Species[sp]->use_me)
+//			continue;
+//		Species_Kill(sp, 0);
+//		Species[sp]->relsize = 0.0;
+//	}
 
-	ForEachGroup(c)
-		RGroup[c]->pr = 0.0; // reset the pr, so our output doesn't look weird
-
-	ForEachSpecies(sp)
-	{
-		if (!Species[sp]->use_me)
-			continue;
-		Species_Kill(sp, 0);
-		Species[sp]->relsize = 0.0;
-	}
-
+	printf("inside _kill_groups_and_species()\n");
 	GrpIndex rg;
-		GroupType *g;
-		printf("inside mort_EndofYear()\n");
-		ForEachGroup(rg)
+	ForEachGroup(rg)
+	{
+		Int i;
+
+		ForEachEstSpp2( rg, i)
 		{
-			g = RGroup[rg];
-			printf("mort_EndofYear()  rgroup no:%d,current Year: %d, group killYear:%d \n",rg, Globals.currYear,g->killyr);
-
-			if ((Globals.currYear >= g->killfreq_startyr) && GT(g->killfreq, 0.))
+			if (!Species[RGroup[rg]->est_spp[i]]->use_me)
 			{
-				if (LT(g->killfreq, 1.0))
-				{
-					if (RandUni() <= g->killfreq)
-					{
-						g->killyr = Globals.currYear;
-					}
-
-				}
-				else if ((Globals.currYear - g->killfreq_startyr) % (IntU) g->killfreq == 0)
-				{
-					g->killyr = Globals.currYear;
-				}
-
+				continue;
 			}
-
-			if (Globals.currYear == RGroup[rg]->extirp)
+			else
 			{
-				rgroup_Extirpate(rg);
-			}
-			else if (Globals.currYear == RGroup[rg]->killyr)
-			{
-				printf("calling RGroup_Kill()\n");
-				RGroup_Kill(rg);
+				printf("calling Species_Proportion_Kill() with rgroup name= %s , RGroup[%d]->proportion_killed =%f \n",RGroup[rg]->name,rg, RGroup[rg]->proportion_killed);
+				Species_Proportion_Kill(RGroup[rg]->est_spp[i], 6, RGroup[rg]->proportion_killed);
 			}
 
 		}
+
+	}
+
 
 }
 
@@ -2872,24 +2891,58 @@ static void _kill_groups_and_species(void)
 static int _do_grid_disturbances(int row, int col)
 {
 	// return 1 if a disturbance occurs, else return 0
-	int c = col + ((row - 1) * grid_Cols) - 1;
-	printf("inside _do_grid_disturbances,UseDisturbances=%d, grid_Disturb[%d].kill_yr =%d \n",
-			    UseDisturbances,
-				c,
-				grid_Disturb[c].kill_yr);
-	if (UseDisturbances)
+
+//	if (UseDisturbances)
+//	{
+//		int cell = col + ((row - 1) * grid_Cols) - 1;
+//		if (Globals.currYear == grid_Disturb[cell].kill_yr)
+//		{
+//			//basically if a disturbance occurs, we kill everything and then don't allow any species to grow for the year
+//			_kill_groups_and_species();
+//			SppIndex s;
+//			ForEachSpecies(s)
+//				if (Species[s]->use_me && Species[s]->use_dispersal)
+//					Species[s]->allow_growth = FALSE;
+//			return 1;
+//		}
+//	}
+
+	if(UseDisturbances)
 	{
 		int cell = col + ((row - 1) * grid_Cols) - 1;
-		if (Globals.currYear == grid_Disturb[cell].kill_yr)
+//		printf( "inside _do_grid_disturbances Globals.currYear =%d, cell=%d, grid_Disturb[cell].kill_yr =%d \n",
+//							Globals.currYear, cell, grid_Disturb[cell].kill_yr);
+		if ((Globals.currYear >=grid_Disturb[cell].killfreq_startyr) && GT(grid_Disturb[cell].killfrq, 0.))
 		{
-			//basically if a disturbance occurs, we kill everything and then don't allow any species to grow for the year
-			_kill_groups_and_species();
-			SppIndex s;
-			ForEachSpecies(s)
-				if (Species[s]->use_me && Species[s]->use_dispersal)
-					Species[s]->allow_growth = FALSE;
+			if (LT(grid_Disturb[cell].killfrq, 1.0))
+			{
+				if (RandUni() <= grid_Disturb[cell].killfrq)
+				{
+					grid_Disturb[cell].kill_yr = Globals.currYear;
+				}
+
+			}
+			else if ((Globals.currYear - grid_Disturb[cell].killfreq_startyr) % (IntU) grid_Disturb[cell].killfrq == 0)
+			{
+				grid_Disturb[cell].kill_yr = Globals.currYear;
+			}
+
+		}
+
+		if (Globals.currYear == grid_Disturb[cell].extirp)
+		{
+			_do_groups_and_species_extirpate();
 			return 1;
 		}
+		else if (Globals.currYear == grid_Disturb[cell].kill_yr)
+		{
+			printf( "current year matched with cell kill_year so calling  _kill_groups_and_species() Globals.currYear =%d, cell=%d, grid_Disturb[cell].kill_yr =%d \n",
+							Globals.currYear, cell, grid_Disturb[cell].kill_yr);
+			_kill_groups_and_species();
+			return 1;
+		}
+
+
 	}
 	return 0;
 }

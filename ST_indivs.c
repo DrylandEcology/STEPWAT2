@@ -237,7 +237,10 @@ void indiv_proportion_Kill(IndivType *ndv, int killType, RealF proportKilled)
 	ndv->prv_yr_relsize = ndv->relsize;
 
 	RealF reduction = -(ndv->relsize * proportKilled);
+	printf("inside indiv_proportion_Kill() old rel_size=%f, reduction=%f \n",ndv->relsize,reduction);
+
 	ndv->relsize = ndv->relsize + reduction;
+	printf("inside indiv_proportion_Kill() new  rel_size=%f \n",ndv->relsize);
 	Species_Update_Newsize(ndv->myspecies, reduction);
 
 	if (ZERO(ndv->relsize) || LT(ndv->relsize, 0.0))
