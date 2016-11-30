@@ -291,6 +291,7 @@ static void _kill_groups_and_species(void);
 static int _do_grid_disturbances(int row, int col);
 static void _read_init_species(void);
 static void _do_groups_and_species_extirpate(void);
+static void _do_grid_proportion_Recovery(int row, int col);
 
 //static void _copy_species(SpeciesType* to, SpeciesType* from, Bool deep);
 
@@ -464,7 +465,7 @@ void runGrid(void)
 					if (year > 1 && UseSeedDispersal)
 						_set_sd_lyppt(i, j);
 
-					_do_grid_disturbances(i, j);
+
 
 					rgroup_Establish(); /* excludes annuals */
 
@@ -477,11 +478,18 @@ void runGrid(void)
 
 					rgroup_IncrAges();
 
+					// Added functions for Grazing and mort_end_year as proportional killing effect before exporting biomass end of the year
+					// grazing_EndOfYear();
+					_do_grid_disturbances(i, j);
+
 					stat_Collect(year);
-					//printf("inside run Grid() calling mort_EndofYear()\n");
-					//mort_EndOfYear();
 
 					_save_cell(i, j, year, TRUE);
+
+		            // Moved kill annual and kill extra growth after we export biomass, we also doing recoverly after killing year
+				    _kill_annuals();
+					_do_grid_proportion_Recovery(i, j);
+					_kill_extra_growth();
 
 					if (UseProgressBar)
 					{
@@ -630,7 +638,7 @@ static void _run_spinup(void)
 				_load_spinup_cell(spinup_Cell);
 				Globals.currYear = year;
 
-				_do_grid_disturbances(i, j);
+			//	_do_grid_disturbances(i, j);
 
 				rgroup_Establish(); /* excludes annuals */
 
@@ -645,8 +653,10 @@ static void _run_spinup(void)
 
 				stat_Collect(year);
 				//mort_EndOfYear();
-
 				_save_spinup_cell(spinup_Cell);
+
+				_kill_annuals();
+				_kill_extra_growth();
 
 			} /* end model run for this cell*/
 
@@ -2851,6 +2861,8 @@ static void _kill_groups_and_species(void)
 //	GrpIndex c;
 //	SppIndex sp;
 //
+	// (AKT /Kyle) 11/17/2016
+	//we may need to revisit this setting PR to 0 when we kill everything
 //	ForEachGroup(c)
 //		RGroup[c]->pr = 0.0; // reset the pr, so our output doesn't look weird
 //
@@ -2922,7 +2934,7 @@ static int _do_grid_disturbances(int row, int col)
 				}
 
 			}
-			else if ((Globals.currYear - grid_Disturb[cell].killfreq_startyr) % (IntU) grid_Disturb[cell].killfrq == 0)
+			else if (((Globals.currYear - grid_Disturb[cell].killfreq_startyr) % (IntU) grid_Disturb[cell].killfrq) == 0)
 			{
 				grid_Disturb[cell].kill_yr = Globals.currYear;
 			}
@@ -2945,6 +2957,75 @@ static int _do_grid_disturbances(int row, int col)
 
 	}
 	return 0;
+}
+
+
+static void _do_grid_proportion_Recovery(int row, int col)
+{
+	/*======================================================*/
+	/* PURPOSE */
+	/* Perform the sorts of proportion_Recovery one might expect at next year after the killing year
+	 /* HISTORY */
+	/* Nov 22 2016 -AKT -Added Species Proportion Recovery for Grid Version */
+	/*======================================================*/
+	if (UseDisturbances)
+	{
+		int cell = col + ((row - 1) * grid_Cols) - 1;
+//		printf( "inside _do_grid_proportion_Recovery Globals.currYear =%d, cell=%d, grid_Disturb[cell].kill_yr =%d \n",
+//							Globals.currYear, cell, grid_Disturb[cell].kill_yr);
+		if ((Globals.currYear >= grid_Disturb[cell].killfreq_startyr) && GT(grid_Disturb[cell].killfrq, 0.))
+		{
+			if (LT(grid_Disturb[cell].killfrq, 1.0))
+			{
+				if (RandUni() <= grid_Disturb[cell].killfrq)
+				{
+					grid_Disturb[cell].kill_yr = Globals.currYear;
+				}
+
+			}
+			else if (((Globals.currYear - grid_Disturb[cell].killfreq_startyr) % (IntU) grid_Disturb[cell].killfrq) == 0)
+			{
+				grid_Disturb[cell].kill_yr = Globals.currYear;
+			}
+
+		}
+
+		//rgroup proportion recovery
+		if (Globals.currYear == grid_Disturb[cell].kill_yr)
+		{
+			GrpIndex rg;
+			ForEachGroup(rg)
+			{
+				if (Globals.currYear < RGroup[rg]->startyr)
+				{
+					/* don't start trying to grow until RGroup[rg]->startyr year */
+					continue;
+				}
+
+				Int i;
+
+				ForEachEstSpp2( rg, i)
+				{
+					if (!Species[RGroup[rg]->est_spp[i]]->use_me)
+					{
+						continue;
+					}
+					else
+					{
+						printf( "calling Species_Proportion_Recovery() with rgroup name= %s , RGroup[%d]->proportion_recovered =%f \n", RGroup[rg]->name, rg, RGroup[rg]->proportion_recovered);
+						Species_Proportion_Recovery(RGroup[rg]->est_spp[i], 6,
+								                    RGroup[rg]->proportion_recovered,
+								                    RGroup[rg]->proportion_killed);
+					}
+
+				}
+
+			}
+
+		}
+
+	}
+
 }
 
 /***********************************************************/
