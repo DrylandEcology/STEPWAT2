@@ -292,6 +292,7 @@ static int _do_grid_disturbances(int row, int col);
 static void _read_init_species(void);
 static void _do_groups_and_species_extirpate(void);
 static void _do_grid_proportion_Recovery(int row, int col);
+static void _do_grid_grazing_EndOfYear(int row, int col);
 
 //static void _copy_species(SpeciesType* to, SpeciesType* from, Bool deep);
 
@@ -479,7 +480,7 @@ void runGrid(void)
 					rgroup_IncrAges();
 
 					// Added functions for Grazing and mort_end_year as proportional killing effect before exporting biomass end of the year
-					// grazing_EndOfYear();
+					_do_grid_grazing_EndOfYear(i, j);
 					_do_grid_disturbances(i, j);
 
 					stat_Collect(year);
@@ -2888,7 +2889,7 @@ static void _kill_groups_and_species(void)
 			}
 			else
 			{
-				printf("calling Species_Proportion_Kill() with rgroup name= %s , RGroup[%d]->proportion_killed =%f \n",RGroup[rg]->name,rg, RGroup[rg]->proportion_killed);
+				printf("calling Species_Proportion_Kill() with rgroup name= %s , RGroup[%d]->proportion_killed =%f for Species[%d]->name= %s \n",RGroup[rg]->name,rg, RGroup[rg]->proportion_killed, i, Species[RGroup[rg]->est_spp[i]]->name);
 				Species_Proportion_Kill(RGroup[rg]->est_spp[i], 6, RGroup[rg]->proportion_killed);
 			}
 
@@ -3012,10 +3013,79 @@ static void _do_grid_proportion_Recovery(int row, int col)
 					}
 					else
 					{
-						printf( "calling Species_Proportion_Recovery() with rgroup name= %s , RGroup[%d]->proportion_recovered =%f \n", RGroup[rg]->name, rg, RGroup[rg]->proportion_recovered);
+						printf( "calling Species_Proportion_Recovery() with rgroup name= %s , RGroup[%d]->proportion_recovered =%f for Species[%d]->name= %s \n", RGroup[rg]->name, rg, RGroup[rg]->proportion_recovered, i, Species[RGroup[rg]->est_spp[i]]->name);
 						Species_Proportion_Recovery(RGroup[rg]->est_spp[i], 6,
 								                    RGroup[rg]->proportion_recovered,
 								                    RGroup[rg]->proportion_killed);
+					}
+
+				}
+
+			}
+
+		}
+
+	}
+
+}
+
+static void _do_grid_grazing_EndOfYear(int row, int col)
+{
+
+	/*======================================================*/
+	/* PURPOSE */
+	/* Perform the sorts of grazing one might expect at end of year, it is based on grazing frequency
+	 /* HISTORY */
+	/*  Nov 22 2016 -AKT  -Added Species grazing EndOfYear for grid model  */
+	/*======================================================*/
+
+	if (UseDisturbances)
+	{
+		IntU grazingyr = 0;
+		int cell = col + ((row - 1) * grid_Cols) - 1;
+//		printf( "inside _do_grid_proportion_Recovery Globals.currYear =%d, cell=%d, grid_Disturb[cell].kill_yr =%d \n",
+//							Globals.currYear, cell, grid_Disturb[cell].kill_yr);
+		if (GT(grid_Disturb[cell].grazing_frq, 0.))
+		{
+			if (LT(grid_Disturb[cell].grazing_frq, 1.0))
+			{
+				if (RandUni() <= grid_Disturb[cell].grazing_frq)
+				{
+					grazingyr = Globals.currYear;
+				}
+
+			}
+			else if ((Globals.currYear  % (IntU) grid_Disturb[cell].grazing_frq) == 0)
+			{
+				grazingyr = Globals.currYear;
+			}
+
+		}
+
+		//rgroup proportion grazing
+		if (Globals.currYear == grazingyr)
+		{
+			GrpIndex rg;
+			ForEachGroup(rg)
+			{
+				if (Globals.currYear < RGroup[rg]->startyr)
+				{
+					/* don't start trying to grow or do grazing until RGroup[rg]->startyr year */
+					continue;
+				}
+
+				Int i;
+
+				ForEachEstSpp2( rg, i)
+				{
+					if (!Species[RGroup[rg]->est_spp[i]]->use_me)
+					{
+						continue;
+					}
+					else
+					{
+						printf( "year = %d, calling Species_Proportion_Grazing() with rgroup name= %s , RGroup[%d]->proportion_grazing =%f for Species[%d]->name= %s \n", Globals.currYear,RGroup[rg]->name, rg,RGroup[rg]->proportion_grazing, i, Species[RGroup[rg]->est_spp[i]]->name);
+			     		Species_Proportion_Grazing(RGroup[rg]->est_spp[i], RGroup[rg]->proportion_grazing);
 					}
 
 				}
