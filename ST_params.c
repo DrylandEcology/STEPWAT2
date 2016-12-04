@@ -72,7 +72,7 @@ static void _rgroup_add1( char name[], RealF space, RealF density,
                       Int estab, RealF slow, Int stretch,
                       Int xres, Int estann, Int turnon,
                       Int styr, Int killyr, Int killfreq_startyr,RealF killfreq,
-                      Int extirp, Int mort, RealF xgro, Int veg_prod_type, RealF prop_killed, RealF prop_recovered,RealF grazing_frq,RealF prop_grazing);
+                      Int extirp, Int mort, RealF xgro, Int veg_prod_type, RealF prop_killed, RealF prop_recovered,RealF grazing_frq,RealF prop_grazing,Int grazingfreq_startyr);
 static void _rgroup_add2( char name[],
                       RealF nslope, RealF nint,
                       RealF wslope, RealF wint,
@@ -862,7 +862,7 @@ static void _rgroup_init( void) {
 
    /* input variables*/
    Int estab, stretch, xres, turnon, extirp, mort, estann,
-       styr, killyr, killfreq_startyr,veg_prod_type;
+       styr, killyr, killfreq_startyr,veg_prod_type, grazingfreq_startyr;
    RealF space, density, slow, killfreq, xgro,
          nslope, nint, wslope, wint, dslope, dint,prop_killed, prop_recovered,grazing_frq, prop_grazing ;
 
@@ -891,20 +891,20 @@ static void _rgroup_init( void) {
         groupsok = TRUE;
         break;
      }
-     x=sscanf( inbuf, "%s %f %f %d %f %d %d %d %d %d %d %d %f %d %d %f %d %f %f %f %f",
+     x=sscanf( inbuf, "%s %f %f %d %f %d %d %d %d %d %d %d %f %d %d %f %d %f %f %f %f %d",
                name,
                &space, &density, &estab, &slow, &stretch,
                &xres, &estann, &turnon, &styr, &killyr,&killfreq_startyr, &killfreq,
-               &extirp, &mort, &xgro, &veg_prod_type, &prop_killed, &prop_recovered,&grazing_frq, &prop_grazing );
-     if (x < 16) {
+               &extirp, &mort, &xgro, &veg_prod_type, &prop_killed, &prop_recovered,&grazing_frq, &prop_grazing,&grazingfreq_startyr );
+     if (x < 22) {
        LogError(logfp, LOGFATAL, "%s: Too few columns in groups",
                MyFileName);
      }
    
-     _rgroup_add1( name, space, density, estab,
+    _rgroup_add1( name, space, density, estab,
                    slow, stretch, xres, estann,
                    turnon, styr, killyr,killfreq_startyr, killfreq,
-                   extirp, mort, xgro, veg_prod_type,prop_killed, prop_recovered,grazing_frq,prop_grazing);
+                   extirp, mort, xgro, veg_prod_type,prop_killed, prop_recovered,grazing_frq,prop_grazing,grazingfreq_startyr);
    }/* end while*/
 
    if (!groupsok) {
@@ -957,7 +957,7 @@ static void _rgroup_add1( char name[], RealF space, RealF density,
                       Int estab, RealF slow, Int stretch,
                       Int xres, Int estann, Int turnon,
                       Int styr, Int killyr, Int killfreq_startyr, RealF killfreq,
-                      Int extirp, Int mort, RealF xgro, Int veg_prod_type, RealF prop_killed, RealF prop_recovered,RealF grazing_frq,RealF prop_grazing) {
+                      Int extirp, Int mort, RealF xgro, Int veg_prod_type, RealF prop_killed, RealF prop_recovered,RealF grazing_frq,RealF prop_grazing, Int grazingfreq_startyr) {
 /*======================================================*/
   GrpIndex rg;
 
@@ -986,7 +986,8 @@ static void _rgroup_add1( char name[], RealF space, RealF density,
   RGroup[rg]->proportion_recovered = prop_recovered;
   RGroup[rg]->grazingfrq           = grazing_frq;
   RGroup[rg]->proportion_grazing   = prop_grazing;
-  
+  RGroup[rg]->grazingfreq_startyr  = grazingfreq_startyr;
+
   RGroup[rg]->extirpated    = FALSE;
 }
 
