@@ -210,6 +210,12 @@ void mort_EndOfYear( void)
 
 	ForEachGroup(rg)
 	{
+		if (Globals.currYear < RGroup[rg]->startyr)
+		{
+			/* don't start trying to kill or grow or do grazing until RGroup[rg]->startyr year */
+			continue;
+		}
+
 		g = RGroup[rg];
 
 		if ((Globals.currYear >= g->killfreq_startyr) && GT(g->killfreq, 0.))
@@ -222,7 +228,7 @@ void mort_EndOfYear( void)
 				}
 
 			}
-			else if ((Globals.currYear - g->killfreq_startyr) % (IntU) g->killfreq == 0)
+			else if (((Globals.currYear - g->killfreq_startyr) % (IntU) g->killfreq) == 0)
 			{
 				g->killyr = Globals.currYear;
 			}
@@ -313,24 +319,39 @@ void proportion_Recovery(void)
 	/* 1st Nov 2015 -AT -Added Species Proportion Recovery  */
 	/*======================================================*/
 
-	  GrpIndex rg;
-	  GroupType *g;
+	GrpIndex rg;
+	GroupType *g;
 
-	  ForEachGroup(rg)
-	  {
+	ForEachGroup(rg)
+	{
+
+		if (Globals.currYear < RGroup[rg]->startyr)
+		{
+			/* don't start trying to grow  until RGroup[rg]->startyr year */
+			continue;
+		}
+
 		g = RGroup[rg];
 
-	    if ( GT( g->killfreq, 0.) ) {
-	      if ( LT(g->killfreq, 1.0) ) {
-	        if (RandUni() <= g->killfreq)
-	          g->killyr = Globals.currYear;
-	      } else if ( (Globals.currYear - (g->startyr-1)) % (IntU)g->killfreq == 0) {
-	    	  g->killyr = Globals.currYear;
-	      }
-	    }
+		if ((Globals.currYear >= g->killfreq_startyr) && GT(g->killfreq, 0.))
+		{
+			if (LT(g->killfreq, 1.0))
+			{
+				if (RandUni() <= g->killfreq)
+				{
+					g->killyr = Globals.currYear;
+				}
 
-	    //rgroup proportion recovery
-	   if (Globals.currYear == RGroup[rg]->killyr)
+			}
+			else if (((Globals.currYear - g->killfreq_startyr) % (IntU) g->killfreq) == 0)
+			{
+				g->killyr = Globals.currYear;
+			}
+
+		}
+
+		//rgroup proportion recovery
+		if (Globals.currYear == RGroup[rg]->killyr)
 		{
 			Int i;
 			ForEachEstSpp2( rg, i)
@@ -341,7 +362,7 @@ void proportion_Recovery(void)
 			}
 		}
 
-	  }
+	}
 }
 
 
