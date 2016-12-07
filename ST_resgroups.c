@@ -1161,7 +1161,7 @@ void RGroup_Kill(GrpIndex rg)
 
 	/*------------------------------------------------------*/
 
-	printf("inside RGroup_Kill() rg=%d, RGroup[rg]->proportion_killed=%f \n",rg,RGroup[rg]->proportion_killed);
+	//printf("inside RGroup_Kill() rg=%d, RGroup[rg]->proportion_killed=%f \n",rg,RGroup[rg]->proportion_killed);
 	Int i;
 
 	ForEachEstSpp2( rg, i)

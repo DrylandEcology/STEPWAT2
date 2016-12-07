@@ -237,10 +237,10 @@ void indiv_proportion_Kill(IndivType *ndv, int killType, RealF proportKilled)
 	ndv->prv_yr_relsize = ndv->relsize;
 
 	RealF reduction = -(ndv->relsize * proportKilled);
-	printf("inside indiv_proportion_Kill() old indiv rel_size=%f, reduction=%f \n",ndv->relsize,reduction);
+//	printf("inside indiv_proportion_Kill() old indiv rel_size=%f, reduction=%f \n",ndv->relsize,reduction);
 
 	ndv->relsize = ndv->relsize + reduction;
-	printf("inside indiv_proportion_Kill() new indiv rel_size=%f \n",ndv->relsize);
+//	printf("inside indiv_proportion_Kill() new indiv rel_size=%f \n",ndv->relsize);
 	Species_Update_Newsize(ndv->myspecies, reduction);
 
 	if (ZERO(ndv->relsize) || LT(ndv->relsize, 0.0))
@@ -273,9 +273,9 @@ void indiv_proportion_Grazing( IndivType *ndv, RealF proportionGrazing)
 
 
 	RealF grazing_reduce = -(ndv->relsize * proportionGrazing);
-	printf("inside indiv_proportion_Grazing() old indiv rel_size=%f, grazing_reduce=%f \n",ndv->relsize,grazing_reduce);
+//	printf("inside indiv_proportion_Grazing() old indiv rel_size=%f, grazing_reduce=%f \n",ndv->relsize,grazing_reduce);
 	ndv->relsize = ndv->relsize + grazing_reduce;
-	printf("inside indiv_proportion_Grazing() new indiv rel_size=%f \n",ndv->relsize);
+//	printf("inside indiv_proportion_Grazing() new indiv rel_size=%f \n",ndv->relsize);
 	Species_Update_Newsize(ndv->myspecies, grazing_reduce);
 
 	if (ZERO(ndv->relsize) || LT(ndv->relsize, 0.0))

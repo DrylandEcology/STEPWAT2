@@ -2065,12 +2065,12 @@ static void _read_disturbances_in(void)
 
 	GrpIndex rg;
 	GroupType *g;
-	printf("inside _read_disturbances_in ()\n");
+	//printf("inside _read_disturbances_in ()\n");
 	ForEachGroup(rg)
 	{
 		g = RGroup[rg];
-		printf(" rgroup name= %s , killYear:%d, proportion_killed=%f,proportion_recovered=%f ,proportion_grazing=%f \n",
-				g->name, g->killyr, g->proportion_killed, g->proportion_recovered, g->proportion_grazing);
+	//	printf(" rgroup name= %s , killYear:%d, proportion_killed=%f,proportion_recovered=%f ,proportion_grazing=%f \n",
+	//			g->name, g->killyr, g->proportion_killed, g->proportion_recovered, g->proportion_grazing);
 	}
 
 	FILE *f;
@@ -2092,12 +2092,12 @@ static void _read_disturbances_in(void)
 				&grid_Disturb[i].killfreq_startyr,&grid_Disturb[i].xgrow,&grid_Disturb[i].veg_prod_type,
 				&grid_Disturb[i].grazing_frq,&grid_Disturb[i].grazingfreq_startyr);
 
-		printf("values :  cell=%d ,choices[0]=%d ,choices[1]=%d ,choices[2]=%d ,kill_yr=%d ,killfrq=%d ,extirp=%d ,killfreq_startyr=%d ,xgrow=%f ,veg_prod_type=%d ,grazing_frq=%d ,grazingfrd_start_year=%d \n", cell,
-						grid_Disturb[i].choices[0], grid_Disturb[i].choices[1],
-						grid_Disturb[i].choices[2], grid_Disturb[i].kill_yr,
-						grid_Disturb[i].killfrq, grid_Disturb[i].extirp,
-						grid_Disturb[i].killfreq_startyr,grid_Disturb[i].xgrow,grid_Disturb[i].veg_prod_type,
-						grid_Disturb[i].grazing_frq,grid_Disturb[i].grazingfreq_startyr);
+//		printf("values :  cell=%d ,choices[0]=%d ,choices[1]=%d ,choices[2]=%d ,kill_yr=%d ,killfrq=%d ,extirp=%d ,killfreq_startyr=%d ,xgrow=%f ,veg_prod_type=%d ,grazing_frq=%d ,grazingfrd_start_year=%d \n", cell,
+//						grid_Disturb[i].choices[0], grid_Disturb[i].choices[1],
+//						grid_Disturb[i].choices[2], grid_Disturb[i].kill_yr,
+//						grid_Disturb[i].killfrq, grid_Disturb[i].extirp,
+//						grid_Disturb[i].killfreq_startyr,grid_Disturb[i].xgrow,grid_Disturb[i].veg_prod_type,
+//						grid_Disturb[i].grazing_frq,grid_Disturb[i].grazingfreq_startyr);
 
 
 		if (num != 12)
@@ -2843,7 +2843,7 @@ static void _set_sd_lyppt(int row, int col)
 
 static void _do_groups_and_species_extirpate(void)
 {
-	printf("inside _do_groups_and_species_extirpate()\n");
+	//printf("inside _do_groups_and_species_extirpate()\n");
 	GrpIndex rg;
 	ForEachGroup(rg)
 	{
@@ -2860,7 +2860,7 @@ static void _kill_groups_and_species(void)
 	 *RGroup[c]->pr = 0.0; // reset the pr, so our output doesn't look weird
 	 */
 
-	printf("inside _kill_groups_and_species()\n");
+	//printf("inside _kill_groups_and_species()\n");
 	GrpIndex rg;
 	ForEachGroup(rg)
 	{
@@ -2879,7 +2879,7 @@ static void _kill_groups_and_species(void)
 			}
 			else
 			{
-				printf("calling Species_Proportion_Kill() with rgroup name= %s , RGroup[%d]->proportion_killed =%f for Species[%d]->name= %s \n",RGroup[rg]->name,rg, RGroup[rg]->proportion_killed, i, Species[RGroup[rg]->est_spp[i]]->name);
+			//	printf("calling Species_Proportion_Kill() with rgroup name= %s , RGroup[%d]->proportion_killed =%f for Species[%d]->name= %s \n",RGroup[rg]->name,rg, RGroup[rg]->proportion_killed, i, Species[RGroup[rg]->est_spp[i]]->name);
 				Species_Proportion_Kill(RGroup[rg]->est_spp[i], 6, RGroup[rg]->proportion_killed);
 			}
 
@@ -2924,8 +2924,8 @@ static int _do_grid_disturbances(int row, int col)
 		}
 		else if (Globals.currYear == grid_Disturb[cell].kill_yr)
 		{
-			printf( "current year matched with cell kill_year so calling  _kill_groups_and_species() Globals.currYear =%d, cell=%d, grid_Disturb[cell].kill_yr =%d \n",
-							Globals.currYear, cell, grid_Disturb[cell].kill_yr);
+//			printf( "current year matched with cell kill_year so calling  _kill_groups_and_species() Globals.currYear =%d, cell=%d, grid_Disturb[cell].kill_yr =%d \n",
+//							Globals.currYear, cell, grid_Disturb[cell].kill_yr);
 			_kill_groups_and_species();
 			return 1;
 		}
@@ -2988,7 +2988,7 @@ static void _do_grid_proportion_Recovery(int row, int col)
 					}
 					else
 					{
-						printf( "calling Species_Proportion_Recovery() with rgroup name= %s , RGroup[%d]->proportion_recovered =%f for Species[%d]->name= %s \n", RGroup[rg]->name, rg, RGroup[rg]->proportion_recovered, i, Species[RGroup[rg]->est_spp[i]]->name);
+					//	printf( "calling Species_Proportion_Recovery() with rgroup name= %s , RGroup[%d]->proportion_recovered =%f for Species[%d]->name= %s \n", RGroup[rg]->name, rg, RGroup[rg]->proportion_recovered, i, Species[RGroup[rg]->est_spp[i]]->name);
 						Species_Proportion_Recovery(RGroup[rg]->est_spp[i], 6,
 								                    RGroup[rg]->proportion_recovered,
 								                    RGroup[rg]->proportion_killed);
@@ -3058,7 +3058,7 @@ static void _do_grid_grazing_EndOfYear(int row, int col)
 					}
 					else
 					{
-						printf( "year = %d, calling Species_Proportion_Grazing() with rgroup name= %s , RGroup[%d]->proportion_grazing =%f for Species[%d]->name= %s \n", Globals.currYear,RGroup[rg]->name, rg,RGroup[rg]->proportion_grazing, i, Species[RGroup[rg]->est_spp[i]]->name);
+						// printf( "year = %d, calling Species_Proportion_Grazing() with rgroup name= %s , RGroup[%d]->proportion_grazing =%f for Species[%d]->name= %s \n", Globals.currYear,RGroup[rg]->name, rg,RGroup[rg]->proportion_grazing, i, Species[RGroup[rg]->est_spp[i]]->name);
 			     		Species_Proportion_Grazing(RGroup[rg]->est_spp[i], RGroup[rg]->proportion_grazing);
 					}
 

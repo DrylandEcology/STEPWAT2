@@ -204,7 +204,7 @@ void mort_EndOfYear( void)
  *       year of non-existance.
 /*------------------------------------------------------*/
 
-	printf("inside mort_EndOfYear() \n");
+	//printf("inside mort_EndOfYear() \n");
 	GrpIndex rg;
 	GroupType *g;
 
@@ -293,7 +293,7 @@ void grazing_EndOfYear( void){
 		//rgroup grazing
 		if (Globals.currYear == grazingyr)
 		{	
-			printf( "currYear is equal to grazingYear so will iterate all the Species for doing grazing, RGroup[g]->est_count =%d \n",RGroup[rg]->est_count);
+			//printf( "currYear is equal to grazingYear so will iterate all the Species for doing grazing, RGroup[g]->est_count =%d \n",RGroup[rg]->est_count);
 			Int i;
 			ForEachEstSpp2( rg, i)
 			{
@@ -301,7 +301,7 @@ void grazing_EndOfYear( void){
 				{
 					continue;
 				}
-				printf( "year=%d calling Species_Proportion_Grazing()  rgroupName=%s, est_count =%d,grazingfreq_startyr=%d, grazingfreq=%d, proportionGrazing=%f \n",Globals.currYear,g->name,RGroup[rg]->est_count,g->grazingfreq_startyr,g->grazingfrq,g->proportion_grazing);
+				//printf( "year=%d calling Species_Proportion_Grazing()  rgroupName=%s, est_count =%d,grazingfreq_startyr=%d, grazingfreq=%d, proportionGrazing=%f \n",Globals.currYear,g->name,RGroup[rg]->est_count,g->grazingfreq_startyr,g->grazingfrq,g->proportion_grazing);
 				Species_Proportion_Grazing(RGroup[rg]->est_spp[i],RGroup[rg]->proportion_grazing );
 			}
 		}
