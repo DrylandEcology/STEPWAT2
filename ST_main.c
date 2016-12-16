@@ -194,7 +194,7 @@ int main(int argc, char **argv) {
 		SXW_Init(TRUE, NULL);
 
 	//Connect to ST db and insert static data
-	ST_connect("Output/stdebug");
+	//ST_connect("Output/stdebug");
 
 	incr = (IntS) ((float) Globals.runModelIterations / 10);
 	if (incr == 0)
@@ -258,15 +258,15 @@ int main(int argc, char **argv) {
 			 proportion_Recovery();
 			_kill_extra_growth();
 
-			ForEachGroup(g) {
-				insertRGroupYearInfo(g);
-			}
-			ForEachSpecies(s) {
-				insertSpecieYearInfo(s);
-				for ((i) = Species[s]->IndvHead; (i) != NULL; (i) = (i)->Next) {
-					insertIndivYearInfo(i);
-				}
-			}
+			//ForEachGroup(g) {
+			//	insertRGroupYearInfo(g);
+			//}
+			//ForEachSpecies(s) {
+			//	insertSpecieYearInfo(s);
+			//	for ((i) = Species[s]->IndvHead; (i) != NULL; (i) = (i)->Next) {
+			//		insertIndivYearInfo(i);
+			//	}
+			//}
 		} /* end model run for this year*/
 
 		//if (BmassFlags.yearly) //moved to output function
@@ -291,7 +291,7 @@ int main(int argc, char **argv) {
 		stat_Output_AllBmass();
 
 	//Needed to disconnect from database
-	ST_disconnect();
+	//ST_disconnect();
 #ifdef STEPWAT
 			if (!isnull(SXW.debugfile) ) SXW_PrintDebug(1);
 #endif
