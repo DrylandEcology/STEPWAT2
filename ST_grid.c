@@ -2615,7 +2615,7 @@ static void _read_seed_dispersal_in(void)
 		H = Species[s]->sd_H;
 		VT = Species[s]->sd_VT;
 		MAXD = ((H * VW) / VT) / 100.0; // divide by 100.0 because we want it in meters, not centimeters
-		sd_Rate = -(log(0.005) / MAXD); //sd_Rate is the seed dispersal rate... 0.005 = exp(-RATE*MAXD) => RATE = -(ln(0.005)/MAXD)
+		sd_Rate = -(log(0.05) / MAXD); //sd_Rate is the seed dispersal rate... 0.05 = exp(-RATE*MAXD) => RATE = -(ln(0.05)/MAXD) See Coffin et al. 1993
 
 		plotLength = sqrt(Globals.plotsize);
 		MAXDP = (int) ceil(MAXD / plotLength); //MAXD in terms of plots... rounds up to the nearest integer
