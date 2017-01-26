@@ -78,7 +78,7 @@ void Env_Generate( void) {
 /**************************************************************/
 static void _make_ppt( void) {
 /*======================================================*/
-/* take a random number from normal distribution with*/
+/* If not running SOILWAT,take a random number from normal distribution with*/
 /* mean, stddev that is between min & max from */
 /* the Globals.ppt structure.*/
 /* Also set the growing season precip. */
@@ -87,8 +87,15 @@ static void _make_ppt( void) {
 /* Chris Bennett @ LTER-CSU 6/15/2000            */
 /* cwb - 6-Dec-02 -- added code to interface with STEPWAT.
  *       The ppt and gsppt are set in _sxw_set_environs()
- *       but we still pas through this code to set the
+ *       but we still pass through this code to set the
  *       Dry/Wet/Normal state.
+ * KAP 1/26/2017 The above note by CB is not correct. Env.ppt
+ *      is set in _sxw_set_environs, but gsppt is not, it is 
+ *      set below. When using SOILWAT or not, the gsspt, ppt.dry,
+ *      and ppt.wet is currently fixed each year and read from env.in
+ *      We should consider calculating gsspt in the _sxw_set_environs
+ *      function when running SOILWAT (so it is not fixed), and allowing
+ *      what constitutes a wet and dry year to vary across sites.
 
 /*------------------------------------------------------*/
 
