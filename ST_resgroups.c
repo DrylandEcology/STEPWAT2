@@ -181,7 +181,7 @@ void rgroup_PartResources(void)
 		}
 	}
 #endif
-
+	  /* If relsize>0, reset noplants from TRUE to FALSE and if noplants=TRUE, exit from the loop */
 		if (GT(g->relsize, 0.))
 			noplants = FALSE;
 

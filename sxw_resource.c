@@ -281,7 +281,8 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
 		}
 		sumUsedByGroup += use_by_group[g];
 	}
-	//Extra Transp is proportionately given to the Rgroups.
+	//Occasionally, extra transpiration remains and if not perfectly partitioned to RGroups.
+	//This check makes sure any remaining transpiration is divided proportionately among Rgroups.
 	ForEachTrPeriod(p)
 	{
 		for (t = 0; t < SXW.NSoLyrs; t++)
