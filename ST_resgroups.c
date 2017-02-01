@@ -471,7 +471,7 @@ void rgroup_ResPartIndiv(void)
 		{
 			ndv = indivs[n];
 
-			ndv->res_required = (ndv->relsize / g->max_spp) / g->max_density;
+			ndv->res_required = (ndv->relsize / g->max_spp) / g->estabs;
 			if (GT(g->pr, 1.))
 			{
 				ndv->res_avail = fmin(ndv->res_required, base_rem);
