@@ -585,7 +585,7 @@ static void _age_independent( const SppIndex sp) {
 
   kills = (IndivType **) Mem_Calloc(Species[sp]->est_count,
                                    sizeof(IndivType *),
-                                   "_age_independed(kills)");
+                                   "_age_independent(kills)");
 
   ForEachIndiv (ndv, Species[sp]) {
     a = (RealF)ndv->age / SppMaxAge(sp);
