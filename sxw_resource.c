@@ -234,27 +234,10 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
 	RealD *transp;
 	RealF sumUsedByGroup = 0., sumTranspTotal = 0., TranspRemaining = 0.;
 
-	RealD sumMaxBioByType[4] = {0.};
-	RealD avgMaxBioByGroup[MAX_RGROUPS] = {0.};
-	RealD fracGroupsMaxBioFromType = 0;
-
-
-	ForEachGroup(g)
-	{
-		t = RGroup[g]->veg_prod_type-1;
-		ForEachGroupSpp(s,g,i) {
-			if(Species[s]->use_me)
-				avgMaxBioByGroup[g] += Species[s]->mature_biomass;
-		}
-		avgMaxBioByGroup[g] /= RGroup[g]->max_spp;
-		sumMaxBioByType[t] += avgMaxBioByGroup[g];
-	}
-
 	ForEachGroup(g)
 	{
 		use_by_group[g] = 0.; /* clear */
 		t = RGroup[g]->veg_prod_type-1;
-		fracGroupsMaxBioFromType = avgMaxBioByGroup[g]/sumMaxBioByType[t];
 		switch(t) {
 		case 0://Tree
 			transp = SXW.transpTotal;
