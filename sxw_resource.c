@@ -260,7 +260,7 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
 			int nLyrs = getNTranspLayers(RGroup[g]->veg_prod_type);
 			for (l = 0; l < nLyrs; l++) {
 				use_by_group[g] += (RealF) (_roots_active_rel[Iglp(g, l, p)] * RGroup[g]->min_res_req * transp[Ilp(l, p)]);
-				printf("for groupName= %s, layerIndex: %d  after sum use_by_group[g]= %f \n",RGroup[g]->name,l,use_by_group[g] );
+				//printf("for groupName= %s, layerIndex: %d  after sum use_by_group[g]= %f \n",RGroup[g]->name,l,use_by_group[g] );
 			}
 		}
 		sumUsedByGroup += use_by_group[g];
@@ -273,12 +273,12 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
 			sumTranspTotal += SXW.transpTotal[Ilp(t, p)];
 	}
     TranspRemaining = sumTranspTotal - sumUsedByGroup;
-    printf(" sumTranspTotal=%f, sumUsedByGroup=%f  TranspRemaining=%f \n",sumTranspTotal,sumUsedByGroup,TranspRemaining);
+    //printf(" sumTranspTotal=%f, sumUsedByGroup=%f  TranspRemaining=%f \n",sumTranspTotal,sumUsedByGroup,TranspRemaining);
 		ForEachGroup(g)
 		{
 			if(!ZRO(use_by_group[g])) {
                 use_by_group[g] += (use_by_group[g]/sumUsedByGroup) * TranspRemaining;
-                printf("for groupName= %s, after sum use_by_group[g]= %f \n",RGroup[g]->name,use_by_group[g] );
+              //  printf("for groupName= %s, after sum use_by_group[g]= %f \n",RGroup[g]->name,use_by_group[g] );
 		}
 	}
 }
