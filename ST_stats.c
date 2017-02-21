@@ -1346,7 +1346,7 @@ static void _make_header( char *buf) {
       sprintf(tbuf,"%s%c", fields[i], BmassFlags.sep);
       strcat(buf, tbuf);
     }
-    sprintf(tbuf,"%s\n", fields[i]);
+    sprintf(tbuf,"%s%c\n", fields[i],BmassFlags.sep);
     strcat(buf, tbuf);
 
 
