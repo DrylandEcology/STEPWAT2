@@ -1,6 +1,0 @@
-# sxw bvt definition file STEPPEWAT - DLM 07-19-12
-
-# read two numbers, biomass (g/m2) and transpiration (cm/m2) for that biomass to construct a simple linear relationship that gives g biomass / cm transp per m2.
-900.0 # biomass (g/m2)
-23.0 # transpiration (cm/m2)
-
