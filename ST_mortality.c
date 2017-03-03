@@ -189,20 +189,9 @@ void mort_EndOfYear( void)
 {
 /*======================================================*/
 /* PURPOSE */
-/* Perform the sorts of mortality one might expect at the
-   end of the growing season, like killing annuals and
-   extra growth.
-
-
-/* HISTORY */
-/* Chris Bennett @ LTER-CSU 3/14/2000            */
-/*    cwb - 8/8/01 - moved extirpate from main to here */
-/*       technically, this should maybe happen at the
- *       beginning of the year, but it'simpler to add it
- *       here.  depends on whether you intend the extirp
- *       year to be the last year of growth or the first
- *       year of non-existance.
-/*------------------------------------------------------*/
+/* Implements killing of plants through fire or another event
+ * that would result in mortality in single year (killyr) or 
+ * extirpation (extirp) where plants are killed and do not return. */
 
 	//printf("inside mort_EndOfYear() \n");
 	GrpIndex rg;

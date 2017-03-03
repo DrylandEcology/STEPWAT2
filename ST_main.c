@@ -253,7 +253,7 @@ int main(int argc, char **argv) {
 			if (BmassFlags.yearly)
 				output_Bmass_Yearly(year);
 
-            // Moved kill annual and kill extra growth after we export biomass, we also doing recoverly after killing year
+            // Moved kill annual and kill extra growth after we export biomass, and recovery of biomass after fire before the next year
 			_kill_annuals();
 			 proportion_Recovery();
 			_kill_extra_growth();
