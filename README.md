@@ -1,18 +1,18 @@
 # StepWat
 folder
 
-To run the gridded version of STEPWAT from the testing.sagebrush.MT_drs folder:
-# This call will save all SOILWAT2 output
+#To run the gridded version of STEPWAT from the testing.sagebrush.MT_drs folder:
+This call will save all SOILWAT2 output
  ./stepwat    -f  files.in  -g -s  -o ../sw_src/testing/files_step_soilwat_grid.in
 
-# This call will not save any SOILWAT2 output
+This call will not save any SOILWAT2 output
 ./stepwat -f files.in -g -s
  
-To run the non-gridded version of STEPWAT from the Stepwat_Inputs folder:
-# This call will save all SOILWAT2 output
+#To run the non-gridded version of STEPWAT from the Stepwat_Inputs folder:
+This call will save all SOILWAT2 output
  ./stepwat    -f  files.in -s -o ../../sw_src/testing/files_step_soilwat.in
 
-# This call will not save any SOILWAT2 output
+This call will not save any SOILWAT2 output
 ./stepwat -f files.in -s
 
 
