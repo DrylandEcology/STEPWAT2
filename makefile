@@ -116,8 +116,8 @@ ALLTGT	=	$(Bin)/stepwat
 #@# Targets follow ---------------------------------
 
 all:	$(ALLTGT)
-		cp stepwat testing.sagebrush.MT_drs
-		cp stepwat testing.sagebrush.MT_drs/Stepwat_Inputs
+		cp stepwat testing.sagebrush.master
+		cp stepwat testing.sagebrush.master/Stepwat_Inputs
 
 
 objs:	$(ALLOBJS)
