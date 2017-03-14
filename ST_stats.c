@@ -105,6 +105,7 @@ static void copyStruct(RealF val,RealF std_val,struct accumulators_grid_cell_st 
 static RealF _get_gridcell_avg( struct accumulators_grid_cell_st *p);
 static RealF _get_gridcell_std( struct accumulators_grid_cell_st *p);
 static void _make_header( char *buf);
+static void _make_header_with_std( char *buf);
 
 /* I'm making this a macro because it gets called a lot, but
 /* note that the syntax checker is obviated, so make sure
@@ -1095,7 +1096,7 @@ void stat_Output_AllCellAvgBmass(const char * filename)
 /***********************************************************/
 void stat_Output_AllBmass(void) {
 
-  char buf[1024], tbuf[80], sep = BmassFlags.sep;
+  char buf[2048], tbuf[80], sep = BmassFlags.sep;
   IntS yr;
   GrpIndex rg;
   SppIndex sp;
@@ -1108,7 +1109,7 @@ void stat_Output_AllBmass(void) {
   buf[0]='\0';
 
   if (BmassFlags.header) {
-    _make_header(buf);
+	_make_header_with_std(buf);
     fprintf(f, "%s", buf);
   }
 
@@ -1144,8 +1145,9 @@ void stat_Output_AllBmass(void) {
 
     if (BmassFlags.grpb) {
       ForEachGroup(rg) {
-        sprintf(tbuf, "%f%c",
-                _get_avg( &_Grp[rg].s[yr-1]), sep);
+        sprintf(tbuf, "%f%c%f%c",
+                _get_avg(&_Grp[rg].s[yr-1]), sep,
+                _get_std(&_Grp[rg].s[yr-1]), sep);
         strcat( buf, tbuf);
 
         if (BmassFlags.size) {
@@ -1287,6 +1289,75 @@ static RealF _get_gridcell_std(struct accumulators_grid_cell_st *p)
 		return avg;
 }
 
+
+
+/***********************************************************/
+static void _make_header_with_std( char *buf) {
+
+  char fields[MAX_OUTFIELDS*2][MAX_FIELDLEN+1];
+  char tbuf[80];
+  GrpIndex rg;
+  SppIndex sp;
+  Int i, fc=0;
+
+
+  /* Set up headers */
+  if (BmassFlags.yr)
+    strcpy(fields[fc++], "Year");
+  if (BmassFlags.dist)
+    strcpy(fields[fc++], "Disturbs");
+  if (BmassFlags.ppt) {
+    strcpy(fields[fc++], "PPT");
+    strcpy(fields[fc++], "StdDev");
+  }
+  if (BmassFlags.pclass)
+    strcpy(fields[fc++], "PPTClass");
+  if (BmassFlags.tmp) {
+    strcpy(fields[fc++], "Temp");
+    strcpy(fields[fc++], "StdDev");
+  }
+  if (BmassFlags.grpb) {
+    ForEachGroup(rg) {
+      strcpy(fields[fc++], RGroup[rg]->name);
+
+      strcpy(fields[fc], RGroup[rg]->name);
+      strcat(fields[fc++], "_std");
+
+      if (BmassFlags.size) {
+        strcpy(fields[fc], RGroup[rg]->name);
+        strcat(fields[fc++], "_RSize");
+      }
+      if (BmassFlags.pr) {
+        strcpy(fields[fc], RGroup[rg]->name);
+        strcat(fields[fc++],"_PR");
+        strcpy(fields[fc], RGroup[rg]->name);
+        strcat(fields[fc++], "_PRstd");
+      }
+    }
+  }
+
+  if (BmassFlags.sppb) {
+    ForEachSpecies(sp) {
+      strcpy(fields[fc++], Species[sp]->name);
+      if (BmassFlags.indv) {
+        strcpy(fields[fc], Species[sp]->name);
+        strcat(fields[fc++], "_Indivs");
+      }
+    }
+  }
+
+
+
+  /* Put header line in global variable */
+    for (i=0; i< fc-1; i++) {
+      sprintf(tbuf,"%s%c", fields[i], BmassFlags.sep);
+      strcat(buf, tbuf);
+    }
+    sprintf(tbuf,"%s%c\n", fields[i],BmassFlags.sep);
+    strcat(buf, tbuf);
+
+
+}
 
 /***********************************************************/
 static void _make_header( char *buf) {
