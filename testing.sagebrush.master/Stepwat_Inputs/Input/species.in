@@ -19,11 +19,10 @@
 #         attainable with average resource availability, that is
 #         reported biomass = maxbio * irate / PR
 # ratep = prop of intrisic growth rate to use as maximum growth rate
-#         not used for annuals.
 # slow  = number of years of slow growth before mortality begins
 #         not used for annuals.
 # disturb  = disturbance class: (this is defined differently in Coffin & Lauenroth 1990
-#			than it is here.
+#	than it is here.
 #         1 = very sensitive to fecal pats and ant mounds
 #         2 = sensitive to pats, very sensitive to mounds
 #         3 = insensitive to pats, sensitive to mounds
@@ -31,12 +30,11 @@
 # pestab = seedling establishment probability for a given year
 #          for annuals, this is the probability that propagules
 #          will reach the plot in a given year.  Can be 1.0 for 
-#          native species, or < 1 for invasives.
+#          or < 1.
 # eind  = maximum number of individuals that can establish in a year
 #         for annuals, max number of viable seeds that will grow to maturity
 #         on the plot. ie, fecundity.
 # minbio = biomass of an established seedling in grams
-#         meaningless for annuals.
 # maxbio = biomass of a mature individual in grams
 #         for annuals, see also irate definition.
 # clonal = can reproduce vegetatively (yes/no)
