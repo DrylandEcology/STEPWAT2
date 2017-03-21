@@ -299,7 +299,8 @@ static RealF _add_annuals(const GrpIndex rg, const RealF g_pr,
 static RealF _get_annual_maxestab(SppIndex sp)
 {
 	/*======================================================*/
-
+        /* Get the maximum number of viable seeds from the seedbank that can 
+         establish this year*/
 	IntU i;
 	RealF sum = 0.;
 	SpeciesType *s = Species[sp];
@@ -313,7 +314,8 @@ static RealF _get_annual_maxestab(SppIndex sp)
 static void _add_annual_seedprod(SppIndex sp, RealF pr)
 {
 	/*======================================================*/
-	/* negative pr means add 0 seeds to seedbank */
+	/* Add seeds to the seedbank this year and increment viable years for seeds.
+         * negative pr means add 0 seeds to seedbank */
 
 	SpeciesType *s = Species[sp];
 	IntU i;
@@ -720,7 +722,8 @@ void rgroup_Establish(void)
 	 *
 	 *   Also, there's now a parameter to define the start year
 	 *   of establishment for perennials.
-	 *
+         * 
+	 * KAP: Annual establishment now occurs here instead of in PartResources
 	 */
 	/*------------------------------------------------------*/
 	IntS i, num_est; /* number of individuals of sp. that establish*/
