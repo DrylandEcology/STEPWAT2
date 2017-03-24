@@ -36,6 +36,7 @@ void indiv_proportion_Recovery(IndivType *ndv, int killType,
 void indiv_proportion_Grazing(IndivType *ndv, RealF proportionGrazing);
 
 void _delete(IndivType *ndv);
+void get_species_relsize(SppIndex sp);
 
 /*------------------------------------------------------*/
 /* Modular functions only used on one or two specific   */
@@ -294,7 +295,7 @@ void Species_Update_Newsize(SppIndex sp, RealF newsize)
 	/* if this cond. true, we're off a bit from zeroing. fix it */
 	if (Species[sp]->est_count == 1 && LT(newsize, -Species[sp]->relsize))
 		newsize = -Species[sp]->relsize;
-
+        
 	Species[sp]->relsize += newsize;
 //	printf("After adding or sub relsize Species[sp]->relsize=%.5f \n ",Species[sp]->relsize);
 
@@ -611,6 +612,22 @@ void Species_Kill(const SppIndex sp, int killType)
 	rgroup_DropSpecies(sp);
 
 }
+
+/**************************************************************/
+void get_species_relsize(SppIndex sp)
+{
+RealF lastyear_relsize;
+
+
+    if (Species[sp]->max_age == 1)
+	{
+        lastyear_relsize = 0.0;
+                
+	 ForEachSpecies(sp){
+            lastyear_relsize = Species[sp]->relsize;
+        }
+    }
+ }
 
 #ifdef DEBUG_MEM
 #include "myMemory.h"

@@ -55,8 +55,7 @@ static GroupType *_create(void);
 static void _extra_growth(GrpIndex rg);
 static void _add_annual_seedprod(SppIndex sp, RealF pr);
 static RealF _get_annual_maxestab(SppIndex sp);
-static RealF _add_annuals(const GrpIndex rg, const RealF g_pr,
-		const Bool add_seeds);
+static RealF _add_annuals(const GrpIndex rg, const RealF g_pr);
 
 /****************** Begin Function Code ********************/
 /***********************************************************/
@@ -106,8 +105,7 @@ void rgroup_PartResources(void)
 
 	Bool noplants = TRUE;
 	const Bool do_base = FALSE, /* monikers for _res_part_extra() */
-	do_extra = TRUE, add_seeds = TRUE, /* monikers for pass 1 & 2 _add_annuals() */
-	no_seeds = FALSE;
+	do_extra = TRUE;
 	GroupType *g; /* shorthand for RGroup[rg] */
 	int i;
 
@@ -119,7 +117,7 @@ void rgroup_PartResources(void)
 		g = RGroup[rg];
 
 		if (g->max_age == 1)
-			g->relsize = _add_annuals(rg, 1.0, no_seeds);
+			//g->relsize = _add_annuals(rg, 1.0, no_seeds);
 
 		/*this piece of the code is only used when SOILWAT is NOT running*/
 #ifdef STEPWAT
@@ -212,8 +210,7 @@ void rgroup_PartResources(void)
 
 }
 
-static RealF _add_annuals(const GrpIndex rg, const RealF g_pr,
-		const Bool add_seeds)
+static RealF _add_annuals(const GrpIndex rg, RealF lastyear_relsize)
 {
 	/*======================================================*/
 	/* if add_seeds==FALSE, don't add seeds to the seedbank or
@@ -230,8 +227,13 @@ static RealF _add_annuals(const GrpIndex rg, const RealF g_pr,
 	 *
 	 * reset group size to account for additions, or 0 if none.
 	 */
-	const RealF PR_0_est = 20.0; /* PR at which no seeds can establish */
-	IntU i;
+    #define xF_DELTA (20*F_DELTA)
+    #define xD_DELTA (20*D_DELTA)
+    #define ZERO(x) \
+    ( (sizeof(x) == sizeof(float)) \
+  ? ((x)>-xF_DELTA && (x)<xF_DELTA) \
+  : ((x)>-xD_DELTA && (x)<xD_DELTA) )
+        IntU i;
 	RealF x, estabs, /* number of estabs predicted by seedbank */
 	pr_inv, /* inverse of PR as the limit of estabs */
 	newsize, sumsize;
@@ -257,33 +259,38 @@ static RealF _add_annuals(const GrpIndex rg, const RealF g_pr,
 		if (!s->use_me)
 			continue;
 		//if add seeds is F and a random number drawn from the uniform distribution is less than prob of seed establishment
-		if (!add_seeds && RandUni() <= s->seedling_estab_prob)
-		{
-			/* force addition of new propagules */
-			//if regen_ok is True, pass the g_pr parameter, if regen_ok is False, pass -1
-			_add_annual_seedprod(sp, (g->regen_ok) ? g_pr : -1.);
-			forced = TRUE;
-		}
+		
+		/* force addition of new propagules */
+		//if regen_ok is True, pass the g_pr parameter, if regen_ok is False, pass -1
+                //need to make the relsize value we are passing here is the last year's relsize
+		_add_annual_seedprod(sp, lastyear_relsize);
+		forced = TRUE;
+		
 
 		//if regen_ok is T then x = values coming from _get_annual_maxestab, if regen ok is F then
 		//x=0.
-		x = (g->regen_ok) ? _get_annual_maxestab(sp) : 0.;
-		if (GT(x, 0.))
+		if (RandUni() <= s->seedling_estab_prob)
 		{
-			estabs = (x - (x / PR_0_est * g_pr)) * exp(-g_pr);
-			pr_inv = 1.0 / g_pr;
-			newsize = fmin(pr_inv, estabs);
-			if (add_seeds)
-			{
+                x = (g->regen_ok) ? _get_annual_maxestab(sp) : 0.;
+                }
+		
+                if (GT(x, 0.))
+		{
+                    if (ZERO(lastyear_relsize))
+                    {
+                       newsize = RandUniRange(1, x);
+                    }
+                    
+                    else{
+                        newsize = x * lastyear_relsize;
+                        }
+                    }                      
+                        
 				rgroup_AddSpecies(rg, sp);
 				Species_Update_Newsize(sp, newsize);
 			}
-		}
 
-		if (add_seeds && !forced)
-			_add_annual_seedprod(sp, (ZRO(x)) ? -1. : g_pr);
-
-		sumsize += newsize;
+		//sumsize += newsize;
 	}
 
 	/*if (g->regen_ok == TRUE) {
@@ -292,9 +299,9 @@ static RealF _add_annuals(const GrpIndex rg, const RealF g_pr,
 	/*will print out a flag of Regen_ok with the resourse group number (numbered
 	 * in the order of turned on groups in the "rgroup.in" file */
 
-	return (sumsize / (RealF) g->max_spp);
+	//return (sumsize / (RealF) g->max_spp);
 
-}
+
 
 static RealF _get_annual_maxestab(SppIndex sp)
 {
@@ -311,7 +318,7 @@ static RealF _get_annual_maxestab(SppIndex sp)
 	return sum;
 }
 
-static void _add_annual_seedprod(SppIndex sp, RealF pr)
+static void _add_annual_seedprod(SppIndex sp, RealF lastyear_relsize)
 {
 	/*======================================================*/
 	/* Add seeds to the seedbank this year and increment viable years for seeds.
@@ -327,9 +334,7 @@ static void _add_annual_seedprod(SppIndex sp, RealF pr)
 
 	//compare pr (actual value or -1) to zero, if less than zero, then make it zero. If greater than 0
 	//than multiple max_seed_estab * exp(-pr)
-	s->seedprod[i] = LT(pr, 0.) ? 0. : s->max_seed_estab * exp(-pr);
-	//s->seedprod[i] = LT(pr, 0.) ? 0. : s->max_seed_estab * 1/pr ;
-	//s->seedprod[i] = LT(pr, 0.) ? 0. : s->max_seed_estab * s->relsize;
+	s->seedprod[i] = s->max_seed_estab * lastyear_relsize;
 }
 
 static RealF _ppt2resource(RealF ppt, GroupType *g)
@@ -730,6 +735,7 @@ void rgroup_Establish(void)
 	GrpIndex rg;
 	SppIndex sp;
 	GroupType *g;
+        RealF lastyear_relsize;
 
 	/* Cannot establish if plot is still in disturbed state*/
 	if (Plot.disturbed > 0)
@@ -775,22 +781,24 @@ void rgroup_Establish(void)
             //KAP:The below RandUni function has been added to now only establish annuals here, but allow establishment to be stochastic.
             //A random number is drawn from the uniform distribution and if that number is equal to or less than the probability of establishment,
             //then annual species will establish via the get_annual_maxestab function.
-				if (Species[sp]->max_age == 1)
-				{
-				if (RandUni() <= Species[sp]->seedling_estab_prob)
-				{
-					num_est = _get_annual_maxestab(sp);
-				}
-				else
-				{
-				num_est = 0;
-				}	
+                       if (Species[sp]->max_age == 1)
+                            {
+                           
+             //Need to figure out a way to save and bring in last year's relsize to use here
+             //potentially create new function to last year's relsize and put it after grazing occurs.
+             //This should capture the end of year relsize after establishment, growth,mortality, and grazing,
+             //but not fire. We also need to add check to see if the relsize is 0 at this point,
+             //which would indicate it is not established in the current year.
+                            num_est = _add_annuals(rg, lastyear_relsize);
+                            }
+                        
+                                                                
 					  //printf("num_est for annuals=%d \n",num_est);
 
 					// above inserted to establish individuals for annuals
 					// num_est for individuals is the number called from the seedbank in
 					//     _get_annual_maxestab() (TEM 10-27-2015)
-				}
+			
 				else
 				{
 
