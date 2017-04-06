@@ -36,7 +36,7 @@ void indiv_proportion_Recovery(IndivType *ndv, int killType,
 void indiv_proportion_Grazing(IndivType *ndv, RealF proportionGrazing);
 
 void _delete(IndivType *ndv);
-void get_species_relsize(SppIndex sp);
+void save_annual_species_relsize(void);
 
 /*------------------------------------------------------*/
 /* Modular functions only used on one or two specific   */
@@ -614,20 +614,19 @@ void Species_Kill(const SppIndex sp, int killType)
 }
 
 /**************************************************************/
-void get_species_relsize(SppIndex sp)
+void save_annual_species_relsize()
 {
-RealF lastyear_relsize;
-
-
-    if (Species[sp]->max_age == 1)
+	int sp = 0;
+	ForEachSpecies(sp)
 	{
-        lastyear_relsize = 0.0;
-                
-	 ForEachSpecies(sp){
-            lastyear_relsize = Species[sp]->relsize;
-        }
+    if (Species[sp]->max_age == 1)
+		{
+        Species[sp]->lastyear_relsize = Species[sp]->relsize;
+        }        
     }
  }
+
+/**************************************************************/
 
 #ifdef DEBUG_MEM
 #include "myMemory.h"

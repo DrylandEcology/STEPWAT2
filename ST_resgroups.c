@@ -116,7 +116,7 @@ void rgroup_PartResources(void)
 	{
 		g = RGroup[rg];
 
-		if (g->max_age == 1)
+		//if (g->max_age == 1)
 			//g->relsize = _add_annuals(rg, 1.0, no_seeds);
 
 		/*this piece of the code is only used when SOILWAT is NOT running*/
@@ -326,14 +326,15 @@ static void _add_annual_seedprod(SppIndex sp, RealF lastyear_relsize)
 
 	SpeciesType *s = Species[sp];
 	IntU i;
-// incrementing the number of viable years
+	
+	//incrementing the number of viable years
 	for (i = s->viable_yrs - 1; i > 0; i--)
 	{
 		s->seedprod[i] = s->seedprod[i - 1];
 	}
 
-	//compare pr (actual value or -1) to zero, if less than zero, then make it zero. If greater than 0
-	//than multiple max_seed_estab * exp(-pr)
+	//this year's seed production is a function of the maximum number of seedlings that can establish
+	//and last year's species relative size
 	s->seedprod[i] = s->max_seed_estab * lastyear_relsize;
 }
 
@@ -778,27 +779,14 @@ void rgroup_Establish(void)
 					continue;
 				if (!Species[sp]->allow_growth)
 					continue;
-            //KAP:The below RandUni function has been added to now only establish annuals here, but allow establishment to be stochastic.
-            //A random number is drawn from the uniform distribution and if that number is equal to or less than the probability of establishment,
-            //then annual species will establish via the get_annual_maxestab function.
-                       if (Species[sp]->max_age == 1)
-                            {
-                           
-             //Need to figure out a way to save and bring in last year's relsize to use here
-             //potentially create new function to last year's relsize and put it after grazing occurs.
-             //This should capture the end of year relsize after establishment, growth,mortality, and grazing,
-             //but not fire. We also need to add check to see if the relsize is 0 at this point,
-             //which would indicate it is not established in the current year.
-                            num_est = _add_annuals(rg, lastyear_relsize);
-                            }
-                        
-                                                                
+    
+                if (Species[sp]->max_age == 1)
+                    {
+                    	num_est = _add_annuals(rg, lastyear_relsize);
+                    }
+                                                                 
 					  //printf("num_est for annuals=%d \n",num_est);
-
-					// above inserted to establish individuals for annuals
-					// num_est for individuals is the number called from the seedbank in
-					//     _get_annual_maxestab() (TEM 10-27-2015)
-			
+				
 				else
 				{
 

@@ -64,7 +64,7 @@ extern Bool isPartialSoilwatOutput;
 
   void _kill_annuals(void);
   void _kill_extra_growth(void);
-  void get_species_relsize(void);
+  void save_annual_species_relsize(void);
 
 #ifdef DEBUG_MEM
   #define chkmem_f CheckMemoryIntegrity(FALSE);
@@ -247,7 +247,7 @@ int main(int argc, char **argv) {
            // Added functions for Grazing and mort_end_year as proportional killing effect before exporting biomass end of the year
 			grazing_EndOfYear();
                         
-                        get_species_relsize();
+            save_annual_species_relsize();
 
 			mort_EndOfYear();
 
