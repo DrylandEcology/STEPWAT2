@@ -335,7 +335,14 @@ static void _add_annual_seedprod(SppIndex sp, RealF lastyear_relsize)
 
 	//this year's seed production is a function of the maximum number of seedlings that can establish
 	//and last year's species relative size
-	s->seedprod[i] = s->max_seed_estab * lastyear_relsize;
+	if (ZERO(lastyear_relsize))
+                    {
+                       s->seedprod[i] = RandUniRange(1, s->max_seed_estab);
+                    }
+	else
+                    { 
+                    s->seedprod[i] = s->max_seed_estab * lastyear_relsize;
+                    }
 }
 
 static RealF _ppt2resource(RealF ppt, GroupType *g)
