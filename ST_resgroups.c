@@ -213,17 +213,9 @@ void rgroup_PartResources(void)
 static RealF _add_annuals(const GrpIndex rg, RealF lastyear_relsize)
 {
 	/*======================================================*/
-	/* if add_seeds==FALSE, don't add seeds to the seedbank or
-	 * add species, but do calculations required to return a
-	 * temporary group relative size for resource allocation.
-	 * if add_seeds==TRUE, we should have done the above and now
-	 * we really want to add to the biomass and seedbank.
-	 *
-	 * check regen_ok flag.  if true, apply establishment and
+	/* check regen_ok flag.  if true, apply establishment and
 	 * add to seedbank.  Otherwise, add 0 to seedbank and skip
-	 * adding plants this year.  We also check probability of establishment to
-	 * account for introduction of propagules, in which case
-	 * we can't add to the seedbank twice.
+	 * adding plants this year.  
 	 *
 	 * reset group size to account for additions, or 0 if none.
 	 */
@@ -235,7 +227,6 @@ static RealF _add_annuals(const GrpIndex rg, RealF lastyear_relsize)
   : ((x)>-xD_DELTA && (x)<xD_DELTA) )
         IntU i;
 	RealF x, estabs, /* number of estabs predicted by seedbank */
-	pr_inv, /* inverse of PR as the limit of estabs */
 	newsize, sumsize;
 	SppIndex sp;
 	GroupType *g;
@@ -255,14 +246,10 @@ static RealF _add_annuals(const GrpIndex rg, RealF lastyear_relsize)
 		s = Species[sp];
 		newsize = 0.0;
 		forced = FALSE;
-		// printf("add_seeds=%d \n",add_seeds);
 		if (!s->use_me)
 			continue;
-		//if add seeds is F and a random number drawn from the uniform distribution is less than prob of seed establishment
 		
 		/* force addition of new propagules */
-		//if regen_ok is True, pass the g_pr parameter, if regen_ok is False, pass -1
-                //need to make the relsize value we are passing here is the last year's relsize
 		_add_annual_seedprod(sp, lastyear_relsize);
 		forced = TRUE;
 		
@@ -321,8 +308,7 @@ static RealF _get_annual_maxestab(SppIndex sp)
 static void _add_annual_seedprod(SppIndex sp, RealF lastyear_relsize)
 {
 	/*======================================================*/
-	/* Add seeds to the seedbank this year and increment viable years for seeds.
-         * negative pr means add 0 seeds to seedbank */
+	/* Add seeds to the seedbank this year and increment viable years for seeds.*/
 
 	SpeciesType *s = Species[sp];
 	IntU i;
@@ -333,9 +319,10 @@ static void _add_annual_seedprod(SppIndex sp, RealF lastyear_relsize)
 		s->seedprod[i] = s->seedprod[i - 1];
 	}
 
-	//this year's seed production is a function of the maximum number of seedlings that can establish
-	//and last year's species relative size
-	if (ZERO(lastyear_relsize))
+	//If the current year is year 1 of the simulation, then the number of seeds added is a random number draw between
+	//1 and the maximum number of seedlings that can establish. Otherwise, this year's seed production is a function of the maximum 
+	//number of seedlings that can establish and last year's species relative size.
+	if (Globals.currYear == 1)
                     {
                        s->seedprod[i] = RandUniRange(1, s->max_seed_estab);
                     }
