@@ -776,10 +776,9 @@ void rgroup_Establish(void)
                 if (Species[sp]->max_age == 1)
                     {
                     	num_est = _add_annuals(rg, Species[sp]->lastyear_relsize);
+                        //printf("num_est for annuals=%d \n",num_est);
                     }
-                                                                 
-					  //printf("num_est for annuals=%d \n",num_est);
-				
+                                                                 				
 				else
 				{
 
