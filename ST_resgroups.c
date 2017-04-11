@@ -730,6 +730,7 @@ void rgroup_Establish(void)
 	GrpIndex rg;
 	SppIndex sp;
 	GroupType *g;
+        RealF lastyear_relsize;
 
 	/* Cannot establish if plot is still in disturbed state*/
 	if (Plot.disturbed > 0)
@@ -775,7 +776,7 @@ void rgroup_Establish(void)
     
                 if (Species[sp]->max_age == 1)
                     {
-                    	num_est = _add_annuals(rg, Species[sp]->lastyear_relsize);
+                    	num_est = _add_annuals(rg, lastyear_relsize);
                     }
                                                                  
 					  //printf("num_est for annuals=%d \n",num_est);
