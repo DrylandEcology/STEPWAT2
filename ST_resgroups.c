@@ -210,65 +210,55 @@ void rgroup_PartResources(void)
 
 }
 
-static RealF _add_annuals(const GrpIndex rg, const SppIndex sp, const RealF lastyear_relsize)
-{
-	/*======================================================*/
-	/* check regen_ok flag.  if true, apply establishment and
-	 * add to seedbank.  Otherwise, add 0 to seedbank and skip
-	 * adding plants this year.  
-	 *
-	 * reset group size to account for additions, or 0 if none.
-	 */
-    #define xF_DELTA (20*F_DELTA)
-    #define xD_DELTA (20*D_DELTA)
-    #define ZERO(x) \
+static RealF _add_annuals(const GrpIndex rg, const SppIndex sp, const RealF lastyear_relsize) {
+    /*======================================================*/
+    /* check regen_ok flag.  if true, apply establishment and
+     * add to seedbank.  Otherwise, add 0 to seedbank and skip
+     * adding plants this year.  
+     * reset group size to account for additions, or 0 if none.
+     */
+#define xF_DELTA (20*F_DELTA)
+#define xD_DELTA (20*D_DELTA)
+#define ZERO(x) \
     ( (sizeof(x) == sizeof(float)) \
   ? ((x)>-xF_DELTA && (x)<xF_DELTA) \
   : ((x)>-xD_DELTA && (x)<xD_DELTA) )
-        IntU i;
-	RealF x, estabs, /* number of estabs predicted by seedbank */
-	newsize, sumsize;
-	GroupType *g;
-	SpeciesType *s;
-	Bool forced;
+    IntU i;
+    RealF x,
+    newsize, sumsize;
+    GroupType *g;
+    SpeciesType *s;
+    Bool forced;
 
-	g = RGroup[rg];
+    g = RGroup[rg];
+    assert(g->max_age == 1);
 
-	assert(g->max_age == 1);
+    s = Species[sp];
+    newsize = 0.0;
+    forced = FALSE;
 
-	sumsize = 0.0;
-	//ForEachGroupSpp(sp,rg,i)
-	//{
-		s = Species[sp];
-		newsize = 0.0;
-		forced = FALSE;
-		//if (!s->use_me)
-		//	continue;
-		
-		/* force addition of new propagules */
-		_add_annual_seedprod(sp, lastyear_relsize);
-		forced = TRUE;
-		
-		//if regen_ok is T then x = values coming from _get_annual_maxestab, if regen ok is F then
-		//x=0.
-                x = 0.;
-		if (RandUni() <= s->seedling_estab_prob)
-		{
-                x = (g->regen_ok) ? _get_annual_maxestab(sp) : 0.;
-                }
-		
-                if (GT(x, 0.))
-		{
-                    if (ZERO(lastyear_relsize))
-                    {
-                       newsize = RandUniRange(1, x);
-                    }
-                    
-                    else{
-                        newsize = x * lastyear_relsize;
-                        }
-                    }                      
-                 return newsize;     			
+    /* force addition of new propagules */
+    _add_annual_seedprod(sp, lastyear_relsize);
+    forced = TRUE;
+
+    x = 0.;
+    if (RandUni() <= s->seedling_estab_prob) {
+        x = (g->regen_ok) ? _get_annual_maxestab(sp) : 0.;
+        //printf("annual_maxestab x =%0.5f \n", x );
+    }
+
+    if (GT(x, 0.)) {
+        if (ZERO(lastyear_relsize)) {
+            newsize = RandUniRange(1, x);
+            //printf("newsize   =%0.5f \n", newsize);
+        }
+        else {
+            //printf("lastyear_relsize=%0.5f \n", lastyear_relsize);
+            newsize = x * lastyear_relsize;
+            //printf("newsize   =%0.5f \n", newsize);
+        }
+    }
+    return newsize;
 }
 
 static RealF _get_annual_maxestab(SppIndex sp) {
