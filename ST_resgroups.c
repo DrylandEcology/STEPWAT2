@@ -55,7 +55,7 @@ static GroupType *_create(void);
 static void _extra_growth(GrpIndex rg);
 static void _add_annual_seedprod(SppIndex sp, RealF pr);
 static RealF _get_annual_maxestab(SppIndex sp);
-static RealF _add_annuals(const GrpIndex rg, const RealF g_pr);
+static RealF _add_annuals(const GrpIndex rg, const SppIndex sp, const RealF lastyear_relsize);
 
 /****************** Begin Function Code ********************/
 /***********************************************************/
@@ -210,7 +210,7 @@ void rgroup_PartResources(void)
 
 }
 
-static RealF _add_annuals(const GrpIndex rg, RealF lastyear_relsize)
+static RealF _add_annuals(const GrpIndex rg, const SppIndex sp, const RealF lastyear_relsize)
 {
 	/*======================================================*/
 	/* check regen_ok flag.  if true, apply establishment and
@@ -228,7 +228,6 @@ static RealF _add_annuals(const GrpIndex rg, RealF lastyear_relsize)
         IntU i;
 	RealF x, estabs, /* number of estabs predicted by seedbank */
 	newsize, sumsize;
-	SppIndex sp;
 	GroupType *g;
 	SpeciesType *s;
 	Bool forced;
@@ -237,25 +236,22 @@ static RealF _add_annuals(const GrpIndex rg, RealF lastyear_relsize)
 
 	assert(g->max_age == 1);
 
-	if (!g->use_me)
-		return 0.0;
-
 	sumsize = 0.0;
-	ForEachGroupSpp(sp,rg,i)
-	{
+	//ForEachGroupSpp(sp,rg,i)
+	//{
 		s = Species[sp];
 		newsize = 0.0;
 		forced = FALSE;
-		if (!s->use_me)
-			continue;
+		//if (!s->use_me)
+		//	continue;
 		
 		/* force addition of new propagules */
 		_add_annual_seedprod(sp, lastyear_relsize);
 		forced = TRUE;
 		
-
 		//if regen_ok is T then x = values coming from _get_annual_maxestab, if regen ok is F then
 		//x=0.
+                x = 0.;
 		if (RandUni() <= s->seedling_estab_prob)
 		{
                 x = (g->regen_ok) ? _get_annual_maxestab(sp) : 0.;
@@ -272,64 +268,43 @@ static RealF _add_annuals(const GrpIndex rg, RealF lastyear_relsize)
                         newsize = x * lastyear_relsize;
                         }
                     }                      
-                        
-				rgroup_AddSpecies(rg, sp);
-				Species_Update_Newsize(sp, newsize);
-			}
-
-		//sumsize += newsize;
-	}
-
-	/*if (g->regen_ok == TRUE) {
-	 printf("Regen_ok %u\n",rg);}*/
-
-	/*will print out a flag of Regen_ok with the resourse group number (numbered
-	 * in the order of turned on groups in the "rgroup.in" file */
-
-	//return (sumsize / (RealF) g->max_spp);
-
-
-
-static RealF _get_annual_maxestab(SppIndex sp)
-{
-	/*======================================================*/
-        /* Get the maximum number of viable seeds from the seedbank that can 
-         establish this year*/
-	IntU i;
-	RealF sum = 0.;
-	SpeciesType *s = Species[sp];
-
-	for (i = 1; i <= s->viable_yrs; i++)
-		sum += s->seedprod[i - 1] / pow(i, s->exp_decay);
-
-	return sum;
+                 return newsize;     			
 }
 
-static void _add_annual_seedprod(SppIndex sp, RealF lastyear_relsize)
-{
-	/*======================================================*/
-	/* Add seeds to the seedbank this year and increment viable years for seeds.*/
+static RealF _get_annual_maxestab(SppIndex sp) {
+    /*======================================================*/
+    /* Get the maximum number of viable seeds from the seedbank that can 
+     establish this year*/
+    IntU i;
+    RealF sum = 0.;
+    SpeciesType *s = Species[sp];
 
-	SpeciesType *s = Species[sp];
-	IntU i;
-	
-	//incrementing the number of viable years
-	for (i = s->viable_yrs - 1; i > 0; i--)
-	{
-		s->seedprod[i] = s->seedprod[i - 1];
-	}
+    for (i = 1; i <= s->viable_yrs; i++)
+        sum += s->seedprod[i - 1] / pow(i, s->exp_decay);
 
-	//If the current year is year 1 of the simulation, then the number of seeds added is a random number draw between
-	//1 and the maximum number of seedlings that can establish. Otherwise, this year's seed production is a function of the maximum 
-	//number of seedlings that can establish and last year's species relative size.
-	if (Globals.currYear == 1)
-                    {
-                       s->seedprod[i] = RandUniRange(1, s->max_seed_estab);
-                    }
-	else
-                    { 
-                    s->seedprod[i] = s->max_seed_estab * lastyear_relsize;
-                    }
+    return sum;
+}
+
+static void _add_annual_seedprod(SppIndex sp, RealF lastyear_relsize) {
+    /*======================================================*/
+    /* Add seeds to the seedbank this year and increment viable years for seeds.*/
+
+    SpeciesType *s = Species[sp];
+    IntU i;
+
+    //incrementing the number of viable years
+    for (i = s->viable_yrs - 1; i > 0; i--) {
+        s->seedprod[i] = s->seedprod[i - 1];
+    }
+
+    //If the current year is year 1 of the simulation, then the number of seeds added is a random number draw between
+    //1 and the maximum number of seedlings that can establish. Otherwise, this year's seed production is a function of the maximum 
+    //number of seedlings that can establish and last year's species relative size.
+    if (Globals.currYear == 1) {
+        s->seedprod[i] = RandUniRange(1, s->max_seed_estab);
+    } else {
+        s->seedprod[i] = s->max_seed_estab * lastyear_relsize;
+    }
 }
 
 static RealF _ppt2resource(RealF ppt, GroupType *g)
@@ -684,120 +659,108 @@ static void _extra_growth(GrpIndex rg)
 	}
 
 }
-
 /***********************************************************/
-void rgroup_Establish(void)
-{
-	/*======================================================*/
-	/* PURPOSE */
-	/* Determines which and how many species can establish
-	 in a given year.
+void rgroup_Establish(void) {
+    /*======================================================*/
+    /* PURPOSE */
+    /* Determines which and how many species can establish
+     in a given year.
 
-	 For each species in each group, check that a uniform
-	 random number between 0 and 1 is less than the species'
-	 establishment probability.
-	 a) If so, return a random number of individuals,
-	 up to the maximum allowed to establish for the
-	 species.  This is the number of individuals in
-	 this species that will establish this year.
-	 b) If not, continue with the next species.
+     For each species in each group, check that a uniform
+     random number between 0 and 1 is less than the species'
+     establishment probability.
+     a) If so, return a random number of individuals,
+     up to the maximum allowed to establish for the
+     species.  This is the number of individuals in
+     this species that will establish this year.
+     b) If not, continue with the next species.
 
-	 */
+     */
 
-	/* HISTORY */
-	/* Chris Bennett @ LTER-CSU 6/15/2000            */
-	/*   cwb (3/7/01) - Complete rewrite that simplifies the
-	 process and attempts to make the total number of
-	 seedlings established match the probability of
-	 establishment.
-	 cwb (3/30) - Actually the probability of establishment
-	 emulates the occurrance of microsite conditions that
-	 allow establishment.  There may be more seedlings
-	 established than indicated by the probability.
+    /* HISTORY */
+    /* Chris Bennett @ LTER-CSU 6/15/2000            */
+    /*   cwb (3/7/01) - Complete rewrite that simplifies the
+     process and attempts to make the total number of
+     seedlings established match the probability of
+     establishment.
+     cwb (3/30) - Actually the probability of establishment
+     emulates the occurrance of microsite conditions that
+     allow establishment.  There may be more seedlings
+     established than indicated by the probability.
 
-	 * 7-Nov-03 (cwb) Adding the new algorithm to handle annuals.
-	 *   It's more complicated than before (which didn't really
-	 *   work) so annuals are now added in the PartResources()
-	 *   function.  Only perennials are added here.
-	 *
-	 *   Also, there's now a parameter to define the start year
-	 *   of establishment for perennials.
-         * 
-	 * KAP: Annual establishment now occurs here instead of in PartResources
-	 */
-	/*------------------------------------------------------*/
-	IntS i, num_est; /* number of individuals of sp. that establish*/
-	GrpIndex rg;
-	SppIndex sp;
-	GroupType *g;
-        RealF lastyear_relsize;
+     * 7-Nov-03 (cwb) Adding the new algorithm to handle annuals.
+     *   It's more complicated than before (which didn't really
+     *   work) so annuals are now added in the PartResources()
+     *   function.  Only perennials are added here.
+     *
+     *   Also, there's now a parameter to define the start year
+     *   of establishment for perennials.
+     * 
+     * KAP: Annual establishment now occurs here instead of in PartResources
+     */
+    /*------------------------------------------------------*/
+    IntS i, num_est; /* number of individuals of sp. that establish*/
+    GrpIndex rg;
+    SppIndex sp;
+    GroupType *g;
+    RealF lastyear_relsize;
 
-	/* Cannot establish if plot is still in disturbed state*/
-	if (Plot.disturbed > 0)
-	{
-		ForEachGroup(rg)
-			RGroup[rg]->regen_ok = FALSE;
-		return; /* skip regen for all */
-	}
+    /* Cannot establish if plot is still in disturbed state*/
+    if (Plot.disturbed > 0) {
+        ForEachGroup(rg)
+        RGroup[rg]->regen_ok = FALSE;
+        return; /* skip regen for all */
+    }
 
-	ForEachGroup(rg)
-	{
-		g = RGroup[rg];
-		if (!g->use_me)
-			continue;
+    ForEachGroup(rg) {
+        g = RGroup[rg];
+        if (!g->use_me)
+            continue;
 
-		g->regen_ok = TRUE; /* default */
+        g->regen_ok = TRUE; /* default */
 
-		if (Globals.currYear < RGroup[rg]->startyr)
-		{
-			g->regen_ok = FALSE;
+        if (Globals.currYear < RGroup[rg]->startyr) {
+            g->regen_ok = FALSE;
 
-		}
-		else  ///if ( g->max_age == 1 ) {
-		/* see similar logic in mort_EndOfYear() for perennials */
-		/// if ( GT( g->killfreq, 0.) ) {
-		///   if ( LT(g->killfreq, 1.0) ) {
-		///     if (RandUni() <= g->killfreq)
-		///       g->regen_ok = FALSE;
-		///   } else if ( (Globals.currYear - g->startyr) % (IntU)g->killfreq == 0) {
-		///     g->regen_ok = FALSE;
-		///   }
-		/// }
-		///} else
-		//above removed allow annuals to establish with other species (TEM 10-27-2015)
-		{
+        } else ///if ( g->max_age == 1 ) {
+            /* see similar logic in mort_EndOfYear() for perennials */
+            /// if ( GT( g->killfreq, 0.) ) {
+            ///   if ( LT(g->killfreq, 1.0) ) {
+            ///     if (RandUni() <= g->killfreq)
+            ///       g->regen_ok = FALSE;
+            ///   } else if ( (Globals.currYear - g->startyr) % (IntU)g->killfreq == 0) {
+            ///     g->regen_ok = FALSE;
+            ///   }
+            /// }
+            ///} else
+            //above removed allow annuals to establish with other species (TEM 10-27-2015)
+        {
+            ForEachGroupSpp(sp, rg, i) {
+                if (!Species[sp]->use_me)
+                    continue;
+                if (!Species[sp]->allow_growth)
+                    continue;
 
-			ForEachGroupSpp(sp,rg,i)
-			{
-				if (!Species[sp]->use_me)
-					continue;
-				if (!Species[sp]->allow_growth)
-					continue;
-    
-                if (Species[sp]->max_age == 1)
-                    {
-                    	num_est = _add_annuals(rg, lastyear_relsize);
-                    }
-                                                                 
-					  //printf("num_est for annuals=%d \n",num_est);
-				
-				else
-				{
+                if (Species[sp]->max_age == 1) {
+                    //printf("Globals.currYear = %d, call to _add_annuals sp=%d Species[sp]->lastyear_relsize : %.5f \n", Globals.currYear, sp, Species[sp]->lastyear_relsize);
+                    num_est = _add_annuals(rg, sp, Species[sp]->lastyear_relsize);
+                    //printf("num_est for annuals=%d \n",num_est);
+                }                    
+                else {
 
-					num_est = Species_NumEstablish(sp);
-				}
+                    num_est = Species_NumEstablish(sp);
+                }
 
-				if (num_est)
-				{
-					/* printf("%d %d %d %d\n",
-					 Globals.currIter, Globals.currYear, sp, num_est); */
+                if (num_est) {
+                    /* printf("%d %d %d %d\n",
+                     Globals.currIter, Globals.currYear, sp, num_est); */
 
-					Species_Add_Indiv(sp, num_est);
-					species_Update_Estabs(sp, num_est);
-				}
-			}
-		}
-	}
+                    Species_Add_Indiv(sp, num_est);
+                    species_Update_Estabs(sp, num_est);
+                }
+            }
+        }
+    }
 }
 
 /***********************************************************/
