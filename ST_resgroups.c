@@ -244,7 +244,7 @@ static RealF _add_annuals(const GrpIndex rg, const SppIndex sp, const RealF last
     x = 0.;
     if (RandUni() <= s->seedling_estab_prob) {
         x = (g->regen_ok) ? _get_annual_maxestab(sp) : 0.;
-        //printf("annual_maxestab x =%0.5f \n", x );
+        //printf("g->regen_ok: %d  , x = %.5f %\n", g->regen_ok, x);
     }
 
     if (GT(x, 0.)) {
@@ -282,38 +282,46 @@ static void _add_annual_seedprod(SppIndex sp, RealF lastyear_relsize) {
     SpeciesType *s = Species[sp];
     IntU i;
 
+
     //incrementing the number of viable years
     for (i = s->viable_yrs - 1; i > 0; i--) {
+        if (i == 1 || i == 2) {
+            //printf("Species name=%s , old Array values for index i=%d, value=%.5f \n", s->name, i, s->seedprod[i]);
+        }
+
         s->seedprod[i] = s->seedprod[i - 1];
     }
+
+    //printf("Species name=%s ,old Array array 0 index i=%d, value =%.5f \n", s->name, i, s->seedprod[i]);
 
     //If the current year is year 1 of the simulation, then the number of seeds added is a random number draw between
     //1 and the maximum number of seedlings that can establish. Otherwise, this year's seed production is a function of the maximum 
     //number of seedlings that can establish and last year's species relative size.
     if (Globals.currYear == 1) {
         s->seedprod[i] = RandUniRange(1, s->max_seed_estab);
+        //printf("Species name=%s ,currYear =1 so new calculated value s->seedprod[%d]= %.5f , s->max_seed_estab =%d\n", s->name, i, s->seedprod[i], s->max_seed_estab);
     } else {
         s->seedprod[i] = s->max_seed_estab * lastyear_relsize;
+        //printf("Species name=%s ,currYear=%d  so new calculated value s->seedprod[%d]= %.5f , s->max_seed_estab =%d, lastyear_relsize=%.5f\n", s->name, Globals.currYear, i, s->seedprod[i], s->max_seed_estab, lastyear_relsize);
     }
 }
 
-static RealF _ppt2resource(RealF ppt, GroupType *g)
-{
-	/*======================================================*/
-	/* PURPOSE */
-	/* Converts ppt in mm to a resource index for a group
-	 pointed to by g.
-	 Represents EQNs 2,3,4
+static RealF _ppt2resource(RealF ppt, GroupType *g) {
+    /*======================================================*/
+    /* PURPOSE */
+    /* Converts ppt in mm to a resource index for a group
+     pointed to by g.
+     Represents EQNs 2,3,4
 
-	 /* SCOPE
-	 Local routine called from rgroup_PartResources.
+     /* SCOPE
+     Local routine called from rgroup_PartResources.
 
-	 /* HISTORY
-	 /* Chris Bennett @ LTER-CSU 2/12/2001
+     /* HISTORY
+     /* Chris Bennett @ LTER-CSU 2/12/2001
 
-	 /*------------------------------------------------------*/
+     /*------------------------------------------------------*/
 
-	return (ppt * g->ppt_slope[Env.wet_dry] + g->ppt_intcpt[Env.wet_dry]);
+    return (ppt * g->ppt_slope[Env.wet_dry] + g->ppt_intcpt[Env.wet_dry]);
 
 }
 
