@@ -91,6 +91,7 @@ struct species_st {
   IntUS *kills,        /* ptr to array of # indivs killed by age. index=age. */
         estabs;        /* number of individuals established in iter */
   RealF relsize,       /* size of all indivs' relsize (>= 0) */
+  lastyear_relsize,    /* relsize from the previous year, used for annual establishment */
         *seedprod,     /* annuals: array of previous years' seed production (size = viable_yrs)*/
         extragrowth,   /* amt of superfluous growth from extra resources */
 	received_prob;	//the chance that this species received seeds this year... only applicable if using seed dispersal and gridded option
@@ -148,6 +149,7 @@ struct resourcegroup_st {
         res_avail,    /* resource available from environment X competition */
         res_extra,    /* if requested, resource above 1.0 when PR < 1.0 */
         pr,           /* resources required / resources available */
+        lastyear_relsize,    /* relsize from the previous year, used for annual establishment */
         relsize;      /* size of all species' indivs' relsizes scaled to 1.0 */
   SppIndex est_count, /* number of species actually established in group*/
            est_spp[MAX_SPP_PER_GRP]; /*list of spp actually estab in grp*/

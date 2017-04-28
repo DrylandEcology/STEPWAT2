@@ -223,7 +223,7 @@ void mort_EndOfYear( void)
 		g = RGroup[rg];
                 
                 // For test
-                if (x_cheatgrass < 0.35)
+                if (x_cheatgrass < 25.484)
                     {
                        y = RandUniRange(70, 300);
                     }
@@ -231,7 +231,7 @@ void mort_EndOfYear( void)
                     else{
                         y =1 / (- 0.117 + 0.0093 * x_cheatgrass);
                         }
-                //printf("[Rui] x_firefrequency: %f\n",y);
+                printf("[Rui] x_firefrequency: %f\n",y);
                 // End test 
 		if ((Globals.currYear >= g->killfreq_startyr) && GT(y, 0.))
 		{
