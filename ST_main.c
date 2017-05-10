@@ -60,6 +60,8 @@ extern Bool isPartialSoilwatOutput;
   void stat_Output_AllMorts( void) ;
   void stat_Output_AllBmass(void) ;
   
+  void stat_Output_AllSoilwatVariables(void);
+
   void runGrid( void ); //for the grid... declared in ST_grid.c
 
   void _kill_annuals(void);
@@ -280,7 +282,15 @@ int main(int argc, char **argv) {
 			output_Mort_Yearly();
 
 		if (UseSoilwat)
+			{
+		     	stat_Output_AllSoilwatVariables();
+			}
+
+		if (UseSoilwat)
+		{
 			SXW_Reset();
+		}
+
 
 	} /* end model run for this iteration*/
 

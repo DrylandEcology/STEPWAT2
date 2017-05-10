@@ -25,6 +25,8 @@
 #include "filefuncs.h"
 #include "myMemory.h"
 #include "ST_structs.h"
+#include "sxw.h"
+  extern SXW_t SXW;
 
 /************ External Variable Declarations ***************/
 /***********************************************************/
@@ -45,6 +47,10 @@
   void stat_Output_YrMorts( void ) ;
   void stat_Output_AllMorts( void) ;
   void stat_Output_AllBmass(void) ;
+
+  //adding below function for adding modified soilwat output at stepwat location
+  void stat_Output_AllSoilwatVariables(void);
+
   //Adding below two functions for creating grid cells avg values output file
   void stat_Output_AllBmassAvg(void) ;
   void stat_Output_AllCellAvgBmass(const char * filename);
@@ -106,6 +112,7 @@ static RealF _get_gridcell_avg( struct accumulators_grid_cell_st *p);
 static RealF _get_gridcell_std( struct accumulators_grid_cell_st *p);
 static void _make_header( char *buf);
 static void _make_header_with_std( char *buf);
+static void _make_header_for_soilwat(char *buf);
 
 /* I'm making this a macro because it gets called a lot, but
 /* note that the syntax checker is obviated, so make sure
@@ -1290,7 +1297,6 @@ static RealF _get_gridcell_std(struct accumulators_grid_cell_st *p)
 }
 
 
-
 /***********************************************************/
 static void _make_header_with_std( char *buf) {
 
@@ -1421,6 +1427,81 @@ static void _make_header( char *buf) {
     strcat(buf, tbuf);
 
 
+}
+
+static void _make_header_for_soilwat(char *buf)
+{
+
+	char fields[MAX_OUTFIELDS * 2][MAX_FIELDLEN + 1];
+	char tbuf[80];
+
+	Int i, fc = 0;
+
+	/* Set up headers */
+	if (BmassFlags.yr)
+		strcpy(fields[fc++], "Year");
+
+	strcpy(fields[fc++], "surfaceTemp");
+
+	/* Put header line in global variable */
+	for (i = 0; i < fc - 1; i++)
+	{
+		sprintf(tbuf, "%s%c", fields[i], BmassFlags.sep);
+		strcat(buf, tbuf);
+	}
+	sprintf(tbuf, "%s%c\n", fields[i], BmassFlags.sep);
+	strcat(buf, tbuf);
+
+}
+
+void stat_Output_AllSoilwatVariables(void)
+{
+	char buf[2048], tbuf[80], sep = BmassFlags.sep;
+	IntS yr;
+	GrpIndex rg;
+	SppIndex sp;
+	FILE *f;
+
+	char filename[FILENAME_MAX];
+
+	sprintf(filename, "%s%0*d.csv", "test_soilwat_output",
+			Globals.mort.suffixwidth, Globals.currIter);
+
+	if (DirExists(DirName(filename)))
+	{
+		strcpy(inbuf, filename);
+		if (!RemoveFiles(inbuf))
+			printf("Can't remove old biomass output files %s\n", inbuf);
+
+	}
+	else if (!MkDir(DirName(filename)))
+	{
+		printf("Can't make output path for yearly biomass files: %s\n",
+				DirName(filename));
+	}
+
+	f = OpenFile(filename, "w");
+
+	buf[0] = '\0';
+
+	if (BmassFlags.header)
+	{
+		_make_header_for_soilwat(buf);
+		fprintf(f, "%s", buf);
+	}
+
+
+	for (yr = 1; yr <= Globals.runModelYears; yr++)
+	{
+		*buf = '\0';
+		if (BmassFlags.yr)
+			sprintf(buf, "%d%c", yr, sep);
+
+		sprintf(buf, "%f", SXW.surfaceTemp);
+
+		fprintf(f, "%s\n", buf);
+	} /* end of foreach year */
+	CloseFile(&f);
 }
 
 
