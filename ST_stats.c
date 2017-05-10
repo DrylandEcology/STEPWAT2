@@ -1456,6 +1456,8 @@ static void _make_header_for_soilwat(char *buf)
 
 void stat_Output_AllSoilwatVariables(void)
 {
+
+	printf("inside stat_Output_AllSoilwatVariables \n");
 	char buf[2048], tbuf[80], sep = BmassFlags.sep;
 	IntS yr;
 	GrpIndex rg;
@@ -1464,8 +1466,10 @@ void stat_Output_AllSoilwatVariables(void)
 
 	char filename[FILENAME_MAX];
 
-	sprintf(filename, "%s%0*d.csv", "test_soilwat_output",
+	sprintf(filename, "%s%0*d.csv", "output/test_soilwat_output",
 			Globals.mort.suffixwidth, Globals.currIter);
+
+	printf("inside stat_Output_AllSoilwatVariables filename:%s \n",filename);
 
 	if (DirExists(DirName(filename)))
 	{
@@ -1490,6 +1494,7 @@ void stat_Output_AllSoilwatVariables(void)
 		fprintf(f, "%s", buf);
 	}
 
+	printf("inside stat_Output_AllSoilwatVariables buf:%s \n",buf);
 
 	for (yr = 1; yr <= Globals.runModelYears; yr++)
 	{
