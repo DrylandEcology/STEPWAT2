@@ -197,7 +197,7 @@ void mort_EndOfYear( void)
 	GrpIndex rg;
 	GroupType *g;
         RealF y = 0;
-        IntS cg_idx = 5;
+        IntS cg_idx = 6;
         RealF x_cheatgrass = Species[cg_idx]->relsize * Species[cg_idx]->mature_biomass; // calculate biomass of cheatgrass
         
         // FILE *out;
@@ -223,7 +223,9 @@ void mort_EndOfYear( void)
 		g = RGroup[rg];
                 
                 // For test
-                if (x_cheatgrass < 25.484)
+                //if LE(g->killfreq, 0.);
+                //{
+                    if (x_cheatgrass < 25.484)
                     {
                        y = RandUniRange(70, 300);
                     }
@@ -231,8 +233,17 @@ void mort_EndOfYear( void)
                     else{
                         y =1 / (- 0.117 + 0.0093 * x_cheatgrass);
                         }
-                printf("[Rui] x_firefrequency: %f\n",y);
+                //}
+                if GT ((IntU) g->killfreq, 0.)
+                {
+                if GT (y, (IntU) g->killfreq)
+                    { 
+                    y = (IntU) g->killfreq;
+                    }
+                }
+               printf("[Rui] x_firefrequency: %f\n",y);
                 // End test 
+                
 		if ((Globals.currYear >= g->killfreq_startyr) && GT(y, 0.))
 		{
 			if (LT(y, 1.0))
@@ -249,6 +260,11 @@ void mort_EndOfYear( void)
 			}
 
 		}
+                 
+                }
+               
+                
+               
 
 		if (Globals.currYear == RGroup[rg]->extirp)
 		{
@@ -261,7 +277,7 @@ void mort_EndOfYear( void)
 
 	}
 
-}
+
 
 void grazing_EndOfYear( void){
 
