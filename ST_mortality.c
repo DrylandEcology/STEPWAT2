@@ -196,7 +196,17 @@ void mort_EndOfYear( void)
 	//printf("inside mort_EndOfYear() \n");
 	GrpIndex rg;
 	GroupType *g;
-
+        RealF y = 0;
+        IntS cg_idx = 6;
+        RealF x_cheatgrass = Species[cg_idx]->relsize * Species[cg_idx]->mature_biomass; // calculate biomass of cheatgrass
+        
+        // FILE *out;
+        // Rui
+        // problem 2: we assume that the value of X in the prediction model can be obtained from Species[cg_idx].
+        // however, we may not refer to Species, or the index "cg_idx" may not be correct
+        
+  
+        // printf("[Rui] x_cheatgrass: %f\n",x_cheatgrass);
 	ForEachGroup(rg)
 	{
 		if (Globals.currYear < RGroup[rg]->startyr)
@@ -206,23 +216,34 @@ void mort_EndOfYear( void)
 		}
 
 		g = RGroup[rg];
-
-		if ((Globals.currYear >= g->killfreq_startyr) && GT(g->killfreq, 0.))
-		{
-			if (LT(g->killfreq, 1.0))
+                     if (x_cheatgrass < 12.05)
+                    {
+                       y = 1 / RandUniRange(70, 300);
+                    } 
+                    else{
+                        y = - 0.117 + 0.0093 * x_cheatgrass;
+                        }
+                    if GT (g->killfreq, y)
+                    { 
+                         y = g->killfreq;
+                    }
+                printf("[Rui] FIRE FREQUENCY: %f\n",y);
+                
+                    if ((Globals.currYear >= g->killfreq_startyr) && GT(y, 0.))
+                    {
+			if (LT(y, 1.0))
 			{
-				if (RandUni() <= g->killfreq)
+				if (RandUni() <= y)
 				{
 					g->killyr = Globals.currYear;
 				}
-
 			}
-			else if (((Globals.currYear - g->killfreq_startyr) % (IntU) g->killfreq) == 0)
+			else if (((Globals.currYear - g->killfreq_startyr) % (IntU) y) == 0)
 			{
 				g->killyr = Globals.currYear;
 			}
 
-		}
+                    }
 
 		if (Globals.currYear == RGroup[rg]->extirp)
 		{
@@ -310,35 +331,53 @@ void proportion_Recovery(void)
 
 	GrpIndex rg;
 	GroupType *g;
-
+        RealF y = 0;
+	IntS cg_idx = 6;
+        RealF x_cheatgrass = Species[cg_idx]->relsize * Species[cg_idx]->mature_biomass; // calculate biomass of cheatgrass
+        
+        // FILE *out;
+        // Rui
+        // problem 2: we assume that the value of X in the prediction model can be obtained from Species[cg_idx].
+        // however, we may not refer to Species, or the index "cg_idx" may not be correct
+        
+  
+        // printf("[Rui] x_cheatgrass: %f\n",x_cheatgrass);
 	ForEachGroup(rg)
 	{
-
 		if (Globals.currYear < RGroup[rg]->startyr)
 		{
-			/* don't start trying to grow  until RGroup[rg]->startyr year */
+			/* don't start trying to kill or grow or do grazing until RGroup[rg]->startyr year */
 			continue;
 		}
 
 		g = RGroup[rg];
-
-		if ((Globals.currYear >= g->killfreq_startyr) && GT(g->killfreq, 0.))
-		{
-			if (LT(g->killfreq, 1.0))
+                     if (x_cheatgrass < 12.05)
+                    {
+                       y = 1 / RandUniRange(70, 300);
+                    } 
+                    else{
+                        y = - 0.117 + 0.0093 * x_cheatgrass;
+                        }
+                    if GT (g->killfreq, y)
+                    { 
+                         y = g->killfreq;
+                    }
+                    if ((Globals.currYear >= g->killfreq_startyr) && GT(y, 0.))
+                    {
+			if (LT(y, 1.0))
 			{
-				if (RandUni() <= g->killfreq)
+				if (RandUni() <= y)
 				{
 					g->killyr = Globals.currYear;
 				}
 
 			}
-			else if (((Globals.currYear - g->killfreq_startyr) % (IntU) g->killfreq) == 0)
+			else if (((Globals.currYear - g->killfreq_startyr) % (IntU) y) == 0)
 			{
 				g->killyr = Globals.currYear;
 			}
 
-		}
-
+                    }
 		//rgroup proportion recovery
 		if (Globals.currYear == RGroup[rg]->killyr)
 		{
