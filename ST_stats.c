@@ -1446,7 +1446,7 @@ static void _make_header_for_soilwat(char *buf)
 
   // create a column for each layer in the csv
   int num_layers;
-  for(num_layers = 1; num_layers <= SW_Site.n_layers; num_layers++){
+  for(num_layers = 1; num_layers <= MAX_LAYERS; num_layers++){ // create amount of columns equal to max layers for ease with inserting data
       char colName[20]; // create array to hold string
       snprintf(colName, sizeof colName, "Layer %d", num_layers); // concatenate layer number to word "layer"
       strcpy(fields[fc++], colName); // store column layer
@@ -1504,26 +1504,24 @@ void stat_Output_AllSoilwatVariables(void)
 	}
 
   int layerLoop;
-  // loop through amount of years
-  // TODO: see where it tells it to only write 5 files (1 per iteration)
-  for(layerLoop = 0; layerLoop < SW_Site.n_layers; layerLoop++){
-  	for (yr = 1; yr <= Globals.runModelYears; yr++)
-  	{
-  		*buf = '\0';
+  int checkVals;
 
-      // get year to fill in year column in csv
-  		if (BmassFlags.yr)
-        curYearInt = yr;
+  int testingLayers = 0;
 
-      // store soilwater values in buffer
-      //sprintf(buf, "%f", SXW.swc[yr]);
-      //SXW.swc[Ilp(i,p)]
-      sprintf(buf, "%f", SXW.swc[Ilp(layerLoop, yr)]);
+  // loop for entering data to csv. for each year it gets the value at all layers then inputs data row by row
+  for (yr = 1; yr <= Globals.runModelYears; yr++){
+      float layerVals[446];
+      for(layerLoop = 0; layerLoop < SW_Site.n_layers; layerLoop++){
+          layerVals[layerLoop] = SXW.swc[Ilp(layerLoop, yr)];
+          testingLayers++;
+      }
+      // write to file. this is reason set layers to MAX_LAYERS instead of layers actually used since it would be too hard to format the fprintf
+      fprintf(f, "%d,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f\n",
+       yr, layerVals[0], layerVals[1], layerVals[2], layerVals[3], layerVals[4], layerVals[5], layerVals[6],
+       layerVals[7], layerVals[8], layerVals[9], layerVals[10], layerVals[11], layerVals[12], layerVals[13],
+       layerVals[14], layerVals[15], layerVals[16], layerVals[17], layerVals[18], layerVals[19], layerVals[20],
+       layerVals[21], layerVals[22], layerVals[23], layerVals[24]);
 
-      // write values to csv
-      // , in fprintf means column so %d,%s means put %d value in col 1 and %s value in col 2
-  		fprintf(f, "%d,%s\n", curYearInt, buf);
-  	} /* end of foreach year */
   }
 	CloseFile(&f);
 }
