@@ -59,7 +59,7 @@ extern Bool isPartialSoilwatOutput;
   //void stat_Output_YrMorts( void ) ;
   void stat_Output_AllMorts( void) ;
   void stat_Output_AllBmass(void) ;
-  
+
   void stat_Output_AllSoilwatVariables(void);
 
   void runGrid( void ); //for the grid... declared in ST_grid.c
@@ -229,7 +229,7 @@ int main(int argc, char **argv) {
 			/* printf("Iter=%d, Year=%d\n", iter, year);  */
 			Globals.currYear = year;
 
-			rgroup_Establish(); 
+			rgroup_Establish();
 
 			Env_Generate();
 
@@ -279,7 +279,7 @@ int main(int argc, char **argv) {
 		}
 
 		if (MortFlags.yearly)
-			output_Mort_Yearly();
+			output_Mort_Yearly(); // writes yearly file
 
 		if (UseSoilwat)
 			{
@@ -550,7 +550,7 @@ static void check_log(void) {
   if (logfp != stdout) {
     if (logged && !QuietMode)
       fprintf(progfp, "\nCheck logfile for error messages.\n");
-      
+
     CloseFile(&logfp);
   }
 
