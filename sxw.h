@@ -56,6 +56,14 @@ struct stepwat_st {
          aet;     /* soilwat's evapotranspiration for the year */
   RealD  surfaceTemp;   /* soilwat's surfaceTemp */
 
+  // PPT variables
+  int    yearInterval; // keep track of years
+  int    curMonth;
+  RealF  PPTVal[500]; // array to store ppt vals
+  RealF  PPT_day[500];
+  RealF  PPT_week[500];
+  RealF  PPT_month[500];
+
 };
 
 #define SXW_NFILES 5

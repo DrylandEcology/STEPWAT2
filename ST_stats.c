@@ -114,7 +114,7 @@ static RealF _get_gridcell_avg( struct accumulators_grid_cell_st *p);
 static RealF _get_gridcell_std( struct accumulators_grid_cell_st *p);
 static void _make_header( char *buf);
 static void _make_header_with_std( char *buf);
-static void _make_header_for_soilwat(char *buf);
+static void _make_header_for_soilwat(char *buf, char *header1, char *header2);
 
 /* I'm making this a macro because it gets called a lot, but
 /* note that the syntax checker is obviated, so make sure
@@ -1432,9 +1432,9 @@ static void _make_header( char *buf) {
 }
 
 // helper function called by stat_Output_AllSoilwatVariables to create the CSV column names
-static void _make_header_for_soilwat(char *buf)
+// pass in header1 and header2 for column labels
+static void _make_header_for_soilwat(char *buf, char *header1, char *header2)
 {
-
 	char fields[MAX_OUTFIELDS * 2][MAX_FIELDLEN + 1];
 	char tbuf[80];
 
@@ -1442,13 +1442,14 @@ static void _make_header_for_soilwat(char *buf)
 
 	/* Set up headers */
 	if (BmassFlags.yr)
-		strcpy(fields[fc++], "Year");
+    strcpy(fields[fc++], header1);
+    //strcpy(fields[fc++], "Year");
 
   // create a column for each layer in the csv
   int num_layers;
   for(num_layers = 1; num_layers <= MAX_LAYERS; num_layers++){ // create amount of columns equal to max layers for ease with inserting data
       char colName[20]; // create array to hold string
-      snprintf(colName, sizeof colName, "Layer %d", num_layers); // concatenate layer number to word "layer"
+      snprintf(colName, sizeof colName, "%s %d", header2, num_layers); // concatenate layer number to word "layer"
       strcpy(fields[fc++], colName); // store column layer
   }
 
@@ -1466,18 +1467,22 @@ static void _make_header_for_soilwat(char *buf)
 // store soilwat values in a csv
 void stat_Output_AllSoilwatVariables(void)
 {
-
 	//printf("inside stat_Output_AllSoilwatVariables \n");
-	char buf[2048], tbuf[80], sep = BmassFlags.sep;
+	char buf[2048], tbuf[80], PPTbuf[2048], sep = BmassFlags.sep;
 	IntS yr;
   int curYearInt;
 	GrpIndex rg;
 	SppIndex sp;
 	FILE *f;
+  FILE *PPTFILE;
 
 	char filename[FILENAME_MAX];
+  char PPTfilename[FILENAME_MAX];
 
 	sprintf(filename, "%s%0*d.csv", "output/SoilWater_output",
+			Globals.mort.suffixwidth, Globals.currIter);
+
+  sprintf(PPTfilename, "%s%0*d.csv", "output/PPT_output",
 			Globals.mort.suffixwidth, Globals.currIter);
 
 	if (DirExists(DirName(filename)))
@@ -1499,21 +1504,46 @@ void stat_Output_AllSoilwatVariables(void)
 
 	if (BmassFlags.header)
 	{
-		_make_header_for_soilwat(buf); // make column names
+		_make_header_for_soilwat(buf, "Year", "Layer"); // make column names
 		fprintf(f, "%s", buf);
 	}
 
+  if (DirExists(DirName(PPTfilename)))
+	{
+		strcpy(inbuf, PPTfilename);
+		if (!RemoveFiles(inbuf))
+			printf("Can't remove old biomass output files %s\n", inbuf);
+
+	}
+	else if (!MkDir(DirName(PPTfilename)))
+	{
+		printf("Can't make output path for yearly biomass files: %s\n",
+				DirName(PPTfilename));
+	}
+
+	PPTFILE = OpenFile(PPTfilename, "w");
+
+	PPTbuf[0] = '\0';
+
+	if (BmassFlags.header)
+	{
+		_make_header_for_soilwat(PPTbuf, "Month", "Year"); // make column names
+		fprintf(PPTFILE, "%s", PPTbuf);
+	}
+
+  // Adding values to soil water csv //
   int layerLoop;
   int checkVals;
-
-  int testingLayers = 0;
+  int overallIndex = 0;
+  int temp;
 
   // loop for entering data to csv. for each year it gets the value at all layers then inputs data row by row
   for (yr = 1; yr <= Globals.runModelYears; yr++){
       float layerVals[446];
+      float PPTlayerVals[446];
       for(layerLoop = 0; layerLoop < SW_Site.n_layers; layerLoop++){
           layerVals[layerLoop] = SXW.swc[Ilp(layerLoop, yr)];
-          testingLayers++;
+          overallIndex++;
       }
       // write to file. this is reason set layers to MAX_LAYERS instead of layers actually used since it would be too hard to format the fprintf
       fprintf(f, "%d,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f\n",
@@ -1522,8 +1552,15 @@ void stat_Output_AllSoilwatVariables(void)
        layerVals[14], layerVals[15], layerVals[16], layerVals[17], layerVals[18], layerVals[19], layerVals[20],
        layerVals[21], layerVals[22], layerVals[23], layerVals[24]);
 
+       // store PPT values. Only need to store one column since PPT is not a bi-layer value
+       // TODO: update for 12 rows and yr + 1 columns
+       fprintf(PPTFILE, "%d,%f\n", yr, SXW.PPTVal[yr-1]);
+
   }
+  // Done adding values to soil water csv //
 	CloseFile(&f);
+  CloseFile(&PPTFILE);
+
 }
 
 
