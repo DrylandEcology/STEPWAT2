@@ -50,6 +50,12 @@ struct stepwat_st {
         *f_prod,   /* biomass to prod. conv. nos. */
         *f_watin;  /* soilwat's input file */
 
+  /* % Cover from prod.in */
+  float grass_cover,
+        shrub_cover,
+        tree_cover,
+        forbs_cover;
+
   /* DEBUG stuff */
   char *debugfile; /* added in ST_Main(), read to get debug instructions */
   RealF *swc, /* dynamic array(Ilp) of SWC from SOILWAT */

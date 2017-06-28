@@ -1538,7 +1538,6 @@ void stat_Output_AllSoilwatVariables(void)
   // Adding values to soil water csv //
   int layerLoop;
   int checkVals;
-  //int overallIndex = 0;
   int currentMonth;
   int temp;
 
@@ -1546,44 +1545,48 @@ void stat_Output_AllSoilwatVariables(void)
   // Handles SWC CSV
   for (yr = 1; yr <= Globals.runModelYears; yr++){ // set yr to 1 to start for proper access to Ilp array
       float layerVals[446];
+      float swcVals[446];
       float PPTlayerVals[446];
 
-      // loop for soil water
-      for(layerLoop = 0; layerLoop < SW_Site.n_layers; layerLoop++){
-          layerVals[layerLoop] = SXW.swc[Ilp(layerLoop, yr)];
-          //overallIndex++;
+      // loop to convert month swc to year and write it to csv
+      for(currentMonth = 0; currentMonth < MAX_MONTHS; currentMonth++){
+          for(layerLoop = 0; layerLoop < SW_Site.n_layers; layerLoop++){
+            layerVals[layerLoop] += SXW.swc[Ilp(layerLoop, currentMonth)]; // each layer value for current month is stored in array to be averaged later
+          }
       }
 
+      //printf("layerVals[0]: %f\n", layerVals[0]);
+
+      // loop for soil water
+      /*for(layerLoop = 0; layerLoop < SW_Site.n_layers; layerLoop++){
+          layerVals[layerLoop] = SXW.swc[Ilp(layerLoop, yr)];
+          //printf("layerVals[%d]: %f\n", layerLoop, layerVals[layerLoop]);
+      }*/
+
       // loop for PPT
+      // TODO: currently using year values since SOILWAT does not pass any values aside from year
       for(currentMonth = 0; currentMonth < MAX_MONTHS; currentMonth++){
         PPTlayerVals[currentMonth] = SXW.PPTVal[currentMonth];
       }
 
       // write to file. this is reason set layers to MAX_LAYERS instead of layers actually used since it would be too hard to format the fprintf
       fprintf(f, "%d,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f\n",
-       yr, layerVals[0], layerVals[1], layerVals[2], layerVals[3], layerVals[4], layerVals[5], layerVals[6],
-       layerVals[7], layerVals[8], layerVals[9], layerVals[10], layerVals[11], layerVals[12], layerVals[13],
-       layerVals[14], layerVals[15], layerVals[16], layerVals[17], layerVals[18], layerVals[19], layerVals[20],
-       layerVals[21], layerVals[22], layerVals[23], layerVals[24]);
+       yr, layerVals[0]/12, layerVals[1]/12, layerVals[2]/12, layerVals[3]/12, layerVals[4]/12, layerVals[5]/12, layerVals[6]/12,
+       layerVals[7]/12, layerVals[8]/12, layerVals[9]/12, layerVals[10]/12, layerVals[11]/12, layerVals[12]/12, layerVals[13]/12,
+       layerVals[14]/12, layerVals[15]/12, layerVals[16]/12, layerVals[17]/12, layerVals[18]/12, layerVals[19]/12, layerVals[20]/12,
+       layerVals[21]/12, layerVals[22]/12, layerVals[23]/12, layerVals[24]/12);
 
+       // write PPT vals to csv
       fprintf(PPTFILE, "%d,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f\n", yr, PPTlayerVals[0], PPTlayerVals[1], PPTlayerVals[2],
        PPTlayerVals[3], PPTlayerVals[4], PPTlayerVals[5], PPTlayerVals[6],PPTlayerVals[7], PPTlayerVals[8], PPTlayerVals[9],
        PPTlayerVals[10], PPTlayerVals[11]);
-
-       // store PPT values. Only need to store one column since PPT is not a bi-layer value
-       // TODO: update for 12 rows and yr + 1 columns
-       //fprintf(PPTFILE, "%d,%f\n", yr, SXW.PPTVal[yr-1]);
   }
+  printf("SXW.grass_cover: %f\n", SXW.grass_cover);
+  printf("SXW.shrub_cover: %f\n", SXW.shrub_cover);
+  printf("SXW.tree_cover: %f\n", SXW.tree_cover);
+  printf("SXW.forbs_cover: %f\n", SXW.forbs_cover);
 
-  /*int currentMonth;
-  // for loop for PPT values
-  for(currentMonth = 0; currentMonth < MAX_MONTHS; currentMonth++;){
-    float PPTlayerVals[446];
-    for(yr = 0; yr < Globals.runModelYears; yr++){
-      PPTlayerVals[yr] = SXW.PPTVal[yr];
-    }
-    fprintf(PPTFILE, "%d,%f\n", yr, SXW.PPTVal[yr-1]);
-  }*/
+
 
   // Done adding values to soil water csv //
 	CloseFile(&f);

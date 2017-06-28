@@ -209,7 +209,7 @@ void SXW_Init( Bool init_SW, char *f_roots ) {
 	  _read_debugfile();
   _write_sw_outin();
 
-  
+
   if(init_SW) {
 	  temp = strdup(SXW.f_watin);
 	  SW_CTL_init_model(temp);
@@ -223,8 +223,9 @@ void SXW_Init( Bool init_SW, char *f_roots ) {
   	SXW.NTrLyrs = SW_Site.n_transp_lyrs_grass;
   if(SW_Site.n_transp_lyrs_forb > SXW.NTrLyrs)
 	  SXW.NTrLyrs = SW_Site.n_transp_lyrs_forb;
-  	
+
   SXW.NSoLyrs = SW_Site.n_layers;
+  printf("Number of layers: %d\n", SW_Site.n_layers);
 
   _make_arrays();
 
@@ -375,6 +376,14 @@ void SXW_SW_Setup_Echo(void) {
 	{// %u %u %u %u s->lyr[i]->my_transp_rgn_forb, s->lyr[i]->my_transp_rgn_tree, s->lyr[i]->my_transp_rgn_shrub, s->lyr[i]->my_transp_rgn_grass
 		fprintf(f,"%6.2f %6.2f %6.2f %6.2f\n", s->lyr[i]->transp_coeff_forb, s->lyr[i]->transp_coeff_tree, s->lyr[i]->transp_coeff_shrub, s->lyr[i]->transp_coeff_grass);
 	}
+
+  // adding values to sxw structure for use in ST_stats.c
+  SXW.grass_cover = SW_VegProd.grass.conv_stcr;
+  SXW.shrub_cover = SW_VegProd.shrub.conv_stcr;
+  SXW.tree_cover = SW_VegProd.tree.conv_stcr;
+  SXW.forbs_cover = SW_VegProd.forb.conv_stcr;
+
+
 	fprintf(f, "\n");
 	CloseFile(&f);
 }
@@ -453,7 +462,7 @@ static void  _read_files( void ) {
     if (!GetALine(fin, inbuf)) break;
     *_sxwfiles[i] = Str_Dup(Str_TrimLeftQ(inbuf));
   }
- 
+
   if (i < nfiles) {
     LogError(logfp, LOGFATAL, "STEPWAT: %s: Insufficient files found",
             MyFileName);
@@ -1186,7 +1195,7 @@ void load_sxw_memory( RealD* grid_roots_max, RealD* grid_rootsXphen, RealD* grid
 	_phen = Mem_Calloc(SXW.NGrps * MAX_MONTHS, sizeof(RealD), "load_sxw_memory()");
 	_prod_bmass = Mem_Calloc(SXW.NGrps * MAX_MONTHS, sizeof(RealD), "load_sxw_memory()");
 	_prod_pctlive = Mem_Calloc(SXW.NGrps * MAX_MONTHS, sizeof(RealD), "load_sxw_memory()");
-	
+
 	memcpy(_roots_max, grid_roots_max, SXW.NGrps * SXW.NTrLyrs * sizeof(RealD));
 	memcpy(_rootsXphen, grid_rootsXphen, SXW.NGrps * SXW.NPds * SXW.NTrLyrs * sizeof(RealD));
 	memcpy(_roots_active, grid_roots_active, SXW.NGrps * SXW.NPds * SXW.NTrLyrs * sizeof(RealD));
