@@ -227,6 +227,13 @@ void SXW_Init( Bool init_SW, char *f_roots ) {
   SXW.NSoLyrs = SW_Site.n_layers;
   printf("Number of layers: %d\n", SW_Site.n_layers);
 
+  stat_Output_Daily_CSV_Summary();
+  stat_Output_Weekly_CSV_Summary();
+  stat_Output_Monthly_CSV_Summary();
+  stat_Output_Yearly_CSV_Summary();
+
+
+
   _make_arrays();
 
   _read_roots_max();
@@ -318,7 +325,6 @@ void SXW_Run_SOILWAT (void) {
 	SXW.aet = 0.; /* used to be in sw_setup() but it needs clearing each run */
 
 	//SXW_SW_Setup_Echo();
-
 	_sxw_sw_run();
 
 	/* now compute resource availability for the given plant sizes */

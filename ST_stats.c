@@ -1465,6 +1465,7 @@ static void _make_header_for_soilwat(char *buf, char *header1, char *header2, in
 }
 
 // store soilwat values in a csv
+// TODO: need to clean up this function... too many commented out blobs and ugly/hard to read
 void stat_Output_AllSoilwatVariables(void)
 {
 	//printf("inside stat_Output_AllSoilwatVariables \n");
@@ -1544,14 +1545,16 @@ void stat_Output_AllSoilwatVariables(void)
   // loop for entering data to csv. for each year it gets the value at all layers then inputs data row by row
   // Handles SWC CSV
   for (yr = 1; yr <= Globals.runModelYears; yr++){ // set yr to 1 to start for proper access to Ilp array
-      float layerVals[446];
-      float swcVals[446];
-      float PPTlayerVals[446];
+      float layerVals[104] = {0};
+      float PPTlayerVals[446] = {0};
 
       // loop to convert month swc to year and write it to csv
       for(currentMonth = 0; currentMonth < MAX_MONTHS; currentMonth++){
           for(layerLoop = 0; layerLoop < SW_Site.n_layers; layerLoop++){
             layerVals[layerLoop] += SXW.swc[Ilp(layerLoop, currentMonth)]; // each layer value for current month is stored in array to be averaged later
+            //printf("SWCbulk[SXW.grass_cover,layer]:  %f\n", SXW.swc[SXW.grass_cover, layerLoop]); // this is what i need to do to get necessary swcbulk values
+            //if(layerLoop == 0) printf("layerVals[0] for month %d: %f\n", currentMonth, layerVals[0]);
+            //printf("SXW.swc[Ilp(%d, %d)]: %f\n", layerLoop, currentMonth, SXW.swc[Ilp(layerLoop, currentMonth)]);
           }
       }
 
@@ -1569,6 +1572,7 @@ void stat_Output_AllSoilwatVariables(void)
         PPTlayerVals[currentMonth] = SXW.PPTVal[currentMonth];
       }
 
+      //printf("layerVals[0]: %f\n", layerVals[0]);
       // write to file. this is reason set layers to MAX_LAYERS instead of layers actually used since it would be too hard to format the fprintf
       fprintf(f, "%d,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f\n",
        yr, layerVals[0]/12, layerVals[1]/12, layerVals[2]/12, layerVals[3]/12, layerVals[4]/12, layerVals[5]/12, layerVals[6]/12,
@@ -1581,10 +1585,11 @@ void stat_Output_AllSoilwatVariables(void)
        PPTlayerVals[3], PPTlayerVals[4], PPTlayerVals[5], PPTlayerVals[6],PPTlayerVals[7], PPTlayerVals[8], PPTlayerVals[9],
        PPTlayerVals[10], PPTlayerVals[11]);
   }
-  printf("SXW.grass_cover: %f\n", SXW.grass_cover);
+  // printing out values from the outsetup.in that SOILWAT reads in to ensure passing to STEPPE correctly
+  /*printf("SXW.grass_cover: %f\n", SXW.grass_cover);
   printf("SXW.shrub_cover: %f\n", SXW.shrub_cover);
   printf("SXW.tree_cover: %f\n", SXW.tree_cover);
-  printf("SXW.forbs_cover: %f\n", SXW.forbs_cover);
+  printf("SXW.forbs_cover: %f\n", SXW.forbs_cover);*/
 
 
 
