@@ -109,7 +109,6 @@ void output_Bmass_Yearly( Int year ) {
         sprintf(fields[fc++],"%d", Species[sp]->est_count);
     }
   }
-
   sprintf(filename, "%s%0*d.csv", Parm_name(F_BMassPre),
                                  Globals.bmass.suffixwidth,
                                  Globals.currIter);
@@ -185,5 +184,3 @@ void output_Mort_Yearly( void ) {
 
 	CloseFile(&Globals.mort.fp_year);
 }
-
-

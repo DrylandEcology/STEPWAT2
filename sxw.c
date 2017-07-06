@@ -708,6 +708,7 @@ static void _read_watin(void) {
    MyFileName = SXW.f_watin;
    f = OpenFile(MyFileName, "r");
 
+
    while( GetALine(f, inbuf) ) {
      if (++lineno == (eOutput + 2)) {
        strcpy(_swOutDefName, DirName(SXW.f_watin));
@@ -748,7 +749,94 @@ static void _write_sw_outin(void) {
 		strcpy(pd, "DY");
 		break;
 	}
+
+  //printf("//////////////////////\n");
+  FILE *zq;
+	zq = fopen(_swOutDefName, "r");
+	int lineNum = 0;
+	if(zq){
+		//printf("\n reading %s to check values.\n", MyFileName);
+    char lineLen[100];
+    char timestepVals[100];
+    char *timeStep_final[4];
+		while(fgets(lineLen, sizeof lineLen, zq) != NULL){
+			if(lineNum == 0){
+        printf("%s\n", lineLen);
+        strcpy(timestepVals, lineLen);
+
+        lineNum++;
+      }
+		}
+
+    //
+    char ** res  = NULL;
+    char *  p    = strtok (timestepVals, " ");
+    int n_spaces = 0, i;
+
+    /* split string and append tokens to 'res' */
+
+    while (p) {
+      res = realloc (res, sizeof (char*) * ++n_spaces);
+
+      if (res == NULL)
+        exit (-1); /* memory allocation failed */
+
+      res[n_spaces-1] = p;
+
+      p = strtok (NULL, " ");
+
+    }
+
+    /* realloc one extra element for the last NULL */
+
+    res = realloc (res, sizeof (char*) * (n_spaces+1));
+    res[n_spaces] = 0;
+
+    if(strcmp(res[3],"mo")) printf("yes sir\n");
+    printf("res[3]: %s\n", res[3]);
+    /* print the result */
+    for (i = 0; i < (n_spaces); ++i){
+      printf ("res[%d] = %s\n", i, res[i]);
+
+      if(strcmp(res[i],"dy")){
+        //printf("DAY\n");
+        timeStep_final[0] = "dy";
+        //printf("timeStep_final[0]: %s\n", timeStep_final[0]);
+      }
+      else if(strcmp(res[i],"wk")){
+        //printf("WEEK\n");
+        timeStep_final[1] = "wk";
+        //printf("timeStep_final[1]: %s\n", timeStep_final[1]);
+      }
+      else if(strcmp(res[i],"mo")){
+        //printf("MO\n");
+        timeStep_final[2] = "mo";
+        //printf("timeStep_final[2]: %s\n", timeStep_final[2]);
+      }
+      else if(strcmp(res[i],"yr")){
+        //printf("YR\n");
+        timeStep_final[3] = "yr";
+        //printf("timeStep_final[3]: %s\n", timeStep_final[3]);
+      }
+      else printf("\nelse\n\n");
+    }
+
+    /*printf("timeStep_final[0]: %s\n", timeStep_final[0]);
+    printf("timeStep_final[1]: %s\n", timeStep_final[1]);
+    printf("timeStep_final[2]: %s\n", timeStep_final[2]);
+    printf("timeStep_final[3]: %s\n", timeStep_final[3]);*/
+
+    /* free the memory allocated */
+
+    free (res);
+    //
+
+		fclose(zq);
+	}
+  //printf("//////////////////////\n");
+
 	fp = OpenFile(_swOutDefName, "w");
+  //fprintf(fp, "TIMESTEP dy wk mo yr\n");
 	fprintf(fp, "TRANSP  SUM  %s  1  end  transp\n", pd);
 	fprintf(fp, "PRECIP  SUM  YR  1  end  precip\n");
 	fprintf(fp, "TEMP    AVG  YR  1  end  temp\n");
