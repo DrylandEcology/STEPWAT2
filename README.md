@@ -48,7 +48,8 @@ Other tasks:
 
 ```
 cd testing.sagebrush.master/
-./stepwat -f files.in -g -s```
+./stepwat -f files.in -g -s
+```
 
 
 * Run the non-gridded version of STEPWAT2 from the Stepwat_Inputs/ folder using SOILWAT2
@@ -56,7 +57,7 @@ cd testing.sagebrush.master/
 
 ```
 cd testing.sagebrush.master/Stepwat_Inputs/
-./stepwat -f files.in -s 
+./stepwat -f files.in -s
 ```
 
 
