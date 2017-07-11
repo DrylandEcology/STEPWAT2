@@ -70,6 +70,18 @@ struct stepwat_st {
   RealF  PPT_week[500];
   RealF  PPT_month[500];
 
+  // store converted SWA values
+  float SWAbulk_grass[366][25], // 2D array to store SWA vals ([days of year][number of layers])
+        SWAbulk_shrub[366][25],
+        SWAbulk_tree[366][25],
+        SWAbulk_forb[366][25];
+
+  // 2D array to store 4 critical values per layer
+  float SWCbulk[4][8]; // TODO: first value needs to be (number of layers * plant types) - not hardcoded
+
+  int curInterval;
+  int tempInt;
+
 };
 
 #define SXW_NFILES 5
