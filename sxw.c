@@ -207,7 +207,7 @@ void SXW_Init( Bool init_SW, char *f_roots ) {
 
   if (SXW.debugfile)
 	  _read_debugfile();
-  _write_sw_outin();
+  //_write_sw_outin();
 
 
   if(init_SW) {
@@ -750,25 +750,26 @@ static void _write_sw_outin(void) {
 		break;
 	}
 
-  //printf("//////////////////////\n");
+  // reading outsetup_v30.in file to get timestep values
   FILE *zq;
 	zq = fopen(_swOutDefName, "r");
 	int lineNum = 0;
 	if(zq){
-		//printf("\n reading %s to check values.\n", MyFileName);
     char lineLen[100];
     char timestepVals[100];
     char *timeStep_final[4];
 		while(fgets(lineLen, sizeof lineLen, zq) != NULL){
-			if(lineNum == 0){
-        printf("%s\n", lineLen);
-        strcpy(timestepVals, lineLen);
-
-        lineNum++;
+			if(lineNum == 5 || lineNum == 3){ // check both lines in case debug is turned off which would make line 3 the last line
+        char *timeCheck = strstr(lineLen, "TIMESTEP"); // check if this line is the one that outlines the timesteps
+        if(timeCheck){
+          printf("%s\n", lineLen);
+          strcpy(timestepVals, lineLen);
+        }
       }
+      lineNum++;
 		}
+    // done reading outsetup_v30.in file
 
-    //
     char ** res  = NULL;
     char *  p    = strtok (timestepVals, " ");
     int n_spaces = 0, i;
@@ -792,8 +793,6 @@ static void _write_sw_outin(void) {
     res = realloc (res, sizeof (char*) * (n_spaces+1));
     res[n_spaces] = 0;
 
-    if(strcmp(res[3],"mo")) printf("yes sir\n");
-    printf("res[3]: %s\n", res[3]);
     /* print the result */
     for (i = 0; i < (n_spaces); ++i){
       printf ("res[%d] = %s\n", i, res[i]);
@@ -821,10 +820,6 @@ static void _write_sw_outin(void) {
       else printf("\nelse\n\n");
     }
 
-    /*printf("timeStep_final[0]: %s\n", timeStep_final[0]);
-    printf("timeStep_final[1]: %s\n", timeStep_final[1]);
-    printf("timeStep_final[2]: %s\n", timeStep_final[2]);
-    printf("timeStep_final[3]: %s\n", timeStep_final[3]);*/
 
     /* free the memory allocated */
 
@@ -833,10 +828,8 @@ static void _write_sw_outin(void) {
 
 		fclose(zq);
 	}
-  //printf("//////////////////////\n");
 
 	fp = OpenFile(_swOutDefName, "w");
-  //fprintf(fp, "TIMESTEP dy wk mo yr\n");
 	fprintf(fp, "TRANSP  SUM  %s  1  end  transp\n", pd);
 	fprintf(fp, "PRECIP  SUM  YR  1  end  precip\n");
 	fprintf(fp, "TEMP    AVG  YR  1  end  temp\n");
@@ -844,6 +837,7 @@ static void _write_sw_outin(void) {
 		fprintf(fp, "AET     SUM  YR  1  end  aet\n");
 		fprintf(fp, "SWCBULK     FIN  MO  1  end  swc_bulk\n");
 	}
+  fprintf(fp, "TIMESTEP dy wk mo yr\n");
 
 	CloseFile(&fp);
 }
