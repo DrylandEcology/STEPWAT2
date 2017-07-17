@@ -1,0 +1,70 @@
+# Disturbance input definition file STEPPEWAT
+# resource-group-level information
+
+# Anything after the first pound sign is a comment
+# Blank lines, white space, and comments may be used freely,
+# however, the order of input is important
+
+####################################################
+# All-group parameters:
+# NGrpEstab = maximum number of resource groups that can
+#        establish in a given year
+#
+# NGrpEstab
+     10
+[end]  # section end
+# NOTE: only 10 RGs can be established at a time. Below there are 11 RG possibilities. One always has
+# to be turned off. As a default, annual warm-season grasses are turned off.
+#=============================================================
+#                Group definitions
+
+
+# killyr = kill all members of this group at end of this year.
+#          0 == don't kill
+# killfreq_startyr = start year for killing due to fire, which will continue at the specified kill frequency
+# killfrq = frequency to kill.  if < 1, yearly probability,
+#            if > 1 yearly interval, after killfreq_startyr.  
+#            Overrides killyr.
+# extirp = year at which all group members are extirpated
+#       (without recovery) from the plot. 0==don't use, >0 == year # 
+# mort =  switch to allow age-independent/slowgrowth mortality
+#         functions.0 = don't use; 1 = use.
+# xgrow = extra growth factor; if > 0, plants can convert "extra" ppt
+#         into ephemeral (this year's) biomass by
+#         grams_extra_biomass = mm_extra_ppt * xgrow_factor
+# veg_prod_type = 1 for tree, 2 for shrub, 3 for grass & 4 for forb.  Refer to Soilwat2’s VegProd types in VegProd.h.
+# proportion_killed = proportional killing that mimics fire at given kill year/killfreq. This is the proportion of biomass 
+# 	   removed by fire.
+# proportion_recovered = proportionally recovered all members of the group after kill year.
+# grazing_frq = frequency of grazing.  if < 1, yearly probability,
+#            if > 1 yearly interval, after grazingfreq_startyr.  
+#            Overrides grazingyear.
+# proportion_grazing = proportion of biomass removed due to grazing. 
+# grazingfreq_startyr = start year for grazing
+
+#TM - density values from Biondini et al 1998 - used density% in Table 2 for p.cool.forb (Achillea millefolium) and
+#	p.warm.forb (Grindelia squarrosa)
+#TM - density values for annual cool grasses from (http://www.fs.fed.us/database/feis/plants/graminoid/brojap/all.html) converted 56 stems/sqft to stems/sqmeter
+#TM - density for perennial warm grasses from (http://www.fs.fed.us/database/feis/plants/graminoid/koemac/all.html#4) 
+#  used 1052 KOMA per 2 rod squar and converted to 11 per meter square
+#TM - densities from GZTX data for shrub (gusa) & a.warm.forb(chal - used same for a.cool.forb) & p.cool.grass (stco)
+#TM - need density for a.warm.grass - but right now turned off so insterted arbitraty number
+# space parameter for sagebrush, p.cool.grass, p.warm.grass, a.cool.grass, a.warm.grass, forbs from Bradford & Lauenroth 2006
+# space parameter for shrubs was a guess (KP) 
+#TM 10.6.2015 - tested various stretch values for sagebrush and found stretch of 8 to be best paired with irate 0.02
+
+# name        killyr killfreq_startyr Prescribed_killfrq Cheatgrass_index_number ignation cheatgrass_coefficient wild_fire_slope  extirp  mort  xgrow  veg_prod_type  proportion_killed proportion_recovered grazing_frq proportion_grazing  grazingfreq_startyr
+ sagebrush      0      1       10    6   12.05 -0.117  0.0093    0     1  0.00000   2  1.00  0.00 0  0.00  0
+ a.cool.forb    0      1       10    6   12.05 -0.117  0.0093    0     1  0.00000   4  1.00  0.00 0  0.24  0
+ a.warm.forb    0      1       10    6   12.05 -0.117  0.0093    0     1  0.00000   4  1.00  0.00 0  0.24  0
+ p.cool.forb    0      1       10    6   12.05 -0.117  0.0093    0     1  0.00000   4  1.00  0.40 0  0.24  0
+ p.warm.forb    0      1       10    6   12.05 -0.117  0.0093    0     1  0.00000   4  1.00  0.40 0  0.24  0
+ a.cool.grass   0      1       10    6   12.05 -0.117  0.0093    0     1  0.00000   3  1.00  0.00 0  0.24  0
+ p.cool.grass   0      1       10    6   12.05 -0.117  0.0093    0     1  0.00000   3  1.00  0.70 0  0.24  0
+ p.warm.grass   0      1       10    6   12.05 -0.117  0.0093    0     1  0.00000   3  1.00  0.70 0  0.24  0
+ shrub          0      1       10    6   12.05 -0.117  0.0093    0     1  0.00000   2  1.00  0.00 0  0.00  0
+ succulents     0      1       10    6   12.05 -0.117  0.0093    0     1  0.00000   2  1.00  0.00 0  0.00  0 
+
+
+[end]  # section end
+
