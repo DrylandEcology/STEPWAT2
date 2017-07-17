@@ -6,6 +6,7 @@ Input/model.in		#for the model
 Input/env.in		#for the environment
 Input/plot.in		#for the plot
 Input/rgroup.in		#for the rgroup (resource-group-level information)
+Input/disturbance.in	#for the disturbance
 Input/species.in	#for the species information
 
 Input/bmassflags.in	#biomass flags... (for setting up the output I think)

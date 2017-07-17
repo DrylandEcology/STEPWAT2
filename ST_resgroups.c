@@ -242,26 +242,23 @@ static RealF _add_annuals(const GrpIndex rg, const SppIndex sp, const RealF last
     forced = TRUE;
 
     x = 0.;
-    if (RandUni() <= s->seedling_estab_prob) {
+     if (RandUni() <= s->seedling_estab_prob) {
         x = (g->regen_ok) ? _get_annual_maxestab(sp) : 0.;
         //printf("g->regen_ok: %d  , x = %.5f %\n", g->regen_ok, x);
     }
 
     if (GT(x, 0.)) {
-        if (ZERO(s->lastyear_relsize)) {
+        if (ZERO(lastyear_relsize)) {
             newsize = RandUniRange(1, x);
-           // printf("newsize   =%0.5f \n", newsize);
-        }
-        else {
-            //printf("lastyear_relsize=%0.5f \n", s->lastyear_relsize);
-            newsize = x *  s->lastyear_relsize;
             //printf("newsize   =%0.5f \n", newsize);
         }
-       
+        else {
+            //printf("lastyear_relsize=%0.5f \n", lastyear_relsize);
+            newsize = x * lastyear_relsize;
+            //printf("newsize   =%0.5f \n", newsize);
+        }
     }
     return newsize;
-     
-    //printf ("newsize   =%0.5f \n", newsize);
 }
 
 static RealF _get_annual_maxestab(SppIndex sp) {
@@ -700,12 +697,12 @@ void rgroup_Establish(void) {
      * KAP: Annual establishment now occurs here instead of in PartResources
      */
     /*------------------------------------------------------*/
-    IntS i, newsize=1, num_est; /* number of individuals of sp. that establish*/
+    IntS i, num_est; /* number of individuals of sp. that establish*/
     GrpIndex rg;
     SppIndex sp;
     GroupType *g;
     RealF lastyear_relsize;
-    
+
     /* Cannot establish if plot is still in disturbed state*/
     if (Plot.disturbed > 0) {
         ForEachGroup(rg)
@@ -743,8 +740,7 @@ void rgroup_Establish(void) {
                     continue;
 
                 if (Species[sp]->max_age == 1) {
-                    Species_Update_Newsize(sp, newsize);
-                    //printf("Globals.currYear = %d, call to _add_annuals sp=%d Species[sp]->lastyear_relsize : %.5f \n", Globals.currYear, sp, Species[sp]->lastyear_relsize);
+                    printf("Globals.currYear = %d, call to _add_annuals sp=%d Species[sp]->lastyear_relsize : %.5f \n", Globals.currYear, sp, Species[sp]->lastyear_relsize);
                     num_est = _add_annuals(rg, sp, Species[sp]->lastyear_relsize);
                     //printf("num_est for annuals=%d \n",num_est);
                 }                    
@@ -754,9 +750,9 @@ void rgroup_Establish(void) {
                 }
 
                 if (num_est) {
-                    //printf("%d %d %d %d\n",
-                    // Globals.currIter, Globals.currYear, sp, num_est); */
-                    
+                    /* printf("%d %d %d %d\n",
+                     Globals.currIter, Globals.currYear, sp, num_est); */
+
                     Species_Add_Indiv(sp, num_est);
                     species_Update_Estabs(sp, num_est);
                 }
@@ -859,7 +855,6 @@ void RGroup_Update_Newsize(GrpIndex rg)
 	{
 		//For calculating rgroup relSize, sumsize should be divide by no of current established species in rgroup rather than total no of species in rgroup.
 		RGroup[rg]->relsize = sumsize / (RealF) RGroup[rg]->est_count;
-                 RGroup[rg]->lastyear_relsize = RGroup[rg]->relsize ;
 	}
 
 	///if (RGroup[rg]->max_age != 1) {
@@ -867,7 +862,6 @@ void RGroup_Update_Newsize(GrpIndex rg)
 	indivs = RGroup_GetIndivs(rg, SORT_0, &numindvs);
 	for (n = 0; n < numindvs; n++)
 		indivs[n]->grp_res_prop = indivs[n]->relsize / sumsize;
-       
 	Mem_Free(indivs);
 	///}
 

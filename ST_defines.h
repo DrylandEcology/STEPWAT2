@@ -74,7 +74,7 @@ typedef enum {Intcpt, Slope, P0=0, P1, P2, P3, P4}
 typedef enum {DepthNonComp, DepthShallow, DepthMedium, DepthDeep, DepthLast}
   DepthClass;
 
-typedef enum {F_First, F_Log, F_Model, F_Env, F_Plot, F_RGroup, F_Species,
+typedef enum {F_First, F_Log, F_Model, F_Env, F_Plot, F_RGroup, F_Disturbance, F_Species,
               F_BMassFlag, F_BMassPre, F_BMassAvg,
               F_MortFlag,  F_MortPre,  F_MortAvg,
               F_SXW, F_EXE}
