@@ -143,7 +143,7 @@ Bool UseProgressBar;
  */
 void print_soilwat_output(char* str)
 {
-	isPartialSoilwatOutput = FALSE;
+  isPartialSoilwatOutput = FALSE;
 
 	printf( "inside stepwat main setting files options for soilwat full output, so now isPartialSoilwatOutput=%d \n", isPartialSoilwatOutput);
 
@@ -170,7 +170,7 @@ void print_soilwat_output(char* str)
 /******************** Begin Model Code *********************/
 /***********************************************************/
 int main(int argc, char **argv) {
-	IntS year, iter, incr, g, s;
+  IntS year, iter, incr, g, s;
 	IndivType *i;
 	Bool killedany;
 

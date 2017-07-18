@@ -315,4 +315,3 @@ static void _update_productivity(void) {
 	}
 #undef Biomass
 }
-

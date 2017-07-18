@@ -16,7 +16,7 @@ CC  	=	gcc
 
 WRES	=	windres #no idea what this was actually used for since it doesn't do anything...
 
-HOMEV	=	
+HOMEV	=
 VPATH	=	$(HOMEV)/include #no idea what this was used for either...
 oDir	=	./obj
 Bin	=	.
@@ -25,8 +25,8 @@ libDirs	=	-Lsw_src -Lsqlite-amalgamation
 
 incDirs	=	-Isw_src -Isqlite-amalgamation
 
-LIBS	=	
-C_FLAGS	=	-g  -O0 -Wstrict-prototypes -Wmissing-prototypes -Wimplicit -Wunused -Wformat -Wredundant-decls -Wcast-align\
+LIBS	=
+C_FLAGS	=	-g -O0 -Wstrict-prototypes -Wmissing-prototypes -Wimplicit -Wunused -Wformat -Wredundant-decls -Wcast-align\
 	-DSTEPWAT -lm
 
 SRCS	=\
@@ -173,7 +173,7 @@ $(oDir)/sxw.o: sxw.c sw_src/generic.h sw_src/filefuncs.h \
  sxw_module.h sw_src/SW_Control.h sw_src/SW_Model.h sw_src/SW_Site.h sw_src/SW_SoilWater.h \
  sw_src/SW_Files.h sw_src/SW_VegProd.h
 	$(CC) $(C_FLAGS) $(incDirs) -c -o $@ $<
-	
+
 $(oDir)/sxw_sql.o: sxw_sql.c ST_steppe.h \
  ST_steppe.h sw_src/SW_Defines.h sxw.h\
  sw_src/SW_Times.h sxw_module.h sw_src/SW_Model.h sw_src/SW_Site.h sw_src/SW_SoilWater.h
@@ -219,9 +219,9 @@ $(oDir)/sw_src/SW_Output.o: sw_src/SW_Output.c sw_src/generic.h \
  sw_src/SW_Files.h sw_src/SW_Model.h sw_src/SW_Times.h sw_src/SW_Site.h sw_src/SW_SoilWater.h sw_src/SW_Output.h \
  sw_src/SW_Weather.h
 	$(CC) $(C_FLAGS) $(incDirs) -c -o $@ $<
-	
-$(oDir)/sw_src/SW_Main_Function.o: sw_src/SW_Main_Function.c 
-	$(CC) $(C_FLAGS) $(incDirs) -c -o $@ $<	
+
+$(oDir)/sw_src/SW_Main_Function.o: sw_src/SW_Main_Function.c
+	$(CC) $(C_FLAGS) $(incDirs) -c -o $@ $<
 
 $(oDir)/sw_src/SW_Site.o: sw_src/SW_Site.c sw_src/generic.h sw_src/filefuncs.h \
  sw_src/myMemory.h sw_src/SW_Defines.h sw_src/SW_Files.h sw_src/SW_Site.h
@@ -311,16 +311,16 @@ $(oDir)/sxw_tester.o: sxw_tester.c sw_src/generic.h \
  ST_defines.h ST_structs.h ST_functions.h ST_Globals.h sw_src/SW_Defines.h \
  sw_src/SW_Site.h sxw_funcs.h sxw.h sw_src/SW_Times.h sxw_module.h sxw_vars.h
 	$(CC) $(C_FLAGS) $(incDirs) -c -o $@ $<
-	
+
 $(oDir)/sw_src/SW_VegEstab.o: sw_src/SW_VegEstab.c sw_src/generic.h sw_src/filefuncs.h sw_src/myMemory.h \
 	sw_src/SW_Defines.h sw_src/SW_Files.h sw_src/SW_Site.h sw_src/SW_Times.h \
 	sw_src/SW_Model.h sw_src/SW_SoilWater.h sw_src/SW_Weather.h sw_src/SW_VegEstab.h
 		$(CC) $(C_FLAGS) $(incDirs) -c -o $@ $<
-		
+
 $(oDir)/ST_grid.o: ST_grid.c ST_steppe.h ST_defines.h sw_src/generic.h \
  ST_globals.h \
  sw_src/myMemory.h ST_globals.h
 	$(CC) $(C_FLAGS) $(incDirs) -c -o $@ $<
-	
+
 $(oDir)/ST_sql.o: ST_sql.c ST_steppe.h ST_globals.h
 	$(CC) $(C_FLAGS) $(incDirs) -c -o $@ $<
