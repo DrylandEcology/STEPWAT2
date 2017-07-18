@@ -204,8 +204,9 @@ int main(int argc, char **argv) {
 	/* --- Begin a new iteration ------ */
 	for (iter = 1; iter <= Globals.runModelIterations; iter++) {
 
-		if (progfp == stderr) {
-			if (iter % incr == 0)
+		if (progfp == stderr) 
+                {
+	          if (iter % incr == 0)
 				fprintf(progfp, ".");
 		} else {
 			fprintf(progfp, "%d\n", iter);

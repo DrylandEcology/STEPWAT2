@@ -1179,7 +1179,7 @@ static void _species_init( void) {
 
      Species[sp]->viable_yrs = viable;
      Species[sp]->exp_decay  = xdecay;
-     Species[sp]->seedprod = (RealF *) Mem_Calloc( viable, sizeof(RealF), "species_init()");
+     Species[sp]->seedprod = (IntU *) Mem_Calloc( viable, sizeof(IntU), "species_init()");
 
    } /* end while readspp*/
 

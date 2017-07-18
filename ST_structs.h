@@ -89,10 +89,11 @@ struct species_st {
 
   SppIndex est_count;  /* number of individuals established (growing)*/
   IntUS *kills,        /* ptr to array of # indivs killed by age. index=age. */
-        estabs;        /* number of individuals established in iter */
+        estabs,        /* number of individuals established in iter */
+        *seedprod;    /* annuals: array of previous years' seed production (size = viable_yrs)*/
   RealF relsize,       /* size of all indivs' relsize (>= 0) */
   lastyear_relsize,    /* relsize from the previous year, used for annual establishment */
-        *seedprod,     /* annuals: array of previous years' seed production (size = viable_yrs)*/
+        
         extragrowth,   /* amt of superfluous growth from extra resources */
 	received_prob;	//the chance that this species received seeds this year... only applicable if using seed dispersal and gridded option
   struct indiv_st *IndvHead;    /* facility for linked list 8/3/01; top of list */

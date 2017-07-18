@@ -53,7 +53,7 @@ static RealF _ppt2resource(RealF ppt, GroupType *g);
 static void _res_part_extra(Bool isextra, RealF extra, RealF size[]);
 static GroupType *_create(void);
 static void _extra_growth(GrpIndex rg);
-static void _add_annual_seedprod(SppIndex sp, RealF pr);
+static void _add_annual_seedprod(SppIndex sp, RealF lastyear_relsize);
 static RealF _get_annual_maxestab(SppIndex sp);
 static RealF _add_annuals(const GrpIndex rg, const SppIndex sp, const RealF lastyear_relsize);
 
@@ -244,18 +244,21 @@ static RealF _add_annuals(const GrpIndex rg, const SppIndex sp, const RealF last
     x = 0.;
     if (RandUni() <= s->seedling_estab_prob) {
         x = (g->regen_ok) ? _get_annual_maxestab(sp) : 0.;
-        //printf("g->regen_ok: %d  , x = %.5f %\n", g->regen_ok, x);
+        printf("g->regen_ok: %d  , x = %.5f %\n", g->regen_ok, x);
     }
 
     if (GT(x, 0.)) {
         if (ZERO(lastyear_relsize)) {
             newsize = RandUniRange(1, x);
-            //printf("newsize   =%0.5f \n", newsize);
+            printf("newsize   =%0.5f \n", newsize);
         }
         else {
-            //printf("lastyear_relsize=%0.5f \n", lastyear_relsize);
+           printf("lastyear_relsize=%0.5f \n", lastyear_relsize);
+           
+           //???????????????????????????????//////////////////
             newsize = x * lastyear_relsize;
-            //printf("newsize   =%0.5f \n", newsize);
+                       //???????????????????????????????//////////////////
+            printf("newsize   =%0.5f \n", newsize);
         }
     }
     return newsize;
@@ -286,23 +289,23 @@ static void _add_annual_seedprod(SppIndex sp, RealF lastyear_relsize) {
     //incrementing the number of viable years
     for (i = s->viable_yrs - 1; i > 0; i--) {
         if (i == 1 || i == 2) {
-            //printf("Species name=%s , old Array values for index i=%d, value=%.5f \n", s->name, i, s->seedprod[i]);
+            printf("Species name=%s , old Array values for index i=%u, value=%hu \n", s->name, i, s->seedprod[i]);
         }
 
         s->seedprod[i] = s->seedprod[i - 1];
     }
 
-    //printf("Species name=%s ,old Array array 0 index i=%d, value =%.5f \n", s->name, i, s->seedprod[i]);
+    printf("Species name=%s ,old Array array 0 index i=%u, value =%hu \n", s->name, i, s->seedprod[i]);
 
     //If the current year is year 1 of the simulation, then the number of seeds added is a random number draw between
     //1 and the maximum number of seedlings that can establish. Otherwise, this year's seed production is a function of the maximum 
     //number of seedlings that can establish and last year's species relative size.
     if (Globals.currYear == 1) {
         s->seedprod[i] = RandUniRange(1, s->max_seed_estab);
-        //printf("Species name=%s ,currYear =1 so new calculated value s->seedprod[%d]= %.5f , s->max_seed_estab =%d\n", s->name, i, s->seedprod[i], s->max_seed_estab);
+        printf("Species name=%s ,currYear =1 so new calculated value s->seedprod[%u]= %hu , s->max_seed_estab =%hu\n", s->name, i, s->seedprod[i], s->max_seed_estab);
     } else {
-        s->seedprod[i] = s->max_seed_estab * lastyear_relsize;
-        //printf("Species name=%s ,currYear=%d  so new calculated value s->seedprod[%d]= %.5f , s->max_seed_estab =%d, lastyear_relsize=%.5f\n", s->name, Globals.currYear, i, s->seedprod[i], s->max_seed_estab, lastyear_relsize);
+        s->seedprod[i] = (IntU)(s->max_seed_estab * lastyear_relsize);
+        printf("Species name=%s ,currYear=%hu  so new calculated value s->seedprod[%u]= %hu , s->max_seed_estab =%hu, lastyear_relsize=%.5f\n", s->name, Globals.currYear, i, s->seedprod[i], s->max_seed_estab, lastyear_relsize);
     }
 }
 
@@ -740,9 +743,9 @@ void rgroup_Establish(void) {
                     continue;
 
                 if (Species[sp]->max_age == 1) {
-                    //printf("Globals.currYear = %d, call to _add_annuals sp=%d Species[sp]->lastyear_relsize : %.5f \n", Globals.currYear, sp, Species[sp]->lastyear_relsize);
+                    printf("Globals.currYear = %hu, call to _add_annuals sp=%d Species[sp]->lastyear_relsize : %.5f \n", Globals.currYear, sp, Species[sp]->lastyear_relsize);
                     num_est = _add_annuals(rg, sp, Species[sp]->lastyear_relsize);
-                    //printf("num_est for annuals=%d \n",num_est);
+                    printf("num_est for annuals=%hd \n",num_est);
                 }                    
                 else {
 
