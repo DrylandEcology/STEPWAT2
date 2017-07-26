@@ -72,13 +72,14 @@ static void _model_init( void);
 static void _rgroup_add1( char name[], RealF space, RealF density,
                       Int estab, RealF slow, Int stretch,
                       Int xres, Int estann, Int turnon,
-                      Int styr);
+                      Int styr,  RealF xgro, Int veg_prod_type);
 static void _rgroup_add2( char name[],
                       RealF nslope, RealF nint,
                       RealF wslope, RealF wint,
                       RealF dslope, RealF dint);
-static void _rgroup_add_disturbance( char name[],  Int killyr, Int killfreq_startyr, Int cheatgrass_index, RealF killfreq, RealF ignation, RealF cheatgrass_coefficient, RealF wild_fire_slope,
-                      Int extirp, Int mort, RealF xgro, Int veg_prod_type, RealF prop_killed, RealF prop_recovered,RealF grazing_frq,RealF prop_grazing,Int grazingfreq_startyr);
+static void _rgroup_add_disturbance( char name[],  Int killyr, Int killfreq_startyr,RealF killfreq,
+                      Int extirp, Int mort, RealF prop_killed, RealF prop_recovered,RealF grazing_frq,RealF prop_grazing,Int grazingfreq_startyr);
+static void _rgroup_add_wildfire( char name[], Int cheatgrass_index,  RealF ignation, RealF cheatgrass_coefficient, RealF wild_fire_slope);
 
 static void _rgroup_addsucculent( char name[],
                                RealF wslope, RealF wint,
@@ -866,9 +867,9 @@ static void _rgroup_init( void) {
 
    /* input variables*/
    Int estab, stretch, xres, turnon, extirp, estann,
-       styr;
+       styr, veg_prod_type;
    RealF space, density, slow, 
-         nslope, nint, wslope, wint, dslope, dint;
+         nslope, nint, wslope, wint, dslope, dint,xgro;
 
    
    MyFileName = Parm_name(F_RGroup);
@@ -896,18 +897,18 @@ static void _rgroup_init( void) {
         groupsok = TRUE;
         break;
      }
-     x=sscanf( inbuf, "%s %f %f %d %f %d %d %d %d %d ",
+     x=sscanf( inbuf, "%s %f %f %d %f %d %d %d %d %d %f %d  ",
                name,
                &space, &density, &estab, &slow, &stretch,
-               &xres, &estann, &turnon, &styr);
-     if (x < 10) {
+               &xres, &estann, &turnon, &styr, &xgro, &veg_prod_type);
+     if (x < 12) {
        LogError(logfp, LOGFATAL, "%s: Too few columns in groups",
                MyFileName);
      }
    
     _rgroup_add1( name, space, density, estab,
                    slow, stretch, xres, estann,
-                   turnon, styr);
+                   turnon, styr, xgro, veg_prod_type);
    }/* end while*/
 
    if (!groupsok) {
@@ -969,8 +970,8 @@ static void _rgroup_disturbance( void) {
 
    /* input variables*/
    Int extirp, mort,
-       killyr, cheatgrass_index, killfreq_startyr,veg_prod_type, grazingfreq_startyr;
-   RealF  killfreq, xgro, ignation, cheatgrass_coefficient, wild_fire_slope,
+       killyr, cheatgrass_index, killfreq_startyr, grazingfreq_startyr;
+   RealF  killfreq, ignation, cheatgrass_coefficient, wild_fire_slope,
         prop_killed, prop_recovered,grazing_frq, prop_grazing ;
 
    MyFileName = Parm_name(F_Disturbance);
@@ -998,24 +999,38 @@ static void _rgroup_disturbance( void) {
         groupsok = TRUE;
         break;
      }
-     x=sscanf( inbuf, "%s %d %d %f %d %d %f %d %f %f %f %f %d",
+     x=sscanf( inbuf, "%s %d %d %f %d %d %f %f %f %f %d",
                name,
-               &killyr,&killfreq_startyr, &killfreq, &cheatgrass_index, &ignation, &cheatgrass_coefficient, &wild_fire_slope,
-               &extirp, &mort, &xgro, &veg_prod_type, &prop_killed, &prop_recovered,&grazing_frq, &prop_grazing,&grazingfreq_startyr );
-     if (x < 17) {
+               &killyr, &killfreq_startyr, &killfreq,
+               &extirp, &mort, &prop_killed, &prop_recovered,&grazing_frq, &prop_grazing,&grazingfreq_startyr );
+     if (x < 11) {
        LogError(logfp, LOGFATAL, "%s: Too few columns in groups",
                MyFileName);
      }
    
-    _rgroup_add_disturbance(name, killyr,killfreq_startyr, killfreq, cheatgrass_index, ignation, cheatgrass_coefficient, wild_fire_slope,
-                   extirp, mort, xgro, veg_prod_type,prop_killed, prop_recovered,grazing_frq,prop_grazing,grazingfreq_startyr);
+    _rgroup_add_disturbance(name, killyr,killfreq_startyr, killfreq,
+                   extirp, mort, prop_killed, prop_recovered,grazing_frq,prop_grazing,grazingfreq_startyr);
    }/* end while*/
 
    if (!groupsok) {
       LogError(logfp, LOGFATAL, "%s: Incomplete input in group definitions",
               MyFileName);
    }
-
+groupsok = FALSE;
+   while( GetALine(f,inbuf)) {
+     if (!isnull(strstr(inbuf,"[end]"))) {
+        groupsok = TRUE;
+        break;
+     }
+     x=sscanf( inbuf, "%s %d %f %f %f",
+               name,
+                &cheatgrass_index, &ignation, &cheatgrass_coefficient, &wild_fire_slope);
+     if (x != 5) {
+       LogError(logfp, LOGFATAL, "%s: Wrong number of columns in groups' wild fire",
+               MyFileName);
+     }
+     _rgroup_add_wildfire( name, cheatgrass_index, ignation, cheatgrass_coefficient, wild_fire_slope);
+   }/* end while*/
 
    CloseFile(&f);
 }
@@ -1025,7 +1040,7 @@ static void _rgroup_disturbance( void) {
 static void _rgroup_add1( char name[], RealF space, RealF density,
                       Int estab, RealF slow, Int stretch,
                       Int xres, Int estann, Int turnon,
-                      Int styr) {
+                      Int styr,  RealF xgro, Int veg_prod_type) {
 /*======================================================*/
   GrpIndex rg;
 
@@ -1041,6 +1056,8 @@ static void _rgroup_add1( char name[], RealF space, RealF density,
   RGroup[rg]->min_res_req   = space;
   RGroup[rg]->est_annually  = itob(estann);
   RGroup[rg]->startyr       = styr;
+  RGroup[rg]->xgrow         = xgro;
+  RGroup[rg]->veg_prod_type = veg_prod_type;
   
 }
 
@@ -1073,25 +1090,25 @@ static void _rgroup_add2( char name[],
 }
 
 
-static void _rgroup_add_disturbance( char name[], Int killyr, Int killfreq_startyr,Int cheatgrass_index, RealF killfreq, RealF ignation, RealF cheatgrass_coefficient, RealF wild_fire_slope,
-                      Int extirp, Int mort, RealF xgro, Int veg_prod_type, RealF prop_killed, RealF prop_recovered,RealF grazing_frq,RealF prop_grazing, Int grazingfreq_startyr) {
+static void _rgroup_add_disturbance( char name[], Int killyr, Int killfreq_startyr, RealF killfreq,
+                      Int extirp, Int mort, RealF prop_killed, RealF prop_recovered,RealF grazing_frq,RealF prop_grazing, Int grazingfreq_startyr) {
 /*======================================================*/
   GrpIndex rg;
   
-  rg = RGroup_Name2Index(name);
-  _setNameLen(RGroup[rg]->name, name, MAX_GROUPNAMELEN);
+   char name2[80];
+
+   _setNameLen(name2, name, MAX_GROUPNAMELEN);
+   rg = RGroup_Name2Index( name2);
+   if (rg <0) {
+     LogError(logfp, LOGFATAL, "%s: Mismatched name (%s) for disturbance",
+             MyFileName, name2);
+   }
+
   RGroup[rg]->killyr        = killyr;
   RGroup[rg]->killfreq_startyr = killfreq_startyr;
   RGroup[rg]->killfreq      = killfreq;
-  RGroup[rg]->cheatgrass_index      = cheatgrass_index;
-  RGroup[rg]->ignation      = ignation;
-  RGroup[rg]->cheatgrass_coefficient      = cheatgrass_coefficient;
-  RGroup[rg]->wild_fire_slope      = wild_fire_slope;
-  
   RGroup[rg]->extirp        = (IntS) extirp;
-  RGroup[rg]->xgrow         = xgro;
   RGroup[rg]->use_mort      = itob(mort);
-  RGroup[rg]->veg_prod_type = veg_prod_type;
   RGroup[rg]->proportion_killed    = prop_killed;
   RGroup[rg]->proportion_recovered = prop_recovered;
   RGroup[rg]->grazingfrq           = grazing_frq;
@@ -1101,6 +1118,26 @@ static void _rgroup_add_disturbance( char name[], Int killyr, Int killfreq_start
   RGroup[rg]->extirpated    = FALSE;
 }
 
+static void _rgroup_add_wildfire( char name[],  Int cheatgrass_index, RealF ignation, RealF cheatgrass_coefficient, RealF wild_fire_slope) {
+/*======================================================*/
+  GrpIndex rg;
+  
+   char name2[80];
+
+   _setNameLen(name2, name, MAX_GROUPNAMELEN);
+   rg = RGroup_Name2Index( name2);
+   if (rg <0) {
+     LogError(logfp, LOGFATAL, "%s: Mismatched name (%s) for disturbance",
+             MyFileName, name2);
+   }
+
+
+  RGroup[rg]->cheatgrass_index      = cheatgrass_index;
+  RGroup[rg]->ignation      = ignation;
+  RGroup[rg]->cheatgrass_coefficient      = cheatgrass_coefficient;
+  RGroup[rg]->wild_fire_slope      = wild_fire_slope;
+  
+}
 
 /**************************************************************/
 static void _rgroup_addsucculent( char name[],

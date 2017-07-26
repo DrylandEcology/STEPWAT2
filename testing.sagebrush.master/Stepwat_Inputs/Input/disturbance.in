@@ -29,10 +29,6 @@
 #       (without recovery) from the plot. 0==don't use, >0 == year # 
 # mort =  switch to allow age-independent/slowgrowth mortality
 #         functions.0 = don't use; 1 = use.
-# xgrow = extra growth factor; if > 0, plants can convert "extra" ppt
-#         into ephemeral (this year's) biomass by
-#         grams_extra_biomass = mm_extra_ppt * xgrow_factor
-# veg_prod_type = 1 for tree, 2 for shrub, 3 for grass & 4 for forb.  Refer to Soilwat2’s VegProd types in VegProd.h.
 # proportion_killed = proportional killing that mimics fire at given kill year/killfreq. This is the proportion of biomass 
 # 	   removed by fire.
 # proportion_recovered = proportionally recovered all members of the group after kill year.
@@ -53,18 +49,32 @@
 # space parameter for shrubs was a guess (KP) 
 #TM 10.6.2015 - tested various stretch values for sagebrush and found stretch of 8 to be best paired with irate 0.02
 
-# name        killyr killfreq_startyr Prescribed_killfrq Cheatgrass_index_number ignation cheatgrass_coefficient wild_fire_slope  extirp  mort  xgrow  veg_prod_type  proportion_killed proportion_recovered grazing_frq proportion_grazing  grazingfreq_startyr
- sagebrush      0      1       10    6   12.05 -0.117  0.0093    0     1  0.00000   2  1.00  0.00 0  0.00  0
- a.cool.forb    0      1       10    6   12.05 -0.117  0.0093    0     1  0.00000   4  1.00  0.00 0  0.24  0
- a.warm.forb    0      1       10    6   12.05 -0.117  0.0093    0     1  0.00000   4  1.00  0.00 0  0.24  0
- p.cool.forb    0      1       10    6   12.05 -0.117  0.0093    0     1  0.00000   4  1.00  0.40 0  0.24  0
- p.warm.forb    0      1       10    6   12.05 -0.117  0.0093    0     1  0.00000   4  1.00  0.40 0  0.24  0
- a.cool.grass   0      1       10    6   12.05 -0.117  0.0093    0     1  0.00000   3  1.00  0.00 0  0.24  0
- p.cool.grass   0      1       10    6   12.05 -0.117  0.0093    0     1  0.00000   3  1.00  0.70 0  0.24  0
- p.warm.grass   0      1       10    6   12.05 -0.117  0.0093    0     1  0.00000   3  1.00  0.70 0  0.24  0
- shrub          0      1       10    6   12.05 -0.117  0.0093    0     1  0.00000   2  1.00  0.00 0  0.00  0
- succulents     0      1       10    6   12.05 -0.117  0.0093    0     1  0.00000   2  1.00  0.00 0  0.00  0 
+# name        killyr killfreq_startyr Prescribed_killfrq   extirp  mort    proportion_killed proportion_recovered grazing_frq proportion_grazing  grazingfreq_startyr
+ sagebrush      0      1       0.02    0     1    1.00  0.00 0  0.00  0
+ a.cool.forb    0      1       0.02    0     1    1.00  0.00 0  0.24  0
+ a.warm.forb    0      1       0.02    0     1    1.00  0.00 0  0.24  0
+ p.cool.forb    0      1       0.02    0     1    1.00  0.40 0  0.24  0
+ p.warm.forb    0      1       0.02    0     1    1.00  0.40 0  0.24  0
+ a.cool.grass   0      1       0.02    0     1    1.00  0.00 0  0.24  0
+ p.cool.grass   0      1       0.02    0     1    1.00  0.70 0  0.24  0
+ p.warm.grass   0      1       0.02    0     1    1.00  0.70 0  0.24  0
+ shrub          0      1       0.02    0     1    1.00  0.00 0  0.00  0
+ succulents     0      1       0.02    0     1    1.00  0.00 0  0.00  0 
 
 
 [end]  # section end
 
+# name        Cheatgrass_index_number ignation cheatgrass_coefficient wild_fire_slope  
+ sagebrush     6   12.05 -0.117  0.0093    
+ a.cool.forb   6   12.05 -0.117  0.0093   
+ a.warm.forb   6   12.05 -0.117  0.0093  
+ p.cool.forb   6   12.05 -0.117  0.0093  
+ p.warm.forb   6   12.05 -0.117  0.0093  
+ a.cool.grass  6   12.05 -0.117  0.0093  
+ p.cool.grass  6   12.05 -0.117  0.0093  
+ p.warm.grass  6   12.05 -0.117  0.0093   
+ shrub         6   12.05 -0.117  0.0093 
+ succulents    6   12.05 -0.117  0.0093   
+
+
+[end]  # section end
