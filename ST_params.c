@@ -79,7 +79,7 @@ static void _rgroup_add2( char name[],
                       RealF dslope, RealF dint);
 static void _rgroup_add_disturbance( char name[],  Int killyr, Int killfreq_startyr,RealF killfreq,
                       Int extirp, Int mort, RealF prop_killed, RealF prop_recovered,RealF grazing_frq,RealF prop_grazing,Int grazingfreq_startyr);
-static void _rgroup_add_wildfire( char name[], Int cheatgrass_index,  RealF ignation, RealF cheatgrass_coefficient, RealF wild_fire_slope);
+static void _rgroup_add_wildfire( char name[], Int cheatgrass_index,  RealF ignition, RealF cheatgrass_coefficient, RealF wild_fire_slope);
 
 static void _rgroup_addsucculent( char name[],
                                RealF wslope, RealF wint,
@@ -971,7 +971,7 @@ static void _rgroup_disturbance( void) {
    /* input variables*/
    Int extirp, mort,
        killyr, cheatgrass_index, killfreq_startyr, grazingfreq_startyr;
-   RealF  killfreq, ignation, cheatgrass_coefficient, wild_fire_slope,
+   RealF  killfreq, ignition, cheatgrass_coefficient, wild_fire_slope,
         prop_killed, prop_recovered,grazing_frq, prop_grazing ;
 
    MyFileName = Parm_name(F_Disturbance);
@@ -1024,12 +1024,12 @@ groupsok = FALSE;
      }
      x=sscanf( inbuf, "%s %d %f %f %f",
                name,
-                &cheatgrass_index, &ignation, &cheatgrass_coefficient, &wild_fire_slope);
+                &cheatgrass_index, &ignition, &cheatgrass_coefficient, &wild_fire_slope);
      if (x != 5) {
        LogError(logfp, LOGFATAL, "%s: Wrong number of columns in groups' wild fire",
                MyFileName);
      }
-     _rgroup_add_wildfire( name, cheatgrass_index, ignation, cheatgrass_coefficient, wild_fire_slope);
+     _rgroup_add_wildfire( name, cheatgrass_index, ignition, cheatgrass_coefficient, wild_fire_slope);
    }/* end while*/
 
    CloseFile(&f);
@@ -1118,7 +1118,7 @@ static void _rgroup_add_disturbance( char name[], Int killyr, Int killfreq_start
   RGroup[rg]->extirpated    = FALSE;
 }
 
-static void _rgroup_add_wildfire( char name[],  Int cheatgrass_index, RealF ignation, RealF cheatgrass_coefficient, RealF wild_fire_slope) {
+static void _rgroup_add_wildfire( char name[],  Int cheatgrass_index, RealF ignition, RealF cheatgrass_coefficient, RealF wild_fire_slope) {
 /*======================================================*/
   GrpIndex rg;
   
@@ -1133,7 +1133,7 @@ static void _rgroup_add_wildfire( char name[],  Int cheatgrass_index, RealF igna
 
 
   RGroup[rg]->cheatgrass_index      = cheatgrass_index;
-  RGroup[rg]->ignation      = ignation;
+  RGroup[rg]->ignition      = ignition;
   RGroup[rg]->cheatgrass_coefficient      = cheatgrass_coefficient;
   RGroup[rg]->wild_fire_slope      = wild_fire_slope;
   

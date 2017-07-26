@@ -196,24 +196,27 @@ void mort_EndOfYear( void)
 	//printf("inside mort_EndOfYear() \n");
 	GrpIndex rg;
 	GroupType *g;
-        RealF y = 0;
+        RealF fire_possibility = 0;
         RealF x_cheatgrass = Species[g->cheatgrass_index]->relsize * Species[g->cheatgrass_index]->mature_biomass; // calculate biomass of cheatgrass
         
         
   
-        // printf("[Rui] x_cheatgrass: %f\n",x_cheatgrass);
-        if (x_cheatgrass < g->ignation)
+        printf("[Rui] x_cheatgrass: %f\n",x_cheatgrass);
+        if (x_cheatgrass < g->ignition)
                     {
-                       y = 1 / Globals.runModelYears;
+                       fire_possibility = 1 / Globals.runModelYears;
                     } 
-                    if (x_cheatgrass > g->ignation){
-                        y = g->cheatgrass_coefficient + g->wild_fire_slope * x_cheatgrass;
+        /* don't ignite wild fire based on cheatgrass until the cheatgrass could reach the ignition value */
+                    if (x_cheatgrass > g->ignition){
+                        fire_possibility = g->cheatgrass_coefficient + g->wild_fire_slope * x_cheatgrass;
                         }
-                    if GT (g->killfreq, y)
+                    if GT (g->killfreq, fire_possibility)
                     { 
-                         y = g->killfreq;
+                         fire_possibility = g->killfreq;
                     }
-                printf("[Rui] FIRE FREQUENCY: %f\n",y);
+          /*  if the input prescribed fire value < 1; wild fire and prescribed fire happen at the same time, 
+           * while if the input prescribed fire value >1, only prescribed fire happens */
+                printf("[Rui] FIRE FREQUENCY: %f\n",fire_possibility);
 	ForEachGroup(rg)
 	{
 		if (Globals.currYear < RGroup[rg]->startyr)
@@ -225,16 +228,16 @@ void mort_EndOfYear( void)
 		g = RGroup[rg];
                      
                 
-                    if ((Globals.currYear >= g->killfreq_startyr) && GT(y, 0.))
+                    if ((Globals.currYear >= g->killfreq_startyr) && GT(fire_possibility, 0.))
                     {
-			if (LT(y, 1.0))
+			if (LT(fire_possibility, 1.0))
 			{
-				if (RandUni() <= y)
+				if (RandUni() <= fire_possibility)
 				{
 					g->killyr = Globals.currYear;
 				}
 			}
-			else if (((Globals.currYear - g->killfreq_startyr) % (IntU) y) == 0)
+			else if (((Globals.currYear - g->killfreq_startyr) % (IntU) fire_possibility) == 0)
 			{
 				g->killyr = Globals.currYear;
 			}

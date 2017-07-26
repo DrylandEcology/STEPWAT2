@@ -22,8 +22,10 @@
 # killyr = kill all members of this group at end of this year.
 #          0 == don't kill
 # killfreq_startyr = start year for killing due to fire, which will continue at the specified kill frequency
-# killfrq = frequency to kill.  if < 1, yearly probability,
-#            if > 1 yearly interval, after killfreq_startyr.  
+# Prescribed_killfrq = frequency to kill. 
+#            if > 1 yearly interval, only prescribed fire occur after killfreq_startyr.  
+#            if 0 < Prescribed_killfrq < 1 yearly possibility, occur  with the wild fire whose parameters are below.
+#            if = 0 no prescribed fire. 
 #            Overrides killyr.
 # extirp = year at which all group members are extirpated
 #       (without recovery) from the plot. 0==don't use, >0 == year # 
@@ -33,7 +35,7 @@
 # 	   removed by fire.
 # proportion_recovered = proportionally recovered all members of the group after kill year.
 # grazing_frq = frequency of grazing.  if < 1, yearly probability,
-#            if > 1 yearly interval, after grazingfreq_startyr.  
+#            if > 1 yearly interval, after grazingfreq_startyr. 
 #            Overrides grazingyear.
 # proportion_grazing = proportion of biomass removed due to grazing. 
 # grazingfreq_startyr = start year for grazing
@@ -64,17 +66,25 @@
 
 [end]  # section end
 
-# name        Cheatgrass_index_number ignation cheatgrass_coefficient wild_fire_slope  
- sagebrush     6   12.05 -0.117  0.0093    
- a.cool.forb   6   12.05 -0.117  0.0093   
- a.warm.forb   6   12.05 -0.117  0.0093  
- p.cool.forb   6   12.05 -0.117  0.0093  
- p.warm.forb   6   12.05 -0.117  0.0093  
- a.cool.grass  6   12.05 -0.117  0.0093  
- p.cool.grass  6   12.05 -0.117  0.0093  
- p.warm.grass  6   12.05 -0.117  0.0093   
- shrub         6   12.05 -0.117  0.0093 
- succulents    6   12.05 -0.117  0.0093   
+
+
+
+# NOTE: 
+# Cheatgrass_index_number = order rg number input by species.in
+# ignition = cheatgrass biomass ignition in 1*1 m2 plot; When < 12.05 the wild fire will occur randomly; when >12.05 the fire yearly possibility will related with cheatgrass biomass.  
+# cheatgrass_coefficient 
+# wild_fire_slope = slope of fire yearly possibility & cheatgrass biomass
+# name        cheatgrass_index_number ignition cheatgrass_coefficient wild_fire_slope  
+ sagebrush     1   12.05 -0.117  0.0093    
+ a.cool.forb   1   12.05 -0.117  0.0093   
+ a.warm.forb   1   12.05 -0.117  0.0093  
+ p.cool.forb   1   12.05 -0.117  0.0093  
+ p.warm.forb   1   12.05 -0.117  0.0093  
+ a.cool.grass  1   12.05 -0.117  0.0093  
+ p.cool.grass  1   12.05 -0.117  0.0093  
+ p.warm.grass  1   12.05 -0.117  0.0093   
+ shrub         1   12.05 -0.117  0.0093 
+ succulents    1   12.05 -0.117  0.0093   
 
 
 [end]  # section end
