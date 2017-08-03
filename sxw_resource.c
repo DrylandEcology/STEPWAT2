@@ -88,6 +88,8 @@ extern
 
 static void _transp_contribution_by_group(RealF use_by_group[]);
 
+static void _SWA_contribution_by_group(RealF use_by_group[]);
+
 
 /***********************************************************/
 /****************** Begin Function Code ********************/
@@ -148,6 +150,7 @@ void _sxw_update_resource(void) {
 
 	_sxw_update_root_tables(sizes);
 	_transp_contribution_by_group(_resource_cur);
+  _SWA_contribution_by_group(_resource_cur);
 
 	ForEachGroup(g)
 	{
@@ -234,19 +237,19 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
 	RealD *transp;
 	RealF sumUsedByGroup = 0., sumTranspTotal = 0., TranspRemaining = 0.;
 
-	ForEachGroup(g)
+	ForEachGroup(g) // steppe functional group
 	{
 		use_by_group[g] = 0.; /* clear */
 		t = RGroup[g]->veg_prod_type-1;
 		switch(t) {
 		case 0://Tree
-			transp = SXW.transpTotal;
+			transp = SXW.transpTotal; // want to use transpiration assigned to specific functional type
 			break;
 		case 1://Shrub
 			transp = SXW.transpTotal;
 			break;
 		case 2://Grass
-			transp = SXW.transpTotal;
+			transp = SXW.transpTotal; // SXW.transpGrasses (if use specic type need to rescale resource space parameters)
 			break;
 		case 3://Forb
 			transp = SXW.transpTotal;
@@ -255,20 +258,24 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
 			transp = SXW.transpTotal;
 			break;
 		}
-		ForEachTrPeriod(p)
+		ForEachTrPeriod(p) // loops thru each month and calculates a
+                      //use by group for each steppe functional group according to whether that group has active living roots in giving layer for period
 		{
 			int nLyrs = getNTranspLayers(RGroup[g]->veg_prod_type);
 			for (l = 0; l < nLyrs; l++) {
-				use_by_group[g] += (RealF) (_roots_active_rel[Iglp(g, l, p)] * RGroup[g]->min_res_req * transp[Ilp(l, p)]);
+				use_by_group[g] += (RealF) (_roots_active_rel[Iglp(g, l, p)] * RGroup[g]->min_res_req * transp[Ilp(l, p)]); //min_res_req is space parameter
+                                                              // rescale space param based on indy transp
 				//printf("for groupName= %s, layerIndex: %d  after sum use_by_group[g]= %f \n",RGroup[g]->name,l,use_by_group[g] );
 			}
 		}
 		sumUsedByGroup += use_by_group[g];
 	}
+  // TODO: if redo upper part, can remove bottom part
 	//Occasionally, extra transpiration remains and if not perfectly partitioned to RGroups.
 	//This check makes sure any remaining transpiration is divided proportionately among Rgroups.
 	ForEachTrPeriod(p)
 	{
+    //printf("p: %d\n", p);
 		for (t = 0; t < SXW.NSoLyrs; t++)
 			sumTranspTotal += SXW.transpTotal[Ilp(t, p)];
 	}
@@ -283,5 +290,45 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
 	}
 }
 
+static void _SWA_contribution_by_group(RealF use_by_group[]) {
+	GrpIndex g;
+	SppIndex s;
+	TimeInt p;
+	LyrIndex l;
+	int t,i;
+	RealD *swaNew;
+	RealF sumUsedByGroup = 0., sumSWATotal = 0., SWARemaining = 0.;
+
+	ForEachGroup(g) // steppe functional group
+	{
+		use_by_group[g] = 0.; // clear
+		t = RGroup[g]->veg_prod_type-1;
+		switch(t)
+    {
+  		case 0://Tree
+  			swaNew = SXW.SWAbulk_tree; // want to use transpiration assigned to specific functional type
+  			break;
+  		case 1://Shrub
+  			swaNew = SXW.SWAbulk_shrub;
+  			break;
+  		case 2://Grass
+  			swaNew = SXW.SWAbulk_grass; // SXW.transpGrasses (if use specic type need to rescale resource space parameters)
+  			break;
+  		case 3://Forb
+  			swaNew = SXW.SWAbulk_forb;
+  			break;
+		}
 
 
+		ForEachTrPeriod(p)
+		{
+			for (l = 0; l < SXW.NSoLyrs; l++) {
+				use_by_group[g] += (RealF) (_roots_active_rel[Iglp(g, l, p)] * RGroup[g]->min_res_req * swaNew[Ilp(l, p)]); //min_res_req is space parameter
+        //printf("RGroup[g]->min_res_req: %f\n", RGroup[g]->min_res_req);
+			}
+		}
+		sumUsedByGroup += use_by_group[g];
+    //printf("sumUsedByGroup: %f\n", sumUsedByGroup);
+    //printf("use_by_group: %f\n", use_by_group[g]);
+	}
+}

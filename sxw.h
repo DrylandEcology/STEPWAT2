@@ -71,7 +71,7 @@ struct stepwat_st {
   RealF  PPT_month[500];
 
   // store converted SWA values
-  float SWAbulk_grass[366][25], // 2D array to store SWA vals ([days of year][number of layers])
+  float SWAbulk_grass[366][25], // 2D array to store SWA vals ([days of year][number of max layers])
         SWAbulk_shrub[366][25],
         SWAbulk_tree[366][25],
         SWAbulk_forb[366][25];
