@@ -265,10 +265,10 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
 			for (l = 0; l < nLyrs; l++) {
 				use_by_group[g] += (RealF) (_roots_active_rel[Iglp(g, l, p)] * RGroup[g]->min_res_req * transp[Ilp(l, p)]); //min_res_req is space parameter
                                                               // rescale space param based on indy transp
-				//printf("for groupName= %s, layerIndex: %d  after sum use_by_group[g]= %f \n",RGroup[g]->name,l,use_by_group[g] );
 			}
 		}
 		sumUsedByGroup += use_by_group[g];
+    //printf("sumUsedByGroup: %f\n", sumUsedByGroup);
 	}
   // TODO: if redo upper part, can remove bottom part
 	//Occasionally, extra transpiration remains and if not perfectly partitioned to RGroups.
@@ -296,8 +296,8 @@ static void _SWA_contribution_by_group(RealF use_by_group[]) {
 	TimeInt p;
 	LyrIndex l;
 	int t,i;
-	RealD *swaNew;
-	RealF sumUsedByGroup = 0., sumSWATotal = 0., SWARemaining = 0.;
+  float swaNew[366][25];
+	RealF sumUsedByGroup = 0.;
 
 	ForEachGroup(g) // steppe functional group
 	{
@@ -306,29 +306,24 @@ static void _SWA_contribution_by_group(RealF use_by_group[]) {
 		switch(t)
     {
   		case 0://Tree
-  			swaNew = SXW.SWAbulk_tree; // want to use transpiration assigned to specific functional type
+        memcpy(swaNew, SXW.SWAbulk_tree, sizeof(swaNew));
   			break;
   		case 1://Shrub
-  			swaNew = SXW.SWAbulk_shrub;
+        memcpy(swaNew, SXW.SWAbulk_shrub, sizeof(swaNew));
   			break;
   		case 2://Grass
-  			swaNew = SXW.SWAbulk_grass; // SXW.transpGrasses (if use specic type need to rescale resource space parameters)
+        memcpy(swaNew, SXW.SWAbulk_grass, sizeof(swaNew));
   			break;
   		case 3://Forb
-  			swaNew = SXW.SWAbulk_forb;
+        memcpy(swaNew, SXW.SWAbulk_forb, sizeof(swaNew));
   			break;
 		}
-
-
 		ForEachTrPeriod(p)
 		{
 			for (l = 0; l < SXW.NSoLyrs; l++) {
-				use_by_group[g] += (RealF) (_roots_active_rel[Iglp(g, l, p)] * RGroup[g]->min_res_req * swaNew[Ilp(l, p)]); //min_res_req is space parameter
-        //printf("RGroup[g]->min_res_req: %f\n", RGroup[g]->min_res_req);
+				use_by_group[g] += (RealF) (_roots_active_rel[Iglp(g, l, p)] * RGroup[g]->min_res_req * swaNew[p][l]); //min_res_req is space parameter
 			}
 		}
 		sumUsedByGroup += use_by_group[g];
-    //printf("sumUsedByGroup: %f\n", sumUsedByGroup);
-    //printf("use_by_group: %f\n", use_by_group[g]);
 	}
 }
