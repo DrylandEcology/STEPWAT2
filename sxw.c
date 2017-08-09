@@ -227,12 +227,12 @@ void SXW_Init( Bool init_SW, char *f_roots ) {
   SXW.NSoLyrs = SW_Site.n_layers;
   printf("Number of layers: %d\n", SW_Site.n_layers);
 
-  stat_Output_Daily_CSV_Summary();
+  // TODO: need to see if need to have output for every run of STEPPE or only when -o parameter is called
+  /*stat_Output_Daily_CSV_Summary();
   stat_Output_Weekly_CSV_Summary();
   stat_Output_Monthly_CSV_Summary();
   stat_Output_Yearly_CSV_Summary();
-
-
+  */
 
   _make_arrays();
 

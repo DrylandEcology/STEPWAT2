@@ -264,28 +264,23 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
 			int nLyrs = getNTranspLayers(RGroup[g]->veg_prod_type);
 			for (l = 0; l < nLyrs; l++) {
 				use_by_group[g] += (RealF) (_roots_active_rel[Iglp(g, l, p)] * RGroup[g]->min_res_req * transp[Ilp(l, p)]); //min_res_req is space parameter
-                                                              // rescale space param based on indy transp
 			}
 		}
 		sumUsedByGroup += use_by_group[g];
-    //printf("sumUsedByGroup: %f\n", sumUsedByGroup);
 	}
   // TODO: if redo upper part, can remove bottom part
 	//Occasionally, extra transpiration remains and if not perfectly partitioned to RGroups.
 	//This check makes sure any remaining transpiration is divided proportionately among Rgroups.
 	ForEachTrPeriod(p)
 	{
-    //printf("p: %d\n", p);
 		for (t = 0; t < SXW.NSoLyrs; t++)
 			sumTranspTotal += SXW.transpTotal[Ilp(t, p)];
 	}
     TranspRemaining = sumTranspTotal - sumUsedByGroup;
-    //printf(" sumTranspTotal=%f, sumUsedByGroup=%f  TranspRemaining=%f \n",sumTranspTotal,sumUsedByGroup,TranspRemaining);
 		ForEachGroup(g)
 		{
 			if(!ZRO(use_by_group[g])) {
                 use_by_group[g] += (use_by_group[g]/sumUsedByGroup) * TranspRemaining;
-              //  printf("for groupName= %s, after sum use_by_group[g]= %f \n",RGroup[g]->name,use_by_group[g] );
 		}
 	}
 }
@@ -297,7 +292,7 @@ static void _SWA_contribution_by_group(RealF use_by_group[]) {
 	LyrIndex l;
 	int t,i;
   float swaNew[366][25];
-	RealF sumUsedByGroup = 0.;
+	RealF sumUsedByGroup = 0., sumSWATotal = 0., SWARemaining = 0.;
 
 	ForEachGroup(g) // steppe functional group
 	{
@@ -306,17 +301,19 @@ static void _SWA_contribution_by_group(RealF use_by_group[]) {
 		switch(t)
     {
   		case 0://Tree
-        memcpy(swaNew, SXW.SWAbulk_tree, sizeof(swaNew));
+        memcpy(swaNew, SXW.SWATotal, sizeof(swaNew)); // copy values into array
   			break;
   		case 1://Shrub
-        memcpy(swaNew, SXW.SWAbulk_shrub, sizeof(swaNew));
+        memcpy(swaNew, SXW.SWATotal, sizeof(swaNew));
   			break;
   		case 2://Grass
-        memcpy(swaNew, SXW.SWAbulk_grass, sizeof(swaNew));
+        memcpy(swaNew, SXW.SWATotal, sizeof(swaNew));
   			break;
   		case 3://Forb
-        memcpy(swaNew, SXW.SWAbulk_forb, sizeof(swaNew));
+        memcpy(swaNew, SXW.SWATotal, sizeof(swaNew));
   			break;
+      default:
+        memcpy(swaNew, SXW.SWATotal, sizeof(swaNew));
 		}
 		ForEachTrPeriod(p)
 		{
@@ -326,4 +323,19 @@ static void _SWA_contribution_by_group(RealF use_by_group[]) {
 		}
 		sumUsedByGroup += use_by_group[g];
 	}
+
+  // ##############################################################
+  ForEachTrPeriod(p)
+	{
+		for (t = 0; t < SXW.NSoLyrs; t++)
+			sumSWATotal += SXW.SWATotal[p][t];
+	}
+    SWARemaining = sumSWATotal - sumUsedByGroup;
+		ForEachGroup(g)
+		{
+			if(!ZRO(use_by_group[g])) {
+                use_by_group[g] += (use_by_group[g]/sumUsedByGroup) * SWARemaining;
+		}
+	}
+  // ##############################################################
 }
