@@ -384,10 +384,10 @@ void SXW_SW_Setup_Echo(void) {
 	}
 
   // adding values to sxw structure for use in ST_stats.c
-  SXW.grass_cover = SW_VegProd.grass.conv_stcr;
+  /*SXW.grass_cover = SW_VegProd.grass.conv_stcr;
   SXW.shrub_cover = SW_VegProd.shrub.conv_stcr;
   SXW.tree_cover = SW_VegProd.tree.conv_stcr;
-  SXW.forbs_cover = SW_VegProd.forb.conv_stcr;
+  SXW.forbs_cover = SW_VegProd.forb.conv_stcr;*/
 
 
 	fprintf(f, "\n");

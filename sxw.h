@@ -51,10 +51,11 @@ struct stepwat_st {
         *f_watin;  /* soilwat's input file */
 
   /* % Cover from prod.in */
-  float grass_cover,
+  /*float grass_cover,
         shrub_cover,
         tree_cover,
-        forbs_cover;
+        forbs_cover;*/
+  RealD critSoilWater[4]; // storing values in same order as defined in rgroup.in (0=tree, 1=shrub, 2=grass, 3=forb)
 
   /* DEBUG stuff */
   char *debugfile; /* added in ST_Main(), read to get debug instructions */
@@ -74,8 +75,7 @@ struct stepwat_st {
   float SWAbulk_grass[366][25], // 2D array to store SWA vals ([days of year][number of max layers])
         SWAbulk_shrub[366][25],
         SWAbulk_tree[366][25],
-        SWAbulk_forb[366][25],
-        SWATotal[366][25];
+        SWAbulk_forb[366][25];
 
   // 2D array to store 4 critical values per layer
   float SWCbulk[4][8]; // TODO: first value needs to be (number of layers * plant types) - not hardcoded
