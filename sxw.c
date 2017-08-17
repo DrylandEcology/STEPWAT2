@@ -227,13 +227,6 @@ void SXW_Init( Bool init_SW, char *f_roots ) {
   SXW.NSoLyrs = SW_Site.n_layers;
   printf("Number of layers: %d\n", SW_Site.n_layers);
 
-  // TODO: need to see if need to have output for every run of STEPPE or only when -o parameter is called
-  /*stat_Output_Daily_CSV_Summary();
-  stat_Output_Weekly_CSV_Summary();
-  stat_Output_Monthly_CSV_Summary();
-  stat_Output_Yearly_CSV_Summary();
-  */
-
   _make_arrays();
 
   _read_roots_max();
@@ -837,6 +830,7 @@ static void _write_sw_outin(void) {
 		fprintf(fp, "AET     SUM  YR  1  end  aet\n");
 		fprintf(fp, "SWCBULK     FIN  MO  1  end  swc_bulk\n");
 	}
+  fprintf(fp, "SWA    AVG  MO  1  end  swa\n");
   fprintf(fp, "TIMESTEP dy wk mo yr\n");
 
 	CloseFile(&fp);

@@ -141,7 +141,7 @@ Bool UseProgressBar;
  * it will work in both grid and non-grid version
  *
  */
-void print_soilwat_output(char* str)
+/*void print_soilwat_output(char* str)
 {
   isPartialSoilwatOutput = FALSE;
 
@@ -154,7 +154,7 @@ void print_soilwat_output(char* str)
 	array[0] = "sw_v31"; //Just for name sake SOILWAT exe name given here, though it will never getting use
 	array[1] = "-f";
 	array[2] = Str_Dup(str);
-	array[3] = NULL;/* end of array so later you can do while (array[i++]!=NULL) {...} */
+	array[3] = NULL;// end of array so later you can do while (array[i++]!=NULL) {...}
 
 	printf( "inside stepwat main setting files options for soilwat: argc=%d array[0]=%s ,array[1]=%s,array[2]=%s \n ",
 			argc_soilwat, array[0], array[1], array[2]);
@@ -165,7 +165,7 @@ void print_soilwat_output(char* str)
 
 	printf( "Soilwat main function executed successfully and now isPartialSoilwatOutput=%d \n", isPartialSoilwatOutput);
 
-}
+}*/
 
 /******************** Begin Model Code *********************/
 /***********************************************************/
@@ -179,11 +179,11 @@ int main(int argc, char **argv) {
 	/* provides a way to inform user that something
 	 * was logged.  see generic.h */
 
-	init_args(argc, argv);
+  isPartialSoilwatOutput = TRUE; // dont want to get soilwat output unless -o flag
+
+	init_args(argc, argv); // if -o flag then well set isPartialSoilwatOutput to FALSE and get output
 
 	printf("STEPWAT  init_args() executed successfully \n ");
-
-	isPartialSoilwatOutput = TRUE;
 
 	if (UseGrid == TRUE) {
 		runGrid();
@@ -194,9 +194,6 @@ int main(int argc, char **argv) {
 
 	if (UseSoilwat)
 		SXW_Init(TRUE, NULL);
-
-	//Connect to ST db and insert static data
-	//ST_connect("Output/stdebug");
 
 	incr = (IntS) ((float) Globals.runModelIterations / 10);
 	if (incr == 0)
@@ -219,14 +216,8 @@ int main(int argc, char **argv) {
 		RandSeed(Globals.randseed);
 		Globals.currIter = iter;
 
-		/*Debug_AddByIter( iter); */
-
 		/* ------  Begin running the model ------ */
 		for (year = 1; year <= Globals.runModelYears; year++) {
-
-			/*Debug_AddByYear(year);*/
-
-			/* printf("Iter=%d, Year=%d\n", iter, year);  */
 			Globals.currYear = year;
 
 			rgroup_Establish();
@@ -259,20 +250,8 @@ int main(int argc, char **argv) {
 			_kill_annuals();
 			 proportion_Recovery();
 			_kill_extra_growth();
-
-			//ForEachGroup(g) {
-			//	insertRGroupYearInfo(g);
-			//}
-			//ForEachSpecies(s) {
-			//	insertSpecieYearInfo(s);
-			//	for ((i) = Species[s]->IndvHead; (i) != NULL; (i) = (i)->Next) {
-			//		insertIndivYearInfo(i);
-			//	}
-			//}
 		} /* end model run for this year*/
 
-		//if (BmassFlags.yearly) //moved to output function
-		//	CloseFile(&Globals.bmass.fp_year);
 		if (MortFlags.summary) {
 			stat_Collect_GMort();
 			stat_Collect_SMort();
@@ -300,12 +279,18 @@ int main(int argc, char **argv) {
 	if (BmassFlags.summary)
 		stat_Output_AllBmass();
 
-	//Needed to disconnect from database
-	//ST_disconnect();
+  // trying to find the proper place to write the output
+  if(isPartialSoilwatOutput == FALSE){
+    //SW_OUT_write_today();
+    //SW_OUT_flush();
+    SW_OUT_close_files();
+  }
+
 #ifdef STEPWAT
 			if (!isnull(SXW.debugfile) ) SXW_PrintDebug(1);
 #endif
 
+  printf("\nend program\n");
 	fprintf(progfp, "\n");
 	return 0;
 }
@@ -406,10 +391,12 @@ static void init_args(int argc, char **argv) {
    *         the program to write progress info (iter) to stdout.
    *         Without the option, progress info (dots) is written to
    *         stderr.
+   * 8/16/17 - BEB  removed option for -o flag. Now if this flag is set the output files from
+   *                files.in are written to.
    */
   char str[1024],
        *opts[]  = {"-d","-f","-q","-s","-e", "-p", "-g", "-o"};  /* valid options */
-  int valopts[] = {  1,   1,   0,  -1,   0,    0 ,   0, 1};  /* indicates options with values */
+  int valopts[] = {  1,   1,   0,  -1,   0,    0 ,   0, 0};  /* indicates options with values */
                  /* 0=none, 1=required, -1=optional */
   int i, /* looper through all cmdline arguments */
       a, /* current valid argument-value position */
@@ -523,11 +510,13 @@ static void init_args(int argc, char **argv) {
 			break; /* -g */
 
 		case 7:
-			printf("Get all the Soilwat option called, with file=%s  \n", str);
+			/*printf("Get all the Soilwat option called, with file=%s  \n", str);
 			if (strlen(str) > 1)
 			{
 				print_soilwat_output(str);
-			}
+			}*/
+      printf("in flag -o\n");
+      isPartialSoilwatOutput = FALSE;
 
 			break; /* -o    also get all the soilwat output*/
 
