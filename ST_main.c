@@ -269,6 +269,7 @@ int main(int argc, char **argv) {
 		{
 			SXW_Reset();
 		}
+    SW_OUT_close_files();
 
 
 	} /* end model run for this iteration*/
@@ -281,9 +282,8 @@ int main(int argc, char **argv) {
 
   // trying to find the proper place to write the output
   if(isPartialSoilwatOutput == FALSE){
-    //SW_OUT_write_today();
     //SW_OUT_flush();
-    SW_OUT_close_files();
+    //SW_OUT_close_files();
   }
 
 #ifdef STEPWAT
