@@ -263,13 +263,10 @@ int main(int argc, char **argv) {
 		if (UseSoilwat)
 			{
 		     	stat_Output_AllSoilwatVariables();
+          SXW_Reset();
 			}
 
-		if (UseSoilwat)
-		{
-			SXW_Reset();
-		}
-    SW_OUT_close_files();
+    //SW_OUT_close_files();
 
 
 	} /* end model run for this iteration*/
@@ -280,11 +277,6 @@ int main(int argc, char **argv) {
 	if (BmassFlags.summary)
 		stat_Output_AllBmass();
 
-  // trying to find the proper place to write the output
-  if(isPartialSoilwatOutput == FALSE){
-    //SW_OUT_flush();
-    //SW_OUT_close_files();
-  }
 
 #ifdef STEPWAT
 			if (!isnull(SXW.debugfile) ) SXW_PrintDebug(1);
@@ -391,7 +383,7 @@ static void init_args(int argc, char **argv) {
    *         the program to write progress info (iter) to stdout.
    *         Without the option, progress info (dots) is written to
    *         stderr.
-   * 8/16/17 - BEB  removed option for -o flag. Now if this flag is set the output files from
+   * 8/16/17 - BEB  Updated option for -o flag. Now if this flag is set the output files from
    *                files.in are written to.
    */
   char str[1024],
