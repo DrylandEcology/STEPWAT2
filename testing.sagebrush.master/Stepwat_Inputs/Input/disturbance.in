@@ -22,7 +22,7 @@
 # killyr = kill all members of this group at end of this year.
 #          0 == don't kill
 # killfreq_startyr = start year for killing due to fire, which will continue at the specified kill frequency
-# Prescribed_killfrq = frequency to kill. 
+# Prescribed_killfreq = frequency to kill. 
 #            if > 1 yearly interval, only prescribed fire occur after killfreq_startyr.  
 #            if 0 < Prescribed_killfrq < 1 yearly possibility, occur  with the wild fire whose parameters are below.
 #            if = 0 no prescribed fire. 
@@ -51,17 +51,17 @@
 # space parameter for shrubs was a guess (KP) 
 #TM 10.6.2015 - tested various stretch values for sagebrush and found stretch of 8 to be best paired with irate 0.02
 
-# name        killyr killfreq_startyr Prescribed_killfrq   extirp  mort    proportion_killed proportion_recovered grazing_frq proportion_grazing  grazingfreq_startyr
- sagebrush      0      1       0.02    0     1    1.00  0.00 0  0.00  0
- a.cool.forb    0      1       0.02    0     1    1.00  0.00 0  0.24  0
- a.warm.forb    0      1       0.02    0     1    1.00  0.00 0  0.24  0
- p.cool.forb    0      1       0.02    0     1    1.00  0.40 0  0.24  0
- p.warm.forb    0      1       0.02    0     1    1.00  0.40 0  0.24  0
- a.cool.grass   0      1       0.02    0     1    1.00  0.00 0  0.24  0
- p.cool.grass   0      1       0.02    0     1    1.00  0.70 0  0.24  0
- p.warm.grass   0      1       0.02    0     1    1.00  0.70 0  0.24  0
- shrub          0      1       0.02    0     1    1.00  0.00 0  0.00  0
- succulents     0      1       0.02    0     1    1.00  0.00 0  0.00  0 
+# name        killyr killfreq_startyr Prescribed_killfreq   extirp  mort    proportion_killed proportion_recovered grazing_frq proportion_grazing  grazingfreq_startyr
+ sagebrush      0      1       10    0     1    1.00  0.00 0  0.00  0
+ a.cool.forb    0      1       10    0     1    1.00  0.00 0  0.24  0
+ a.warm.forb    0      1       10    0     1    1.00  0.00 0  0.24  0
+ p.cool.forb    0      1       10    0     1    1.00  0.40 0  0.24  0
+ p.warm.forb    0      1       10    0     1    1.00  0.40 0  0.24  0
+ a.cool.grass   0      1       10    0     1    1.00  0.00 0  0.24  0
+ p.cool.grass   0      1       10    0     1    1.00  0.70 0  0.24  0
+ p.warm.grass   0      1       10    0     1    1.00  0.70 0  0.24  0
+ shrub          0      1       10    0     1    1.00  0.00 0  0.00  0
+ succulents     0      1       10    0     1    1.00  0.00 0  0.00  0 
 
 
 [end]  # section end
@@ -71,7 +71,9 @@
 
 # NOTE: 
 # Cheatgrass_index_number = order rg number input by species.in
-# ignition = cheatgrass biomass ignition in 1*1 m2 plot; When < 12.05 the wild fire will occur randomly; when >12.05 the fire yearly possibility will related with cheatgrass biomass.  
+# ignition = cheatgrass biomass ignition in 1*1 m2 plot; When < 12.05 the wild fire will occur randomly; 
+            # when >12.05 the fire yearly possibility will related with cheatgrass biomass; 
+            # When = 0 there will be no wild fire happen.  
 # cheatgrass_coefficient 
 # wild_fire_slope = slope of fire yearly possibility & cheatgrass biomass
 # name        cheatgrass_index_number ignition cheatgrass_coefficient wild_fire_slope  

@@ -196,15 +196,21 @@ void mort_EndOfYear( void)
 	//printf("inside mort_EndOfYear() \n");
 	GrpIndex rg;
 	GroupType *g;
-        RealF fire_possibility = 0;
+        RealF fire_possibility;
         RealF x_cheatgrass = Species[g->cheatgrass_index]->relsize * Species[g->cheatgrass_index]->mature_biomass; // calculate biomass of cheatgrass
         
         
-  
-        printf("[Rui] x_cheatgrass: %f\n",x_cheatgrass);
+
+       //printf("[Rui] x_cheatgrass: %f\n",x_cheatgrass);
+        if (g->killfreq == 0)
+                    { 
+                         fire_possibility = 0;
+                    }
         if (x_cheatgrass < g->ignition)
                     {
-                       fire_possibility = 1 / Globals.runModelYears;
+                       fire_possibility = 1.0 / Globals.runModelYears;
+                     
+                      
                     } 
         /* don't ignite wild fire based on cheatgrass until the cheatgrass could reach the ignition value */
                     if (x_cheatgrass > g->ignition){
@@ -214,13 +220,12 @@ void mort_EndOfYear( void)
                     { 
                          fire_possibility = g->killfreq;
                     }
-                     if (g->killfreq = 0)
-                    { 
-                         fire_possibility = 0;
-                    }
+                     
           /*  if the input prescribed fire value < 1; wild fire and prescribed fire happen at the same time, 
            * while if the input prescribed fire value >1, only prescribed fire happens */
-                printf("[Rui] FIRE FREQUENCY: %f\n",fire_possibility);
+     
+          printf("[Rui] fire_possibility: %f\n",fire_possibility); 
+         
 	ForEachGroup(rg)
 	{
 		if (Globals.currYear < RGroup[rg]->startyr)

@@ -1008,7 +1008,7 @@ static void _rgroup_disturbance( void) {
                MyFileName);
      }
    
-    _rgroup_add_disturbance(name, killyr,killfreq_startyr, killfreq,
+    _rgroup_add_disturbance(name, killyr, killfreq_startyr, killfreq,
                    extirp, mort, prop_killed, prop_recovered,grazing_frq,prop_grazing,grazingfreq_startyr);
    }/* end while*/
 
