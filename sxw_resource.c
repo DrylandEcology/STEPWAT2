@@ -239,20 +239,21 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
 
 	ForEachGroup(g) // steppe functional group
 	{
-		use_by_group[g] = 0.; /* clear */
+    use_by_group[g] = 0.; /* clear */
 		t = RGroup[g]->veg_prod_type-1;
+
 		switch(t) {
 		case 0://Tree
-			transp = SXW.transpTotal; // want to use transpiration assigned to specific functional type
+			transp = SXW.transpTrees;
 			break;
 		case 1://Shrub
-			transp = SXW.transpTotal;
+			transp = SXW.transpShrubs;
 			break;
 		case 2://Grass
-			transp = SXW.transpTotal; // SXW.transpGrasses (if use specic type need to rescale resource space parameters)
+			transp = SXW.transpGrasses;
 			break;
 		case 3://Forb
-			transp = SXW.transpTotal;
+			transp = SXW.transpForbs;
 			break;
 		default:
 			transp = SXW.transpTotal;
@@ -263,7 +264,7 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
 		{
 			int nLyrs = getNTranspLayers(RGroup[g]->veg_prod_type);
 			for (l = 0; l < nLyrs; l++) {
-				use_by_group[g] += (RealF) (_roots_active_rel[Iglp(g, l, p)] * RGroup[g]->min_res_req * transp[Ilp(l, p)]); //min_res_req is space parameter
+				 use_by_group[g] += (RealF) (_roots_active_rel[Iglp(g, l, p)] * transp[Ilp(l, p)]);
 			}
 		}
 		sumUsedByGroup += use_by_group[g];
@@ -365,4 +366,11 @@ static void _SWA_contribution_by_group(RealF use_by_group[]) {
 		}
 		sumUsedByGroup += use_by_group[g];
 	}
+  /*ForEachTrPeriod(p)
+	{
+		for (t = 0; t < SXW.NSoLyrs; t++)
+			sumSWATotal += SXW.transpTotal[Ilp(t, p)];
+	}
+    SWARemaining = sumSWATotal - sumUsedByGroup;
+    printf("SWARemaining: %f\n", SWARemaining);*/
 }

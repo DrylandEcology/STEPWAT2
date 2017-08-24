@@ -200,7 +200,7 @@ int main(int argc, char **argv) {
 
 			rgroup_IncrAges();
 
-           // Added functions for Grazing and mort_end_year as proportional killing effect before exporting biomass end of the year
+      // Added functions for Grazing and mort_end_year as proportional killing effect before exporting biomass end of the year
 			grazing_EndOfYear();
 
 			mort_EndOfYear();
@@ -210,10 +210,31 @@ int main(int argc, char **argv) {
 			if (BmassFlags.yearly)
 				output_Bmass_Yearly(year);
 
-            // Moved kill annual and kill extra growth after we export biomass, and recovery of biomass after fire before the next year
+       // Moved kill annual and kill extra growth after we export biomass, and recovery of biomass after fire before the next year
 			_kill_annuals();
 			 proportion_Recovery();
 			_kill_extra_growth();
+
+      /* ####################################################################################
+      * this is the basic algorithm for getting the average over multiple iterations
+      * will not remain here, will be moved into a function but this is just a testing phase
+      * ################################################################################## */
+        int i;
+        float m = 0;
+        float swaAvg = 0;
+
+        if(year == 1){
+          for(i=0; i<12; i++){
+            swaAvg += SXW.SWAbulk_forb[i][0];
+          }
+          swaAvg /= 12; //[year][layer]
+          m = 1+iter;
+          m = 2/m;
+          SXW.SWAbulk_forb_avg[year][0] = (m * swaAvg + (1-m) * SXW.SWAbulk_forb_avg[year][0]); //[year][layer]
+          //printf("\nSWAbulk_forb_avg[1][0] = %f\n\n", SXW.SWAbulk_forb_avg[year][0]);
+        }
+      // ######################################################################################
+
 		} /* end model run for this year*/
 
 		if (MortFlags.summary) {
@@ -226,17 +247,12 @@ int main(int argc, char **argv) {
 
 		if (UseSoilwat)
 			{
-          //printf("iterating!!!!!\n");
 		     	stat_Output_AllSoilwatVariables();
-        //  printf("iterating@@@@@\n");
+          // dont need to restart if last iteration finished
+          // this keeps it from re-writing the output folder and overwriting output files
           if(Globals.currIter != Globals.runModelIterations)
             SXW_Reset();
-          //printf("RESART*&$#@!$#!@#!\n");
 			}
-
-    //SW_OUT_close_files();
-
-
 	} /* end model run for this iteration*/
 
 	/*------------------------------------------------------*/
@@ -244,10 +260,6 @@ int main(int argc, char **argv) {
 		stat_Output_AllMorts();
 	if (BmassFlags.summary)
 		stat_Output_AllBmass();
-
-//  SW_OUT_read();
-//  SW_OUT_write_today();
-
 
 #ifdef STEPWAT
 			if (!isnull(SXW.debugfile) ) SXW_PrintDebug(1);
@@ -278,7 +290,6 @@ void Plot_Initialize(void) {
 		if (RGroup[Species[sp]->res_grp]->extirpated) {
 			Species[sp]->seedling_estab_prob =
 					Species[sp]->seedling_estab_prob_old;
-
 		}
 
 		/* clear estab and kills information */
