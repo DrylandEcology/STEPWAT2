@@ -49,15 +49,16 @@
   void stat_Output_YrMorts( void ) ;
   void stat_Output_AllMorts( void) ;
   void stat_Output_AllBmass(void) ;
+  void stat_Average_SOILWAT_vars(float outputVar[366][25], float outputVarAvg[366][25]) ;
 
   //adding below function for adding modified soilwat output at stepwat location
   void stat_Output_AllSoilwatVariables(void);
 
   //Adding below two functions for creating grid cells avg values output file
-  void stat_Output_AllBmassAvg(void) ;
+  void stat_Output_AllBmassAvg(void);
   void stat_Output_AllCellAvgBmass(const char * filename);
   void stat_Output_Seed_Dispersal(const char * filename, const char sep, Bool makeHeader);
-  void stat_free_mem( void ) ;
+  void stat_free_mem( void );
 
   void stat_Load_Accumulators( int cell, int year ); //these accumulators were added to use in the gridded option... there overall purpose is to save/load data to allow steppe to output correctly when running multiple grid cells
   void stat_Save_Accumulators( int cell, int year );
@@ -828,6 +829,7 @@ void stat_Output_YrMorts( void ) {
 
 /***********************************************************/
 void stat_Output_AllMorts( void) {
+  printf("stat_Output_AllMorts\n");
   FILE *f;
   IntS age;
   GrpIndex rg;
@@ -1462,6 +1464,24 @@ static void _make_header_for_soilwat(char *buf, char *header1, char *header2, in
 	sprintf(tbuf, "%s%c\n", fields[i], BmassFlags.sep);
 	strcat(buf, tbuf);
 
+}
+
+void stat_Average_SOILWAT_vars(float outputVar[366][25], float outputVarAvg[366][25]){
+  // need to average all of the variables outlined in the outsetup file
+    int i;
+    int j;
+    float m = 0;
+    float outputAvg = 0;
+
+    for(i=0; i<12; i++){
+      outputAvg += outputVar[i][0];
+      outputAvg /= 12; //[year][layer]
+    }
+    m = 1+j;
+    m = 2/m;
+    outputVarAvg[1][0] = (m * outputAvg + (1-m) * outputVarAvg[1][0]); //SXW.SWAbulk_forb_avg[year][layer]
+    //printf("\nSWAbulk_forb_avg[1][0] = %f(%f)\n\n", outputVarAvg[1][0], outputAvg);
+    printf("\nSWAbulk_forb_avg[1][0] = %f\n\n", outputVarAvg[1][0]);
 }
 
 // store soilwat values in a csv

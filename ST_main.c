@@ -210,6 +210,8 @@ int main(int argc, char **argv) {
 			if (BmassFlags.yearly)
 				output_Bmass_Yearly(year);
 
+      stat_Average_SOILWAT_vars(SXW.SWAbulk_forb, SXW.SWAbulk_forb_avg);
+
        // Moved kill annual and kill extra growth after we export biomass, and recovery of biomass after fire before the next year
 			_kill_annuals();
 			 proportion_Recovery();
@@ -219,7 +221,7 @@ int main(int argc, char **argv) {
       * this is the basic algorithm for getting the average over multiple iterations
       * will not remain here, will be moved into a function but this is just a testing phase
       * ################################################################################## */
-        int i;
+        /*int i;
         float m = 0;
         float swaAvg = 0;
 
@@ -232,7 +234,7 @@ int main(int argc, char **argv) {
           m = 2/m;
           SXW.SWAbulk_forb_avg[year][0] = (m * swaAvg + (1-m) * SXW.SWAbulk_forb_avg[year][0]); //[year][layer]
           //printf("\nSWAbulk_forb_avg[1][0] = %f\n\n", SXW.SWAbulk_forb_avg[year][0]);
-        }
+        }*/
       // ######################################################################################
 
 		} /* end model run for this year*/
@@ -260,6 +262,9 @@ int main(int argc, char **argv) {
 		stat_Output_AllMorts();
 	if (BmassFlags.summary)
 		stat_Output_AllBmass();
+
+  printf("\n\n\nSWAbulk_forb_avg[1][0] = %f\n\n", SXW.SWAbulk_forb_avg[1][0]);
+
 
 #ifdef STEPWAT
 			if (!isnull(SXW.debugfile) ) SXW_PrintDebug(1);
