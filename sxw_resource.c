@@ -49,7 +49,7 @@
 /* for steppe, see ST_globals.h */
 
 //extern SW_SITE SW_Site;
-//extern SW_MODEL SW_Model;
+extern SW_MODEL SW_Model;
 //extern SW_SOILWAT SW_Soilwat;
 //extern SW_VEGPROD SW_VegProd;
 
@@ -233,6 +233,7 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
 	SppIndex s;
 	TimeInt p;
 	LyrIndex l;
+  int currentYear = SW_Model.year-SW_Model.startyr;
 	int t,i;
 	RealD *transp;
 	RealF sumUsedByGroup = 0., sumTranspTotal = 0., TranspRemaining = 0.;
@@ -269,6 +270,8 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
 		}
 		sumUsedByGroup += use_by_group[g];
 	}
+  SXW.transp_SWA[currentYear] += sumUsedByGroup;
+  //printf("SXW.transp_SWA[%d] = %f\n", currentYear, SXW.transp_SWA[currentYear]);
   // TODO: if redo upper part, can remove bottom part
 	//Occasionally, extra transpiration remains and if not perfectly partitioned to RGroups.
 	//This check makes sure any remaining transpiration is divided proportionately among Rgroups.
@@ -291,54 +294,82 @@ static void _SWA_contribution_by_group(RealF use_by_group[]) {
 	SppIndex s;
 	TimeInt p;
 	LyrIndex l;
+  int currentYear = SW_Model.year-SW_Model.startyr;
 	int t,i;
   float swaNew[366][25];
 	RealF sumUsedByGroup = 0., sumSWATotal = 0., SWARemaining = 0.;
 
   // values for refactored equation
   RealD critSumByGroup[MAX_RGROUPS] = {0.};
+  RealD refactoredCrit = 0;
 
 
+  ForEachGroup(g)
+	{
+		t = RGroup[g]->veg_prod_type-1;
+    critSumByGroup[t] += RGroup[g]->min_res_req; // get the critical value sums
+	}
 
 
 	ForEachGroup(g) // steppe functional group
 	{
 		use_by_group[g] = 0.; // clear
+    float newCritSum = 0.;
 		t = RGroup[g]->veg_prod_type-1;
 		switch(t)
     {
   		case 0://Tree
         memcpy(swaNew, SXW.SWAbulk_tree, sizeof(swaNew)); // copy values into array
         // need to include all the veg types in the range of the critical soil water potential
+        for(i=0; i<4; i++){ // loop through 4 times, once per veg type
+          if(SXW.critSoilWater[t] >= SXW.critSoilWater[i]) // if the veg type being used is bigger than the others need to include those others
+            newCritSum += critSumByGroup[i]; // make new sum for proper scaling
+            /* reason is to get the values for these to scale so they equal 1 requires getting sum of all in use and then dividing
+            // each individual one by the sum of all to make the total add up to 1 but retain the difference in the individual elements
+            // for example if shrubs critical soil water potential (csp) is -3.9 and grasses csp is -3.5 and you are running on
+            // grasses then you need to include all the values for shrubs and grasses since both are getting resources at that depth
+            */
+        }
+        refactoredCrit = RGroup[g]->min_res_req / newCritSum; // get new critical value for use in equation below
   			break;
 
   		case 1://Shrub
         memcpy(swaNew, SXW.SWAbulk_shrub, sizeof(swaNew));
+        for(i=0; i<4; i++){
+          if(SXW.critSoilWater[t] >= SXW.critSoilWater[i])
+            newCritSum += critSumByGroup[i];
+        }
+        refactoredCrit = RGroup[g]->min_res_req / newCritSum;
   			break;
 
   		case 2://Grass
         memcpy(swaNew, SXW.SWAbulk_grass, sizeof(swaNew));
+        for(i=0; i<4; i++){
+          if(SXW.critSoilWater[t] >= SXW.critSoilWater[i])
+            newCritSum += critSumByGroup[i];
+        }
+        refactoredCrit = RGroup[g]->min_res_req / newCritSum;
   			break;
 
   		case 3://Forb
         memcpy(swaNew, SXW.SWAbulk_forb, sizeof(swaNew));
+        for(i=0; i<4; i++){
+          if(SXW.critSoilWater[t] >= SXW.critSoilWater[i])
+            newCritSum += critSumByGroup[i];
+        }
+        refactoredCrit = RGroup[g]->min_res_req / newCritSum;
   			break;
 		}
 		ForEachTrPeriod(p)
 		{
 			for (l = 0; l < SXW.NSoLyrs; l++) {
-				use_by_group[g] += (RealF) (_roots_active_rel[Iglp(g, l, p)] * swaNew[p][l]); //min_res_req is space parameter
+				use_by_group[g] += (RealF) (_roots_active_rel[Iglp(g, l, p)] * refactoredCrit * swaNew[p][l]); //min_res_req is space parameter
         //printf("for groupName= %s, layerIndex: %d  use_by_group[%d]= %f\n",RGroup[g]->name,l,g,use_by_group[g]);
         //printf("swaNew[%d][%d]: %f\n", p,l,swaNew[p][l]);
 			}
 		}
 		sumUsedByGroup += use_by_group[g];
 	}
-  /*ForEachTrPeriod(p)
-	{
-		for (t = 0; t < SXW.NSoLyrs; t++)
-			sumSWATotal += SXW.transpTotal[Ilp(t, p)];
-	}
-    SWARemaining = sumSWATotal - sumUsedByGroup;
-    printf("SWARemaining: %f\n", SWARemaining);*/
+  SXW.transp_SWA[currentYear] += sumUsedByGroup;
+  //printf("SXW.transp_SWA[%d] = %f\n", currentYear, SXW.transp_SWA[currentYear]);
 }

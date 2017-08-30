@@ -829,7 +829,6 @@ void stat_Output_YrMorts( void ) {
 
 /***********************************************************/
 void stat_Output_AllMorts( void) {
-  printf("stat_Output_AllMorts\n");
   FILE *f;
   IntS age;
   GrpIndex rg;
@@ -1481,7 +1480,7 @@ void stat_Average_SOILWAT_vars(float outputVar[366][25], float outputVarAvg[366]
     m = 2/m;
     outputVarAvg[1][0] = (m * outputAvg + (1-m) * outputVarAvg[1][0]); //SXW.SWAbulk_forb_avg[year][layer]
     //printf("\nSWAbulk_forb_avg[1][0] = %f(%f)\n\n", outputVarAvg[1][0], outputAvg);
-    printf("\nSWAbulk_forb_avg[1][0] = %f\n\n", outputVarAvg[1][0]);
+    //printf("\nSWAbulk_forb_avg[1][0] = %f\n\n", outputVarAvg[1][0]);
 }
 
 // store soilwat values in a csv

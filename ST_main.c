@@ -210,7 +210,7 @@ int main(int argc, char **argv) {
 			if (BmassFlags.yearly)
 				output_Bmass_Yearly(year);
 
-      stat_Average_SOILWAT_vars(SXW.SWAbulk_forb, SXW.SWAbulk_forb_avg);
+      //stat_Average_SOILWAT_vars(SXW.SWAbulk_forb, SXW.SWAbulk_forb_avg); // need to make this work
 
        // Moved kill annual and kill extra growth after we export biomass, and recovery of biomass after fire before the next year
 			_kill_annuals();
@@ -263,7 +263,7 @@ int main(int argc, char **argv) {
 	if (BmassFlags.summary)
 		stat_Output_AllBmass();
 
-  printf("\n\n\nSWAbulk_forb_avg[1][0] = %f\n\n", SXW.SWAbulk_forb_avg[1][0]);
+  //printf("\n\n\nSWAbulk_forb_avg[1][0] = %f\n\n", SXW.SWAbulk_forb_avg[1][0]);
 
 
 #ifdef STEPWAT

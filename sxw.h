@@ -26,6 +26,7 @@
 
 #include "generic.h"
 #include "SW_Times.h"
+#include "ST_defines.h"
 
 int getNTranspLayers(int veg_prod_type);
 
@@ -77,6 +78,8 @@ struct stepwat_st {
         SWAbulk_tree[366][25],
         SWAbulk_forb[366][25],
         SWAbulk_forb_avg[366][25];
+
+  RealF transp_SWA[MAX_YEARS];
 
 
   // 2D array to store 4 critical values per layer
