@@ -252,13 +252,14 @@ static RealF _add_annuals(const GrpIndex rg, const SppIndex sp, const RealF last
    // if (GT(x, 0.)) {
         if (lastyear_relsize == 0) {
             newsize = RandUniRange(1, s->max_seed_estab);
+            printf("s->max_seed_estab   =%hu \n", s->max_seed_estab);
             printf("newsize   =%0.5f \n", newsize);
         }
         else {
          //  printf("lastyear_relsize=%0.5f \n", lastyear_relsize);
 
             //seedbank = s->seedprod + 1.0 - 1.0;
-            newsize =(s->seedprod) * (s ->seedling_estab_prob);
+            newsize = ((RealF)* s->seedprod) * s->seedling_estab_prob;
            
             printf("2newsize   =%0.5f \n", newsize);
         }
@@ -306,7 +307,7 @@ static void _add_annual_seedprod(SppIndex sp, RealF lastyear_relsize) {
         s->seedprod[i] = RandUniRange(1, s->max_seed_estab);
         //printf("Species name=%s ,seedprod[i] == 0 so new calculated value s->seedprod[%u]= %hu , s->max_seed_estab =%hu\n", s->name, i, s->seedprod[i], s->max_seed_estab);
     } else {
-        s->seedprod[i] = (IntU)(s->max_seed_estab * lastyear_relsize);
+        s->seedprod[i] = (s->max_seed_estab * lastyear_relsize);
 
         //printf("Species name=%s ,currYear=%hu  so new calculated value s->seedprod[%u]= %hu , s->max_seed_estab =%hu, lastyear_relsize=%.5f\n", s->name, Globals.currYear, i, s->seedprod[i], s->max_seed_estab, lastyear_relsize);
     }
