@@ -224,8 +224,10 @@ static RealF _add_annuals(const GrpIndex rg, const SppIndex sp, const RealF last
   ? ((x)>-xF_DELTA && (x)<xF_DELTA) \
   : ((x)>-xD_DELTA && (x)<xD_DELTA) )
     IntU i;
-    RealF x,
-    newsize, sumsize;
+    RealF //x, estabs,
+    newsize,
+    seedbank, 
+    sumsize;
     GroupType *g;
     SpeciesType *s;
     Bool forced;
@@ -234,33 +236,33 @@ static RealF _add_annuals(const GrpIndex rg, const SppIndex sp, const RealF last
     assert(g->max_age == 1);
 
     s = Species[sp];
-    newsize = 0.0;
-    forced = FALSE;
+    //newsize = 0.0;
+    //forced = FALSE;
 
     /* force addition of new propagules */
     _add_annual_seedprod(sp, lastyear_relsize);
-    forced = TRUE;
+    //forced = TRUE;
 
-    x = 0.;
-    if (RandUni() <= s->seedling_estab_prob) {
-        x = (g->regen_ok) ? _get_annual_maxestab(sp) : 0.;
-        printf("g->regen_ok: %d  , x = %.5f %\n", g->regen_ok, x);
-    }
+    //x = 0.;
+   // if (RandUni() <= s->seedling_estab_prob) {
+        //x = (g->regen_ok) ? _get_annual_maxestab(sp) : 0.;
+      //  printf("g->regen_ok: %d  , x = %.5f %\n", g->regen_ok, x);
+   // }
 
-    if (GT(x, 0.)) {
-        if (ZERO(lastyear_relsize)) {
-            newsize = RandUniRange(1, x);
+   // if (GT(x, 0.)) {
+        if (lastyear_relsize == 0) {
+            newsize = RandUniRange(1, s->max_seed_estab);
             printf("newsize   =%0.5f \n", newsize);
         }
         else {
-           printf("lastyear_relsize=%0.5f \n", lastyear_relsize);
+         //  printf("lastyear_relsize=%0.5f \n", lastyear_relsize);
+
+            //seedbank = s->seedprod + 1.0 - 1.0;
+            newsize =(s->seedprod) * (s ->seedling_estab_prob);
            
-           //???????????????????????????????//////////////////
-            newsize = x * lastyear_relsize;
-                       //???????????????????????????????//////////////////
-            printf("newsize   =%0.5f \n", newsize);
+            printf("2newsize   =%0.5f \n", newsize);
         }
-    }
+  //  }
     return newsize;
 }
 
@@ -289,23 +291,24 @@ static void _add_annual_seedprod(SppIndex sp, RealF lastyear_relsize) {
     //incrementing the number of viable years
     for (i = s->viable_yrs - 1; i > 0; i--) {
         if (i == 1 || i == 2) {
-            printf("Species name=%s , old Array values for index i=%u, value=%hu \n", s->name, i, s->seedprod[i]);
+           // printf("Species name=%s , old Array values for index i=%u, value=%hu \n", s->name, i, s->seedprod[i]);
         }
 
         s->seedprod[i] = s->seedprod[i - 1];
     }
 
-    printf("Species name=%s ,old Array array 0 index i=%u, value =%hu \n", s->name, i, s->seedprod[i]);
+    //printf("Species name=%s ,old Array array 0 index i=%u, value =%hu \n", s->name, i, s->seedprod[i]);
 
     //If the current year is year 1 of the simulation, then the number of seeds added is a random number draw between
     //1 and the maximum number of seedlings that can establish. Otherwise, this year's seed production is a function of the maximum 
     //number of seedlings that can establish and last year's species relative size.
-    if (Globals.currYear == 1) {
+    if (s->seedprod[i] == 0) {
         s->seedprod[i] = RandUniRange(1, s->max_seed_estab);
-        printf("Species name=%s ,currYear =1 so new calculated value s->seedprod[%u]= %hu , s->max_seed_estab =%hu\n", s->name, i, s->seedprod[i], s->max_seed_estab);
+        //printf("Species name=%s ,seedprod[i] == 0 so new calculated value s->seedprod[%u]= %hu , s->max_seed_estab =%hu\n", s->name, i, s->seedprod[i], s->max_seed_estab);
     } else {
         s->seedprod[i] = (IntU)(s->max_seed_estab * lastyear_relsize);
-        printf("Species name=%s ,currYear=%hu  so new calculated value s->seedprod[%u]= %hu , s->max_seed_estab =%hu, lastyear_relsize=%.5f\n", s->name, Globals.currYear, i, s->seedprod[i], s->max_seed_estab, lastyear_relsize);
+
+        //printf("Species name=%s ,currYear=%hu  so new calculated value s->seedprod[%u]= %hu , s->max_seed_estab =%hu, lastyear_relsize=%.5f\n", s->name, Globals.currYear, i, s->seedprod[i], s->max_seed_estab, lastyear_relsize);
     }
 }
 
