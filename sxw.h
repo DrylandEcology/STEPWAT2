@@ -79,7 +79,7 @@ struct stepwat_st {
         SWAbulk_forb[366][25],
         SWAbulk_forb_avg[366][25];
 
-  RealF transp_SWA[MAX_YEARS];
+  RealF transp_SWA[MAX_YEARS][11]; // store the sum of SWA and transp for each year and resource. transp_SWA[year][steppe_resource_group]
 
 
   // 2D array to store 4 critical values per layer

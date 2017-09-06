@@ -180,6 +180,8 @@ int main(int argc, char **argv) {
 		RandSeed(Globals.randseed);
 		Globals.currIter = iter;
 
+    memset(SXW.transp_SWA,0,sizeof(SXW.transp_SWA));
+
 		/* ------  Begin running the model ------ */
 		for (year = 1; year <= Globals.runModelYears; year++) {
 			Globals.currYear = year;
@@ -236,7 +238,7 @@ int main(int argc, char **argv) {
           //printf("\nSWAbulk_forb_avg[1][0] = %f\n\n", SXW.SWAbulk_forb_avg[year][0]);
         }*/
       // ######################################################################################
-
+      //printf("SXW.transp_SWA[%d] = %f\n", year, SXW.transp_SWA[year]);
 		} /* end model run for this year*/
 
 		if (MortFlags.summary) {
@@ -255,6 +257,16 @@ int main(int argc, char **argv) {
           if(Globals.currIter != Globals.runModelIterations)
             SXW_Reset();
 			}
+      printf("SXW.transp_SWA[1][0] sagebrush: %f\n", SXW.transp_SWA[1][0]);
+      printf("SXW.transp_SWA[1][1] a.cool.forb: %f\n", SXW.transp_SWA[1][1]);
+      printf("SXW.transp_SWA[1][2] a.warm.forb: %f\n", SXW.transp_SWA[1][2]);
+      printf("SXW.transp_SWA[1][3] p.cool.forb: %f\n", SXW.transp_SWA[1][3]);
+      printf("SXW.transp_SWA[1][4] p.warm.forb: %f\n", SXW.transp_SWA[1][4]);
+      printf("SXW.transp_SWA[1][5] a.cool.grass: %f\n", SXW.transp_SWA[1][5]);
+      printf("SXW.transp_SWA[1][6] p.cool.grass: %f\n", SXW.transp_SWA[1][6]);
+      printf("SXW.transp_SWA[1][7] p.warm.grass: %f\n", SXW.transp_SWA[1][7]);
+      printf("SXW.transp_SWA[1][8] shrub: %f\n", SXW.transp_SWA[1][8]);
+      printf("SXW.transp_SWA[1][9] succulents: %f\n\n", SXW.transp_SWA[1][9]);
 	} /* end model run for this iteration*/
 
 	/*------------------------------------------------------*/

@@ -242,6 +242,8 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
 	{
     use_by_group[g] = 0.; /* clear */
 		t = RGroup[g]->veg_prod_type-1;
+    //printf("g: %d\n", g);
+    //printf("RGroup[g]->grp_num: %d\n", RGroup[g]->grp_num);
 
 		switch(t) {
 		case 0://Tree
@@ -269,8 +271,9 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
 			}
 		}
 		sumUsedByGroup += use_by_group[g];
+    SXW.transp_SWA[currentYear][g] += sumUsedByGroup;
 	}
-  SXW.transp_SWA[currentYear] += sumUsedByGroup;
+  //SXW.transp_SWA[currentYear][t-1] += sumUsedByGroup;
   //printf("SXW.transp_SWA[%d] = %f\n", currentYear, SXW.transp_SWA[currentYear]);
   // TODO: if redo upper part, can remove bottom part
 	//Occasionally, extra transpiration remains and if not perfectly partitioned to RGroups.
@@ -369,7 +372,8 @@ static void _SWA_contribution_by_group(RealF use_by_group[]) {
 			}
 		}
 		sumUsedByGroup += use_by_group[g];
+
+    SXW.transp_SWA[currentYear][g] += sumUsedByGroup;
+    //printf("SXW.transp_SWA[%d][%d] = %f\n", currentYear, t, SXW.transp_SWA[currentYear][t-1]);
 	}
-  SXW.transp_SWA[currentYear] += sumUsedByGroup;
-  //printf("SXW.transp_SWA[%d] = %f\n", currentYear, SXW.transp_SWA[currentYear]);
 }
