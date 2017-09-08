@@ -32,6 +32,7 @@
 #endif
 
 extern Bool isPartialSoilwatOutput;
+extern Bool storeAllIterations;
 
 /************* External Function Declarations **************/
 /***********************************************************/
@@ -95,8 +96,9 @@ static void usage(void) {
            "  -q : quiet mode, don't print message to check logfile.\n"
            "  -s : use SOILWAT model for resource partitioning.\n"
            "  -e : echo initialization results to logfile\n"
-           "  -o : print all the soilwat output as well like standalone soilwat running\n"
-           "  -g : use gridded mode\n";
+           "  -o : print all the soilwat output\n"
+           "  -g : use gridded mode\n"
+           "  -i : print SOILWAT output for each iteration\n"; // dont need to set -o flag to use this flag
   fprintf(stderr,"%s", s);
   exit(0);
 }
@@ -145,6 +147,7 @@ int main(int argc, char **argv) {
 	 * was logged.  see generic.h */
 
   isPartialSoilwatOutput = TRUE; // dont want to get soilwat output unless -o flag
+  storeAllIterations = FALSE; // dont want to store all soilwat output iterations unless -i flag
 
 	init_args(argc, argv); // if -o flag then well set isPartialSoilwatOutput to FALSE and get output
 
@@ -386,8 +389,8 @@ static void init_args(int argc, char **argv) {
    *                files_v30.in are written to.
    */
   char str[1024],
-       *opts[]  = {"-d","-f","-q","-s","-e", "-p", "-g", "-o"};  /* valid options */
-  int valopts[] = {  1,   1,   0,  -1,   0,    0 ,   0, 0};  /* indicates options with values */
+       *opts[]  = {"-d","-f","-q","-s","-e", "-p", "-g", "-o", "-i"};  /* valid options */
+  int valopts[] = {  1,   1,   0,  -1,   0,    0 ,   0, 0, 0};  /* indicates options with values */
                  /* 0=none, 1=required, -1=optional */
   int i, /* looper through all cmdline arguments */
       a, /* current valid argument-value position */
@@ -504,6 +507,11 @@ static void init_args(int argc, char **argv) {
       printf("storing SOILWAT output (flag -o)\n");
       isPartialSoilwatOutput = FALSE;
 			break; /* -o    also get all the soilwat output*/
+
+    case 8:
+      printf("storing SOILWAT output for all iterations\n");
+      storeAllIterations = TRUE;
+      break;
 
 		default:
 			LogError(logfp, LOGFATAL,
