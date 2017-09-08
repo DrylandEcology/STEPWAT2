@@ -126,6 +126,7 @@ void _sxw_update_resource(void) {
   GrpIndex g;
   SppIndex sp;
   int i;
+  int currentYear = SW_Model.year-SW_Model.startyr;
 
   #ifdef SXW_BYMAXSIZE
     ForEachGroup(g) {
@@ -154,6 +155,7 @@ void _sxw_update_resource(void) {
 
 	ForEachGroup(g)
 	{
+    _resource_cur[g] = SXW.transp_SWA[currentYear][g];
 		//_resource_pr[g] = ZRO(sizes[g]) ? 0.0 : _resource_cur[g] * _bvt / sizes[g];
 		_resource_cur[g] = _resource_cur[g] * _bvt;
 	}
@@ -271,7 +273,7 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
 			}
 		}
 		sumUsedByGroup += use_by_group[g];
-    SXW.transp_SWA[currentYear][g] += sumUsedByGroup;
+    SXW.transp_SWA[currentYear][g] += sumUsedByGroup; //SXW.transp_SWA[currentYear][resource_group]
 	}
   //SXW.transp_SWA[currentYear][t-1] += sumUsedByGroup;
   //printf("SXW.transp_SWA[%d] = %f\n", currentYear, SXW.transp_SWA[currentYear]);

@@ -394,7 +394,7 @@ void SXW_SW_Setup_Echo(void) {
 RealF SXW_GetPR( GrpIndex rg) {
 /*======================================================*/
 /* see _sxw_update_resource() for _resource_cur[]
-This function is no longer utilized, SXW_GetTranspiration has replaced it
+This function is no longer utilized, SXW_GetResource has replaced it
 _resource_pr is no longer used as a parameter. We remain the code for the time being
 KAP 7/20/2016
 */
@@ -403,11 +403,11 @@ KAP 7/20/2016
 	//return pr > 10 ? 10 : pr;
 }
 
-RealF SXW_GetTranspiration( GrpIndex rg) {
+RealF SXW_GetResource( GrpIndex rg) {
 /*======================================================*/
 /* see _sxw_update_resource() for _resource_cur[]
 */
-	//printf("SXW_GetTranspiration _resource_cur[%d] = %.5f \n", rg, _resource_cur[rg]);
+	//printf("SXW_GetResource _resource_cur[%d] = %.5f \n", rg, _resource_cur[rg]);
 	return _resource_cur[rg];
 }
 

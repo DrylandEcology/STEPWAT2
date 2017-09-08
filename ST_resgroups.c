@@ -144,7 +144,7 @@ void rgroup_PartResources(void)
 		/* trick for later pr calc */
 
 		g->res_required = RGroup_GetBiomass(rg);
-		g->res_avail = SXW_GetTranspiration(rg); //1.0;
+		g->res_avail = SXW_GetResource(rg); //1.0;
 		//PR limit can be really high see mort no_resource I limit to the groups estab indiv because that is what we can kill.
 		//This was at 10 but ten might be to low or high in some cases.
 		if(!ZRO(g->res_avail) && g->res_required / g->res_avail > g->estabs)
@@ -161,13 +161,13 @@ void rgroup_PartResources(void)
 		}
         //KAP:Previously, a seperate set of code was used to determine resource availability for annual species
         //Now, resource paritioning for annuals occurs in the same way as for perennials, by getting the RGroup Biomass
-        //and the resource_cur from SXW_GetTranspiration
+        //and the resource_cur from SXW_GetResource
 		//Annuals seem to have a artificial limit of 20. We do Annuals here differently
 		if(g->max_age == 1)
 		{
 			//{	ForEachGroupSpp(sp,rg,i)
 			//	g->res_required += Species[sp]->mature_biomass * .75;}
-			//g->res_avail = SXW_GetTranspiration(rg);
+			//g->res_avail = SXW_GetResource(rg);
 			if(!ZRO(g->res_avail) && g->res_required / g->res_avail > 20)
 			{
 				g->res_required = 20;
@@ -194,7 +194,7 @@ void rgroup_PartResources(void)
 	 extra resource partitioning does not occur when running SOILWAT*/
 		_res_part_extra(do_base, xtra_base, size_base);
 		_res_part_extra(do_extra, xtra_obase, size_obase);
-	
+
 	/* reset annuals' "true" relative size here */
     //KAP: formely, this call established annual species. We have moved annual establishment to the Rgroup_Establish function,
     //where all other resource groups establish (e.g. perennials). This function is no longer required.
@@ -299,7 +299,7 @@ static RealF _add_annuals(const GrpIndex rg, const RealF g_pr,
 static RealF _get_annual_maxestab(SppIndex sp)
 {
 	/*======================================================*/
-        /* Get the maximum number of viable seeds from the seedbank that can 
+        /* Get the maximum number of viable seeds from the seedbank that can
          establish this year*/
 	IntU i;
 	RealF sum = 0.;
@@ -722,7 +722,7 @@ void rgroup_Establish(void)
 	 *
 	 *   Also, there's now a parameter to define the start year
 	 *   of establishment for perennials.
-         * 
+         *
 	 * KAP: Annual establishment now occurs here instead of in PartResources
 	 */
 	/*------------------------------------------------------*/
@@ -784,7 +784,7 @@ void rgroup_Establish(void)
 				else
 				{
 				num_est = 0;
-				}	
+				}
 					  //printf("num_est for annuals=%d \n",num_est);
 
 					// above inserted to establish individuals for annuals
@@ -1320,4 +1320,3 @@ void RGroup_SetMemoryRefs( void)
  creation imply that availability is not tied to relsize.
 
  */
-
