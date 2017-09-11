@@ -49,7 +49,7 @@
   void stat_Output_YrMorts( void ) ;
   void stat_Output_AllMorts( void) ;
   void stat_Output_AllBmass(void) ;
-  void stat_Average_SOILWAT_vars(float outputVar[366][25], float outputVarAvg[366][25]) ;
+  void stat_Average_SOILWAT_vars(float outputVar[366][25], float outputVarAvg[366][25], int loopYear, int loopLayer) ;
 
   //adding below function for adding modified soilwat output at stepwat location
   void stat_Output_AllSoilwatVariables(void);
@@ -1465,22 +1465,19 @@ static void _make_header_for_soilwat(char *buf, char *header1, char *header2, in
 
 }
 
-void stat_Average_SOILWAT_vars(float outputVar[366][25], float outputVarAvg[366][25]){
+void stat_Average_SOILWAT_vars(float outputVar[366][25], float outputVarAvg[366][25], int loopYear, int loopLayer){
   // need to average all of the variables outlined in the outsetup file
     int i;
-    int j;
-    float m = 0;
-    float outputAvg = 0;
+    float outputAvg = 0; // current value
 
+    // average the months to year
     for(i=0; i<12; i++){
-      outputAvg += outputVar[i][0];
-      outputAvg /= 12; //[year][layer]
+      outputAvg += outputVar[i][loopLayer];
     }
-    m = 1+j;
-    m = 2/m;
-    outputVarAvg[1][0] = (m * outputAvg + (1-m) * outputVarAvg[1][0]); //SXW.SWAbulk_forb_avg[year][layer]
-    //printf("\nSWAbulk_forb_avg[1][0] = %f(%f)\n\n", outputVarAvg[1][0], outputAvg);
-    //printf("\nSWAbulk_forb_avg[1][0] = %f\n\n", outputVarAvg[1][0]);
+    outputAvg /= 12;
+    outputVarAvg[loopYear][loopLayer] += outputAvg; //[year][layer]
+
+    //printf("outputAvg: %f\n", outputAvg);
 }
 
 // store soilwat values in a csv

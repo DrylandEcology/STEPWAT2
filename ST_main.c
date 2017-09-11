@@ -140,6 +140,7 @@ int main(int argc, char **argv) {
   IntS year, iter, incr, g, s;
 	IndivType *i;
 	Bool killedany;
+  int k;
 
 	logged = FALSE;
 	atexit(check_log);
@@ -215,33 +216,17 @@ int main(int argc, char **argv) {
 			if (BmassFlags.yearly)
 				output_Bmass_Yearly(year);
 
-      //stat_Average_SOILWAT_vars(SXW.SWAbulk_forb, SXW.SWAbulk_forb_avg); // need to make this work
+      // getting average over all iterations  (currently works but only implemented for SXW.SWAbulk_forb currently)
+      if(!isPartialSoilwatOutput){
+        for(k=0; k<SXW.NSoLyrs; k++){
+          stat_Average_SOILWAT_vars(SXW.SWAbulk_forb, SXW.SWAbulk_forb_avg, year, k); // need to make this work
+        }
+      }
 
        // Moved kill annual and kill extra growth after we export biomass, and recovery of biomass after fire before the next year
 			_kill_annuals();
 			 proportion_Recovery();
 			_kill_extra_growth();
-
-      /* ####################################################################################
-      * this is the basic algorithm for getting the average over multiple iterations
-      * will not remain here, will be moved into a function but this is just a testing phase
-      * ################################################################################## */
-        /*int i;
-        float m = 0;
-        float swaAvg = 0;
-
-        if(year == 1){
-          for(i=0; i<12; i++){
-            swaAvg += SXW.SWAbulk_forb[i][0];
-          }
-          swaAvg /= 12; //[year][layer]
-          m = 1+iter;
-          m = 2/m;
-          SXW.SWAbulk_forb_avg[year][0] = (m * swaAvg + (1-m) * SXW.SWAbulk_forb_avg[year][0]); //[year][layer]
-          //printf("\nSWAbulk_forb_avg[1][0] = %f\n\n", SXW.SWAbulk_forb_avg[year][0]);
-        }*/
-      // ######################################################################################
-      //printf("SXW.transp_SWA[%d] = %f\n", year, SXW.transp_SWA[year]);
 		} /* end model run for this year*/
 
 		if (MortFlags.summary) {
@@ -260,7 +245,7 @@ int main(int argc, char **argv) {
           if(Globals.currIter != Globals.runModelIterations)
             SXW_Reset();
 			}
-      printf("SXW.transp_SWA[1][0] sagebrush: %f\n", SXW.transp_SWA[1][0]);
+      /*printf("SXW.transp_SWA[1][0] sagebrush: %f\n", SXW.transp_SWA[1][0]);
       printf("SXW.transp_SWA[1][1] a.cool.forb: %f\n", SXW.transp_SWA[1][1]);
       printf("SXW.transp_SWA[1][2] a.warm.forb: %f\n", SXW.transp_SWA[1][2]);
       printf("SXW.transp_SWA[1][3] p.cool.forb: %f\n", SXW.transp_SWA[1][3]);
@@ -269,7 +254,8 @@ int main(int argc, char **argv) {
       printf("SXW.transp_SWA[1][6] p.cool.grass: %f\n", SXW.transp_SWA[1][6]);
       printf("SXW.transp_SWA[1][7] p.warm.grass: %f\n", SXW.transp_SWA[1][7]);
       printf("SXW.transp_SWA[1][8] shrub: %f\n", SXW.transp_SWA[1][8]);
-      printf("SXW.transp_SWA[1][9] succulents: %f\n\n", SXW.transp_SWA[1][9]);
+      printf("SXW.transp_SWA[1][9] succulents: %f\n\n", SXW.transp_SWA[1][9]);*/
+      //printf("\n\n\nSWAbulk_forb[1][0] = %f\n\n", SXW.SWAbulk_forb[1][0]);
 	} /* end model run for this iteration*/
 
 	/*------------------------------------------------------*/
@@ -278,7 +264,7 @@ int main(int argc, char **argv) {
 	if (BmassFlags.summary)
 		stat_Output_AllBmass();
 
-  //printf("\n\n\nSWAbulk_forb_avg[1][0] = %f\n\n", SXW.SWAbulk_forb_avg[1][0]);
+  //printf("\n\n\nSWAbulk_forb_avg[1][0] = %f\n\n", SXW.SWAbulk_forb_avg[1][0]/Globals.runModelIterations);
 
 
 #ifdef STEPWAT
@@ -390,7 +376,7 @@ static void init_args(int argc, char **argv) {
    */
   char str[1024],
        *opts[]  = {"-d","-f","-q","-s","-e", "-p", "-g", "-o", "-i"};  /* valid options */
-  int valopts[] = {  1,   1,   0,  -1,   0,    0 ,   0, 0, 0};  /* indicates options with values */
+  int valopts[] = {  1,   1,   0,  -1,   0,    0,    0,   0,   0};  /* indicates options with values */
                  /* 0=none, 1=required, -1=optional */
   int i, /* looper through all cmdline arguments */
       a, /* current valid argument-value position */
@@ -508,7 +494,7 @@ static void init_args(int argc, char **argv) {
       isPartialSoilwatOutput = FALSE;
 			break; /* -o    also get all the soilwat output*/
 
-    case 8:
+    case 8: // -i
       printf("storing SOILWAT output for all iterations\n");
       storeAllIterations = TRUE;
       break;
