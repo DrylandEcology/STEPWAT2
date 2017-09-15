@@ -49,7 +49,7 @@
   void stat_Output_YrMorts( void ) ;
   void stat_Output_AllMorts( void) ;
   void stat_Output_AllBmass(void) ;
-  void stat_Average_SOILWAT_vars(float outputVar[366][25], float outputVarAvg[366][25], int loopYear, int loopLayer) ;
+  void stat_Average_SOILWAT_vars(float *outputVar, float *outputVarAvg, int loopYear, int loopLayer) ;
 
   //adding below function for adding modified soilwat output at stepwat location
   void stat_Output_AllSoilwatVariables(void);
@@ -1465,26 +1465,28 @@ static void _make_header_for_soilwat(char *buf, char *header1, char *header2, in
 
 }
 
-void stat_Average_SOILWAT_vars(float outputVar[366][25], float outputVarAvg[366][25], int loopYear, int loopLayer){
+//                                   regular structure         average structure          year          layer
+void stat_Average_SOILWAT_vars(float *outputVar, float *outputVarAvg, int loopYear, int loopLayer){
   // need to average all of the variables outlined in the outsetup file
     int i;
     float outputAvg = 0; // current value
-
     // average the months to year
     for(i=0; i<12; i++){
-      outputAvg += outputVar[i][loopLayer];
+      //outputAvg += outputVar[i][loopLayer];
+      ///outputAvg += outputVar[Ilp(loopLayer,i)];
+      //if(loopYear == 1)printf("outputVar[Ilp(%d,%d)]: %f\n", loopLayer, i, SXW.transpTotal[Ilp(loopLayer,i)]);
     }
-    outputAvg /= 12;
-    outputVarAvg[loopYear][loopLayer] += outputAvg; //[year][layer]
+    ///outputAvg /= 12;
+    //outputVarAvg[loopYear][loopLayer] += outputAvg; //[year][layer]
+    ///outputVarAvg[Ilp(loopLayer,loopYear)] += outputAvg; //[year][layer]
 
-    //printf("outputAvg: %f\n", outputAvg);
+    ///printf("outputAvg: %f\n", outputAvg);
 }
 
 // store soilwat values in a csv
 // TODO: need to clean up this function... too many commented out blobs and ugly/hard to read
 void stat_Output_AllSoilwatVariables(void)
 {
-	//printf("inside stat_Output_AllSoilwatVariables \n");
 	char buf[2048], tbuf[80], PPTbuf[2048], sep = BmassFlags.sep;
 	IntS yr;
   int curYearInt;

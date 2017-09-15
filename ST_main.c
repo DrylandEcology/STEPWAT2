@@ -219,7 +219,16 @@ int main(int argc, char **argv) {
       // getting average over all iterations  (currently works but only implemented for SXW.SWAbulk_forb currently)
       if(!isPartialSoilwatOutput){
         for(k=0; k<SXW.NSoLyrs; k++){
-          stat_Average_SOILWAT_vars(SXW.SWAbulk_forb, SXW.SWAbulk_forb_avg, year, k); // need to make this work
+          /*stat_Average_SOILWAT_vars(SXW.SWAbulk_forb, SXW.SWAbulk_forb_avg, year, k); // need to make this work
+          stat_Average_SOILWAT_vars(SXW.SWAbulk_tree, SXW.SWAbulk_tree_avg, year, k);
+          stat_Average_SOILWAT_vars(SXW.SWAbulk_grass, SXW.SWAbulk_grass_avg, year, k);
+          stat_Average_SOILWAT_vars(SXW.SWAbulk_shrub, SXW.SWAbulk_shrub_avg, year, k);*/
+          //printf("transpTotal: %f\n", SXW.transpTotal[Ilp(year,1)]);
+          stat_Average_SOILWAT_vars(SXW.transpTotal, SXW.transpTotal_avg, year, k);
+          //stat_Average_SOILWAT_vars(SXW.transpTrees, SXW.transpTrees_avg, year, k);
+          //stat_Average_SOILWAT_vars(SXW.transpShrubs, SXW.transpShrubs_avg, year, k);
+          //stat_Average_SOILWAT_vars(SXW.transpForbs, SXW.transpForbs_avg, year, k);
+          //stat_Average_SOILWAT_vars(SXW.transpGrasses, SXW.transpGrasses_avg, year, k);
         }
       }
 
