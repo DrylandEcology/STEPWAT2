@@ -44,25 +44,24 @@ Other tasks:
 >   -g : use gridded mode
 ```
 
-* Run the gridded version (-g) of STEPWAT2 using SOILWAT2 to drive the water cycle (-s)
-  and save all SOILWAT2 output (-o):
+* Run the gridded version (-g) of STEPWAT2 using SOILWAT2 to drive the water cycle (-s):
 
 ```
 cd testing.sagebrush.master/
-./stepwat -f files.in -g -s -o ../sw_src/testing/files_step_soilwat_grid.in
+./stepwat -f files.in -g -s
 ```
 
 
 * Run the non-gridded version of STEPWAT2 from the Stepwat_Inputs/ folder using SOILWAT2
-  to drive the water cycle (-s) but not save any SOILWAT2 output:
+  to drive the water cycle (-s):
 
 ```
 cd testing.sagebrush.master/Stepwat_Inputs/
-./stepwat -f files.in -s ../../sw_src/testing/files_step_soilwat.in
+./stepwat -f files.in -s
 ```
 
 
-* Run the basic version of STEPWAT2
+* Run STEPPE (no SOILWAT2)
 
 ```
 cd testing.sagebrush.master/Stepwat_Inputs/
