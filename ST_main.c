@@ -32,7 +32,7 @@
 #endif
 
 extern Bool isPartialSoilwatOutput;
-extern Bool storeAllIterations;
+//extern Bool storeAllIterations;
 
 /************* External Function Declarations **************/
 /***********************************************************/
@@ -148,7 +148,7 @@ int main(int argc, char **argv) {
 	 * was logged.  see generic.h */
 
   isPartialSoilwatOutput = TRUE; // dont want to get soilwat output unless -o flag
-  storeAllIterations = FALSE; // dont want to store all soilwat output iterations unless -i flag
+  //storeAllIterations = FALSE; // dont want to store all soilwat output iterations unless -i flag
 
 	init_args(argc, argv); // if -o flag then well set isPartialSoilwatOutput to FALSE and get output
 
@@ -503,10 +503,10 @@ static void init_args(int argc, char **argv) {
       isPartialSoilwatOutput = FALSE;
 			break; /* -o    also get all the soilwat output*/
 
-    case 8: // -i
+    /*case 8: // -i
       printf("storing SOILWAT output for all iterations\n");
       storeAllIterations = TRUE;
-      break;
+      break;*/
 
 		default:
 			LogError(logfp, LOGFATAL,
