@@ -248,7 +248,7 @@ int main(int argc, char **argv) {
 
 		if (UseSoilwat)
 			{
-		     	stat_Output_AllSoilwatVariables();
+		     	//stat_Output_AllSoilwatVariables();
           // dont need to restart if last iteration finished
           // this keeps it from re-writing the output folder and overwriting output files
           if(Globals.currIter != Globals.runModelIterations)
@@ -273,11 +273,14 @@ int main(int argc, char **argv) {
 	if (BmassFlags.summary)
 		stat_Output_AllBmass();
 
-  //printf("\n\n\nSWAbulk_forb_avg[1][0] = %f\n\n", SXW.SWAbulk_forb_avg[1][0]/Globals.runModelIterations);
+  //printf("\n\n\nSWAbulk_forb_avg[0][7] = %f\n\n", SXW.SWAbulk_forb_avg[0][7]/Globals.runModelIterations);
 
 
 #ifdef STEPWAT
-			if (!isnull(SXW.debugfile) ) SXW_PrintDebug(1);
+			if (!isnull(SXW.debugfile)){
+        printf("entering debugfile\n");
+        SXW_PrintDebug(1);
+      }
 #endif
 
   printf("\nend program\n");

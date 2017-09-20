@@ -900,6 +900,12 @@ static void _make_transp_arrays(void) {
 	SXW.transpShrubs = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
 	SXW.transpForbs = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
 	SXW.transpGrasses = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
+
+  /*SXW.transpTotal_avg = (float *) Mem_Calloc(size, sizeof(float), fstr);
+	SXW.transpTrees_avg = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
+	SXW.transpShrubs_avg = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
+	SXW.transpForbs_avg = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
+	SXW.transpGrasses_avg = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);*/
 }
 
 
@@ -1001,6 +1007,7 @@ static void _read_debugfile(void) {
 }
 
 void debugCleanUp() {
+  printf("in debugCleanUp\n");
 	disconnect();
 }
 
@@ -1240,16 +1247,41 @@ int getNTranspLayers(int veg_prod_type) {
 /***********************************************************/
 void free_all_sxw_memory( void ) {
 	free_sxw_memory();
+  Mem_Free(SXW.f_files);
 	Mem_Free(SXW.f_roots);
 	Mem_Free(SXW.f_phen);
 	Mem_Free(SXW.f_bvt);
 	Mem_Free(SXW.f_prod);
 	Mem_Free(SXW.f_watin);
+
 	Mem_Free(SXW.transpTotal);
 	Mem_Free(SXW.transpTrees);
 	Mem_Free(SXW.transpShrubs);
 	Mem_Free(SXW.transpForbs);
 	Mem_Free(SXW.transpGrasses);
+  /*Mem_Free(SXW.transpTotal_avg);
+	Mem_Free(SXW.transpTrees_avg);
+	Mem_Free(SXW.transpShrubs_avg);
+	Mem_Free(SXW.transpForbs_avg);
+	Mem_Free(SXW.transpGrasses_avg);
+
+  Mem_Free(SXW.SWAbulk_grass);
+  Mem_Free(SXW.SWAbulk_shrub);
+  Mem_Free(SXW.SWAbulk_tree);
+  Mem_Free(SXW.SWAbulk_forb);
+  Mem_Free(SXW.SWAbulk_grass_avg);
+  Mem_Free(SXW.SWAbulk_shrub_avg);
+  Mem_Free(SXW.SWAbulk_tree_avg);
+  Mem_Free(SXW.SWAbulk_forb_avg);
+
+  Mem_Free(SXW.SWCbulk);
+  Mem_Free(SXW.SWCoriginal);
+  Mem_Free(SXW.transp_SWA);
+
+  Mem_Free(SXW.PPTVal);
+  Mem_Free(SXW.PPT_day);
+  Mem_Free(SXW.PPT_week);
+  Mem_Free(SXW.PPT_month);*/
 	if (SXW.debugfile || UseGrid) Mem_Free(SXW.swc);
 }
 

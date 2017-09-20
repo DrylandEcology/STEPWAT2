@@ -36,11 +36,12 @@ struct stepwat_st {
   RealD *transpShrubs;
   RealD *transpForbs;
   RealD *transpGrasses;
-  RealD *transpTotal_avg; /* points to dynamic array indexed by Ilp() */
-  RealD *transpTrees_avg;
-  RealD *transpShrubs_avg;
-  RealD *transpForbs_avg;
-  RealD *transpGrasses_avg;
+
+  float transpTotal_avg[366][25], /* points to dynamic array indexed by Ilp() */
+    transpTrees_avg[366][25],
+    transpShrubs_avg[366][25],
+    transpForbs_avg[366][25],
+    transpGrasses_avg[366][25];
 
   RealF  temp,   /* soilwat's MAT */
          ppt;    /* soilwat's MAP */
