@@ -223,7 +223,7 @@ static RealF _add_annuals(const GrpIndex rg, const SppIndex sp, const RealF last
     ( (sizeof(x) == sizeof(float)) \
   ? ((x)>-xF_DELTA && (x)<xF_DELTA) \
   : ((x)>-xD_DELTA && (x)<xD_DELTA) )
-    IntU i;
+    IntU i, num_est;
     RealF x,
     newsize, sumsize;
     GroupType *g;
@@ -256,12 +256,14 @@ static RealF _add_annuals(const GrpIndex rg, const SppIndex sp, const RealF last
            printf("lastyear_relsize=%0.5f \n", lastyear_relsize);
            
            //???????????????????????????????//////////////////
-            newsize = x * lastyear_relsize;
+            newsize = x * s->seedling_estab_prob;
+           
                        //???????????????????????????????//////////////////
             printf("newsize   =%0.5f \n", newsize);
         }
+         num_est = (IntU) newsize; 
     }
-    return newsize;
+    return num_est;
 }
 
 static RealF _get_annual_maxestab(SppIndex sp) {
