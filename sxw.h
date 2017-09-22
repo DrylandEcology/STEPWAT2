@@ -37,7 +37,7 @@ struct stepwat_st {
   RealD *transpForbs;
   RealD *transpGrasses;
 
-  float transpTotal_avg[366][25], /* points to dynamic array indexed by Ilp() */
+  float transpTotal_avg[366][25],
     transpTrees_avg[366][25],
     transpShrubs_avg[366][25],
     transpForbs_avg[366][25],
@@ -88,6 +88,11 @@ struct stepwat_st {
         SWAbulk_shrub_avg[MAX_YEARS][25],
         SWAbulk_tree_avg[MAX_YEARS][25],
         SWAbulk_forb_avg[MAX_YEARS][25];
+
+  float tempMax_avg, // 2D array to store SWA vals ([days of year][number of max layers])
+        tempMin_avg,
+        tempAvgAir_avg,
+        tempSoilSurfaceTemp_avg;
 
   RealF transp_SWA[MAX_YEARS][11]; // store the sum of SWA and transp for each year and resource. transp_SWA[year][steppe_resource_group]
 

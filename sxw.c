@@ -1259,7 +1259,7 @@ void free_all_sxw_memory( void ) {
 	Mem_Free(SXW.transpShrubs);
 	Mem_Free(SXW.transpForbs);
 	Mem_Free(SXW.transpGrasses);
-  /*Mem_Free(SXW.transpTotal_avg);
+  Mem_Free(SXW.transpTotal_avg);
 	Mem_Free(SXW.transpTrees_avg);
 	Mem_Free(SXW.transpShrubs_avg);
 	Mem_Free(SXW.transpForbs_avg);
@@ -1281,7 +1281,7 @@ void free_all_sxw_memory( void ) {
   Mem_Free(SXW.PPTVal);
   Mem_Free(SXW.PPT_day);
   Mem_Free(SXW.PPT_week);
-  Mem_Free(SXW.PPT_month);*/
+  Mem_Free(SXW.PPT_month);
 	if (SXW.debugfile || UseGrid) Mem_Free(SXW.swc);
 }
 

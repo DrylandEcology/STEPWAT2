@@ -216,22 +216,6 @@ int main(int argc, char **argv) {
 			if (BmassFlags.yearly)
 				output_Bmass_Yearly(year);
 
-      // getting average over all iterations  (currently works but only implemented for SXW.SWAbulk_forb currently)
-      if(!isPartialSoilwatOutput){
-        for(k=0; k<SXW.NSoLyrs; k++){
-          /*stat_Average_SOILWAT_vars(SXW.SWAbulk_forb, SXW.SWAbulk_forb_avg, year, k); // need to make this work
-          stat_Average_SOILWAT_vars(SXW.SWAbulk_tree, SXW.SWAbulk_tree_avg, year, k);
-          stat_Average_SOILWAT_vars(SXW.SWAbulk_grass, SXW.SWAbulk_grass_avg, year, k);
-          stat_Average_SOILWAT_vars(SXW.SWAbulk_shrub, SXW.SWAbulk_shrub_avg, year, k);*/
-          //printf("transpTotal: %f\n", SXW.transpTotal[Ilp(year,1)]);
-          stat_Average_SOILWAT_vars(SXW.transpTotal, SXW.transpTotal_avg, year, k);
-          //stat_Average_SOILWAT_vars(SXW.transpTrees, SXW.transpTrees_avg, year, k);
-          //stat_Average_SOILWAT_vars(SXW.transpShrubs, SXW.transpShrubs_avg, year, k);
-          //stat_Average_SOILWAT_vars(SXW.transpForbs, SXW.transpForbs_avg, year, k);
-          //stat_Average_SOILWAT_vars(SXW.transpGrasses, SXW.transpGrasses_avg, year, k);
-        }
-      }
-
        // Moved kill annual and kill extra growth after we export biomass, and recovery of biomass after fire before the next year
 			_kill_annuals();
 			 proportion_Recovery();
@@ -254,17 +238,6 @@ int main(int argc, char **argv) {
           if(Globals.currIter != Globals.runModelIterations)
             SXW_Reset();
 			}
-      /*printf("SXW.transp_SWA[1][0] sagebrush: %f\n", SXW.transp_SWA[1][0]);
-      printf("SXW.transp_SWA[1][1] a.cool.forb: %f\n", SXW.transp_SWA[1][1]);
-      printf("SXW.transp_SWA[1][2] a.warm.forb: %f\n", SXW.transp_SWA[1][2]);
-      printf("SXW.transp_SWA[1][3] p.cool.forb: %f\n", SXW.transp_SWA[1][3]);
-      printf("SXW.transp_SWA[1][4] p.warm.forb: %f\n", SXW.transp_SWA[1][4]);
-      printf("SXW.transp_SWA[1][5] a.cool.grass: %f\n", SXW.transp_SWA[1][5]);
-      printf("SXW.transp_SWA[1][6] p.cool.grass: %f\n", SXW.transp_SWA[1][6]);
-      printf("SXW.transp_SWA[1][7] p.warm.grass: %f\n", SXW.transp_SWA[1][7]);
-      printf("SXW.transp_SWA[1][8] shrub: %f\n", SXW.transp_SWA[1][8]);
-      printf("SXW.transp_SWA[1][9] succulents: %f\n\n", SXW.transp_SWA[1][9]);*/
-      //printf("\n\n\nSWAbulk_forb[1][0] = %f\n\n", SXW.SWAbulk_forb[1][0]);
 	} /* end model run for this iteration*/
 
 	/*------------------------------------------------------*/
@@ -272,9 +245,6 @@ int main(int argc, char **argv) {
 		stat_Output_AllMorts();
 	if (BmassFlags.summary)
 		stat_Output_AllBmass();
-
-  //printf("\n\n\nSWAbulk_forb_avg[0][7] = %f\n\n", SXW.SWAbulk_forb_avg[0][7]/Globals.runModelIterations);
-
 
 #ifdef STEPWAT
 			if (!isnull(SXW.debugfile)){
