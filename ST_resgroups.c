@@ -247,22 +247,23 @@ static RealF _add_annuals(const GrpIndex rg, const SppIndex sp, const RealF last
         printf("g->regen_ok: %d  , x = %.5f %\n", g->regen_ok, x);
     }
 
-    if (GT(x, 0.)) {
-        if (ZERO(lastyear_relsize)) {
-            newsize = RandUniRange(1, x);
-            printf("newsize   =%0.5f \n", newsize);
-        }
-        else {
-           printf("lastyear_relsize=%0.5f \n", lastyear_relsize);
+    if (GT(x, 0.)) 
+       {
+       // if (ZERO(lastyear_relsize)) {
+        //    newsize = RandUniRange(1, x);
+        //    printf("newsize   =%0.5f \n", newsize);
+       // }
+       // else {
+         //  printf("lastyear_relsize=%0.5f \n", lastyear_relsize);
            
            //???????????????????????????????//////////////////
             newsize = x * s->seedling_estab_prob;
            
                        //???????????????????????????????//////////////////
             printf("newsize   =%0.5f \n", newsize);
-        }
-         num_est = (IntU) newsize; 
-    }
+      //  }
+             num_est = (IntU) newsize; 
+       }
     return num_est;
 }
 
