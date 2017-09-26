@@ -149,6 +149,7 @@ static void _write_sw_outin(void);
 static void _read_debugfile(void);
 void _print_debuginfo(void);
 void debugCleanUp(void);
+static void _make_swa_array(void);
 static void _make_swc_array(void);
 static void SXW_SW_Setup_Echo(void);
 //static void SXW_SW_Output_Echo(void);
@@ -845,6 +846,7 @@ static void _make_arrays(void) {
 	_make_phen_arrays();
 	_make_prod_arrays();
 	_make_transp_arrays();
+  _make_swa_array();
 	if (SXW.debugfile || UseGrid)
 		_make_swc_array();
 }
@@ -901,13 +903,28 @@ static void _make_transp_arrays(void) {
 	SXW.transpForbs = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
 	SXW.transpGrasses = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
 
-  /*SXW.transpTotal_avg = (float *) Mem_Calloc(size, sizeof(float), fstr);
+  SXW.transpTotal_avg = (RealD *) Mem_Calloc(size, sizeof(float), fstr);
 	SXW.transpTrees_avg = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
 	SXW.transpShrubs_avg = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
 	SXW.transpForbs_avg = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
-	SXW.transpGrasses_avg = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);*/
+	SXW.transpGrasses_avg = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
+
+  //SXW.transp_SWA = (RealF *) Mem_Calloc(size, sizeof(RealD), fstr);
 }
 
+static void _make_swa_array(void){
+  char *fstr = "_make_swa_array()";
+	int size = SXW.NPds * SXW.NSoLyrs;
+
+  SXW.SWAbulk_grass = (RealF *) Mem_Calloc(size, sizeof(RealF *), fstr);
+  SXW.SWAbulk_shrub = (RealF *) Mem_Calloc(size, sizeof(RealF *), fstr);
+  SXW.SWAbulk_tree = (RealF *) Mem_Calloc(size, sizeof(RealF *), fstr);
+  SXW.SWAbulk_forb = (RealF *) Mem_Calloc(size, sizeof(RealF *), fstr);
+  SXW.SWAbulk_grass_avg = (RealF *) Mem_Calloc(size, sizeof(RealF *), fstr);
+  SXW.SWAbulk_shrub_avg = (RealF *) Mem_Calloc(size, sizeof(RealF *), fstr);
+  SXW.SWAbulk_tree_avg = (RealF *) Mem_Calloc(size, sizeof(RealF *), fstr);
+  SXW.SWAbulk_forb_avg = (RealF *) Mem_Calloc(size, sizeof(RealF *), fstr);
+}
 
 static void _make_swc_array(void) {
 /*======================================================*/

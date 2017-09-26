@@ -37,11 +37,11 @@ struct stepwat_st {
   RealD *transpForbs;
   RealD *transpGrasses;
 
-  float transpTotal_avg[366][25],
-    transpTrees_avg[366][25],
-    transpShrubs_avg[366][25],
-    transpForbs_avg[366][25],
-    transpGrasses_avg[366][25];
+  RealD *transpTotal_avg,
+        *transpTrees_avg,
+        *transpShrubs_avg,
+        *transpForbs_avg,
+        *transpGrasses_avg;
 
   RealF  temp,   /* soilwat's MAT */
          ppt;    /* soilwat's MAP */
@@ -58,11 +58,6 @@ struct stepwat_st {
         *f_prod,   /* biomass to prod. conv. nos. */
         *f_watin;  /* soilwat's input file */
 
-  /* % Cover from prod.in */
-  /*float grass_cover,
-        shrub_cover,
-        tree_cover,
-        forbs_cover;*/
   RealD critSoilWater[4]; // storing values in same order as defined in rgroup.in (0=tree, 1=shrub, 2=grass, 3=forb)
 
   /* DEBUG stuff */
@@ -79,15 +74,14 @@ struct stepwat_st {
   RealF  PPT_week[500];
   RealF  PPT_month[500];
 
-  // store converted SWA values
-  float SWAbulk_grass[366][25], // 2D array to store SWA vals ([days of year][number of max layers])
-        SWAbulk_shrub[366][25],
-        SWAbulk_tree[366][25],
-        SWAbulk_forb[366][25],
-        SWAbulk_grass_avg[MAX_YEARS][25], // 2D array to store SWA vals ([days of year][number of max layers])
-        SWAbulk_shrub_avg[MAX_YEARS][25],
-        SWAbulk_tree_avg[MAX_YEARS][25],
-        SWAbulk_forb_avg[MAX_YEARS][25];
+  RealF *SWAbulk_grass, // 2D array to store SWA vals ([days of year][number of max layers])
+        *SWAbulk_shrub,
+        *SWAbulk_tree,
+        *SWAbulk_forb,
+        *SWAbulk_grass_avg, // 2D array to store SWA vals ([days of year][number of max layers])
+        *SWAbulk_shrub_avg,
+        *SWAbulk_tree_avg,
+        *SWAbulk_forb_avg;
 
   float tempMax_avg, // 2D array to store SWA vals ([days of year][number of max layers])
         tempMin_avg,
@@ -95,7 +89,6 @@ struct stepwat_st {
         tempSoilSurfaceTemp_avg;
 
   RealF transp_SWA[MAX_YEARS][11]; // store the sum of SWA and transp for each year and resource. transp_SWA[year][steppe_resource_group]
-
 
   // 2D array to store 4 critical values per layer
   float SWCbulk[4][8]; // TODO: first value needs to be (number of layers * plant types) - not hardcoded

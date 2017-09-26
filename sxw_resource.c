@@ -126,7 +126,9 @@ void _sxw_update_resource(void) {
   GrpIndex g;
   SppIndex sp;
   int i;
-  int currentYear = SW_Model.year-SW_Model.startyr;
+  int currentYear;
+  if(SW_Model.year == 0) currentYear = 0;
+  else currentYear = SW_Model.year - SW_Model.startyr;
 
   #ifdef SXW_BYMAXSIZE
     ForEachGroup(g) {
@@ -235,7 +237,9 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
 	SppIndex s;
 	TimeInt p;
 	LyrIndex l;
-  int currentYear = SW_Model.year-SW_Model.startyr;
+  int currentYear;
+  if(SW_Model.year == 0) currentYear = 0;
+  else currentYear = SW_Model.year - SW_Model.startyr;
 	int t,i;
 	RealD *transp;
 	RealF sumUsedByGroup = 0., sumTranspTotal = 0., TranspRemaining = 0.;
@@ -273,7 +277,7 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
 			}
 		}
 		sumUsedByGroup += use_by_group[g];
-    SXW.transp_SWA[currentYear][g] += sumUsedByGroup; //SXW.transp_SWA[currentYear][resource_group]
+    SXW.transp_SWA[currentYear][g] += sumUsedByGroup;
 	}
   //SXW.transp_SWA[currentYear][t-1] += sumUsedByGroup;
   //printf("SXW.transp_SWA[%d] = %f\n", currentYear, SXW.transp_SWA[currentYear]);
@@ -299,7 +303,9 @@ static void _SWA_contribution_by_group(RealF use_by_group[]) {
 	SppIndex s;
 	TimeInt p;
 	LyrIndex l;
-  int currentYear = SW_Model.year-SW_Model.startyr;
+  int currentYear;
+  if(SW_Model.year == 0) currentYear = 0;
+  else currentYear = SW_Model.year - SW_Model.startyr;
 	int t,i;
   float swaNew[366][25];
 	RealF sumUsedByGroup = 0., sumSWATotal = 0., SWARemaining = 0.;
