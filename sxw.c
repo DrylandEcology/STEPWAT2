@@ -903,7 +903,7 @@ static void _make_transp_arrays(void) {
 	SXW.transpForbs = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
 	SXW.transpGrasses = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
 
-  SXW.transpTotal_avg = (RealD *) Mem_Calloc(size, sizeof(float), fstr);
+  SXW.transpTotal_avg = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
 	SXW.transpTrees_avg = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
 	SXW.transpShrubs_avg = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
 	SXW.transpForbs_avg = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
