@@ -847,7 +847,7 @@ static void _make_arrays(void) {
 	_make_prod_arrays();
 	_make_transp_arrays();
   _make_swa_array();
-	if (SXW.debugfile || UseGrid)
+	//if (SXW.debugfile || UseGrid)
 		_make_swc_array();
 }
 
@@ -1299,7 +1299,8 @@ void free_all_sxw_memory( void ) {
   Mem_Free(SXW.PPT_day);
   Mem_Free(SXW.PPT_week);
   Mem_Free(SXW.PPT_month);
-	if (SXW.debugfile || UseGrid) Mem_Free(SXW.swc);
+	//if (SXW.debugfile || UseGrid)
+  Mem_Free(SXW.swc);
 }
 
 /***********************************************************/

@@ -74,6 +74,12 @@ struct stepwat_st {
   RealF  PPT_week[500];
   RealF  PPT_month[500];
 
+  RealF PPT_sum,
+        PPT_rain,
+        PPT_snow_fall,
+        PPT_snow_melt,
+        PPT_snow_loss;
+
   RealF *SWAbulk_grass, // 2D array to store SWA vals ([days of year][number of max layers])
         *SWAbulk_shrub,
         *SWAbulk_tree,
@@ -83,7 +89,7 @@ struct stepwat_st {
         *SWAbulk_tree_avg,
         *SWAbulk_forb_avg;
 
-  float tempMax_avg, // 2D array to store SWA vals ([days of year][number of max layers])
+  float tempMax_avg,
         tempMin_avg,
         tempAvgAir_avg,
         tempSoilSurfaceTemp_avg;
