@@ -89,6 +89,9 @@ struct stepwat_st {
         *SWAbulk_tree_avg,
         *SWAbulk_forb_avg;
 
+  RealF *SWA_master, // 3D array
+        *dSWAbulk;
+
   float tempMax_avg,
         tempMin_avg,
         tempAvgAir_avg,

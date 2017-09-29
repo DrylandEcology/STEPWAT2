@@ -189,7 +189,7 @@ void _sxw_update_root_tables( RealF sizes[] ) {
 			{
 				x = _rootsXphen[Iglp(g, l, p)] * sizes[g];
 				_roots_active[Iglp(g, l, p)] = x;
-				_roots_active_sum[Itlp(t,l, p)] += x;
+				_roots_active_sum[Itlp(t, l, p)] += x;
 			}
 		}
 	}
@@ -303,35 +303,35 @@ static void _SWA_contribution_by_group(RealF use_by_group[]) {
   if(SW_Model.year == 0) currentYear = 0;
   else currentYear = SW_Model.year - SW_Model.startyr;
 	int t,i;
-  RealF *swaNew;
+  //RealF *swaNew;
 	RealF sumUsedByGroup = 0., sumSWATotal = 0., SWARemaining = 0.;
 
 	ForEachGroup(g) // steppe functional group
 	{
 		use_by_group[g] = 0.; // clear
 		t = RGroup[g]->veg_prod_type-1;
-		switch(t)
+		/*switch(t)
     {
   		case 0://Tree
-        swaNew = SXW.SWAbulk_tree;
+        //swaNew = SXW.SWAbulk_tree;
   			break;
 
   		case 1://Shrub
-        swaNew = SXW.SWAbulk_shrub;
+        //swaNew = SXW.SWAbulk_shrub;
   			break;
 
   		case 2://Grass
-        swaNew = SXW.SWAbulk_grass;
+        //swaNew = SXW.SWAbulk_grass;
   			break;
 
   		case 3://Forb
-        swaNew = SXW.SWAbulk_forb;
+        //swaNew = SXW.SWAbulk_forb;
         break;
-		}
+		}*/
 		ForEachTrPeriod(p)
 		{
 			for (l = 0; l < SXW.NSoLyrs; l++) {
-				use_by_group[g] += (RealF) (_roots_active_rel[Iglp(g, l, p)] * swaNew[Ilp(l, p)]); //min_res_req is space parameter
+				use_by_group[g] += (RealF) (_roots_active_rel[Iglp(g, l, p)] * SXW.SWA_master[Itlp(t,l,p)]); //min_res_req is space parameter
 			}
 		}
 		sumUsedByGroup += use_by_group[g];
