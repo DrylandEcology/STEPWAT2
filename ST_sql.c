@@ -87,7 +87,7 @@ static void prepareStatements() {
 
 	sprintf(sql, "INSERT INTO RGroupsYearInfo (Year, Iteration, RGroupID, Estabs, KillYr, YrsNegPR, mmExtraRes, ResRequired, ResAvail, ResExtra, PR, RelSize, EstSppCount, Extirpated, RegenOk) VALUES (@Year, @Iteration, @RGroupID, @Estabs, @KillYr, @YrsNegPR, @mmExtraRes, @ResRequired, @ResAvail, @ResExtra, @PR, @RelSize, @EstSppCount, @Extirpated, @RegenOk);");
 	sqlite3_prepare_v2(db, sql, 1024, &stmt_RGroupsYearInfo, NULL);
-
+        
 	sprintf(sql, "INSERT INTO SpeciesYearInfo (Year, Iteration, SpeciesID, EstabCount, Estabs, RelSize, ExtraGrowth, ReceivedProb, AllowGrowth, sdSGerm) VALUES (@Year, @Iteration, @SpeciesID, @EstabCount, @Estabs, @RelSize, @ExtraGrowth, @ReceivedProb, @AllowGrowth, @sdSGerm);");
 	sqlite3_prepare_v2(db, sql, 1024, &stmt_SpeciesYearInfo, NULL);
 
@@ -221,7 +221,7 @@ static void insertRgroups(void) {
 	{
 		rg = RGroup[g];
 		sql[0] = 0;
-		sprintf(sql, "INSERT INTO RGroups (RGroupID, NAME, MaxStretch, MaxSppEstab, MaxSpp, MaxAge, StartYr, KillFreq, Extirp, GrpNum, VegProdType, MinResReq, MaxDensity, MaxPerSqm, MaxBmass, XGrow, SlowRate, PptSlope1, PptSlope2, PptSlope3, PptIntcpt1, PptIntcpt2, PptIntcpt3, Succulent, UseExtraRes, UseMe, UseMort, EstAnnually, DepthClassID) VALUES (%d, '%s', %d, %d, %d, %d, %d, %d, %d, %d, %d, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %d, %d, %d, %d, %d, %d);", g+1, rg->name, rg->max_stretch, rg->max_spp_estab, rg->max_spp, rg->max_age, rg->startyr, rg->killfreq, rg->extirp, rg->grp_num, rg->veg_prod_type, rg->min_res_req, rg->max_density, rg->max_per_sqm, rg->max_bmass, rg->xgrow, rg->slowrate, rg->ppt_slope[0], rg->ppt_slope[1], rg->ppt_slope[2], rg->ppt_intcpt[0], rg->ppt_intcpt[1], rg->ppt_intcpt[2], rg->succulent, rg->use_extra_res, rg->use_me, rg->use_mort, rg->est_annually, rg->depth);
+		sprintf(sql, "INSERT INTO RGroups (RGroupID, NAME, MaxStretch, MaxSppEstab, MaxSpp, MaxAge, StartYr, KillFreq, Extirp, GrpNum, VegProdType, MinResReq, MaxDensity, MaxPerSqm, MaxBmass, XGrow, SlowRate, PptSlope1, PptSlope2, PptSlope3, PptIntcpt1, PptIntcpt2, PptIntcpt3, Succulent, UseExtraRes, UseMe, UseMort, EstAnnually, DepthClassID) VALUES (%d, '%s', %d, %d, %d, %d, %d, %f, %d, %d, %d, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %d, %d, %d, %d, %d, %d);", g+1, rg->name, rg->max_stretch, rg->max_spp_estab, rg->max_spp, rg->max_age, rg->startyr, rg->killfreq, rg->extirp, rg->grp_num, rg->veg_prod_type, rg->min_res_req, rg->max_density, rg->max_per_sqm, rg->max_bmass, rg->xgrow, rg->slowrate, rg->ppt_slope[0], rg->ppt_slope[1], rg->ppt_slope[2], rg->ppt_intcpt[0], rg->ppt_intcpt[1], rg->ppt_intcpt[2], rg->succulent, rg->use_extra_res, rg->use_me, rg->use_mort, rg->est_annually, rg->depth);
 		rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
 		sqlcheck(rc, zErrMsg);
 	}

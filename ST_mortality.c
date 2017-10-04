@@ -196,16 +196,13 @@ void mort_EndOfYear( void)
 	//printf("inside mort_EndOfYear() \n");
 	GrpIndex rg;
 	GroupType *g;
-        RealF fire_possibility;
+        RealF fire_possibility,y;
         RealF x_cheatgrass = Species[g->cheatgrass_index]->relsize * Species[g->cheatgrass_index]->mature_biomass; // calculate biomass of cheatgrass
-        
+        y = RandUni();
         
 
        //printf("[Rui] x_cheatgrass: %f\n",x_cheatgrass);
-        if (g->killfreq == 0)
-                    { 
-                         fire_possibility = 0;
-                    }
+
         if (x_cheatgrass < g->ignition)
                     {
                        fire_possibility = 1.0 / Globals.runModelYears;
@@ -213,9 +210,13 @@ void mort_EndOfYear( void)
                       
                     } 
         /* don't ignite wild fire based on cheatgrass until the cheatgrass could reach the ignition value */
-                    if (x_cheatgrass > g->ignition){
+                    if (x_cheatgrass >= g->ignition){
                         fire_possibility = g->cheatgrass_coefficient + g->wild_fire_slope * x_cheatgrass;
                         }
+                    if (g->ignition = 0)
+                       {
+                       fire_possibility = 0; 
+                       } 
                     if GT (g->killfreq, fire_possibility)
                     { 
                          fire_possibility = g->killfreq;
@@ -241,7 +242,7 @@ void mort_EndOfYear( void)
                     {
 			if (LT(fire_possibility, 1.0))
 			{
-				if (RandUni() <= fire_possibility)
+				if (y <= fire_possibility)
 				{
 					g->killyr = Globals.currYear;
 				}
@@ -250,6 +251,7 @@ void mort_EndOfYear( void)
 			{
 				g->killyr = Globals.currYear;
 			}
+                         printf("[Rui] g->killyr: %d\n",g->killyr); 
 
                     }
 

@@ -1057,6 +1057,7 @@ static void _rgroup_add1( char name[], RealF space, RealF density,
   RGroup[rg]->est_annually  = itob(estann);
   RGroup[rg]->startyr       = styr;
   RGroup[rg]->xgrow         = xgro;
+  RGroup[rg]->use_me        = itob(turnon);
   RGroup[rg]->veg_prod_type = veg_prod_type;
   
 }
