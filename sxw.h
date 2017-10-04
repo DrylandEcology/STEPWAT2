@@ -92,6 +92,8 @@ struct stepwat_st {
   RealF *SWA_master, // 3D array
         *dSWAbulk;
 
+  int rank_SWPcrits[5]; // array to store the SWP crits in order of lest negative to most negative (used in sxw_resource)
+
   float tempMax_avg,
         tempMin_avg,
         tempAvgAir_avg,
@@ -105,6 +107,11 @@ struct stepwat_st {
 
   int curInterval;
   int tempInt;
+
+  int col_status_dy;
+  int col_status_wk;
+  int col_status_mo;
+  int col_status_yr;
 
 };
 

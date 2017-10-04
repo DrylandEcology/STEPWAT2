@@ -303,31 +303,69 @@ static void _SWA_contribution_by_group(RealF use_by_group[]) {
   if(SW_Model.year == 0) currentYear = 0;
   else currentYear = SW_Model.year - SW_Model.startyr;
 	int t,i;
-  //RealF *swaNew;
 	RealF sumUsedByGroup = 0., sumSWATotal = 0., SWARemaining = 0.;
+
+  /*
+  ##############################################################################
+  new needs to be done only 1 time
+  move to location where stuff is only executed on first run and first iteration
+  ##############################################################################
+  */
+  int j;
+  float key;
+  RealF tempArray[4];
+  tempArray[0] = SXW.critSoilWater[0];
+  tempArray[1] = SXW.critSoilWater[1];
+  tempArray[2] = SXW.critSoilWater[2];
+  tempArray[3] = SXW.critSoilWater[3];
+
+  //printf("tempArray[1]%f\n", tempArray[1]);
+  //printf("tempArray[2]%f\n", tempArray[2]);
+  /*printf("%f\n", tempArray[0]);
+  printf("%f\n", tempArray[1]);
+  printf("%f\n", tempArray[2]);
+  printf("%f\n\n", tempArray[3]);*/
+
+  // --------------------------------------------------------------------------
+  // insertion sort to rank the veg types and store them in their proper order
+  for (i = 1; i < 4; i++)
+   {
+       key = tempArray[i];
+       j = i-1;
+       while (j >= 0 && tempArray[j] < key)
+       {
+           tempArray[j+1] = tempArray[j];
+           SXW.rank_SWPcrits[j+2] = j;
+           //printf("j: %d\n", j);
+           j = j-1;
+       }
+       tempArray[j+1] = key;
+       SXW.rank_SWPcrits[j+2] = i;
+       //printf("i: %d\n", i);
+   }
+
+  //printf("%d\n", SXW.rank_SWPcrits[0]);
+  /*printf("%d = %f\n", SXW.rank_SWPcrits[1], tempArray[0]);
+  printf("%d = %f\n", SXW.rank_SWPcrits[2], tempArray[1]);
+  printf("%d = %f\n", SXW.rank_SWPcrits[3], tempArray[2]);
+  printf("%d = %f\n\n", SXW.rank_SWPcrits[4], tempArray[3]);*/
+
+  /*printf("%f\n", tempArray[0]);
+  printf("%f\n", tempArray[1]);
+  printf("%f\n", tempArray[2]);
+  printf("%f\n\n", tempArray[3]);*/
+  // --------------------------------------------------------------------------
+  /*
+  ##############################################################################
+  end of stuff that only needs to be done once
+  ##############################################################################
+  */
 
 	ForEachGroup(g) // steppe functional group
 	{
 		use_by_group[g] = 0.; // clear
 		t = RGroup[g]->veg_prod_type-1;
-		/*switch(t)
-    {
-  		case 0://Tree
-        //swaNew = SXW.SWAbulk_tree;
-  			break;
 
-  		case 1://Shrub
-        //swaNew = SXW.SWAbulk_shrub;
-  			break;
-
-  		case 2://Grass
-        //swaNew = SXW.SWAbulk_grass;
-  			break;
-
-  		case 3://Forb
-        //swaNew = SXW.SWAbulk_forb;
-        break;
-		}*/
 		ForEachTrPeriod(p)
 		{
 			for (l = 0; l < SXW.NSoLyrs; l++) {
