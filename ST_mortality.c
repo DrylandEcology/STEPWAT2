@@ -198,34 +198,34 @@ void mort_EndOfYear( void)
 	GroupType *g;
         RealF fire_possibility,y;
         RealF x_cheatgrass = Species[g->cheatgrass_index]->relsize * Species[g->cheatgrass_index]->mature_biomass; // calculate biomass of cheatgrass
-        y = RandUni();
+        y = RandUni(); /* Set a random number outide of the loop to make sure the kill probability for each functional group is same */
         
-
+        
        //printf("[Rui] x_cheatgrass: %f\n",x_cheatgrass);
 
         if (x_cheatgrass < g->ignition)
                     {
-                       fire_possibility = 1.0 / Globals.runModelYears;
-                     
-                      
+                       fire_possibility = 1.0 / Globals.runModelYears;  
                     } 
         /* don't ignite wild fire based on cheatgrass until the cheatgrass could reach the ignition value */
-                    if (x_cheatgrass >= g->ignition){
+        if (x_cheatgrass >= g->ignition)
+                    {
                         fire_possibility = g->cheatgrass_coefficient + g->wild_fire_slope * x_cheatgrass;
-                        }
-                    if (g->ignition = 0)
-                       {
+                    }
+       if (g->ignition = 0)
+                    {
                        fire_possibility = 0; 
-                       } 
-                    if GT (g->killfreq, fire_possibility)
+                     } 
+        if GT (g->killfreq, fire_possibility)
                     { 
                          fire_possibility = g->killfreq;
                     }
                      
           /*  if the input prescribed fire value < 1; wild fire and prescribed fire happen at the same time, 
-           * while if the input prescribed fire value >1, only prescribed fire happens */
+           * while if the input prescribed fire value >1, only prescribed fire happens
+           * if the  input prescribed fire value=0 && ignition =0 no fire happened */
      
-          printf("[Rui] fire_possibility: %f\n",fire_possibility); 
+         // printf("[Rui] fire_possibility: %f\n",fire_possibility); 
          
 	ForEachGroup(rg)
 	{
@@ -251,7 +251,7 @@ void mort_EndOfYear( void)
 			{
 				g->killyr = Globals.currYear;
 			}
-                         printf("[Rui] g->killyr: %d\n",g->killyr); 
+                        // printf("[Rui] g->killyr: %d\n",g->killyr); 
 
                     }
 
