@@ -93,9 +93,12 @@ struct species_st {
         *seedprod;    /* annuals: array of previous years' seed production (size = viable_yrs)*/
   RealF relsize,       /* size of all indivs' relsize (>= 0) */
   lastyear_relsize,    /* relsize from the previous year, used for annual establishment */
-        
+  
         extragrowth,   /* amt of superfluous growth from extra resources */
 	received_prob;	//the chance that this species received seeds this year... only applicable if using seed dispersal and gridded option
+ float alpha,    /*  the first parameter of the beta distribution for establishment.*/
+        beta;   /*  the second parameter of the beta distribution for establishment.*/
+        
   struct indiv_st *IndvHead;    /* facility for linked list 8/3/01; top of list */
   Bool allow_growth, //whether to allow growth this year... only applicable if using seed dispersal and gridded option
 	sd_sgerm;	//whether seeds where produced/received and germinated this year... only applicable if using seed dispersal and gridded option
