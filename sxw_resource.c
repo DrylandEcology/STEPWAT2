@@ -277,7 +277,7 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
 		sumUsedByGroup += use_by_group[g];
     SXW.transp_SWA[currentYear][g] += sumUsedByGroup;
 	}
-  // TODO: if redo upper part, can remove bottom part
+
 	//Occasionally, extra transpiration remains and if not perfectly partitioned to RGroups.
 	//This check makes sure any remaining transpiration is divided proportionately among Rgroups.
 	ForEachTrPeriod(p)
@@ -296,70 +296,15 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
 
 static void _SWA_contribution_by_group(RealF use_by_group[]) {
 	GrpIndex g;
-	SppIndex s;
 	TimeInt p;
 	LyrIndex l;
   int currentYear;
   if(SW_Model.year == 0) currentYear = 0;
   else currentYear = SW_Model.year - SW_Model.startyr;
-	int t,i;
+	int t,kv,id_prev_veg;
 	RealF sumUsedByGroup = 0., sumSWATotal = 0., SWARemaining = 0.;
 
-  /*
-  ##############################################################################
-  new needs to be done only 1 time
-  move to location where stuff is only executed on first run and first iteration
-  ##############################################################################
-  */
-  int j;
-  float key;
-  RealF tempArray[4];
-  tempArray[0] = SXW.critSoilWater[0];
-  tempArray[1] = SXW.critSoilWater[1];
-  tempArray[2] = SXW.critSoilWater[2];
-  tempArray[3] = SXW.critSoilWater[3];
-
-  //printf("tempArray[1]%f\n", tempArray[1]);
-  //printf("tempArray[2]%f\n", tempArray[2]);
-  /*printf("%f\n", tempArray[0]);
-  printf("%f\n", tempArray[1]);
-  printf("%f\n", tempArray[2]);
-  printf("%f\n\n", tempArray[3]);*/
-
-  // --------------------------------------------------------------------------
-  // insertion sort to rank the veg types and store them in their proper order
-  for (i = 1; i < 4; i++)
-   {
-       key = tempArray[i];
-       j = i-1;
-       while (j >= 0 && tempArray[j] < key)
-       {
-           tempArray[j+1] = tempArray[j];
-           SXW.rank_SWPcrits[j+2] = j;
-           //printf("j: %d\n", j);
-           j = j-1;
-       }
-       tempArray[j+1] = key;
-       SXW.rank_SWPcrits[j+2] = i;
-       //printf("i: %d\n", i);
-   }
-
-  //printf("%d\n", SXW.rank_SWPcrits[0]);
-  /*printf("%d = %f\n", SXW.rank_SWPcrits[1], tempArray[0]);
-  printf("%d = %f\n", SXW.rank_SWPcrits[2], tempArray[1]);
-  printf("%d = %f\n", SXW.rank_SWPcrits[3], tempArray[2]);
-  printf("%d = %f\n\n", SXW.rank_SWPcrits[4], tempArray[3]);*/
-
-  /*printf("%f\n", tempArray[0]);
-  printf("%f\n", tempArray[1]);
-  printf("%f\n", tempArray[2]);
-  printf("%f\n\n", tempArray[3]);*/
-  // --------------------------------------------------------------------------
-  /*
-  ##############################################################################
-  end of stuff that only needs to be done once
-  ##############################################################################
-  */
+  int index_sw_veg_types[4] = {1, 2, 3, 4}; // temp array for veg_types (need to find actual array where this info is stored)
 
 	ForEachGroup(g) // steppe functional group
 	{
@@ -368,7 +313,17 @@ static void _SWA_contribution_by_group(RealF use_by_group[]) {
 
 		ForEachTrPeriod(p)
 		{
+
 			for (l = 0; l < SXW.NSoLyrs; l++) {
+        // loop to get dSWAbulk
+        for(kv=0; kv<4; kv++){
+          id_prev_veg = SXW.rank_SWPcrits[kv+1]; // get prev veg type
+          SXW.dSWAbulk[Iglp(kv,l,p)] = SXW.SWA_master[Itlp(kv,p,l)]-SXW.SWA_master[Itlp(id_prev_veg,p,l)]; //Itlp(veg_type, timeperiod, layer)
+
+          //printf("SXW.SWA_master[Itlp(%d,%d,%d)]: %f || SXW.SWA_master[Itlp(%d,%d,%d)]: %f\n",
+          //kv, p, l, SXW.SWA_master[Itlp(kv,p,l)], id_prev_veg, p, l, SXW.SWA_master[Itlp(id_prev_veg,p,l)]);
+          //printf("SXW.dSWAbulk[Iglp(kv,l,p)]: %f\n", SXW.dSWAbulk[Iglp(kv,l,p)]);
+        }
 				use_by_group[g] += (RealF) (_roots_active_rel[Iglp(g, l, p)] * SXW.SWA_master[Itlp(t,l,p)]); //min_res_req is space parameter
 			}
 		}

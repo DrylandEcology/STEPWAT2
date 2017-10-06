@@ -104,10 +104,8 @@ struct stepwat_st {
   // 2D array to store 4 critical values per layer
   float SWCbulk[4][8]; // TODO: first value needs to be (number of layers * plant types) - not hardcoded
   float SWCoriginal[500][8]; // storing SWC values here instead of in *swc since that does not have enough storage for more than month timestep
-
-  int curInterval;
-  int tempInt;
-
+  
+  // used in SW_Output.c for creating column headers
   int col_status_dy;
   int col_status_wk;
   int col_status_mo;

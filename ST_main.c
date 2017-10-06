@@ -168,6 +168,49 @@ int main(int argc, char **argv) {
 	if (incr == 0)
 		incr = 1;
 
+  /*----------------------------------------------------------
+    Get proper order for rank_SWPcrits
+  ----------------------------------------------------------*/
+  int outerLoop, innerLoop;
+  float key;
+  RealF tempArray[4];
+  tempArray[0] = SXW.critSoilWater[0];
+  tempArray[1] = SXW.critSoilWater[1];
+  tempArray[2] = SXW.critSoilWater[2];
+  tempArray[3] = SXW.critSoilWater[3];
+
+  /*printf("%f\n", tempArray[0]);
+  printf("%f\n", tempArray[1]);
+  printf("%f\n", tempArray[2]);
+  printf("%f\n\n", tempArray[3]);*/
+
+  // insertion sort to rank the veg types and store them in their proper order
+  for (outerLoop = 1; outerLoop < 4; outerLoop++)
+   {
+       key = tempArray[outerLoop];
+       innerLoop = outerLoop-1;
+       while (innerLoop >= 0 && tempArray[innerLoop] < key)
+       {
+           tempArray[innerLoop+1] = tempArray[innerLoop];
+           SXW.rank_SWPcrits[innerLoop+2] = innerLoop;
+           //printf("innerLoop: %d\n", innerLoop);
+           innerLoop = innerLoop-1;
+       }
+       tempArray[innerLoop+1] = key;
+       SXW.rank_SWPcrits[innerLoop+2] = outerLoop;
+       //printf("outerLoop: %d\n", outerLoop);
+   }
+   SXW.rank_SWPcrits[0] = 0;
+
+   /*printf("%d = %f\n", SXW.rank_SWPcrits[1], tempArray[0]);
+   printf("%d = %f\n", SXW.rank_SWPcrits[2], tempArray[1]);
+   printf("%d = %f\n", SXW.rank_SWPcrits[3], tempArray[2]);
+   printf("%d = %f\n\n", SXW.rank_SWPcrits[4], tempArray[3]);*/
+
+   /*----------------------------------------------------------
+     End of rank_SWPcrits
+   ----------------------------------------------------------*/
+
 	/* --- Begin a new iteration ------ */
 	for (iter = 1; iter <= Globals.runModelIterations; iter++) {
 		if (progfp == stderr) {
