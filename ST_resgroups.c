@@ -446,6 +446,8 @@ void rgroup_ResPartIndiv(void)
 
 	GrpIndex rg;
 	GroupType *g; /* shorthand for RGroup[rg] */
+	SppIndex sp;
+	Int j; 
 	IndivType **indivs, /* dynamic array of indivs in RGroup[rg] */
 	*ndv; /* shorthand for the current indiv */
 	IntS numindvs, n;
@@ -469,23 +471,37 @@ void rgroup_ResPartIndiv(void)
 		/*      amount of extra, if any, is kept in g->res_extra      */
 		/*    base_rem = fmin(1, g->res_avail);  */
 		base_rem = g->res_avail;
-		for (n = 0; n < numindvs; n++)
+		
+		ForEachEstSpp(sp, rg, j)
 		{
-			ndv = indivs[n];
+		
+			for (n = 0; n < numindvs; n++)
+			{
+				ndv = indivs[n];
 
-			ndv->res_required = (ndv->relsize / g->max_spp) / g->estabs;
-			if (GT(g->pr, 1.))
-			{
+				ndv->res_required = (ndv->relsize * Species [sp]->mature_biomass);
+				printf("ndv->res_required = %f\n, Species = %s \n", Species[sp]->name, ndv->res_required);
+
+				if (GT(g->pr, 1.))
+				{
 				ndv->res_avail = fmin(ndv->res_required, base_rem);
+				printf("ndv->res_avail_pr>1 = %f\n", ndv->res_avail);
+
 				base_rem = fmax(base_rem - ndv->res_avail, 0.);
-			}
-			else
-			{
+				printf("base_rem pr>1 = %f\n", base_rem);
+
+				}
+				
+				else
+				{
 				ndv->res_avail = ndv->grp_res_prop * g->res_avail;
+				printf("ndv->res_avail pr <1 = %f\n", ndv->res_avail);
+
+				}
 			}
 		}
-
 		base_rem += fmin(0, g->res_avail - 1.0);
+        printf("base_rem end = %f\n", base_rem);
 
 		/* --- compute PR, but on the way, assign extra resource */
 		for (n = 0; n < numindvs; n++)
@@ -509,9 +525,9 @@ void rgroup_ResPartIndiv(void)
 			}
 
 			/* ---- at last!  compute the PR value, or dflt to 100  */
-			ndv->pr =
-					GT(ndv->res_avail, 0.) ?
-							ndv->res_required / ndv->res_avail : 100.;
+			ndv->pr = GT(ndv->res_avail, 0.) ? ndv->res_required / ndv->res_avail : 100.;
+			printf("ndv->pr  = %f\n", ndv->pr);
+
 		}
 
 		Mem_Free(indivs);
