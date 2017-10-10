@@ -301,10 +301,8 @@ static void _SWA_contribution_by_group(RealF use_by_group[]) {
   int currentYear;
   if(SW_Model.year == 0) currentYear = 0;
   else currentYear = SW_Model.year - SW_Model.startyr;
-	int t,kv,id_prev_veg;
+	int t;
 	RealF sumUsedByGroup = 0., sumSWATotal = 0., SWARemaining = 0.;
-
-  int index_sw_veg_types[4] = {1, 2, 3, 4}; // temp array for veg_types (need to find actual array where this info is stored)
 
 	ForEachGroup(g) // steppe functional group
 	{
@@ -313,17 +311,7 @@ static void _SWA_contribution_by_group(RealF use_by_group[]) {
 
 		ForEachTrPeriod(p)
 		{
-
 			for (l = 0; l < SXW.NSoLyrs; l++) {
-        // loop to get dSWAbulk
-        for(kv=0; kv<4; kv++){
-          id_prev_veg = SXW.rank_SWPcrits[kv+1]; // get prev veg type
-          SXW.dSWAbulk[Iglp(kv,l,p)] = SXW.SWA_master[Itlp(kv,p,l)]-SXW.SWA_master[Itlp(id_prev_veg,p,l)]; //Itlp(veg_type, timeperiod, layer)
-
-          //printf("SXW.SWA_master[Itlp(%d,%d,%d)]: %f || SXW.SWA_master[Itlp(%d,%d,%d)]: %f\n",
-          //kv, p, l, SXW.SWA_master[Itlp(kv,p,l)], id_prev_veg, p, l, SXW.SWA_master[Itlp(id_prev_veg,p,l)]);
-          //printf("SXW.dSWAbulk[Iglp(kv,l,p)]: %f\n", SXW.dSWAbulk[Iglp(kv,l,p)]);
-        }
 				use_by_group[g] += (RealF) (_roots_active_rel[Iglp(g, l, p)] * SXW.SWA_master[Itlp(t,l,p)]); //min_res_req is space parameter
 			}
 		}

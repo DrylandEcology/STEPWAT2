@@ -150,7 +150,7 @@ int main(int argc, char **argv) {
   isPartialSoilwatOutput = TRUE; // dont want to get soilwat output unless -o flag
   storeAllIterations = FALSE; // dont want to store all soilwat output iterations unless -i flag
 
-	init_args(argc, argv); // if -o flag then well set isPartialSoilwatOutput to FALSE and get output
+	init_args(argc, argv); // read input arguments and intialize proper flags
 
 	printf("STEPWAT  init_args() executed successfully \n ");
 
@@ -179,6 +179,7 @@ int main(int argc, char **argv) {
   tempArray[2] = SXW.critSoilWater[2];
   tempArray[3] = SXW.critSoilWater[3];
 
+  // printing for testing purposes
   /*printf("%f\n", tempArray[0]);
   printf("%f\n", tempArray[1]);
   printf("%f\n", tempArray[2]);
@@ -191,17 +192,16 @@ int main(int argc, char **argv) {
        innerLoop = outerLoop-1;
        while (innerLoop >= 0 && tempArray[innerLoop] < key)
        {
-           tempArray[innerLoop+1] = tempArray[innerLoop];
-           SXW.rank_SWPcrits[innerLoop+2] = innerLoop;
-           //printf("innerLoop: %d\n", innerLoop);
-           innerLoop = innerLoop-1;
+         // code to switch values
+         SXW.rank_SWPcrits[innerLoop+2] = innerLoop;
+         innerLoop = innerLoop-1;
        }
        tempArray[innerLoop+1] = key;
        SXW.rank_SWPcrits[innerLoop+2] = outerLoop;
-       //printf("outerLoop: %d\n", outerLoop);
    }
-   SXW.rank_SWPcrits[0] = 0;
+   SXW.rank_SWPcrits[0] = 0; // setting to 0 since that is was equation calls for
 
+   // printing for testing purposes
    /*printf("%d = %f\n", SXW.rank_SWPcrits[1], tempArray[0]);
    printf("%d = %f\n", SXW.rank_SWPcrits[2], tempArray[1]);
    printf("%d = %f\n", SXW.rank_SWPcrits[3], tempArray[2]);
@@ -220,7 +220,7 @@ int main(int argc, char **argv) {
 			fprintf(progfp, "%d\n", iter);
 		}
 
-    // set these to 0 for use with -i flag
+    // set these to 0 for use with -i flag (need to create column headers for every iteration file)
     SXW.col_status_dy = 0;
     SXW.col_status_wk = 0;
     SXW.col_status_mo = 0;
@@ -233,7 +233,7 @@ int main(int argc, char **argv) {
 		RandSeed(Globals.randseed);
 		Globals.currIter = iter;
 
-    memset(SXW.transp_SWA,0,sizeof(SXW.transp_SWA));
+    memset(SXW.transp_SWA,0,sizeof(SXW.transp_SWA)); // set transp_SWA to 0; needs to be reset each iteration
 
 		/* ------  Begin running the model ------ */
 		for (year = 1; year <= Globals.runModelYears; year++) {
@@ -404,6 +404,7 @@ static void init_args(int argc, char **argv) {
    *         stderr.
    * 8/16/17 - BEB  Updated option for -o flag. Now if this flag is set the output files from
    *                files_v30.in are written to.
+   * 10/9/17 - BEB Added -i flag for writing SOILWAT output for every iteration
    */
   char str[1024],
        *opts[]  = {"-d","-f","-q","-s","-e", "-p", "-g", "-o", "-i"};  /* valid options */
@@ -536,10 +537,6 @@ static void init_args(int argc, char **argv) {
 		}
 
 		a++; /* move to next valid option-value position */
-    if(isPartialSoilwatOutput == FALSE && storeAllIterations){
-      printf("\n\ncant use both -i and -o flags\n\n");
-      break;
-    }
 
 	} /* end for(i) */
 
