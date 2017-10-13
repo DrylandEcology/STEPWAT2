@@ -89,8 +89,8 @@ struct stepwat_st {
         *SWAbulk_tree_avg,
         *SWAbulk_forb_avg;
 
-  RealF *SWA_master, // 3D array
-        *dSWAbulk;
+  RealF *SWA_master, // 3D array to store SWA for all veg_types
+        *dSWAbulk; // store actual available SWA
 
   int rank_SWPcrits[5]; // array to store the SWP crits in order of lest negative to most negative (used in sxw_resource)
 
@@ -104,7 +104,7 @@ struct stepwat_st {
   // 2D array to store 4 critical values per layer
   float SWCbulk[4][8]; // TODO: first value needs to be (number of layers * plant types) - not hardcoded
   float SWCoriginal[500][8]; // storing SWC values here instead of in *swc since that does not have enough storage for more than month timestep
-  
+
   // used in SW_Output.c for creating column headers
   int col_status_dy;
   int col_status_wk;
@@ -130,6 +130,11 @@ typedef struct stepwat_st SXW_t;
  * veg-prod-type/layer/phenology
  */
 #define Itlp(t,l,p) (((t)*SXW.NTrLyrs*SXW.NPds) + ((l)*SXW.NPds) + (p))
+
+/* convert 4-d index to actual array index for
+ * veg-prod-type/crit-value/layer/phenology
+ */
+#define Itclp(t,c,l,p) (((t)*SXW.NTrLyrs*SXW.NPds) + ((c)*4) + ((l)*SXW.NPds) + (p)) // c*4 is because there are 4 critical values
 
 /* convert 2d layer by period indices to
   layer/phenology 1D index */
