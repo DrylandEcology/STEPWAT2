@@ -56,6 +56,7 @@ static void _extra_growth(GrpIndex rg);
 static void _add_annual_seedprod(SppIndex sp, RealF lastyear_relsize);
 static RealF _get_annual_maxestab(SppIndex sp);
 static RealF _add_annuals(const GrpIndex rg, const SppIndex sp, const RealF lastyear_relsize);
+float genbet ( float aa, float bb );
 
 /****************** Begin Function Code ********************/
 /***********************************************************/
@@ -209,7 +210,184 @@ void rgroup_PartResources(void)
 	rgroup_ResPartIndiv();
 
 }
+float genbet ( float aa, float bb )
 
+/******************************************************************************/
+/*
+  Purpose:
+
+    GENBET generates a beta random deviate.
+
+  Discussion:
+
+    This procedure returns a single random deviate from the beta distribution
+    with parameters A and B.  The density is
+
+      x^(a-1) * (1-x)^(b-1) / Beta(a,b) for 0 < x < 1
+  Parameters:
+
+    Input, float AA, the first parameter of the beta distribution.
+    0.0 < AA.
+
+    Input, float BB, the second parameter of the beta distribution.
+    0.0 < BB.
+
+    Output, float GENBET, a beta random variate.
+*/
+{
+  float a;
+  float alpha;
+  float b;
+  float beta;
+  float delta;
+  float gamma;
+  float k1;
+  float k2;
+  const float log4 = 1.3862943611198906188;
+  const float log5 = 1.6094379124341003746;
+  float r;
+  float s;
+  float t;
+  float u1;
+  float u2;
+  float v;
+  float value;
+  float w;
+  float y;
+  float z;
+
+  if ( aa <= 0.0 )
+  {
+    fprintf ( stderr, "\n" );
+    fprintf ( stderr, "GENBET - Fatal error!\n" );
+    fprintf ( stderr, "  AA <= 0.0\n" );
+    exit ( 1 );
+  }
+
+  if ( bb <= 0.0 ) 
+  {
+    fprintf ( stderr, "\n" );
+    fprintf ( stderr, "GENBET - Fatal error!\n" );
+    fprintf ( stderr, "  BB <= 0.0\n" );
+    exit ( 1 );
+  }
+/*
+  Algorithm BB
+*/
+  if ( 1.0 < aa && 1.0 < bb )
+  {
+    a = min ( aa, bb );
+    b = max ( aa, bb );
+    alpha = a + b;
+    beta = sqrt ( ( alpha - 2.0 ) / ( 2.0 * a * b - alpha ) );
+    gamma = a + 1.0 / beta;
+
+    for ( ; ; )
+    {
+      u1 = RandUni ( );
+      u2 = RandUni ( );
+      v = beta * log ( u1 / ( 1.0 - u1 ) );
+/*
+  exp ( v ) replaced by r4_exp ( v )
+*/
+      w = a * exp ( v );
+
+      z = u1 * u1 * u2;
+      r = gamma * v - log4;
+      s = a + r - w;
+
+      if ( 5.0 * z <= s + 1.0 + log5 )
+      {
+        break;
+      }
+
+      t = log ( z );
+      if ( t <= s )
+      {
+        break;
+      }
+
+      if ( t <= ( r + alpha * log ( alpha / ( b + w ) ) ) )
+      {
+        break;
+      }
+    }
+  }
+/*
+  Algorithm BC
+*/
+  else
+  {
+    a = max ( aa, bb );
+    b = min ( aa, bb );
+    alpha = a + b;
+    beta = 1.0 / b;
+    delta = 1.0 + a - b;
+    k1 = delta * ( 1.0 / 72.0 + b / 24.0 ) 
+      / ( a / b - 7.0 / 9.0 );
+    k2 = 0.25 + ( 0.5 + 0.25 / delta ) * b;
+
+    for ( ; ; )
+    {
+      u1 = RandUni ( );
+      u2 = RandUni ( );
+
+      if ( u1 < 0.5 )
+      {
+        y = u1 * u2;
+        z = u1 * y;
+
+        if ( k1 <= 0.25 * u2 + z - y )
+        {
+          continue;
+        }
+      }
+      else
+      {
+        z = u1 * u1 * u2;
+
+        if ( z <= 0.25 )
+        {
+          v = beta * log ( u1 / ( 1.0 - u1 ) );
+          w = a * exp ( v );
+
+          if ( aa == a )
+          {
+            value = w / ( b + w );
+          }
+          else
+          {
+            value = b / ( b + w );
+          }
+          return value;
+        }
+
+        if ( k2 < z )
+        {
+          continue;
+        }
+      }
+
+      v = beta * log ( u1 / ( 1.0 - u1 ) );
+      w = a * exp ( v );
+
+      if ( log ( z ) <= alpha * ( log ( alpha / ( b + w ) ) + v ) - log4 )
+      {
+        break;
+      }
+    }
+  }
+
+  if ( aa == a )
+  {
+    value = w / ( b + w );
+  }
+  else
+  {
+    value = b / ( b + w );
+  }
+  return value;
+}
 static RealF _add_annuals(const GrpIndex rg, const SppIndex sp, const RealF lastyear_relsize) {
     /*======================================================*/
     /* check regen_ok flag.  if true, apply establishment and
@@ -225,7 +403,8 @@ static RealF _add_annuals(const GrpIndex rg, const SppIndex sp, const RealF last
   : ((x)>-xD_DELTA && (x)<xD_DELTA) )
     IntU i, num_est;
     RealF x,
-    newsize, sumsize;
+    newsize, betaran;
+    float alpha, beta, var;
     GroupType *g;
     SpeciesType *s;
     Bool forced;
@@ -242,13 +421,15 @@ static RealF _add_annuals(const GrpIndex rg, const SppIndex sp, const RealF last
     forced = TRUE;
 
     x = 0.;
-    if (RandUni() <= s->seedling_estab_prob) {
+   // if (RandUni() <= s->seedling_estab_prob) {
         x = (g->regen_ok) ? _get_annual_maxestab(sp) : 0.;
-        printf("g->regen_ok: %d  , x = %.5f %\n", g->regen_ok, x);
-    }
+        //printf("g->regen_ok: %d  , x = %.5f %\n", g->regen_ok, x);
+    //}
 
     if (GT(x, 0.)) 
        {
+        /*Option1:newsize = x * s->seedling_estab_prob * betaran */
+              // betaran = genbet (2.0, 2.0);
        // if (ZERO(lastyear_relsize)) {
         //    newsize = RandUniRange(1, x);
         //    printf("newsize   =%0.5f \n", newsize);
@@ -257,13 +438,21 @@ static RealF _add_annuals(const GrpIndex rg, const SppIndex sp, const RealF last
          //  printf("lastyear_relsize=%0.5f \n", lastyear_relsize);
            
            //???????????????????????????????//////////////////
-            newsize = x * s->seedling_estab_prob;
+          //  newsize = x * s->seedling_estab_prob * betaran;
+            /*Option 1 done*/
            
                        //???????????????????????????????//////////////////
-            printf("newsize   =%0.5f \n", newsize);
+            /*Option 2*/
+           alpha = (pow (s->seedling_estab_prob, 2) - pow (s->seedling_estab_prob, 3) - s->seedling_estab_prob * s->var) / s->var;
+           beta = (s->seedling_estab_prob - pow (s->seedling_estab_prob, 3) - s->var + s->var * s->seedling_estab_prob)/ s->var;
+             var = genbet (alpha, beta);
+            newsize = x * var;
+             /*Option 2 done*/
       //  }
              num_est = (IntU) newsize; 
        }
+      else  if (LE(x, 0.)) {num_est = 0;}
+                printf("num_est   =%d \n", num_est);
     return num_est;
 }
 
@@ -292,23 +481,23 @@ static void _add_annual_seedprod(SppIndex sp, RealF lastyear_relsize) {
     //incrementing the number of viable years
     for (i = s->viable_yrs - 1; i > 0; i--) {
         if (i == 1 || i == 2) {
-            printf("Species name=%s , old Array values for index i=%u, value=%hu \n", s->name, i, s->seedprod[i]);
+            //printf("Species name=%s , old Array values for index i=%u, value=%hu \n", s->name, i, s->seedprod[i]);
         }
 
         s->seedprod[i] = s->seedprod[i - 1];
     }
 
-    printf("Species name=%s ,old Array array 0 index i=%u, value =%hu \n", s->name, i, s->seedprod[i]);
+   // printf("Species name=%s ,old Array array 0 index i=%u, value =%hu \n", s->name, i, s->seedprod[i]);
 
     //If the current year is year 1 of the simulation, then the number of seeds added is a random number draw between
     //1 and the maximum number of seedlings that can establish. Otherwise, this year's seed production is a function of the maximum 
     //number of seedlings that can establish and last year's species relative size.
     if (Globals.currYear == 1) {
         s->seedprod[i] = RandUniRange(1, s->max_seed_estab);
-        printf("Species name=%s ,currYear =1 so new calculated value s->seedprod[%u]= %hu , s->max_seed_estab =%hu\n", s->name, i, s->seedprod[i], s->max_seed_estab);
+       // printf("Species name=%s ,currYear =1 so new calculated value s->seedprod[%u]= %hu , s->max_seed_estab =%hu\n", s->name, i, s->seedprod[i], s->max_seed_estab);
     } else {
         s->seedprod[i] = (IntU)(s->max_seed_estab * lastyear_relsize);
-        printf("Species name=%s ,currYear=%hu  so new calculated value s->seedprod[%u]= %hu , s->max_seed_estab =%hu, lastyear_relsize=%.5f\n", s->name, Globals.currYear, i, s->seedprod[i], s->max_seed_estab, lastyear_relsize);
+       // printf("Species name=%s ,currYear=%hu  so new calculated value s->seedprod[%u]= %hu , s->max_seed_estab =%hu, lastyear_relsize=%.5f\n", s->name, Globals.currYear, i, s->seedprod[i], s->max_seed_estab, lastyear_relsize);
     }
 }
 
@@ -746,7 +935,7 @@ void rgroup_Establish(void) {
                     continue;
 
                 if (Species[sp]->max_age == 1) {
-                    printf("Globals.currYear = %hu, call to _add_annuals sp=%d Species[sp]->lastyear_relsize : %.5f \n", Globals.currYear, sp, Species[sp]->lastyear_relsize);
+                    //printf("Globals.currYear = %hu, call to _add_annuals sp=%d Species[sp]->lastyear_relsize : %.5f \n", Globals.currYear, sp, Species[sp]->lastyear_relsize);
                     num_est = _add_annuals(rg, sp, Species[sp]->lastyear_relsize);
                     printf("num_est for annuals=%hd \n",num_est);
                 }                    
