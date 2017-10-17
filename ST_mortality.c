@@ -225,7 +225,7 @@ void mort_EndOfYear( void)
            * while if the input prescribed fire value >1, only prescribed fire happens
            * if the  input prescribed fire value=0 && ignition =0 no fire happened */
      
-         // printf("[Rui] fire_possibility: %f\n",fire_possibility); 
+         printf("[Rui] fire_possibility: %f\n",fire_possibility); 
          
 	ForEachGroup(rg)
 	{
