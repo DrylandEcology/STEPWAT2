@@ -1586,9 +1586,9 @@ void stat_Output_AllSoilwatVariables(void)
 
       // loop for PPT
       // TODO: currently using year values since SOILWAT does not pass any values aside from year
-      for(currentMonth = 0; currentMonth < MAX_MONTHS; currentMonth++){
-        PPTlayerVals[currentMonth] = SXW.PPTVal[currentMonth];
-      }
+      //for(currentMonth = 0; currentMonth < MAX_MONTHS; currentMonth++){
+        //PPTlayerVals[currentMonth] = SXW.PPTVal[currentMonth];
+      //}
 
       //printf("layerVals[0]: %f\n", layerVals[0]);
       // write to file. this is reason set layers to MAX_LAYERS instead of layers actually used since it would be too hard to format the fprintf
@@ -1599,9 +1599,9 @@ void stat_Output_AllSoilwatVariables(void)
        layerVals[21]/12, layerVals[22]/12, layerVals[23]/12, layerVals[24]/12);
 
        // write PPT vals to csv
-      fprintf(PPTFILE, "%d,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f\n", yr, PPTlayerVals[0], PPTlayerVals[1], PPTlayerVals[2],
+      /*fprintf(PPTFILE, "%d,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f\n", yr, PPTlayerVals[0], PPTlayerVals[1], PPTlayerVals[2],
        PPTlayerVals[3], PPTlayerVals[4], PPTlayerVals[5], PPTlayerVals[6],PPTlayerVals[7], PPTlayerVals[8], PPTlayerVals[9],
-       PPTlayerVals[10], PPTlayerVals[11]);
+       PPTlayerVals[10], PPTlayerVals[11]);*/
   }
   // printing out values from the outsetup.in that SOILWAT reads in to ensure passing to STEPPE correctly
   /*printf("SXW.grass_cover: %f\n", SXW.grass_cover);

@@ -903,11 +903,11 @@ static void _make_transp_arrays(void) {
 	SXW.transpForbs = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
 	SXW.transpGrasses = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
 
-  SXW.transpTotal_avg = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
-	SXW.transpTrees_avg = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
-	SXW.transpShrubs_avg = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
-	SXW.transpForbs_avg = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
-	SXW.transpGrasses_avg = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
+  SXW.transpTotal_avg = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr);
+	SXW.transpTrees_avg = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr);
+	SXW.transpShrubs_avg = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr);
+	SXW.transpForbs_avg = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr);
+	SXW.transpGrasses_avg = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr);
 }
 
 static void _make_swa_array(void){
@@ -1302,10 +1302,10 @@ void free_all_sxw_memory( void ) {
   Mem_Free(SXW.SWCoriginal);
   Mem_Free(SXW.transp_SWA);
 
-  Mem_Free(SXW.PPTVal);
+  /*Mem_Free(SXW.PPTVal);
   Mem_Free(SXW.PPT_day);
   Mem_Free(SXW.PPT_week);
-  Mem_Free(SXW.PPT_month);
+  Mem_Free(SXW.PPT_month);*/
 	//if (SXW.debugfile || UseGrid)
   Mem_Free(SXW.swc);
 }

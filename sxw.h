@@ -69,10 +69,10 @@ struct stepwat_st {
   // PPT variables
   int    yearInterval; // keep track of years
   int    curMonth;
-  RealF  PPTVal[500]; // array to store ppt vals
+  /*RealF  PPTVal[500]; // array to store ppt vals
   RealF  PPT_day[500];
   RealF  PPT_week[500];
-  RealF  PPT_month[500];
+  RealF  PPT_month[500];*/
 
   RealF PPT_sum,
         PPT_rain,
