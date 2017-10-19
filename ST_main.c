@@ -94,6 +94,7 @@ static void usage(void) {
            "  -d : supply working directory (default=.)\n"
            "  -f : supply list of input files (default=files.in)\n"
            "  -q : quiet mode, don't print message to check logfile.\n"
+           "  -p : prints progress bar\n"
            "  -s : use SOILWAT model for resource partitioning.\n"
            "  -e : echo initialization results to logfile\n"
            "  -o : print all the soilwat output\n"
@@ -152,7 +153,7 @@ int main(int argc, char **argv) {
 
 	init_args(argc, argv); // read input arguments and intialize proper flags
 
-	printf("STEPWAT  init_args() executed successfully \n ");
+	printf("STEPWAT  init_args() executed successfully \n");
 
 	if (UseGrid == TRUE) {
 		runGrid();
@@ -188,7 +189,7 @@ int main(int argc, char **argv) {
   // insertion sort to rank the veg types and store them in their proper order
   for (outerLoop = 1; outerLoop < 4; outerLoop++)
    {
-       key = tempArray[outerLoop];
+       key = tempArray[outerLoop]; // set key equal to critical value
        innerLoop = outerLoop-1;
        while (innerLoop >= 0 && tempArray[innerLoop] < key)
        {
@@ -213,6 +214,7 @@ int main(int argc, char **argv) {
 
 	/* --- Begin a new iteration ------ */
 	for (iter = 1; iter <= Globals.runModelIterations; iter++) {
+    //printf("iter: %d\n", iter);
 		if (progfp == stderr) {
 			if (iter % incr == 0)
 				fprintf(progfp, ".");

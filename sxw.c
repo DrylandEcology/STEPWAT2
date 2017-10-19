@@ -226,7 +226,10 @@ void SXW_Init( Bool init_SW, char *f_roots ) {
 	  SXW.NTrLyrs = SW_Site.n_transp_lyrs_forb;
 
   SXW.NSoLyrs = SW_Site.n_layers;
+
   printf("Number of layers: %d\n", SW_Site.n_layers);
+  printf("Number of iterations: %d\n", Globals.runModelIterations);
+  printf("Number of years: %d\n", Globals.runModelYears);
 
   _make_arrays();
 
@@ -908,6 +911,13 @@ static void _make_transp_arrays(void) {
 	SXW.transpShrubs_avg = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr);
 	SXW.transpForbs_avg = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr);
 	SXW.transpGrasses_avg = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr);
+
+  // initialize values to 0
+  Mem_Set(SXW.transpTotal_avg, 0, SXW.NPds * SXW.NSoLyrs * sizeof(RealF));
+	Mem_Set(SXW.transpTrees_avg, 0, SXW.NPds * SXW.NSoLyrs * sizeof(RealF));
+	Mem_Set(SXW.transpShrubs_avg, 0, SXW.NPds * SXW.NSoLyrs * sizeof(RealF));
+	Mem_Set(SXW.transpForbs_avg, 0, SXW.NPds * SXW.NSoLyrs * sizeof(RealF));
+	Mem_Set(SXW.transpGrasses_avg, 0, SXW.NPds * SXW.NSoLyrs * sizeof(RealF));
 }
 
 static void _make_swa_array(void){
@@ -924,10 +934,22 @@ static void _make_swa_array(void){
   SXW.SWAbulk_tree_avg = (RealF *) Mem_Calloc(size, sizeof(RealF *), fstr);
   SXW.SWAbulk_forb_avg = (RealF *) Mem_Calloc(size, sizeof(RealF *), fstr);
 
+  Mem_Set(SXW.SWAbulk_grass, 0, SXW.NPds * SXW.NSoLyrs * sizeof(RealF));
+	Mem_Set(SXW.SWAbulk_shrub, 0, SXW.NPds * SXW.NSoLyrs * sizeof(RealF));
+	Mem_Set(SXW.SWAbulk_tree, 0, SXW.NPds * SXW.NSoLyrs * sizeof(RealF));
+	Mem_Set(SXW.SWAbulk_forb, 0, SXW.NPds * SXW.NSoLyrs * sizeof(RealF));
+  Mem_Set(SXW.SWAbulk_grass_avg, 0, SXW.NPds * SXW.NSoLyrs * sizeof(RealF));
+	Mem_Set(SXW.SWAbulk_shrub_avg, 0, SXW.NPds * SXW.NSoLyrs * sizeof(RealF));
+	Mem_Set(SXW.SWAbulk_tree_avg, 0, SXW.NPds * SXW.NSoLyrs * sizeof(RealF));
+	Mem_Set(SXW.SWAbulk_forb_avg, 0, SXW.NPds * SXW.NSoLyrs * sizeof(RealF));
+
   //4 - Grass,Frob,Tree,Shrub
   size = 4 * SXW.NPds * SXW.NSoLyrs;
   SXW.SWA_master = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr);
   SXW.dSWAbulk = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr);
+
+  //Mem_Set(SXW.SWA_master, 0, SXW.NPds * 4 * SXW.NSoLyrs * sizeof(RealF));
+  memset(SXW.SWA_master, 0, sizeof(SXW.SWA_master));
 }
 
 static void _make_swc_array(void) {
