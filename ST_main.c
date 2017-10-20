@@ -194,19 +194,29 @@ int main(int argc, char **argv) {
        while (innerLoop >= 0 && tempArray[innerLoop] < key)
        {
          // code to switch values
-         SXW.rank_SWPcrits[innerLoop+2] = innerLoop;
+         tempArray[innerLoop+1] = tempArray[innerLoop];
          innerLoop = innerLoop-1;
        }
        tempArray[innerLoop+1] = key;
-       SXW.rank_SWPcrits[innerLoop+2] = outerLoop;
    }
-   SXW.rank_SWPcrits[0] = 0; // setting to 0 since that is was equation calls for
+
+   // loops to compare sorted v unsorted array and find proper index
+   for(outerLoop = 0; outerLoop < 4; outerLoop++){
+     for(innerLoop = 0; innerLoop < 4; innerLoop++){
+       // compare sorted to unsorted and store index in rank_SWPcrits
+       if(SXW.critSoilWater[outerLoop] == tempArray[innerLoop]){
+         SXW.rank_SWPcrits[outerLoop] = innerLoop;
+         tempArray[innerLoop] = 100; // set value to something impossible so if a duplicate a different index is picked next
+         break;
+       }
+     }
+   }
 
    // printing for testing purposes
-   /*printf("%d = %f\n", SXW.rank_SWPcrits[1], tempArray[0]);
-   printf("%d = %f\n", SXW.rank_SWPcrits[2], tempArray[1]);
-   printf("%d = %f\n", SXW.rank_SWPcrits[3], tempArray[2]);
-   printf("%d = %f\n\n", SXW.rank_SWPcrits[4], tempArray[3]);*/
+   /*printf("%d = %f\n", SXW.rank_SWPcrits[0], SXW.critSoilWater[SXW.rank_SWPcrits[0]]);
+   printf("%d = %f\n", SXW.rank_SWPcrits[1], SXW.critSoilWater[SXW.rank_SWPcrits[1]]);
+   printf("%d = %f\n", SXW.rank_SWPcrits[2], SXW.critSoilWater[SXW.rank_SWPcrits[2]]);
+   printf("%d = %f\n\n", SXW.rank_SWPcrits[3], SXW.critSoilWater[SXW.rank_SWPcrits[3]]);*/
 
    /*----------------------------------------------------------
      End of rank_SWPcrits
