@@ -924,20 +924,11 @@ static void _make_swa_array(void){
   char *fstr = "_make_swa_array()";
 	int size = SXW.NPds * SXW.NSoLyrs;
 
-  SXW.SWAbulk_grass = (RealF *) Mem_Calloc(size, sizeof(RealF *), fstr);
-  SXW.SWAbulk_shrub = (RealF *) Mem_Calloc(size, sizeof(RealF *), fstr);
-  SXW.SWAbulk_tree = (RealF *) Mem_Calloc(size, sizeof(RealF *), fstr);
-  SXW.SWAbulk_forb = (RealF *) Mem_Calloc(size, sizeof(RealF *), fstr);
-
   SXW.SWAbulk_grass_avg = (RealF *) Mem_Calloc(size, sizeof(RealF *), fstr);
   SXW.SWAbulk_shrub_avg = (RealF *) Mem_Calloc(size, sizeof(RealF *), fstr);
   SXW.SWAbulk_tree_avg = (RealF *) Mem_Calloc(size, sizeof(RealF *), fstr);
   SXW.SWAbulk_forb_avg = (RealF *) Mem_Calloc(size, sizeof(RealF *), fstr);
 
-  Mem_Set(SXW.SWAbulk_grass, 0, SXW.NPds * SXW.NSoLyrs * sizeof(RealF));
-	Mem_Set(SXW.SWAbulk_shrub, 0, SXW.NPds * SXW.NSoLyrs * sizeof(RealF));
-	Mem_Set(SXW.SWAbulk_tree, 0, SXW.NPds * SXW.NSoLyrs * sizeof(RealF));
-	Mem_Set(SXW.SWAbulk_forb, 0, SXW.NPds * SXW.NSoLyrs * sizeof(RealF));
   Mem_Set(SXW.SWAbulk_grass_avg, 0, SXW.NPds * SXW.NSoLyrs * sizeof(RealF));
 	Mem_Set(SXW.SWAbulk_shrub_avg, 0, SXW.NPds * SXW.NSoLyrs * sizeof(RealF));
 	Mem_Set(SXW.SWAbulk_tree_avg, 0, SXW.NPds * SXW.NSoLyrs * sizeof(RealF));
@@ -1308,10 +1299,6 @@ void free_all_sxw_memory( void ) {
 	Mem_Free(SXW.transpForbs_avg);
 	Mem_Free(SXW.transpGrasses_avg);
 
-  Mem_Free(SXW.SWAbulk_grass);
-  Mem_Free(SXW.SWAbulk_shrub);
-  Mem_Free(SXW.SWAbulk_tree);
-  Mem_Free(SXW.SWAbulk_forb);
   Mem_Free(SXW.SWAbulk_grass_avg);
   Mem_Free(SXW.SWAbulk_shrub_avg);
   Mem_Free(SXW.SWAbulk_tree_avg);

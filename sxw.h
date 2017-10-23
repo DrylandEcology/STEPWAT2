@@ -59,6 +59,7 @@ struct stepwat_st {
         *f_watin;  /* soilwat's input file */
 
   RealD critSoilWater[4]; // storing values in same order as defined in rgroup.in (0=tree, 1=shrub, 2=grass, 3=forb)
+  RealD useVegType[4];
 
   /* DEBUG stuff */
   char *debugfile; /* added in ST_Main(), read to get debug instructions */
@@ -80,11 +81,7 @@ struct stepwat_st {
         PPT_snow_melt,
         PPT_snow_loss;
 
-  RealF *SWAbulk_grass, // 2D array to store SWA vals ([days of year][number of max layers])
-        *SWAbulk_shrub,
-        *SWAbulk_tree,
-        *SWAbulk_forb,
-        *SWAbulk_grass_avg, // 2D array to store SWA vals ([days of year][number of max layers])
+  RealF *SWAbulk_grass_avg, // 2D array to store SWA vals ([days of year][number of max layers])
         *SWAbulk_shrub_avg,
         *SWAbulk_tree_avg,
         *SWAbulk_forb_avg;
