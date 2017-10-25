@@ -906,18 +906,18 @@ static void _make_transp_arrays(void) {
 	SXW.transpForbs = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
 	SXW.transpGrasses = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
 
-  SXW.transpTotal_avg = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr);
-	SXW.transpTrees_avg = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr);
-	SXW.transpShrubs_avg = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr);
-	SXW.transpForbs_avg = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr);
-	SXW.transpGrasses_avg = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr);
+  SXW.transpTotal_avg = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
+	SXW.transpTrees_avg = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
+	SXW.transpShrubs_avg = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
+	SXW.transpForbs_avg = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
+	SXW.transpGrasses_avg = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
 
   // initialize values to 0
-  Mem_Set(SXW.transpTotal_avg, 0, SXW.NPds * SXW.NSoLyrs * sizeof(RealF));
-	Mem_Set(SXW.transpTrees_avg, 0, SXW.NPds * SXW.NSoLyrs * sizeof(RealF));
-	Mem_Set(SXW.transpShrubs_avg, 0, SXW.NPds * SXW.NSoLyrs * sizeof(RealF));
-	Mem_Set(SXW.transpForbs_avg, 0, SXW.NPds * SXW.NSoLyrs * sizeof(RealF));
-	Mem_Set(SXW.transpGrasses_avg, 0, SXW.NPds * SXW.NSoLyrs * sizeof(RealF));
+  Mem_Set(SXW.transpTotal_avg, 0, SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
+	Mem_Set(SXW.transpTrees_avg, 0, SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
+	Mem_Set(SXW.transpShrubs_avg, 0, SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
+	Mem_Set(SXW.transpForbs_avg, 0, SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
+	Mem_Set(SXW.transpGrasses_avg, 0, SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
 }
 
 static void _make_swa_array(void){
@@ -1280,7 +1280,8 @@ int getNTranspLayers(int veg_prod_type) {
 
 /***********************************************************/
 void free_all_sxw_memory( void ) {
-	free_sxw_memory();
+  printf("freeing memory\n");
+  free_sxw_memory();
   Mem_Free(SXW.f_files);
 	Mem_Free(SXW.f_roots);
 	Mem_Free(SXW.f_phen);
@@ -1307,15 +1308,6 @@ void free_all_sxw_memory( void ) {
   Mem_Free(SXW.SWA_master);
   Mem_Free(SXW.dSWAbulk);
 
-  Mem_Free(SXW.SWCbulk);
-  Mem_Free(SXW.SWCoriginal);
-  Mem_Free(SXW.transp_SWA);
-
-  /*Mem_Free(SXW.PPTVal);
-  Mem_Free(SXW.PPT_day);
-  Mem_Free(SXW.PPT_week);
-  Mem_Free(SXW.PPT_month);*/
-	//if (SXW.debugfile || UseGrid)
   Mem_Free(SXW.swc);
 }
 

@@ -264,7 +264,7 @@ $(oDir)/ST_indivs.o: ST_indivs.c ST_steppe.h ST_defines.h \
 
 $(oDir)/ST_main.o: ST_main.c ST_steppe.h ST_defines.h sw_src/generic.h \
  ST_structs.h ST_functions.h sw_src/filefuncs.h \
- sw_src/myMemory.h
+ sw_src/myMemory.h sw_src/SW_VegProd.h
 	$(CC) $(C_FLAGS) $(incDirs) -c -o $@ $<
 
 $(oDir)/ST_mortality.o: ST_mortality.c ST_steppe.h ST_defines.h \

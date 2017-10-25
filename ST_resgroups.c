@@ -461,8 +461,9 @@ void rgroup_ResPartIndiv(void)
 		if (!g->est_count)
 			continue;
 
+		numindvs = 0; // setting to 0 so no problems passing into RGroup_GetIndivs function
 		/* --- allocate the temporary group-oriented arrays */
-		indivs = RGroup_GetIndivs(rg, SORT_D, &numindvs);
+		indivs = RGroup_GetIndivs(rg, SORT_D, &numindvs); // SORT_D = sort in descending order
 
 		/* ---- assign indivs' availability, not including extra ---- */
 		/*      resource <= 1.0 is for basic growth, >= extra         */
@@ -907,6 +908,7 @@ void RGroup_Update_Newsize(GrpIndex rg)
 	}
 
 	///if (RGroup[rg]->max_age != 1) {
+	numindvs = 0; // set to 0 so no problems passing to function
 	/* compute the contribution of each indiv to the group's size */
 	indivs = RGroup_GetIndivs(rg, SORT_0, &numindvs);
 	for (n = 0; n < numindvs; n++)

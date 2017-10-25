@@ -309,14 +309,14 @@ static void _SWA_contribution_by_group(RealF use_by_group[]) {
 		use_by_group[g] = 0.; // clear
 		t = RGroup[g]->veg_prod_type-1;
 
-		ForEachTrPeriod(p)
+		/*ForEachTrPeriod(p)
 		{
 			for (l = 0; l < SXW.NSoLyrs; l++) {
         // TODO: need to figure out actual value for 2nd param in Itclp
 				use_by_group[g] += (RealF) (_roots_active_rel[Iglp(g, l, p)] * SXW.SWA_master[Itclp(t,0,l,p)]); //min_res_req is space parameter
 			}
-		}
-		sumUsedByGroup += use_by_group[g];
-    SXW.transp_SWA[currentYear][g] += sumUsedByGroup;
+		}*/
+		//sumUsedByGroup += use_by_group[g];
+    //SXW.transp_SWA[currentYear][g] += sumUsedByGroup;
 	}
 }

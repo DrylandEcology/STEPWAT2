@@ -23,6 +23,7 @@
 #include "generic.h"
 #include "filefuncs.h"
 #include "myMemory.h"
+#include "SW_VegProd.h"
 
 
 #ifdef STEPWAT
@@ -33,6 +34,7 @@
 
 extern Bool isPartialSoilwatOutput;
 extern Bool storeAllIterations;
+extern SW_VEGPROD SW_VegProd;
 
 /************* External Function Declarations **************/
 /***********************************************************/
@@ -175,10 +177,10 @@ int main(int argc, char **argv) {
   int outerLoop, innerLoop;
   float key;
   RealF tempArray[4];
-  tempArray[0] = SXW.critSoilWater[0];
-  tempArray[1] = SXW.critSoilWater[1];
-  tempArray[2] = SXW.critSoilWater[2];
-  tempArray[3] = SXW.critSoilWater[3];
+  tempArray[0] = SW_VegProd.critSoilWater[0];
+  tempArray[1] = SW_VegProd.critSoilWater[1];
+  tempArray[2] = SW_VegProd.critSoilWater[2];
+  tempArray[3] = SW_VegProd.critSoilWater[3];
 
   // printing for testing purposes
   /*printf("%f\n", tempArray[0]);
@@ -204,7 +206,7 @@ int main(int argc, char **argv) {
    for(outerLoop = 0; outerLoop < 4; outerLoop++){
      for(innerLoop = 0; innerLoop < 4; innerLoop++){
        // compare sorted to unsorted and store index in rank_SWPcrits
-       if(SXW.critSoilWater[outerLoop] == tempArray[innerLoop]){
+       if(SW_VegProd.critSoilWater[outerLoop] == tempArray[innerLoop]){
          SXW.rank_SWPcrits[outerLoop] = innerLoop;
          tempArray[innerLoop] = 100; // set value to something impossible so if a duplicate a different index is picked next
          break;
@@ -316,6 +318,7 @@ int main(int argc, char **argv) {
 
   printf("\nend program\n");
 	fprintf(progfp, "\n");
+  //free_all_sxw_memory();
 	return 0;
 }
 /* END PROGRAM */

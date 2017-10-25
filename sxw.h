@@ -58,9 +58,6 @@ struct stepwat_st {
         *f_prod,   /* biomass to prod. conv. nos. */
         *f_watin;  /* soilwat's input file */
 
-  RealD critSoilWater[4]; // storing values in same order as defined in rgroup.in (0=tree, 1=shrub, 2=grass, 3=forb)
-  RealD useVegType[4];
-
   /* DEBUG stuff */
   char *debugfile; /* added in ST_Main(), read to get debug instructions */
   RealF *swc, /* dynamic array(Ilp) of SWC from SOILWAT */
@@ -70,10 +67,6 @@ struct stepwat_st {
   // PPT variables
   int    yearInterval; // keep track of years
   int    curMonth;
-  /*RealF  PPTVal[500]; // array to store ppt vals
-  RealF  PPT_day[500];
-  RealF  PPT_week[500];
-  RealF  PPT_month[500];*/
 
   RealF PPT_sum,
         PPT_rain,
@@ -99,8 +92,8 @@ struct stepwat_st {
   RealF transp_SWA[MAX_YEARS][11]; // store the sum of SWA and transp for each year and resource. transp_SWA[year][steppe_resource_group]
 
   // 2D array to store 4 critical values per layer
-  float SWCbulk[4][8]; // TODO: first value needs to be (number of layers * plant types) - not hardcoded
-  float SWCoriginal[500][8]; // storing SWC values here instead of in *swc since that does not have enough storage for more than month timestep
+  //float SWCbulk[4][8]; // TODO: first value needs to be (number of layers * plant types) - not hardcoded
+  //float SWCoriginal[500][8]; // storing SWC values here instead of in *swc since that does not have enough storage for more than month timestep
 
   // used in SW_Output.c for creating column headers
   int col_status_dy;
