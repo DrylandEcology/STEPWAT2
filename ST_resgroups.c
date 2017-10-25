@@ -101,8 +101,8 @@ void rgroup_PartResources(void)
 	RealF resource, /* amt of "resource" == 1 when ppt is avg */
 	xtra_base = 0., /* pooled extra resource up to 1.0 */
 	xtra_obase = 0., /* pooled resource > 1.0 */
-	size_base[MAX_RGROUPS], /* total res. contrib to base, all groups */
-	size_obase[MAX_RGROUPS]; /* total res. contrib. if xtra_obase */
+	size_base[MAX_RGROUPS] = {0}, /* total res. contrib to base, all groups */
+	size_obase[MAX_RGROUPS] = {0}; /* total res. contrib. if xtra_obase */
 
 	Bool noplants = TRUE;
 	const Bool do_base = FALSE, /* monikers for _res_part_extra() */
@@ -913,7 +913,7 @@ void RGroup_Update_Newsize(GrpIndex rg)
 	indivs = RGroup_GetIndivs(rg, SORT_0, &numindvs);
 	for (n = 0; n < numindvs; n++)
 		indivs[n]->grp_res_prop = indivs[n]->relsize / sumsize;
-	Mem_Free(indivs);
+	//Mem_Free(indivs); // dont call free on variable unless it was initialized with malloc or calloc
 	///}
 
 	/* double check some assumptions */
