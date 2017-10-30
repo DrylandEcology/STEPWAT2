@@ -212,7 +212,7 @@ void mort_EndOfYear( void)
                     {
                         fire_possibility = g->cheatgrass_coefficient + g->wild_fire_slope * x_cheatgrass;
                     }
-       if (g->ignition = 0)
+       if (g->ignition == 0)
                     {
                        fire_possibility = 0; 
                      } 
@@ -251,7 +251,6 @@ void mort_EndOfYear( void)
 			{
 				g->killyr = Globals.currYear;
 			}
-                        // printf("[Rui] g->killyr: %d\n",g->killyr); 
 
                     }
 
@@ -265,7 +264,7 @@ void mort_EndOfYear( void)
 		}
 
 	}
-
+                        
 }
 
 void grazing_EndOfYear( void){

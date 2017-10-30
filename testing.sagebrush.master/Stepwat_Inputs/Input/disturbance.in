@@ -52,16 +52,16 @@
 #TM 10.6.2015 - tested various stretch values for sagebrush and found stretch of 8 to be best paired with irate 0.02
 
 # name        killyr killfreq_startyr Prescribed_killfreq   extirp  mort    proportion_killed proportion_recovered grazing_frq proportion_grazing  grazingfreq_startyr
- sagebrush      0      1       10.0    0     1    1.00  0.00 0  0.00  0
- a.cool.forb    0      1       10.0    0     1    1.00  0.00 0  0.24  0
- a.warm.forb    0      1       10.0    0     1    1.00  0.00 0  0.24  0
- p.cool.forb    0      1       10.0    0     1    1.00  0.40 0  0.24  0
- p.warm.forb    0      1       10.0    0     1    1.00  0.40 0  0.24  0
- a.cool.grass   0      1       10.0    0     1    1.00  0.00 0  0.24  0
- p.cool.grass   0      1       10.0    0     1    1.00  0.70 0  0.24  0
- p.warm.grass   0      1       10.0    0     1    1.00  0.70 0  0.24  0
- shrub          0      1       10.0    0     1    1.00  0.00 0  0.00  0
- succulents     0      1       10.0    0     1    1.00  0.00 0  0.00  0 
+ sagebrush      0      1       0    0     1    1.00  0.00 0  0.00  0
+ a.cool.forb    0      1       0    0     1    1.00  0.00 0  0.24  0
+ a.warm.forb    0      1       0    0     1    1.00  0.00 0  0.24  0
+ p.cool.forb    0      1       0    0     1    1.00  0.00 0  0.24  0
+ p.warm.forb    0      1       0    0     1    1.00  0.00 0  0.24  0
+ a.cool.grass   0      1       0    0     1    1.00  0.00 0  0.24  0
+ p.cool.grass   0      1       0    0     1    1.00  0.00 0  0.24  0
+ p.warm.grass   0      1       0    0     1    1.00  0.00 0  0.24  0
+ shrub          0      1       0    0     1    1.00  0.00 0  0.00  0
+ succulents     0      1       0    0     1    1.00  0.00 0  0.00  0 
 
 
 [end]  # section end
@@ -77,16 +77,16 @@
 # cheatgrass_coefficient 
 # wild_fire_slope = slope of fire yearly possibility & cheatgrass biomass
 # name        cheatgrass_index_number ignition cheatgrass_coefficient wild_fire_slope  
- sagebrush     9   1 -0.117  0.0093    
- a.cool.forb   9   1 -0.117  0.0093   
- a.warm.forb   9   1 -0.117  0.0093  
- p.cool.forb   9   1 -0.117  0.0093  
- p.warm.forb   9   1 -0.117  0.0093  
- a.cool.grass  9   1 -0.117  0.0093  
- p.cool.grass  9   1 -0.117  0.0093  
- p.warm.grass  9   1 -0.117  0.0093   
- shrub         9   1 -0.117  0.0093 
- succulents    9   1 -0.117  0.0093   
+ sagebrush     9   12.05 -0.117  0.0093    
+ a.cool.forb   9   12.05 -0.117  0.0093   
+ a.warm.forb   9   12.05 -0.117  0.0093  
+ p.cool.forb   9   12.05 -0.117  0.0093  
+ p.warm.forb   9   12.05 -0.117  0.0093  
+ a.cool.grass  9   12.05 -0.117  0.0093  
+ p.cool.grass  9   12.05 -0.117  0.0093  
+ p.warm.grass  9   12.05 -0.117  0.0093   
+ shrub         9   12.05 -0.117  0.0093 
+ succulents    9   12.05 -0.117  0.0093   
 
 
 [end]  # section end
