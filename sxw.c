@@ -938,6 +938,7 @@ static void _make_swa_array(void){
   size = 4 * SXW.NPds * SXW.NSoLyrs;
   SXW.SWA_master = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr);
   SXW.dSWAbulk = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr);
+  SXW.dSWA_repartitioned = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr);
 
   //Mem_Set(SXW.SWA_master, 0, SXW.NPds * 4 * SXW.NSoLyrs * sizeof(RealF));
   memset(SXW.SWA_master, 0, sizeof(SXW.SWA_master));
@@ -1307,6 +1308,7 @@ void free_all_sxw_memory( void ) {
 
   Mem_Free(SXW.SWA_master);
   Mem_Free(SXW.dSWAbulk);
+  Mem_Free(SXW.dSWA_repartitioned);
 
   Mem_Free(SXW.swc);
 }

@@ -80,7 +80,8 @@ struct stepwat_st {
         *SWAbulk_forb_avg;
 
   RealF *SWA_master, // 4D array to store SWA for all veg_types
-        *dSWAbulk; // store actual available SWA
+        *dSWAbulk, // store actual available SWA
+        *dSWA_repartitioned; // store repartioned SWA values
 
   int rank_SWPcrits[5]; // array to store the SWP crits in order of lest negative to most negative (used in sxw_resource)
 

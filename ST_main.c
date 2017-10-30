@@ -176,17 +176,15 @@ int main(int argc, char **argv) {
   ----------------------------------------------------------*/
   int outerLoop, innerLoop;
   float key;
-  RealF tempArray[4];
+  RealF tempArray[4], tempArrayUnsorted[4]; // meed two temp arrays equal to critSoilWater since we dont want to alter the original at all
   tempArray[0] = SW_VegProd.critSoilWater[0];
   tempArray[1] = SW_VegProd.critSoilWater[1];
   tempArray[2] = SW_VegProd.critSoilWater[2];
   tempArray[3] = SW_VegProd.critSoilWater[3];
-
-  // printing for testing purposes
-  /*printf("%f\n", tempArray[0]);
-  printf("%f\n", tempArray[1]);
-  printf("%f\n", tempArray[2]);
-  printf("%f\n\n", tempArray[3]);*/
+  tempArrayUnsorted[0] = SW_VegProd.critSoilWater[0];
+  tempArrayUnsorted[1] = SW_VegProd.critSoilWater[1];
+  tempArrayUnsorted[2] = SW_VegProd.critSoilWater[2];
+  tempArrayUnsorted[3] = SW_VegProd.critSoilWater[3];
 
   // insertion sort to rank the veg types and store them in their proper order
   for (outerLoop = 1; outerLoop < 4; outerLoop++)
@@ -202,23 +200,32 @@ int main(int argc, char **argv) {
        tempArray[innerLoop+1] = key;
    }
 
+   /*printf("%f\n", tempArrayUnsorted[0]);
+   printf("%f\n", tempArrayUnsorted[1]);
+   printf("%f\n", tempArrayUnsorted[2]);
+   printf("%f\n\n", tempArrayUnsorted[3]);
+
+   printf("%f\n", tempArray[0]);
+   printf("%f\n", tempArray[1]);
+   printf("%f\n", tempArray[2]);
+   printf("%f\n\n", tempArray[3]);*/
+
    // loops to compare sorted v unsorted array and find proper index
    for(outerLoop = 0; outerLoop < 4; outerLoop++){
      for(innerLoop = 0; innerLoop < 4; innerLoop++){
-       // compare sorted to unsorted and store index in rank_SWPcrits
-       if(SW_VegProd.critSoilWater[outerLoop] == tempArray[innerLoop]){
+       if(tempArray[outerLoop] == tempArrayUnsorted[innerLoop]){
          SXW.rank_SWPcrits[outerLoop] = innerLoop;
-         tempArray[innerLoop] = 100; // set value to something impossible so if a duplicate a different index is picked next
+         tempArrayUnsorted[innerLoop] = 100; // set value to something impossible so if a duplicate a different index is picked next
          break;
        }
      }
    }
 
    // printing for testing purposes
-   /*printf("%d = %f\n", SXW.rank_SWPcrits[0], SXW.critSoilWater[SXW.rank_SWPcrits[0]]);
-   printf("%d = %f\n", SXW.rank_SWPcrits[1], SXW.critSoilWater[SXW.rank_SWPcrits[1]]);
-   printf("%d = %f\n", SXW.rank_SWPcrits[2], SXW.critSoilWater[SXW.rank_SWPcrits[2]]);
-   printf("%d = %f\n\n", SXW.rank_SWPcrits[3], SXW.critSoilWater[SXW.rank_SWPcrits[3]]);*/
+   /*printf("%d = %f\n", SXW.rank_SWPcrits[0], SW_VegProd.critSoilWater[SXW.rank_SWPcrits[0]]);
+   printf("%d = %f\n", SXW.rank_SWPcrits[1], SW_VegProd.critSoilWater[SXW.rank_SWPcrits[1]]);
+   printf("%d = %f\n", SXW.rank_SWPcrits[2], SW_VegProd.critSoilWater[SXW.rank_SWPcrits[2]]);
+   printf("%d = %f\n\n", SXW.rank_SWPcrits[3], SW_VegProd.critSoilWater[SXW.rank_SWPcrits[3]]);*/
 
    /*----------------------------------------------------------
      End of rank_SWPcrits
@@ -250,7 +257,7 @@ int main(int argc, char **argv) {
     memset(SXW.transp_SWA,0,sizeof(SXW.transp_SWA)); // set transp_SWA to 0; needs to be reset each iteration
 
 		/* ------  Begin running the model ------ */
-		for (year = 1; year <= Globals.runModelYears; year++) {
+		for (year = 1; year <= Globals.runModelYears; year++){
 			Globals.currYear = year;
 
 			rgroup_Establish();
@@ -318,7 +325,6 @@ int main(int argc, char **argv) {
 
   printf("\nend program\n");
 	fprintf(progfp, "\n");
-  //free_all_sxw_memory();
 	return 0;
 }
 /* END PROGRAM */
