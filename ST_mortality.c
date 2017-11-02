@@ -247,7 +247,7 @@ void mort_EndOfYear( void)
 					g->killyr = Globals.currYear;
 				}
 			}
-			else if (((Globals.currYear - g->killfreq_startyr) % (IntU) fire_possibility) == 0)
+			else if (((Globals.currYear - g->killfreq_startyr) % (IntU) g->killfreq) == 0)
 			{
 				g->killyr = Globals.currYear;
 			}
