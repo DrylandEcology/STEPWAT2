@@ -90,7 +90,8 @@ struct species_st {
   SppIndex est_count;  /* number of individuals established (growing)*/
   IntUS *kills,        /* ptr to array of # indivs killed by age. index=age. */
         estabs,        /* number of individuals established in iter */
-        *seedprod;    /* annuals: array of previous years' seed production (size = viable_yrs)*/
+        *seedprod,    /* annuals: array of previous years' seed production (size = viable_yrs)*/
+        pseed;        /* the average seed production of annuals per 1g per 1m^2 and per year.*/
   RealF relsize,       /* size of all indivs' relsize (>= 0) */
   lastyear_relsize,    /* relsize from the previous year, used for annual establishment */
   
