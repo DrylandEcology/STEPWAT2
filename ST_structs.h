@@ -91,10 +91,12 @@ struct species_st {
   IntUS *kills,        /* ptr to array of # indivs killed by age. index=age. */
         estabs,        /* number of individuals established in iter */
         *seedprod,    /* annuals: array of previous years' seed production (size = viable_yrs)*/
+                seedbank,
         pseed;        /* the average seed production of annuals per 1g per 1m^2 and per year.*/
+
   RealF relsize,       /* size of all indivs' relsize (>= 0) */
   lastyear_relsize,    /* relsize from the previous year, used for annual establishment */
-  
+
         extragrowth,   /* amt of superfluous growth from extra resources */
 	received_prob;	//the chance that this species received seeds this year... only applicable if using seed dispersal and gridded option
   float       var;    /* the variance parameter of the beta distribution for establishment..*/
