@@ -196,7 +196,37 @@ void mort_EndOfYear( void)
 	//printf("inside mort_EndOfYear() \n");
 	GrpIndex rg;
 	GroupType *g;
+        RealF fire_possibility,y;
+        RealF x_cheatgrass = Species[g->cheatgrass_index]->relsize * Species[g->cheatgrass_index]->mature_biomass; // calculate biomass of cheatgrass
+        y = RandUni(); /* Set a random number outide of the loop to make sure the kill probability for each functional group is same */
+        
+        
+       //printf("[Rui] x_cheatgrass: %f\n",x_cheatgrass);
 
+        if (x_cheatgrass < g->ignition)
+                    {
+                       fire_possibility = 1.0 / Globals.runModelYears;  
+                    } 
+        /* don't ignite wild fire based on cheatgrass until the cheatgrass could reach the ignition value */
+        if (x_cheatgrass >= g->ignition)
+                    {
+                        fire_possibility = g->cheatgrass_coefficient + g->wild_fire_slope * x_cheatgrass;
+                    }
+       if (g->ignition == 0)
+                    {
+                       fire_possibility = 0; 
+                     } 
+        if GT (g->killfreq, fire_possibility)
+                    { 
+                         fire_possibility = g->killfreq;
+                    }
+                     
+          /*  if the input prescribed fire value < 1; wild fire and prescribed fire happen at the same time, 
+           * while if the input prescribed fire value >1, only prescribed fire happens
+           * if the  input prescribed fire value=0 && ignition =0 no fire happened */
+     
+         printf("[Rui] fire_possibility: %f\n",fire_possibility); 
+         
 	ForEachGroup(rg)
 	{
 		if (Globals.currYear < RGroup[rg]->startyr)
@@ -206,23 +236,23 @@ void mort_EndOfYear( void)
 		}
 
 		g = RGroup[rg];
-
-		if ((Globals.currYear >= g->killfreq_startyr) && GT(g->killfreq, 0.))
-		{
-			if (LT(g->killfreq, 1.0))
+                     
+                
+                    if ((Globals.currYear >= g->killfreq_startyr) && GT(fire_possibility, 0.))
+                    {
+			if (LT(fire_possibility, 1.0))
 			{
-				if (RandUni() <= g->killfreq)
+				if (y <= fire_possibility)
 				{
 					g->killyr = Globals.currYear;
 				}
-
 			}
 			else if (((Globals.currYear - g->killfreq_startyr) % (IntU) g->killfreq) == 0)
 			{
 				g->killyr = Globals.currYear;
 			}
 
-		}
+                    }
 
 		if (Globals.currYear == RGroup[rg]->extirp)
 		{
@@ -234,7 +264,7 @@ void mort_EndOfYear( void)
 		}
 
 	}
-
+                        
 }
 
 void grazing_EndOfYear( void){
@@ -322,23 +352,7 @@ void proportion_Recovery(void)
 
 		g = RGroup[rg];
 
-		if ((Globals.currYear >= g->killfreq_startyr) && GT(g->killfreq, 0.))
-		{
-			if (LT(g->killfreq, 1.0))
-			{
-				if (RandUni() <= g->killfreq)
-				{
-					g->killyr = Globals.currYear;
-				}
-
-			}
-			else if (((Globals.currYear - g->killfreq_startyr) % (IntU) g->killfreq) == 0)
-			{
-				g->killyr = Globals.currYear;
-			}
-
-		}
-
+		
 		//rgroup proportion recovery
 		if (Globals.currYear == RGroup[rg]->killyr)
 		{

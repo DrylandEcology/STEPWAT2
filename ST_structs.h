@@ -165,8 +165,9 @@ struct resourcegroup_st {
         max_spp,        /* number of species in the group*/
         max_age,        /* longest lifespan in group. used to malloc kills[] */
         startyr,        /* don't start trying to grow until this year */
-		killfreq_startyr,/* start year for kill frequency*/
-        killfreq,       /* kill group at this frequency: <1=prob, >1=# years */
+        cheatgrass_index,/* cheatgrass in put order*/
+	killfreq_startyr,/* start year for kill frequency*/
+
         extirp,         /* year in which group is extirpated (0==ignore) */
         grp_num,        /* index number of this group */
         veg_prod_type,  /* type of VegProd.  1 for tree, 2 for shrub, 3 for grass, 4 for forb */
@@ -177,6 +178,10 @@ struct resourcegroup_st {
         max_density,  /* number of mature plants per plot allowed */
         max_per_sqm,  /* convert density and plotsize to max plants/m^2 */
         max_bmass,    /* sum of mature biomass for all species in group */
+        killfreq,       /* kill group at this frequency: <1=prob, >1=# years */
+        ignition,       /*cheatgrass biomass ignition in 1*1 square meter */
+        cheatgrass_coefficient,   /* cheatgrass biomass and fire frequency coeefficient */
+        wild_fire_slope,  /* slope of fire yearly possibility and cheatgrass biomass */	
         xgrow,        /* ephemeral growth = mm extra ppt * xgrow */
         slowrate,     /* user-defined growthrate that triggers mortality */
         ppt_slope[3], /* res. space eqn: slope for wet/dry/norm yrs*/

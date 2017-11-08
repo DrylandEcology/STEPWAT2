@@ -87,7 +87,7 @@ static void prepareStatements() {
 
 	sprintf(sql, "INSERT INTO RGroupsYearInfo (Year, Iteration, RGroupID, Estabs, KillYr, YrsNegPR, mmExtraRes, ResRequired, ResAvail, ResExtra, PR, RelSize, EstSppCount, Extirpated, RegenOk) VALUES (@Year, @Iteration, @RGroupID, @Estabs, @KillYr, @YrsNegPR, @mmExtraRes, @ResRequired, @ResAvail, @ResExtra, @PR, @RelSize, @EstSppCount, @Extirpated, @RegenOk);");
 	sqlite3_prepare_v2(db, sql, 1024, &stmt_RGroupsYearInfo, NULL);
-
+        
 	sprintf(sql, "INSERT INTO SpeciesYearInfo (Year, Iteration, SpeciesID, EstabCount, Estabs, RelSize, ExtraGrowth, ReceivedProb, AllowGrowth, sdSGerm) VALUES (@Year, @Iteration, @SpeciesID, @EstabCount, @Estabs, @RelSize, @ExtraGrowth, @ReceivedProb, @AllowGrowth, @sdSGerm);");
 	sqlite3_prepare_v2(db, sql, 1024, &stmt_SpeciesYearInfo, NULL);
 
@@ -221,7 +221,7 @@ static void insertRgroups(void) {
 	{
 		rg = RGroup[g];
 		sql[0] = 0;
-		sprintf(sql, "INSERT INTO RGroups (RGroupID, NAME, MaxStretch, MaxSppEstab, MaxSpp, MaxAge, StartYr, KillFreq, Extirp, GrpNum, VegProdType, MinResReq, MaxDensity, MaxPerSqm, MaxBmass, XGrow, SlowRate, PptSlope1, PptSlope2, PptSlope3, PptIntcpt1, PptIntcpt2, PptIntcpt3, Succulent, UseExtraRes, UseMe, UseMort, EstAnnually, DepthClassID) VALUES (%d, '%s', %d, %d, %d, %d, %d, %d, %d, %d, %d, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %d, %d, %d, %d, %d, %d);", g+1, rg->name, rg->max_stretch, rg->max_spp_estab, rg->max_spp, rg->max_age, rg->startyr, rg->killfreq, rg->extirp, rg->grp_num, rg->veg_prod_type, rg->min_res_req, rg->max_density, rg->max_per_sqm, rg->max_bmass, rg->xgrow, rg->slowrate, rg->ppt_slope[0], rg->ppt_slope[1], rg->ppt_slope[2], rg->ppt_intcpt[0], rg->ppt_intcpt[1], rg->ppt_intcpt[2], rg->succulent, rg->use_extra_res, rg->use_me, rg->use_mort, rg->est_annually, rg->depth);
+		sprintf(sql, "INSERT INTO RGroups (RGroupID, NAME, MaxStretch, MaxSppEstab, MaxSpp, MaxAge, StartYr, KillFreq, Extirp, GrpNum, VegProdType, MinResReq, MaxDensity, MaxPerSqm, MaxBmass, XGrow, SlowRate, PptSlope1, PptSlope2, PptSlope3, PptIntcpt1, PptIntcpt2, PptIntcpt3, Succulent, UseExtraRes, UseMe, UseMort, EstAnnually, DepthClassID) VALUES (%d, '%s', %d, %d, %d, %d, %d, %f, %d, %d, %d, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %d, %d, %d, %d, %d, %d);", g+1, rg->name, rg->max_stretch, rg->max_spp_estab, rg->max_spp, rg->max_age, rg->startyr, rg->killfreq, rg->extirp, rg->grp_num, rg->veg_prod_type, rg->min_res_req, rg->max_density, rg->max_per_sqm, rg->max_bmass, rg->xgrow, rg->slowrate, rg->ppt_slope[0], rg->ppt_slope[1], rg->ppt_slope[2], rg->ppt_intcpt[0], rg->ppt_intcpt[1], rg->ppt_intcpt[2], rg->succulent, rg->use_extra_res, rg->use_me, rg->use_mort, rg->est_annually, rg->depth);
 		rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
 		sqlcheck(rc, zErrMsg);
 	}
@@ -392,7 +392,7 @@ static void createTables(void) {
 	char *table_depthClass = "CREATE TABLE DepthClass(DepthClassID INT PRIMARY KEY NOT NULL, Name TEXT);";
 	char *table_killTypes = "CREATE TABLE KillTypes(KillTypeID INT PRIMARY KEY, Name TEXT);";
 
-	char *table_rgroups = "CREATE TABLE RGroups(RGroupID INT PRIMARY KEY NOT NULL, NAME TEXT NOT NULL, MaxStretch INT, MaxSppEstab INT, MaxSpp INT, MaxAge INT, StartYr INT, KillFreq INT, Extirp INT, GrpNum INT, VegProdType INT, MinResReq REAL, MaxDensity REAL, MaxPerSqm REAL, MaxBmass REAL, XGrow REAL, SlowRate REAL, PptSlope1 REAL, PptSlope2 REAL, PptSlope3 REAL, PptIntcpt1 REAL, PptIntcpt2 REAL, PptIntcpt3 REAL, Succulent INT, UseExtraRes INT, UseMe INT, UseMort INT, EstAnnually INT, DepthClassID INT );";
+	char *table_rgroups = "CREATE TABLE RGroups(RGroupID INT PRIMARY KEY NOT NULL, NAME TEXT NOT NULL, MaxStretch INT, MaxSppEstab INT, MaxSpp INT, MaxAge INT, StartYr INT, KillFreq REAL, Extirp INT, GrpNum INT, VegProdType INT, MinResReq REAL, MaxDensity REAL, MaxPerSqm REAL, MaxBmass REAL, XGrow REAL, SlowRate REAL, PptSlope1 REAL, PptSlope2 REAL, PptSlope3 REAL, PptIntcpt1 REAL, PptIntcpt2 REAL, PptIntcpt3 REAL, Succulent INT, UseExtraRes INT, UseMe INT, UseMort INT, EstAnnually INT, DepthClassID INT );";
 	char *table_rgroupsYearInfo = "CREATE TABLE RGroupsYearInfo(Year INT NOT NULL, Iteration INT NOT NULL, RGroupID INT NOT NULL, Estabs INT, KillYr INT, YrsNegPR INT, mmExtraRes INT, ResRequired REAL, ResAvail REAL, ResExtra REAL, PR REAL, RelSize REAL, EstSppCount REAL, Extirpated INT, RegenOk INT, PRIMARY KEY(Year, Iteration, RGroupID));";
 
 	char *table_species = "CREATE TABLE Species(SpeciesID INT PRIMARY KEY NOT NULL, RGroupID INT NOT NULL, NAME TEXT NOT NULL, MaxAge INT, ViableYrs INT, MaxSeedEstab INT, MaxVegUnits INT, MaxSlow INT, SPnum INT, MaxRate REAL, IntrinRate REAL, RelSeedlingsSize REAL, SeedlingBiomass REAL, MatureBiomass REAL, SeedlingEstabProbOld REAL, SeedlingEstabProb REAL, AnnMortProb REAL, CohortSurv REAL, ExpDecay REAL, ProbVeggrow1 REAL, ProbVeggrow2 REAL, ProbVeggrow3 REAL, ProbVeggrow4 REAL, sdParam1 REAL, sdPPTdry REAL, sdPPTwet REAL, sdPmin REAL, sdPmax REAL, sdH REAL, sdVT REAL, TempClassID INT, DisturbClassID INT, isClonal INT, UseTempResponse INT, UseMe INT, UseDispersal INT);";

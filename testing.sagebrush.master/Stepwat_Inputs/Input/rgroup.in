@@ -33,28 +33,11 @@
 #       of the plants in this group.  1=on, 0=off.
 # startyr = do not attempt to grow this group until this year.
 #        especially useful for invasives.
-# killyr = kill all members of this group at end of this year.
-#          0 == don't kill
-# killfreq_startyr = start year for killing due to fire, which will continue at the specified kill frequency
-# killfrq = frequency to kill.  if < 1, yearly probability,
-#            if > 1 yearly interval, after killfreq_startyr.  
-#            Overrides killyr.
-# extirp = year at which all group members are extirpated
-#       (without recovery) from the plot. 0==don't use, >0 == year # 
-# mort =  switch to allow age-independent/slowgrowth mortality
-#         functions.0 = don't use; 1 = use.
 # xgrow = extra growth factor; if > 0, plants can convert "extra" ppt
 #         into ephemeral (this year's) biomass by
 #         grams_extra_biomass = mm_extra_ppt * xgrow_factor
 # veg_prod_type = 1 for tree, 2 for shrub, 3 for grass & 4 for forb.  Refer to Soilwat2’s VegProd types in VegProd.h.
-# proportion_killed = proportional killing that mimics fire at given kill year/killfreq. This is the proportion of biomass 
-# 	   removed by fire.
-# proportion_recovered = proportionally recovered all members of the group after kill year.
-# grazing_frq = frequency of grazing.  if < 1, yearly probability,
-#            if > 1 yearly interval, after grazingfreq_startyr.  
-#            Overrides grazingyear.
-# proportion_grazing = proportion of biomass removed due to grazing. 
-# grazingfreq_startyr = start year for grazing
+
 
 #TM - density values from Biondini et al 1998 - used density% in Table 2 for p.cool.forb (Achillea millefolium) and
 #	p.warm.forb (Grindelia squarrosa)
@@ -67,18 +50,18 @@
 # space parameter for shrubs was a guess (KP) 
 #TM 10.6.2015 - tested various stretch values for sagebrush and found stretch of 8 to be best paired with irate 0.02
 
-# name     space  density maxest slow stretch xres  estann  on  startyr killyr killfreq_startyr killfrq  extirp  mort  xgrow  veg_prod_type  proportion_killed proportion_recovered grazing_frq proportion_grazing  grazingfreq_startyr
- sagebrush     0.320  1.0000   1  0.0500   8     1       0   1      1        0      0       0       0     1  0.00000   2  1.00  0.00 0  0.00  0
- a.cool.forb   0.030  5.0000   1  0.0500   2     1       0   1      1        0      0       0       0     1  0.00000   4  1.00  0.00 0  0.24  0
- a.warm.forb   0.020  3.0000   1  0.0500   2     1       0   1      1        0      0       0       0     1  0.00000   4  1.00  0.00 0  0.24  0
- p.cool.forb   0.160  8.0000   1  0.0500   2     1       0   1      1        0      0       0       0     1  0.00000   4  1.00  0.40 0  0.24  0
- p.warm.forb   0.040  3.0000   1  0.0500   2     1       0   1      1        0      0       0       0     1  0.00000   4  1.00  0.40 0  0.24  0
- a.cool.grass  0.050  50.000   1  0.0500   2     1       0   1      1        0      0       0       0     1  0.00000   3  1.00  0.00 0  0.24  0
- p.cool.grass  0.220  15.000   1  0.0500   2     1       0   1      1        0      0       0       0     1  0.00000   3  1.00  0.70 0  0.24  0
- p.warm.grass  0.040   5.000   1  0.0500   2     1       0   1      1        0      0       0       0     1  0.00000   3  1.00  0.70 0  0.24  0
- shrub         0.090  1.0000   1  0.0500   2     1       0   1      1        0      0       0       0     1  0.00000   2  1.00  0.00 0  0.00  0
- succulents	   0.030  0.3100   1  0.0500   8     1       0   1   	1        0      0       0       0     0  0.00000   2  1.00  0.00 0  0.00  0 
-# a.warm.grass 0.000  5.0000   1  0.0500   2     1       0   0      1        0      0       0       0     1  0.00000   3  0.20  0.80 0  0.20  0
+# name     space  density maxest slow stretch xres  estann  on  startyr xgrow  veg_prod_type
+ sagebrush     0.320  1.0000   1  0.0500   8     1       0   1      1     0.00000   2  
+ a.cool.forb   0.030  5.0000   1  0.0500   2     1       0   1      1     0.00000   4   
+ a.warm.forb   0.020  3.0000   1  0.0500   2     1       0   1      1     0.00000   4   
+ p.cool.forb   0.160  8.0000   1  0.0500   2     1       0   1      1     0.00000   4    
+ p.warm.forb   0.040  3.0000   1  0.0500   2     1       0   1      1     0.00000   4    
+ a.cool.grass  0.050  50.000   1  0.0500   2     1       0   1      1     0.00000   3    
+ p.cool.grass  0.220  15.000   1  0.0500   2     1       0   1      1     0.00000   3    
+ p.warm.grass  0.040   5.000   1  0.0500   2     1       0   1      1     0.00000   3    
+ shrub         0.090  1.0000   1  0.0500   2     1       0   1      1     0.00000   2   
+ succulents    0.030  0.3100   1  0.0500   8     1       0   1      1     0.00000   2    
+# a.warm.grass 0.000  5.0000   1  0.0500   2     1       0   0      1     0.00000   3   
 
 [end]  # section end
 
@@ -94,7 +77,7 @@
 #TM - these are the values from Bradford and Lauenroth 2006
 
 # name            nslope   nint     wetslope wetint   dryslope dryint  
-sagebrush 	  	  0.00093  0.70935  0.00093  0.70935  0.00093  0.70935
+sagebrush 	  0.00093  0.70935  0.00093  0.70935  0.00093  0.70935
 a.cool.forb 	  0.00093  0.70935  0.00093  0.70935  0.00093  0.70935
 a.warm.forb 	  0.00093  0.70935  0.00093  0.70935  0.00093  0.70935
 p.cool.forb 	  0.00093  0.70935  0.00093  0.70935  0.00093  0.70935
@@ -102,7 +85,7 @@ p.warm.forb 	  0.00093  0.70935  0.00093  0.70935  0.00093  0.70935
 a.cool.grass	  0.00093  0.70935  0.00093  0.70935  0.00093  0.70935
 p.cool.grass	  0.00093  0.70935  0.00093  0.70935  0.00093  0.70935
 p.warm.grass	  0.00093  0.70935  0.00093  0.70935  0.00093  0.70935
-shrub    	      0.00093  0.70935  0.00093  0.70935  0.00400  0.70935
+shrub    	  0.00093  0.70935  0.00093  0.70935  0.00400  0.70935
 succulents        0.00093  0.70935  0.00093  0.70935  0.00400  0.70935
 #a.warm.grass	  0.00093  0.70935  0.00093  0.70935  0.00093  0.70935
 
