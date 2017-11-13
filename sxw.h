@@ -83,21 +83,16 @@ struct stepwat_st {
         *dSWAbulk, // store actual available SWA
         *dSWA_repartitioned; // store repartioned SWA values
 
-  int rank_SWPcrits[5]; // array to store the SWP crits in order of lest negative to most negative (used in sxw_resource)
-
+  //int rank_SWPcrits[5]; // array to store the SWP crits in order of lest negative to most negative (used in sxw_resource)
 
   RealF transp_SWA[MAX_YEARS][11]; // store the sum of SWA and transp for each year and resource. transp_SWA[year][steppe_resource_group]
-
-  // 2D array to store 4 critical values per layer
-  //float SWCbulk[4][8]; // TODO: first value needs to be (number of layers * plant types) - not hardcoded
-  //float SWCoriginal[500][8]; // storing SWC values here instead of in *swc since that does not have enough storage for more than month timestep
+  int rank_SWPcrits[5]; // array to store the SWP crits in order of lest negative to most negative (used in sxw_resource)
 
   // used in SW_Output.c for creating column headers
   int col_status_dy;
   int col_status_wk;
   int col_status_mo;
   int col_status_yr;
-
 };
 
 #define SXW_NFILES 5

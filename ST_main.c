@@ -176,7 +176,7 @@ int main(int argc, char **argv) {
   ----------------------------------------------------------*/
   int outerLoop, innerLoop;
   float key;
-  RealF tempArray[4], tempArrayUnsorted[4]; // meed two temp arrays equal to critSoilWater since we dont want to alter the original at all
+  RealF tempArray[4], tempArrayUnsorted[4]; // need two temp arrays equal to critSoilWater since we dont want to alter the original at all
   tempArray[0] = SW_VegProd.critSoilWater[0];
   tempArray[1] = SW_VegProd.critSoilWater[1];
   tempArray[2] = SW_VegProd.critSoilWater[2];
@@ -200,16 +200,6 @@ int main(int argc, char **argv) {
        tempArray[innerLoop+1] = key;
    }
 
-   /*printf("%f\n", tempArrayUnsorted[0]);
-   printf("%f\n", tempArrayUnsorted[1]);
-   printf("%f\n", tempArrayUnsorted[2]);
-   printf("%f\n\n", tempArrayUnsorted[3]);
-
-   printf("%f\n", tempArray[0]);
-   printf("%f\n", tempArray[1]);
-   printf("%f\n", tempArray[2]);
-   printf("%f\n\n", tempArray[3]);*/
-
    // loops to compare sorted v unsorted array and find proper index
    for(outerLoop = 0; outerLoop < 4; outerLoop++){
      for(innerLoop = 0; innerLoop < 4; innerLoop++){
@@ -220,13 +210,10 @@ int main(int argc, char **argv) {
        }
      }
    }
-
-   // printing for testing purposes
    /*printf("%d = %f\n", SXW.rank_SWPcrits[0], SW_VegProd.critSoilWater[SXW.rank_SWPcrits[0]]);
    printf("%d = %f\n", SXW.rank_SWPcrits[1], SW_VegProd.critSoilWater[SXW.rank_SWPcrits[1]]);
    printf("%d = %f\n", SXW.rank_SWPcrits[2], SW_VegProd.critSoilWater[SXW.rank_SWPcrits[2]]);
    printf("%d = %f\n\n", SXW.rank_SWPcrits[3], SW_VegProd.critSoilWater[SXW.rank_SWPcrits[3]]);*/
-
    /*----------------------------------------------------------
      End of rank_SWPcrits
    ----------------------------------------------------------*/
