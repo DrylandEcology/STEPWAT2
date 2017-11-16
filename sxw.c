@@ -923,6 +923,7 @@ static void _make_transp_arrays(void) {
 static void _make_swa_array(void){
   char *fstr = "_make_swa_array()";
 	int size = SXW.NPds * SXW.NSoLyrs;
+  //int size_3d = 4 * SXW.NPds * SXW.NSoLyrs;
 
   SXW.SWAbulk_grass_avg = (RealF *) Mem_Calloc(size, sizeof(RealF *), fstr);
   SXW.SWAbulk_shrub_avg = (RealF *) Mem_Calloc(size, sizeof(RealF *), fstr);
@@ -934,11 +935,14 @@ static void _make_swa_array(void){
 	Mem_Set(SXW.SWAbulk_tree_avg, 0, SXW.NPds * SXW.NSoLyrs * sizeof(RealF));
 	Mem_Set(SXW.SWAbulk_forb_avg, 0, SXW.NPds * SXW.NSoLyrs * sizeof(RealF));
 
+  //SXW.sum_dSWA_repartitioned = (RealF *) Mem_Calloc(size_3d, sizeof(RealF), fstr);
+  //Mem_Set(SXW.sum_dSWA_repartitioned, 0, size_3d);
+
   //4 - Grass,Frob,Tree,Shrub
-  size = 4 * SXW.NPds * SXW.NSoLyrs;
-  SXW.SWA_master = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr);
-  SXW.dSWAbulk = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr);
-  SXW.dSWA_repartitioned = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr);
+  size = 4 * 4 * SXW.NPds * SXW.NSoLyrs;
+  SXW.SWA_master = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr); // 4D
+  SXW.dSWAbulk = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr); // 4D
+  SXW.dSWA_repartitioned = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr); // 4D
 
   //Mem_Set(SXW.SWA_master, 0, SXW.NPds * 4 * SXW.NSoLyrs * sizeof(RealF));
   memset(SXW.SWA_master, 0, sizeof(SXW.SWA_master));
@@ -1305,6 +1309,8 @@ void free_all_sxw_memory( void ) {
   Mem_Free(SXW.SWAbulk_shrub_avg);
   Mem_Free(SXW.SWAbulk_tree_avg);
   Mem_Free(SXW.SWAbulk_forb_avg);
+
+  //Mem_Free(SXW.sum_dSWA_repartitioned);
 
   Mem_Free(SXW.SWA_master);
   Mem_Free(SXW.dSWAbulk);
