@@ -84,7 +84,7 @@ struct stepwat_st {
         *dSWA_repartitioned; // 4D array to store repartioned SWA values
 
         // going to want to change this to Itlp array
-  RealF sum_dSWA_repartitioned[4][10][500]; // store the sum of dSWA_repartitioned for each veg_type, layer, timeperiod. 3D array
+  RealF sum_dSWA_repartitioned[4][20][500]; // [veg_type][layer][timeperiod] store the sum of dSWA_repartitioned. 3D array
 
   RealF transp_SWA[MAX_YEARS][11]; // store the sum of SWA and transp for each year and resource. transp_SWA[year][steppe_resource_group]
   int rank_SWPcrits[5]; // array to store the SWP crits in order of lest negative to most negative (used in sxw_resource)

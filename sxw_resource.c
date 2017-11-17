@@ -76,7 +76,8 @@ extern
 
 extern
   RealF _resource_pr[MAX_RGROUPS],  /* resource convertable to pr */
-        _resource_cur[MAX_RGROUPS];  /* current resource utilization */
+        _resource_cur[MAX_RGROUPS],
+        _resource_cur_swa[MAX_RGROUPS];  /* current resource utilization */
 
 extern
   RealF _bvt;
@@ -153,13 +154,15 @@ void _sxw_update_resource(void) {
 
 	_sxw_update_root_tables(sizes);
 	_transp_contribution_by_group(_resource_cur);
-  _SWA_contribution_by_group(_resource_cur);
+  _SWA_contribution_by_group(_resource_cur_swa);
 
 	ForEachGroup(g)
 	{
     _resource_cur[g] = SXW.transp_SWA[currentYear][g];
+    //_resource_cur_swa[g] = SXW.sum_dSWA_repartitioned[currentYear][1][g];
 		//_resource_pr[g] = ZRO(sizes[g]) ? 0.0 : _resource_cur[g] * _bvt / sizes[g];
 		_resource_cur[g] = _resource_cur[g] * _bvt;
+    //_resource_cur_swa[g] = _resource_cur_swa[g] * _bvt;
 	}
 /* _print_debuginfo(); */
 }
@@ -234,13 +237,12 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
 	 */
 
 	GrpIndex g;
-	SppIndex s;
 	TimeInt p;
 	LyrIndex l;
   int currentYear;
   if(SW_Model.year == 0) currentYear = 0;
   else currentYear = SW_Model.year - SW_Model.startyr;
-	int t,i;
+	int t;
 	RealD *transp;
 	RealF sumUsedByGroup = 0., sumTranspTotal = 0., TranspRemaining = 0.;
 
@@ -302,7 +304,7 @@ static void _SWA_contribution_by_group(RealF use_by_group[]) {
   if(SW_Model.year == 0) currentYear = 0;
   else currentYear = SW_Model.year - SW_Model.startyr;
 	int t;
-	RealF sumUsedByGroup = 0., sumSWATotal = 0., SWARemaining = 0.;
+	RealF sumUsedByGroup = 0.;
 
 	ForEachGroup(g) // steppe functional group
 	{

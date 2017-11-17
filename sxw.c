@@ -107,6 +107,7 @@ RealD * _roots_max,     /* read from root distr. file */
 /* simple vectors hold the resource information for each group */
 /* curr/equ gives the available/required ratio */
 RealF _resource_cur[MAX_RGROUPS],  /* current resource utilization */
+      _resource_cur_swa[MAX_RGROUPS],
       _resource_pr[MAX_RGROUPS];   /* resource convertable to PR */
 
 #ifdef SXW_BYMAXSIZE
@@ -144,7 +145,6 @@ static void _make_roots_arrays(void);
 static void _make_phen_arrays(void);
 static void _make_prod_arrays(void);
 static void _make_transp_arrays(void);
-static void _write_sw_outin(void);
 //static void _recover_names(void);
 static void _read_debugfile(void);
 void _print_debuginfo(void);
@@ -208,7 +208,6 @@ void SXW_Init( Bool init_SW, char *f_roots ) {
 
   if (SXW.debugfile)
 	  _read_debugfile();
-  //_write_sw_outin();
 
 
   if(init_SW) {
@@ -721,123 +720,6 @@ static void _read_watin(void) {
               "%s: Too few files (%d)", MyFileName, lineno);
    }
 
-}
-
-static void _write_sw_outin(void) {
-/*======================================================*/
-/* make sure the outsetup file for soilwat contains only
- * the given information */
-/* Note that there won't actually be any output.  These
- * keys are required to trigger the correct part of the
- * output accumulation routines.  Refer to the Output.c
- * module of SOILWAT for more.
- */
-	FILE *fp;
-	char pd[3];
-
-	switch (SXW.NPds) {
-	case MAX_WEEKS:
-		strcpy(pd, "WK");
-		break;
-	case MAX_MONTHS:
-		strcpy(pd, "MO");
-		break;
-	case MAX_DAYS:
-		strcpy(pd, "DY");
-		break;
-	}
-
-  // reading outsetup_v30.in file to get timestep values
-  FILE *zq;
-	zq = fopen(_swOutDefName, "r");
-	int lineNum = 0;
-	if(zq){
-    char lineLen[100];
-    char timestepVals[100];
-    char *timeStep_final[4];
-		while(fgets(lineLen, sizeof lineLen, zq) != NULL){
-			if(lineNum == 5 || lineNum == 3){ // check both lines in case debug is turned off which would make line 3 the last line
-        char *timeCheck = strstr(lineLen, "TIMESTEP"); // check if this line is the one that outlines the timesteps
-        if(timeCheck){
-          printf("%s\n", lineLen);
-          strcpy(timestepVals, lineLen);
-        }
-      }
-      lineNum++;
-		}
-    // done reading outsetup_v30.in file
-
-    char ** res  = NULL;
-    char *  p    = strtok (timestepVals, " ");
-    int n_spaces = 0, i;
-
-    /* split string and append tokens to 'res' */
-
-    while (p) {
-      res = realloc (res, sizeof (char*) * ++n_spaces);
-
-      if (res == NULL)
-        exit (-1); /* memory allocation failed */
-
-      res[n_spaces-1] = p;
-
-      p = strtok (NULL, " ");
-
-    }
-
-    /* realloc one extra element for the last NULL */
-
-    res = realloc (res, sizeof (char*) * (n_spaces+1));
-    res[n_spaces] = 0;
-
-    /* print the result */
-    for (i = 0; i < (n_spaces); ++i){
-      printf ("res[%d] = %s\n", i, res[i]);
-
-      if(strcmp(res[i],"dy")){
-        //printf("DAY\n");
-        timeStep_final[0] = "dy";
-        //printf("timeStep_final[0]: %s\n", timeStep_final[0]);
-      }
-      else if(strcmp(res[i],"wk")){
-        //printf("WEEK\n");
-        timeStep_final[1] = "wk";
-        //printf("timeStep_final[1]: %s\n", timeStep_final[1]);
-      }
-      else if(strcmp(res[i],"mo")){
-        //printf("MO\n");
-        timeStep_final[2] = "mo";
-        //printf("timeStep_final[2]: %s\n", timeStep_final[2]);
-      }
-      else if(strcmp(res[i],"yr")){
-        //printf("YR\n");
-        timeStep_final[3] = "yr";
-        //printf("timeStep_final[3]: %s\n", timeStep_final[3]);
-      }
-      else printf("\nelse\n\n");
-    }
-
-
-    /* free the memory allocated */
-
-    free (res);
-    //
-
-		fclose(zq);
-	}
-
-	fp = OpenFile(_swOutDefName, "w");
-	fprintf(fp, "TRANSP  SUM  %s  1  end  transp\n", pd);
-	fprintf(fp, "PRECIP  SUM  YR  1  end  precip\n");
-	fprintf(fp, "TEMP    AVG  YR  1  end  temp\n");
-	if (SXW.debugfile) {
-		fprintf(fp, "AET     SUM  YR  1  end  aet\n");
-		fprintf(fp, "SWCBULK     FIN  MO  1  end  swc_bulk\n");
-	}
-  fprintf(fp, "SWA    AVG  MO  1  end  swa\n");
-  fprintf(fp, "TIMESTEP dy wk mo yr\n");
-
-	CloseFile(&fp);
 }
 
 static void _make_arrays(void) {
