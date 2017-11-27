@@ -76,8 +76,7 @@ extern
 
 extern
   RealF _resource_pr[MAX_RGROUPS],  /* resource convertable to pr */
-        _resource_cur[MAX_RGROUPS],
-        _resource_cur_swa[MAX_RGROUPS];  /* current resource utilization */
+        _resource_cur[MAX_RGROUPS];
 
 extern
   RealF _bvt;
@@ -154,15 +153,12 @@ void _sxw_update_resource(void) {
 
 	_sxw_update_root_tables(sizes);
 	_transp_contribution_by_group(_resource_cur);
-  _SWA_contribution_by_group(_resource_cur_swa);
+  _SWA_contribution_by_group(SXW.sum_dSWA_repartitioned);
 
 	ForEachGroup(g)
 	{
     _resource_cur[g] = SXW.transp_SWA[currentYear][g];
-    //_resource_cur_swa[g] = SXW.sum_dSWA_repartitioned[currentYear][1][g];
-		//_resource_pr[g] = ZRO(sizes[g]) ? 0.0 : _resource_cur[g] * _bvt / sizes[g];
 		_resource_cur[g] = _resource_cur[g] * _bvt;
-    //_resource_cur_swa[g] = _resource_cur_swa[g] * _bvt;
 	}
 /* _print_debuginfo(); */
 }
@@ -311,14 +307,13 @@ static void _SWA_contribution_by_group(RealF use_by_group[]) {
 		use_by_group[g] = 0.; // clear
 		t = RGroup[g]->veg_prod_type-1;
 
-		/*ForEachTrPeriod(p)
+		ForEachTrPeriod(p)
 		{
 			for (l = 0; l < SXW.NSoLyrs; l++) {
-        // TODO: need to figure out actual value for 2nd param in Itclp
-				use_by_group[g] += (RealF) (_roots_active_rel[Iglp(g, l, p)] * SXW.SWA_master[Itclp(t,0,l,p)]); //min_res_req is space parameter
+				use_by_group[g] += (RealF) (_roots_active_rel[Iglp(g, l, p)] * SXW.sum_dSWA_repartitioned[g][l][p]); //min_res_req is space parameter
 			}
-		}*/
-		//sumUsedByGroup += use_by_group[g];
-    //SXW.transp_SWA[currentYear][g] += sumUsedByGroup;
+		}
+		sumUsedByGroup += use_by_group[g];
+    SXW.transp_SWA[currentYear][g] += sumUsedByGroup;
 	}
 }
