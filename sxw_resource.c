@@ -158,7 +158,9 @@ void _sxw_update_resource(void) {
 	ForEachGroup(g)
 	{
     _resource_cur[g] = SXW.transp_SWA[currentYear][g];
+    //printf("resource_cur prior to multiplication: %f\n", _resource_cur[g]);
 		_resource_cur[g] = _resource_cur[g] * _bvt;
+    //printf("resource_cur post multiplication: %f\n\n", _resource_cur[g]);
 	}
 /* _print_debuginfo(); */
 }
@@ -315,5 +317,6 @@ static void _SWA_contribution_by_group(RealF use_by_group[]) {
 		}
 		sumUsedByGroup += use_by_group[g];
     SXW.transp_SWA[currentYear][g] += sumUsedByGroup;
+    //printf("SXW.transp_SWA[%d][%d]: %f\n", currentYear, g, SXW.transp_SWA[currentYear][g]);
 	}
 }
