@@ -1,4 +1,4 @@
-TIMESTEP mo
+TIMESTEP mo yr // output files to be created
 TRANSP  SUM  MO  1  end  transp
 PRECIP  SUM  YR  1  end  precip
 TEMP    AVG  YR  1  end  temp
