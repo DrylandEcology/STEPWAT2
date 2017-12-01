@@ -308,11 +308,13 @@ static void _SWA_contribution_by_group(RealF use_by_group[]) {
 	{
 		use_by_group[g] = 0.; // clear
 		t = RGroup[g]->veg_prod_type-1;
+    //printf("g, t || %d, %d\n", g, t);
 
 		ForEachTrPeriod(p)
 		{
 			for (l = 0; l < SXW.NSoLyrs; l++) {
-				use_by_group[g] += (RealF) (_roots_active_rel[Iglp(g, l, p)] * SXW.sum_dSWA_repartitioned[g][l][p]); //min_res_req is space parameter
+        //printf("%d,%d,%d\n", g,l,p);
+				use_by_group[g] += (RealF) (_roots_active_rel[Iglp(g, l, p)] * SXW.sum_dSWA_repartitioned[t][l][p]); //min_res_req is space parameter
 			}
 		}
 		sumUsedByGroup += use_by_group[g];

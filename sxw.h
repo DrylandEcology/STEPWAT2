@@ -84,7 +84,8 @@ struct stepwat_st {
         *dSWA_repartitioned; // 4D array to store repartioned SWA values
 
         // going to want to change this to Itlp array
-  RealF sum_dSWA_repartitioned[4][20][500]; // [veg_type][layer][timeperiod] store the sum of dSWA_repartitioned. 3D array
+  RealF sum_dSWA_repartitioned[80][80][366]; // [veg_type][layer][timeperiod] store the sum of dSWA_repartitioned. 3D array
+  //RealF *sum_dSWA_repartitioned;
 
   RealF transp_SWA[MAX_YEARS][11]; // store the sum of SWA and transp for each year and resource. transp_SWA[year][steppe_resource_group]
   int rank_SWPcrits[5]; // array to store the SWP crits in order of lest negative to most negative (used in sxw_resource)
@@ -94,6 +95,11 @@ struct stepwat_st {
   int col_status_wk;
   int col_status_mo;
   int col_status_yr;
+
+  RealF *swc_avg;
+  RealF val_snowmelt_avg[1000], // set to 1000 for max years
+        val_snowloss_avg[1000],
+        aet_avg[1000];
 };
 
 #define SXW_NFILES 5
@@ -117,7 +123,13 @@ typedef struct stepwat_st SXW_t;
 /* convert 4-d index to actual array index for
  * veg-prod-type/crit-value/layer/phenology
  */
+ //veg_type, new_critical_value, layer, timeperiod
 #define Itclp(t,c,l,p) (((t)*SXW.NTrLyrs*SXW.NPds) + ((c)*4) + ((l)*SXW.NPds) + (p)) // c*4 is because there are 4 critical values
+
+// for use with avg values
+#define Iylp(y,l,p) (((y)*Globals.runModelYears * SXW.NTrLyrs * SXW.NPds) + ((l)*SXW.NTrLyrs * SXW.NPds) + ((p)*SXW.NPds))
+
+#define Ivlp(v,l,p) (((v)*4 * SXW.NTrLyrs * SXW.NPds) + ((l)*SXW.NTrLyrs * SXW.NPds) + ((p)*SXW.NPds))
 
 /* convert 2d layer by period indices to
   layer/phenology 1D index */
