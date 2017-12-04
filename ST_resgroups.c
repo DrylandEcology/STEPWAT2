@@ -136,6 +136,11 @@ void rgroup_PartResources(void)
 		size_base[rg] = g->relsize * g->min_res_req;
 		size_obase[rg] = (g->use_extra_res) ? size_base[rg] : 0.;
 
+		/*these functions are not used if using SOILWAT,
+		 extra resource partitioning does not occur when running SOILWAT*/
+			_res_part_extra(do_base, xtra_base, size_base);
+			_res_part_extra(do_extra, xtra_obase, size_obase);
+
 		/*this is how res_required and res_avail are set if SOILWAT is running*/
 #ifdef STEPWAT
 	}
@@ -192,8 +197,8 @@ void rgroup_PartResources(void)
 
 	/*these functions are not used if using SOILWAT,
 	 extra resource partitioning does not occur when running SOILWAT*/
-		_res_part_extra(do_base, xtra_base, size_base);
-		_res_part_extra(do_extra, xtra_obase, size_obase);
+	//	_res_part_extra(do_base, xtra_base, size_base);
+		//_res_part_extra(do_extra, xtra_obase, size_obase);
 
 	/* reset annuals' "true" relative size here */
     //KAP: formely, this call established annual species. We have moved annual establishment to the Rgroup_Establish function,
@@ -202,6 +207,7 @@ void rgroup_PartResources(void)
 	{
 		g = RGroup[rg];
 		g->pr = ZRO(g->res_avail) ? 0. : g->res_required / g->res_avail;
+		//printf("pr = %f    res_avail = %f    res_required = %f\n", g->pr, g->res_avail, g->res_required);
 		//if (g->max_age == 1)
 		//{
 		//	g->relsize = _add_annuals(rg, g->pr, add_seeds);
@@ -398,12 +404,21 @@ static void _res_part_extra(Bool isextra, RealF extra, RealF size[])
 			continue;
 		space = (UseSoilwat) ? 1.0 : g->min_res_req;
 
-		req_prop = size[rg] / sum_size;
+		// checking so dont divide by 0
+		if(sum_size == 0.)
+			req_prop = 0.;
+		else
+			req_prop = size[rg] / sum_size;
+		//printf("sum_size: %f\n", sum_size);
 
 		if (isextra && g->use_extra_res && GT(g->xgrow, 0))
 			g->res_extra = req_prop * extra / space;
-		else
+		else{
 			g->res_avail += req_prop * extra / space;
+			//printf("res_avail: %f\n", g->res_avail);
+			//printf("req_prop: %f\n", req_prop);
+			//printf("res_avail: %f\n", g->res_avail);
+		}
 
 	}
 
