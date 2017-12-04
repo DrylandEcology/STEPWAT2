@@ -127,8 +127,10 @@ typedef struct stepwat_st SXW_t;
 #define Itclp(t,c,l,p) (((t)*SXW.NTrLyrs*SXW.NPds) + ((c)*4) + ((l)*SXW.NPds) + (p)) // c*4 is because there are 4 critical values
 
 // for use with avg values
+// year, layer, timeperiod
 #define Iylp(y,l,p) (((y)*Globals.runModelYears * SXW.NTrLyrs * SXW.NPds) + ((l)*SXW.NTrLyrs * SXW.NPds) + ((p)*SXW.NPds))
 
+// veg type, layer, timeperiod
 #define Ivlp(v,l,p) (((v)*4 * SXW.NTrLyrs * SXW.NPds) + ((l)*SXW.NTrLyrs * SXW.NPds) + ((p)*SXW.NPds))
 
 /* convert 2d layer by period indices to
