@@ -315,6 +315,7 @@ static void _SWA_contribution_by_group(RealF use_by_group[]) {
 			for (l = 0; l < SXW.NSoLyrs; l++) {
         //printf("%d,%d,%d\n", g,l,p);
 				use_by_group[g] += (RealF) (_roots_active_rel[Iglp(g, l, p)] * SXW.sum_dSWA_repartitioned[t][l][p]); //min_res_req is space parameter
+        //use_by_group[g] += (RealF) (_roots_active_rel[Iglp(g, l, p)] * SXW.sum_dSWA_repartitioned[Ivlp(t,l,p)]); //min_res_req is space parameter
 			}
 		}
 		sumUsedByGroup += use_by_group[g];
