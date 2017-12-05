@@ -162,13 +162,13 @@ void insertInfo() {
 	endTransaction();
 }
 
-static void insertRootsXphenRow(GrpIndex g, int Layer, double Jan, double Feb, double March, double April, double May, double June, double July, double Aug, double Sept, double Oct, double November, double December) {
+static void insertRootsXphenRow(GrpIndex g, int Layer, double var_Jan, double var_Feb, double var_Mar, double var_Apr, double var_May, double var_Jun, double var_Jul, double var_Aug, double var_Sep, double var_Oct, double var_Nov, double var_Dec) {
 	int rc;
 	char *zErrMsg = 0;
 
 	sql[0] = 0;
 
-	sprintf(sql, "INSERT INTO sxwRootsXphen (RGroupID,Layer,January,February,March,April,May,June,July,August,September,October,November,December) VALUES (%d, %d, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f);", g, Layer, Jan, Feb, March, April, May, June, July, Aug, Sept, Oct, November, December);
+	sprintf(sql, "INSERT INTO sxwRootsXphen (RGroupID,Layer,January,February,March,April,May,June,July,August,September,October,November,December) VALUES (%d, %d, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f);", g, Layer, var_Jan, var_Feb, var_Mar, var_Apr, var_May, var_Jun, var_Jul, var_Aug, var_Sep, var_Oct, var_Nov, var_Dec);
 	rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
 	sqlcheck(rc, zErrMsg);
 }
@@ -453,12 +453,12 @@ void insertOutputProd(SW_VEGPROD *v) {
 	endTransaction();
 }
 
-static void insertSXWoutputRootsSumRow(int Year, int Iteration, int Layer, int VegProdType, double January, double February, double March, double April, double May, double June, double July, double August, double September, double October, double November, double December) {
+static void insertSXWoutputRootsSumRow(int Year, int Iteration, int Layer, int VegProdType, double var_Jan, double var_Feb, double var_Mar, double var_Apr, double var_May, double var_Jun, double var_Jul, double var_Aug, double var_Sep, double var_Oct, double var_Nov, double var_Dec) {
 	/*int rc;
 	char *zErrMsg = 0;
 	sql[0] = 0;
 
-	sprintf(sql, "INSERT INTO sxwOutputRootsSum (Year,Iteration,Layer,VegProdType,January,February,March,April,May,June,July,August,September,October,November,December) VALUES (%d, %d, %d, %d, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f);", Year,Iteration,Layer,VegProdType,January,February,March,April,May,June,July,August,September,October,November,December);
+	sprintf(sql, "INSERT INTO sxwOutputRootsSum (Year,Iteration,Layer,VegProdType,January,February,March,April,May,June,July,August,September,October,November,December) VALUES (%d, %d, %d, %d, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f);", Year,Iteration,Layer,VegProdType,January,February,var_Mar,April,May,June,July,August,September,October,November,December);
 	rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
 	sqlcheck(rc, zErrMsg);*/
 
@@ -466,18 +466,18 @@ static void insertSXWoutputRootsSumRow(int Year, int Iteration, int Layer, int V
 	sqlite3_bind_int(stmt_OutRootsSum, 2, Iteration);
 	sqlite3_bind_int(stmt_OutRootsSum, 3, Layer);
 	sqlite3_bind_int(stmt_OutRootsSum, 4, VegProdType);
-	sqlite3_bind_double(stmt_OutRootsSum, 5, January);
-	sqlite3_bind_double(stmt_OutRootsSum, 6, February);
-	sqlite3_bind_double(stmt_OutRootsSum, 7, March);
-	sqlite3_bind_double(stmt_OutRootsSum, 8, April);
-	sqlite3_bind_double(stmt_OutRootsSum, 9, May);
-	sqlite3_bind_double(stmt_OutRootsSum, 10, June);
-	sqlite3_bind_double(stmt_OutRootsSum, 11, July);
-	sqlite3_bind_double(stmt_OutRootsSum, 12, August);
-	sqlite3_bind_double(stmt_OutRootsSum, 13, September);
-	sqlite3_bind_double(stmt_OutRootsSum, 14, October);
-	sqlite3_bind_double(stmt_OutRootsSum, 15, November);
-	sqlite3_bind_double(stmt_OutRootsSum, 16, December);
+	sqlite3_bind_double(stmt_OutRootsSum, 5, var_Jan);
+	sqlite3_bind_double(stmt_OutRootsSum, 6, var_Feb);
+	sqlite3_bind_double(stmt_OutRootsSum, 7, var_Mar);
+	sqlite3_bind_double(stmt_OutRootsSum, 8, var_Apr);
+	sqlite3_bind_double(stmt_OutRootsSum, 9, var_May);
+	sqlite3_bind_double(stmt_OutRootsSum, 10, var_Jun);
+	sqlite3_bind_double(stmt_OutRootsSum, 11, var_Jul);
+	sqlite3_bind_double(stmt_OutRootsSum, 12, var_Aug);
+	sqlite3_bind_double(stmt_OutRootsSum, 13, var_Sep);
+	sqlite3_bind_double(stmt_OutRootsSum, 14, var_Oct);
+	sqlite3_bind_double(stmt_OutRootsSum, 15, var_Nov);
+	sqlite3_bind_double(stmt_OutRootsSum, 16, var_Dec);
 
 	sqlite3_step(stmt_OutRootsSum);
 	sqlite3_clear_bindings(stmt_OutRootsSum);
@@ -506,7 +506,7 @@ void insertRootsSum(RealD * _roots_active_sum) {
 	endTransaction();
 }
 
-static void insertSXWoutputRootsRelativeRow(int Year, int Iteration, int Layer, int RGroupID, double January, double February, double March, double April, double May, double June, double July, double August, double September, double October, double November, double December) {
+static void insertSXWoutputRootsRelativeRow(int Year, int Iteration, int Layer, int RGroupID, double var_Jan, double var_Feb, double var_Mar, double var_Apr, double var_May, double var_Jun, double var_Jul, double var_Aug, double var_Sep, double var_Oct, double var_Nov, double var_Dec) {
 	/*int rc;
 	char *zErrMsg = 0;
 	sql[0] = 0;
@@ -519,18 +519,18 @@ static void insertSXWoutputRootsRelativeRow(int Year, int Iteration, int Layer, 
 	sqlite3_bind_int(stmt_OutRootsRel, 2, Iteration);
 	sqlite3_bind_int(stmt_OutRootsRel, 3, Layer);
 	sqlite3_bind_int(stmt_OutRootsRel, 4, RGroupID);
-	sqlite3_bind_double(stmt_OutRootsRel, 5, January);
-	sqlite3_bind_double(stmt_OutRootsRel, 6, February);
-	sqlite3_bind_double(stmt_OutRootsRel, 7, March);
-	sqlite3_bind_double(stmt_OutRootsRel, 8, April);
-	sqlite3_bind_double(stmt_OutRootsRel, 9, May);
-	sqlite3_bind_double(stmt_OutRootsRel, 10, June);
-	sqlite3_bind_double(stmt_OutRootsRel, 11, July);
-	sqlite3_bind_double(stmt_OutRootsRel, 12, August);
-	sqlite3_bind_double(stmt_OutRootsRel, 13, September);
-	sqlite3_bind_double(stmt_OutRootsRel, 14, October);
-	sqlite3_bind_double(stmt_OutRootsRel, 15, November);
-	sqlite3_bind_double(stmt_OutRootsRel, 16, December);
+	sqlite3_bind_double(stmt_OutRootsRel, 5, var_Jan);
+	sqlite3_bind_double(stmt_OutRootsRel, 6, var_Feb);
+	sqlite3_bind_double(stmt_OutRootsRel, 7, var_Mar);
+	sqlite3_bind_double(stmt_OutRootsRel, 8, var_Apr);
+	sqlite3_bind_double(stmt_OutRootsRel, 9, var_May);
+	sqlite3_bind_double(stmt_OutRootsRel, 10, var_Jun);
+	sqlite3_bind_double(stmt_OutRootsRel, 11, var_Jul);
+	sqlite3_bind_double(stmt_OutRootsRel, 12, var_Aug);
+	sqlite3_bind_double(stmt_OutRootsRel, 13, var_Sep);
+	sqlite3_bind_double(stmt_OutRootsRel, 14, var_Oct);
+	sqlite3_bind_double(stmt_OutRootsRel, 15, var_Nov);
+	sqlite3_bind_double(stmt_OutRootsRel, 16, var_Dec);
 
 	sqlite3_step(stmt_OutRootsRel);
 	sqlite3_clear_bindings(stmt_OutRootsRel);
@@ -562,7 +562,7 @@ void insertRootsRelative(RealD * _roots_active_rel) {
 	endTransaction();
 }
 
-static void insertSXWoutputTranspirationRow(int Year, int Iteration, int Layer, int VegProdType, double January, double February, double March, double April, double May, double June, double July, double August, double September, double October, double November, double December) {
+static void insertSXWoutputTranspirationRow(int Year, int Iteration, int Layer, int VegProdType, double var_Jan, double var_Feb, double var_Mar, double var_Apr, double var_May, double var_Jun, double var_Jul, double var_Aug, double var_Sep, double var_Oct, double var_Nov, double var_Dec) {
 	/*int rc;
 	char *zErrMsg = 0;
 	sql[0] = 0;
@@ -575,18 +575,18 @@ static void insertSXWoutputTranspirationRow(int Year, int Iteration, int Layer, 
 	sqlite3_bind_int(stmt_OutTransp, 2, Iteration);
 	sqlite3_bind_int(stmt_OutTransp, 3, Layer);
 	sqlite3_bind_int(stmt_OutTransp, 4, VegProdType);
-	sqlite3_bind_double(stmt_OutTransp, 5, January);
-	sqlite3_bind_double(stmt_OutTransp, 6, February);
-	sqlite3_bind_double(stmt_OutTransp, 7, March);
-	sqlite3_bind_double(stmt_OutTransp, 8, April);
-	sqlite3_bind_double(stmt_OutTransp, 9, May);
-	sqlite3_bind_double(stmt_OutTransp, 10, June);
-	sqlite3_bind_double(stmt_OutTransp, 11, July);
-	sqlite3_bind_double(stmt_OutTransp, 12, August);
-	sqlite3_bind_double(stmt_OutTransp, 13, September);
-	sqlite3_bind_double(stmt_OutTransp, 14, October);
-	sqlite3_bind_double(stmt_OutTransp, 15, November);
-	sqlite3_bind_double(stmt_OutTransp, 16, December);
+	sqlite3_bind_double(stmt_OutTransp, 5, var_Jan);
+	sqlite3_bind_double(stmt_OutTransp, 6, var_Feb);
+	sqlite3_bind_double(stmt_OutTransp, 7, var_Mar);
+	sqlite3_bind_double(stmt_OutTransp, 8, var_Apr);
+	sqlite3_bind_double(stmt_OutTransp, 9, var_May);
+	sqlite3_bind_double(stmt_OutTransp, 10, var_Jun);
+	sqlite3_bind_double(stmt_OutTransp, 11, var_Jul);
+	sqlite3_bind_double(stmt_OutTransp, 12, var_Aug);
+	sqlite3_bind_double(stmt_OutTransp, 13, var_Sep);
+	sqlite3_bind_double(stmt_OutTransp, 14, var_Oct);
+	sqlite3_bind_double(stmt_OutTransp, 15, var_Nov);
+	sqlite3_bind_double(stmt_OutTransp, 16, var_Dec);
 
 	sqlite3_step(stmt_OutTransp);
 	sqlite3_clear_bindings(stmt_OutTransp);
@@ -645,7 +645,7 @@ void insertTranspiration() {
 	endTransaction();
 }
 
-static void insertSXWoutputSWCBulkRow(int Year, int Iteration, int Layer, double January, double February, double March, double April, double May, double June, double July, double August, double September, double October, double November, double December) {
+static void insertSXWoutputSWCBulkRow(int Year, int Iteration, int Layer, double var_Jan, double var_Feb, double var_Mar, double var_Apr, double var_May, double var_Jun, double var_Jul, double var_Aug, double var_Sep, double var_Oct, double var_Nov, double var_Dec) {
 	/*int rc;
 	char *zErrMsg = 0;
 	sql[0] = 0;
@@ -657,18 +657,18 @@ static void insertSXWoutputSWCBulkRow(int Year, int Iteration, int Layer, double
 	sqlite3_bind_int(stmt_OutSWC, 1, Year);
 	sqlite3_bind_int(stmt_OutSWC, 2, Iteration);
 	sqlite3_bind_int(stmt_OutSWC, 3, Layer);
-	sqlite3_bind_double(stmt_OutSWC, 4, January);
-	sqlite3_bind_double(stmt_OutSWC, 5, February);
-	sqlite3_bind_double(stmt_OutSWC, 6, March);
-	sqlite3_bind_double(stmt_OutSWC, 7, April);
-	sqlite3_bind_double(stmt_OutSWC, 8, May);
-	sqlite3_bind_double(stmt_OutSWC, 9, June);
-	sqlite3_bind_double(stmt_OutSWC, 10, July);
-	sqlite3_bind_double(stmt_OutSWC, 11, August);
-	sqlite3_bind_double(stmt_OutSWC, 12, September);
-	sqlite3_bind_double(stmt_OutSWC, 13, October);
-	sqlite3_bind_double(stmt_OutSWC, 14, November);
-	sqlite3_bind_double(stmt_OutSWC, 15, December);
+	sqlite3_bind_double(stmt_OutSWC, 4, var_Jan);
+	sqlite3_bind_double(stmt_OutSWC, 5, var_Feb);
+	sqlite3_bind_double(stmt_OutSWC, 6, var_Mar);
+	sqlite3_bind_double(stmt_OutSWC, 7, var_Apr);
+	sqlite3_bind_double(stmt_OutSWC, 8, var_May);
+	sqlite3_bind_double(stmt_OutSWC, 9, var_Jun);
+	sqlite3_bind_double(stmt_OutSWC, 10, var_Jul);
+	sqlite3_bind_double(stmt_OutSWC, 11, var_Aug);
+	sqlite3_bind_double(stmt_OutSWC, 12, var_Sep);
+	sqlite3_bind_double(stmt_OutSWC, 13, var_Oct);
+	sqlite3_bind_double(stmt_OutSWC, 14, var_Nov);
+	sqlite3_bind_double(stmt_OutSWC, 15, var_Dec);
 
 	sqlite3_step(stmt_OutSWC);
 	sqlite3_clear_bindings(stmt_OutSWC);
