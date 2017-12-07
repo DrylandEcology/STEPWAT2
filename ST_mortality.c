@@ -196,37 +196,32 @@ void mort_EndOfYear( void)
 	//printf("inside mort_EndOfYear() \n");
 	GrpIndex rg;
 	GroupType *g;
-        RealF fire_possibility,y;
-        RealF x_cheatgrass = Species[g->cheatgrass_index]->relsize * Species[g->cheatgrass_index]->mature_biomass; // calculate biomass of cheatgrass
-        y = RandUni(); /* Set a random number outide of the loop to make sure the kill probability for each functional group is same */
-        
-        
-       //printf("[Rui] x_cheatgrass: %f\n",x_cheatgrass);
-
-        if (x_cheatgrass < g->ignition)
+        RealF fire_possibility,Wildfire_controller;
+        RealF Bio_cheatgrass = Species[g->cheatgrass_index]->relsize * Species[g->cheatgrass_index]->mature_biomass; // calculate biomass of cheatgrass
+        Wildfire_controller = RandUni(); /* Set a random number outside of the loop to make sure the kill probability for each functional group is same */
+        // printf("[Rui] x_cheatgrass: %s\n",Species[g->cheatgrass_index]->name);
+        //printf("[Rui] x_cheatgrass: %f\n",Bio_cheatgrass);
+        if (Bio_cheatgrass < g->ignition)
                     {
                        fire_possibility = 1.0 / Globals.runModelYears;  
                     } 
         /* don't ignite wild fire based on cheatgrass until the cheatgrass could reach the ignition value */
-        if (x_cheatgrass >= g->ignition)
+        if (Bio_cheatgrass >= g->ignition)
                     {
-                        fire_possibility = g->cheatgrass_coefficient + g->wild_fire_slope * x_cheatgrass;
+                        fire_possibility = g->cheatgrass_coefficient + g->wild_fire_slope * Bio_cheatgrass;
                     }
-       if (g->ignition == 0)
+        /* if ignition =0, no wild fire happened */
+        if (g->ignition == 0)
                     {
                        fire_possibility = 0; 
                      } 
+        /*  if the input prescribed fire value < 1; wild fire and prescribed fire happen at the same time, 
+        * while if the input prescribed fire value >1, only prescribed fire happens */
         if GT (g->killfreq, fire_possibility)
                     { 
                          fire_possibility = g->killfreq;
                     }
-                     
-          /*  if the input prescribed fire value < 1; wild fire and prescribed fire happen at the same time, 
-           * while if the input prescribed fire value >1, only prescribed fire happens
-           * if the  input prescribed fire value=0 && ignition =0 no fire happened */
-     
-         printf("[Rui] fire_possibility: %f\n",fire_possibility); 
-         
+        //printf("fire_possibility: %f\n",fire_possibility);   
 	ForEachGroup(rg)
 	{
 		if (Globals.currYear < RGroup[rg]->startyr)
@@ -234,19 +229,18 @@ void mort_EndOfYear( void)
 			/* don't start trying to kill or grow or do grazing until RGroup[rg]->startyr year */
 			continue;
 		}
-
 		g = RGroup[rg];
-                     
-                
-                    if ((Globals.currYear >= g->killfreq_startyr) && GT(fire_possibility, 0.))
+                /* check wild fire first*/
+                if ((Globals.currYear >= g->killfreq_startyr) && GT(fire_possibility, 0.))
                     {
 			if (LT(fire_possibility, 1.0))
 			{
-				if (y <= fire_possibility)
+				if (Wildfire_controller <= fire_possibility)
 				{
 					g->killyr = Globals.currYear;
 				}
 			}
+                /* then check prescribed fire*/
 			else if (((Globals.currYear - g->killfreq_startyr) % (IntU) g->killfreq) == 0)
 			{
 				g->killyr = Globals.currYear;
