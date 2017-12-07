@@ -1,4 +1,5 @@
 [submodule "sw_src"]
 	path = sw_src
 	url = https://github.com/Burke-Lauenroth-Lab/SOILWAT2.git
+	branch = soilwat_co2_effects
         ignore = dirty
