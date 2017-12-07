@@ -220,7 +220,7 @@ static void _update_productivity(void) {
  *     otherwise.
  */
   GrpIndex g;
-  Months m;
+  TimeInt m;
 
   SW_VEGPROD *v = &SW_VegProd;
   RealF totbmass = 0.0,
