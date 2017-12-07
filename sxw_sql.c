@@ -221,7 +221,7 @@ void insertInputVars() {
 	SW_VEGPROD *v = &SW_VegProd;
 
 	beginTransaction();
-	insertSXWinputVarsRow(Year, Iteration, v->fractionGrass, v->fractionShrub, v->fractionTree, v->fractionForb, v->fractionBareGround);
+	insertSXWinputVarsRow(Year, Iteration, v->grass.cov.fCover, v->shrub.cov.fCover, v->tree.cov.fCover, v->forb.cov.fCover, v->bare_cov.fCover);
 	endTransaction();
 }
 
