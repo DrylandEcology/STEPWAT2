@@ -213,6 +213,7 @@ void SXW_Init( Bool init_SW, char *f_roots ) {
   if(init_SW) {
 	  temp = strdup(SXW.f_watin);
 	  SW_CTL_init_model(temp);
+	  SW_CTL_obtain_inputs();
 	  free(temp);
   }
 
@@ -261,7 +262,8 @@ void SXW_Reset(void) {
 
 	temp = strdup(SXW.f_watin);
 	SW_CTL_init_model(temp);
-	free(temp);
+	SW_CTL_obtain_inputs();
+  free(temp);
 }
 
 void SXW_InitPlot (void) {
