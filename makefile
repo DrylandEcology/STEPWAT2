@@ -238,7 +238,7 @@ $(oDir)/sw_src/SW_VegProd.o: sw_src/SW_VegProd.c sw_src/generic.h \
  sw_src/SW_VegProd.h
 	$(CC) $(C_FLAGS) $(incDirs) -c -o $@ $<
 
-$(oDir)/sw_src/SW_Carbon.o: sw_src/SW_VegProd.c sw_src/generic.h \
+$(oDir)/sw_src/SW_Carbon.o: sw_src/SW_Carbon.c sw_src/generic.h \
  sw_src/filefuncs.h sw_src/SW_Defines.h sw_src/SW_Files.h sw_src/SW_Times.h \
  sw_src/SW_Carbon.h sw_src/SW_VegProd.h sw_src/SW_Model.h
 	$(CC) $(C_FLAGS) $(incDirs) -c -o $@ $<
