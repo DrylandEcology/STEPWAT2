@@ -237,7 +237,7 @@ static RealF _add_annuals(const GrpIndex rg, const SppIndex sp, const RealF last
             /*Option 2*/
            alpha = (pow (s->seedling_estab_prob, 2) - pow (s->seedling_estab_prob, 3) - s->seedling_estab_prob * s->var) / s->var;
            beta = (s->seedling_estab_prob - pow (s->seedling_estab_prob, 3) - s->var + s->var * s->seedling_estab_prob)/ s->var;
-             var = genbet (alpha, beta);
+             var = RandBeta(alpha, beta);
             newsize = x * var;
              /*Option 2 done*/
       //  }
