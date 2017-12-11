@@ -46,7 +46,6 @@ SRCS	=\
 	$(Src)/sw_src/SW_Files.c\
 	$(Src)/sw_src/SW_Model.c\
 	$(Src)/sw_src/SW_Output.c\
-	$(Src)/sw_src/SW_Main_Function.c\
 	$(Src)/sw_src/SW_Site.c\
 	$(Src)/sw_src/SW_Sky.c\
 	$(Src)/sw_src/SW_VegProd.c\
@@ -84,7 +83,6 @@ EXOBJS	=\
 	$(oDir)/sw_src/SW_Files.o\
 	$(oDir)/sw_src/SW_Model.o\
 	$(oDir)/sw_src/SW_Output.o\
-	$(oDir)/sw_src/SW_Main_Function.o\
 	$(oDir)/sw_src/SW_Site.o\
 	$(oDir)/sw_src/SW_Sky.o\
 	$(oDir)/sw_src/SW_VegProd.o\
@@ -218,9 +216,6 @@ $(oDir)/sw_src/SW_Output.o: sw_src/SW_Output.c sw_src/generic.h \
  sw_src/filefuncs.h sw_src/myMemory.h sw_src/SW_Defines.h \
  sw_src/SW_Files.h sw_src/SW_Model.h sw_src/SW_Times.h sw_src/SW_Site.h sw_src/SW_SoilWater.h sw_src/SW_Output.h \
  sw_src/SW_Weather.h
-	$(CC) $(C_FLAGS) $(incDirs) -c -o $@ $<
-
-$(oDir)/sw_src/SW_Main_Function.o: sw_src/SW_Main_Function.c
 	$(CC) $(C_FLAGS) $(incDirs) -c -o $@ $<
 
 $(oDir)/sw_src/SW_Site.o: sw_src/SW_Site.c sw_src/generic.h sw_src/filefuncs.h \

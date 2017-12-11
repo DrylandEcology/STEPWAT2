@@ -61,7 +61,8 @@ struct stepwat_st {
   /* DEBUG stuff */
   char *debugfile; /* added in ST_Main(), read to get debug instructions */
   RealF *swc, /* dynamic array(Ilp) of SWC from SOILWAT */
-         aet;     /* soilwat's evapotranspiration for the year */
+         aet;
+              /* soilwat's evapotranspiration for the year */
   RealD  surfaceTemp;   /* soilwat's surfaceTemp */
 
   // PPT variables
@@ -97,16 +98,36 @@ struct stepwat_st {
   int col_status_yr;
 
   RealF *swc_avg;
-  RealF val_snowmelt_avg[1000], // set to 1000 for max years
-        val_snowloss_avg[1000],
-        aet_avg[1000];
+  RealF val_snowmelt_avg[1000][2], // set to 1000 for max years
+        val_snowloss_avg[1000][2],
+        aet_avg[1000][2];
+};
+
+struct soilwat_average{
+  RealF *soilinfilt_avg,
+        *runoff_avg,
+        *vwcbulk_avg,
+        *vwcmatric,
+        *swamatric_avg,
+        *swpmatric_avg,
+        *surfacewater_avg,
+        *evapsoil_avg,
+        *evapsurface_avg,
+        *interception_avg,
+        *lyrdrain_avg,
+        *hydred_avg,
+        *pet_avg,
+        *wetday_avg,
+        *snowpack_avg,
+        *deepswc_avg,
+        *soiltemp_avg,
+        *establ_avg;
 };
 
 #define SXW_NFILES 5
 
-
-
 typedef struct stepwat_st SXW_t;
+typedef struct soilwat_average SXW_avg;
 
 #define ForEachTrPeriod(i) for((i)=0; (i)< SXW.NPds; (i)++)
 
@@ -127,8 +148,8 @@ typedef struct stepwat_st SXW_t;
 #define Itclp(t,c,l,p) (((t)*SXW.NTrLyrs*SXW.NPds) + ((c)*4) + ((l)*SXW.NPds) + (p)) // c*4 is because there are 4 critical values
 
 // for use with avg values
-// year, layer, timeperiod
-#define Iylp(y,l,p) (((y)*Globals.runModelYears * SXW.NTrLyrs * SXW.NPds) + ((l)*SXW.NTrLyrs * SXW.NPds) + ((p)*SXW.NPds))
+// year, layer, timeperiod, avg/std
+#define Iylp(y,l,p,x) (((y)*Globals.runModelYears * SXW.NTrLyrs * SXW.NPds * 2) + ((l)*SXW.NTrLyrs * SXW.NPds * 2) + ((p)*SXW.NPds * 2) + ((x)*2))
 
 // veg type, layer, timeperiod
 #define Ivlp(v,l,p) (((v)*4 * SXW.NTrLyrs * SXW.NPds) + ((l)*SXW.NTrLyrs * SXW.NPds) + ((p)*SXW.NPds))
