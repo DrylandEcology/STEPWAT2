@@ -64,6 +64,7 @@
 #include "sw_src/SW_Control.h"
 #include "sw_src/SW_Model.h"
 #include "sw_src/SW_VegProd.h"
+#include "sw_src/SW_Carbon.h"
 #include "sw_src/SW_Site.h"
 #include "sw_src/SW_SoilWater.h"
 #include "sw_src/SW_Files.h"
@@ -336,7 +337,7 @@ void SXW_SW_Setup_Echo(void) {
 	FILE *f = OpenFile(strcat(name, ".input.out"), "a");
 	int i;
 	fprintf(f, "\n================== %d =============================\n", SW_Model.year);
-	fprintf(f,"Fractions Grass:%f Shrub:%f Tree:%f Forb:%f BareGround:%f\n", SW_VegProd.fractionGrass, SW_VegProd.fractionShrub, SW_VegProd.fractionTree, SW_VegProd.fractionForb, SW_VegProd.fractionBareGround);
+	fprintf(f,"Fractions Grass:%f Shrub:%f Tree:%f Forb:%f BareGround:%f\n", SW_VegProd.grass.cov.fCover, SW_VegProd.shrub.cov.fCover, SW_VegProd.tree.cov.fCover, SW_VegProd.forb.cov.fCover, SW_VegProd.bare_cov.fCover);
 	fprintf(f,"Monthly Production Values\n");
 	fprintf(f,"Grass\n");
 	fprintf(f,"Month\tLitter\tBiomass\tPLive\tLAI_conv\n");
