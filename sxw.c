@@ -782,7 +782,7 @@ static void _make_transp_arrays(void) {
 	int size;
   int avg_size;
 
-	size = SXW.NPds * SXW.NSoLyrs;
+	size = (SXW.NPds * SXW.NSoLyrs) * 365;
 	SXW.transpTotal = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
 	SXW.transpTrees = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
 	SXW.transpShrubs = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
@@ -854,7 +854,7 @@ static void _make_swc_array(void) {
 
 	SXW.swc = (RealF *) Mem_Calloc(size, sizeof(RealF *), fstr);
 
-  avg_size = (SXW.NPds * SXW.NSoLyrs * Globals.runModelYears) * Globals.runModelYears;
+  avg_size = (SXW.NPds * SXW.NSoLyrs * Globals.runModelYears) * 365;
   SXW.swc_avg = (RealF *) Mem_Calloc(avg_size, sizeof(RealF), fstr);
 }
 
