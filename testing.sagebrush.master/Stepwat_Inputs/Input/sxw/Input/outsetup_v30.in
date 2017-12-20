@@ -1,7 +1,26 @@
-TIMESTEP mo yr
-TRANSP  SUM  MO  1  end  transp
-PRECIP  SUM  YR  1  end  precip
-TEMP    AVG  YR  1  end  temp
-AET     SUM  YR  1  end  aet
-SWCBULK     FIN  MO  1  end  swc_bulk
-SWA  AVG  MO  1  end  swa
+TIMESTEP dy wk mo yr
+TRANSP  	SUM  	MO  	1  	end  	transp
+PRECIP  	SUM  	YR  	1  	end  	precip
+TEMP    	AVG  	YR  	1  	end  	temp
+AET     	SUM  	YR  	1  	end  	aet
+SWCBULK     	FIN  	MO  	1  	end  	swc_bulk
+SWA  		AVG  	MO  	1  	end  	swa
+ESTABL 		off 	YR 	1 	end 	estabs
+VWCBULK		avg 	MO 	1 	end 	vwc_bulk
+VWCMATRIC 	avg 	YR 	1 	end 	vwc_matric
+SWPMATRIC 	avg 	WK 	1 	end 	swp_matric
+SWABULK 	AVG 	MO 	1 	end 	swa_bulk
+SWAMATRIC 	avg 	YR 	1 	end 	swa_matric
+SURFACEWATER 	avg 	DY 	1 	end 	surface_water
+RUNOFF 		sum 	WK 	1 	end 	runoff
+EVAPSOIL	sum	DY	1	end	evap_soil
+EVAPSURFACE	sum	WK	1	end	evap_surface
+INTERCEPTION	sum	MO	1	end	interception
+SOILINFILT	sum	YR	1	end	infiltration
+LYRDRAIN	sum	DY	1	end	percolation
+HYDRED		sum	WK	1	end	hydred
+PET		sum	DY	1	end	pet
+WETDAY		sum	DY	1	end	wetdays
+SNOWPACK	avg	WK	1	end	snowpack
+DEEPSWC		sum	MO	1	end	deep_drain
+SOILTEMP	avg	MO	1	end	temp_soil

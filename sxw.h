@@ -104,24 +104,47 @@ struct stepwat_st {
 };
 
 struct soilwat_average{
-  RealF *soilinfilt_avg,
-        *runoff_avg,
-        *vwcbulk_avg,
-        *vwcmatric,
-        *swamatric_avg,
-        *swpmatric_avg,
-        *surfacewater_avg,
-        *evapsoil_avg,
-        *evapsurface_avg,
-        *interception_avg,
-        *lyrdrain_avg,
-        *hydred_avg,
-        *pet_avg,
-        *wetday_avg,
-        *snowpack_avg,
-        *deepswc_avg,
-        *soiltemp_avg,
-        *establ_avg;
+  RealF *soilinfilt_avg, // done
+        *runoff_total_avg,// done
+        *runoff_surface_avg,// done
+        *runoff_snow_avg,// done
+        *vwcbulk_avg, // done
+        *vwcmatric_avg, // done
+        *swamatric_avg, // done
+        *swabulk_avg, // done
+        *swpmatric_avg, // done
+        *surfacewater_avg, // done
+        *evapsoil_avg, // done
+        *evapsurface_total_avg,// done
+        *evapsurface_tree_avg,// done
+        *evapsurface_shrub_avg,// done
+        *evapsurface_forb_avg,// done
+        *evapsurface_grass_avg,// done
+        *evapsurface_litter_avg,// done
+        *evapsurface_water_avg,// done
+
+        *interception_total_avg,// done
+        *interception_tree_avg,// done
+        *interception_shrub_avg,// done
+        *interception_forb_avg,// done
+        *interception_grass_avg,// done
+        *interception_litter_avg,// done
+
+        *lyrdrain_avg, // done
+
+        *hydred_total_avg,// done
+        *hydred_tree_avg,// done
+        *hydred_shrub_avg,// done
+        *hydred_forb_avg,// done
+        *hydred_grass_avg,// done
+
+        *pet_avg, // done
+        *wetday_avg, // done
+        *snowpack_water_eqv_avg, // done
+        *snowpack_depth_avg, // done
+        *deepswc_avg, // done
+        *soiltemp_avg, // done
+        *estab_avg; // done
 };
 
 #define SXW_NFILES 5
@@ -150,6 +173,10 @@ typedef struct soilwat_average SXW_avg;
 // for use with avg values
 // year, layer, timeperiod, avg/std
 #define Iylp(y,l,p,x) (((y)*Globals.runModelYears * SXW.NTrLyrs * SXW.NPds * 2) + ((l)*SXW.NTrLyrs * SXW.NPds * 2) + ((p)*SXW.NPds * 2) + ((x)*2))
+
+// for soilwat average and standard deviation
+// year, timeperiod, choice (avg or std)
+#define Iypc(y,p,c) (((y)*Globals.runModelYears * SXW.NPds * 2) + ((p)*SXW.NPds * 2) + ((c) * 2))
 
 // veg type, layer, timeperiod
 #define Ivlp(v,l,p) (((v)*4 * SXW.NTrLyrs * SXW.NPds) + ((l)*SXW.NTrLyrs * SXW.NPds) + ((p)*SXW.NPds))

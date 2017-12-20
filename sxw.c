@@ -73,6 +73,7 @@
 /*************** Global Variable Declarations ***************/
 /***********************************************************/
 SXW_t SXW;
+SXW_avg SXW_AVG;
 
 extern SW_SITE SW_Site;
 extern SW_MODEL SW_Model;
@@ -145,6 +146,7 @@ static void _make_roots_arrays(void);
 static void _make_phen_arrays(void);
 static void _make_prod_arrays(void);
 static void _make_transp_arrays(void);
+static void _make_soil_arrays(void);
 //static void _recover_names(void);
 static void _read_debugfile(void);
 void _print_debuginfo(void);
@@ -732,8 +734,8 @@ static void _make_arrays(void) {
 	_make_prod_arrays();
 	_make_transp_arrays();
   _make_swa_array();
-	//if (SXW.debugfile || UseGrid)
-		_make_swc_array();
+	_make_swc_array();
+  _make_soil_arrays();
 }
 
 static void _make_roots_arrays(void) {
@@ -810,7 +812,7 @@ static void _make_swa_array(void){
   int avg_size;
   //int size_3d = 4 * SXW.NPds * SXW.NSoLyrs;
 
-  avg_size = (SXW.NPds * SXW.NSoLyrs * Globals.runModelYears * 2) * Globals.runModelYears;
+  avg_size = (SXW.NPds * SXW.NSoLyrs * Globals.runModelYears * 2) * Globals.runModelYears * Globals.runModelIterations;
   SXW.SWAbulk_grass_avg = (RealF *) Mem_Calloc(avg_size, sizeof(RealF *), fstr);
   SXW.SWAbulk_shrub_avg = (RealF *) Mem_Calloc(avg_size, sizeof(RealF *), fstr);
   SXW.SWAbulk_tree_avg = (RealF *) Mem_Calloc(avg_size, sizeof(RealF *), fstr);
@@ -825,7 +827,7 @@ static void _make_swa_array(void){
   //Mem_Set(SXW.sum_dSWA_repartitioned, 0, size_3d);
 
   //4 - Grass,Frob,Tree,Shrub
-  size = 4 * 4 * SXW.NPds * SXW.NSoLyrs;
+  size = 4 * 4 * SXW.NPds * SXW.NSoLyrs  * Globals.runModelIterations;
   SXW.SWA_master = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr); // 4D
   SXW.dSWAbulk = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr); // 4D
   SXW.dSWA_repartitioned = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr); // 4D
@@ -856,6 +858,104 @@ static void _make_swc_array(void) {
 
   avg_size = (SXW.NPds * SXW.NSoLyrs * Globals.runModelYears) * 365;
   SXW.swc_avg = (RealF *) Mem_Calloc(avg_size, sizeof(RealF), fstr);
+}
+
+static void _make_soil_arrays(void){
+  char *fstr = "_make_soil_arrays";
+  int size, layer_size;
+  size = (SXW.NPds * Globals.runModelYears * 2) * Globals.runModelYears;
+  layer_size = (SXW.NPds * SXW.NSoLyrs * Globals.runModelYears * 2) * Globals.runModelYears;
+
+
+  SXW_AVG.estab_avg = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr);
+  SXW_AVG.vwcbulk_avg = (RealF *) Mem_Calloc(layer_size, sizeof(RealF), fstr);
+  SXW_AVG.vwcmatric_avg = (RealF *) Mem_Calloc(layer_size, sizeof(RealF), fstr);
+  SXW_AVG.swpmatric_avg = (RealF *) Mem_Calloc(layer_size, sizeof(RealF), fstr);
+  SXW_AVG.swabulk_avg = (RealF *) Mem_Calloc(layer_size, sizeof(RealF), fstr);
+  SXW_AVG.swamatric_avg = (RealF *) Mem_Calloc(layer_size, sizeof(RealF), fstr);
+  SXW_AVG.surfacewater_avg = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr);
+  SXW_AVG.runoff_total_avg = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr);
+  SXW_AVG.runoff_surface_avg = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr);
+  SXW_AVG.runoff_snow_avg = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr);
+  SXW_AVG.evapsoil_avg = (RealF *) Mem_Calloc(layer_size, sizeof(RealF), fstr);
+  SXW_AVG.evapsurface_total_avg = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr);
+  SXW_AVG.evapsurface_tree_avg = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr);
+  SXW_AVG.evapsurface_shrub_avg = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr);
+  SXW_AVG.evapsurface_forb_avg = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr);
+  SXW_AVG.evapsurface_grass_avg = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr);
+  SXW_AVG.evapsurface_litter_avg = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr);
+  SXW_AVG.evapsurface_water_avg = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr);
+
+  SXW_AVG.interception_total_avg = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr);
+  SXW_AVG.interception_tree_avg = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr);
+  SXW_AVG.interception_shrub_avg = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr);
+  SXW_AVG.interception_forb_avg = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr);
+  SXW_AVG.interception_grass_avg = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr);
+  SXW_AVG.interception_litter_avg = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr);
+  SXW_AVG.soilinfilt_avg = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr);
+
+  SXW_AVG.lyrdrain_avg = (RealF *) Mem_Calloc(layer_size, sizeof(RealF), fstr);
+
+  SXW_AVG.hydred_total_avg = (RealF *) Mem_Calloc(layer_size, sizeof(RealF), fstr);
+  SXW_AVG.hydred_tree_avg = (RealF *) Mem_Calloc(layer_size, sizeof(RealF), fstr);
+  SXW_AVG.hydred_shrub_avg = (RealF *) Mem_Calloc(layer_size, sizeof(RealF), fstr);
+  SXW_AVG.hydred_forb_avg = (RealF *) Mem_Calloc(layer_size, sizeof(RealF), fstr);
+  SXW_AVG.hydred_grass_avg = (RealF *) Mem_Calloc(layer_size, sizeof(RealF), fstr);
+
+  SXW_AVG.pet_avg = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr);
+  SXW_AVG.wetday_avg = (RealF *) Mem_Calloc(layer_size, sizeof(RealF), fstr);
+
+  SXW_AVG.snowpack_water_eqv_avg = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr);
+  SXW_AVG.snowpack_depth_avg = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr);
+
+  SXW_AVG.deepswc_avg = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr);
+
+  SXW_AVG.soiltemp_avg = (RealF *) Mem_Calloc(layer_size, sizeof(RealF), fstr);
+
+  Mem_Set(SXW_AVG.estab_avg, 0, size * sizeof(RealF));
+  Mem_Set(SXW_AVG.vwcbulk_avg, 0, layer_size * sizeof(RealF));
+  Mem_Set(SXW_AVG.vwcmatric_avg, 0, layer_size * sizeof(RealF));
+  Mem_Set(SXW_AVG.swpmatric_avg, 0, layer_size * sizeof(RealF));
+  Mem_Set(SXW_AVG.swabulk_avg, 0, layer_size * sizeof(RealF));
+  Mem_Set(SXW_AVG.swamatric_avg, 0, layer_size * sizeof(RealF));
+  Mem_Set(SXW_AVG.surfacewater_avg, 0, size * sizeof(RealF));
+  Mem_Set(SXW_AVG.runoff_total_avg, 0, size * sizeof(RealF));
+  Mem_Set(SXW_AVG.runoff_surface_avg, 0, size * sizeof(RealF));
+  Mem_Set(SXW_AVG.runoff_snow_avg, 0, size * sizeof(RealF));
+  Mem_Set(SXW_AVG.evapsoil_avg, 0, layer_size * sizeof(RealF));
+  Mem_Set(SXW_AVG.evapsurface_total_avg, 0, size * sizeof(RealF));
+  Mem_Set(SXW_AVG.evapsurface_tree_avg, 0, size * sizeof(RealF));
+  Mem_Set(SXW_AVG.evapsurface_shrub_avg, 0, size * sizeof(RealF));
+  Mem_Set(SXW_AVG.evapsurface_forb_avg, 0, size * sizeof(RealF));
+  Mem_Set(SXW_AVG.evapsurface_grass_avg, 0, size * sizeof(RealF));
+  Mem_Set(SXW_AVG.evapsurface_litter_avg, 0, size * sizeof(RealF));
+  Mem_Set(SXW_AVG.evapsurface_water_avg, 0, size * sizeof(RealF));
+
+  Mem_Set(SXW_AVG.interception_total_avg, 0, size * sizeof(RealF));
+  Mem_Set(SXW_AVG.interception_tree_avg, 0, size * sizeof(RealF));
+  Mem_Set(SXW_AVG.interception_shrub_avg, 0, size * sizeof(RealF));
+  Mem_Set(SXW_AVG.interception_forb_avg, 0, size * sizeof(RealF));
+  Mem_Set(SXW_AVG.interception_grass_avg, 0, size * sizeof(RealF));
+  Mem_Set(SXW_AVG.interception_litter_avg, 0, size * sizeof(RealF));
+
+  Mem_Set(SXW_AVG.soilinfilt_avg, 0, size * sizeof(RealF));
+  Mem_Set(SXW_AVG.lyrdrain_avg, 0, layer_size * sizeof(RealF));
+
+  Mem_Set(SXW_AVG.hydred_total_avg, 0, layer_size * sizeof(RealF));
+  Mem_Set(SXW_AVG.hydred_tree_avg, 0, layer_size * sizeof(RealF));
+  Mem_Set(SXW_AVG.hydred_shrub_avg, 0, layer_size * sizeof(RealF));
+  Mem_Set(SXW_AVG.hydred_forb_avg, 0, layer_size * sizeof(RealF));
+  Mem_Set(SXW_AVG.hydred_grass_avg, 0, layer_size * sizeof(RealF));
+
+  Mem_Set(SXW_AVG.pet_avg, 0, size * sizeof(RealF));
+  Mem_Set(SXW_AVG.wetday_avg, 0, layer_size * sizeof(RealF));
+
+  Mem_Set(SXW_AVG.snowpack_water_eqv_avg, 0, size * sizeof(RealF));
+  Mem_Set(SXW_AVG.snowpack_depth_avg, 0, size * sizeof(RealF));
+
+  Mem_Set(SXW_AVG.deepswc_avg, 0, size * sizeof(RealF));
+
+  Mem_Set(SXW_AVG.soiltemp_avg, 0, layer_size * sizeof(RealF));
 }
 
 
@@ -1217,6 +1317,44 @@ void free_all_sxw_memory( void ) {
 
   Mem_Free(SXW.swc);
   Mem_Free(SXW.swc_avg);
+
+  Mem_Free(SXW_AVG.estab_avg);
+  Mem_Free(SXW_AVG.vwcbulk_avg);
+  Mem_Free(SXW_AVG.vwcmatric_avg);
+  Mem_Free(SXW_AVG.swpmatric_avg);
+  Mem_Free(SXW_AVG.swabulk_avg);
+  Mem_Free(SXW_AVG.swamatric_avg);
+  Mem_Free(SXW_AVG.surfacewater_avg);
+  Mem_Free(SXW_AVG.runoff_total_avg);
+  Mem_Free(SXW_AVG.runoff_surface_avg);
+  Mem_Free(SXW_AVG.runoff_snow_avg);
+  Mem_Free(SXW_AVG.evapsoil_avg);
+  Mem_Free(SXW_AVG.evapsurface_total_avg);
+  Mem_Free(SXW_AVG.evapsurface_tree_avg);
+  Mem_Free(SXW_AVG.evapsurface_shrub_avg);
+  Mem_Free(SXW_AVG.evapsurface_forb_avg);
+  Mem_Free(SXW_AVG.evapsurface_grass_avg);
+  Mem_Free(SXW_AVG.evapsurface_litter_avg);
+  Mem_Free(SXW_AVG.evapsurface_water_avg);
+  Mem_Free(SXW_AVG.interception_total_avg);
+  Mem_Free(SXW_AVG.interception_tree_avg);
+  Mem_Free(SXW_AVG.interception_shrub_avg);
+  Mem_Free(SXW_AVG.interception_forb_avg);
+  Mem_Free(SXW_AVG.interception_grass_avg);
+  Mem_Free(SXW_AVG.interception_litter_avg);
+  Mem_Free(SXW_AVG.soilinfilt_avg);
+  Mem_Free(SXW_AVG.lyrdrain_avg);
+  Mem_Free(SXW_AVG.hydred_total_avg);
+  Mem_Free(SXW_AVG.hydred_tree_avg);
+  Mem_Free(SXW_AVG.hydred_shrub_avg);
+  Mem_Free(SXW_AVG.hydred_forb_avg);
+  Mem_Free(SXW_AVG.hydred_grass_avg);
+  Mem_Free(SXW_AVG.pet_avg);
+  Mem_Free(SXW_AVG.wetday_avg);
+  Mem_Free(SXW_AVG.snowpack_water_eqv_avg);
+  Mem_Free(SXW_AVG.snowpack_depth_avg);
+  Mem_Free(SXW_AVG.deepswc_avg);
+  Mem_Free(SXW_AVG.soiltemp_avg);
 }
 
 /***********************************************************/
