@@ -313,5 +313,10 @@ static void _update_productivity(void) {
 		v->fractionForb = (0.0);
 		v->fractionBareGround = 1;
 	}
+	SW_VegProd.useVegType[0][1] = v->fractionTree;
+	SW_VegProd.useVegType[1][1] = v->fractionShrub;
+	SW_VegProd.useVegType[2][1] = v->fractionGrass;
+	SW_VegProd.useVegType[3][1] = v->fractionForb;
+	//printf("useVegType, fractiongrass: %f, %f\n", SW_VegProd.useVegType[2],v->fractionGrass);
 #undef Biomass
 }
