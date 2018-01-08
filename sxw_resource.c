@@ -259,7 +259,7 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
 			transp = SXW.transpTotal;
 			break;
 		}
-        
+
         //Loops through each month and calculates amount of transpiration for each steppe functional group
         //according to whether that group has active living roots in each soil layer for each month
             ForEachTrPeriod(p)
@@ -270,7 +270,7 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
                 }
             }
             //printf("for groupName= %s, use_by_group[g] in transp= %f \n",RGroup[g]->name,use_by_group[g] );
-		
+
         sumUsedByGroup += use_by_group[g];
         //printf(" sumUsedByGroup in transp=%f \n",sumUsedByGroup);
 	}
@@ -284,13 +284,13 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
 	}
     TranspRemaining = sumTranspTotal - sumUsedByGroup;
     //printf(" sumTranspTotal=%f, sumUsedByGroup=%f  TranspRemaining=%f \n",sumTranspTotal,sumUsedByGroup,TranspRemaining);
-		
+
         ForEachGroup(g)
 		{
 			if(!ZRO(use_by_group[g])) {
                 use_by_group[g] += (use_by_group[g]/sumUsedByGroup) * TranspRemaining;
                 //printf("for groupName= %s, after sum use_by_group[g]= %f \n",RGroup[g]->name,use_by_group[g] );
-                
+
                 SXW.transp_SWA[currentYear][g] = use_by_group[g];
                 //printf("for groupName= %s, SXW.transp_SWA[g] in transp= %f \n",RGroup[g]->name,SXW.transp_SWA[currentYear][g]);
             }
@@ -305,7 +305,7 @@ static void _SWA_contribution_by_group(RealF use_by_group[]) {
      * Compute each group's amount of SWA from SOILWAT2
      * based on its biomass, root distribution, and phenological
      * activity. */
-    
+
 	GrpIndex g;
 	TimeInt p;
 	LyrIndex l;
@@ -324,16 +324,16 @@ static void _SWA_contribution_by_group(RealF use_by_group[]) {
 		ForEachTrPeriod(p)
 		{
 			for (l = 0; l < SXW.NSoLyrs; l++) {
-                //printf("%d,%d,%d\n", g,l,p);
+        //printf("%d,%d,%d\n", t,l,p);
 				use_by_group[g] += (RealF) (_roots_active_rel[Iglp(g, l, p)] * SXW.sum_dSWA_repartitioned[t][l][p]);
                 //printf("for groupName= %s, layerIndex: %d, month: %d, in swa loop use_by_group[g]= %f \n",RGroup[g]->name,l,p,use_by_group[g]);
 			}
 		}
 		//printf("for groupName= %s, use_by_group[g] in swa= %f \n",RGroup[g]->name,use_by_group[g]);
-        
+
         sumUsedByGroup += use_by_group[g];
         //printf(" sumUsedByGroup in swa=%f \n",sumUsedByGroup);
-        
+
         SXW.transp_SWA[currentYear][g] += use_by_group[g];
         //printf("SXW.transp_SWA[%d][%d]: %f\n", currentYear, g, SXW.transp_SWA[currentYear][g]);
 	}

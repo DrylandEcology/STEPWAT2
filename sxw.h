@@ -144,7 +144,12 @@ struct soilwat_average{
         *snowpack_depth_avg, // done
         *deepswc_avg, // done
         *soiltemp_avg, // done
-        *estab_avg; // done
+        *estab_avg,
+        *max_temp_avg,
+        *min_temp_avg,
+        *avg_temp_avg; // done
+
+    RealD *surfaceTemp_avg;
 };
 
 #define SXW_NFILES 5
@@ -176,7 +181,7 @@ typedef struct soilwat_average SXW_avg;
 
 // for soilwat average and standard deviation
 // year, timeperiod, choice (avg or std)
-#define Iypc(y,p,c) (((y)*Globals.runModelYears * SXW.NPds * 2) + ((p)*SXW.NPds * 2) + ((c) * 2))
+#define Iypc(y,p,c) (((y)*Globals.runModelYears * SXW.NPds) + ((p)*SXW.NPds) + (c))
 
 // veg type, layer, timeperiod
 #define Ivlp(v,l,p) (((v)*4 * SXW.NTrLyrs * SXW.NPds) + ((l)*SXW.NTrLyrs * SXW.NPds) + ((p)*SXW.NPds))
