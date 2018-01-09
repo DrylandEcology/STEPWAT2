@@ -82,6 +82,10 @@ extern SW_WEATHER SW_Weather;
 extern SW_MARKOV SW_Markov;
 //extern SW_SOILWAT SW_Soilwat;
 
+extern Bool isPartialSoilwatOutput;
+extern Bool storeAllIterations;
+
+
 
 /*************** Module/Local Variable Declarations ***************/
 /***********************************************************/
@@ -735,7 +739,9 @@ static void _make_arrays(void) {
 	_make_transp_arrays();
   _make_swa_array();
 	_make_swc_array();
-  _make_soil_arrays();
+  // only make output storage if -o or -i flags
+  if(storeAllIterations || isPartialSoilwatOutput == FALSE)
+    _make_soil_arrays();
 }
 
 static void _make_roots_arrays(void) {
@@ -782,7 +788,7 @@ static void _make_transp_arrays(void) {
  */
 	char *fstr = "_make_transp_array()";
 	int size;
-  int avg_size;
+  //int avg_size;
 
 	size = (SXW.NPds * SXW.NSoLyrs) * 365;
 	SXW.transpTotal = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
@@ -790,51 +796,18 @@ static void _make_transp_arrays(void) {
 	SXW.transpShrubs = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
 	SXW.transpForbs = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
 	SXW.transpGrasses = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
-
-  avg_size = (SXW.NPds * SXW.NSoLyrs * Globals.runModelYears * 2) * Globals.runModelYears;
-  SXW.transpTotal_avg = (RealD *) Mem_Calloc(avg_size, sizeof(RealD), fstr);
-	SXW.transpTrees_avg = (RealD *) Mem_Calloc(avg_size, sizeof(RealD), fstr);
-	SXW.transpShrubs_avg = (RealD *) Mem_Calloc(avg_size, sizeof(RealD), fstr);
-	SXW.transpForbs_avg = (RealD *) Mem_Calloc(avg_size, sizeof(RealD), fstr);
-	SXW.transpGrasses_avg = (RealD *) Mem_Calloc(avg_size, sizeof(RealD), fstr);
-
-  // initialize values to 0
-  Mem_Set(SXW.transpTotal_avg, 0, avg_size * sizeof(RealD));
-	Mem_Set(SXW.transpTrees_avg, 0,  avg_size * sizeof(RealD));
-	Mem_Set(SXW.transpShrubs_avg, 0,  avg_size * sizeof(RealD));
-	Mem_Set(SXW.transpForbs_avg, 0,  avg_size * sizeof(RealD));
-	Mem_Set(SXW.transpGrasses_avg, 0,  avg_size * sizeof(RealD));
 }
 
 static void _make_swa_array(void){
   char *fstr = "_make_swa_array()";
 	int size = SXW.NPds * SXW.NSoLyrs;
   int avg_size;
-  //int size_3d = 4 * SXW.NPds * SXW.NSoLyrs;
-
-  avg_size = (SXW.NPds * SXW.NSoLyrs * Globals.runModelYears * 2) * Globals.runModelYears * Globals.runModelIterations;
-  SXW.SWAbulk_grass_avg = (RealF *) Mem_Calloc(avg_size, sizeof(RealF *), fstr);
-  SXW.SWAbulk_shrub_avg = (RealF *) Mem_Calloc(avg_size, sizeof(RealF *), fstr);
-  SXW.SWAbulk_tree_avg = (RealF *) Mem_Calloc(avg_size, sizeof(RealF *), fstr);
-  SXW.SWAbulk_forb_avg = (RealF *) Mem_Calloc(avg_size, sizeof(RealF *), fstr);
-
-  Mem_Set(SXW.SWAbulk_grass_avg, 0, avg_size * sizeof(RealF));
-	Mem_Set(SXW.SWAbulk_shrub_avg, 0, avg_size * sizeof(RealF));
-	Mem_Set(SXW.SWAbulk_tree_avg, 0, avg_size * sizeof(RealF));
-	Mem_Set(SXW.SWAbulk_forb_avg, 0, avg_size * sizeof(RealF));
-
-  //SXW.sum_dSWA_repartitioned = (RealF *) Mem_Calloc(size_3d, sizeof(RealF), fstr);
-  //Mem_Set(SXW.sum_dSWA_repartitioned, 0, size_3d);
 
   //4 - Grass,Frob,Tree,Shrub
   size = 4 * 4 * SXW.NPds * SXW.NSoLyrs  * Globals.runModelIterations;
   SXW.SWA_master = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr); // 4D
   SXW.dSWAbulk = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr); // 4D
   SXW.dSWA_repartitioned = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr); // 4D
-
-  //int newSize = 4*SXW.NPds * SXW.NSoLyrs;
-  //SXW.sum_dSWA_repartitioned = (RealF *) Mem_Calloc(newSize, sizeof(RealF *), fstr);
-  //Mem_Set(SXW.sum_dSWA_repartitioned, 0, SXW.NPds * SXW.NSoLyrs * 4 * sizeof(RealF));
 
   //Mem_Set(SXW.SWA_master, 0, SXW.NPds * 4 * SXW.NSoLyrs * sizeof(RealF));
   memset(SXW.SWA_master, 0, sizeof(SXW.SWA_master));
@@ -850,21 +823,51 @@ static void _make_swc_array(void) {
  * specified with debugfile
  */
 	char *fstr = "_make_swc_array()";
-	int size = SXW.NPds * SXW.NSoLyrs;
+	int size = SXW.NPds * SXW.NSoLyrs * 366;
   int avg_size;
   //int size_3d = 4 * SXW.NPds * SXW.NSoLyrs;
 
 	SXW.swc = (RealF *) Mem_Calloc(size, sizeof(RealF *), fstr);
 
-  avg_size = (SXW.NPds * SXW.NSoLyrs * Globals.runModelYears) * 365;
-  SXW.swc_avg = (RealF *) Mem_Calloc(avg_size, sizeof(RealF), fstr);
+  //avg_size = (SXW.NPds * SXW.NSoLyrs * Globals.runModelYears) * 365;
+  //SXW.swc_avg = (RealF *) Mem_Calloc(avg_size, sizeof(RealF), fstr);
 }
 
+// all memory allocation for avg values are here
+// to be used with -o or -i flags
+// dont need to allocate memory unless storing SOILWAT output
 static void _make_soil_arrays(void){
   char *fstr = "_make_soil_arrays";
-  int size, layer_size;
+  int size, layer_size, avg_size;
   size = (SXW.NPds * Globals.runModelYears * 2) * Globals.runModelYears;
   layer_size = (SXW.NPds * SXW.NSoLyrs * Globals.runModelYears * 2) * Globals.runModelYears;
+
+  avg_size = (SXW.NPds * SXW.NSoLyrs * Globals.runModelYears * 2) * Globals.runModelYears;
+  SXW.transpTotal_avg = (RealD *) Mem_Calloc(avg_size, sizeof(RealD), fstr);
+	SXW.transpTrees_avg = (RealD *) Mem_Calloc(avg_size, sizeof(RealD), fstr);
+	SXW.transpShrubs_avg = (RealD *) Mem_Calloc(avg_size, sizeof(RealD), fstr);
+	SXW.transpForbs_avg = (RealD *) Mem_Calloc(avg_size, sizeof(RealD), fstr);
+	SXW.transpGrasses_avg = (RealD *) Mem_Calloc(avg_size, sizeof(RealD), fstr);
+
+  // initialize values to 0
+  Mem_Set(SXW.transpTotal_avg, 0, avg_size * sizeof(RealD));
+	Mem_Set(SXW.transpTrees_avg, 0,  avg_size * sizeof(RealD));
+	Mem_Set(SXW.transpShrubs_avg, 0,  avg_size * sizeof(RealD));
+	Mem_Set(SXW.transpForbs_avg, 0,  avg_size * sizeof(RealD));
+	Mem_Set(SXW.transpGrasses_avg, 0,  avg_size * sizeof(RealD));
+
+  //avg_size = (SXW.NPds * SXW.NSoLyrs * Globals.runModelYears * 2) * Globals.runModelYears * Globals.runModelIterations;
+  SXW.SWAbulk_grass_avg = (RealF *) Mem_Calloc(avg_size, sizeof(RealF *), fstr);
+  SXW.SWAbulk_shrub_avg = (RealF *) Mem_Calloc(avg_size, sizeof(RealF *), fstr);
+  SXW.SWAbulk_tree_avg = (RealF *) Mem_Calloc(avg_size, sizeof(RealF *), fstr);
+  SXW.SWAbulk_forb_avg = (RealF *) Mem_Calloc(avg_size, sizeof(RealF *), fstr);
+
+  Mem_Set(SXW.SWAbulk_grass_avg, 0, avg_size * sizeof(RealF));
+	Mem_Set(SXW.SWAbulk_shrub_avg, 0, avg_size * sizeof(RealF));
+	Mem_Set(SXW.SWAbulk_tree_avg, 0, avg_size * sizeof(RealF));
+	Mem_Set(SXW.SWAbulk_forb_avg, 0, avg_size * sizeof(RealF));
+
+  SXW.swc_avg = (RealF *) Mem_Calloc(avg_size, sizeof(RealF), fstr);
 
   SXW_AVG.max_temp_avg = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr);
   SXW_AVG.min_temp_avg = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr);
@@ -1293,7 +1296,6 @@ int getNTranspLayers(int veg_prod_type) {
 
 /***********************************************************/
 void free_all_sxw_memory( void ) {
-  printf("freeing memory\n");
   free_sxw_memory();
   Mem_Free(SXW.f_files);
 	Mem_Free(SXW.f_roots);
