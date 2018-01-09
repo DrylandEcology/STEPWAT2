@@ -98,9 +98,6 @@ struct stepwat_st {
   int col_status_yr;
 
   RealF *swc_avg;
-  RealF val_snowmelt_avg[1000][2], // set to 1000 for max years
-        val_snowloss_avg[1000][2],
-        aet_avg[1000][2];
 };
 
 struct soilwat_average{
@@ -147,7 +144,10 @@ struct soilwat_average{
         *estab_avg,
         *max_temp_avg,
         *min_temp_avg,
-        *avg_temp_avg; // done
+        *avg_temp_avg, // done
+        *aet_avg,
+        *val_snowmelt_avg,
+        *val_snowloss_avg;
 
     RealD *surfaceTemp_avg;
 };

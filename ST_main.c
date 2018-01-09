@@ -242,7 +242,7 @@ int main(int argc, char **argv) {
 		Globals.currIter = iter;
 
     memset(SXW.transp_SWA, 0, sizeof(SXW.transp_SWA)); // set transp_SWA to 0; needs to be reset each iteration
-    memset(SXW.sum_dSWA_repartitioned, 0, sizeof(SXW.sum_dSWA_repartitioned));
+    //memset(SXW.sum_dSWA_repartitioned, 0, sizeof(SXW.sum_dSWA_repartitioned));
 
 		/* ------  Begin running the model ------ */
 		for (year = 1; year <= Globals.runModelYears; year++){
