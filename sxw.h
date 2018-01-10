@@ -180,8 +180,9 @@ typedef struct soilwat_average SXW_avg;
 #define Iylp(y,l,p,x) (((y)*Globals.runModelYears * SXW.NTrLyrs * SXW.NPds * 2) + ((l)*SXW.NTrLyrs * SXW.NPds * 2) + ((p)*SXW.NPds * 2) + ((x)*2))
 
 // for soilwat average and standard deviation
-// year, timeperiod, choice (avg or std)
-#define Iypc(y,p,c) (((y)*Globals.runModelYears * SXW.NPds) + ((p)*SXW.NPds) + (c))
+// year, timeperiod, choice (avg or std), timeperiod (dy, wk, mo, yr)
+// difference between p and b is p is current period within period (ie. for day it could be 0 to 364) and b is just timeperiod (0 to 3 where 0 is day and 3 is yr)
+#define Iypc(y,p,c,b) (((y)*Globals.runModelYears * SXW.NPds * 4) + ((p)*SXW.NPds * 4) + ((c) * 4) + (b))
 
 // veg type, layer, timeperiod
 #define Ivlp(v,l,p) (((v)*4 * SXW.NTrLyrs * SXW.NPds) + ((l)*SXW.NTrLyrs * SXW.NPds) + ((p)*SXW.NPds))

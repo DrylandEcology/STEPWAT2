@@ -839,8 +839,8 @@ static void _make_swc_array(void) {
 static void _make_soil_arrays(void){
   char *fstr = "_make_soil_arrays";
   int size, layer_size, avg_size;
-  size = (SXW.NPds * Globals.runModelYears * 2) * Globals.runModelYears;
-  layer_size = (SXW.NPds * SXW.NSoLyrs * Globals.runModelYears * 2) * Globals.runModelYears;
+  size = (SXW.NPds * Globals.runModelYears * 2 * 4) * Globals.runModelYears;
+  layer_size = (SXW.NPds * SXW.NSoLyrs * Globals.runModelYears * 2 * 4) * Globals.runModelYears;
 
   avg_size = (SXW.NPds * SXW.NSoLyrs * Globals.runModelYears * 2) * Globals.runModelYears;
   SXW.transpTotal_avg = (RealD *) Mem_Calloc(avg_size, sizeof(RealD), fstr);
@@ -868,6 +868,7 @@ static void _make_soil_arrays(void){
 	Mem_Set(SXW.SWAbulk_forb_avg, 0, avg_size * sizeof(RealF));
 
   SXW.swc_avg = (RealF *) Mem_Calloc(avg_size, sizeof(RealF), fstr);
+
 
   SXW_AVG.max_temp_avg = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr);
   SXW_AVG.min_temp_avg = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr);
