@@ -40,8 +40,8 @@ Other tasks:
 >   -q : quiet mode, don't print message to check logfile.
 >   -s : use SOILWAT model for resource partitioning.
 >   -e : echo initialization results to logfile
->   -o : print all the soilwat output (averaged over all iterations) in addition to the stepwat output
->   -i : print soilwat output for each iteration
+>   -o : write SOILWAT output to output files. Contains average over all iterations and standard deviation
+>   -i : write soilwat output to output files for each iteration
 >   -g : use gridded mode
 ```
 
@@ -67,6 +67,13 @@ cd testing.sagebrush.master/Stepwat_Inputs/
 ```
 cd testing.sagebrush.master/Stepwat_Inputs/
 ./stepwat -f files.in
+```
+
+* Run STEPPE (get SOILWAT output for all iterations and average)
+
+```
+cd testing.sagebrush.master/Stepwat_Inputs/
+./stepwat -f files.in -o -i -s
 ```
 
 
