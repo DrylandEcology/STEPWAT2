@@ -1,18 +1,10 @@
 # Output setup file for STEPWAT
 #
 # Notes:
-# Time periods available:  DY,WK,MO,YR
+# Time periods available:  DY,YR
 #   eg, if DY is chosen then 100,200 would mean to use the second hundred days
 #   But if YR is chosen, start and end numbers are in days so only those days
 #   are reported for the yearly average.
-# Some keys from older versions (fortran and the c versions mimicking the fortran
-#   version) are not currently implemented:
-#   ALLH20, WTHR.
-#
-# ESTABL only produces yearly output, namely, DOY for each species requested.
-#   Thus, to minimize typo errors, all flags are ignored except the filename.
-#   Output is simply the day of the year establishment occurred for each species
-#   in each year of the model run.  Refer to the estabs.in file for more info.
 #
 # DEEPSWC produces output only if the deepdrain flag is set in siteparam.in.
 #
@@ -24,45 +16,48 @@
 #  SUM - sum the variable for each day in the output period
 #  AVG - average the variable over the output period
 #  FIN - output value of final day in the period; soil water variables only.
-# Note that SUM and AVG are the same if timeperiod = dy.
+# Note that SUM and AVG are the same if timeperiod = DY.
 #
 # (01/17/2013) TIMESTEP key indicates which periods you want to output.
 # You can output all the periods at a time, just one, or however many
 # you want. To change which periods to output type 'dy' for day,
 # 'wk' for week, 'mo' for month, and 'yr' for year after TIMESTEP
 # in any order. For example: "TIMESTEP mo wk" will output for month and week
-
-# (1/9/2018) USE_TIMESTEP: this determines if using the timestep periods or using the PERIOD defined for each individual variable (1 = use, 0 = dont use)
-# If set to 0 TIMESTEP line determines which output files are to be created so need to have all the timeperiods defined in the values PERIOD
+#
+# (1/9/2018) USE_TIMESTEP: this determines if the TIMESTEP or PERIOD is used to define time periods for each individual output variable.
+# If "USE_TIMESTEP = 0", then the time period for each output variable listed below will be determined by the PERIOD column. Note only 1 time period can be listed for each output variable using this option. 
+# Also note that all of the time periods specified in the PERIOD column must be listed after TIMESTEP, so the correct output files are generated.   
 # EX: if only using TRANSP and PRECIP and the periods are MO for TRANSP and DY for PRECIP TIMESTEP needs to be "TIMESTEP dy mo" so program knows to create day and month output files
-# if "USE_TIMESTEP 1" then can have any combo of periods after TIMESTEP
+# If "USE_TIMESTEP = 1", then all output variables listed below will be outputted for the time periods specified after TIMESTEP (e.g. dy, yr). Note, this option allows for output variables to be generated for multiple time periods.
+# Also note that when using this option, each variable must only be listed once in the Table below. The PERIOD column is ignored with "USE_TIMESTEP = 1".
+#
+# To generate SWA output, the SWCBULK variable must also be requested.
 
-USE_TIMESTEP 0
-TIMESTEP dy wk mo yr
+USE_TIMESTEP 1
+TIMESTEP dy yr
 
 # key		SUMTYPE	PERIOD	start	end	filename_prefix
-TRANSP  	SUM  	MO  	1  	end  	transp
+TRANSP  	SUM  	YR  	1  	end  	transp
 PRECIP  	SUM  	YR  	1  	end  	precip
 TEMP    	AVG  	YR  	1  	end  	temp
 AET     	SUM  	YR  	1  	end  	aet
-SWCBULK     	FIN  	MO  	1  	end  	swc_bulk
-SWA  		AVG  	MO  	1  	end  	swa
-ESTABL 		off 	YR 	1 	end 	estabs
-VWCBULK		avg 	MO 	1 	end 	vwc_bulk
-VWCMATRIC 	avg 	YR 	1 	end 	vwc_matric
-SWPMATRIC 	avg 	WK 	1 	end 	swp_matric
-SWABULK 	AVG 	MO 	1 	end 	swa_bulk
-SWAMATRIC 	avg 	YR 	1 	end 	swa_matric
-SURFACEWATER 	avg 	DY 	1 	end 	surface_water
-RUNOFF 		sum 	WK 	1 	end 	runoff
-EVAPSOIL	sum	DY	1	end	evap_soil
-EVAPSURFACE	sum	WK	1	end	evap_surface
-INTERCEPTION	sum	MO	1	end	interception
-SOILINFILT	sum	YR	1	end	infiltration
-LYRDRAIN	sum	DY	1	end	percolation
-HYDRED		sum	WK	1	end	hydred
-PET		sum	DY	1	end	pet
-WETDAY		sum	DY	1	end	wetdays
-SNOWPACK	avg	WK	1	end	snowpack
-DEEPSWC		sum	MO	1	end	deep_drain
-SOILTEMP	avg	MO	1	end	temp_soil
+SWCBULK     FIN  	YR  	1  	end  	swc_bulk
+SWA  		AVG  	YR  	1  	end  	swa
+VWCBULK		avg 	YR 		1 	end 	vwc_bulk
+VWCMATRIC 	avg 	YR 		1 	end 	vwc_matric
+SWPMATRIC 	avg 	YR 		1 	end 	swp_matric
+SWABULK 	AVG 	YR 		1 	end 	swa_bulk
+SWAMATRIC 	avg 	YR 		1 	end 	swa_matric
+SURFACEWATER avg 	YR 		1 	end 	surface_water
+RUNOFF 		sum 	YR 		1 	end 	runoff
+EVAPSOIL	sum		YR		1	end		evap_soil
+EVAPSURFACE	sum		YR		1	end		evap_surface
+INTERCEPTION sum	YR		1	end		interception
+SOILINFILT	sum		YR		1	end		infiltration
+LYRDRAIN	sum		YR		1	end		percolation
+HYDRED		sum		YR		1	end		hydred
+PET			sum		YR		1	end		pet
+WETDAY		sum		YR		1	end		wetdays
+SNOWPACK	avg		YR		1	end		snowpack
+DEEPSWC		sum		YR		1	end		deep_drain
+SOILTEMP	avg		YR		1	end		temp_soil
