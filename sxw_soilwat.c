@@ -220,7 +220,7 @@ static void _update_productivity(void) {
  *     otherwise.
  */
   GrpIndex g;
-  Months m;
+  TimeInt m;
 
   SW_VEGPROD *v = &SW_VegProd;
   RealF totbmass = 0.0,
@@ -300,18 +300,18 @@ static void _update_productivity(void) {
 	if (GT(totbmass, 0.)) {
 		//if (ZRO(biomass))
 		//	biomass = 1;
-		v->fractionTree = (vegTypeBiomass[0] / totbmass);
-		v->fractionShrub = (vegTypeBiomass[1] / totbmass);
-		v->fractionGrass = (vegTypeBiomass[2] / totbmass);
-		v->fractionForb = (vegTypeBiomass[3] / totbmass);
+		v->tree.cov.fCover = (vegTypeBiomass[0] / totbmass);
+		v->shrub.cov.fCover = (vegTypeBiomass[1] / totbmass);
+		v->grass.cov.fCover = (vegTypeBiomass[2] / totbmass);
+		v->forb.cov.fCover = (vegTypeBiomass[3] / totbmass);
 		//TODO: figure how to calculate bareground fraction.
-		v->fractionBareGround = 0;
+		v->bare_cov.fCover = 0;
 	} else {
-		v->fractionTree = (0.0);
-		v->fractionShrub = (0.0);
-		v->fractionGrass = (0.0);
-		v->fractionForb = (0.0);
-		v->fractionBareGround = 1;
+		v->tree.cov.fCover = (0.0);
+		v->shrub.cov.fCover = (0.0);
+		v->grass.cov.fCover = (0.0);
+		v->forb.cov.fCover = (0.0);
+		v->bare_cov.fCover = 1;
 	}
 #undef Biomass
 }

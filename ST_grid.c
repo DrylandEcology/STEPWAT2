@@ -6,8 +6,8 @@
 //  History:
 //     (5/24/2013) -- INITIAL CODING - DLM
 //
-//	WARNING: This module deals with a LARGE amount of dynamic memory allocation/deallocation (there can be potentially hundreds of thousands of allocations/frees called by this code depending on settings ran).  
-//			 Be very wary when editing it as even small changes could possibly cause massive memory errors/leaks to occur.  In particular be careful when copy/freeing the linked list of individuals (I would suggest just using the code I wrote for this as it works and it's pretty easy to screw it up).  
+//	WARNING: This module deals with a LARGE amount of dynamic memory allocation/deallocation (there can be potentially hundreds of thousands of allocations/frees called by this code depending on settings ran).
+//			 Be very wary when editing it as even small changes could possibly cause massive memory errors/leaks to occur.  In particular be careful when copy/freeing the linked list of individuals (I would suggest just using the code I wrote for this as it works and it's pretty easy to screw it up).
 //			 Always keep in mind that for every time memory is allocated (every time alloc or calloc is called), a corresponding free is required.  I would recommend valgrind or a similar program to debug memory errors as doing it without some kind of tool would be crazy.
 /********************************************************/
 /*
@@ -353,7 +353,7 @@ static int _load_bar(char* prefix, clock_t start, int x, int n, int r, int w)
 
 	int i;
 
-	printf("\r"); //we output a carriage-return character to put us back at the beginning of the line	
+	printf("\r"); //we output a carriage-return character to put us back at the beginning of the line
 	if (prefix != NULL)
 		printf("%s", prefix);
 
@@ -383,7 +383,7 @@ static int _load_bar(char* prefix, clock_t start, int x, int n, int r, int w)
 		printf(" ");
 
 	printf("]");
-	fflush(stdout); //we do this to flush (ie. print) the output, since stdout typically waits for a newline character before flushing 
+	fflush(stdout); //we do this to flush (ie. print) the output, since stdout typically waits for a newline character before flushing
 	return result;
 }
 
@@ -446,7 +446,7 @@ void runGrid(void)
 				{ //for each cell
 
 					//fprintf(stderr, "year: %d", year);
-					_load_cell(i, j, year, TRUE);
+					_load_cell(i, j, year, swTRUE);
 
 					if (year == 1 && (sd_Option2a || sd_Option2b))
 					{
@@ -484,7 +484,7 @@ void runGrid(void)
 
 					stat_Collect(year);
 
-					_save_cell(i, j, year, TRUE);
+					_save_cell(i, j, year, swTRUE);
 
 		            // Moved kill annual and kill extra growth after we export biomass, we also doing recoverly after killing year
 				    _kill_annuals();
@@ -512,10 +512,10 @@ void runGrid(void)
 			for (i = 1; i <= grid_Rows; i++)
 				for (j = 1; j <= grid_Cols; j++)
 				{
-					_load_cell(i, j, Globals.runModelYears, TRUE);
+					_load_cell(i, j, Globals.runModelYears, swTRUE);
 					stat_Collect_GMort();
 					stat_Collect_SMort();
-					_save_cell(i, j, Globals.runModelYears, TRUE);
+					_save_cell(i, j, Globals.runModelYears, swTRUE);
 				}
 		//reset soilwat to initial condition
 		if (UseSoilwat)
@@ -547,7 +547,7 @@ void runGrid(void)
 		{
 
 			int cell = j + ((i - 1) * grid_Cols) - 1;
-			_load_cell(i, j, 1, TRUE);
+			_load_cell(i, j, 1, swTRUE);
 			for (year = 2; year <= Globals.runModelYears; year++) // _load_cell gets the first years accumulators loaded, so we start at 2...
 				stat_Load_Accumulators(cell, year);
 
@@ -602,7 +602,7 @@ static void _run_spinup(void)
 	Bool killedany;
 	IntS year, iter;
 
-	DuringSpinup = TRUE;
+	DuringSpinup = swTRUE;
 
 	if (!UseSoils || !UseSoilwat)
 	{ // if we're not using inputting soils then there is simply one soil type as all the soils are the same
@@ -674,7 +674,7 @@ static void _run_spinup(void)
 		//_free_grid_globals(); //free's the grid variables that change every iter
 	} /*end iterations */
 
-	DuringSpinup = FALSE;
+	DuringSpinup = swFALSE;
 }
 
 /***********************************************************/
@@ -775,14 +775,14 @@ static void _init_grid_inputs(void)
 	if (UseSoils && UseSoilwat)
 		_read_soils_in();
 
-	DuringSpinup = FALSE;
+	DuringSpinup = swFALSE;
 }
 
 /***********************************************************/
 static void _init_SXW_inputs(Bool init_SW, char *f_roots)
 {
 	SXW_Init(init_SW, f_roots);	// initializes soilwat
-	if (init_SW == TRUE)
+	if (init_SW == swTRUE)
 	{
 		char aString[2048];
 		sprintf(aString, "%s/%s", grid_directories[0], SW_Weather.name_prefix);
@@ -800,7 +800,7 @@ static void _init_stepwat_inputs(void)
 	parm_Initialize(0);				// loads stepwat input files
 
 	if (UseSoilwat)
-		_init_SXW_inputs(TRUE, NULL);
+		_init_SXW_inputs(swTRUE, NULL);
 
 	ChDir("..");					// goes back to the folder that we were in
 }
@@ -1464,7 +1464,7 @@ static void _free_grid_memory(void)
 /***********************************************************/
 static void _free_spinup_memory(void)
 {
-	// frees spinup memory	
+	// frees spinup memory
 
 	GrpIndex c;
 	SppIndex s;
@@ -2040,7 +2040,7 @@ static Bool GetALine2(FILE *f, char buf[], int limit)
 	int i = 0, aChar;
 	aChar = getc(f);
 	if (aChar == EOF)
-		return FALSE;
+		return swFALSE;
 	while ((i < (limit - 1)) && aChar != EOF && aChar != '\r' && aChar != '\n')
 	{
 		buf[i++] = (char) aChar;
@@ -2051,7 +2051,7 @@ static Bool GetALine2(FILE *f, char buf[], int limit)
 			fseek(f, -1, SEEK_CUR); //back up one character in the file because we didn't find a new-line character
 
 	buf[i] = '\0';
-	return TRUE;
+	return swTRUE;
 }
 
 /***********************************************************/
@@ -2295,9 +2295,9 @@ static void _init_soil_layers(int cell, int isSpinup)
 	int i, j;
 	i = cell;
 	char *errtype = '\0';
-	Bool evap_ok = TRUE, transp_ok_forb = TRUE, transp_ok_tree = TRUE,
-			transp_ok_shrub = TRUE, transp_ok_grass = TRUE; /* mitigate gaps in layers */
-	Bool fail = FALSE;
+	Bool evap_ok = swTRUE, transp_ok_forb = swTRUE, transp_ok_tree = swTRUE,
+			transp_ok_shrub = swTRUE, transp_ok_grass = swTRUE; /* mitigate gaps in layers */
+	Bool fail = swFALSE;
 	RealF fval = 0;
 
 	if (SW_Site.deepdrain)
@@ -2317,32 +2317,32 @@ static void _init_soil_layers(int cell, int isSpinup)
 	{
 		if (LT(grid_Soils[i].lyr[j].data[0], 0.))
 		{
-			fail = TRUE;
+			fail = swTRUE;
 			fval = grid_Soils[i].lyr[j].data[0];
 			errtype = Str_Dup("bulk density");
 		}
 		else if (LT(grid_Soils[i].lyr[j].data[1],
 				0.) || GT(grid_Soils[i].lyr[j].data[1], 1))
 		{
-			fail = TRUE;
+			fail = swTRUE;
 			fval = grid_Soils[i].lyr[j].data[1];
 			errtype = Str_Dup("gravel content");
 		}
 		else if (LE(grid_Soils[i].lyr[j].data[7], 0.))
 		{
-			fail = TRUE;
+			fail = swTRUE;
 			fval = grid_Soils[i].lyr[j].data[7];
 			errtype = Str_Dup("sand proportion");
 		}
 		else if (LE(grid_Soils[i].lyr[j].data[8], 0.))
 		{
-			fail = TRUE;
+			fail = swTRUE;
 			fval = grid_Soils[i].lyr[j].data[8];
 			errtype = Str_Dup("clay proportion");
 		}
 		else if (LT(grid_Soils[i].lyr[j].data[9], 0.))
 		{
-			fail = TRUE;
+			fail = swTRUE;
 			fval = grid_Soils[i].lyr[j].data[9];
 			errtype = Str_Dup("impermeability");
 		}
@@ -2382,35 +2382,35 @@ static void _init_soil_layers(int cell, int isSpinup)
 			if (GT(SW_Site.lyr[j]->evap_coeff, 0.0))
 				SW_Site.n_evap_lyrs++;
 			else
-				evap_ok = FALSE;
+				evap_ok = swFALSE;
 		}
 		if (transp_ok_tree)
 		{
 			if (GT(SW_Site.lyr[j]->transp_coeff_tree, 0.0))
 				SW_Site.n_transp_lyrs_tree++;
 			else
-				transp_ok_tree = FALSE;
+				transp_ok_tree = swFALSE;
 		}
 		if (transp_ok_shrub)
 		{
 			if (GT(SW_Site.lyr[j]->transp_coeff_shrub, 0.0))
 				SW_Site.n_transp_lyrs_shrub++;
 			else
-				transp_ok_shrub = FALSE;
+				transp_ok_shrub = swFALSE;
 		}
 		if (transp_ok_grass)
 		{
 			if (GT(SW_Site.lyr[j]->transp_coeff_grass, 0.0))
 				SW_Site.n_transp_lyrs_grass++;
 			else
-				transp_ok_grass = FALSE;
+				transp_ok_grass = swFALSE;
 		}
 		if (transp_ok_forb)
 		{
 			if (GT(SW_Site.lyr[j]->transp_coeff_forb, 0.0))
 				SW_Site.n_transp_lyrs_forb++;
 			else
-				transp_ok_forb = FALSE;
+				transp_ok_forb = swFALSE;
 		}
 		water_eqn(SW_Site.lyr[j]->fractionVolBulk_gravel,
 				SW_Site.lyr[j]->fractionWeightMatric_sand,
@@ -2438,7 +2438,7 @@ static void _init_soil_layers(int cell, int isSpinup)
 	init_site_info(); //in SW_Site.c, called to initialize layer data...
 
 	free_all_sxw_memory();
-	_init_SXW_inputs(FALSE, grid_Soils[i].rootsFile); //we call this so that SXW can set the correct sizes/values up for the memory dynamically allocated in sxw.c
+	_init_SXW_inputs(swFALSE, grid_Soils[i].rootsFile); //we call this so that SXW can set the correct sizes/values up for the memory dynamically allocated in sxw.c
 
 	if (!isSpinup)
 	{
@@ -2657,7 +2657,7 @@ static void _read_seed_dispersal_in(void)
 							grid_SD[s][cell].prob[k] = pd;
 							grid_SD[s][cell].size++;
 							k++;
-							//fprintf(stderr, "cell: %d; i: %d; j: %d; dist: %f; pd: %f %d %d\n", i + ( (j-1) * grid_Cols) - 1, i, j, d, pd, row, col); 
+							//fprintf(stderr, "cell: %d; i: %d; j: %d; dist: %f; pd: %f %d %d\n", i + ( (j-1) * grid_Cols) - 1, i, j, d, pd, row, col);
 						}
 					}
 				//fprintf(stderr, "size %d index %d maxsize %d\n", grid_SD[cell].size, cell, maxCells);
@@ -2727,7 +2727,7 @@ static void _do_seed_dispersal(void)
 
 				sgerm = (grid_SD[s][i].seeds_present
 						|| grid_SD[s][i].seeds_received) && germ; //refers to whether the species has seeds available from the previous year and conditions are correct for germination this year
-				grid_Species[s][i].allow_growth = FALSE;
+				grid_Species[s][i].allow_growth = swFALSE;
 				biomass = grid_Species[s][i].relsize
 						* grid_Species[s][i].mature_biomass;
 
@@ -2743,12 +2743,12 @@ static void _do_seed_dispersal(void)
 						//will fail and allow_growth will not become TRUE, then when Globals.currYear=8 this allow_growth= FALSE will carry forward and there will no call
 						// to other functions like Species_Update_Newsize() so new size will not be updated and last year size will carry forward so in final output year 7 and year 8 will
 						// have same output that is not correct.
-						grid_Species[s][i].allow_growth = TRUE;
+						grid_Species[s][i].allow_growth = swTRUE;
 					}
 
 				}
 				else if (sgerm || GT(biomass, 0.0))
-					grid_Species[s][i].allow_growth = TRUE;
+					grid_Species[s][i].allow_growth = swTRUE;
 				grid_Species[s][i].sd_sgerm = sgerm; //based upon whether we have received/produced seeds that germinated
 				//if(grid_Species[s][i].allow_growth == TRUE &&  i == 52 && s == 0 && Globals.currIter == 1)
 				//	printf("%s allow_growth:%d year:%d sgerm:%d iter:%d\n", grid_Species[s][i].name, grid_Species[s][i].allow_growth, year, sgerm, Globals.currIter);
@@ -2790,7 +2790,7 @@ static void _do_seed_dispersal(void)
 				float Pmin = grid_Species[s][i].sd_Pmin, Pmax =
 						grid_Species[s][i].sd_Pmax;
 
-				//p3 = Pmin, if LYPPT < PPTdry 
+				//p3 = Pmin, if LYPPT < PPTdry
 				//p3 = 1 - (1-Pmin) * exp(-d * (LYPPT - PPTdry)) with d = - ln((1 - Pmax)/(1 - Pmin)) / (PPTwet - PPTdry), if PPTdry <= LYPPT <= PPTwet
 				//p3 = Pmax, if LYPPT > PPTwet
 
@@ -3092,7 +3092,7 @@ static void _read_init_species(void)
 	int i, j, num, cell, do_copy, copy_cell, use_SpinUp, seeds_Avail;
 	char buf[4096];
 
-	//open the file/do the reading	
+	//open the file/do the reading
 	f = OpenFile(grid_files[5], "r"); //grid_files[5] is the grid_initSpecies.csv file
 
 	GetALine2(f, buf, 4096); // gets rid of the first line (since it just defines the columns)... it's only there for user readability

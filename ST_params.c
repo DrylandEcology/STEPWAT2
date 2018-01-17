@@ -51,7 +51,7 @@ SppIndex species_New(void);
   void parm_Initialize( Int);
   void parm_SetFirstName( char *s);
   void parm_SetName( char *s, int which);
-  void parm_free_memory( void ); 
+  void parm_free_memory( void );
 
 /*********** Locally Used Function Declarations ************/
 /***********************************************************/
@@ -100,7 +100,7 @@ char *MyFileName;
 /**************************************************************/
 void parm_Initialize( Int iter) {
 /*======================================================*/
-  static Bool beenhere = FALSE;
+  static Bool beenhere = swFALSE;
   char filename[FILENAME_MAX];
 
   if (beenhere) {
@@ -146,13 +146,13 @@ void parm_Initialize( Int iter) {
     _rgroup_init();
     _species_init();
     _check_species();
-	
+
 //    _bmasshdr_init();
 //    _morthdr_create();
     RandSeed(Globals.randseed);
 
 	/*_recover_names();*/
-    beenhere = TRUE;
+    beenhere = swTRUE;
   }
 
 }
@@ -400,7 +400,7 @@ static void _check_species( void) {
        runyrs = Globals.runModelYears;  /* shorthand */
   SppIndex sp;
   GrpIndex rg;
-  Bool tripped = FALSE;
+  Bool tripped = swFALSE;
   GroupType *g;
   SpeciesType *s;
 
@@ -415,7 +415,7 @@ static void _check_species( void) {
     }
     g->max_spp = cnt;
     if (cnt < g->max_spp_estab) {
-      tripped = TRUE;
+      tripped = swTRUE;
       g->max_spp_estab = cnt;
       LogError(logfp, LOGNOTE, "Max_Spp_Estab > Number of Spp for %s",
               g->name);
@@ -729,7 +729,7 @@ static void _mortflags_init( void) {
    MortFlags.summary = (Bool)(*s=='y'||*s=='Y');
    MortFlags.yearly  = (Bool)(*y=='y'||*y=='Y');
    if (!(MortFlags.summary || MortFlags.yearly)) {
-     MortFlags.header = MortFlags.group = MortFlags.species = FALSE;
+     MortFlags.header = MortFlags.group = MortFlags.species = swFALSE;
      return;
    }
 
@@ -885,10 +885,10 @@ static void _rgroup_init( void) {
 
    /* ------------------------------------------------------------*/
    /* Install all the defined groups, except for dry/wet/norm parms */
-   groupsok = FALSE;
+   groupsok = swFALSE;
    while( GetALine(f,inbuf)) {
      if (!isnull(strstr(inbuf,"[end]"))) {
-        groupsok = TRUE;
+        groupsok = swTRUE;
         break;
      }
      x=sscanf( inbuf, "%s %f %f %d %f %d %d %d %d %d %d %d %f %d %d %f %d %f %f %f %f %d",
@@ -900,7 +900,7 @@ static void _rgroup_init( void) {
        LogError(logfp, LOGFATAL, "%s: Too few columns in groups",
                MyFileName);
      }
-   
+
     _rgroup_add1( name, space, density, estab,
                    slow, stretch, xres, estann,
                    turnon, styr, killyr,killfreq_startyr, killfreq,
@@ -914,10 +914,10 @@ static void _rgroup_init( void) {
 
    /* ------------------------------------------------------------*/
    /* Install  dry/wet/norm parms for defined groups */
-   groupsok = FALSE;
+   groupsok = swFALSE;
    while( GetALine(f,inbuf)) {
      if (!isnull(strstr(inbuf,"[end]"))) {
-        groupsok = TRUE;
+        groupsok = swTRUE;
         break;
      }
      x=sscanf( inbuf, "%s %f %f %f %f %f %f",
@@ -988,7 +988,7 @@ static void _rgroup_add1( char name[], RealF space, RealF density,
   RGroup[rg]->proportion_grazing   = prop_grazing;
   RGroup[rg]->grazingfreq_startyr  = grazingfreq_startyr;
 
-  RGroup[rg]->extirpated    = FALSE;
+  RGroup[rg]->extirpated    = swFALSE;
 }
 
 
@@ -1038,7 +1038,7 @@ static void _rgroup_addsucculent( char name[],
      LogError(logfp, LOGFATAL, "%s: Mismatched name (%s) for succulents",
              MyFileName, name2);
    }
-   RGroup[rg]->succulent = TRUE;
+   RGroup[rg]->succulent = swTRUE;
    Succulent.growth[Slope]  = wslope;
    Succulent.growth[Intcpt] = wint;
    Succulent.mort[Slope]  = dslope;
@@ -1058,7 +1058,7 @@ static void _species_init( void) {
 /* Read parameters for each species
 */
    FILE *f;
-   Bool readspp = TRUE, sppok = TRUE;
+   Bool readspp = swTRUE, sppok = swTRUE;
 
    /* temp vars to hold the group info*/
    char name[80], /* plenty of space to read possibly long name*/
@@ -1084,9 +1084,9 @@ static void _species_init( void) {
    f = OpenFile(MyFileName, "r");
 
    while( readspp) {
-      if( ! GetALine(f, inbuf )) {sppok=FALSE;break;}
+      if( ! GetALine(f, inbuf )) {sppok=swFALSE;break;}
       if ( ! isnull( strstr(inbuf,"[end]")) ) {
-         readspp=FALSE;
+         readspp=swFALSE;
          continue;
       }
 
@@ -1135,7 +1135,7 @@ static void _species_init( void) {
       Species[sp]->max_vegunits = (Species[sp]->isclonal)
                                 ? vegi
                                 : 0;
-      Species[sp]->use_me = (RGroup[rg-1]->use_me) ? itob(turnon) : FALSE ;
+      Species[sp]->use_me = (RGroup[rg-1]->use_me) ? itob(turnon) : swFALSE ;
       Species[sp]->received_prob = 0;
       Species[sp]->cohort_surv = cohort;
 /*      Species[sp]->ann_mort_prob = (age > 0)
@@ -1155,11 +1155,11 @@ static void _species_init( void) {
 
    /* ------------------------------------------------- */
    /* ------ read the additional annuals' establishment parameters */
-   sppok = readspp = TRUE;
+   sppok = readspp = swTRUE;
    while( readspp) {
-     if( ! GetALine(f, inbuf )) {sppok=FALSE; break;}
+     if( ! GetALine(f, inbuf )) {sppok=swFALSE; break;}
      if ( ! isnull( strstr(inbuf,"[end]")) ) {
-        readspp=FALSE;
+        readspp=swFALSE;
         continue;
      }
 
@@ -1187,15 +1187,15 @@ static void _species_init( void) {
       LogError(logfp, LOGFATAL, "%s: Incorrect/incomplete input in annual estab parms",
               MyFileName);
    }
-   
+
 
    /* ------------------------------------------------- */
    /* ------ read the vegetative propagation parameters */
-   sppok = readspp = TRUE;
+   sppok = readspp = swTRUE;
    while( readspp) {
-      if( ! GetALine(f, inbuf )) {sppok=FALSE; break;}
+      if( ! GetALine(f, inbuf )) {sppok=swFALSE; break;}
       if ( ! isnull( strstr(inbuf,"[end]")) ) {
-         readspp=FALSE;
+         readspp=swFALSE;
          continue;
       }
 
@@ -1225,15 +1225,15 @@ static void _species_init( void) {
 
    /* ------------------------------------------------- */
    /* ------- read the seed dispersal parameters ------ */
-   sppok = readspp = TRUE;
+   sppok = readspp = swTRUE;
    while( readspp ) {
-	if( !GetALine(f, inbuf) ) {sppok=FALSE; break;}
+	if( !GetALine(f, inbuf) ) {sppok=swFALSE; break;}
 	if( !isnull(strstr(inbuf,"[end]")) ) {
-		readspp=FALSE;
+		readspp=swFALSE;
 		continue;
 	}
 
-	x = sscanf( inbuf, "%s %hd %f %f %f %f %f %f %f", 
+	x = sscanf( inbuf, "%s %hd %f %f %f %f %f %f %f",
 		    name, &turnondispersal, &p1, &p2, &p3, &p4, &p5, &p6, &p7);
 	if(x < 9)
 		LogError(logfp, LOGFATAL, "%s: Too few columns in species seed dispersal inputs", MyFileName);
@@ -1242,11 +1242,11 @@ static void _species_init( void) {
 	sp = Species_Name2Index(name2);
 	if( sp < 0)
 		LogError(logfp, LOGFATAL, "%s: Mismatched name (%s) for species seed dispersal inputs", MyFileName, name2);
-		
+
         Species[sp]->use_dispersal = itob(turnondispersal);
-        Species[sp]->allow_growth = TRUE;
-	Species[sp]->sd_sgerm = FALSE;
-	
+        Species[sp]->allow_growth = swTRUE;
+	Species[sp]->sd_sgerm = swFALSE;
+
 	Species[sp]->sd_Param1 = p1;
 	Species[sp]->sd_PPTdry = p2;
 	Species[sp]->sd_PPTwet = p3;
@@ -1255,7 +1255,7 @@ static void _species_init( void) {
 	Species[sp]->sd_H = p6;
 	Species[sp]->sd_VT = p7;
    }
-   if(!sppok) 
+   if(!sppok)
 	  LogError(logfp, LOGFATAL, "%s: Incorrect/incomplete input in species seed dispersal input", MyFileName);
 
    CloseFile(&f);
@@ -1320,4 +1320,3 @@ void Parm_SetMemoryRefs( void) {
 }
 
 #endif
-

@@ -64,6 +64,7 @@
 #include "sw_src/SW_Control.h"
 #include "sw_src/SW_Model.h"
 #include "sw_src/SW_VegProd.h"
+#include "sw_src/SW_Carbon.h"
 #include "sw_src/SW_Site.h"
 #include "sw_src/SW_SoilWater.h"
 #include "sw_src/SW_Files.h"
@@ -219,6 +220,7 @@ void SXW_Init( Bool init_SW, char *f_roots ) {
   if(init_SW) {
 	  temp = strdup(SXW.f_watin);
 	  SW_CTL_init_model(temp);
+	  SW_CTL_obtain_inputs();
 	  free(temp);
   }
 
@@ -271,7 +273,8 @@ void SXW_Reset(void) {
 
 	temp = strdup(SXW.f_watin);
 	SW_CTL_init_model(temp);
-	free(temp);
+	SW_CTL_obtain_inputs();
+  free(temp);
 }
 
 void SXW_InitPlot (void) {
@@ -343,7 +346,7 @@ void SXW_SW_Setup_Echo(void) {
 	FILE *f = OpenFile(strcat(name, ".input.out"), "a");
 	int i;
 	fprintf(f, "\n================== %d =============================\n", SW_Model.year);
-	fprintf(f,"Fractions Grass:%f Shrub:%f Tree:%f Forb:%f BareGround:%f\n", SW_VegProd.fractionGrass, SW_VegProd.fractionShrub, SW_VegProd.fractionTree, SW_VegProd.fractionForb, SW_VegProd.fractionBareGround);
+	fprintf(f,"Fractions Grass:%f Shrub:%f Tree:%f Forb:%f BareGround:%f\n", SW_VegProd.grass.cov.fCover, SW_VegProd.shrub.cov.fCover, SW_VegProd.tree.cov.fCover, SW_VegProd.forb.cov.fCover, SW_VegProd.bare_cov.fCover);
 	fprintf(f,"Monthly Production Values\n");
 	fprintf(f,"Grass\n");
 	fprintf(f,"Month\tLitter\tBiomass\tPLive\tLAI_conv\n");
@@ -423,7 +426,7 @@ RealF SXW_GetResource( GrpIndex rg) {
 void SXW_PrintDebug(Bool cleanup) {
 /*======================================================*/
 	TimeInt i;
-	static Bool beenhere = FALSE;
+	static Bool beenhere = swFALSE;
 
 	if(cleanup) {
 		debugCleanUp();
@@ -436,7 +439,7 @@ void SXW_PrintDebug(Bool cleanup) {
 			}
 		}
 		if (!beenhere) {
-			beenhere = TRUE;
+			beenhere = swTRUE;
 			insertInfo();
 			insertSXWPhen();
 			insertSXWProd();
@@ -526,7 +529,7 @@ static void _read_phen(void) {
 
   GrpIndex g;
   IntUS cnt=0;
-  Months m;
+  TimeInt m;
   char *p;
   FILE *fp;
 
@@ -594,7 +597,7 @@ static void _read_bvt(void) {
 static void _read_prod(void) {
 	int x;
 	FILE *fp;
-	Months mon = Jan;
+	TimeInt mon = Jan;
 
 	GrpIndex g;
 	IntUS cnt = 0;
@@ -705,7 +708,7 @@ static void _read_watin(void) {
  */
    FILE *f;
    int lineno = 0;
-   Bool found = FALSE;
+   Bool found = swFALSE;
 
    MyFileName = SXW.f_watin;
    f = OpenFile(MyFileName, "r");
@@ -715,7 +718,7 @@ static void _read_watin(void) {
      if (++lineno == (eOutput + 2)) {
        strcpy(_swOutDefName, DirName(SXW.f_watin));
        strcat(_swOutDefName, inbuf);
-       found = TRUE;
+       found = swTRUE;
        break;
      }
    }
@@ -740,7 +743,7 @@ static void _make_arrays(void) {
   _make_swa_array();
 	_make_swc_array();
   // only make output storage if -o or -i flags
-  if(storeAllIterations || isPartialSoilwatOutput == FALSE)
+  if(storeAllIterations || isPartialSoilwatOutput == swFALSE)
     _make_soil_arrays();
 }
 
@@ -1082,7 +1085,7 @@ void _print_debuginfo(void) {
 	RealF sum1 = 0.;
 	RealF sum2 = 0.;
 	RealF sum3 = 0.;
-	static Bool beenhere = FALSE;
+	static Bool beenhere = swFALSE;
 	char vegProdNames[4][7];
 	strcpy(vegProdNames[0], "TREE");
 	strcpy(vegProdNames[1], "SHRUB");
@@ -1093,7 +1096,7 @@ void _print_debuginfo(void) {
 	f = OpenFile(strcat(name, ".output.out"), "a");
 
 	if (!beenhere) {
-		beenhere = TRUE;
+		beenhere = swTRUE;
 		fprintf(f, "\n------ Roots X Phen Array -------\n");
 		ForEachGroup(r)
 		{

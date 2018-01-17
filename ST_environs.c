@@ -56,11 +56,11 @@ void Env_Generate( void) {
   Int rg;
 
   switch (UseSoilwat) {
-    case FALSE:
+    case swFALSE:
          /* clear last year's leftover resources */
          ForEachGroup(rg) RGroup[rg]->res_avail = 0.0;
          break;
-    case TRUE:
+    case swTRUE:
          SXW_Run_SOILWAT();
          break;
   }
@@ -90,7 +90,7 @@ static void _make_ppt( void) {
  *       but we still pass through this code to set the
  *       Dry/Wet/Normal state.
  * KAP 1/26/2017 The above note by CB is not correct. Env.ppt
- *      is set in _sxw_set_environs, but gsppt is not, it is 
+ *      is set in _sxw_set_environs, but gsppt is not, it is
  *      set below. When using SOILWAT or not, the gsspt, ppt.dry,
  *      and ppt.wet is currently fixed each year and read from env.in
  *      We should consider calculating gsspt in the _sxw_set_environs
@@ -241,17 +241,17 @@ static void _make_disturbance( void) {
       case FecalPat:
            if (Plot.pat_removed) {
              Plot.disturbed = 0;
-             Plot.pat_removed = FALSE;
+             Plot.pat_removed = swFALSE;
              Plot.disturbance = NoDisturb;
            } else {
              pc = Globals.pat.recol[Slope] * Plot.disturbed
                   + Globals.pat.recol[Intcpt];
              if (RandUni() <= pc) {
-               Plot.pat_removed = TRUE;
+               Plot.pat_removed = swTRUE;
                /* slight effects for one year*/
                Plot.disturbed = 1;
              } else {
-               Plot.pat_removed = FALSE;
+               Plot.pat_removed = swFALSE;
                Plot.disturbed++;
              }
            }
@@ -272,7 +272,7 @@ static void _make_disturbance( void) {
     event = (DisturbEvent) RandUniRange(1, LastDisturb -1);
 
     /* make sure this is off unless needed  */
-    Plot.pat_removed = FALSE;
+    Plot.pat_removed = swFALSE;
     switch( event) {
       case FecalPat:
        if (!Globals.pat.use) {event=NoDisturb; break;}
@@ -280,7 +280,7 @@ static void _make_disturbance( void) {
                ? event : NoDisturb;
          if (event == NoDisturb) break;
          Plot.pat_removed = (RandUni() <= Globals.pat.removal)
-                           ? TRUE : FALSE;
+                           ? swTRUE : swFALSE;
          Plot.disturbed = 0;
          break;
       case AntMound:
@@ -308,4 +308,3 @@ static void _make_disturbance( void) {
    }
 
 }
-

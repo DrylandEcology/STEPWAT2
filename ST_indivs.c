@@ -99,7 +99,7 @@ Bool indiv_New( SppIndex sp) {
   p = _create();
   p->id = id;
   p->myspecies = sp;
-  p->killed = FALSE;
+  p->killed = swFALSE;
   p->age = 1;
   p->slow_yrs = 0;
   p->relsize = Species[sp]->relseedlingsize;
@@ -116,7 +116,7 @@ Bool indiv_New( SppIndex sp) {
   //if(!UseGrid)
 	//  insertIndiv(p);
   id++;
-  return( TRUE);
+  return( swTRUE);
 }
 
 /**************************************************************/
@@ -181,12 +181,12 @@ Bool indiv_Kill_Partial( MortalityType code,
 
 /*------------------------------------------------------*/
   SppIndex sp;
-  Bool result = FALSE;
+  Bool result = swFALSE;
 
   sp = ndv->myspecies;
   if ( GT(ndv->relsize, killamt) && Species[sp]->isclonal) {
-    result            = TRUE;
-    ndv->killed       = TRUE;
+    result            = swTRUE;
+    ndv->killed       = swTRUE;
     ndv->relsize     -= killamt;
     ndv->killedby     = code;
     ndv->growthrate   = 0.0;
@@ -208,7 +208,7 @@ void indiv_proportion_Kill(IndivType *ndv, int killType, RealF proportKilled)
 	/* HISTORY */
 	/* Chris Bennett @ LTER-CSU 6/15/2000
 	 *  09/23/15 -AT  -Added proportionKilled
-	 *  Nov 4 2015- AT - Modified code for doing proportional kill for annual as well and not deleting species 
+	 *  Nov 4 2015- AT - Modified code for doing proportional kill for annual as well and not deleting species
 	 *  and indi from memory only adjusting their real size  */
 
 	/*------------------------------------------------------*/
@@ -486,4 +486,3 @@ int Indiv_CompSize_D( const void *key1, const void *key2) {
 
   return r;
 }
-

@@ -145,19 +145,19 @@ int main(int argc, char **argv) {
 	Bool killedany;
   int k;
 
-	logged = FALSE;
+	logged = swFALSE;
 	atexit(check_log);
 	/* provides a way to inform user that something
 	 * was logged.  see generic.h */
 
-  isPartialSoilwatOutput = TRUE; // dont want to get soilwat output unless -o flag
-  storeAllIterations = FALSE; // dont want to store all soilwat output iterations unless -i flag
+  isPartialSoilwatOutput = swTRUE; // dont want to get soilwat output unless -o flag
+  storeAllIterations = swFALSE; // dont want to store all soilwat output iterations unless -i flag
 
 	init_args(argc, argv); // read input arguments and intialize proper flags
 
 	printf("STEPWAT  init_args() executed successfully \n");
 
-	if (UseGrid == TRUE) {
+	if (UseGrid == swTRUE) {
 		runGrid();
 		return 0;
 	}
@@ -165,7 +165,7 @@ int main(int argc, char **argv) {
 	parm_Initialize(0);
 
 	if (UseSoilwat)
-		SXW_Init(TRUE, NULL);
+		SXW_Init(swTRUE, NULL);
 
 	incr = (IntS) ((float) Globals.runModelIterations / 10);
 	if (incr == 0)
@@ -379,7 +379,7 @@ void Plot_Initialize(void) {
 			RGroup[rg]->est_count = 0;
 		}
 		RGroup[rg]->yrs_neg_pr = 0;
-		RGroup[rg]->extirpated = FALSE;
+		RGroup[rg]->extirpated = swFALSE;
 	}
 
 	if (UseSoilwat)
@@ -423,11 +423,11 @@ static void init_args(int argc, char **argv) {
       a, /* current valid argument-value position */
       op, /* position number of found option */
       nopts=sizeof(opts)/sizeof(char *);
-  Bool lastop_noval = FALSE;
+  Bool lastop_noval = swFALSE;
 
   /* Defaults */
   parm_SetFirstName( DFLT_FIRSTFILE);
-  UseSoilwat = QuietMode = EchoInits = UseSeedDispersal = FALSE;
+  UseSoilwat = QuietMode = EchoInits = UseSeedDispersal = swFALSE;
   SXW.debugfile = NULL;
   progfp = stderr;
 
@@ -451,7 +451,7 @@ static void init_args(int argc, char **argv) {
 			exit(-1);
 		}
 		if (a == argc - 1 && strlen(argv[a]) == 2)
-			lastop_noval = TRUE;
+			lastop_noval = swTRUE;
 
 		*str = '\0';
 		/* extract value part of option-value pair */
@@ -508,36 +508,36 @@ static void init_args(int argc, char **argv) {
 			break; /* -f */
 
 		case 2:
-			QuietMode = TRUE;
+			QuietMode = swTRUE;
 			break; /* -q */
 
 		case 3:
-			UseSoilwat = TRUE; /* -s */
+			UseSoilwat = swTRUE; /* -s */
 			if (strlen(str) > 1)
 				SXW.debugfile = Str_Dup(str);
 			break;
 
 		case 4:
-			EchoInits = TRUE;
+			EchoInits = swTRUE;
 			break; /* -e */
 
 		case 5:
 			progfp = stdout; /* -p */
-			UseProgressBar = TRUE;
+			UseProgressBar = swTRUE;
 			break;
 
 		case 6:
-			UseGrid = TRUE;
+			UseGrid = swTRUE;
 			break; /* -g */
 
 		case 7:
       printf("storing SOILWAT output (flag -o)\n");
-      isPartialSoilwatOutput = FALSE;
+      isPartialSoilwatOutput = swFALSE;
 			break; /* -o    also get all the soilwat output*/
 
     case 8: // -i
       printf("storing SOILWAT output for all iterations\n");
-      storeAllIterations = TRUE;
+      storeAllIterations = swTRUE;
       break;
 
 		default:
