@@ -150,6 +150,31 @@ struct soilwat_average{
         *val_snowloss_avg;
 
     RealD *surfaceTemp_avg;
+
+    // Carbon Variables
+    RealD *biomass_grass_avg,
+          *biomass_shrub_avg,
+          *biomass_tree_avg,
+      		*biomass_forb_avg,
+      		*biomass_total_avg,
+
+      		*biolive_grass_avg,
+      		*biolive_shrub_avg,
+      		*biolive_tree_avg,
+      		*biolive_forb_avg,
+      		*biolive_total_avg,
+
+      		*bio_mult_grass_avg,
+      		*bio_mult_shrub_avg,
+      		*bio_mult_tree_avg,
+      		*bio_mult_forb_avg,
+
+      		*wue_mult_grass_avg,
+      		*wue_mult_shrub_avg,
+      		*wue_mult_tree_avg,
+      		*wue_mult_forb_avg;
+
+
 };
 
 #define SXW_NFILES 5

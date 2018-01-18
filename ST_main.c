@@ -164,8 +164,10 @@ int main(int argc, char **argv) {
 
 	parm_Initialize(0);
 
-	if (UseSoilwat)
+	if (UseSoilwat){
 		SXW_Init(swTRUE, NULL);
+    SW_OUT_set_ncol(); // set number of columns
+  }
 
 	incr = (IntS) ((float) Globals.runModelIterations / 10);
 	if (incr == 0)

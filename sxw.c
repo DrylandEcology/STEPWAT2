@@ -931,6 +931,30 @@ static void _make_soil_arrays(void){
 
   SXW_AVG.soiltemp_avg = (RealF *) Mem_Calloc(layer_size, sizeof(RealF), fstr);
 
+  // carbon variables
+  SXW_AVG.biomass_grass_avg = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
+  SXW_AVG.biomass_shrub_avg = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
+  SXW_AVG.biomass_tree_avg = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
+  SXW_AVG.biomass_forb_avg = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
+  SXW_AVG.biomass_total_avg = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
+
+  SXW_AVG.biolive_grass_avg = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
+  SXW_AVG.biolive_shrub_avg = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
+  SXW_AVG.biolive_tree_avg = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
+  SXW_AVG.biolive_forb_avg = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
+  SXW_AVG.biolive_total_avg = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
+
+  SXW_AVG.bio_mult_grass_avg = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
+  SXW_AVG.bio_mult_shrub_avg = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
+  SXW_AVG.bio_mult_tree_avg = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
+  SXW_AVG.bio_mult_forb_avg = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
+
+  SXW_AVG.wue_mult_grass_avg = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
+  SXW_AVG.wue_mult_shrub_avg = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
+  SXW_AVG.wue_mult_tree_avg = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
+  SXW_AVG.wue_mult_forb_avg = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
+
+
   Mem_Set(SXW_AVG.max_temp_avg, 0, size * sizeof(RealF));
   Mem_Set(SXW_AVG.min_temp_avg, 0, size * sizeof(RealF));
   Mem_Set(SXW_AVG.avg_temp_avg, 0, size * sizeof(RealF));
@@ -1387,6 +1411,28 @@ void free_all_sxw_memory( void ) {
   Mem_Free(SXW_AVG.snowpack_depth_avg);
   Mem_Free(SXW_AVG.deepswc_avg);
   Mem_Free(SXW_AVG.soiltemp_avg);
+
+  Mem_Free(SXW_AVG.biomass_grass_avg);
+  Mem_Free(SXW_AVG.biomass_shrub_avg);
+  Mem_Free(SXW_AVG.biomass_tree_avg);
+  Mem_Free(SXW_AVG.biomass_forb_avg);
+  Mem_Free(SXW_AVG.biomass_total_avg);
+
+  Mem_Free(SXW_AVG.biolive_grass_avg);
+  Mem_Free(SXW_AVG.biolive_shrub_avg);
+  Mem_Free(SXW_AVG.biolive_tree_avg);
+  Mem_Free(SXW_AVG.biolive_forb_avg);
+  Mem_Free(SXW_AVG.biolive_total_avg);
+
+  Mem_Free(SXW_AVG.bio_mult_grass_avg);
+  Mem_Free(SXW_AVG.bio_mult_shrub_avg);
+  Mem_Free(SXW_AVG.bio_mult_tree_avg);
+  Mem_Free(SXW_AVG.bio_mult_forb_avg);
+
+  Mem_Free(SXW_AVG.wue_mult_grass_avg);
+  Mem_Free(SXW_AVG.wue_mult_shrub_avg);
+  Mem_Free(SXW_AVG.wue_mult_tree_avg);
+  Mem_Free(SXW_AVG.wue_mult_forb_avg);
 }
 
 /***********************************************************/
