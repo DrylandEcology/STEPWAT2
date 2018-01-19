@@ -761,7 +761,7 @@ static void _make_roots_arrays(void) {
   _roots_active_rel = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
 
   //4 - Grass,Frob,Tree,Shrub
-  size = 4 * SXW.NPds * SXW.NTrLyrs;
+  size = NVEGTYPES * SXW.NPds * SXW.NTrLyrs;
   _roots_active_sum = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
 }
 
@@ -793,7 +793,7 @@ static void _make_transp_arrays(void) {
 	int size;
   //int avg_size;
 
-	size = (SXW.NPds * SXW.NSoLyrs) * 365;
+	size = (SXW.NPds * SXW.NSoLyrs) * MAX_DAYS;
 	SXW.transpTotal = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
 	SXW.transpTrees = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
 	SXW.transpShrubs = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
@@ -807,15 +807,15 @@ static void _make_swa_array(void){
   int avg_size;
 
   //4 - Grass,Frob,Tree,Shrub
-  size = 4 * 4 * SXW.NPds * SXW.NSoLyrs  * Globals.runModelIterations;
+  size = NVEGTYPES * NVEGTYPES * SXW.NPds * SXW.NSoLyrs  * Globals.runModelIterations;
   SXW.SWA_master = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr); // 4D
   SXW.dSWAbulk = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr); // 4D
   SXW.dSWA_repartitioned = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr); // 4D
 
   //Mem_Set(SXW.SWA_master, 0, SXW.NPds * 4 * SXW.NSoLyrs * sizeof(RealF));
   memset(SXW.SWA_master, 0, sizeof(SXW.SWA_master));
-  Mem_Set(SXW.dSWAbulk, 0, 4*4*SXW.NPds * SXW.NSoLyrs * sizeof(RealF));
-  Mem_Set(SXW.dSWA_repartitioned, 0, 4*4*SXW.NPds * SXW.NSoLyrs * sizeof(RealF));
+  Mem_Set(SXW.dSWAbulk, 0, size * sizeof(RealF));
+  Mem_Set(SXW.dSWA_repartitioned, 0, size * sizeof(RealF));
   //memset(SXW.sum_dSWA_repartitioned, 0, sizeof(SXW.sum_dSWA_repartitioned) * 5 * 20 * 500);
 }
 
@@ -826,7 +826,7 @@ static void _make_swc_array(void) {
  * specified with debugfile
  */
 	char *fstr = "_make_swc_array()";
-	int size = SXW.NPds * SXW.NSoLyrs * 366;
+	int size = SXW.NPds * SXW.NSoLyrs * MAX_DAYS;
   int avg_size;
   //int size_3d = 4 * SXW.NPds * SXW.NSoLyrs;
 
@@ -842,8 +842,8 @@ static void _make_swc_array(void) {
 static void _make_soil_arrays(void){
   char *fstr = "_make_soil_arrays";
   int size, layer_size, avg_size;
-  size = (SXW.NPds * Globals.runModelYears * 2 * 4) * Globals.runModelYears;
-  layer_size = (SXW.NPds * SXW.NSoLyrs * Globals.runModelYears * 2 * 4) * Globals.runModelYears;
+  size = (SXW.NPds * Globals.runModelYears * 2 * NVEGTYPES) * Globals.runModelYears;
+  layer_size = (SXW.NPds * SXW.NSoLyrs * Globals.runModelYears * 2 * NVEGTYPES) * Globals.runModelYears;
 
   avg_size = (SXW.NPds * SXW.NSoLyrs * Globals.runModelYears * 2) * Globals.runModelYears;
   SXW.transpTotal_avg = (RealD *) Mem_Calloc(avg_size, sizeof(RealD), fstr);

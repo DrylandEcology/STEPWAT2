@@ -313,6 +313,7 @@ int main(int argc, char **argv) {
       }
 #endif
 
+  free_all_sxw_memory();
   printf("\nend program\n");
 	fprintf(progfp, "\n");
 	return 0;
