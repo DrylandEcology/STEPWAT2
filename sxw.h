@@ -101,50 +101,51 @@ struct stepwat_st {
 };
 
 struct soilwat_average{
-  RealF *soilinfilt_avg, // done
-        *runoff_total_avg,// done
-        *runoff_surface_avg,// done
-        *runoff_snow_avg,// done
-        *vwcbulk_avg, // done
-        *vwcmatric_avg, // done
-        *swamatric_avg, // done
-        *swabulk_avg, // done
-        *swpmatric_avg, // done
-        *surfacewater_avg, // done
-        *evapsoil_avg, // done
-        *evapsurface_total_avg,// done
-        *evapsurface_tree_avg,// done
-        *evapsurface_shrub_avg,// done
-        *evapsurface_forb_avg,// done
-        *evapsurface_grass_avg,// done
-        *evapsurface_litter_avg,// done
-        *evapsurface_water_avg,// done
+  RealF *soilinfilt_avg,
+        *runoff_total_avg,
+        *surface_runoff_avg,
+        *surface_runon_avg,
+        *runoff_snow_avg,
+        *vwcbulk_avg,
+        *vwcmatric_avg,
+        *swamatric_avg,
+        *swabulk_avg,
+        *swpmatric_avg,
+        *surfacewater_avg,
+        *evapsoil_avg,
+        *evapsurface_total_avg,
+        *evapsurface_tree_avg,
+        *evapsurface_shrub_avg,
+        *evapsurface_forb_avg,
+        *evapsurface_grass_avg,
+        *evapsurface_litter_avg,
+        *evapsurface_water_avg,
 
-        *interception_total_avg,// done
-        *interception_tree_avg,// done
-        *interception_shrub_avg,// done
-        *interception_forb_avg,// done
-        *interception_grass_avg,// done
-        *interception_litter_avg,// done
+        *interception_total_avg,
+        *interception_tree_avg,
+        *interception_shrub_avg,
+        *interception_forb_avg,
+        *interception_grass_avg,
+        *interception_litter_avg,
 
-        *lyrdrain_avg, // done
+        *lyrdrain_avg,
 
-        *hydred_total_avg,// done
-        *hydred_tree_avg,// done
-        *hydred_shrub_avg,// done
-        *hydred_forb_avg,// done
-        *hydred_grass_avg,// done
+        *hydred_total_avg,
+        *hydred_tree_avg,
+        *hydred_shrub_avg,
+        *hydred_forb_avg,
+        *hydred_grass_avg,
 
-        *pet_avg, // done
-        *wetday_avg, // done
-        *snowpack_water_eqv_avg, // done
-        *snowpack_depth_avg, // done
-        *deepswc_avg, // done
-        *soiltemp_avg, // done
+        *pet_avg,
+        *wetday_avg,
+        *snowpack_water_eqv_avg,
+        *snowpack_depth_avg,
+        *deepswc_avg,
+        *soiltemp_avg,
         *estab_avg,
         *max_temp_avg,
         *min_temp_avg,
-        *avg_temp_avg, // done
+        *avg_temp_avg,
         *aet_avg,
         *val_snowmelt_avg,
         *val_snowloss_avg;

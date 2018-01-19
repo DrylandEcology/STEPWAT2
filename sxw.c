@@ -894,7 +894,8 @@ static void _make_soil_arrays(void){
   SXW_AVG.swamatric_avg = (RealF *) Mem_Calloc(layer_size, sizeof(RealF), fstr);
   SXW_AVG.surfacewater_avg = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr);
   SXW_AVG.runoff_total_avg = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr);
-  SXW_AVG.runoff_surface_avg = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr);
+  SXW_AVG.surface_runoff_avg = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr);
+  SXW_AVG.surface_runon_avg = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr);
   SXW_AVG.runoff_snow_avg = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr);
   SXW_AVG.evapsoil_avg = (RealF *) Mem_Calloc(layer_size, sizeof(RealF), fstr);
   SXW_AVG.evapsurface_total_avg = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr);
@@ -968,7 +969,8 @@ static void _make_soil_arrays(void){
   Mem_Set(SXW_AVG.swamatric_avg, 0, layer_size * sizeof(RealF));
   Mem_Set(SXW_AVG.surfacewater_avg, 0, size * sizeof(RealF));
   Mem_Set(SXW_AVG.runoff_total_avg, 0, size * sizeof(RealF));
-  Mem_Set(SXW_AVG.runoff_surface_avg, 0, size * sizeof(RealF));
+  Mem_Set(SXW_AVG.surface_runoff_avg, 0, size * sizeof(RealF));
+  Mem_Set(SXW_AVG.surface_runon_avg, 0, size * sizeof(RealF));
   Mem_Set(SXW_AVG.runoff_snow_avg, 0, size * sizeof(RealF));
   Mem_Set(SXW_AVG.evapsoil_avg, 0, layer_size * sizeof(RealF));
   Mem_Set(SXW_AVG.evapsurface_total_avg, 0, size * sizeof(RealF));
@@ -1382,7 +1384,8 @@ void free_all_sxw_memory( void ) {
   Mem_Free(SXW_AVG.swamatric_avg);
   Mem_Free(SXW_AVG.surfacewater_avg);
   Mem_Free(SXW_AVG.runoff_total_avg);
-  Mem_Free(SXW_AVG.runoff_surface_avg);
+  Mem_Free(SXW_AVG.surface_runoff_avg);
+  Mem_Free(SXW_AVG.surface_runon_avg);
   Mem_Free(SXW_AVG.runoff_snow_avg);
   Mem_Free(SXW_AVG.evapsoil_avg);
   Mem_Free(SXW_AVG.evapsurface_total_avg);
