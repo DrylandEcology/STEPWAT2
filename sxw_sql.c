@@ -221,7 +221,7 @@ void insertInputVars() {
 	SW_VEGPROD *v = &SW_VegProd;
 
 	beginTransaction();
-	insertSXWinputVarsRow(Year, Iteration, v->grass.cov.fCover, v->shrub.cov.fCover, v->tree.cov.fCover, v->forb.cov.fCover, v->bare_cov.fCover);
+	insertSXWinputVarsRow(Year, Iteration, v->veg[3].cov.fCover, v->veg[1].cov.fCover, v->veg[0].cov.fCover, v->veg[2].cov.fCover, v->bare_cov.fCover);
 	endTransaction();
 }
 
@@ -256,10 +256,10 @@ void insertInputProd() {
 
 	beginTransaction();
 	ForEachTrPeriod(p) {
-		insertSXWinputProdRow(Year, Iteration, 1, p+1, v->tree.litter[p], v->tree.biomass[p], v->tree.pct_live[p], v->tree.lai_conv[p]);
-		insertSXWinputProdRow(Year, Iteration, 2, p+1, v->shrub.litter[p], v->shrub.biomass[p], v->shrub.pct_live[p], v->shrub.lai_conv[p]);
-		insertSXWinputProdRow(Year, Iteration, 3, p+1, v->grass.litter[p], v->grass.biomass[p], v->grass.pct_live[p], v->grass.lai_conv[p]);
-		insertSXWinputProdRow(Year, Iteration, 4, p+1, v->forb.litter[p], v->forb.biomass[p], v->forb.pct_live[p], v->forb.lai_conv[p]);
+		insertSXWinputProdRow(Year, Iteration, 1, p+1, v->veg[0].litter[p], v->veg[0].biomass[p], v->veg[0].pct_live[p], v->veg[0].lai_conv[p]);
+		insertSXWinputProdRow(Year, Iteration, 2, p+1, v->veg[1].litter[p], v->veg[1].biomass[p], v->veg[1].pct_live[p], v->veg[1].lai_conv[p]);
+		insertSXWinputProdRow(Year, Iteration, 3, p+1, v->veg[3].litter[p], v->veg[3].biomass[p], v->veg[3].pct_live[p], v->veg[3].lai_conv[p]);
+		insertSXWinputProdRow(Year, Iteration, 4, p+1, v->veg[2].litter[p], v->veg[2].biomass[p], v->veg[2].pct_live[p], v->veg[2].lai_conv[p]);
 	}
 	endTransaction();
 }
@@ -295,7 +295,7 @@ void insertInputSoils() {
 	beginTransaction();
 	ForEachSoilLayer(l)
 	{
-		insertSXWinputSoilsRow(Year, Iteration, l+1, s->lyr[l]->transp_coeff_tree, s->lyr[l]->transp_coeff_shrub, s->lyr[l]->transp_coeff_grass, s->lyr[l]->transp_coeff_forb);
+		insertSXWinputSoilsRow(Year, Iteration, l+1, s->lyr[l]->transp_coeff[0], s->lyr[l]->transp_coeff[1], s->lyr[l]->transp_coeff[3], s->lyr[l]->transp_coeff[2]);
 	}
 	endTransaction();
 }
@@ -417,24 +417,24 @@ void insertOutputProd(SW_VEGPROD *v) {
 		} // all the other months have 31 days
 
 		for (i = doy; i < (doy + days); i++) { //accumulating the monthly values...
-			lai_live += (v->tree.lai_live_daily[i])
-					+ (v->shrub.lai_live_daily[i])
-					+ (v->grass.lai_live_daily[i])
-					+ (v->forb.lai_live_daily[i]);
-			vegcov += (v->tree.vegcov_daily[i]) + (v->shrub.vegcov_daily[i])
-					+ (v->grass.vegcov_daily[i]) + (v->forb.vegcov_daily[i]);
-			total_agb += (v->tree.total_agb_daily[i])
-					+ (v->shrub.total_agb_daily[i])
-					+ (v->grass.total_agb_daily[i])
-					+ (v->forb.total_agb_daily[i]);
-			pct_live += (v->tree.pct_live_daily[i])
-					+ (v->shrub.pct_live_daily[i])
-					+ (v->grass.pct_live_daily[i])
-					+ (v->forb.pct_live_daily[i]);
-			biomass += (v->tree.biomass_daily[i])
-					+ (v->shrub.biomass_daily[i])
-					+ (v->grass.biomass_daily[i])
-					+ (v->forb.biomass_daily[i]);
+			lai_live += (v->veg[0].lai_live_daily[i])
+					+ (v->veg[1].lai_live_daily[i])
+					+ (v->veg[3].lai_live_daily[i])
+					+ (v->veg[2].lai_live_daily[i]);
+			vegcov += (v->veg[0].vegcov_daily[i]) + (v->veg[1].vegcov_daily[i])
+					+ (v->veg[3].vegcov_daily[i]) + (v->veg[2].vegcov_daily[i]);
+			total_agb += (v->veg[0].total_agb_daily[i])
+					+ (v->veg[1].total_agb_daily[i])
+					+ (v->veg[3].total_agb_daily[i])
+					+ (v->veg[2].total_agb_daily[i]);
+			pct_live += (v->veg[0].pct_live_daily[i])
+					+ (v->veg[1].pct_live_daily[i])
+					+ (v->veg[3].pct_live_daily[i])
+					+ (v->veg[2].pct_live_daily[i]);
+			biomass += (v->veg[0].biomass_daily[i])
+					+ (v->veg[1].biomass_daily[i])
+					+ (v->veg[3].biomass_daily[i])
+					+ (v->veg[2].biomass_daily[i]);
 		}
 		doy += days; //updating the doy
 

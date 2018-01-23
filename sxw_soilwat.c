@@ -95,25 +95,25 @@ void _sxw_sw_setup (RealF sizes[]) {
 
 #ifndef SXW_BYMAXSIZE
 	for (doy = 1; doy <= MAX_DAYS; doy++) {
-		v->tree.litter_daily[doy] = 0;
-		v->grass.litter_daily[doy] = 0;
-		v->shrub.litter_daily[doy] = 0;
-		v->forb.litter_daily[doy] = 0;
+		v->veg[0].litter_daily[doy] = 0;
+		v->veg[3].litter_daily[doy] = 0;
+		v->veg[1].litter_daily[doy] = 0;
+		v->veg[2].litter_daily[doy] = 0;
 
-		v->tree.biomass_daily[doy] = 0;
-		v->grass.biomass_daily[doy] = 0;
-		v->shrub.biomass_daily[doy] = 0;
-		v->forb.biomass_daily[doy] = 0;
+		v->veg[0].biomass_daily[doy] = 0;
+		v->veg[3].biomass_daily[doy] = 0;
+		v->veg[1].biomass_daily[doy] = 0;
+		v->veg[2].biomass_daily[doy] = 0;
 
-		v->tree.pct_live_daily[doy] = 0;
-		v->grass.pct_live_daily[doy] = 0;
-		v->shrub.pct_live_daily[doy] = 0;
-		v->forb.pct_live_daily[doy] = 0;
+		v->veg[0].pct_live_daily[doy] = 0;
+		v->veg[3].pct_live_daily[doy] = 0;
+		v->veg[1].pct_live_daily[doy] = 0;
+		v->veg[2].pct_live_daily[doy] = 0;
 
-		v->tree.lai_conv_daily[doy] = 0;
-		v->grass.lai_conv_daily[doy] = 0;
-		v->shrub.lai_conv_daily[doy] = 0;
-		v->forb.lai_conv_daily[doy] = 0;
+		v->veg[0].lai_conv_daily[doy] = 0;
+		v->veg[3].lai_conv_daily[doy] = 0;
+		v->veg[1].lai_conv_daily[doy] = 0;
+		v->veg[2].lai_conv_daily[doy] = 0;
 	}
 
 	SW_VPD_init();
@@ -153,56 +153,56 @@ static void _update_transp_coeff(RealF relsize[]) {
 	ForEachTreeTranspLayer(t)
 	{
 		y = SW_Site.lyr[t];
-		y->transp_coeff_tree = 0.;
+		y->transp_coeff[0] = 0.;
 		ForEachGroup(g)
 			if(RGroup[g]->veg_prod_type == 1)
 				if (getNTranspLayers(RGroup[g]->veg_prod_type))
-					y->transp_coeff_tree += (RealF) _roots_max[Ilg(t, g)] * relsize[g];
-		sum1 += y->transp_coeff_tree;
+					y->transp_coeff[0] += (RealF) _roots_max[Ilg(t, g)] * relsize[g];
+		sum1 += y->transp_coeff[0];
 	}
 
 	ForEachShrubTranspLayer(t)
 	{
 		y = SW_Site.lyr[t];
-		y->transp_coeff_shrub = 0.;
+		y->transp_coeff[1] = 0.;
 		ForEachGroup(g)
 			if(RGroup[g]->veg_prod_type == 2)
 				if (getNTranspLayers(RGroup[g]->veg_prod_type))
-					y->transp_coeff_shrub += (RealF) _roots_max[Ilg(t, g)] * relsize[g];
-		sum2 += y->transp_coeff_shrub;
+					y->transp_coeff[1] += (RealF) _roots_max[Ilg(t, g)] * relsize[g];
+		sum2 += y->transp_coeff[1];
 	}
 
 	ForEachGrassTranspLayer(t)
 	{
 		y = SW_Site.lyr[t];
-		y->transp_coeff_grass = 0.;
+		y->transp_coeff[3] = 0.;
 		ForEachGroup(g)
 			if(RGroup[g]->veg_prod_type == 3)
 				if (getNTranspLayers(RGroup[g]->veg_prod_type))
-					y->transp_coeff_grass += (RealF) _roots_max[Ilg(t, g)] * relsize[g];
-		sum3 += y->transp_coeff_grass;
+					y->transp_coeff[3] += (RealF) _roots_max[Ilg(t, g)] * relsize[g];
+		sum3 += y->transp_coeff[3];
 	}
 
 	ForEachForbTranspLayer(t)
 	{
 		y = SW_Site.lyr[t];
-		y->transp_coeff_forb = 0.;
+		y->transp_coeff[2] = 0.;
 		ForEachGroup(g)
 			if(RGroup[g]->veg_prod_type == 4)
 				if (getNTranspLayers(RGroup[g]->veg_prod_type))
-					y->transp_coeff_forb += (RealF) _roots_max[Ilg(t, g)] * relsize[g];
-		sum4 += y->transp_coeff_forb;
+					y->transp_coeff[2] += (RealF) _roots_max[Ilg(t, g)] * relsize[g];
+		sum4 += y->transp_coeff[2];
 	}
 
   /* normalize coefficients to 1.0 If sum is 0, then the transp_coeff is also 0. */
 	ForEachTreeTranspLayer(t)
-		if(!ZRO(sum1)) SW_Site.lyr[t]->transp_coeff_tree /= sum1;
+		if(!ZRO(sum1)) SW_Site.lyr[t]->transp_coeff[0] /= sum1;
 	ForEachShrubTranspLayer(t)
-		if(!ZRO(sum2)) SW_Site.lyr[t]->transp_coeff_shrub /= sum2;
+		if(!ZRO(sum2)) SW_Site.lyr[t]->transp_coeff[1] /= sum2;
 	ForEachGrassTranspLayer(t)
-		if(!ZRO(sum3)) SW_Site.lyr[t]->transp_coeff_grass /= sum3;
+		if(!ZRO(sum3)) SW_Site.lyr[t]->transp_coeff[3] /= sum3;
 	ForEachForbTranspLayer(t)
-		if(!ZRO(sum4)) SW_Site.lyr[t]->transp_coeff_forb /= sum4;
+		if(!ZRO(sum4)) SW_Site.lyr[t]->transp_coeff[2] /= sum4;
 
 }
 
@@ -259,58 +259,58 @@ static void _update_productivity(void) {
 	/* compute monthly biomass, litter, and pct live per month */
 	ForEachMonth(m)
 	{
-		v->tree.pct_live[m] = 0.;
-		v->tree.biomass[m] = 0.;
-		v->tree.litter[m] = 0.;
-		v->shrub.pct_live[m] = 0.;
-		v->shrub.biomass[m] = 0.;
-		v->shrub.litter[m] = 0.;
-		v->grass.pct_live[m] = 0.;
-		v->grass.biomass[m] = 0.;
-		v->grass.litter[m] = 0.;
-		v->forb.pct_live[m] = 0.;
-		v->forb.biomass[m] = 0.;
-		v->forb.litter[m] = 0.;
+		v->veg[0].pct_live[m] = 0.;
+		v->veg[0].biomass[m] = 0.;
+		v->veg[0].litter[m] = 0.;
+		v->veg[1].pct_live[m] = 0.;
+		v->veg[1].biomass[m] = 0.;
+		v->veg[1].litter[m] = 0.;
+		v->veg[3].pct_live[m] = 0.;
+		v->veg[3].biomass[m] = 0.;
+		v->veg[3].litter[m] = 0.;
+		v->veg[2].pct_live[m] = 0.;
+		v->veg[2].biomass[m] = 0.;
+		v->veg[2].litter[m] = 0.;
 
 		if (GT(totbmass, 0.)) {
 			ForEachGroup(g)
 			{
 				if (1 == RGroup[g]->veg_prod_type) {	//tree
-					v->tree.pct_live[m] += _prod_pctlive[Igp(g, m)] * rgroupFractionOfVegTypeBiomass[g];
-					v->tree.biomass[m] += _prod_bmass[Igp(g, m)] * bmassg[g];
+					v->veg[0].pct_live[m] += _prod_pctlive[Igp(g, m)] * rgroupFractionOfVegTypeBiomass[g];
+					v->veg[0].biomass[m] += _prod_bmass[Igp(g, m)] * bmassg[g];
 				} else if (2 == RGroup[g]->veg_prod_type) {	 //shrub
-					v->shrub.pct_live[m] += _prod_pctlive[Igp(g, m)] * rgroupFractionOfVegTypeBiomass[g];
-					v->shrub.biomass[m] += _prod_bmass[Igp(g, m)] * bmassg[g];
+					v->veg[1].pct_live[m] += _prod_pctlive[Igp(g, m)] * rgroupFractionOfVegTypeBiomass[g];
+					v->veg[1].biomass[m] += _prod_bmass[Igp(g, m)] * bmassg[g];
 				} else if (3 == RGroup[g]->veg_prod_type) {	 //grass
-					v->grass.pct_live[m] += _prod_pctlive[Igp(g, m)] * rgroupFractionOfVegTypeBiomass[g];
-					v->grass.biomass[m] += _prod_bmass[Igp(g, m)] * bmassg[g];
+					v->veg[3].pct_live[m] += _prod_pctlive[Igp(g, m)] * rgroupFractionOfVegTypeBiomass[g];
+					v->veg[3].biomass[m] += _prod_bmass[Igp(g, m)] * bmassg[g];
 				} else if (4 == RGroup[g]->veg_prod_type) {   //forb
-					v->forb.pct_live[m] += _prod_pctlive[Igp(g, m)] * rgroupFractionOfVegTypeBiomass[g];
-					v->forb.biomass[m] += _prod_bmass[Igp(g, m)] * bmassg[g];
+					v->veg[2].pct_live[m] += _prod_pctlive[Igp(g, m)] * rgroupFractionOfVegTypeBiomass[g];
+					v->veg[2].biomass[m] += _prod_bmass[Igp(g, m)] * bmassg[g];
 				}
 			}
 
-			v->tree.litter[m] = (vegTypeBiomass[0] * _prod_litter[m]);
-			v->shrub.litter[m] = (vegTypeBiomass[1] * _prod_litter[m]);
-			v->grass.litter[m] = (vegTypeBiomass[2] * _prod_litter[m]);
-			v->forb.litter[m] = (vegTypeBiomass[3] * _prod_litter[m]);
+			v->veg[0].litter[m] = (vegTypeBiomass[0] * _prod_litter[m]);
+			v->veg[1].litter[m] = (vegTypeBiomass[1] * _prod_litter[m]);
+			v->veg[3].litter[m] = (vegTypeBiomass[2] * _prod_litter[m]);
+			v->veg[2].litter[m] = (vegTypeBiomass[3] * _prod_litter[m]);
 		}
 	}
 
 	if (GT(totbmass, 0.)) {
 		//if (ZRO(biomass))
 		//	biomass = 1;
-		v->tree.cov.fCover = (vegTypeBiomass[0] / totbmass);
-		v->shrub.cov.fCover = (vegTypeBiomass[1] / totbmass);
-		v->grass.cov.fCover = (vegTypeBiomass[2] / totbmass);
-		v->forb.cov.fCover = (vegTypeBiomass[3] / totbmass);
+		v->veg[0].cov.fCover = (vegTypeBiomass[0] / totbmass);
+		v->veg[1].cov.fCover = (vegTypeBiomass[1] / totbmass);
+		v->veg[3].cov.fCover = (vegTypeBiomass[2] / totbmass);
+		v->veg[2].cov.fCover = (vegTypeBiomass[3] / totbmass);
 		//TODO: figure how to calculate bareground fraction.
 		v->bare_cov.fCover = 0;
 	} else {
-		v->tree.cov.fCover = (0.0);
-		v->shrub.cov.fCover = (0.0);
-		v->grass.cov.fCover = (0.0);
-		v->forb.cov.fCover = (0.0);
+		v->veg[0].cov.fCover = (0.0);
+		v->veg[1].cov.fCover = (0.0);
+		v->veg[3].cov.fCover = (0.0);
+		v->veg[2].cov.fCover = (0.0);
 		v->bare_cov.fCover = 1;
 	}
 #undef Biomass

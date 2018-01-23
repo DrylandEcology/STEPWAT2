@@ -224,13 +224,13 @@ void SXW_Init( Bool init_SW, char *f_roots ) {
 	  free(temp);
   }
 
-  SXW.NTrLyrs = SW_Site.n_transp_lyrs_tree;
-  if(SW_Site.n_transp_lyrs_shrub > SXW.NTrLyrs)
-  	SXW.NTrLyrs = SW_Site.n_transp_lyrs_shrub;
-  if(SW_Site.n_transp_lyrs_grass > SXW.NTrLyrs)
-  	SXW.NTrLyrs = SW_Site.n_transp_lyrs_grass;
-  if(SW_Site.n_transp_lyrs_forb > SXW.NTrLyrs)
-	  SXW.NTrLyrs = SW_Site.n_transp_lyrs_forb;
+  SXW.NTrLyrs = SW_Site.n_transp_lyrs[0];
+  if(SW_Site.n_transp_lyrs[1] > SXW.NTrLyrs)
+  	SXW.NTrLyrs = SW_Site.n_transp_lyrs[1];
+  if(SW_Site.n_transp_lyrs[3] > SXW.NTrLyrs)
+  	SXW.NTrLyrs = SW_Site.n_transp_lyrs[3];
+  if(SW_Site.n_transp_lyrs[2] > SXW.NTrLyrs)
+	  SXW.NTrLyrs = SW_Site.n_transp_lyrs[2];
 
   SXW.NSoLyrs = SW_Site.n_layers;
 
@@ -346,38 +346,38 @@ void SXW_SW_Setup_Echo(void) {
 	FILE *f = OpenFile(strcat(name, ".input.out"), "a");
 	int i;
 	fprintf(f, "\n================== %d =============================\n", SW_Model.year);
-	fprintf(f,"Fractions Grass:%f Shrub:%f Tree:%f Forb:%f BareGround:%f\n", SW_VegProd.grass.cov.fCover, SW_VegProd.shrub.cov.fCover, SW_VegProd.tree.cov.fCover, SW_VegProd.forb.cov.fCover, SW_VegProd.bare_cov.fCover);
+	fprintf(f,"Fractions Grass:%f Shrub:%f Tree:%f Forb:%f BareGround:%f\n", SW_VegProd.veg[3].cov.fCover, SW_VegProd.veg[1].cov.fCover, SW_VegProd.veg[0].cov.fCover, SW_VegProd.veg[2].cov.fCover, SW_VegProd.bare_cov.fCover);
 	fprintf(f,"Monthly Production Values\n");
 	fprintf(f,"Grass\n");
 	fprintf(f,"Month\tLitter\tBiomass\tPLive\tLAI_conv\n");
 	for (i = 0; i < 12; i++) {
-		fprintf(f,"%u\t%f\t%f\t%f\t%f\n", i + 1, SW_VegProd.grass.litter[i],
-				SW_VegProd.grass.biomass[i], SW_VegProd.grass.pct_live[i],
-				SW_VegProd.grass.lai_conv[i]);
+		fprintf(f,"%u\t%f\t%f\t%f\t%f\n", i + 1, SW_VegProd.veg[3].litter[i],
+				SW_VegProd.veg[3].biomass[i], SW_VegProd.veg[3].pct_live[i],
+				SW_VegProd.veg[3].lai_conv[i]);
 	}
 
 	fprintf(f,"Shrub\n");
 	fprintf(f,"Month\tLitter\tBiomass\tPLive\tLAI_conv\n");
 	for (i = 0; i < 12; i++) {
-		fprintf(f,"%u\t%f\t%f\t%f\t%f\n", i + 1, SW_VegProd.shrub.litter[i],
-				SW_VegProd.shrub.biomass[i], SW_VegProd.shrub.pct_live[i],
-				SW_VegProd.shrub.lai_conv[i]);
+		fprintf(f,"%u\t%f\t%f\t%f\t%f\n", i + 1, SW_VegProd.veg[1].litter[i],
+				SW_VegProd.veg[1].biomass[i], SW_VegProd.veg[1].pct_live[i],
+				SW_VegProd.veg[1].lai_conv[i]);
 	}
 
 	fprintf(f,"Tree\n");
 	fprintf(f,"Month\tLitter\tBiomass\tPLive\tLAI_conv\n");
 	for (i = 0; i < 12; i++) {
-		fprintf(f,"%u\t%f\t%f\t%f\t%f\n", i + 1, SW_VegProd.tree.litter[i],
-				SW_VegProd.tree.biomass[i], SW_VegProd.tree.pct_live[i],
-				SW_VegProd.tree.lai_conv[i]);
+		fprintf(f,"%u\t%f\t%f\t%f\t%f\n", i + 1, SW_VegProd.veg[0].litter[i],
+				SW_VegProd.veg[0].biomass[i], SW_VegProd.veg[0].pct_live[i],
+				SW_VegProd.veg[0].lai_conv[i]);
 	}
 
 	fprintf(f,"Forb\n");
 	fprintf(f,"Month\tLitter\tBiomass\tPLive\tLAI_conv\n");
 	for (i = 0; i < 12; i++) {
-		fprintf(f,"%u\t%f\t%f\t%f\t%f\n", i + 1, SW_VegProd.forb.litter[i],
-				SW_VegProd.forb.biomass[i], SW_VegProd.forb.pct_live[i],
-				SW_VegProd.forb.lai_conv[i]);
+		fprintf(f,"%u\t%f\t%f\t%f\t%f\n", i + 1, SW_VegProd.veg[2].litter[i],
+				SW_VegProd.veg[2].biomass[i], SW_VegProd.veg[2].pct_live[i],
+				SW_VegProd.veg[2].lai_conv[i]);
 	}
 
 	SW_SITE *s = &SW_Site;
@@ -385,7 +385,7 @@ void SXW_SW_Setup_Echo(void) {
 	fprintf(f,"Forb\tTree\tShrub\tGrass\n");
 	ForEachSoilLayer(i)
 	{// %u %u %u %u s->lyr[i]->my_transp_rgn_forb, s->lyr[i]->my_transp_rgn_tree, s->lyr[i]->my_transp_rgn_shrub, s->lyr[i]->my_transp_rgn_grass
-		fprintf(f,"%6.2f %6.2f %6.2f %6.2f\n", s->lyr[i]->transp_coeff_forb, s->lyr[i]->transp_coeff_tree, s->lyr[i]->transp_coeff_shrub, s->lyr[i]->transp_coeff_grass);
+		fprintf(f,"%6.2f %6.2f %6.2f %6.2f\n", s->lyr[i]->transp_coeff[2], s->lyr[i]->transp_coeff[0], s->lyr[i]->transp_coeff[1], s->lyr[i]->transp_coeff[3]);
 	}
 
   // adding values to sxw structure for use in ST_stats.c
@@ -1185,24 +1185,24 @@ void _print_debuginfo(void) {
 		} // all the other months have 31 days
 
 		for (i = doy; i < (doy + days); i++) { //accumulating the monthly values...
-			lai_live += (v->tree.lai_live_daily[i])
-					+ (v->shrub.lai_live_daily[i])
-					+ (v->grass.lai_live_daily[i])
-					+ (v->forb.lai_live_daily[i]);
-			vegcov += (v->tree.vegcov_daily[i]) + (v->shrub.vegcov_daily[i])
-					+ (v->grass.vegcov_daily[i]) + (v->forb.vegcov_daily[i]);
-			total_agb += (v->tree.total_agb_daily[i])
-					+ (v->shrub.total_agb_daily[i])
-					+ (v->grass.total_agb_daily[i])
-					+ (v->forb.total_agb_daily[i]);
-			pct_live += (v->tree.pct_live_daily[i])
-					+ (v->shrub.pct_live_daily[i])
-					+ (v->grass.pct_live_daily[i])
-					+ (v->forb.pct_live_daily[i]);
-			biomass += (v->tree.biomass_daily[i])
-					+ (v->shrub.biomass_daily[i])
-					+ (v->grass.biomass_daily[i])
-					+ (v->forb.biomass_daily[i]);
+			lai_live += (v->veg[0].lai_live_daily[i])
+					+ (v->veg[1].lai_live_daily[i])
+					+ (v->veg[3].lai_live_daily[i])
+					+ (v->veg[2].lai_live_daily[i]);
+			vegcov += (v->veg[0].vegcov_daily[i]) + (v->veg[1].vegcov_daily[i])
+					+ (v->veg[3].vegcov_daily[i]) + (v->veg[2].vegcov_daily[i]);
+			total_agb += (v->veg[0].total_agb_daily[i])
+					+ (v->veg[1].total_agb_daily[i])
+					+ (v->veg[3].total_agb_daily[i])
+					+ (v->veg[2].total_agb_daily[i]);
+			pct_live += (v->veg[0].pct_live_daily[i])
+					+ (v->veg[1].pct_live_daily[i])
+					+ (v->veg[3].pct_live_daily[i])
+					+ (v->veg[2].pct_live_daily[i]);
+			biomass += (v->veg[0].biomass_daily[i])
+					+ (v->veg[1].biomass_daily[i])
+					+ (v->veg[3].biomass_daily[i])
+					+ (v->veg[2].biomass_daily[i]);
 		}
 		doy += days; //updating the doy
 		//biomass = (v->tree.biomass[p]) + (v->shrub.biomass[p])
@@ -1322,13 +1322,13 @@ void SXW_SetMemoryRefs( void) {
  //returns the number of transpiration layers correctly for each veg_prod_type
 int getNTranspLayers(int veg_prod_type) {
 	if(veg_prod_type == 1)
-		return SW_Site.n_transp_lyrs_tree;
+		return SW_Site.n_transp_lyrs[0];
 	else if(veg_prod_type == 2)
-		return SW_Site.n_transp_lyrs_shrub;
+		return SW_Site.n_transp_lyrs[1];
 	else if(veg_prod_type == 3)
-		return SW_Site.n_transp_lyrs_grass;
+		return SW_Site.n_transp_lyrs[3];
 	else if(veg_prod_type == 4)
-		return SW_Site.n_transp_lyrs_forb;
+		return SW_Site.n_transp_lyrs[2];
 	return -1;
 }
 
