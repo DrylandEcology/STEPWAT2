@@ -2307,9 +2307,9 @@ static void _init_soil_layers(int cell, int isSpinup)
 	Mem_Free(SW_Site.lyr);
 
 	SW_Site.n_layers = grid_Soils[i].num_layers;
-	SW_Site.n_evap_lyrs = SW_Site.n_transp_lyrs_forb =
-			SW_Site.n_transp_lyrs_tree = SW_Site.n_transp_lyrs_shrub =
-					SW_Site.n_transp_lyrs_grass = 0;
+	SW_Site.n_evap_lyrs = SW_Site.n_transp_lyrs[SW_FORBS] =
+			SW_Site.n_transp_lyrs[SW_TREES] = SW_Site.n_transp_lyrs[SW_SHRUB] =
+					SW_Site.n_transp_lyrs[SW_GRASS] = 0;
 
 	SW_Site.lyr = Mem_Calloc(SW_Site.n_layers + SW_Site.deepdrain,
 			sizeof(SW_LAYER_INFO *), "_init_grid_globals()");
@@ -2362,19 +2362,19 @@ static void _init_soil_layers(int cell, int isSpinup)
 		SW_Site.lyr[j]->soilMatric_density = grid_Soils[i].lyr[j].data[0];
 		SW_Site.lyr[j]->fractionVolBulk_gravel = grid_Soils[i].lyr[j].data[1];
 		SW_Site.lyr[j]->evap_coeff = grid_Soils[i].lyr[j].data[2];
-		SW_Site.lyr[j]->transp_coeff_grass = grid_Soils[i].lyr[j].data[3];
-		SW_Site.lyr[j]->transp_coeff_shrub = grid_Soils[i].lyr[j].data[4];
-		SW_Site.lyr[j]->transp_coeff_tree = grid_Soils[i].lyr[j].data[5];
-		SW_Site.lyr[j]->transp_coeff_forb = grid_Soils[i].lyr[j].data[6];
+		SW_Site.lyr[j]->transp_coeff[3] = grid_Soils[i].lyr[j].data[3];
+		SW_Site.lyr[j]->transp_coeff[1] = grid_Soils[i].lyr[j].data[4];
+		SW_Site.lyr[j]->transp_coeff[0] = grid_Soils[i].lyr[j].data[5];
+		SW_Site.lyr[j]->transp_coeff[2] = grid_Soils[i].lyr[j].data[6];
 		SW_Site.lyr[j]->fractionWeightMatric_sand =
 				grid_Soils[i].lyr[j].data[7];
 		SW_Site.lyr[j]->fractionWeightMatric_clay =
 				grid_Soils[i].lyr[j].data[8];
 		SW_Site.lyr[j]->impermeability = grid_Soils[i].lyr[j].data[9];
-		SW_Site.lyr[j]->my_transp_rgn_tree = 0;
-		SW_Site.lyr[j]->my_transp_rgn_forb = 0;
-		SW_Site.lyr[j]->my_transp_rgn_shrub = 0;
-		SW_Site.lyr[j]->my_transp_rgn_grass = 0;
+		SW_Site.lyr[j]->my_transp_rgn[0] = 0;
+		SW_Site.lyr[j]->my_transp_rgn[2] = 0;
+		SW_Site.lyr[j]->my_transp_rgn[1] = 0;
+		SW_Site.lyr[j]->my_transp_rgn[3] = 0;
 		SW_Site.lyr[j]->sTemp = grid_Soils[i].lyr[j].data[10];
 
 		if (evap_ok)
@@ -2386,29 +2386,29 @@ static void _init_soil_layers(int cell, int isSpinup)
 		}
 		if (transp_ok_tree)
 		{
-			if (GT(SW_Site.lyr[j]->transp_coeff_tree, 0.0))
-				SW_Site.n_transp_lyrs_tree++;
+			if (GT(SW_Site.lyr[j]->transp_coeff[0], 0.0))
+				SW_Site.n_transp_lyrs[SW_TREES]++;
 			else
 				transp_ok_tree = swFALSE;
 		}
 		if (transp_ok_shrub)
 		{
-			if (GT(SW_Site.lyr[j]->transp_coeff_shrub, 0.0))
-				SW_Site.n_transp_lyrs_shrub++;
+			if (GT(SW_Site.lyr[j]->transp_coeff[1], 0.0))
+				SW_Site.n_transp_lyrs[SW_SHRUB]++;
 			else
 				transp_ok_shrub = swFALSE;
 		}
 		if (transp_ok_grass)
 		{
-			if (GT(SW_Site.lyr[j]->transp_coeff_grass, 0.0))
-				SW_Site.n_transp_lyrs_grass++;
+			if (GT(SW_Site.lyr[j]->transp_coeff[3], 0.0))
+				SW_Site.n_transp_lyrs[SW_GRASS]++;
 			else
 				transp_ok_grass = swFALSE;
 		}
 		if (transp_ok_forb)
 		{
-			if (GT(SW_Site.lyr[j]->transp_coeff_forb, 0.0))
-				SW_Site.n_transp_lyrs_forb++;
+			if (GT(SW_Site.lyr[j]->transp_coeff[2], 0.0))
+				SW_Site.n_transp_lyrs[SW_FORBS]++;
 			else
 				transp_ok_forb = swFALSE;
 		}
