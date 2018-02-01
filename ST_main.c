@@ -36,7 +36,7 @@
 extern Bool isPartialSoilwatOutput;
 extern Bool storeAllIterations;
 extern SW_VEGPROD SW_VegProd;
-extern SW_FILE_STATUS Sw_File_Status;
+SW_FILE_STATUS SW_File_Status;
 
 /************* External Function Declarations **************/
 /***********************************************************/
@@ -176,14 +176,13 @@ int main(int argc, char **argv) {
 		incr = 1;
 
     // set values to -1 so SW_Output.c knows first time through
-  Sw_File_Status.finalValue_dy = -1;
-  Sw_File_Status.finalValue_wk = -1;
-  Sw_File_Status.finalValue_mo = -1;
-  Sw_File_Status.finalValue_yr = -1;
+  SW_File_Status.finalValue_dy = -1;
+  SW_File_Status.finalValue_wk = -1;
+  SW_File_Status.finalValue_mo = -1;
+  SW_File_Status.finalValue_yr = -1;
 
 	/* --- Begin a new iteration ------ */
 	for (iter = 1; iter <= Globals.runModelIterations; iter++) {
-    //printf("iter: %d\n", iter);
 		if (progfp == stderr) {
 			if (iter % incr == 0)
 				fprintf(progfp, ".");
@@ -192,10 +191,10 @@ int main(int argc, char **argv) {
 		}
 
     // set these to 0 for use with -i flag (need to create column headers for every iteration file)
-    Sw_File_Status.col_status_dy = 0;
-    Sw_File_Status.col_status_wk = 0;
-    Sw_File_Status.col_status_mo = 0;
-    Sw_File_Status.col_status_yr = 0;
+    SW_File_Status.col_status_dy = 0;
+    SW_File_Status.col_status_wk = 0;
+    SW_File_Status.col_status_mo = 0;
+    SW_File_Status.col_status_yr = 0;
 
 		if (BmassFlags.yearly || MortFlags.yearly)
 			parm_Initialize(iter);
