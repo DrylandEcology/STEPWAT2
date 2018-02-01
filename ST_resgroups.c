@@ -86,10 +86,10 @@ void rgroup_PartResources(void)
 	size_base[MAX_RGROUPS] = {0}, /* total res. contrib to base, all groups */
 	size_obase[MAX_RGROUPS] = {0}; /* total res. contrib. if xtra_obase */
 
-	Bool noplants = swTRUE;
-	const Bool do_base = swFALSE, /* monikers for _res_part_extra() */
-	do_extra = swTRUE, add_seeds = swTRUE, /* monikers for pass 1 & 2 _add_annuals() */
-	no_seeds = swFALSE;
+	Bool noplants = TRUE;
+	const Bool do_base = FALSE, /* monikers for _res_part_extra() */
+	do_extra = TRUE, add_seeds = TRUE, /* monikers for pass 1 & 2 _add_annuals() */
+	no_seeds = FALSE;
 	GroupType *g; /* shorthand for RGroup[rg] */
 	int i;
 
@@ -164,9 +164,9 @@ void rgroup_PartResources(void)
 	}
         #endif
 
-	  /* If relsize>0, reset noplants from swTRUE to swFALSE and if noplants=swTRUE, exit from the loop */
+	  /* If relsize>0, reset noplants from TRUE to FALSE and if noplants=TRUE, exit from the loop */
 		if (GT(g->relsize, 0.))
-			noplants = swFALSE;
+			noplants = FALSE;
 
 	} /* End ForEachGroup(rg) */
 
@@ -178,7 +178,7 @@ void rgroup_PartResources(void)
 	//	_res_part_extra(do_base, xtra_base, size_base);
 		//_res_part_extra(do_extra, xtra_obase, size_obase);
 
-	/* reset annuals' "swTRUE" relative size here */
+	/* reset annuals' "TRUE" relative size here */
     //KAP: formely, this call established annual species. We have moved annual establishment to the Rgroup_Establish function,
     //where all other resource groups establish (e.g. perennials). This function is no longer required.
 	ForEachGroup(rg)
@@ -198,10 +198,10 @@ static RealF _add_annuals(const GrpIndex rg, const RealF g_pr,
 	/* if add_seeds==FALSE, don't add seeds to the seedbank or
 	 * add species, but do calculations required to return a
 	 * temporary group relative size for resource allocation.
-	 * if add_seeds==swTRUE, we should have done the above and now
+	 * if add_seeds==TRUE, we should have done the above and now
 	 * we really want to add to the biomass and seedbank.
 	 *
-	 * check regen_ok flag.  if swTRUE, apply establishment and
+	 * check regen_ok flag.  if TRUE, apply establishment and
 	 * add to seedbank.  Otherwise, add 0 to seedbank and skip
 	 * adding plants this year.  We also check probability of establishment to
 	 * account for introduction of propagules, in which case
@@ -231,7 +231,7 @@ static RealF _add_annuals(const GrpIndex rg, const RealF g_pr,
 	{
 		s = Species[sp];
 		newsize = 0.0;
-		forced = swFALSE;
+		forced = FALSE;
 		// printf("add_seeds=%d \n",add_seeds);
 		if (!s->use_me)
 			continue;
@@ -239,9 +239,9 @@ static RealF _add_annuals(const GrpIndex rg, const RealF g_pr,
 		if (!add_seeds && RandUni() <= s->seedling_estab_prob)
 		{
 			/* force addition of new propagules */
-			//if regen_ok is swTRUE, pass the g_pr parameter, if regen_ok is False, pass -1
+			//if regen_ok is TRUE, pass the g_pr parameter, if regen_ok is False, pass -1
 			_add_annual_seedprod(sp, (g->regen_ok) ? g_pr : -1.);
-			forced = swTRUE;
+			forced = TRUE;
 		}
 
 		//if regen_ok is T then x = values coming from _get_annual_maxestab, if regen ok is F then
@@ -569,7 +569,7 @@ void rgroup_Grow(void)
 					growth1 = s->relseedlingsize
 							* RandUniRange(1, s->max_vegunits);
 					rate1 = growth1 / ndv->relsize;
-					ndv->killed = swFALSE;
+					ndv->killed = FALSE;
 
 				}
 				else
@@ -700,7 +700,7 @@ void rgroup_Establish(void)
 	if (Plot.disturbed > 0)
 	{
 		ForEachGroup(rg)
-			RGroup[rg]->regen_ok = swFALSE;
+			RGroup[rg]->regen_ok = FALSE;
 		return; /* skip regen for all */
 	}
 
@@ -710,11 +710,11 @@ void rgroup_Establish(void)
 		if (!g->use_me)
 			continue;
 
-		g->regen_ok = swTRUE; /* default */
+		g->regen_ok = TRUE; /* default */
 
 		if (Globals.currYear < RGroup[rg]->startyr)
 		{
-			g->regen_ok = swFALSE;
+			g->regen_ok = FALSE;
 
 		}
 		else  ///if ( g->max_age == 1 ) {
@@ -1017,14 +1017,14 @@ void rgroup_DropSpecies(SppIndex sp)
 
 	IntS i, j;
 	GrpIndex rg;
-	Bool f = swFALSE;
+	Bool f = FALSE;
 
 	rg = Species[sp]->res_grp;
 	ForEachEstSpp2(rg, i)
 	{
 		if (RGroup[rg]->est_spp[i] == sp)
 		{
-			f = swTRUE;
+			f = TRUE;
 			break;
 		}
 	}
@@ -1054,13 +1054,13 @@ void rgroup_AddSpecies(GrpIndex rg, SppIndex sp)
 
 	/*------------------------------------------------------*/
 	Int i;
-	Bool f = swFALSE;
+	Bool f = FALSE;
 
 	ForEachEstSpp2( rg, i)
 	{
 		if (RGroup[rg]->est_spp[i] == sp)
 		{
-			f = swTRUE;
+			f = TRUE;
 			break;
 		}
 	}
@@ -1109,7 +1109,7 @@ void rgroup_Extirpate(GrpIndex rg)
 		}
 	}
 
-	RGroup[rg]->extirpated = swTRUE;
+	RGroup[rg]->extirpated = TRUE;
 
 }
 

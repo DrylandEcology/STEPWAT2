@@ -426,7 +426,7 @@ RealF SXW_GetResource( GrpIndex rg) {
 void SXW_PrintDebug(Bool cleanup) {
 /*======================================================*/
 	TimeInt i;
-	static Bool beenhere = swFALSE;
+	static Bool beenhere = FALSE;
 
 	if(cleanup) {
 		debugCleanUp();
@@ -439,7 +439,7 @@ void SXW_PrintDebug(Bool cleanup) {
 			}
 		}
 		if (!beenhere) {
-			beenhere = swTRUE;
+			beenhere = TRUE;
 			insertInfo();
 			insertSXWPhen();
 			insertSXWProd();
@@ -708,7 +708,7 @@ static void _read_watin(void) {
  */
    FILE *f;
    int lineno = 0;
-   Bool found = swFALSE;
+   Bool found = FALSE;
 
    MyFileName = SXW.f_watin;
    f = OpenFile(MyFileName, "r");
@@ -718,7 +718,7 @@ static void _read_watin(void) {
      if (++lineno == (eOutput + 2)) {
        strcpy(_swOutDefName, DirName(SXW.f_watin));
        strcat(_swOutDefName, inbuf);
-       found = swTRUE;
+       found = TRUE;
        break;
      }
    }
@@ -743,7 +743,7 @@ static void _make_arrays(void) {
   _make_swa_array();
 	_make_swc_array();
   // only make output storage if -o or -i flags
-  if(storeAllIterations || isPartialSoilwatOutput == swFALSE)
+  if(storeAllIterations || isPartialSoilwatOutput == FALSE)
     _make_soil_arrays();
 }
 
@@ -803,20 +803,19 @@ static void _make_transp_arrays(void) {
 
 static void _make_swa_array(void){
   char *fstr = "_make_swa_array()";
-	int size = SXW.NPds * SXW.NSoLyrs;
-  int avg_size;
+	int size = NVEGTYPES * NVEGTYPES * MAX_DAYS * SXW.NSoLyrs;
+  int size_sum = NVEGTYPES * MAX_DAYS * SXW.NSoLyrs;
 
-  //4 - Grass,Frob,Tree,Shrub
-  size = NVEGTYPES * NVEGTYPES * SXW.NPds * SXW.NSoLyrs  * Globals.runModelIterations;
   SXW.SWA_master = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr); // 4D
   SXW.dSWAbulk = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr); // 4D
   SXW.dSWA_repartitioned = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr); // 4D
+  SXW.sum_dSWA_repartitioned = (RealF *) Mem_Calloc(size_sum, sizeof(RealF), fstr);
 
   //Mem_Set(SXW.SWA_master, 0, SXW.NPds * 4 * SXW.NSoLyrs * sizeof(RealF));
   memset(SXW.SWA_master, 0, sizeof(SXW.SWA_master));
   Mem_Set(SXW.dSWAbulk, 0, size * sizeof(RealF));
   Mem_Set(SXW.dSWA_repartitioned, 0, size * sizeof(RealF));
-  //memset(SXW.sum_dSWA_repartitioned, 0, sizeof(SXW.sum_dSWA_repartitioned) * 5 * 20 * 500);
+  Mem_Set(SXW.sum_dSWA_repartitioned, 0, size_sum * sizeof(RealF));
 }
 
 static void _make_swc_array(void) {
@@ -828,12 +827,8 @@ static void _make_swc_array(void) {
 	char *fstr = "_make_swc_array()";
 	int size = SXW.NPds * SXW.NSoLyrs * MAX_DAYS;
   int avg_size;
-  //int size_3d = 4 * SXW.NPds * SXW.NSoLyrs;
 
 	SXW.swc = (RealF *) Mem_Calloc(size, sizeof(RealF *), fstr);
-
-  //avg_size = (SXW.NPds * SXW.NSoLyrs * Globals.runModelYears) * 365;
-  //SXW.swc_avg = (RealF *) Mem_Calloc(avg_size, sizeof(RealF), fstr);
 }
 
 // all memory allocation for avg values are here
@@ -870,7 +865,8 @@ static void _make_soil_arrays(void){
 	Mem_Set(SXW.SWAbulk_tree_avg, 0, avg_size * sizeof(RealF));
 	Mem_Set(SXW.SWAbulk_forb_avg, 0, avg_size * sizeof(RealF));
 
-  SXW.swc_avg = (RealF *) Mem_Calloc(avg_size, sizeof(RealF), fstr);
+  SXW_AVG.swc_avg = (RealF *) Mem_Calloc(avg_size, sizeof(RealF), fstr);
+  Mem_Set(SXW_AVG.swc_avg, 0, avg_size * sizeof(RealF));
 
 
   SXW_AVG.max_temp_avg = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr);
@@ -1111,7 +1107,7 @@ void _print_debuginfo(void) {
 	RealF sum1 = 0.;
 	RealF sum2 = 0.;
 	RealF sum3 = 0.;
-	static Bool beenhere = swFALSE;
+	static Bool beenhere = FALSE;
 	char vegProdNames[4][7];
 	strcpy(vegProdNames[0], "TREE");
 	strcpy(vegProdNames[1], "SHRUB");
@@ -1122,7 +1118,7 @@ void _print_debuginfo(void) {
 	f = OpenFile(strcat(name, ".output.out"), "a");
 
 	if (!beenhere) {
-		beenhere = swTRUE;
+		beenhere = TRUE;
 		fprintf(f, "\n------ Roots X Phen Array -------\n");
 		ForEachGroup(r)
 		{
@@ -1358,14 +1354,14 @@ void free_all_sxw_memory( void ) {
   Mem_Free(SXW.SWAbulk_tree_avg);
   Mem_Free(SXW.SWAbulk_forb_avg);
 
-  //Mem_Free(SXW.sum_dSWA_repartitioned);
+  Mem_Free(SXW.sum_dSWA_repartitioned);
 
   Mem_Free(SXW.SWA_master);
   Mem_Free(SXW.dSWAbulk);
   Mem_Free(SXW.dSWA_repartitioned);
 
   Mem_Free(SXW.swc);
-  Mem_Free(SXW.swc_avg);
+  Mem_Free(SXW_AVG.swc_avg);
 
   Mem_Free(SXW_AVG.max_temp_avg);
   Mem_Free(SXW_AVG.min_temp_avg);

@@ -29,12 +29,14 @@
 #ifdef STEPWAT
   #include "sxw_funcs.h"
   #include "sxw.h"
+  #include "sw_src/SW_Output.h"
   extern SXW_t SXW;
 #endif
 
 extern Bool isPartialSoilwatOutput;
 extern Bool storeAllIterations;
 extern SW_VEGPROD SW_VegProd;
+extern SW_FILE_STATUS Sw_File_Status;
 
 /************* External Function Declarations **************/
 /***********************************************************/
@@ -145,19 +147,19 @@ int main(int argc, char **argv) {
 	Bool killedany;
   int k;
 
-	logged = swFALSE;
+	logged = FALSE;
 	atexit(check_log);
 	/* provides a way to inform user that something
 	 * was logged.  see generic.h */
 
-  isPartialSoilwatOutput = swTRUE; // dont want to get soilwat output unless -o flag
-  storeAllIterations = swFALSE; // dont want to store all soilwat output iterations unless -i flag
+  isPartialSoilwatOutput = TRUE; // dont want to get soilwat output unless -o flag
+  storeAllIterations = FALSE; // dont want to store all soilwat output iterations unless -i flag
 
 	init_args(argc, argv); // read input arguments and intialize proper flags
 
 	printf("STEPWAT  init_args() executed successfully \n");
 
-	if (UseGrid == swTRUE) {
+	if (UseGrid == TRUE) {
 		runGrid();
 		return 0;
 	}
@@ -165,7 +167,7 @@ int main(int argc, char **argv) {
 	parm_Initialize(0);
 
 	if (UseSoilwat){
-		SXW_Init(swTRUE, NULL);
+		SXW_Init(TRUE, NULL);
     SW_OUT_set_ncol(); // set number of columns
   }
 
@@ -173,52 +175,11 @@ int main(int argc, char **argv) {
 	if (incr == 0)
 		incr = 1;
 
-  /*----------------------------------------------------------
-    Get proper order for rank_SWPcrits
-  ----------------------------------------------------------*/
-  int outerLoop, innerLoop;
-  float key;
-  RealF tempArray[4], tempArrayUnsorted[4]; // need two temp arrays equal to critSoilWater since we dont want to alter the original at all
-  tempArray[0] = SW_VegProd.critSoilWater[0];
-  tempArray[1] = SW_VegProd.critSoilWater[1];
-  tempArray[2] = SW_VegProd.critSoilWater[2];
-  tempArray[3] = SW_VegProd.critSoilWater[3];
-  tempArrayUnsorted[0] = SW_VegProd.critSoilWater[0];
-  tempArrayUnsorted[1] = SW_VegProd.critSoilWater[1];
-  tempArrayUnsorted[2] = SW_VegProd.critSoilWater[2];
-  tempArrayUnsorted[3] = SW_VegProd.critSoilWater[3];
-
-  // insertion sort to rank the veg types and store them in their proper order
-  for (outerLoop = 1; outerLoop < 4; outerLoop++)
-   {
-       key = tempArray[outerLoop]; // set key equal to critical value
-       innerLoop = outerLoop-1;
-       while (innerLoop >= 0 && tempArray[innerLoop] < key)
-       {
-         // code to switch values
-         tempArray[innerLoop+1] = tempArray[innerLoop];
-         innerLoop = innerLoop-1;
-       }
-       tempArray[innerLoop+1] = key;
-   }
-
-   // loops to compare sorted v unsorted array and find proper index
-   for(outerLoop = 0; outerLoop < 4; outerLoop++){
-     for(innerLoop = 0; innerLoop < 4; innerLoop++){
-       if(tempArray[outerLoop] == tempArrayUnsorted[innerLoop]){
-         SXW.rank_SWPcrits[outerLoop] = innerLoop;
-         tempArrayUnsorted[innerLoop] = 100; // set value to something impossible so if a duplicate a different index is picked next
-         break;
-       }
-     }
-   }
-   /*printf("%d = %f\n", SXW.rank_SWPcrits[0], SW_VegProd.critSoilWater[SXW.rank_SWPcrits[0]]);
-   printf("%d = %f\n", SXW.rank_SWPcrits[1], SW_VegProd.critSoilWater[SXW.rank_SWPcrits[1]]);
-   printf("%d = %f\n", SXW.rank_SWPcrits[2], SW_VegProd.critSoilWater[SXW.rank_SWPcrits[2]]);
-   printf("%d = %f\n\n", SXW.rank_SWPcrits[3], SW_VegProd.critSoilWater[SXW.rank_SWPcrits[3]]);*/
-   /*----------------------------------------------------------
-     End of rank_SWPcrits
-   ----------------------------------------------------------*/
+    // set values to -1 so SW_Output.c knows first time through
+  Sw_File_Status.finalValue_dy = -1;
+  Sw_File_Status.finalValue_wk = -1;
+  Sw_File_Status.finalValue_mo = -1;
+  Sw_File_Status.finalValue_yr = -1;
 
 	/* --- Begin a new iteration ------ */
 	for (iter = 1; iter <= Globals.runModelIterations; iter++) {
@@ -231,10 +192,10 @@ int main(int argc, char **argv) {
 		}
 
     // set these to 0 for use with -i flag (need to create column headers for every iteration file)
-    SXW.col_status_dy = 0;
-    SXW.col_status_wk = 0;
-    SXW.col_status_mo = 0;
-    SXW.col_status_yr = 0;
+    Sw_File_Status.col_status_dy = 0;
+    Sw_File_Status.col_status_wk = 0;
+    Sw_File_Status.col_status_mo = 0;
+    Sw_File_Status.col_status_yr = 0;
 
 		if (BmassFlags.yearly || MortFlags.yearly)
 			parm_Initialize(iter);
@@ -382,7 +343,7 @@ void Plot_Initialize(void) {
 			RGroup[rg]->est_count = 0;
 		}
 		RGroup[rg]->yrs_neg_pr = 0;
-		RGroup[rg]->extirpated = swFALSE;
+		RGroup[rg]->extirpated = FALSE;
 	}
 
 	if (UseSoilwat)
@@ -426,11 +387,11 @@ static void init_args(int argc, char **argv) {
       a, /* current valid argument-value position */
       op, /* position number of found option */
       nopts=sizeof(opts)/sizeof(char *);
-  Bool lastop_noval = swFALSE;
+  Bool lastop_noval = FALSE;
 
   /* Defaults */
   parm_SetFirstName( DFLT_FIRSTFILE);
-  UseSoilwat = QuietMode = EchoInits = UseSeedDispersal = swFALSE;
+  UseSoilwat = QuietMode = EchoInits = UseSeedDispersal = FALSE;
   SXW.debugfile = NULL;
   progfp = stderr;
 
@@ -454,7 +415,7 @@ static void init_args(int argc, char **argv) {
 			exit(-1);
 		}
 		if (a == argc - 1 && strlen(argv[a]) == 2)
-			lastop_noval = swTRUE;
+			lastop_noval = TRUE;
 
 		*str = '\0';
 		/* extract value part of option-value pair */
@@ -511,36 +472,36 @@ static void init_args(int argc, char **argv) {
 			break; /* -f */
 
 		case 2:
-			QuietMode = swTRUE;
+			QuietMode = TRUE;
 			break; /* -q */
 
 		case 3:
-			UseSoilwat = swTRUE; /* -s */
+			UseSoilwat = TRUE; /* -s */
 			if (strlen(str) > 1)
 				SXW.debugfile = Str_Dup(str);
 			break;
 
 		case 4:
-			EchoInits = swTRUE;
+			EchoInits = TRUE;
 			break; /* -e */
 
 		case 5:
 			progfp = stdout; /* -p */
-			UseProgressBar = swTRUE;
+			UseProgressBar = TRUE;
 			break;
 
 		case 6:
-			UseGrid = swTRUE;
+			UseGrid = TRUE;
 			break; /* -g */
 
 		case 7:
       printf("storing SOILWAT output (flag -o)\n");
-      isPartialSoilwatOutput = swFALSE;
+      isPartialSoilwatOutput = FALSE;
 			break; /* -o    also get all the soilwat output*/
 
     case 8: // -i
       printf("storing SOILWAT output for all iterations\n");
-      storeAllIterations = swTRUE;
+      storeAllIterations = TRUE;
       break;
 
 		default:

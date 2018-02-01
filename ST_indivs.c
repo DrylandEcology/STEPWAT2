@@ -99,7 +99,7 @@ Bool indiv_New( SppIndex sp) {
   p = _create();
   p->id = id;
   p->myspecies = sp;
-  p->killed = swFALSE;
+  p->killed = FALSE;
   p->age = 1;
   p->slow_yrs = 0;
   p->relsize = Species[sp]->relseedlingsize;
@@ -116,7 +116,7 @@ Bool indiv_New( SppIndex sp) {
   //if(!UseGrid)
 	//  insertIndiv(p);
   id++;
-  return( swTRUE);
+  return( TRUE);
 }
 
 /**************************************************************/
@@ -181,12 +181,12 @@ Bool indiv_Kill_Partial( MortalityType code,
 
 /*------------------------------------------------------*/
   SppIndex sp;
-  Bool result = swFALSE;
+  Bool result = FALSE;
 
   sp = ndv->myspecies;
   if ( GT(ndv->relsize, killamt) && Species[sp]->isclonal) {
-    result            = swTRUE;
-    ndv->killed       = swTRUE;
+    result            = TRUE;
+    ndv->killed       = TRUE;
     ndv->relsize     -= killamt;
     ndv->killedby     = code;
     ndv->growthrate   = 0.0;

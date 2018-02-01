@@ -56,11 +56,11 @@ void Env_Generate( void) {
   Int rg;
 
   switch (UseSoilwat) {
-    case swFALSE:
+    case FALSE:
          /* clear last year's leftover resources */
          ForEachGroup(rg) RGroup[rg]->res_avail = 0.0;
          break;
-    case swTRUE:
+    case TRUE:
          SXW_Run_SOILWAT();
          break;
   }
@@ -241,17 +241,17 @@ static void _make_disturbance( void) {
       case FecalPat:
            if (Plot.pat_removed) {
              Plot.disturbed = 0;
-             Plot.pat_removed = swFALSE;
+             Plot.pat_removed = FALSE;
              Plot.disturbance = NoDisturb;
            } else {
              pc = Globals.pat.recol[Slope] * Plot.disturbed
                   + Globals.pat.recol[Intcpt];
              if (RandUni() <= pc) {
-               Plot.pat_removed = swTRUE;
+               Plot.pat_removed = TRUE;
                /* slight effects for one year*/
                Plot.disturbed = 1;
              } else {
-               Plot.pat_removed = swFALSE;
+               Plot.pat_removed = FALSE;
                Plot.disturbed++;
              }
            }
@@ -272,7 +272,7 @@ static void _make_disturbance( void) {
     event = (DisturbEvent) RandUniRange(1, LastDisturb -1);
 
     /* make sure this is off unless needed  */
-    Plot.pat_removed = swFALSE;
+    Plot.pat_removed = FALSE;
     switch( event) {
       case FecalPat:
        if (!Globals.pat.use) {event=NoDisturb; break;}
@@ -280,7 +280,7 @@ static void _make_disturbance( void) {
                ? event : NoDisturb;
          if (event == NoDisturb) break;
          Plot.pat_removed = (RandUni() <= Globals.pat.removal)
-                           ? swTRUE : swFALSE;
+                           ? TRUE : FALSE;
          Plot.disturbed = 0;
          break;
       case AntMound:

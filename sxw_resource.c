@@ -325,7 +325,7 @@ static void _SWA_contribution_by_group(RealF use_by_group[]) {
 		{
 			for (l = 0; l < SXW.NSoLyrs; l++) {
         //printf("%d,%d,%d\n", t,l,p);
-				use_by_group[g] += (RealF) (_roots_active_rel[Iglp(g, l, p)] * SXW.sum_dSWA_repartitioned[t][l][p]);
+				use_by_group[g] += (RealF) (_roots_active_rel[Iglp(g, l, p)] * SXW.sum_dSWA_repartitioned[Ivlp(t,l,p)]);
                 //printf("for groupName= %s, layerIndex: %d, month: %d, in swa loop use_by_group[g]= %f \n",RGroup[g]->name,l,p,use_by_group[g]);
 			}
 		}

@@ -134,7 +134,7 @@ static void _make_header_for_soilwat(char *buf, char *header1, char *header2, in
 	(p)->nobs = (v)->nobs; \
 }
 
-static Bool firsttime = swTRUE;
+static Bool firsttime = TRUE;
 
 
 /***********************************************************/
@@ -154,7 +154,7 @@ void stat_Collect( Int year ) {
   double bmass;
 
   if (firsttime) {
-    firsttime = swFALSE;
+    firsttime = FALSE;
     _init();
   }
 
@@ -489,7 +489,7 @@ void stat_Load_Accumulators(int cell, int year) {
 	//loads the accumulators for the cell at the given year
 
 	if (firsttime) {
-		firsttime = swFALSE;
+		firsttime = FALSE;
 		_init();
 	}
 	IntS age;
@@ -551,7 +551,7 @@ void stat_Save_Accumulators(int cell, int year) {
 	//saves the accumulators for the cell at the given year
 
 	if (firsttime) {
-		firsttime = swFALSE;
+		firsttime = FALSE;
 		_init();
 	}
 	IntS age;

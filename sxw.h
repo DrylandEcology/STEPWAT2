@@ -84,20 +84,9 @@ struct stepwat_st {
         *dSWAbulk, // 4D array to store actual available SWA
         *dSWA_repartitioned; // 4D array to store repartioned SWA values
 
-        // going to want to change this to Itlp array
-  RealF sum_dSWA_repartitioned[80][80][366]; // [veg_type][layer][timeperiod] store the sum of dSWA_repartitioned. 3D array
-  //RealF *sum_dSWA_repartitioned;
+  RealF *sum_dSWA_repartitioned;
 
   RealF transp_SWA[MAX_YEARS][11]; // store the sum of SWA and transp for each year and resource. transp_SWA[year][steppe_resource_group]
-  int rank_SWPcrits[5]; // array to store the SWP crits in order of lest negative to most negative (used in sxw_resource)
-
-  // used in SW_Output.c for creating column headers
-  int col_status_dy;
-  int col_status_wk;
-  int col_status_mo;
-  int col_status_yr;
-
-  RealF *swc_avg;
 };
 
 struct soilwat_average{
@@ -175,7 +164,7 @@ struct soilwat_average{
       		*wue_mult_tree_avg,
       		*wue_mult_forb_avg;
 
-
+    RealF *swc_avg;
 };
 
 #define SXW_NFILES 5
@@ -199,7 +188,7 @@ typedef struct soilwat_average SXW_avg;
  * veg-prod-type/crit-value/layer/phenology
  */
  //veg_type, new_critical_value, layer, timeperiod
-#define Itclp(t,c,l,p) (((t)*SXW.NTrLyrs*SXW.NPds) + ((c)*4) + ((l)*SXW.NPds) + (p)) // c*4 is because there are 4 critical values
+#define Itclp(t,c,l,p) (((t)*SXW.NTrLyrs*SXW.NPds) + ((c)*NVEGTYPES) + ((l)*SXW.NPds) + (p)) // c*4 is because there are 4 critical values
 
 // for use with avg values
 // year, layer, timeperiod, avg/std
@@ -208,10 +197,10 @@ typedef struct soilwat_average SXW_avg;
 // for soilwat average and standard deviation
 // year, timeperiod, choice (avg or std), timeperiod (dy, wk, mo, yr)
 // difference between p and b is p is current period within period (ie. for day it could be 0 to 364) and b is just timeperiod (0 to 3 where 0 is day and 3 is yr)
-#define Iypc(y,p,c,b) (((y)*Globals.runModelYears * SXW.NPds * 4) + ((p)*SXW.NPds * 4) + ((c) * 4) + (b))
+#define Iypc(y,p,c,b) (((y)*Globals.runModelYears * SXW.NPds * NVEGTYPES) + ((p)*SXW.NPds * NVEGTYPES) + ((c) * NVEGTYPES) + (b))
 
 // veg type, layer, timeperiod
-#define Ivlp(v,l,p) (((v)*4 * SXW.NTrLyrs * SXW.NPds) + ((l)*SXW.NTrLyrs * SXW.NPds) + ((p)*SXW.NPds))
+#define Ivlp(v,l,p) (((v)*NVEGTYPES * SXW.NTrLyrs * SXW.NPds) + ((l)*SXW.NTrLyrs * SXW.NPds) + ((p)*SXW.NPds))
 
 /* convert 2d layer by period indices to
   layer/phenology 1D index */
