@@ -46,7 +46,6 @@ SRCS	=\
 	$(Src)/sw_src/SW_Files.c\
 	$(Src)/sw_src/SW_Model.c\
 	$(Src)/sw_src/SW_Output.c\
-	$(Src)/sw_src/SW_Main_Function.c\
 	$(Src)/sw_src/SW_Site.c\
 	$(Src)/sw_src/SW_Sky.c\
 	$(Src)/sw_src/SW_VegProd.c\
@@ -85,7 +84,6 @@ EXOBJS	=\
 	$(oDir)/sw_src/SW_Files.o\
 	$(oDir)/sw_src/SW_Model.o\
 	$(oDir)/sw_src/SW_Output.o\
-	$(oDir)/sw_src/SW_Main_Function.o\
 	$(oDir)/sw_src/SW_Site.o\
 	$(oDir)/sw_src/SW_Sky.o\
 	$(oDir)/sw_src/SW_VegProd.o\
@@ -175,7 +173,7 @@ $(oDir)/sxw.o: sxw.c sw_src/generic.h sw_src/filefuncs.h \
  sxw_module.h sw_src/SW_Control.h sw_src/SW_Model.h sw_src/SW_Site.h sw_src/SW_SoilWater.h \
  sw_src/SW_Files.h sw_src/SW_VegProd.h sw_src/SW_Carbon.h
 	$(CC) $(C_FLAGS) $(incDirs) -c -o $@ $<
-	
+
 $(oDir)/sxw_sql.o: sxw_sql.c ST_steppe.h \
  ST_steppe.h sw_src/SW_Defines.h sxw.h\
  sw_src/SW_Times.h sxw_module.h sw_src/SW_Model.h sw_src/SW_Site.h sw_src/SW_SoilWater.h
@@ -220,9 +218,6 @@ $(oDir)/sw_src/SW_Output.o: sw_src/SW_Output.c sw_src/generic.h \
  sw_src/filefuncs.h sw_src/myMemory.h sw_src/SW_Defines.h \
  sw_src/SW_Files.h sw_src/SW_Model.h sw_src/SW_Times.h sw_src/SW_Site.h sw_src/SW_SoilWater.h sw_src/SW_Output.h \
  sw_src/SW_Weather.h sw_src/SW_Carbon.h
-	$(CC) $(C_FLAGS) $(incDirs) -c -o $@ $<
-
-$(oDir)/sw_src/SW_Main_Function.o: sw_src/SW_Main_Function.c
 	$(CC) $(C_FLAGS) $(incDirs) -c -o $@ $<
 
 $(oDir)/sw_src/SW_Site.o: sw_src/SW_Site.c sw_src/generic.h sw_src/filefuncs.h \
@@ -318,16 +313,16 @@ $(oDir)/sxw_tester.o: sxw_tester.c sw_src/generic.h \
  ST_defines.h ST_structs.h ST_functions.h ST_Globals.h sw_src/SW_Defines.h \
  sw_src/SW_Site.h sxw_funcs.h sxw.h sw_src/SW_Times.h sxw_module.h sxw_vars.h
 	$(CC) $(C_FLAGS) $(incDirs) -c -o $@ $<
-	
+
 $(oDir)/sw_src/SW_VegEstab.o: sw_src/SW_VegEstab.c sw_src/generic.h sw_src/filefuncs.h sw_src/myMemory.h \
 	sw_src/SW_Defines.h sw_src/SW_Files.h sw_src/SW_Site.h sw_src/SW_Times.h \
 	sw_src/SW_Model.h sw_src/SW_SoilWater.h sw_src/SW_Weather.h sw_src/SW_VegEstab.h
 		$(CC) $(C_FLAGS) $(incDirs) -c -o $@ $<
-		
+
 $(oDir)/ST_grid.o: ST_grid.c ST_steppe.h ST_defines.h sw_src/generic.h \
  ST_globals.h \
  sw_src/myMemory.h ST_globals.h
 	$(CC) $(C_FLAGS) $(incDirs) -c -o $@ $<
-	
+
 $(oDir)/ST_sql.o: ST_sql.c ST_steppe.h ST_globals.h
 	$(CC) $(C_FLAGS) $(incDirs) -c -o $@ $<

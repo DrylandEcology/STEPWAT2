@@ -75,10 +75,10 @@ struct stepwat_st {
         PPT_snow_melt,
         PPT_snow_loss;
 
-  RealF *SWAbulk_grass_avg, // 2D array to store SWA vals ([days of year][number of max layers])
-        *SWAbulk_shrub_avg,
-        *SWAbulk_tree_avg,
-        *SWAbulk_forb_avg;
+  RealF *SWA_grass_avg, // 2D array to store SWA vals ([days of year][number of max layers])
+        *SWA_shrub_avg,
+        *SWA_tree_avg,
+        *SWA_forb_avg;
 
   RealF *SWA_master, // 4D array to store SWA for all veg_types
         *dSWAbulk, // 4D array to store actual available SWA

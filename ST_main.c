@@ -175,12 +175,6 @@ int main(int argc, char **argv) {
 	if (incr == 0)
 		incr = 1;
 
-    // set values to -1 so SW_Output.c knows first time through
-  SW_File_Status.finalValue_dy = -1;
-  SW_File_Status.finalValue_wk = -1;
-  SW_File_Status.finalValue_mo = -1;
-  SW_File_Status.finalValue_yr = -1;
-
 	/* --- Begin a new iteration ------ */
 	for (iter = 1; iter <= Globals.runModelIterations; iter++) {
 		if (progfp == stderr) {
