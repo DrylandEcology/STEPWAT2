@@ -184,11 +184,6 @@ int main(int argc, char **argv) {
 			fprintf(progfp, "%d\n", iter);
 		}
 
-    // set these to 0 for use with -i flag (need to create column headers for every iteration file)
-    SW_File_Status.col_status_dy = 0;
-    SW_File_Status.col_status_wk = 0;
-    SW_File_Status.col_status_mo = 0;
-    SW_File_Status.col_status_yr = 0;
 
 		if (BmassFlags.yearly || MortFlags.yearly)
 			parm_Initialize(iter);
