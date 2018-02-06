@@ -415,11 +415,11 @@ KAP 7/20/2016
 	//return pr > 10 ? 10 : pr;
 }
 
-RealF SXW_GetResource( GrpIndex rg) {
+RealF SXW_GetTranspiration( GrpIndex rg) {
 /*======================================================*/
 /* see _sxw_update_resource() for _resource_cur[]
 */
-	//printf("SXW_GetResource _resource_cur[%d] = %.5f \n", rg, _resource_cur[rg]);
+	//printf("SXW_GetTranspiration _resource_cur[%d] = %.5f \n", rg, _resource_cur[rg]);
 	return _resource_cur[rg];
 }
 

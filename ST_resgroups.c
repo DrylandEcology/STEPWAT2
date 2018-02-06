@@ -129,7 +129,7 @@ void rgroup_PartResources(void)
 	else
 	{
 		g->res_required = RGroup_GetBiomass(rg);
-		g->res_avail = SXW_GetResource(rg); //1.0;
+		g->res_avail = SXW_GetTranspiration(rg); //1.0;
 		//PR limit can be really high see mort no_resource I limit to the groups estab indiv because that is what we can kill.
 		//This was at 10 but ten might be to low or high in some cases.
 		if(!ZRO(g->res_avail) && g->res_required / g->res_avail > g->estabs)
@@ -146,7 +146,7 @@ void rgroup_PartResources(void)
 		}
         //KAP:Previously, a seperate set of code was used to determine resource availability for annual species
         //Now, resource paritioning for annuals occurs in the same way as for perennials, by getting the RGroup Biomass
-        //and the resource_cur from SXW_GetResource
+        //and the resource_cur from SXW_GetTranspiration
 		//Annuals seem to have a artificial limit of 20. We do Annuals here differently
 		if(g->max_age == 1)
 		{
@@ -175,8 +175,8 @@ void rgroup_PartResources(void)
 
 	/*these functions are not used if using SOILWAT,
 	 extra resource partitioning does not occur when running SOILWAT*/
-	//	_res_part_extra(do_base, xtra_base, size_base);
-		//_res_part_extra(do_extra, xtra_obase, size_obase);
+	_res_part_extra(do_base, xtra_base, size_base);
+	_res_part_extra(do_extra, xtra_obase, size_obase);
 
 	/* reset annuals' "TRUE" relative size here */
     //KAP: formely, this call established annual species. We have moved annual establishment to the Rgroup_Establish function,
@@ -397,8 +397,7 @@ static void _res_part_extra(Bool isextra, RealF extra, RealF size[])
 void rgroup_ResPartIndiv(void)
 {
 	/*======================================================*/
-	/* PURPOSE */
-	/* The PR value used in the growth loop is now at the
+		/* The PR value used in the growth loop is now at the
 	 individual level rather than the group level, so the
 	 resource availability for the group is divided between
 	 individuals of the group, largest to smallest. Species
@@ -412,6 +411,8 @@ void rgroup_ResPartIndiv(void)
 
 	GrpIndex rg;
 	GroupType *g; /* shorthand for RGroup[rg] */
+	SppIndex sp;
+	Int j;
 	IndivType **indivs, /* dynamic array of indivs in RGroup[rg] */
 	*ndv; /* shorthand for the current indiv */
 	IntS numindvs, n;
@@ -425,32 +426,46 @@ void rgroup_ResPartIndiv(void)
 		if (!g->est_count)
 			continue;
 
-		numindvs = 0; // setting to 0 so no problems passing into RGroup_GetIndivs function
 		/* --- allocate the temporary group-oriented arrays */
-		indivs = RGroup_GetIndivs(rg, SORT_D, &numindvs); // SORT_D = sort in descending order
+		indivs = RGroup_GetIndivs(rg, SORT_D, &numindvs);
 
 		/* ---- assign indivs' availability, not including extra ---- */
 		/*      resource <= 1.0 is for basic growth, >= extra         */
 		/*      amount of extra, if any, is kept in g->res_extra      */
 		/*    base_rem = fmin(1, g->res_avail);  */
 		base_rem = g->res_avail;
-		for (n = 0; n < numindvs; n++)
-		{
-			ndv = indivs[n];
 
-			ndv->res_required = (ndv->relsize / g->max_spp) / g->estabs;
-			if (GT(g->pr, 1.))
+		ForEachEstSpp(sp, rg, j)
+		{
+
+			for (n = 0; n < numindvs; n++)
 			{
+				ndv = indivs[n];
+
+				ndv->res_required = (ndv->relsize * Species [sp]->mature_biomass);
+				//printf("ndv->res_required = %f\n, Species = %s \n", Species[sp]->name, ndv->res_required);
+
+				if (GT(g->pr, 1.))
+				{
 				ndv->res_avail = fmin(ndv->res_required, base_rem);
+				//printf("ndv->res_avail_pr>1 = %f\n", ndv->res_avail);
+
 				base_rem = fmax(base_rem - ndv->res_avail, 0.);
-			}
-			else
-			{
+				//printf("base_rem pr>1 = %f\n", base_rem);
+
+				}
+
+				else
+				{
 				ndv->res_avail = ndv->grp_res_prop * g->res_avail;
+				//printf("ndv->res_avail pr <1 = %f\n", ndv->res_avail);
+
+				}
 			}
 		}
 
 		base_rem += fmin(0, g->res_avail - 1.0);
+        //printf("base_rem end = %f\n", base_rem);
 
 		/* --- compute PR, but on the way, assign extra resource */
 		for (n = 0; n < numindvs; n++)
@@ -460,23 +475,21 @@ void rgroup_ResPartIndiv(void)
 			if (g->use_extra_res)
 			{
 				/* polish off any remaining resource not allocated to extra */
-				ndv->res_avail +=
-						ZRO(base_rem) ? 0. : ndv->grp_res_prop * base_rem;
+				ndv->res_avail += ZRO(base_rem) ? 0. : ndv->grp_res_prop * base_rem;
 				/* extra resource gets assigned here if applicable */
 				if (GT(g->res_extra, 0.))
 				{
 					x = 1. - ndv->relsize;
-					ndv->res_extra = (1. - x) * ndv->grp_res_prop
-							* g->res_extra;
+					ndv->res_extra = (1. - x) * ndv->grp_res_prop* g->res_extra;
 					ndv->res_avail += x * ndv->grp_res_prop * g->res_extra;
 				}
 
 			}
 
 			/* ---- at last!  compute the PR value, or dflt to 100  */
-			ndv->pr =
-					GT(ndv->res_avail, 0.) ?
-							ndv->res_required / ndv->res_avail : 100.;
+			ndv->pr = GT(ndv->res_avail, 0.) ? ndv->res_required / ndv->res_avail : 100.;
+			//printf("ndv->pr  = %f\n", ndv->pr);
+
 		}
 
 		Mem_Free(indivs);
