@@ -173,11 +173,6 @@ void rgroup_PartResources(void)
 	if (noplants)
 		return;
 
-	/*these functions are not used if using SOILWAT,
-	 extra resource partitioning does not occur when running SOILWAT*/
-	_res_part_extra(do_base, xtra_base, size_base);
-	_res_part_extra(do_extra, xtra_obase, size_obase);
-
 	/* reset annuals' "TRUE" relative size here */
     //KAP: formely, this call established annual species. We have moved annual establishment to the Rgroup_Establish function,
     //where all other resource groups establish (e.g. perennials). This function is no longer required.
