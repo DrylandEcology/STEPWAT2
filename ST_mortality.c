@@ -189,34 +189,42 @@ void mort_EndOfYear( void)
 {
 /*======================================================*/
 /* PURPOSE */
-/* Implements killing of plants through fire or another event
+/* Implements killing of plants through wildfire, prescribed fire, or another event
  * that would result in mortality in single year (killyr) or 
  * extirpation (extirp) where plants are killed and do not return. */
 
-	//printf("inside mort_EndOfYear() \n");
-	GrpIndex rg;
-	GroupType *g;
-        RealF fire_possibility,Wildfire_controller;
-        RealF Bio_cheatgrass = Species[g->cheatgrass_index]->relsize * Species[g->cheatgrass_index]->mature_biomass; // calculate biomass of cheatgrass
-        Wildfire_controller = RandUni(); /* Set a random number outside of the loop to make sure the kill probability for each functional group is same */
+    //printf("inside mort_EndOfYear() \n");
+    GrpIndex rg;
+    GroupType *g;
+    RealF fire_possibility, Wildfire_controller, Bio_cheatgrass;
+        
+        /* calculate biomass of cheatgrass*/
+        Bio_cheatgrass = Species[g->cheatgrass_index]->relsize * Species[g->cheatgrass_index]->mature_biomass; 
+        
+        /* Set a random number outside of the loop to make sure the kill probability for each functional group is the same */
+        Wildfire_controller = RandUni(); 
         // printf("[Rui] x_cheatgrass: %s\n",Species[g->cheatgrass_index]->name);
         //printf("[Rui] x_cheatgrass: %f\n",Bio_cheatgrass);
+        
+        /* If cheatgrass biomass is less than the biomass required for wildfire ignition, wildfire probability is very low*/
         if (Bio_cheatgrass < g->ignition)
                     {
                        fire_possibility = 1.0 / Globals.runModelYears;  
                     } 
-        /* don't ignite wild fire based on cheatgrass until the cheatgrass could reach the ignition value */
+        /* Otherwise a wildfire probability is calculated, which increases with cheatgrass biomass*/
         if (Bio_cheatgrass >= g->ignition)
                     {
                         fire_possibility = g->cheatgrass_coefficient + g->wild_fire_slope * Bio_cheatgrass;
                     }
-        /* if ignition =0, no wild fire happened */
+        
+        /* If ignition =0, no wildfire occurs */
         if (g->ignition == 0)
                     {
                        fire_possibility = 0; 
                      } 
-        /*  if the input prescribed fire value < 1; wild fire and prescribed fire happen at the same time, 
-        * while if the input prescribed fire value >1, only prescribed fire happens */
+        
+        /* If the input killfreq < 1; both wildfire and prescribed fire occur, 
+        * while if killfreq >1, only prescribed fire happens */
         if GT (g->killfreq, fire_possibility)
                     { 
                          fire_possibility = g->killfreq;
@@ -230,7 +238,8 @@ void mort_EndOfYear( void)
 			continue;
 		}
 		g = RGroup[rg];
-                /* check wild fire first*/
+                
+                /* check wildfire first*/
                 if ((Globals.currYear >= g->killfreq_startyr) && GT(fire_possibility, 0.))
                     {
 			if (LT(fire_possibility, 1.0))
