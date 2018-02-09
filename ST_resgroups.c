@@ -573,7 +573,7 @@ void rgroup_Grow(void)
 				{
 					/* normal growth: modifier times optimal growth rate (EQN 1)in Coffin and Lauenroth 1990 */
 					rate1 = gmod * s->intrin_rate * (1.0 - ndv->relsize);
-					growth1 = rate1 * (1.0 - ndv->relsize);
+					growth1 = rate1 * ndv->relsize;
 				}
 				ndv->relsize += growth1;
 				ndv->growthrate = rate1;
