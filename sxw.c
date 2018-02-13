@@ -803,18 +803,10 @@ static void _make_transp_arrays(void) {
 
 static void _make_swa_array(void){
   char *fstr = "_make_swa_array()";
-	int size = NVEGTYPES * NVEGTYPES * MAX_DAYS * SXW.NSoLyrs;
   int size_sum = NVEGTYPES * MAX_DAYS * SXW.NSoLyrs;
 
-  SXW.SWA_master = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr); // 4D
-  SXW.dSWAbulk = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr); // 4D
-  SXW.dSWA_repartitioned = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr); // 4D
   SXW.sum_dSWA_repartitioned = (RealF *) Mem_Calloc(size_sum, sizeof(RealF), fstr);
 
-  //Mem_Set(SXW.SWA_master, 0, SXW.NPds * 4 * SXW.NSoLyrs * sizeof(RealF));
-  memset(SXW.SWA_master, 0, sizeof(SXW.SWA_master));
-  Mem_Set(SXW.dSWAbulk, 0, size * sizeof(RealF));
-  Mem_Set(SXW.dSWA_repartitioned, 0, size * sizeof(RealF));
   Mem_Set(SXW.sum_dSWA_repartitioned, 0, size_sum * sizeof(RealF));
 }
 
@@ -1355,10 +1347,6 @@ void free_all_sxw_memory( void ) {
   Mem_Free(SXW.SWA_forb_avg);
 
   Mem_Free(SXW.sum_dSWA_repartitioned);
-
-  Mem_Free(SXW.SWA_master);
-  Mem_Free(SXW.dSWAbulk);
-  Mem_Free(SXW.dSWA_repartitioned);
 
   Mem_Free(SXW.swc);
   Mem_Free(SXW_AVG.swc_avg);

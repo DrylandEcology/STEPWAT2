@@ -66,8 +66,8 @@ struct stepwat_st {
   RealD  surfaceTemp;   /* soilwat's surfaceTemp */
 
   // PPT variables
-  int    yearInterval; // keep track of years
-  int    curMonth;
+  int    yearInterval, // keep track of years
+         curMonth;
 
   RealF PPT_sum,
         PPT_rain,
@@ -79,10 +79,6 @@ struct stepwat_st {
         *SWA_shrub_avg,
         *SWA_tree_avg,
         *SWA_forb_avg;
-
-  RealF *SWA_master, // 4D array to store SWA for all veg_types
-        *dSWAbulk, // 4D array to store actual available SWA
-        *dSWA_repartitioned; // 4D array to store repartioned SWA values
 
   RealF *sum_dSWA_repartitioned;
 
