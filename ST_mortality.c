@@ -199,7 +199,7 @@ void mort_EndOfYear( void)
     RealF fire_possibility, Wildfire_controller, Bio_cheatgrass;
         
         /* calculate biomass of cheatgrass*/
-        Bio_cheatgrass = Species[g->cheatgrass_index]->relsize * Species[g->cheatgrass_index]->mature_biomass; 
+        Bio_cheatgrass = Species_GetBiomass (g->cheatgrass_index); 
         
         /* Set a random number outside of the loop to make sure the kill probability for each functional group is the same */
         Wildfire_controller = RandUni(); 
