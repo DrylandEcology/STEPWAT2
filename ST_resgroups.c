@@ -192,9 +192,8 @@ static RealF _add_annuals(const GrpIndex rg, const SppIndex sp, const RealF last
     ( (sizeof(x) == sizeof(float)) \
   ? ((x)>-xF_DELTA && (x)<xF_DELTA) \
   : ((x)>-xD_DELTA && (x)<xD_DELTA) )
-    IntU i, num_est;
-    RealF x,
-    new_est, betaran;
+    IntU i, num_est, viable_seeds;
+    RealF new_est, betaran;
     float alpha, beta, var;
     GroupType *g;
     SpeciesType *s;
@@ -213,7 +212,7 @@ static RealF _add_annuals(const GrpIndex rg, const SppIndex sp, const RealF last
 
    // x = 0.;
    // if (RandUni() <= s->seedling_estab_prob) {
-        x = (g->regen_ok) ? _get_annual_maxestab(sp) : 0.;
+        viable_seeds = (g->regen_ok) ? _get_annual_maxestab(sp) : 0;
         
    // printf("g->NAME: %s  , x = %.5f %\n", g->name, x);
     //}
@@ -238,7 +237,7 @@ static RealF _add_annuals(const GrpIndex rg, const SppIndex sp, const RealF last
            alpha = (pow (s->seedling_estab_prob, 2) - pow (s->seedling_estab_prob, 3) - s->seedling_estab_prob * s->var) / s->var;
            beta = (s->seedling_estab_prob - pow (s->seedling_estab_prob, 3) - s->var + s->var * s->seedling_estab_prob)/ s->var;
            var = RandBeta(alpha, beta);
-            new_est = x * var;
+           new_est = viable_seeds * var;
              /*Option 2 done*/
       //  }
              num_est = (IntU) new_est; 
