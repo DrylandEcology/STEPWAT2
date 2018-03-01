@@ -194,7 +194,7 @@ static RealF _add_annuals(const GrpIndex rg, const SppIndex sp, const RealF last
   : ((x)>-xD_DELTA && (x)<xD_DELTA) )
     IntU i, num_est;
     RealF x,
-    newsize, betaran;
+    new_est, betaran;
     float alpha, beta, var;
     GroupType *g;
     SpeciesType *s;
@@ -204,7 +204,7 @@ static RealF _add_annuals(const GrpIndex rg, const SppIndex sp, const RealF last
     assert(g->max_age == 1);
 
     s = Species[sp];
-    newsize = 0.0;
+    new_est = 0.0;
     forced = FALSE;
 
     /* force addition of new propagules */
@@ -238,16 +238,15 @@ static RealF _add_annuals(const GrpIndex rg, const SppIndex sp, const RealF last
            alpha = (pow (s->seedling_estab_prob, 2) - pow (s->seedling_estab_prob, 3) - s->seedling_estab_prob * s->var) / s->var;
            beta = (s->seedling_estab_prob - pow (s->seedling_estab_prob, 3) - s->var + s->var * s->seedling_estab_prob)/ s->var;
            var = RandBeta(alpha, beta);
-            newsize = x * var;
+            new_est = x * var;
              /*Option 2 done*/
       //  }
-             num_est = (IntU) newsize; 
-             if (num_est > s->max_seed_estab) {num_est = s->max_seed_estab;} 
-             s->est_count = num_est;
+             s->est_count = (IntU) new_est; 
+             if (s->est_count > s->max_seed_estab) {s->est_count = s->max_seed_estab;} 
      //  }
    //   else  if (LE(x, 0.)) {num_est = 0;}
            //    printf("num_est   =%d \n", num_est);
-    return num_est;
+    return s->est_count;
 }
 
 static RealF _get_annual_maxestab(SppIndex sp) {
