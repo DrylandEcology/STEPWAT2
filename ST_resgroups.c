@@ -209,42 +209,26 @@ static RealF _add_annuals(const GrpIndex rg, const SppIndex sp, const RealF last
     /* force addition of new propagules */
     _add_annual_seedprod(sp, lastyear_relsize);
     forced = TRUE;
+     /*Get viable seeds from seed bank*/
+    viable_seeds = (g->regen_ok) ? _get_annual_maxestab(sp) : 0;
 
-   // x = 0.;
-   // if (RandUni() <= s->seedling_estab_prob) {
-        viable_seeds = (g->regen_ok) ? _get_annual_maxestab(sp) : 0;
-        
-   // printf("g->NAME: %s  , x = %.5f %\n", g->name, x);
-    //}
-
-  //  if (GT(x, 0.)) 
-   //    {
-        /*Option1:newsize = x * s->seedling_estab_prob * betaran */
-              // betaran = genbet (2.0, 2.0);
-       // if (ZERO(lastyear_relsize)) {
-        //    newsize = RandUniRange(1, x);
-        //    printf("newsize   =%0.5f \n", newsize);
-       // }
-       // else {
-         //  printf("lastyear_relsize=%0.5f \n", lastyear_relsize);
-           
-           //???????????????????????????????//////////////////
-          //  newsize = x * s->seedling_estab_prob * betaran;
-            /*Option 1 done*/
-           
-                       //???????????????????????????????//////////////////
-            /*Option 2*/
-           alpha = (pow (s->seedling_estab_prob, 2) - pow (s->seedling_estab_prob, 3) - s->seedling_estab_prob * s->var) / s->var;
-           beta = (s->seedling_estab_prob - pow (s->seedling_estab_prob, 3) - s->var + s->var * s->seedling_estab_prob)/ s->var;
-           var = RandBeta(alpha, beta);
-           new_est = viable_seeds * var;
-             /*Option 2 done*/
-      //  }
-             num_est = (IntU) new_est; 
-             if (num_est > s->max_seed_estab) {num_est = s->max_seed_estab;} 
-     //  }
-   //   else  if (LE(x, 0.)) {num_est = 0;}
-           //    printf("num_est   =%d \n", num_est);
+    /*Create a beta random number draw, where mean =s->seedling_estab_prob
+     *  from species.in; variance = s->var from species.in. 
+     * Default  values were given in species.in */
+    /*Calculate alpha and beta based on the mean and variance values by species.in*/
+     alpha = (pow (s->seedling_estab_prob, 2) - pow (s->seedling_estab_prob, 3)
+             - s->seedling_estab_prob * s->var) / s->var;
+     beta = (s->seedling_estab_prob - pow (s->seedling_estab_prob, 3) 
+             - s->var + s->var * s->seedling_estab_prob)/ s->var;
+     /*Create beta random number*/
+     var = RandBeta(alpha, beta);
+     new_est = viable_seeds * var;
+     num_est = (IntU) new_est; 
+     /*if the beta random number * viable seeds is larger than max_seed_estab
+      *  (Eind in species.in), max_seed_estab value would be used 
+      * for this year's establishment */
+    if (num_est > s->max_seed_estab) {num_est = s->max_seed_estab;} 
+    //    printf("num_est   =%d \n", num_est);
     return num_est;
 }
 
@@ -260,7 +244,8 @@ static RealF _get_annual_maxestab(SppIndex sp) {
         sum += s->seedprod[i - 1] / pow(i, s->exp_decay);
     /*Remove seedlings added from the seed bank*/
         s->seedbank = (IntU) sum - s->estabs;
-   /* multiple those proportions by the total number of seeds that germinated as seedlings and substract those seeds from the relevant seedprod array.*/
+   /* multiple those proportions by the total number of seeds that germinated as
+    *  seedlings and substract those seeds from the relevant seedprod array.*/
         s->seedprod[i - 1] =  s->seedprod[i - 1] - s->estabs *  s->seedprod[i - 1] / sum;
      //   printf("s->NAME: %s  , x = %d %\n", Species[i]->name, Species[i]->seedbank);
 
