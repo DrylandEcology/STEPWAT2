@@ -64,6 +64,7 @@
 #include "sw_src/SW_Control.h"
 #include "sw_src/SW_Model.h"
 #include "sw_src/SW_VegProd.h"
+#include "sw_src/SW_Carbon.h"
 #include "sw_src/SW_Site.h"
 #include "sw_src/SW_SoilWater.h"
 #include "sw_src/SW_Files.h"
@@ -209,10 +210,11 @@ void SXW_Init( Bool init_SW, char *f_roots ) {
 	  _read_debugfile();
   _write_sw_outin();
 
-  
+
   if(init_SW) {
 	  temp = strdup(SXW.f_watin);
 	  SW_CTL_init_model(temp);
+	  SW_CTL_obtain_inputs();
 	  free(temp);
   }
 
@@ -223,7 +225,7 @@ void SXW_Init( Bool init_SW, char *f_roots ) {
   	SXW.NTrLyrs = SW_Site.n_transp_lyrs_grass;
   if(SW_Site.n_transp_lyrs_forb > SXW.NTrLyrs)
 	  SXW.NTrLyrs = SW_Site.n_transp_lyrs_forb;
-  	
+
   SXW.NSoLyrs = SW_Site.n_layers;
 
   _make_arrays();
@@ -261,7 +263,8 @@ void SXW_Reset(void) {
 
 	temp = strdup(SXW.f_watin);
 	SW_CTL_init_model(temp);
-	free(temp);
+	SW_CTL_obtain_inputs();
+  free(temp);
 }
 
 void SXW_InitPlot (void) {
@@ -334,7 +337,7 @@ void SXW_SW_Setup_Echo(void) {
 	FILE *f = OpenFile(strcat(name, ".input.out"), "a");
 	int i;
 	fprintf(f, "\n================== %d =============================\n", SW_Model.year);
-	fprintf(f,"Fractions Grass:%f Shrub:%f Tree:%f Forb:%f BareGround:%f\n", SW_VegProd.fractionGrass, SW_VegProd.fractionShrub, SW_VegProd.fractionTree, SW_VegProd.fractionForb, SW_VegProd.fractionBareGround);
+	fprintf(f,"Fractions Grass:%f Shrub:%f Tree:%f Forb:%f BareGround:%f\n", SW_VegProd.grass.cov.fCover, SW_VegProd.shrub.cov.fCover, SW_VegProd.tree.cov.fCover, SW_VegProd.forb.cov.fCover, SW_VegProd.bare_cov.fCover);
 	fprintf(f,"Monthly Production Values\n");
 	fprintf(f,"Grass\n");
 	fprintf(f,"Month\tLitter\tBiomass\tPLive\tLAI_conv\n");
@@ -453,7 +456,7 @@ static void  _read_files( void ) {
     if (!GetALine(fin, inbuf)) break;
     *_sxwfiles[i] = Str_Dup(Str_TrimLeftQ(inbuf));
   }
- 
+
   if (i < nfiles) {
     LogError(logfp, LOGFATAL, "STEPWAT: %s: Insufficient files found",
             MyFileName);
@@ -509,7 +512,7 @@ static void _read_phen(void) {
 
   GrpIndex g;
   IntUS cnt=0;
-  Months m;
+  TimeInt m;
   char *p;
   FILE *fp;
 
@@ -577,7 +580,7 @@ static void _read_bvt(void) {
 static void _read_prod(void) {
 	int x;
 	FILE *fp;
-	Months mon = Jan;
+	TimeInt mon = Jan;
 
 	GrpIndex g;
 	IntUS cnt = 0;
@@ -1186,7 +1189,7 @@ void load_sxw_memory( RealD* grid_roots_max, RealD* grid_rootsXphen, RealD* grid
 	_phen = Mem_Calloc(SXW.NGrps * MAX_MONTHS, sizeof(RealD), "load_sxw_memory()");
 	_prod_bmass = Mem_Calloc(SXW.NGrps * MAX_MONTHS, sizeof(RealD), "load_sxw_memory()");
 	_prod_pctlive = Mem_Calloc(SXW.NGrps * MAX_MONTHS, sizeof(RealD), "load_sxw_memory()");
-	
+
 	memcpy(_roots_max, grid_roots_max, SXW.NGrps * SXW.NTrLyrs * sizeof(RealD));
 	memcpy(_rootsXphen, grid_rootsXphen, SXW.NGrps * SXW.NPds * SXW.NTrLyrs * sizeof(RealD));
 	memcpy(_roots_active, grid_roots_active, SXW.NGrps * SXW.NPds * SXW.NTrLyrs * sizeof(RealD));
