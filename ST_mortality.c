@@ -256,9 +256,9 @@ void mort_EndOfYear( void)
 		{
 			RGroup_Kill(rg);
 		}
-
+                
 	}
-                        
+ 
 }
 
 void grazing_EndOfYear( void){
