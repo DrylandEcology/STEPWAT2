@@ -832,7 +832,8 @@ static void _make_soil_arrays(void){
   size = (SXW.NPds * Globals.runModelYears * 2 * NVEGTYPES) * Globals.runModelYears;
   layer_size = (SXW.NPds * SXW.NSoLyrs * Globals.runModelYears * 2 * NVEGTYPES) * Globals.runModelYears;
 
-  avg_size = (SXW.NPds * SXW.NSoLyrs * Globals.runModelYears * 2) * Globals.runModelYears;
+  avg_size = (4 * SXW.NSoLyrs * Globals.runModelYears * SXW.NPds * 2) * Globals.runModelYears;
+
   SXW.transpTotal_avg = (RealD *) Mem_Calloc(avg_size, sizeof(RealD), fstr);
 	SXW.transpTrees_avg = (RealD *) Mem_Calloc(avg_size, sizeof(RealD), fstr);
 	SXW.transpShrubs_avg = (RealD *) Mem_Calloc(avg_size, sizeof(RealD), fstr);
@@ -846,7 +847,6 @@ static void _make_soil_arrays(void){
 	Mem_Set(SXW.transpForbs_avg, 0,  avg_size * sizeof(RealD));
 	Mem_Set(SXW.transpGrasses_avg, 0,  avg_size * sizeof(RealD));
 
-  //avg_size = (SXW.NPds * SXW.NSoLyrs * Globals.runModelYears * 2) * Globals.runModelYears * Globals.runModelIterations;
   SXW.SWA_grass_avg = (RealF *) Mem_Calloc(avg_size, sizeof(RealF *), fstr);
   SXW.SWA_shrub_avg = (RealF *) Mem_Calloc(avg_size, sizeof(RealF *), fstr);
   SXW.SWA_tree_avg = (RealF *) Mem_Calloc(avg_size, sizeof(RealF *), fstr);

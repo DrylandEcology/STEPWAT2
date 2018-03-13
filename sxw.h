@@ -188,7 +188,7 @@ typedef struct soilwat_average SXW_avg;
 
 // for use with avg values
 // year, layer, timeperiod, avg/std
-#define Iylp(y,l,p,x) (((y)*Globals.runModelYears * SXW.NTrLyrs * SXW.NPds * 2) + ((l)*SXW.NTrLyrs * SXW.NPds * 2) + ((p)*SXW.NPds * 2) + ((x)*2))
+#define Iylp(y,l,p,pd,x) (((y)*Globals.runModelYears * SXW.NTrLyrs * 4 * SXW.NPds * 2) + ((l)*SXW.NTrLyrs * 4 * SXW.NPds * 2) + ((p) * 4 * SXW.NPds * 2) + ((pd)*4*2) + ((x) * 2))
 
 // for soilwat average and standard deviation
 // year, timeperiod, choice (avg or std), timeperiod (dy, wk, mo, yr)
