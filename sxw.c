@@ -818,7 +818,6 @@ static void _make_swc_array(void) {
  */
 	char *fstr = "_make_swc_array()";
 	int size = SXW.NPds * SXW.NSoLyrs * MAX_DAYS;
-  int avg_size;
 
 	SXW.swc = (RealF *) Mem_Calloc(size, sizeof(RealF *), fstr);
 }

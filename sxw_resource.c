@@ -124,13 +124,13 @@ void _sxw_update_resource(void) {
 
   RealF sizes[MAX_RGROUPS] = {0.};
   GrpIndex g;
-  SppIndex sp;
-  int i;
   int currentYear;
   if(SW_Model.year == 0) currentYear = 0;
   else currentYear = SW_Model.year - SW_Model.startyr;
 
   #ifdef SXW_BYMAXSIZE
+    int i;
+    SppIndex sp;
     ForEachGroup(g) {
       sizes[g] = 0.;
       if (RGroup[g]->regen_ok) {

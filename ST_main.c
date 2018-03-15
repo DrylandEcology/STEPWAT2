@@ -142,10 +142,8 @@ Bool UseProgressBar;
 /******************** Begin Model Code *********************/
 /***********************************************************/
 int main(int argc, char **argv) {
-  IntS year, iter, incr, g, s;
-	IndivType *i;
+  IntS year, iter, incr;
 	Bool killedany;
-  int k;
 
 	logged = FALSE;
 	atexit(check_log);
