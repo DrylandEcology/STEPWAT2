@@ -132,6 +132,9 @@ struct soilwat_average{
         *min_temp_avg,
         *avg_temp_avg,
         *aet_avg,
+        *ppt_avg,
+        *val_rain_avg,
+        *val_snow_avg,
         *val_snowmelt_avg,
         *val_snowloss_avg;
 

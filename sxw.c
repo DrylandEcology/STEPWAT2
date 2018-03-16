@@ -866,10 +866,18 @@ static void _make_soil_arrays(void){
   SXW_AVG.surfaceTemp_avg = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
 
   SXW_AVG.aet_avg = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
-  SXW_AVG.val_snowloss_avg = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
-  SXW_AVG.val_snowmelt_avg = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
 
   Mem_Set(SXW_AVG.aet_avg, 0, size * sizeof(RealF));
+
+  SXW_AVG.ppt_avg = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr);
+  SXW_AVG.val_rain_avg = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr);
+  SXW_AVG.val_snow_avg = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr);
+  SXW_AVG.val_snowloss_avg = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr);
+  SXW_AVG.val_snowmelt_avg = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr);
+
+  Mem_Set(SXW_AVG.ppt_avg, 0, size * sizeof(RealF));
+  Mem_Set(SXW_AVG.val_rain_avg, 0, size * sizeof(RealF));
+  Mem_Set(SXW_AVG.val_snow_avg, 0, size * sizeof(RealF));
   Mem_Set(SXW_AVG.val_snowloss_avg, 0, size * sizeof(RealF));
   Mem_Set(SXW_AVG.val_snowmelt_avg, 0, size * sizeof(RealF));
 
@@ -1356,6 +1364,10 @@ void free_all_sxw_memory( void ) {
   Mem_Free(SXW_AVG.surfaceTemp_avg);
 
   Mem_Free(SXW_AVG.aet_avg);
+
+  Mem_Free(SXW_AVG.ppt_avg);
+  Mem_Free(SXW_AVG.val_rain_avg);
+  Mem_Free(SXW_AVG.val_snow_avg);
   Mem_Free(SXW_AVG.val_snowmelt_avg);
   Mem_Free(SXW_AVG.val_snowloss_avg);
 
