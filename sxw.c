@@ -86,8 +86,6 @@ extern SW_MARKOV SW_Markov;
 extern Bool isPartialSoilwatOutput;
 extern Bool storeAllIterations;
 
-
-
 /*************** Module/Local Variable Declarations ***************/
 /***********************************************************/
 /* these are initialized and maybe populated here but are used
@@ -322,8 +320,7 @@ void SXW_Run_SOILWAT (void) {
 	RealF sizes[MAX_RGROUPS];
 	/* compute production values for transp based on current plant sizes */
 	ForEachGroup(g)
-		sizes[g] = RGroup[g]->relsize;
-	_sxw_update_root_tables(sizes);// Issue #5
+	sizes[g] = RGroup_GetBiomass(g);
 	_sxw_sw_setup(sizes);
 #endif
 
