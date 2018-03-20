@@ -567,23 +567,14 @@ static void _extra_growth(GrpIndex rg)
 	 for "optimal" growth, ie, use of eqn 5, the extra
 	 resources are converted to superfluous growth that
 	 only counts for the current year and is removed at
-	 the beginning of the next year.
-
-	 */
+	 the beginning of the next year. */
 	/* HISTORY */
 	/* Chris Bennett @ LTER-CSU 11/8/2000            */
 	/* 3/14/01 - made this a local function called from
 	 Grow() and put killextragrowth() in Mort_*
 	 3/27/01 - extra growth now occurs in individuals
-	 rather than at the species level.  Also accounts
-	 for the scaling by min_res_req.
+	 rather than at the species level. */
 
-	 * 7-Nov-03 (cwb) Annuals don't get extra growth.  Everything
-	 *     is accounted for by PR in PartResources().
-
-	 */
-
-	/*------------------------------------------------------*/
 	Int j;
 	RealF extra, indivpergram;
 	GroupType *g;
@@ -591,8 +582,6 @@ static void _extra_growth(GrpIndex rg)
 	IndivType *ndv;
 	SppIndex sp;
 
-	//if ( RGroup[rg]->max_age == 1) return;
-	// removed to allow extra growth in annuals (TEM 10-27-2015))
 	if (ZRO(RGroup[rg]->xgrow))
 		return;
 	if (!RGroup[rg]->use_extra_res)
@@ -607,12 +596,13 @@ static void _extra_growth(GrpIndex rg)
 		indivpergram = 1.0 / s->mature_biomass;
 		ForEachIndiv(ndv, s)
 		{
-			extra = ndv->res_extra * g->min_res_req * Env.ppt * g->xgrow;
+			extra = ndv->res_extra * g->xgrow;
 			s->extragrowth += extra * indivpergram;
 		}
+		//printf("s->extragrowth  = %f\n", s->extragrowth);
+		
 		Species_Update_Newsize(s->sp_num, s->extragrowth);
 	}
-
 }
 
 /***********************************************************/
