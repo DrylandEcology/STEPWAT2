@@ -70,19 +70,10 @@ and further partitioning to individuals in the group _ResPartIndiv().
 See COMMENT 1. at the end of this file for the algorithm.*/
 
 	GrpIndex rg;
-	SppIndex sp;
-	RealF resource, /* amt of "resource" == 1 when ppt is avg */
-	xtra_base = 0., /* pooled extra resource up to 1.0 */
-	xtra_obase = 0., /* pooled resource > 1.0 */
-	size_base[MAX_RGROUPS] = {0}, /* total res. contrib to base, all groups */
-	size_obase[MAX_RGROUPS] = {0}; /* total res. contrib. if xtra_obase */
-
 	Bool noplants = TRUE;
-	const Bool do_base = FALSE, /* monikers for _res_part_extra() */
-	do_extra = TRUE, add_seeds = TRUE, /* monikers for pass 1 & 2 _add_annuals() */
+	const Bool add_seeds = TRUE, /* monikers for pass 1 & 2 _add_annuals() */
 	no_seeds = FALSE;
 	GroupType *g; /* shorthand for RGroup[rg] */
-	int i;
 
 	/* ----- distribute basic (minimum) resources */
 	ForEachGroup(rg)
@@ -92,33 +83,9 @@ See COMMENT 1. at the end of this file for the algorithm.*/
 		if (g->max_age == 1)
 			g->relsize = _add_annuals(rg, 1.0, no_seeds);
 
-	/*this piece of the code is only used when SOILWAT is NOT running*/
-	#ifdef STEPWAT
-		if (!UseSoilwat)
-		{ /* use by-mm method */
-	#endif
-		resource = _ppt2resource(Env.ppt, g);
-		g->res_required = g->relsize / g->max_density;
-		g->res_avail = fmin(1., fmin(g->res_required, resource));
-		xtra_base += fmax(0., fmin(1., resource) - g->res_avail)
-				* g->min_res_req;
-		xtra_obase += fmax( 0., resource - 1.) * g->min_res_req;
-
-		size_base[rg] = g->relsize * g->min_res_req;
-		size_obase[rg] = (g->use_extra_res) ? size_base[rg] : 0.;
-
-		/*these functions are not used if using SOILWAT,
-		 extra resource partitioning does not occur when running SOILWAT*/
-			_res_part_extra(do_base, xtra_base, size_base);
-			_res_part_extra(do_extra, xtra_obase, size_obase);
-
-	/*this is how res_required and res_avail are set if SOILWAT is running*/
-	#ifdef STEPWAT
-	}
-		else
-		{
 		g->res_required = RGroup_GetBiomass(rg);
-		g->res_avail = SXW_GetTranspiration(rg); //1.0;
+		g->res_avail = SXW_GetTranspiration(rg); 
+		
 		//PR limit can be really high see mort no_resource I limit to the groups estab indiv because that is what we can kill.
 		if(!ZRO(g->res_avail) && g->res_required / g->res_avail > g->estabs)
 		{
@@ -134,9 +101,6 @@ See COMMENT 1. at the end of this file for the algorithm.*/
 			LogError(logfp, LOGWARN, "RGroup %s : res_avail is Zero and res_required > 0", g->name);
 		}
         
-        //KAP:Previously, a seperate set of code was used to determine resource availability for annual species
-        //Now, resource paritioning for annuals occurs in the same way as for perennials, by getting the RGroup Biomass
-        //and the resource_cur from SXW_GetTranspiration
 		//Annuals seem to have a artificial limit of 20. We do Annuals here differently
 		if(g->max_age == 1)
 		{
@@ -151,8 +115,6 @@ See COMMENT 1. at the end of this file for the algorithm.*/
 				g->res_avail = 1;
 			}
 		}
-	}
-        #endif
 
 	  /* If relsize>0, reset noplants from TRUE to FALSE and if noplants=TRUE, exit from the loop */
 		if (GT(g->relsize, 0.))
@@ -163,13 +125,14 @@ See COMMENT 1. at the end of this file for the algorithm.*/
 	if (noplants)
 		return;
 
-	//calculate PR at the rgroup level: resources required/resources available  
+	//calculate PR at the group level: resources required/resources available  
 	ForEachGroup(rg)
 	{
 		g = RGroup[rg];
 		g->pr = ZRO(g->res_avail) ? 0. : g->res_required / g->res_avail;
 	}
-
+ 	
+ 	//partition resources to individuals and determine 'extra' resources
 	rgroup_ResPartIndiv();
 
 }
@@ -322,55 +285,51 @@ static void _res_part_extra(Bool isextra, RealF extra, RealF size[])
 	/* Determines if some groups have unused resources and
 	 redistributes them to other groups that can use them
 	 (if any).
-
 	 See COMMENT 2 at the end of this file for the algorithm.
-
 	 /* SCOPE
 	 Local routine called from rgroup_PartResources.
-
 	 /* HISTORY
 	 /* Chris Bennett @ LTER-CSU 12/21/2000
 	 Removed from rgroup_PartResources() to simplify that
 	 routine.
-
 	 15-May-03 (cwb) Adding code to accomodate resource-by-mm
 	 when used with Soilwat, esp, see inclusion of 'space'.
-
-	 16-July-16 (kap) These functions are not called when using SOILWAT,
-	 despite the fact that their is separate code below for
-	 when SOILWAT is running.
 	 */
-
-	/*------------------------------------------------------*/
 
 	GrpIndex rg;
 	GroupType *g; /* shorthand for RGroup[rg] */
 	RealF req_prop, /* group's prop'l contrib to the total requirements */
-	sum_size = 0., space; /* placeholder for 1 if by-mm or min_res_req otherwise */
+	sum_size = 0.; /* summed sizes of all functional groups */
 
 	ForEachGroup(rg)
+	{
+		g = RGroup[rg];
+            if (ZRO(g->relsize))
+                        continue;
+                        
 		sum_size += size[rg];
-
+	}
+	
 	ForEachGroup(rg)
 	{
 		g = RGroup[rg];
 		if (ZRO(g->relsize))
 			continue;
+		
 		if (isextra && !g->use_extra_res)
 			continue;
-		space = (UseSoilwat) ? 1.0 : g->min_res_req;
-
-		// checking so dont divide by 0
+			
+		// checking to make sure not dividing by 0
 		if(sum_size == 0.)
 			req_prop = 0.;
 		else
 			req_prop = size[rg] / sum_size;
-		//printf("sum_size: %f\n", sum_size);
 
 		if (isextra && g->use_extra_res && GT(g->xgrow, 0))
-			g->res_extra = req_prop * extra / space;
+			g->res_extra = req_prop * extra;
+		
 		else
-			g->res_avail += req_prop * extra / space;
+			g->res_extra = 0.;
 
 	}
 
@@ -397,9 +356,14 @@ void rgroup_ResPartIndiv(void)
 	*ndv; /* shorthand for the current indiv */
 	IntS numindvs, n;
 	RealF x, /* temporary multiplier */
-	base_rem; /* remainder of resource after allocating to an indiv */
+	base_rem = 0., /* remainder of resource after allocating to an indiv */
+	extra = 0., /* extra resources at the group level, sum of base_rem values */
+	xtra_obase = 0., /* summed extra resources across all groups  */
+    size_base[MAX_RGROUPS] = {0}, /* total res. contrib to base, all groups */
+    size_obase[MAX_RGROUPS] = {0}; /* total res. contrib. if xtra_obase */
+	const Bool do_extra = TRUE;  /* monikers for extra resource partitioning */
 
-	/* -- apportion each group's resources to individuals */
+	/* -- apportion each group's normal resources to individuals */
 	ForEachGroup(rg)
 	{
 		g = RGroup[rg];
@@ -410,6 +374,7 @@ void rgroup_ResPartIndiv(void)
 		indivs = RGroup_GetIndivs(rg, SORT_D, &numindvs);
 
 		base_rem = g->res_avail;
+        //printf("g->res_avail = %f\n, Group = %s \n", RGroup[rg]->name, g->res_avail);
 
 		ForEachEstSpp(sp, rg, j)
 		{
@@ -428,27 +393,51 @@ void rgroup_ResPartIndiv(void)
 				/* Remaining extra resource for each individual (if any)*/
 				base_rem = fmax(base_rem - ndv->res_avail, 0.);
 				//printf("base_rem pr>1 = %f\n", base_rem);
-				
 			}
 		}
+		
+		//sum "extra" resource for all species in each functional group
+		extra += base_rem;
+		//printf("extra = %f\n", extra);
+		
+		//sum "extra" resource for all functional groups
+		xtra_obase +=extra; 
+		//printf("xtra_obase = %f\n", xtra_obase);
+		
+		size_base[rg] = RGroup_GetBiomass(rg);
+		size_obase[rg] = (g->use_extra_res) ? size_base[rg] : 0.;
+                
+        Mem_Free(indivs);
 
+	} /* end ForEachGroup() */
+	
+	    //assign extra resources to functional groups
+        _res_part_extra(do_extra, xtra_obase, size_obase);
+	
+	//now loop back through all individuals in each group, assign extra resource
+    //and calculate PR at the individual level
+    ForEachGroup(rg)
+	{
+		g = RGroup[rg];
+		if (!g->est_count)
+			continue;
+                                           
+      	/* --- allocate the temporary group-oriented arrays */
+		indivs = RGroup_GetIndivs(rg, SORT_D, &numindvs);
+	
 		/* --- compute PR, but on the way, assign extra resource */
 		for (n = 0; n < numindvs; n++)
 		{
 			ndv = indivs[n];
 
-			if (g->use_extra_res)
+			if (g->use_extra_res && GT(g->res_extra, 0.))
 			{
-				/* polish off any remaining resource not allocated to extra */
-				ndv->res_avail += ZRO(base_rem) ? 0. : ndv->grp_res_prop * base_rem;
-				
-				/* extra resource gets assigned here if applicable */
-				if (GT(g->res_extra, 0.))
-				{
-					x = 1. - ndv->relsize;
-					ndv->res_extra = (1. - x) * ndv->grp_res_prop* g->res_extra;
-					ndv->res_avail += x * ndv->grp_res_prop * g->res_extra;
-				}
+				x = 1. - ndv->relsize;
+				//printf("ndv->res_avail before  = %f\n", ndv->res_avail);
+				ndv->res_extra = x * ndv->grp_res_prop* g->res_extra;
+				//printf("ndv->res_extra = %f\n", ndv->res_extra);
+				ndv->res_avail += ndv->res_extra;
+				//printf("ndv->res_avail after = %f\n", ndv->res_avail);
 			}
 
 			/* ---- at last!  compute the PR value, or dflt to 100  */
