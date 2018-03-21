@@ -229,6 +229,12 @@ static RealF _add_annuals(const GrpIndex rg, const SppIndex sp, const RealF last
       * for this year's establishment */
     if (num_est > s->max_seed_estab) {num_est = s->max_seed_estab;} 
     //    printf("num_est   =%d \n", num_est);
+          /*Remove seedlings added from the seed bank*/
+             s->seedbank = (IntU) viable_seeds - num_est;
+     /* multiple those proportions by the total number of seeds that germinated as
+    *  seedlings and substract those seeds from the relevant seedprod array.*/
+       for (i = 1; i <= s->viable_yrs; i++)
+        s->seedprod[i - 1] =  s->seedprod[i - 1] - num_est * s->seedprod[i - 1] / viable_seeds;
     return num_est;
 }
 
@@ -242,15 +248,8 @@ static RealF _get_annual_maxestab(SppIndex sp) {
 
     for (i = 1; i <= s->viable_yrs; i++)
         sum += s->seedprod[i - 1] / pow(i, s->exp_decay);
-    /*Remove seedlings added from the seed bank*/
-        s->seedbank = (IntU) sum - s->est_count;
-   /* multiple those proportions by the total number of seeds that germinated as
-    *  seedlings and substract those seeds from the relevant seedprod array.*/
-        for (i = 1; i <= s->viable_yrs; i++)
-        s->seedprod[i - 1] =  s->seedprod[i - 1] - s->est_count *  s->seedprod[i - 1] / sum;
-     //   printf("s->NAME: %s  , x = %d %\n", Species[i]->name, Species[i]->seedbank);
 
-    return  s->seedbank;
+    return  sum;
 }
 
 static void _add_annual_seedprod(SppIndex sp, RealF lastyear_relsize) {
@@ -262,11 +261,8 @@ static void _add_annual_seedprod(SppIndex sp, RealF lastyear_relsize) {
 
 
     //incrementing the number of viable years
-    for (i = s->viable_yrs - 1; i > 0; i--) {
-        if (i == 1 || i == 2) {
-            //printf("Species name=%s , old Array values for index i=%u, value=%hu \n", s->name, i, s->seedprod[i]);
-        }
-
+    for (i = s->viable_yrs - 1; i > 0; i--) 
+    {
         s->seedprod[i] = s->seedprod[i - 1];
     }
 
