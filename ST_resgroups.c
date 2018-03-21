@@ -234,7 +234,7 @@ static RealF _add_annuals(const GrpIndex rg, const SppIndex sp, const RealF last
      /* multiple those proportions by the total number of seeds that germinated as
     *  seedlings and substract those seeds from the relevant seedprod array.*/
        for (i = 1; i <= s->viable_yrs; i++)
-        s->seedprod[i - 1] =  s->seedprod[i - 1] - num_est * s->seedprod[i - 1] / viable_seeds;
+        s->seedprod[i - 1] =  s->seedprod[i - 1] - (IntU) num_est * s->seedprod[i - 1] / viable_seeds;
     return num_est;
 }
 
