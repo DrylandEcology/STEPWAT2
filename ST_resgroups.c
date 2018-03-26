@@ -96,8 +96,8 @@ void rgroup_PartResources(void)
 	{
 		g = RGroup[rg];
 
-		if (g->max_age == 1)
-			g->relsize = _add_annuals(rg, 1.0, no_seeds);
+		//if (g->max_age == 1)
+		//	g->relsize = _add_annuals(rg, 1.0, no_seeds);
 
 		/*this piece of the code is only used when SOILWAT is NOT running*/
 	#ifdef STEPWAT
