@@ -1,5 +1,3 @@
 TRANSP  SUM  MO  1  end  transp
 PRECIP  SUM  YR  1  end  precip
 TEMP    AVG  YR  1  end  temp
-AET     SUM  YR  1  end  aet
-SWCBULK     FIN  MO  1  end  swc_bulk
