@@ -192,8 +192,8 @@ static RealF _add_annuals(const GrpIndex rg, const SppIndex sp, const RealF last
     ( (sizeof(x) == sizeof(float)) \
   ? ((x)>-xF_DELTA && (x)<xF_DELTA) \
   : ((x)>-xD_DELTA && (x)<xD_DELTA) )
-    IntU i, num_est, viable_seeds;
-    RealF new_est, betaran;
+    IntU i, num_est;
+    RealF new_est, viable_seeds;
     float alpha, beta, var;
     GroupType *g;
     SpeciesType *s;
@@ -228,7 +228,7 @@ static RealF _add_annuals(const GrpIndex rg, const SppIndex sp, const RealF last
       *  (Eind in species.in), max_seed_estab value would be used 
       * for this year's establishment */
     if (num_est > s->max_seed_estab) {num_est = s->max_seed_estab;} 
-    //    printf("num_est   =%d \n", num_est);
+        printf("num_est   =%d \n", num_est);
           /*Remove seedlings added from the seed bank*/
              s->seedbank = (IntU) viable_seeds - num_est;
      /* multiple those proportions by the total number of seeds that germinated as
