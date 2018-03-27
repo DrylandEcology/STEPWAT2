@@ -30,6 +30,7 @@
   #include "sxw_funcs.h"
   #include "sxw.h"
   #include "sw_src/SW_Output.h"
+  #include "sw_src/rands.h"
   extern SXW_t SXW;
 #endif
 
@@ -256,7 +257,7 @@ int main(int argc, char **argv) {
         SXW_PrintDebug(1);
       }
 #endif
-
+  SW_OUT_close_files();
   free_all_sxw_memory();
   printf("\nend program\n");
 	fprintf(progfp, "\n");
