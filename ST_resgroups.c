@@ -228,14 +228,21 @@ static RealF _add_annuals(const GrpIndex rg, const SppIndex sp, const RealF last
       *  (Eind in species.in), max_seed_estab value would be used 
       * for this year's establishment */
     if (num_est > s->max_seed_estab) {num_est = s->max_seed_estab;} 
-        printf("num_est   =%d \n", num_est);
+          printf("Species name=%s , num_est   =%u \n",s->name,  num_est);
+          printf("s->seedbank =%f \n",viable_seeds );
           /*Remove seedlings added from the seed bank*/
              s->seedbank = (IntU) viable_seeds - num_est;
+          printf("NEWs->seedbank =%d \n",s->seedbank );             
      /* multiple those proportions by the total number of seeds that germinated as
     *  seedlings and substract those seeds from the relevant seedprod array.*/
-       for (i = 1; i <= s->viable_yrs; i++)
-        s->seedprod[i - 1] =  s->seedprod[i - 1] - (IntU) num_est * s->seedprod[i - 1] / viable_seeds;
-    return num_est;
+       for (i = s->viable_yrs - 1; i > 0; i--)
+       {
+        printf("Species name=%s , old calculated value s->seedprod[%hu]= %d \n", s->name, i - 1, s->seedprod[i - 1]);  
+        s->seedprod[i] =  s->seedprod[i - 1] -  num_est * s->seedprod[i - 1] / s->seedbank;
+        printf("Species name=%s , so new calculated value s->seedprod[%hu]= %d \n", s->name, i, s->seedprod[i]);
+       
+       }   
+        return num_est;
 }
 
 static RealF _get_annual_maxestab(SppIndex sp) {
@@ -265,7 +272,7 @@ static void _add_annual_seedprod(SppIndex sp, RealF lastyear_relsize) {
     {
         s->seedprod[i] = s->seedprod[i - 1];
     }
-
+    
    // printf("Species name=%s ,old Array array 0 index i=%u, value =%hu \n", s->name, i, s->seedprod[i]);
 
     //If the current year is year 1 of the simulation, then the number of seeds added is a random number draw between
@@ -278,8 +285,7 @@ static void _add_annual_seedprod(SppIndex sp, RealF lastyear_relsize) {
         s->seedprod[i] = (IntU)(s->pseed * s->mature_biomass * lastyear_relsize);
    //     printf("Species name=%s ,currYear=%hu  so new calculated value s->seedprod[%u]= %hu , s->max_seed_estab =%hu, lastyear_relsize=%.5f\n", s->name, Globals.currYear, i, s->seedprod[i], s->max_seed_estab, lastyear_relsize);
     }
-}
-
+    }
 
 static RealF _ppt2resource(RealF ppt, GroupType *g)
 {
