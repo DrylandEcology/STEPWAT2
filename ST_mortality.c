@@ -197,10 +197,17 @@ void mort_EndOfYear( void)
     GrpIndex rg;
     GroupType *g;
     RealF fire_possibility, Wildfire_controller, Bio_cheatgrass;
-        
-        /* calculate biomass of cheatgrass*/
-        Bio_cheatgrass = Species_GetBiomass (g->cheatgrass_index); 
-        
+    char *checkname = "brte"; 
+    int i = 0;
+    /* calculate biomass of cheatgrass*/
+    for( i = 0; i < 15; i++)
+    { /* if species name = checkname = brte then get the biomass of brte(cheatgrass)*/
+      if (strcmp(checkname,Species[i]->name) == 0)
+      {
+      Bio_cheatgrass = Species_GetBiomass (i);
+     // printf("[Rui] x_cheatgrass: %s\n",Species[i]->name);
+      }
+    }         
         /* Set a random number outside of the loop to make sure the kill probability for each functional group is the same */
         Wildfire_controller = RandUni(); 
         // printf("[Rui] x_cheatgrass: %s\n",Species[g->cheatgrass_index]->name);
