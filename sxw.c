@@ -165,7 +165,6 @@ static void SXW_SW_Setup_Echo(void);
 void load_sxw_memory( RealD * grid_roots_max, RealD* grid_rootsXphen, RealD* grid_roots_active, RealD* grid_roots_active_rel, RealD* grid_roots_active_sum, RealD* grid_phen, RealD* grid_prod_bmass, RealD* grid_prod_pctlive );
 void save_sxw_memory( RealD * grid_roots_max, RealD* grid_rootsXphen, RealD* grid_roots_active, RealD* grid_roots_active_rel, RealD* grid_roots_active_sum, RealD* grid_phen, RealD* grid_prod_bmass, RealD* grid_prod_pctlive );
 void free_sxw_memory( void );
-void free_all_sxw_memory( void );
 
 /****************** Begin Function Code ********************/
 /***********************************************************/
@@ -865,7 +864,7 @@ static void _make_soil_arrays(void){
   SXW_AVG.avg_temp_avg = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr);
   SXW_AVG.surfaceTemp_avg = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
 
-  SXW_AVG.aet_avg = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
+  SXW_AVG.aet_avg = (RealF *) Mem_Calloc(size, sizeof(RealF), fstr);
 
   Mem_Set(SXW_AVG.aet_avg, 0, size * sizeof(RealF));
 

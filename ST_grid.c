@@ -240,7 +240,7 @@ void stat_Init_Accumulators(void);
 
 //functions from sxw.c
 //void free_sxw_memory( void );
-void free_all_sxw_memory(void);
+//void free_all_sxw_memory(void);
 void load_sxw_memory(RealD * grid_roots_max, RealD* grid_rootsXphen,
 		RealD* grid_roots_active, RealD* grid_roots_active_rel,
 		RealD* grid_roots_active_sum, RealD* grid_phen, RealD* grid_prod_bmass,

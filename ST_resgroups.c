@@ -25,6 +25,7 @@
 #include "rands.h"
 #include "generic.h"
 
+#include "sw_src/filefuncs.h"
 #include "ST_functions.h"
 #include "sxw_funcs.h"
 extern Bool UseSoilwat;
@@ -79,7 +80,6 @@ void rgroup_PartResources(void)
 	 /*------------------------------------------------------*/
 
 	GrpIndex rg;
-	SppIndex sp;
 	RealF resource, /* amt of "resource" == 1 when ppt is avg */
 	xtra_base = 0., /* pooled extra resource up to 1.0 */
 	xtra_obase = 0., /* pooled resource > 1.0 */
@@ -88,10 +88,9 @@ void rgroup_PartResources(void)
 
 	Bool noplants = TRUE;
 	const Bool do_base = FALSE, /* monikers for _res_part_extra() */
-	do_extra = TRUE, add_seeds = TRUE, /* monikers for pass 1 & 2 _add_annuals() */
+	do_extra = TRUE, /* monikers for pass 1 & 2 _add_annuals() */
 	no_seeds = FALSE;
 	GroupType *g; /* shorthand for RGroup[rg] */
-	int i;
 
 	/*----------------------------------------------------*/
 

@@ -29,6 +29,7 @@
 #include "ST_defines.h"
 
 int getNTranspLayers(int veg_prod_type);
+void free_all_sxw_memory( void );
 
 struct stepwat_st {
   RealD *transpTotal; /* points to dynamic array indexed by Ilp() */
