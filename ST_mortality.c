@@ -254,12 +254,17 @@ void mort_EndOfYear( void)
 				if (Wildfire_controller <= fire_possibility)
 				{
 					g->killyr = Globals.currYear;
+                                        g->wildfire = g->wildfire + 1;
+                                        printf("[Rui] Wildfire_count: %d\n",  g->wildfire);
 				}
 			}
                 /* then check prescribed fire*/
 			else if (((Globals.currYear - g->killfreq_startyr) % (IntU) g->killfreq) == 0)
 			{
 				g->killyr = Globals.currYear;
+                                g->wildfire = 0;
+                                g->prescribedfire = g->prescribedfire +1;
+                                printf("[Rui] Prescribedfire_count: %d\n", g->prescribedfire);
 			}
 
                     }
@@ -271,6 +276,7 @@ void mort_EndOfYear( void)
 		else if (Globals.currYear == RGroup[rg]->killyr)
 		{
 			RGroup_Kill(rg);
+                        printf("[Rui] Fire_happened_year: %d\n", RGroup[rg]->killyr);
 		}
                 
 	}
