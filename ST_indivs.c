@@ -208,7 +208,7 @@ void indiv_proportion_Kill(IndivType *ndv, int killType, RealF proportKilled)
 	/* HISTORY */
 	/* Chris Bennett @ LTER-CSU 6/15/2000
 	 *  09/23/15 -AT  -Added proportionKilled
-	 *  Nov 4 2015- AT - Modified code for doing proportional kill for annual as well and not deleting species 
+	 *  Nov 4 2015- AT - Modified code for doing proportional kill for annual as well and not deleting species
 	 *  and indi from memory only adjusting their real size  */
 
 	/*------------------------------------------------------*/
@@ -486,4 +486,3 @@ int Indiv_CompSize_D( const void *key1, const void *key2) {
 
   return r;
 }
-

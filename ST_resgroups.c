@@ -25,6 +25,7 @@
 #include "rands.h"
 #include "generic.h"
 
+#include "sw_src/filefuncs.h"
 #include "ST_functions.h"
 #include "sxw_funcs.h"
 extern Bool UseSoilwat;
@@ -64,10 +65,11 @@ static RealF _add_annuals(const GrpIndex rg, const RealF g_pr,
 void rgroup_PartResources(void)
 {
 	/*======================================================*/
+	/* PURPOSE */
 	/* Partition resources for this year among the resource
 	 groups.  The allocation happens in three steps: basic
-	 group allocation, partitioning of extra resources in 
-	 _res_part_extra(), and further partitioning to individuals 
+	 group allocation, partitioning of extra resources in
+	 _res_part_extra(), and further partitioning to individuals
 	 in the group _ResPartIndiv().
     See COMMENT 1. at the end of this file for the algorithm.*/
 	/* Chris Bennett @ LTER-CSU 12/15/2000            */
@@ -78,19 +80,19 @@ void rgroup_PartResources(void)
 	 /*------------------------------------------------------*/
 
 	GrpIndex rg;
-	SppIndex sp;
 	RealF resource, /* amt of "resource" == 1 when ppt is avg */
 	xtra_base = 0., /* pooled extra resource up to 1.0 */
 	xtra_obase = 0., /* pooled resource > 1.0 */
-	size_base[MAX_RGROUPS], /* total res. contrib to base, all groups */
-	size_obase[MAX_RGROUPS]; /* total res. contrib. if xtra_obase */
+	size_base[MAX_RGROUPS] = {0}, /* total res. contrib to base, all groups */
+	size_obase[MAX_RGROUPS] = {0}; /* total res. contrib. if xtra_obase */
 
 	Bool noplants = TRUE;
 	const Bool do_base = FALSE, /* monikers for _res_part_extra() */
-	do_extra = TRUE, add_seeds = TRUE, /* monikers for pass 1 & 2 _add_annuals() */
+	do_extra = TRUE, /* monikers for pass 1 & 2 _add_annuals() */
 	no_seeds = FALSE;
 	GroupType *g; /* shorthand for RGroup[rg] */
-	int i;
+
+	/*----------------------------------------------------*/
 
 	/* ----- distribute basic (minimum) resources */
 	ForEachGroup(rg)
@@ -114,6 +116,11 @@ void rgroup_PartResources(void)
 
 		size_base[rg] = g->relsize * g->min_res_req;
 		size_obase[rg] = (g->use_extra_res) ? size_base[rg] : 0.;
+
+		/*these functions are not used if using SOILWAT,
+		 extra resource partitioning does not occur when running SOILWAT*/
+			_res_part_extra(do_base, xtra_base, size_base);
+			_res_part_extra(do_extra, xtra_obase, size_obase);
 
 		/*this is how res_required and res_avail are set if SOILWAT is running*/
 	#ifdef STEPWAT
@@ -139,6 +146,7 @@ void rgroup_PartResources(void)
         //KAP:Previously, a seperate set of code was used to determine resource availability for annual species
         //Now, resource paritioning for annuals occurs in the same way as for perennials, by getting the RGroup Biomass
         //and the resource_cur from SXW_GetTranspiration
+		//Annuals seem to have a artificial limit of 20. We do Annuals here differently
 		if(g->max_age == 1)
 		{
 			if(!ZRO(g->res_avail) && g->res_required / g->res_avail > 20)
@@ -154,7 +162,7 @@ void rgroup_PartResources(void)
 		}
 	}
         #endif
-	  
+
 	  /* If relsize>0, reset noplants from TRUE to FALSE and if noplants=TRUE, exit from the loop */
 		if (GT(g->relsize, 0.))
 			noplants = FALSE;
@@ -164,12 +172,9 @@ void rgroup_PartResources(void)
 	if (noplants)
 		return;
 
-	/*these functions are not used if using SOILWAT,
-	 extra resource partitioning does not occur when running SOILWAT*/
-		_res_part_extra(do_base, xtra_base, size_base);
-		_res_part_extra(do_extra, xtra_obase, size_obase);
-	
-	//calculate PR at the rgroup level: resources required/resources available  
+	/* reset annuals' "TRUE" relative size here */
+    //KAP: formely, this call established annual species. We have moved annual establishment to the Rgroup_Establish function,
+    //where all other resource groups establish (e.g. perennials). This function is no longer required.
 	ForEachGroup(rg)
 	{
 		g = RGroup[rg];
@@ -190,7 +195,7 @@ static RealF _add_annuals(const GrpIndex rg, const RealF g_pr,
 	 * if add_seeds==TRUE, we should have done the above and now
 	 * we really want to add to the biomass and seedbank.
 	 *
-	 * check regen_ok flag.  if true, apply establishment and
+	 * check regen_ok flag.  if TRUE, apply establishment and
 	 * add to seedbank.  Otherwise, add 0 to seedbank and skip
 	 * adding plants this year.  We also check probability of establishment to
 	 * account for introduction of propagules, in which case
@@ -228,7 +233,7 @@ static RealF _add_annuals(const GrpIndex rg, const RealF g_pr,
 		if (!add_seeds && RandUni() <= s->seedling_estab_prob)
 		{
 			/* force addition of new propagules */
-			//if regen_ok is True, pass the g_pr parameter, if regen_ok is False, pass -1
+			//if regen_ok is TRUE, pass the g_pr parameter, if regen_ok is False, pass -1
 			_add_annual_seedprod(sp, (g->regen_ok) ? g_pr : -1.);
 			forced = TRUE;
 		}
@@ -267,7 +272,7 @@ static RealF _add_annuals(const GrpIndex rg, const RealF g_pr,
 static RealF _get_annual_maxestab(SppIndex sp)
 {
 	/*======================================================*/
-        /* Get the maximum number of viable seeds from the seedbank that can 
+        /* Get the maximum number of viable seeds from the seedbank that can
          establish this year*/
 	IntU i;
 	RealF sum = 0.;
@@ -366,7 +371,12 @@ static void _res_part_extra(Bool isextra, RealF extra, RealF size[])
 			continue;
 		space = (UseSoilwat) ? 1.0 : g->min_res_req;
 
-		req_prop = size[rg] / sum_size;
+		// checking so dont divide by 0
+		if(sum_size == 0.)
+			req_prop = 0.;
+		else
+			req_prop = size[rg] / sum_size;
+		//printf("sum_size: %f\n", sum_size);
 
 		if (isextra && g->use_extra_res && GT(g->xgrow, 0))
 			g->res_extra = req_prop * extra / space;
@@ -386,9 +396,9 @@ void rgroup_ResPartIndiv(void)
 	 resource availability for the group is divided between
 	 individuals of the group, largest to smallest. Species
 	 distinctions within the group are ignored.The partitioning of resources
-         to individuals is done proportionally based on size so that individuals 
+         to individuals is done proportionally based on size so that individuals
          should get more resources than their less-developed competitors.
-	 See COMMENT 3 at the end of this file for the algorithm. Chris Bennett 
+	 See COMMENT 3 at the end of this file for the algorithm. Chris Bennett
          @ LTER-CSU 12/21/2000*/
 
 	/*------------------------------------------------------*/
@@ -396,7 +406,7 @@ void rgroup_ResPartIndiv(void)
 	GrpIndex rg;
 	GroupType *g; /* shorthand for RGroup[rg] */
 	SppIndex sp;
-	Int j; 
+	Int j;
 	IndivType **indivs, /* dynamic array of indivs in RGroup[rg] */
 	*ndv; /* shorthand for the current indiv */
 	IntS numindvs, n;
@@ -418,10 +428,10 @@ void rgroup_ResPartIndiv(void)
 		/*      amount of extra, if any, is kept in g->res_extra      */
 		/*    base_rem = fmin(1, g->res_avail);  */
 		base_rem = g->res_avail;
-		
+
 		ForEachEstSpp(sp, rg, j)
 		{
-		
+
 			for (n = 0; n < numindvs; n++)
 			{
 				ndv = indivs[n];
@@ -438,7 +448,7 @@ void rgroup_ResPartIndiv(void)
 				//printf("base_rem pr>1 = %f\n", base_rem);
 
 				}
-				
+
 				else
 				{
 				ndv->res_avail = ndv->grp_res_prop * g->res_avail;
@@ -447,7 +457,7 @@ void rgroup_ResPartIndiv(void)
 				}
 			}
 		}
-		
+
 		base_rem += fmin(0, g->res_avail - 1.0);
         //printf("base_rem end = %f\n", base_rem);
 
@@ -684,7 +694,7 @@ void rgroup_Establish(void)
 	 *
 	 *   Also, there's now a parameter to define the start year
 	 *   of establishment for perennials.
-         * 
+         *
 	 * KAP: Annual establishment now occurs here instead of in PartResources
 	 */
 	/*------------------------------------------------------*/
@@ -746,7 +756,7 @@ void rgroup_Establish(void)
 				else
 				{
 				num_est = 0;
-				}	
+				}
 					  //printf("num_est for annuals=%d \n",num_est);
 
 					// above inserted to establish individuals for annuals
@@ -869,11 +879,12 @@ void RGroup_Update_Newsize(GrpIndex rg)
 	}
 
 	///if (RGroup[rg]->max_age != 1) {
+	numindvs = 0; // set to 0 so no problems passing to function
 	/* compute the contribution of each indiv to the group's size */
 	indivs = RGroup_GetIndivs(rg, SORT_0, &numindvs);
 	for (n = 0; n < numindvs; n++)
 		indivs[n]->grp_res_prop = indivs[n]->relsize / sumsize;
-	Mem_Free(indivs);
+	//Mem_Free(indivs); // dont call free on variable unless it was initialized with malloc or calloc
 	///}
 
 	/* double check some assumptions */
@@ -1282,4 +1293,3 @@ void RGroup_SetMemoryRefs( void)
  creation imply that availability is not tied to relsize.
 
  */
-

@@ -90,7 +90,7 @@ static void _make_ppt( void) {
  *       but we still pass through this code to set the
  *       Dry/Wet/Normal state.
  * KAP 1/26/2017 The above note by CB is not correct. Env.ppt
- *      is set in _sxw_set_environs, but gsppt is not, it is 
+ *      is set in _sxw_set_environs, but gsppt is not, it is
  *      set below. When using SOILWAT or not, the gsspt, ppt.dry,
  *      and ppt.wet is currently fixed each year and read from env.in
  *      We should consider calculating gsspt in the _sxw_set_environs
@@ -308,4 +308,3 @@ static void _make_disturbance( void) {
    }
 
 }
-

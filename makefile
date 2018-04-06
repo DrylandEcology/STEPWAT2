@@ -26,7 +26,7 @@ libDirs	=	-Lsw_src -Lsqlite-amalgamation
 incDirs	=	-Isw_src -Isqlite-amalgamation
 
 LIBS	=
-C_FLAGS	=	-g  -O0 -Wstrict-prototypes -Wmissing-prototypes -Wimplicit -Wunused -Wformat -Wredundant-decls -Wcast-align\
+C_FLAGS	=	-g -O0 -Wstrict-prototypes -Wmissing-prototypes -Wimplicit -Wunused -Wformat -Wredundant-decls -Wcast-align\
 	-DSTEPWAT -lm
 
 SRCS	=\
@@ -46,7 +46,6 @@ SRCS	=\
 	$(Src)/sw_src/SW_Files.c\
 	$(Src)/sw_src/SW_Model.c\
 	$(Src)/sw_src/SW_Output.c\
-	$(Src)/sw_src/SW_Main_Function.c\
 	$(Src)/sw_src/SW_Site.c\
 	$(Src)/sw_src/SW_Sky.c\
 	$(Src)/sw_src/SW_VegProd.c\
@@ -85,7 +84,6 @@ EXOBJS	=\
 	$(oDir)/sw_src/SW_Files.o\
 	$(oDir)/sw_src/SW_Model.o\
 	$(oDir)/sw_src/SW_Output.o\
-	$(oDir)/sw_src/SW_Main_Function.o\
 	$(oDir)/sw_src/SW_Site.o\
 	$(oDir)/sw_src/SW_Sky.o\
 	$(oDir)/sw_src/SW_VegProd.o\
@@ -222,9 +220,6 @@ $(oDir)/sw_src/SW_Output.o: sw_src/SW_Output.c sw_src/generic.h \
  sw_src/SW_Weather.h sw_src/SW_Carbon.h
 	$(CC) $(C_FLAGS) $(incDirs) -c -o $@ $<
 
-$(oDir)/sw_src/SW_Main_Function.o: sw_src/SW_Main_Function.c
-	$(CC) $(C_FLAGS) $(incDirs) -c -o $@ $<
-
 $(oDir)/sw_src/SW_Site.o: sw_src/SW_Site.c sw_src/generic.h sw_src/filefuncs.h \
  sw_src/myMemory.h sw_src/SW_Defines.h sw_src/SW_Files.h sw_src/SW_Site.h sw_src/SW_Carbon.h
 	$(CC) $(C_FLAGS) $(incDirs) -c -o $@ $<
@@ -271,7 +266,7 @@ $(oDir)/ST_indivs.o: ST_indivs.c ST_steppe.h ST_defines.h \
 
 $(oDir)/ST_main.o: ST_main.c ST_steppe.h ST_defines.h sw_src/generic.h \
  ST_structs.h ST_functions.h sw_src/filefuncs.h \
- sw_src/myMemory.h
+ sw_src/myMemory.h sw_src/SW_VegProd.h
 	$(CC) $(C_FLAGS) $(incDirs) -c -o $@ $<
 
 $(oDir)/ST_mortality.o: ST_mortality.c ST_steppe.h ST_defines.h \

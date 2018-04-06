@@ -27,5 +27,14 @@ Input/carbon.in
 Input/swcsetup.in	# params for handling measured swc
 
 #Output
-Output	# 'relative' path for output files: / for same directory, or e.g., Output/
+Output/	# 'relative' path for output files: / for same directory, or e.g., Output/
 Input/outsetup_v30.in	# define output quantities
+Output/sw_output/sw2_daily.csv	#output
+Output/sw_output/sw2_weekly.csv	#output
+Output/sw_output/sw2_monthly.csv	#output
+Output/sw_output/sw2_yearly.csv	#output
+
+Output/sw_output/sw2_daily_slyrs.csv	#output
+Output/sw_output/sw2_weekly_slyrs.csv	#output
+Output/sw_output/sw2_monthly_slyrs.csv	#output
+Output/sw_output/sw2_yearly_slyrs.csv	#output
