@@ -23,15 +23,21 @@
 #include "generic.h"
 #include "filefuncs.h"
 #include "myMemory.h"
+#include "SW_VegProd.h"
 
 
 #ifdef STEPWAT
   #include "sxw_funcs.h"
   #include "sxw.h"
+  #include "sw_src/SW_Output.h"
+  #include "sw_src/rands.h"
   extern SXW_t SXW;
 #endif
 
 extern Bool isPartialSoilwatOutput;
+extern Bool storeAllIterations;
+extern SW_VEGPROD SW_VegProd;
+SW_FILE_STATUS SW_File_Status;
 
 /************* External Function Declarations **************/
 /***********************************************************/
@@ -40,7 +46,6 @@ extern Bool isPartialSoilwatOutput;
   void rgroup_Establish( void) ;
   void rgroup_IncrAges( void);
   void rgroup_PartResources( void);
-  //void rgroup_ResPartIndiv(void);
 
   void mort_Main( Bool *killed);
   void mort_EndOfYear( void);
@@ -56,10 +61,12 @@ extern Bool isPartialSoilwatOutput;
   void stat_Collect( Int year ) ;
   void stat_Collect_GMort ( void ) ;
   void stat_Collect_SMort ( void ) ;
-  //void stat_Output_YrMorts( void ) ;
+
   void stat_Output_AllMorts( void) ;
   void stat_Output_AllBmass(void) ;
-  
+
+  void stat_Output_AllSoilwatVariables(void);
+
   void runGrid( void ); //for the grid... declared in ST_grid.c
 
   void _kill_annuals(void);
@@ -86,19 +93,19 @@ extern Bool isPartialSoilwatOutput;
 /*************** Local Function Declarations ***************/
 /***********************************************************/
 void Plot_Initialize( void);
-//void Debug_AddByIter( Int iter);
-//void Debug_AddByYear( Int year);
-/*void chkmem(void);*/
+
 static void usage(void) {
   char *s ="STEPPE plant community dynamics (SGS-LTER Jan-04).\n"
            "Usage: steppe [-d startdir] [-f files.in] [-q] [-s] [-e] [-o] [-g]\n"
            "  -d : supply working directory (default=.)\n"
            "  -f : supply list of input files (default=files.in)\n"
            "  -q : quiet mode, don't print message to check logfile.\n"
+           "  -p : prints progress bar\n"
            "  -s : use SOILWAT model for resource partitioning.\n"
            "  -e : echo initialization results to logfile\n"
-           "  -o : print all the soilwat output as well like standalone soilwat running\n"
-           "  -g : use gridded mode\n";
+           "  -o : print all the soilwat output\n"
+           "  -g : use gridded mode\n"
+           "  -i : print SOILWAT output for each iteration\n"; // dont need to set -o flag to use this flag
   fprintf(stderr,"%s", s);
   exit(0);
 }
@@ -107,7 +114,6 @@ static void check_log(void);
 
 /* a couple of debugging routines */
 void check_sizes(const char *);
-//static void check_sizes_final(void );
 
 Bool QuietMode;
 
@@ -135,42 +141,10 @@ Bool DuringSpinup;
 Bool EchoInits;
 Bool UseProgressBar;
 
-/* Added By: AKT  06/27/2016
- * Function for printing all the SOILWAT output in the STEPWAT,
- * it will work in both grid and non-grid version
- *
- */
-void print_soilwat_output(char* str)
-{
-	isPartialSoilwatOutput = FALSE;
-
-	printf( "inside stepwat main setting files options for soilwat full output, so now isPartialSoilwatOutput=%d \n", isPartialSoilwatOutput);
-
-	int argc_soilwat = 3;
-	char **array;
-	array = malloc(sizeof(char*) * (argc_soilwat + 1));
-
-	array[0] = "sw_v31"; //Just for name sake SOILWAT exe name given here, though it will never getting use
-	array[1] = "-f";
-	array[2] = Str_Dup(str);
-	array[3] = NULL;/* end of array so later you can do while (array[i++]!=NULL) {...} */
-
-	printf( "inside stepwat main setting files options for soilwat: argc=%d array[0]=%s ,array[1]=%s,array[2]=%s \n ",
-			argc_soilwat, array[0], array[1], array[2]);
-
-	main_function(argc_soilwat, array);
-
-	isPartialSoilwatOutput = TRUE;
-
-	printf( "Soilwat main function executed successfully and now isPartialSoilwatOutput=%d \n", isPartialSoilwatOutput);
-
-}
-
 /******************** Begin Model Code *********************/
 /***********************************************************/
 int main(int argc, char **argv) {
-	IntS year, iter, incr, g, s;
-	IndivType *i;
+  IntS year, iter, incr;
 	Bool killedany;
 
 	logged = FALSE;
@@ -178,11 +152,12 @@ int main(int argc, char **argv) {
 	/* provides a way to inform user that something
 	 * was logged.  see generic.h */
 
-	init_args(argc, argv);
+  isPartialSoilwatOutput = TRUE; // dont want to get soilwat output unless -o flag
+  storeAllIterations = FALSE; // dont want to store all soilwat output iterations unless -i flag
 
-	printf("STEPWAT  init_args() executed successfully \n ");
+	init_args(argc, argv); // read input arguments and intialize proper flags
 
-	isPartialSoilwatOutput = TRUE;
+	printf("STEPWAT  init_args() executed successfully \n");
 
 	if (UseGrid == TRUE) {
 		runGrid();
@@ -191,11 +166,10 @@ int main(int argc, char **argv) {
 
 	parm_Initialize(0);
 
-	if (UseSoilwat)
+	if (UseSoilwat){
 		SXW_Init(TRUE, NULL);
-
-	//Connect to ST db and insert static data
-	//ST_connect("Output/stdebug");
+    SW_OUT_set_ncol(); // set number of columns
+  }
 
 	incr = (IntS) ((float) Globals.runModelIterations / 10);
 	if (incr == 0)
@@ -203,13 +177,13 @@ int main(int argc, char **argv) {
 
 	/* --- Begin a new iteration ------ */
 	for (iter = 1; iter <= Globals.runModelIterations; iter++) {
-
 		if (progfp == stderr) {
 			if (iter % incr == 0)
 				fprintf(progfp, ".");
 		} else {
 			fprintf(progfp, "%d\n", iter);
 		}
+
 
 		if (BmassFlags.yearly || MortFlags.yearly)
 			parm_Initialize(iter);
@@ -218,17 +192,11 @@ int main(int argc, char **argv) {
 		RandSeed(Globals.randseed);
 		Globals.currIter = iter;
 
-		/*Debug_AddByIter( iter); */
-
 		/* ------  Begin running the model ------ */
-		for (year = 1; year <= Globals.runModelYears; year++) {
-
-			/*Debug_AddByYear(year);*/
-
-			/* printf("Iter=%d, Year=%d\n", iter, year);  */
+		for (year = 1; year <= Globals.runModelYears; year++){
 			Globals.currYear = year;
 
-			rgroup_Establish(); 
+			rgroup_Establish();
 
 			Env_Generate();
 
@@ -244,7 +212,7 @@ int main(int argc, char **argv) {
 
 			rgroup_IncrAges();
 
-           // Added functions for Grazing and mort_end_year as proportional killing effect before exporting biomass end of the year
+      // Added functions for Grazing and mort_end_year as proportional killing effect before exporting biomass end of the year
 			grazing_EndOfYear();
                         save_annual_species_relsize();
 
@@ -255,35 +223,28 @@ int main(int argc, char **argv) {
 			if (BmassFlags.yearly)
 				output_Bmass_Yearly(year);
 
-            // Moved kill annual and kill extra growth after we export biomass, and recovery of biomass after fire before the next year
+       // Moved kill annual and kill extra growth after we export biomass, and recovery of biomass after fire before the next year
 			_kill_annuals();
 			 proportion_Recovery();
 			_kill_extra_growth();
-
-			//ForEachGroup(g) {
-			//	insertRGroupYearInfo(g);
-			//}
-			//ForEachSpecies(s) {
-			//	insertSpecieYearInfo(s);
-			//	for ((i) = Species[s]->IndvHead; (i) != NULL; (i) = (i)->Next) {
-			//		insertIndivYearInfo(i);
-			//	}
-			//}
 		} /* end model run for this year*/
 
-		//if (BmassFlags.yearly) //moved to output function
-		//	CloseFile(&Globals.bmass.fp_year);
 		if (MortFlags.summary) {
 			stat_Collect_GMort();
 			stat_Collect_SMort();
 		}
 
 		if (MortFlags.yearly)
-			output_Mort_Yearly();
+			output_Mort_Yearly(); // writes yearly file
 
 		if (UseSoilwat)
-			SXW_Reset();
-
+			{
+		     	//stat_Output_AllSoilwatVariables();
+          // dont need to restart if last iteration finished
+          // this keeps it from re-writing the output folder and overwriting output files
+          if(Globals.currIter != Globals.runModelIterations)
+            SXW_Reset();
+			}
 	} /* end model run for this iteration*/
 
 	/*------------------------------------------------------*/
@@ -292,12 +253,15 @@ int main(int argc, char **argv) {
 	if (BmassFlags.summary)
 		stat_Output_AllBmass();
 
-	//Needed to disconnect from database
-	//ST_disconnect();
 #ifdef STEPWAT
-			if (!isnull(SXW.debugfile) ) SXW_PrintDebug(1);
+			if (!isnull(SXW.debugfile)){
+        printf("entering debugfile\n");
+        SXW_PrintDebug(1);
+      }
 #endif
-
+  SW_OUT_close_files();
+  free_all_sxw_memory();
+  printf("\nend program\n");
 	fprintf(progfp, "\n");
 	return 0;
 }
@@ -322,7 +286,6 @@ void Plot_Initialize(void) {
 		if (RGroup[Species[sp]->res_grp]->extirpated) {
 			Species[sp]->seedling_estab_prob =
 					Species[sp]->seedling_estab_prob_old;
-
 		}
 
 		/* clear estab and kills information */
@@ -368,6 +331,7 @@ void Plot_Initialize(void) {
 		RGroup[rg]->yrs_neg_pr = 0;
 		RGroup[rg]->extirpated = FALSE;
 	}
+  memset(SXW.transp_SWA, 0, sizeof(SXW.transp_SWA)); // set transp_SWA to 0; needs to be reset each iteration
 
 	if (UseSoilwat)
 		SXW_InitPlot();
@@ -398,10 +362,13 @@ static void init_args(int argc, char **argv) {
    *         the program to write progress info (iter) to stdout.
    *         Without the option, progress info (dots) is written to
    *         stderr.
+   * 8/16/17 - BEB  Updated option for -o flag. Now if this flag is set the output files from
+   *                files_v30.in are written to.
+   * 10/9/17 - BEB Added -i flag for writing SOILWAT output for every iteration
    */
   char str[1024],
-       *opts[]  = {"-d","-f","-q","-s","-e", "-p", "-g", "-o"};  /* valid options */
-  int valopts[] = {  1,   1,   0,  -1,   0,    0 ,   0, 1};  /* indicates options with values */
+       *opts[]  = {"-d","-f","-q","-s","-e", "-p", "-g", "-o", "-i"};  /* valid options */
+  int valopts[] = {  1,   1,   0,  -1,   0,    0,    0,   0,   0};  /* indicates options with values */
                  /* 0=none, 1=required, -1=optional */
   int i, /* looper through all cmdline arguments */
       a, /* current valid argument-value position */
@@ -515,13 +482,14 @@ static void init_args(int argc, char **argv) {
 			break; /* -g */
 
 		case 7:
-			printf("Get all the Soilwat option called, with file=%s  \n", str);
-			if (strlen(str) > 1)
-			{
-				print_soilwat_output(str);
-			}
-
+      printf("storing SOILWAT output (flag -o)\n");
+      isPartialSoilwatOutput = FALSE;
 			break; /* -o    also get all the soilwat output*/
+
+    case 8: // -i
+      printf("storing SOILWAT output for all iterations\n");
+      storeAllIterations = TRUE;
+      break;
 
 		default:
 			LogError(logfp, LOGFATAL,
@@ -542,7 +510,7 @@ static void check_log(void) {
   if (logfp != stdout) {
     if (logged && !QuietMode)
       fprintf(progfp, "\nCheck logfile for error messages.\n");
-      
+
     CloseFile(&logfp);
   }
 
@@ -591,32 +559,6 @@ void check_sizes(const char *chkpt) {
 
 }
 
-
-/*static void check_sizes_final(void) {
-//===================================================
-
-  GrpIndex rg;
-  SppIndex sp;
-
-  ForEachGroup(rg) {
-    if (!ZRO(RGroup[rg]->relsize) ) {
-      LogError(stdout, LOGWARN, "(%d) Group %s relsize != 0 (%.2f)\n",
-                                 Globals.currIter,
-                                 RGroup[rg]->name, RGroup[rg]->relsize);
-    }
-  }
-
-  ForEachSpecies(sp) {
-    if (!ZRO(Species[sp]->relsize) ) {
-      LogError(stdout, LOGWARN, "(%d) Species %s relsize != 0 (%.2f)\n",
-                                Globals.currIter,
-                                Species[sp]->name, Species[sp]->relsize);
-    }
-  }
-
-}*/
-
-/*===============================================================*/
 #ifdef DEBUG_MEM
 void CheckMemoryIntegrity(Bool flag) {
 // DLM - 6/6/2013 : NOTE - The dynamically allocated variables added for the new grid option are not accounted for here.  I haven't bothered to add them because it would add a ton of code and I haven't been using the code to facilitate debugging of memory.  Instead I have been using the valgrind program to debug my memory, as I feel like it is a better solution.  If wanting to use this code to debug memory, memory references would probably have to be set up for the dynamically allocated variables in ST_grid.c as well as the new dynamically allocated grid_Stat variable in ST_stats.c.

@@ -20,6 +20,7 @@
 #include <string.h>
 #include "ST_steppe.h"
 #include "ST_globals.h"
+#include "sw_src/filefuncs.h"
 #include "myMemory.h"
 #include "rands.h"
 
@@ -661,4 +662,3 @@ void Species_SetMemoryRefs( void)
 }
 
 #endif
-

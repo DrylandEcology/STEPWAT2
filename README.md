@@ -34,13 +34,14 @@ Other tasks:
 ```
 
 ```
-> Usage: stepwat [-d startdir] [-f files.in] [-q] [-s] [-e] [-o] [-g]
+> Usage: stepwat [-d startdir] [-f files.in] [-q] [-s] [-e] [-o] [-i] [-g]
 >   -d : supply working directory (default=.)
 >   -f : supply list of input files (default=files.in)
 >   -q : quiet mode, don't print message to check logfile.
 >   -s : use SOILWAT model for resource partitioning.
 >   -e : echo initialization results to logfile
->   -o : print all the soilwat output in addition to the stepwat output
+>   -o : write SOILWAT output to output files. Contains average over all iterations and standard deviation
+>   -i : write soilwat output to output files for each iteration
 >   -g : use gridded mode
 ```
 
@@ -68,6 +69,13 @@ cd testing.sagebrush.master/Stepwat_Inputs/
 ./stepwat -f files.in
 ```
 
+* Run STEPPE (get SOILWAT output for all iterations and average)
+
+```
+cd testing.sagebrush.master/Stepwat_Inputs/
+./stepwat -f files.in -o -i -s
+```
+
 
 <br>
 
@@ -79,4 +87,3 @@ Contributors are encouraged, however, to update local clones to [point to the ne
 ```
 git remote set-url origin https://github.com/Burke-Lauenroth-Lab/STEPWAT2.git
 ```
-

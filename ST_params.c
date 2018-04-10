@@ -51,7 +51,7 @@ SppIndex species_New(void);
   void parm_Initialize( Int);
   void parm_SetFirstName( char *s);
   void parm_SetName( char *s, int which);
-  void parm_free_memory( void ); 
+  void parm_free_memory( void );
 
 /*********** Locally Used Function Declarations ************/
 /***********************************************************/
@@ -146,7 +146,7 @@ void parm_Initialize( Int iter) {
     _rgroup_init();
     _species_init();
     _check_species();
-	
+
 //    _bmasshdr_init();
 //    _morthdr_create();
     RandSeed(Globals.randseed);
@@ -900,7 +900,7 @@ static void _rgroup_init( void) {
        LogError(logfp, LOGFATAL, "%s: Too few columns in groups",
                MyFileName);
      }
-   
+
     _rgroup_add1( name, space, density, estab,
                    slow, stretch, xres, estann,
                    turnon, styr, killyr,killfreq_startyr, killfreq,
@@ -1190,7 +1190,7 @@ static void _species_init( void) {
       LogError(logfp, LOGFATAL, "%s: Incorrect/incomplete input in annual estab parms",
               MyFileName);
    }
-   
+
 
    /* ------------------------------------------------- */
    /* ------ read the vegetative propagation parameters */
@@ -1236,7 +1236,7 @@ static void _species_init( void) {
 		continue;
 	}
 
-	x = sscanf( inbuf, "%s %hd %f %f %f %f %f %f %f", 
+	x = sscanf( inbuf, "%s %hd %f %f %f %f %f %f %f",
 		    name, &turnondispersal, &p1, &p2, &p3, &p4, &p5, &p6, &p7);
 	if(x < 9)
 		LogError(logfp, LOGFATAL, "%s: Too few columns in species seed dispersal inputs", MyFileName);
@@ -1245,11 +1245,11 @@ static void _species_init( void) {
 	sp = Species_Name2Index(name2);
 	if( sp < 0)
 		LogError(logfp, LOGFATAL, "%s: Mismatched name (%s) for species seed dispersal inputs", MyFileName, name2);
-		
+
         Species[sp]->use_dispersal = itob(turnondispersal);
         Species[sp]->allow_growth = TRUE;
 	Species[sp]->sd_sgerm = FALSE;
-	
+
 	Species[sp]->sd_Param1 = p1;
 	Species[sp]->sd_PPTdry = p2;
 	Species[sp]->sd_PPTwet = p3;
@@ -1258,7 +1258,7 @@ static void _species_init( void) {
 	Species[sp]->sd_H = p6;
 	Species[sp]->sd_VT = p7;
    }
-   if(!sppok) 
+   if(!sppok)
 	  LogError(logfp, LOGFATAL, "%s: Incorrect/incomplete input in species seed dispersal input", MyFileName);
 
    CloseFile(&f);
@@ -1323,4 +1323,3 @@ void Parm_SetMemoryRefs( void) {
 }
 
 #endif
-
