@@ -264,8 +264,6 @@ void mort_EndOfYear( void)
 			else if (((Globals.currYear - g->killfreq_startyr) % (IntU) g->killfreq) == 0)
 			{
 				g->killyr = Globals.currYear;
-                /* if only prescribed fire happens clean wildfire counts */
-                                g->wildfire = 0;
                 /* Calculate the prescribed fire counts */
                                 g->prescribedfire = g->prescribedfire +1;
                                 printf("[Rui] Prescribedfire_count: %d\n", g->prescribedfire);
