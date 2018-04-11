@@ -199,21 +199,20 @@ void mort_EndOfYear( void)
     RealF fire_possibility, Wildfire_controller, Bio_cheatgrass;
     char *checkname = "brte"; 
     int i = 0;
-    /* Check species index number from the beginning to the 100th species in
+    /* Check species index number from the beginning to all the species in
      *  species.in , if the species name == checkname then get the biomass and stop the loop*/
-    for( i = 0; i < 100; i++)
+    for( i = 0; i < Globals.sppCount; i++)
     { /* if species name = checkname = brte then get the biomass of brte(cheatgrass)*/
       if (strcmp(checkname,Species[i]->name) == 0)
       {
       Bio_cheatgrass = Species_GetBiomass (i);    /* calculate biomass of cheatgrass*/
-    //  printf("[Rui] x_cheatgrass: %s\n",Species[i]->name);
+    //  printf("Cheatgrass: %s\n",Species[i]->name);
       break;
       }
     }         
         /* Set a random number outside of the loop to make sure the kill probability for each functional group is the same */
         Wildfire_controller = RandUni(); 
-        // printf("[Rui] x_cheatgrass: %s\n",Species[g->cheatgrass_index]->name);
-        //printf("[Rui] x_cheatgrass: %f\n",Bio_cheatgrass);
+        //printf("[Cheatgrass: %f\n",Bio_cheatgrass);
         
         /* If cheatgrass biomass is less than the biomass required for wildfire ignition, wildfire probability is very low*/
         if (Bio_cheatgrass < g->ignition)
