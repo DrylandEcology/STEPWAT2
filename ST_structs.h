@@ -309,6 +309,8 @@ struct bmassflags_st {
        pr,
        size,
        sppb,
+       wildfire,/* print wild fires count during all the iterations */
+       prescribedfire,/* print prescribed fires count during all the iterations */
        indv;
   char sep;
 };

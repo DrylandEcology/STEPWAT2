@@ -514,7 +514,7 @@ static void _bmassflags_init( void) {
 
    FILE *fin;
    Int x, i,
-       nitems=14; /* number of items expected in first input line */
+       nitems=16; /* number of items expected in first input line */
 
    /*   code      controls: */
    char u[5],  /* summary? if 'n' don't init and don't print */
@@ -529,6 +529,8 @@ static void _bmassflags_init( void) {
         g[5],  /* biomass for the groups */
         q[5],  /* groups PR quotient (see C&L1990, p240) */
         r[5],  /* relative size for each group */
+        w[5],  /* wildfire count */
+        m[5],  /* prescribed fire count */
         s[5],  /* biomass for each species */
         n[5];  /* number of individuals for each species */
    char z;
@@ -540,8 +542,8 @@ static void _bmassflags_init( void) {
      LogError(logfp, LOGFATAL, "%s: No data found!\n", MyFileName);
    }
 
-   x = sscanf( inbuf, "%s %s %s %s %s %s %s %s %s %s %s %s %s %s",
-                      u, a, h, f, y, d, p, c, t, g, q, r, s, n );
+   x = sscanf( inbuf, "%s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s",
+                      u, a, h, f, y, d, p, c, t, g, q, r, w, m, s, n );
 
    /* don't bother initializing the rest if first flag is 'n' */
    BmassFlags.summary  = (Bool)(*u=='y'||*u=='Y');
@@ -592,15 +594,21 @@ static void _bmassflags_init( void) {
             BmassFlags.pr     = (Bool)(*q=='y'||*q=='Y');
             break;
        case 10:
-            BmassFlags.size   = (Bool)(*r=='y'||*r=='Y');
+            BmassFlags.pr     = (Bool)(*q=='y'||*q=='Y');
             break;
        case 11:
-            BmassFlags.sppb   = (Bool)(*s=='y'||*s=='Y');
+            BmassFlags.pr     = (Bool)(*q=='y'||*q=='Y');
             break;
        case 12:
-            BmassFlags.indv   = (Bool)(*n=='y'||*n=='Y');
+            BmassFlags.size   = (Bool)(*r=='y'||*r=='Y');
             break;
        case 13:
+            BmassFlags.sppb   = (Bool)(*s=='y'||*s=='Y');
+            break;
+       case 14:
+            BmassFlags.indv   = (Bool)(*n=='y'||*n=='Y');
+            break;
+       case 15:
             break;
      }
 
