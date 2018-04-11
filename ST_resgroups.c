@@ -242,8 +242,8 @@ static RealF _add_annuals(const GrpIndex rg, const SppIndex sp, const RealF last
     *  seedlings and substract those seeds from the relevant seedprod array.*/
        for (i = s->viable_yrs - 1; i > 0; i--)
        {
-        printf("Species name=%s , old calculated value s->seedprod[%hu]= %d \n", s->name, i - 1, s->seedprod[i - 1]);  
-        s->seedprod[i] =  s->seedprod[i - 1] -  num_est * s->seedprod[i - 1] / s->seedbank;
+        printf("Species name=%s , old calculated value s->seedprod[%hu]= %d \n", s->name, i, s->seedprod[i]);  
+        s->seedprod[i] =  s->seedprod[i] -  num_est * s->seedprod[i] / s->seedbank;
         printf("Species name=%s , so new calculated value s->seedprod[%hu]= %d \n", s->name, i, s->seedprod[i]);
        
        }   
