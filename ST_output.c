@@ -99,6 +99,10 @@ void output_Bmass_Yearly( Int year ) {
         sprintf(fields[fc++],"%f", RGroup[rg]->relsize);
       if (BmassFlags.pr)
         sprintf(fields[fc++],"%f", RGroup[rg]->pr);
+      if (BmassFlags.wildfire)
+        sprintf(fields[fc++],"%d", RGroup[rg]->wildfire);
+      if (BmassFlags.prescribedfire)
+        sprintf(fields[fc++],"%d", RGroup[rg]->prescribedfire);
     }
   }
 

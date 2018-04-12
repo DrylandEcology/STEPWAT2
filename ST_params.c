@@ -594,13 +594,13 @@ static void _bmassflags_init( void) {
             BmassFlags.pr     = (Bool)(*q=='y'||*q=='Y');
             break;
        case 10:
-            BmassFlags.pr     = (Bool)(*q=='y'||*q=='Y');
+            BmassFlags.size   = (Bool)(*r=='y'||*r=='Y');
             break;
        case 11:
-            BmassFlags.pr     = (Bool)(*q=='y'||*q=='Y');
+            BmassFlags.wildfire     = (Bool)(*w=='y'||*w=='Y');
             break;
        case 12:
-            BmassFlags.size   = (Bool)(*r=='y'||*r=='Y');
+            BmassFlags.prescribedfire     = (Bool)(*m=='y'||*m=='Y');
             break;
        case 13:
             BmassFlags.sppb   = (Bool)(*s=='y'||*s=='Y');
