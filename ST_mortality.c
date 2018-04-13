@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <math.h>
 
+#include "sw_src/filefuncs.h"
 #include "generic.h"
 #include "rands.h"
 #include "myMemory.h"
@@ -190,7 +191,7 @@ void mort_EndOfYear( void)
 /*======================================================*/
 /* PURPOSE */
 /* Implements killing of plants through wildfire, prescribed fire, or another event
- * that would result in mortality in single year (killyr) or 
+ * that would result in mortality in single year (killyr) or
  * extirpation (extirp) where plants are killed and do not return. */
 
     //printf("inside mort_EndOfYear() \n");
@@ -331,7 +332,7 @@ void grazing_EndOfYear( void){
 
 		//rgroup grazing
 		if (Globals.currYear == grazingyr)
-		{	
+		{
 			//printf( "currYear is equal to grazingYear so will iterate all the Species for doing grazing, RGroup[g]->est_count =%d \n",RGroup[rg]->est_count);
 			Int i;
 			ForEachEstSpp2( rg, i)
@@ -865,4 +866,3 @@ void _kill_extra_growth( void) {
 
 
 }
-

@@ -18,6 +18,11 @@
 
 /* see #include "ST_structs.h" below */
 
+
+// TRUE / FALSE
+#define TRUE 1
+#define FALSE 0
+
 /***************************************************
  * Basic definitions
  ***************************************************/
