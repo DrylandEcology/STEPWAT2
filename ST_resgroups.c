@@ -243,7 +243,7 @@ static RealF _add_annuals(const GrpIndex rg, const SppIndex sp, const RealF last
        for (i = s->viable_yrs - 1; i > 0; i--)
        {
         printf("Species name=%s , old calculated value s->seedprod[%hu]= %d \n", s->name, i, s->seedprod[i]);  
-        s->seedprod[i] =  s->seedprod[i] -  num_est * s->seedprod[i] / s->seedbank;
+        s->seedprod[i] =  s->seedprod[i] -  num_est * s->seedprod[i] / (IntU) viable_seeds;
         printf("Species name=%s , so new calculated value s->seedprod[%hu]= %d \n", s->name, i, s->seedprod[i]);
        
        }   
