@@ -1265,6 +1265,10 @@ void stat_Output_AllBmass(void) {
                   _get_std( &_Gpr[rg].s[yr-1]), sep);
           strcat( buf, tbuf);
         }
+        /* Output the sum of all the wild and prescribed fire numbers across all iterations;
+         * If the future project asks for the fire yearly possibility across all iterations, 
+         * just modified the _get_sum to _get_avg on Line 1274 & 1279.
+         ATTENTION: the other output index are the average values across all iterations*/
         if (BmassFlags.wildfire) {
           sprintf(tbuf, "%d%c",
                   _get_sum( &_Gwf[rg].s[yr-1]), sep);
