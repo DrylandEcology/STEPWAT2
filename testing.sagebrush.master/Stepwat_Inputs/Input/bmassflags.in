@@ -8,7 +8,7 @@
 ####################################################
 #
 #
-# Sumry Yearly Header Sep YrNum Disturb PPT PClass Temp GrpBmass GrpPR GrpSize Grpwf GrpPf SppBmass Indivs
+# Sumry Yearly Header Sep YrNum Disturb PPT PClass Temp GrpBmass GrpPR GrpSize GrpWf GrpPf SppBmass Indivs
      y      n	   y   ,     y      n   y     n     y       y     y      y     y      n       y      y
 #===================================================
 # The input line is a set of yes/no flags that define
