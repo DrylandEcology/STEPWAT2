@@ -49,7 +49,7 @@
 /* for steppe, see ST_globals.h */
 
 //extern SW_SITE SW_Site;
-//extern SW_MODEL SW_Model;
+extern SW_MODEL SW_Model;
 //extern SW_SOILWAT SW_Soilwat;
 //extern SW_VEGPROD SW_VegProd;
 
@@ -76,7 +76,7 @@ extern
 
 extern
   RealF _resource_pr[MAX_RGROUPS],  /* resource convertable to pr */
-        _resource_cur[MAX_RGROUPS];  /* current resource utilization */
+        _resource_cur[MAX_RGROUPS];
 
 extern
   RealF _bvt;
@@ -87,6 +87,8 @@ extern
 /***********************************************************/
 
 static void _transp_contribution_by_group(RealF use_by_group[]);
+
+static void _SWA_contribution_by_group(RealF use_by_group[]);
 
 
 /***********************************************************/
@@ -122,10 +124,13 @@ void _sxw_update_resource(void) {
 
   RealF sizes[MAX_RGROUPS] = {0.};
   GrpIndex g;
-  SppIndex sp;
-  int i;
+  int currentYear;
+  if(SW_Model.year == 0) currentYear = 0;
+  else currentYear = SW_Model.year - SW_Model.startyr;
 
   #ifdef SXW_BYMAXSIZE
+    int i;
+    SppIndex sp;
     ForEachGroup(g) {
       sizes[g] = 0.;
       if (RGroup[g]->regen_ok) {
@@ -148,11 +153,14 @@ void _sxw_update_resource(void) {
 
 	_sxw_update_root_tables(sizes);
 	_transp_contribution_by_group(_resource_cur);
+  //_SWA_contribution_by_group(SXW.sum_dSWA_repartitioned);
 
 	ForEachGroup(g)
 	{
-		//_resource_pr[g] = ZRO(sizes[g]) ? 0.0 : _resource_cur[g] * _bvt / sizes[g];
+    _resource_cur[g] = SXW.transp_SWA[currentYear][g];
+    //printf("for groupName= %smresource_cur prior to multiplication: %f\n",RGroup[g]->name, _resource_cur[g]);
 		_resource_cur[g] = _resource_cur[g] * _bvt;
+    //printf("for groupName= %s, resource_cur post multiplication: %f\n\n",Rgroup[g]->name, _resource_cur[g]);
 	}
 /* _print_debuginfo(); */
 }
@@ -182,7 +190,7 @@ void _sxw_update_root_tables( RealF sizes[] ) {
 			{
 				x = _rootsXphen[Iglp(g, l, p)] * sizes[g];
 				_roots_active[Iglp(g, l, p)] = x;
-				_roots_active_sum[Itlp(t,l, p)] += x;
+				_roots_active_sum[Itlp(t, l, p)] += x;
 			}
 		}
 	}
@@ -212,61 +220,63 @@ void _sxw_update_root_tables( RealF sizes[] ) {
 
 static void _transp_contribution_by_group(RealF use_by_group[]) {
 	/*======================================================*/
-	/*
-	 * use_by_group is the vector to be used in the resource
-	 *        availability calculation, ie, the output.
-
-	 * must call _update_root_tables() before this.
-	 *
-	 */
-
-	/* compute each group's contribution to the
-	 * transpiration values retrieved from SOILWAT based
-	 * on its relative size, its root distribution, and
-	 * its phenology (activity).
-	 */
+	/* use_by_group is the amount of transpiration (cm) assigned
+	 * to each STEPPE functional group.
+	 * Must call _update_root_tables() before this.
+	 * Compute each group's amount of transpiration from SOILWAT2
+	 * based on its biomass, root distribution, and phenological
+	 * activity. */
 
 	GrpIndex g;
-	SppIndex s;
 	TimeInt p;
 	LyrIndex l;
-	int t,i;
+    int currentYear;
+    if(SW_Model.year == 0) currentYear = 0;
+    else currentYear = SW_Model.year - SW_Model.startyr;
+	int t;
 	RealD *transp;
 	RealF sumUsedByGroup = 0., sumTranspTotal = 0., TranspRemaining = 0.;
 
-	ForEachGroup(g)
+	ForEachGroup(g) //Steppe functional group
 	{
-		use_by_group[g] = 0.; /* clear */
+    use_by_group[g] = 0.;
 		t = RGroup[g]->veg_prod_type-1;
+
 		switch(t) {
 		case 0://Tree
-			transp = SXW.transpTotal;
+			transp = SXW.transpTrees;
 			break;
 		case 1://Shrub
-			transp = SXW.transpTotal;
+			transp = SXW.transpShrubs;
 			break;
 		case 2://Grass
-			transp = SXW.transpTotal;
+			transp = SXW.transpGrasses;
 			break;
 		case 3://Forb
-			transp = SXW.transpTotal;
+			transp = SXW.transpForbs;
 			break;
 		default:
 			transp = SXW.transpTotal;
 			break;
 		}
-		ForEachTrPeriod(p)
-		{
-			int nLyrs = getNTranspLayers(RGroup[g]->veg_prod_type);
-			for (l = 0; l < nLyrs; l++) {
-				use_by_group[g] += (RealF) (_roots_active_rel[Iglp(g, l, p)] * RGroup[g]->min_res_req * transp[Ilp(l, p)]);
-				//printf("for groupName= %s, layerIndex: %d  after sum use_by_group[g]= %f \n",RGroup[g]->name,l,use_by_group[g] );
-			}
-		}
-		sumUsedByGroup += use_by_group[g];
+
+        //Loops through each month and calculates amount of transpiration for each steppe functional group
+        //according to whether that group has active living roots in each soil layer for each month
+            ForEachTrPeriod(p)
+            {
+                int nLyrs = getNTranspLayers(RGroup[g]->veg_prod_type);
+                for (l = 0; l < nLyrs; l++) {
+                    use_by_group[g] += (RealF) (_roots_active_rel[Iglp(g, l, p)] * transp[Ilp(l, p)]);
+                }
+            }
+            //printf("for groupName= %s, use_by_group[g] in transp= %f \n",RGroup[g]->name,use_by_group[g] );
+
+        sumUsedByGroup += use_by_group[g];
+        //printf(" sumUsedByGroup in transp=%f \n",sumUsedByGroup);
 	}
-	//Occasionally, extra transpiration remains and if not perfectly partitioned to RGroups.
-	//This check makes sure any remaining transpiration is divided proportionately among Rgroups.
+
+	//Very small amounts of transpiration remain and not perfectly partitioned to functional groups.
+	//This check makes sure any remaining transpiration is divided proportionately among groups.
 	ForEachTrPeriod(p)
 	{
 		for (t = 0; t < SXW.NSoLyrs; t++)
@@ -274,14 +284,57 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
 	}
     TranspRemaining = sumTranspTotal - sumUsedByGroup;
     //printf(" sumTranspTotal=%f, sumUsedByGroup=%f  TranspRemaining=%f \n",sumTranspTotal,sumUsedByGroup,TranspRemaining);
-		ForEachGroup(g)
+
+        ForEachGroup(g)
 		{
 			if(!ZRO(use_by_group[g])) {
                 use_by_group[g] += (use_by_group[g]/sumUsedByGroup) * TranspRemaining;
-              //  printf("for groupName= %s, after sum use_by_group[g]= %f \n",RGroup[g]->name,use_by_group[g] );
-		}
-	}
+                //printf("for groupName= %s, after sum use_by_group[g]= %f \n",RGroup[g]->name,use_by_group[g] );
+
+                SXW.transp_SWA[currentYear][g] = use_by_group[g];
+                //printf("for groupName= %s, SXW.transp_SWA[g] in transp= %f \n",RGroup[g]->name,SXW.transp_SWA[currentYear][g]);
+            }
+        }
 }
 
+static void _SWA_contribution_by_group(RealF use_by_group[]) {
+    /*======================================================*/
+    /* use_by_group is the amount of plant available soil water (SWA,cm)
+     * assigned to each STEPPE functional group.
+     * Must call _update_root_tables() before this.
+     * Compute each group's amount of SWA from SOILWAT2
+     * based on its biomass, root distribution, and phenological
+     * activity. */
 
+	GrpIndex g;
+	TimeInt p;
+	LyrIndex l;
+    int currentYear;
+    if(SW_Model.year == 0) currentYear = 0;
+    else currentYear = SW_Model.year - SW_Model.startyr;
+	int t;
+	RealF sumUsedByGroup = 0.;
 
+	ForEachGroup(g) //Steppe functional group
+	{
+		use_by_group[g] = 0.;
+		t = RGroup[g]->veg_prod_type-1;
+        //printf("g, t || %d, %d\n", g, t);
+
+		ForEachTrPeriod(p)
+		{
+			for (l = 0; l < SXW.NSoLyrs; l++) {
+        //printf("%d,%d,%d\n", t,l,p);
+				use_by_group[g] += (RealF) (_roots_active_rel[Iglp(g, l, p)] * SXW.sum_dSWA_repartitioned[Ivlp(t,l,p)]);
+                //printf("for groupName= %s, layerIndex: %d, month: %d, in swa loop use_by_group[g]= %f \n",RGroup[g]->name,l,p,use_by_group[g]);
+			}
+		}
+		//printf("for groupName= %s, use_by_group[g] in swa= %f \n",RGroup[g]->name,use_by_group[g]);
+
+        sumUsedByGroup += use_by_group[g];
+        //printf(" sumUsedByGroup in swa=%f \n",sumUsedByGroup);
+
+        SXW.transp_SWA[currentYear][g] += use_by_group[g];
+        //printf("SXW.transp_SWA[%d][%d]: %f\n", currentYear, g, SXW.transp_SWA[currentYear][g]);
+	}
+}
