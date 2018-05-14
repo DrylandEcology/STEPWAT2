@@ -25,6 +25,7 @@
 #include "rands.h"
 #include "generic.h"
 
+#include "sw_src/filefuncs.h"
 #include "ST_functions.h"
 #include "sxw_funcs.h"
 extern Bool UseSoilwat;
@@ -70,10 +71,19 @@ and further partitioning to individuals in the group _ResPartIndiv().
 See COMMENT 1. at the end of this file for the algorithm.*/
 
 	GrpIndex rg;
+	RealF resource, /* amt of "resource" == 1 when ppt is avg */
+	xtra_base = 0., /* pooled extra resource up to 1.0 */
+	xtra_obase = 0., /* pooled resource > 1.0 */
+	size_base[MAX_RGROUPS] = {0}, /* total res. contrib to base, all groups */
+	size_obase[MAX_RGROUPS] = {0}; /* total res. contrib. if xtra_obase */
+
 	Bool noplants = TRUE;
-	const Bool add_seeds = TRUE, /* monikers for pass 1 & 2 _add_annuals() */
+	const Bool do_base = FALSE, /* monikers for _res_part_extra() */
+	do_extra = TRUE, /* monikers for pass 1 & 2 _add_annuals() */
 	no_seeds = FALSE;
 	GroupType *g; /* shorthand for RGroup[rg] */
+
+	/*----------------------------------------------------*/
 
 	/* ----- distribute basic (minimum) resources */
 	ForEachGroup(rg)
@@ -92,7 +102,6 @@ See COMMENT 1. at the end of this file for the algorithm.*/
 			g->res_required = g->estabs;
 			g->res_avail = 1;
 		}
-		
 		//A check
 		if(ZRO(g->res_avail) && g->res_required > 0)
 		{
@@ -131,7 +140,7 @@ See COMMENT 1. at the end of this file for the algorithm.*/
 		g = RGroup[rg];
 		g->pr = ZRO(g->res_avail) ? 0. : g->res_required / g->res_avail;
 	}
- 	
+
  	//partition resources to individuals and determine 'extra' resources
 	rgroup_ResPartIndiv();
 
@@ -315,10 +324,9 @@ static void _res_part_extra(Bool isextra, RealF extra, RealF size[])
 		g = RGroup[rg];
 		if (ZRO(g->relsize))
 			continue;
-		
 		if (isextra && !g->use_extra_res)
 			continue;
-			
+
 		// checking to make sure not dividing by 0
 		if(sum_size == 0.)
 			req_prop = 0.;

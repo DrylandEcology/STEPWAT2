@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <math.h>
 
+#include "sw_src/filefuncs.h"
 #include "generic.h"
 #include "rands.h"
 #include "myMemory.h"
