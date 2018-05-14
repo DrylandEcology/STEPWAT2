@@ -153,7 +153,7 @@ void _sxw_update_resource(void) {
 
 	_sxw_update_root_tables(sizes);
 	_transp_contribution_by_group(_resource_cur);
-  _SWA_contribution_by_group(SXW.sum_dSWA_repartitioned);
+  //_SWA_contribution_by_group(SXW.sum_dSWA_repartitioned);
 
 	ForEachGroup(g)
 	{

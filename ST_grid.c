@@ -2085,7 +2085,7 @@ static void _read_disturbances_in(void)
 		if (!GetALine2(f, buf, 1024))
 			break;
 
-		num = sscanf(buf, "%d,%d,%d,%d,%d,%f,%d,%d,%f,%d,%d,%d", &cell,
+		num = sscanf(buf, "%d,%d,%d,%d,%d,%d,%d,%d,%f,%d,%d,%d", &cell,
 				&grid_Disturb[i].choices[0], &grid_Disturb[i].choices[1],
 				&grid_Disturb[i].choices[2], &grid_Disturb[i].kill_yr,
 				&grid_Disturb[i].killfrq, &grid_Disturb[i].extirp,
