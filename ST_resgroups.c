@@ -98,9 +98,6 @@ void rgroup_PartResources(void)
 	{
 		g = RGroup[rg];
 
-		//if (g->max_age == 1)
-		//	g->relsize = _add_annuals(rg, 1.0, no_seeds);
-
 		/*this piece of the code is only used when SOILWAT is NOT running*/
 	#ifdef STEPWAT
 		if (!UseSoilwat)
@@ -514,8 +511,6 @@ void rgroup_Grow(void)
 	ForEachGroup(rg)
 	{
 		g = RGroup[rg];
-		//if (g->max_age == 1) continue; /* annuals already taken care of */
-		// removed to allow annuals to grow (TEM 10-27-2015))
 
 		if (!g->est_count)
 			continue;
@@ -620,8 +615,6 @@ static void _extra_growth(GrpIndex rg)
 	IndivType *ndv;
 	SppIndex sp;
 
-	//if ( RGroup[rg]->max_age == 1) return;
-	// removed to allow extra growth in annuals (TEM 10-27-2015))
 	if (ZRO(RGroup[rg]->xgrow))
 		return;
 	if (!RGroup[rg]->use_extra_res)
@@ -844,14 +837,12 @@ void RGroup_Update_Newsize(GrpIndex rg)
 		RGroup[rg]->relsize = sumsize / (RealF) RGroup[rg]->est_count;
 	}
 
-	///if (RGroup[rg]->max_age != 1) {
 	numindvs = 0; // set to 0 so no problems passing to function
 	/* compute the contribution of each indiv to the group's size */
 	indivs = RGroup_GetIndivs(rg, SORT_0, &numindvs);
 	for (n = 0; n < numindvs; n++)
 		indivs[n]->grp_res_prop = indivs[n]->relsize / sumsize;
 	//Mem_Free(indivs); // dont call free on variable unless it was initialized with malloc or calloc
-	///}
 
 	/* double check some assumptions */
 	if (RGroup[rg]->est_count < 0)
