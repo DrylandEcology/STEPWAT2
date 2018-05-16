@@ -564,12 +564,14 @@ static void _extra_growth(GrpIndex rg)
 	IndivType *ndv;
 	SppIndex sp;
 
+	g = RGroup[rg];
+	
 	if (ZRO(RGroup[rg]->xgrow))
 		return;
 	if (!RGroup[rg]->use_extra_res)
 		return;
-
-	g = RGroup[rg];
+    if (ZRO(g->res_extra))
+        return;
 
 	ForEachEstSpp(sp, rg, j)
 	{
@@ -584,6 +586,7 @@ static void _extra_growth(GrpIndex rg)
 		//printf("s->extragrowth  = %f\n", s->extragrowth);
 		
 		Species_Update_Newsize(s->sp_num, s->extragrowth);
+		//printf("s->relsize  = %f\n", Species[sp]->relsize);
 	}
 }
 

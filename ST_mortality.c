@@ -819,16 +819,32 @@ void _kill_extra_growth( void) {
   IntU j;
   GrpIndex rg;
   SppIndex sp;
+  GroupType *g;
+  SpeciesType *s;
 
+  g = RGroup[rg];
 
   ForEachGroup(rg) {
-    if (!RGroup[rg]->use_extra_res) continue;
+  	
+  	if (ZRO(RGroup[rg]->xgrow))
+		return;
+		
+    if (!RGroup[rg]->use_extra_res)
+    	return;
+    	
+    if (ZRO(g->res_extra))
+        return; 
+    	
     ForEachEstSpp( sp, rg, j) {
-      if ( ZRO(Species[sp]->extragrowth) ) continue;
-      Species_Update_Newsize( sp, -Species[sp]->extragrowth);
+      s = Species[sp];
+      
+      if (ZRO(Species[sp]->extragrowth)) continue;
+      //printf("s->relsize before  = %f\n", Species[sp]->relsize);
+      
+      Species_Update_Newsize(s->sp_num, -s->extragrowth);
+      //printf("s->relsize after  = %f\n", Species[sp]->relsize);
+      
       Species[sp]->extragrowth = 0.0;
     }
   }
-
-
 }
