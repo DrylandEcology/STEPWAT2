@@ -280,9 +280,13 @@ static void _res_part_extra(Bool isextra, RealF extra, RealF size[])
             if (ZRO(g->relsize))
                         continue;
                         
-		sum_size += size[rg];
+        //where size = size_obase, which is biomass(g/m2) or 0 if the group can't use resources       
+        sum_size += size[rg];
+        //printf("size[rg]  = %f\n,Rgroup = %s \n",RGroup[rg]->name, size[rg]);
+        //printf("sum_size  = %f\n,Rgroup = %s \n",RGroup[rg]->name, sum_size);
 	}
-	
+		//printf("sum_size  = %f\n", sum_size);
+		
 	ForEachGroup(rg)
 	{
 		g = RGroup[rg];
@@ -302,6 +306,7 @@ static void _res_part_extra(Bool isextra, RealF extra, RealF size[])
 		
 		else
 			g->res_extra = 0.;
+			//printf("res_extra = %f\n,Rgroup = %s \n",RGroup[rg]->name,g->res_extra);
 
 	}
 
@@ -329,7 +334,7 @@ void rgroup_ResPartIndiv(void)
 	IntS numindvs, n;
 	RealF x, /* temporary multiplier */
 	base_rem = 0., /* remainder of resource after allocating to an indiv */
-	extra = 0., /* extra resources at the group level, sum of base_rem values */
+	total_base_rem = 0., /* extra resources at the group level, sum of base_rem values */
 	xtra_obase = 0., /* summed extra resources across all groups  */
     size_base[MAX_RGROUPS] = {0}, /* total res. contrib to base, all groups */
     size_obase[MAX_RGROUPS] = {0}; /* total res. contrib. if xtra_obase */
@@ -357,27 +362,29 @@ void rgroup_ResPartIndiv(void)
 				/* Calculate resources required for each individual in terms of biomass*/
 				ndv->res_required = (ndv->relsize * Species [sp]->mature_biomass);
 				//printf("ndv->res_required = %f\n, Species = %s \n", Species[sp]->name, ndv->res_required);
+				//printf("ndv->relsize = %f\n, Species = %s \n", Species[sp]->name, ndv->relsize);
 
 				/* Calculate resources available for each individual based on res_required*/
 				ndv->res_avail = fmin(ndv->res_required, base_rem);
-				//printf("ndv->res_avail_pr>1 = %f\n", ndv->res_avail);
+				//printf("ndv->res_avail = %f\n", ndv->res_avail);
 
 				/* Remaining extra resource for each individual (if any)*/
 				base_rem = fmax(base_rem - ndv->res_avail, 0.);
-				//printf("base_rem pr>1 = %f\n", base_rem);
+				//printf("base_rem = %f\n", base_rem);
 			}
+	
+		//sum "extra" resource for all species in each functional group
+		total_base_rem += base_rem;
+		//printf("base_rem_final = %f\n", total_base_rem);
 		}
 		
-		//sum "extra" resource for all species in each functional group
-		extra += base_rem;
-		//printf("extra = %f\n", extra);
-		
 		//sum "extra" resource for all functional groups
-		xtra_obase +=extra; 
+		xtra_obase +=total_base_rem; 
 		//printf("xtra_obase = %f\n", xtra_obase);
 		
 		size_base[rg] = RGroup_GetBiomass(rg);
 		size_obase[rg] = (g->use_extra_res) ? size_base[rg] : 0.;
+        //printf("size_obase = %f\n", size_obase[rg]);
                 
         Mem_Free(indivs);
 
@@ -393,6 +400,8 @@ void rgroup_ResPartIndiv(void)
 		g = RGroup[rg];
 		if (!g->est_count)
 			continue;
+        
+        //printf("g->res_extra = %f\n, RGroup= %s \n", RGroup[rg]->name, g->res_extra);
                                            
       	/* --- allocate the temporary group-oriented arrays */
 		indivs = RGroup_GetIndivs(rg, SORT_D, &numindvs);
@@ -404,10 +413,11 @@ void rgroup_ResPartIndiv(void)
 
 			if (g->use_extra_res && GT(g->res_extra, 0.))
 			{
-				x = 1. - ndv->relsize;
 				//printf("ndv->res_avail before  = %f\n", ndv->res_avail);
-				ndv->res_extra = x * ndv->grp_res_prop* g->res_extra;
+				
+				ndv->res_extra = ndv->grp_res_prop * g->res_extra;
 				//printf("ndv->res_extra = %f\n", ndv->res_extra);
+				
 				ndv->res_avail += ndv->res_extra;
 				//printf("ndv->res_avail after = %f\n", ndv->res_avail);
 			}
