@@ -1,20 +1,16 @@
 /********************************************************/
-/********************************************************/
 /*  Source file: resgroups.c
- /*  Type: module
- /*  Application: STEPPE - plant community dynamics simulator
- /*  Purpose: This is the module that executes the growth
- *           functions and otherwise manages the bookkeeping
- *           at the group level.
- /*  History:
- /*     (6/15/2000) -- INITIAL CODING - cwb
- /*
- /********************************************************/
-/********************************************************/
-
-/* =================================================== */
-/*                INCLUDES / DEFINES                   */
-/* --------------------------------------------------- */
+    Type: module
+    Application: STEPPE - plant community dynamics simulator
+    Purpose: This is the module that executes the growth
+            functions and otherwise manages the bookkeeping
+            at the group level.
+   History:
+      (6/15/2000) -- INITIAL CODING - cwb
+ 
+* =================================================== *
+*                INCLUDES / DEFINES                   *
+* --------------------------------------------------- */
 
 #include <math.h>
 #include <string.h>
@@ -24,7 +20,6 @@
 #include "myMemory.h"
 #include "rands.h"
 #include "generic.h"
-
 #include "sw_src/filefuncs.h"
 #include "ST_functions.h"
 #include "sxw_funcs.h"
@@ -50,7 +45,6 @@ void rgroup_Extirpate(GrpIndex rg);
 
 /*********** Locally Used Function Declarations ************/
 /***********************************************************/
-static RealF _ppt2resource(RealF ppt, GroupType *g);
 static void _res_part_extra(Bool isextra, RealF extra, RealF size[]);
 static GroupType *_create(void);
 static void _extra_growth(GrpIndex rg);
@@ -71,19 +65,9 @@ and further partitioning to individuals in the group _ResPartIndiv().
 See COMMENT 1. at the end of this file for the algorithm.*/
 
 	GrpIndex rg;
-	RealF resource, /* amt of "resource" == 1 when ppt is avg */
-	xtra_base = 0., /* pooled extra resource up to 1.0 */
-	xtra_obase = 0., /* pooled resource > 1.0 */
-	size_base[MAX_RGROUPS] = {0}, /* total res. contrib to base, all groups */
-	size_obase[MAX_RGROUPS] = {0}; /* total res. contrib. if xtra_obase */
-
 	Bool noplants = TRUE;
-	const Bool do_base = FALSE, /* monikers for _res_part_extra() */
-	do_extra = TRUE, /* monikers for pass 1 & 2 _add_annuals() */
-	no_seeds = FALSE;
+	const Bool no_seeds = FALSE;
 	GroupType *g; /* shorthand for RGroup[rg] */
-
-	/*----------------------------------------------------*/
 
 	/* ----- distribute basic (minimum) resources */
 	ForEachGroup(rg)
@@ -266,26 +250,6 @@ static void _add_annual_seedprod(SppIndex sp, RealF pr)
 	//s->seedprod[i] = LT(pr, 0.) ? 0. : s->max_seed_estab * s->relsize;
 }
 
-static RealF _ppt2resource(RealF ppt, GroupType *g)
-{
-	/*======================================================*/
-	/* PURPOSE */
-	/* Converts ppt in mm to a resource index for a group
-	 pointed to by g.
-	 Represents EQNs 2,3,4
-
-	 /* SCOPE
-	 Local routine called from rgroup_PartResources.
-
-	 /* HISTORY
-	 /* Chris Bennett @ LTER-CSU 2/12/2001
-
-	 /*------------------------------------------------------*/
-
-	return (ppt * g->ppt_slope[Env.wet_dry] + g->ppt_intcpt[Env.wet_dry]);
-
-}
-
 /***********************************************************/
 static void _res_part_extra(Bool isextra, RealF extra, RealF size[])
 {
@@ -295,10 +259,10 @@ static void _res_part_extra(Bool isextra, RealF extra, RealF size[])
 	 redistributes them to other groups that can use them
 	 (if any).
 	 See COMMENT 2 at the end of this file for the algorithm.
-	 /* SCOPE
+	 SCOPE
 	 Local routine called from rgroup_PartResources.
-	 /* HISTORY
-	 /* Chris Bennett @ LTER-CSU 12/21/2000
+	 HISTORY
+	 Chris Bennett @ LTER-CSU 12/21/2000
 	 Removed from rgroup_PartResources() to simplify that
 	 routine.
 	 15-May-03 (cwb) Adding code to accomodate resource-by-mm
@@ -333,7 +297,7 @@ static void _res_part_extra(Bool isextra, RealF extra, RealF size[])
 		else
 			req_prop = size[rg] / sum_size;
 
-		if (isextra && g->use_extra_res && GT(g->xgrow, 0))
+		if (isextra && g->use_extra_res && GT(g->xgrow, 0.))
 			g->res_extra = req_prop * extra;
 		
 		else
@@ -1110,13 +1074,12 @@ IndivType **RGroup_GetIndivs(GrpIndex rg, const char sort, IntS *num)
 	 free when appropriate.
 	 - Puts the number of individuals in *num.
 
-
-	 /* HISTORY */
-	/* Chris Bennett @ LTER-CSU 12/15/2000
+	 HISTORY
+	 Chris Bennett @ LTER-CSU 12/15/2000
 	 *
 	 *  2-Mar-03 - cwb - removed requirement for list to be
-	 *      pre-allocated.  Added code to allocate and return list.
-	 /*------------------------------------------------------*/
+	 *  pre-allocated.  Added code to allocate and return list.
+	 *------------------------------------------------------*/
 
 	IntS j, i = 0;
 	size_t i_size = sizeof(IndivType **);
