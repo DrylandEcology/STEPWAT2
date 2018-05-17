@@ -264,7 +264,7 @@ static RealF _get_annual_maxestab(SppIndex sp) {
         //printf("Species name=%s , seedprod after decay s->seedprod[%hu]= %d \n", s->name, i, s->seedprod[i]);
     }    
        
-    for (i > 0; i <= s->viable_yrs; i++)
+    for (i = 0; i <= s->viable_yrs; i++)
     {
         sum += s->seedprod[i];
     }
@@ -693,7 +693,6 @@ void rgroup_Establish(void) {
     GrpIndex rg;
     SppIndex sp;
     GroupType *g;
-    RealF lastyear_relsize;
 
     /* Cannot establish if plot is still in disturbed state*/
     if (Plot.disturbed > 0) {
