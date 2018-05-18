@@ -457,7 +457,7 @@ void rgroup_Grow(void)
 	SppIndex sp;
 	GroupType *g;
 	SpeciesType *s;
-	const RealF OPT_SLOPE = .95;
+	const RealF OPT_SLOPE = .05;
 	RealF growth1, /* growth of one individual*/
 	sppgrowth, /* sum of growth for a species' indivs */
 	rate1, /* rate of growth for an individual*/
@@ -498,12 +498,12 @@ void rgroup_Grow(void)
 			/* now grow the individual plants of current species*/
 			ForEachIndiv(ndv, s)
 			{
-
 				/* modify growth rate based on resource availability*/
-				/* deleted EQN 5 because it's wrong. OPT_SLOPE was formerly 0.05, which resulted in gmod values that were too low */
-				/* Now the values fro gmod range between 0.05 and 0.99 similiar to Coffin and Lauenroth 1990 */
+				/* deleted EQN 5 because it's wrong.*/
+				/* Now the values for gmod range between 0.05 and 0.95 similiar to Coffin and Lauenroth 1990 */
 
-				gmod = 1.0 - OPT_SLOPE * min(1.0, ndv->pr);
+				gmod = 1.0 - OPT_SLOPE;
+				
 				if (GT(ndv->pr, 1.0))
 					gmod /= ndv->pr;
 
