@@ -19,4 +19,4 @@
 #       it doesn't hurt to set it to 0 always.
 
 # niter nyrs  seed
- 50 300 0
+ 1 5 0
