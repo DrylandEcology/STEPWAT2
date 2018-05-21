@@ -194,7 +194,7 @@ static RealF _add_annuals(const GrpIndex rg, const SppIndex sp, const RealF last
     ( (sizeof(x) == sizeof(float)) \
   ? ((x)>-xF_DELTA && (x)<xF_DELTA) \
   : ((x)>-xD_DELTA && (x)<xD_DELTA) )
-    IntU i, num_est;
+    IntU i, num_est; //number of individuals that will establish this year
     RealF viable_seeds, viable_seeds_reduced; //viable seed and viable seed excluding this year's added seed, respectively
     float alpha, beta, var; //parameters needed to calculation of num_est from beta distribution
     GroupType *g;
