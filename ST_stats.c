@@ -1186,20 +1186,35 @@ void stat_Output_AllBmass(void) {
       }
     }
 
-    if (BmassFlags.sppb) {
-      ForEachSpecies(sp) {
-        sprintf(tbuf, "%f%c",
-                _get_avg( &_Spp[sp].s[yr-1]), sep);
-        strcat( buf, tbuf);
+		if (BmassFlags.sppb)
+		{
+			for ((sp) = 0; (sp) < Globals.sppCount - 1; (sp)++)
+			{
+				sprintf(tbuf, "%f%c", _get_avg(&_Spp[sp].s[yr - 1]), sep);
+				strcat(buf, tbuf);
 
-        if (BmassFlags.indv) {
-          sprintf(tbuf, "%f%c",
-                  _get_avg( &_Indv[sp].s[yr-1]), sep);
-          strcat( buf, tbuf);
-        }
+				if (BmassFlags.indv)
+				{
+					sprintf(tbuf, "%f%c", _get_avg(&_Indv[sp].s[yr - 1]), sep);
+					strcat(buf, tbuf);
+				}
+			}
 
-      }
-    }
+			if (BmassFlags.indv)
+			{
+				sprintf(tbuf, "%f%c", _get_avg(&_Spp[sp].s[yr - 1]), sep);
+				strcat(buf, tbuf);
+
+				sprintf(tbuf, "%f", _get_avg(&_Indv[sp].s[yr - 1]));
+				strcat(buf, tbuf);
+			}
+			else
+			{
+				sprintf(tbuf, "%f", _get_avg(&_Spp[sp].s[yr - 1]));
+				strcat(buf, tbuf);
+			}
+
+		}
 
     fprintf( f, "%s\n", buf);
   }  /* end of foreach year */
@@ -1373,7 +1388,7 @@ static void _make_header_with_std( char *buf) {
       sprintf(tbuf,"%s%c", fields[i], BmassFlags.sep);
       strcat(buf, tbuf);
     }
-    sprintf(tbuf,"%s%c\n", fields[i],BmassFlags.sep);
+    sprintf(tbuf,"%s\n", fields[i]);
     strcat(buf, tbuf);
 
 
@@ -1435,7 +1450,7 @@ static void _make_header( char *buf) {
       sprintf(tbuf,"%s%c", fields[i], BmassFlags.sep);
       strcat(buf, tbuf);
     }
-    sprintf(tbuf,"%s%c\n", fields[i],BmassFlags.sep);
+    sprintf(tbuf,"%s\n", fields[i]);
     strcat(buf, tbuf);
 
 
