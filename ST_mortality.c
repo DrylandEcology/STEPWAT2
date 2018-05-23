@@ -794,28 +794,20 @@ void _kill_annuals( void) {
 
 /***********************************************************/
 void _kill_extra_growth( void) {
-/*======================================================*/
-/* PURPOSE */
-/* Remove any extra growth accumulated during the growing
-   season.  This should be done after all the statistics
+/*======================================================*
+* PURPOSE *
+* Remove any extra growth accumulated during the growing
+   season. This should be done after all the statistics
    are accumulated for the year.
-
    Note that extra growth is not stored by the individuals
    but only by Species and RGroup.
-
   This should probably be split into separate functions
   so the actual killing of extra growth is one function
   that can be called from anywhere, and the looping is
   in another function with another name.
   That way, individual functions can kill specific
-  extra growth without affecting others.
-*/
-
-/* HISTORY */
-/* Chris Bennett @ LTER-CSU 10/26/2000            */
-
+  extra growth without affecting others.*/
 /*------------------------------------------------------*/
-
   IntU j;
   GrpIndex rg;
   SppIndex sp;
@@ -835,15 +827,14 @@ void _kill_extra_growth( void) {
     if (ZRO(g->res_extra))
         return; 
     	
-    ForEachEstSpp( sp, rg, j) {
-      s = Species[sp];
+    ForEachEstSpp(sp, rg, j) {
       
       if (ZRO(Species[sp]->extragrowth)) continue;
-      //printf("s->relsize before  = %f\n", Species[sp]->relsize);
+    	//printf("s->relsize kill before = %f\n, Species = %s \n", Species[sp]->name, Species[sp]->relsize);
+    	//printf("s->extragrowth kill before  = %f\n", Species[sp]->extragrowth);
       
-      Species_Update_Newsize(s->sp_num, -s->extragrowth);
-      //printf("s->relsize after  = %f\n", Species[sp]->relsize);
-      
+      Species_Update_Newsize(sp, -Species[sp]->extragrowth);
+      //printf("s->relsize kill after  = %f\n", Species[sp]->relsize);   
       Species[sp]->extragrowth = 0.0;
     }
   }
