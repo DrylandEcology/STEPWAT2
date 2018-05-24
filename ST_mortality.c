@@ -139,7 +139,7 @@ void mort_Main( Bool *killed) {
 
   ForEachGroup(rg) {
     g = RGroup[rg];
-    if (!g->est_count) continue;
+    if (g->est_count == 0) continue;
     if (g->max_age == 1) continue;  /* annuals get theirs in EndOfYear() */
 
     /* mortify plants if low resources for consecutive years */
