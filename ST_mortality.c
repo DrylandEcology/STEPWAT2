@@ -817,15 +817,12 @@ void _kill_extra_growth( void) {
   g = RGroup[rg];
 
   ForEachGroup(rg) {
-  	
-  	if (ZRO(RGroup[rg]->xgrow))
-		return;
 		
     if (!RGroup[rg]->use_extra_res)
-    	return;
+    	continue;
     	
     if (ZRO(g->res_extra))
-        return; 
+        continue; 
     	
     ForEachEstSpp(sp, rg, j) {
       
