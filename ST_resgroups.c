@@ -82,13 +82,7 @@ See COMMENT 1. at the end of this file for the algorithm.*/
 		//printf("g->res_avail = %f\n,Group = %s \n",RGroup[rg]->name,  g->res_avail); 
         //printf("g->res_required = %f\n,Group = %s \n",RGroup[rg]->name,  g->res_required); 
         
-		//PR limit can be really high see mort no_resource I limit to the groups estab indiv because that is what we can kill.
-		if(!ZRO(g->res_avail) && g->res_required / g->res_avail > g->estabs)
-		{
-			g->res_required = g->estabs;
-			g->res_avail = 1;
-		}
-		//A check
+		//A check and set of res_required and res_avail
 		if(ZRO(g->res_avail) && g->res_required > 0)
 		{
 			g->res_required = g->estabs;
