@@ -1,14 +1,13 @@
 /********************************************************/
 /********************************************************/
 /*  Source file: resgroups.c
- /*  Type: module
- /*  Application: STEPPE - plant community dynamics simulator
- /*  Purpose: This is the module that executes the growth
+ *  Type: module
+ *  Application: STEPPE - plant community dynamics simulator
+ *  Purpose: This is the module that executes the growth
  *           functions and otherwise manages the bookkeeping
  *           at the group level.
- /*  History:
- /*     (6/15/2000) -- INITIAL CODING - cwb
- /*
+ *  History:
+ *     (6/15/2000) -- INITIAL CODING - cwb */
  /********************************************************/
 /********************************************************/
 
@@ -87,8 +86,7 @@ void rgroup_PartResources(void)
 
 	Bool noplants = TRUE;
 	const Bool do_base = FALSE, /* monikers for _res_part_extra() */
-	do_extra = TRUE, /* monikers for pass 1 & 2 _add_annuals() */
-	no_seeds = FALSE;
+	do_extra = TRUE; /* monikers for pass 1 & 2 _add_annuals() */
 	GroupType *g; /* shorthand for RGroup[rg] */
 
 	/*----------------------------------------------------*/
@@ -188,12 +186,6 @@ static RealF _add_annuals(const GrpIndex rg, const SppIndex sp, const RealF last
      * adding plants this year.  
      * reset group size to account for additions, or 0 if none.
      */
-	#define xF_DELTA (20*F_DELTA)
-	#define xD_DELTA (20*D_DELTA)
-	#define ZERO(x) \
-    ( (sizeof(x) == sizeof(float)) \
-  ? ((x)>-xF_DELTA && (x)<xF_DELTA) \
-  : ((x)>-xD_DELTA && (x)<xD_DELTA) )
     IntU i, num_est; //number of individuals that will establish this year
     RealF viable_seeds, viable_seeds_reduced; //viable seed and viable seed excluding this year's added seed, respectively
     float alpha, beta, var; //parameters needed to calculation of num_est from beta distribution
@@ -201,15 +193,13 @@ static RealF _add_annuals(const GrpIndex rg, const SppIndex sp, const RealF last
     SpeciesType *s;
 
     g = RGroup[rg];
-    assert(g->max_age == 1);
-
     s = Species[sp];
     viable_seeds_reduced = 0.0;
 
     /*Increment viable years for seeds and add seeds to the seedbank*/
     _add_annual_seedprod(sp, lastyear_relsize);
 
-    /*Implement decay process and then get viable seeds from seed bank*/
+    /*Implement the decay process (seed mortality) and then get viable seeds from seed bank*/
     viable_seeds = (g->regen_ok) ? _get_annual_maxestab(sp) : 0;
 
     /*Create a beta random number draw, where mean =s->seedling_estab_prob
@@ -223,14 +213,10 @@ static RealF _add_annuals(const GrpIndex rg, const SppIndex sp, const RealF last
      /*Create beta random number*/
      var = RandBeta(alpha, beta);
      
-     /*Determine number of seedlings to add*/
-     num_est = viable_seeds * var;
+     /*Determine number of seedlings to add. If the beta random number of viable seeds 
+      * is larger than max_seed_estab, max_seed_estab value is used instead*/
+     num_est = min(viable_seeds * var, s->max_seed_estab); 
      	//printf("Species name=%s , num_est   =%u \n",s->name,  num_est);
-     
-     /*if the beta random number * viable seeds is larger than max_seed_estab, 
-     max_seed_estab value is used instead*/
-     if (num_est > s->max_seed_estab) {num_est = s->max_seed_estab;} 
-          //printf("Species name=%s , num_est   =%u \n",s->name,  num_est);
     
     /*Remove seedlings added from the seed bank*/
     /*Calculate the viable seedbank excluding seeds added this year*/
@@ -275,12 +261,13 @@ static RealF _get_annual_maxestab(SppIndex sp) {
 
 static void _add_annual_seedprod(SppIndex sp, RealF lastyear_relsize) {
     /*======================================================*/
-    /* Add seeds to the seedbank this year and increment viable years for seeds.*/
+    /* Increase the age of seeds and then add seeds to the seedbank.*/
 
     SpeciesType *s = Species[sp];
     IntU i;
 
-    //incrementing the number of viable years
+    /*Age of seeds is increased by one year and seeds produced in the 
+    previous year are added to the seedbank at relative age 0 */
     for (i = s->viable_yrs - 1; i > 0; i--) 
     {
         s->seedprod[i] = s->seedprod[i - 1];
@@ -292,11 +279,11 @@ static void _add_annual_seedprod(SppIndex sp, RealF lastyear_relsize) {
     //1 and the maximum number of seedlings that can establish. Otherwise, this year's seed production is a function of the number 
     //of seeds produced per unit biomass, max biomass, and last year's species relative size.
     if (Globals.currYear == 1) {
-        s->seedprod[i] = RandUniRange(1, s->pseed);
+        s->seedprod[0] = RandUniRange(1, s->pseed);
        //printf("Species name=%s ,currYear =1 so new calculated value s->seedprod[%u]= %hu , s->max_seed_estab =%hu\n", s->name, i, s->seedprod[i], s->max_seed_estab);
     
     } else {
-    	s->seedprod[i] = (IntU)(s->pseed * s->mature_biomass * lastyear_relsize);
+    	s->seedprod[0] = (IntU)(s->pseed * s->mature_biomass * lastyear_relsize);
    		//printf("Species name=%s ,currYear=%hu  so new calculated value s->seedprod[%u]= %hu , s->max_seed_estab =%hu, lastyear_relsize=%.5f\n", s->name, Globals.currYear, i, s->seedprod[i], s->max_seed_estab, lastyear_relsize);
     }
 }

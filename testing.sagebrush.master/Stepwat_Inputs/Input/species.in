@@ -50,7 +50,7 @@
 # var = the variance parameter of the beta distribution for annual establishment.
 #       reference value:0.0001, used in L219 of ST_resgroup.c to calculate the parameters 
 #       of alpha and beta in beta random number draw. Mean value = seedling_estab_prob.  
-# pseed = the average seed production of annuals per 1g, per 1m^2 and per year.
+# pseed = the average number of seeds produced by annual species per 1g of biomass, per 1m^2 and per year.
 
 ###PARAMETER SOURCES     
 #TM - eind values are density values taken from Adler datasets from Idaho. Species vuoc (1090), bogr, spcr, brar (2080), are from Karl et al 1999

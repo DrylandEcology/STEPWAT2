@@ -1140,7 +1140,7 @@ static void _species_init( void) {
       Species[sp]->received_prob = 0;
       Species[sp]->cohort_surv = cohort;
       Species[sp]->var = var;
-      Species[sp]->pseed = pseed;
+      Species[sp]->pseed = pseed / Globals.plotsize;
 /*      Species[sp]->ann_mort_prob = (age > 0)
                                  ? -log(cohort)/age
                                  : 0.0;
@@ -1182,7 +1182,7 @@ static void _species_init( void) {
 
      Species[sp]->viable_yrs = viable;
      Species[sp]->exp_decay  = xdecay;
-     Species[sp]->seedprod = (IntU *) Mem_Calloc( viable, sizeof(IntU), "species_init()");
+     Species[sp]->seedprod = (IntUS *) Mem_Calloc( viable, sizeof(IntUS), "species_init()");
 
    } /* end while readspp*/
 
