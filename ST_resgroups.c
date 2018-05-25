@@ -279,7 +279,7 @@ static void _add_annual_seedprod(SppIndex sp, RealF lastyear_relsize) {
     //1 and the maximum number of seedlings that can establish. Otherwise, this year's seed production is a function of the number 
     //of seeds produced per unit biomass, max biomass, and last year's species relative size.
     if (Globals.currYear == 1) {
-        s->seedprod[0] = RandUniRange(1, s->pseed);
+        s->seedprod[0] = RandUniRange(1, s->max_seed_estab);
        //printf("Species name=%s ,currYear =1 so new calculated value s->seedprod[%u]= %hu , s->max_seed_estab =%hu\n", s->name, i, s->seedprod[i], s->max_seed_estab);
     
     } else {
