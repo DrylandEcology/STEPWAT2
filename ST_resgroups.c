@@ -196,10 +196,11 @@ static RealF _add_annuals(const GrpIndex rg, const SppIndex sp, const RealF last
     s = Species[sp];
     viable_seeds_reduced = 0.0;
 
-    /*Increment viable years for seeds and add seeds to the seedbank*/
+    /*Increment viable years for seeds and implement the decay process (seed mortality). 
+    * Then add seeds to the seedbank*/
     _add_annual_seedprod(sp, lastyear_relsize);
 
-    /*Implement the decay process (seed mortality) and then get viable seeds from seed bank*/
+    /*Get viable seeds from seed bank*/
     viable_seeds = (g->regen_ok) ? _get_annual_maxestab(sp) : 0;
 
     /*Create a beta random number draw, where mean =s->seedling_estab_prob
@@ -242,14 +243,7 @@ static RealF _get_annual_maxestab(SppIndex sp) {
     IntU i;
     RealF sum = 0.; //sum of the viable seedbank
     SpeciesType *s = Species[sp];
-
-    for (i = s->viable_yrs; i > 0; i--)
-    {
-        //printf("Species name=%s , seedprod before decay s->seedprod[%hu]= %d \n", s->name, i, s->seedprod[i]);
-        s->seedprod[i] = s->seedprod[i] / pow(i, s->exp_decay);
-        //printf("Species name=%s , seedprod after decay s->seedprod[%hu]= %d \n", s->name, i, s->seedprod[i]);
-    }    
-       
+    
     for (i = 0; i <= s->viable_yrs; i++)
     {
         sum += s->seedprod[i];
@@ -266,11 +260,13 @@ static void _add_annual_seedprod(SppIndex sp, RealF lastyear_relsize) {
     SpeciesType *s = Species[sp];
     IntU i;
 
-    /*Age of seeds is increased by one year and seeds produced in the 
+    /*Age of seeds is increased by one year, seed mortality occurs, and seeds produced in the 
     previous year are added to the seedbank at relative age 0 */
     for (i = s->viable_yrs - 1; i > 0; i--) 
     {
-        s->seedprod[i] = s->seedprod[i - 1];
+        //printf("Species name=%s , seedprod before decay s->seedprod[%hu]= %d \n", s->name, i, s->seedprod[i]);
+        s->seedprod[i] = s->seedprod[i - 1] / pow(i, s->exp_decay);
+        //printf("Species name=%s , seedprod after decay s->seedprod[%hu]= %d \n", s->name, i, s->seedprod[i]);
     }
     
    // printf("Species name=%s ,old Array array 0 index i=%u, value =%hu \n", s->name, i, s->seedprod[i]);
