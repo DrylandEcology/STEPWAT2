@@ -28,9 +28,8 @@
 #         3 = insensitive to pats, sensitive to mounds
 #         4 = insensitive to pats and mounds
 # pestab = seedling establishment probability for a given year
-#          for annuals, this is the probability that propagules
-#          will reach the plot in a given year.  Can be 1.0 for 
-#          or < 1.
+#          This is the probability that propagules
+#          will reach the plot in a given year.  Can be 1.0 or < 1.
 # eind  = maximum number of individuals that can establish in a year
 #         for annuals, max number of viable seeds that will grow to maturity
 #         on the plot. ie, fecundity.
@@ -47,9 +46,10 @@
 #      see also the same flag in group parameters file.
 # dispersal = turn on/off seed dispersal for this species. 1=use, 0=don't use.
 # 	dispersal is only applicable when using gridded option.
-# var = the variance parameter of the beta distribution for annual establishment.
-#       reference value:0.0001, used in L219 of ST_resgroup.c to calculate the parameters 
-#       of alpha and beta in beta random number draw. Mean value = seedling_estab_prob.  
+# var = the variance parameter of the beta distribution for annual establishment. This parameter, 
+#       along with the mean (pestab), is used to calculate the two shape parameters: alpha and beta. 
+#       Default value: 0.0001. NOTE: var must be < pestab * (1-pestab) or alpha and/or beta will be negative,
+#       we will no longer be meeting the assumptions of a beta distribution, and the code will fail.
 # pseed = the average number of seeds produced by annual species per 1g of biomass, per 1m^2 and per year.
 
 ###PARAMETER SOURCES     
