@@ -181,11 +181,13 @@ void rgroup_PartResources(void)
 
 static RealF _add_annuals(const GrpIndex rg, const SppIndex sp, const RealF lastyear_relsize) {
     /*======================================================*/
-    /* check regen_ok flag.  if true, apply establishment and
-     * add to seedbank.  Otherwise, add 0 to seedbank and skip
-     * adding plants this year.  
-     * reset group size to account for additions, or 0 if none.
-     */
+    /* Establishment for annual species, which includes a function that modifies 
+     * the seedbank through seed addition and deletion, a function that determines 
+     * the amount of viable seed in the seedbank if regen_ok is true, a random draw 
+     * from the beta distribution that is used to determine the number of seeds 
+     * that will emerge as seedlings this year, and removal of those germinated 
+     * seeds from the seedbank.*/
+    
     IntU i, num_est; //number of individuals that will establish this year
     RealF viable_seeds; //viable seed
     float var; //random number draw from beta distribution for calculation of num_est
