@@ -187,14 +187,13 @@ static RealF _add_annuals(const GrpIndex rg, const SppIndex sp, const RealF last
      * reset group size to account for additions, or 0 if none.
      */
     IntU i, num_est; //number of individuals that will establish this year
-    RealF viable_seeds, viable_seeds_reduced; //viable seed and viable seed excluding this year's added seed, respectively
+    RealF viable_seeds; //viable seed
     float var; //random number draw from beta distribution for calculation of num_est
     GroupType *g;
     SpeciesType *s;
 
     g = RGroup[rg];
     s = Species[sp];
-    viable_seeds_reduced = 0.0;
 
     /*Increment viable years for seeds and implement the decay process (seed mortality). 
     * Then add seeds to the seedbank*/
@@ -212,18 +211,12 @@ static RealF _add_annuals(const GrpIndex rg, const SppIndex sp, const RealF last
      num_est = min(viable_seeds * var, s->max_seed_estab); 
      	//printf("Species name=%s , num_est   =%u \n",s->name,  num_est);
     
-    /*Remove seedlings added from the seed bank*/
-    /*Calculate the viable seedbank excluding seeds added this year*/
-    viable_seeds_reduced= (IntU) viable_seeds - s->seedprod[0];
-    	//printf("Species name=%s , viable_seeds_reduced= %d \n", s->name, viable_seeds_reduced);
-            
     /*Multiple the proportion of seeds in each viable year array by the total 
     number of seeds that germinated as seedlings and subtract those seeds from 
     the relevant seedprod array.*/
-       for (i = s->viable_yrs; i > 0; i--)
-       {
+       for (i = 0; i <= s->viable_yrs; i++) {
         //printf("Species name=%s , old calculated value s->seedprod[%hu]= %d \n", s->name, i, s->seedprod[i]);  
-        s->seedprod[i] =  s->seedprod[i] -  round(num_est * s->seedprod[i] / viable_seeds_reduced); 
+        s->seedprod[i] =  s->seedprod[i] -  round(num_est * s->seedprod[i] / viable_seeds); 
         //printf("Species name=%s , so new calculated value s->seedprod[%hu]= %d \n", s->name, i, s->seedprod[i]);
        }   
         return num_est;
