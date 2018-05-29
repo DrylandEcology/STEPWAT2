@@ -380,7 +380,13 @@ void rgroup_ResPartIndiv(void) {
         g = RGroup[rg];
         if (g->est_count == 0)
             continue;
-
+        
+        // Check to see if there are extra resources and if the group can use them
+        if (!g->use_extra_res)
+            continue;
+        if (ZRO(g->res_extra))
+            continue;
+        
         //printf("g->res_extra = %f\n, RGroup= %s \n", RGroup[rg]->name, g->res_extra);
 
         /* --- allocate the temporary group-oriented arrays */
@@ -392,14 +398,14 @@ void rgroup_ResPartIndiv(void) {
             for (n = 0; n < numindvs; n++) {
                 ndv = indivs[n];
 
-                if (g->use_extra_res && GT(g->res_extra, 0.)) {
                     //printf("ndv->res_avail before  = %f\n", ndv->res_avail);
 
                     // if individuals already have the resources they require do not assign extra
                     if (ndv->res_avail == ndv->res_required) {
                         ndv->res_extra = 0.0;
                         //printf("ndv->res_extra = %f\n", ndv->res_extra);    
-                    }                        /* assign extra resource as the difference of what is required
+                    }    
+                        /* assign extra resource as the difference of what is required
                          * by the individual - what was assigned to the individual through
                          * partitioning of normal resources */
                     else {
@@ -416,8 +422,7 @@ void rgroup_ResPartIndiv(void) {
                         g->res_extra = fmax(g->res_extra - ndv->res_extra, 0.);
                         //printf("g->res_extra in loop = %f\n,Group = %s \n",RGroup[rg]->name,  g->res_extra); 
                     }
-                }
-
+                
                 /* Calculate the PR value, or dflt to 100, used in growth module */
                 ndv->pr = GT(ndv->res_avail, 0.) ? ndv->res_required / ndv->res_avail : 100.;
                 //printf("ndv->pr  = %f\n", ndv->pr);
