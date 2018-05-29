@@ -206,7 +206,7 @@ static RealF _add_annuals(const GrpIndex rg, const SppIndex sp, const RealF last
 
     /*Create a beta random number draw based on alpha and beta for each species (calculated based on mean (s->seedling_estab_prob
       * and variance (s->var)) */
-     var = RandBeta(Species[sp]->alpha, Species[sp]->alpha);
+     var = RandBeta(Species[sp]->alpha, Species[sp]->beta);
      
      /*Determine number of seedlings to add. If the beta random number of viable seeds 
       * is larger than max_seed_estab, max_seed_estab value is used instead*/
