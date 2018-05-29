@@ -249,6 +249,7 @@ static void _add_annual_seedprod(SppIndex sp, RealF pr)
 	//s->seedprod[i] = LT(pr, 0.) ? 0. : s->max_seed_estab * 1/pr ;
 	//s->seedprod[i] = LT(pr, 0.) ? 0. : s->max_seed_estab * s->relsize;
 }
+
 /***********************************************************/
 static void _res_part_extra(Bool isextra, RealF extra, RealF size[]) {
     /*======================================================*
@@ -272,33 +273,32 @@ static void _res_part_extra(Bool isextra, RealF extra, RealF size[]) {
         sum_size += size[rg];
         //printf("size[rg]  = %f\n,Rgroup = %s \n",RGroup[rg]->name, size[rg]);
         //printf("sum_size  = %f\n,Rgroup = %s \n",RGroup[rg]->name, sum_size);
-    }
+    } /* End ForEachGroup(rg) */
     //printf("sum_size  = %f\n", sum_size);
-		
-	ForEachGroup(rg)
-	{
-		g = RGroup[rg];
-		if (ZRO(g->relsize))
-			continue;
-                if (g->est_count == 0)
-			continue;
-		if (isextra && !g->use_extra_res)
-			continue;
 
-		// checking to make sure not dividing by 0
-		if (sum_size == 0.)
-			req_prop = 0.;
-		else
-			req_prop = size[rg] / sum_size;
+    ForEachGroup(rg) {
+        g = RGroup[rg];
+        if (ZRO(g->relsize))
+            continue;
+        if (g->est_count == 0)
+            continue;
+        if (isextra && !g->use_extra_res)
+            continue;
 
-		if (isextra && g->use_extra_res && GT(g->xgrow, 0.))
-			g->res_extra = req_prop * extra;
-		
-		else
-			g->res_extra = 0.;
-			//printf("res_extra = %f\n,Rgroup = %s \n",RGroup[rg]->name,g->res_extra);
+        // checking to make sure not dividing by 0
+        if (sum_size == 0.)
+            req_prop = 0.;
+        else
+            req_prop = size[rg] / sum_size;
 
-	}
+        if (isextra && g->use_extra_res)
+            g->res_extra = req_prop * extra;
+
+        else
+            g->res_extra = 0.;
+        //printf("res_extra = %f\n,Rgroup = %s \n",RGroup[rg]->name,g->res_extra);
+
+    } /* End ForEachGroup(rg) */
 
 }
 /***********************************************************/
