@@ -564,14 +564,16 @@ static void _extra_growth(GrpIndex rg) {
 
     ForEachEstSpp(sp, rg, j) {
         s = Species[sp];
+        
+        /* Clear extra for each species*/
+        Species[sp]->extragrowth = 0.0;
 
         /* Calculate the proportion of maximum species biomass that is represented by 1 unit */
         indivpergram = 1.0 / s->mature_biomass;
 
         ForEachIndiv(ndv, s) {
-            /* Clear extra for each individual and species */
+            /* Clear extra for each individual*/
             extra = 0.0;
-            Species[sp]->extragrowth = 0.0;
 
             /* Calculate the extra resource available to each individual based on size */
             ndv->res_extra = ndv->grp_res_prop * g->res_extra;
