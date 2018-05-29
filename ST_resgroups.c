@@ -45,7 +45,7 @@ void rgroup_Extirpate(GrpIndex rg);
 
 /*********** Locally Used Function Declarations ************/
 /***********************************************************/
-static void _res_part_extra(Bool isextra, RealF extra, RealF size[]);
+static void _res_part_extra(RealF extra, RealF size[]);
 static GroupType *_create(void);
 static void _extra_growth(GrpIndex rg);
 static void _add_annual_seedprod(SppIndex sp, RealF pr);
@@ -251,7 +251,7 @@ static void _add_annual_seedprod(SppIndex sp, RealF pr)
 }
 
 /***********************************************************/
-static void _res_part_extra(Bool isextra, RealF extra, RealF size[]) {
+static void _res_part_extra(RealF extra, RealF size[]) {
     /*======================================================*
      * PURPOSE *
      * Partitions "extra" resources to other groups that can use them
@@ -289,7 +289,7 @@ static void _res_part_extra(Bool isextra, RealF extra, RealF size[]) {
         else
             req_prop = size[rg] / sum_size;
 
-        if (isextra && g->use_extra_res)
+        if (g->use_extra_res)
             g->res_extra = req_prop * extra;
 
         else
@@ -320,8 +320,7 @@ void rgroup_ResPartIndiv(void) {
     RealF base_rem = 0., /* remainder of resource after allocating to an indiv */
             xtra_obase = 0., /* summed extra resources across all groups */
             size_obase[MAX_RGROUPS] = {0}; /* total res. contrib. if xtra_obase */
-    const Bool do_extra = TRUE; /* monikers for extra resource partitioning */
-
+    
     /* -- apportion each group's normal resources to individuals */
     ForEachGroup(rg) {
         g = RGroup[rg];
@@ -368,7 +367,7 @@ void rgroup_ResPartIndiv(void) {
     } /* end ForEachGroup() */
 
     //assign extra resources to functional groups that can use them
-    _res_part_extra(do_extra, xtra_obase, size_obase);
+    _res_part_extra(xtra_obase, size_obase);
 
     /* now loop back through all individuals in each group, assign extra resource
      * and calculate PR at the individual level. This extra resource will be used to
