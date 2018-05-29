@@ -321,8 +321,7 @@ void rgroup_ResPartIndiv(void) {
     IntS numindvs, n;
     RealF base_rem = 0., /* remainder of resource after allocating to an indiv */
             xtra_obase = 0., /* summed extra resources across all groups */
-            size_base[MAX_RGROUPS] = {0}, /* total res. contrib to base, all groups */
-    size_obase[MAX_RGROUPS] = {0}; /* total res. contrib. if xtra_obase */
+            size_obase[MAX_RGROUPS] = {0}; /* total res. contrib. if xtra_obase */
     const Bool do_extra = TRUE; /* monikers for extra resource partitioning */
 
     /* -- apportion each group's normal resources to individuals */
@@ -363,8 +362,7 @@ void rgroup_ResPartIndiv(void) {
 
         /*check to see if each functional group can use extra resources,
         if so, then pass the biomass of the FG, otherwise pass 0 in _res_part_extra */
-        size_base[rg] = RGroup_GetBiomass(rg);
-        size_obase[rg] = (g->use_extra_res) ? size_base[rg] : 0.;
+        size_obase[rg] = (g->use_extra_res) ? g->res_required : 0.;
         //printf("size_obase = %f\n", size_obase[rg]);
 
         Mem_Free(indivs);
