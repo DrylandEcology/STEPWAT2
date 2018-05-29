@@ -282,8 +282,6 @@ static void _res_part_extra(Bool isextra, RealF extra, RealF size[]) {
             continue;
         if (g->est_count == 0)
             continue;
-        if (isextra && !g->use_extra_res)
-            continue;
 
         // checking to make sure not dividing by 0
         if (sum_size == 0.)
