@@ -319,15 +319,10 @@ void rgroup_ResPartIndiv(void) {
     IntS numindvs, n;
     RealF base_rem = 0., /* remainder of resource after allocating to an indiv */
             xtra_obase = 0., /* summed extra resources across all groups */
-<<<<<<< HEAD
-            size_obase[MAX_RGROUPS] = {0}; /* total res. contrib. if xtra_obase */
-    
-=======
             size_base[MAX_RGROUPS] = {0}, /* total res. contrib to base, all groups */
-    size_obase[MAX_RGROUPS] = {0}; /* total res. contrib. if xtra_obase */
-    const Bool do_extra = TRUE; /* monikers for extra resource partitioning */
+    		size_obase[MAX_RGROUPS] = {0}; /* total res. contrib. if xtra_obase */
+   			 const Bool do_extra = TRUE; /* monikers for extra resource partitioning */
 
->>>>>>> parent of 26e6f3d... Resolving issue #117
     /* -- apportion each group's normal resources to individuals */
     ForEachGroup(rg) {
         g = RGroup[rg];
