@@ -416,7 +416,7 @@ void rgroup_ResPartIndiv(void) {
                          * by the individual - what was assigned to the individual through
                          * partitioning of normal resources */
                     else {
-                        ndv->res_extra = ndv->res_required - ndv->res_avail;
+                        ndv->res_extra = fmin(ndv->res_required - ndv->res_avail, g->res_extra);
                         //printf("ndv->res_required = %f\n", ndv->res_required);
                         //printf("ndv->res_avail = %f\n", ndv->res_avail);
                         //printf("ndv->res_extra = %f\n", ndv->res_extra);
