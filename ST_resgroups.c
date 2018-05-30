@@ -321,7 +321,6 @@ void rgroup_ResPartIndiv(void) {
             xtra_obase = 0., /* summed extra resources across all groups */
             size_base[MAX_RGROUPS] = {0}, /* total res. contrib to base, all groups */
     		size_obase[MAX_RGROUPS] = {0}; /* total res. contrib. if xtra_obase */
-   			 const Bool do_extra = TRUE; /* monikers for extra resource partitioning */
 
     /* -- apportion each group's normal resources to individuals */
     ForEachGroup(rg) {
