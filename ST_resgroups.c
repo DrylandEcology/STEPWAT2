@@ -260,7 +260,7 @@ static void _res_part_extra(RealF extra, RealF size[]) {
     GrpIndex rg;
     GroupType *g; /* shorthand for RGroup[rg] */
     RealF req_prop, /* group's prop'l contrib to the total requirements */
-            sum_size = 0.; /* summed sizes of all functional groups */
+            sum_size = 0.; /* summed sizes of all functional groups that can use extra resources */
 
     ForEachGroup(rg) {
         g = RGroup[rg];
@@ -273,7 +273,9 @@ static void _res_part_extra(RealF extra, RealF size[]) {
         sum_size += size[rg];
         //printf("size[rg]  = %f\n,Rgroup = %s \n",RGroup[rg]->name, size[rg]);
         //printf("sum_size  = %f\n,Rgroup = %s \n",RGroup[rg]->name, sum_size);
+        
     } /* End ForEachGroup(rg) */
+    
     //printf("sum_size  = %f\n", sum_size);
 
     ForEachGroup(rg) {
@@ -283,15 +285,21 @@ static void _res_part_extra(RealF extra, RealF size[]) {
         if (g->est_count == 0)
             continue;
 
-        // checking to make sure not dividing by 0
+        /* Check to avoid dividing by 0 */
         if (sum_size == 0.)
             req_prop = 0.;
+        
+        /* Calculate proportional biomass of each group out of the total biomass 
+         * of all functional groups that can use extra resources */
         else
             req_prop = size[rg] / sum_size;
-
+        
+        /* If the group can use extra resources, divide out extra based on 
+         * proportional biomass */
         if (g->use_extra_res)
             g->res_extra = req_prop * extra;
-
+        
+        /* If the group can't use extra resources, set res_extra to 0 */
         else
             g->res_extra = 0.;
         //printf("res_extra = %f\n,Rgroup = %s \n",RGroup[rg]->name,g->res_extra);
