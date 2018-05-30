@@ -54,80 +54,71 @@ static RealF _add_annuals(const GrpIndex rg, const RealF g_pr,
 		const Bool add_seeds);
 
 /****************** Begin Function Code ********************/
+
 /***********************************************************/
 
-void rgroup_PartResources(void)
-{
-/* Partition resources for this year among the resource
-groups. The allocation happens in three steps: basic
-group allocation, partitioning of extra resources in _res_part_extra(),
-and further partitioning to individuals in the group _ResPartIndiv().
-See COMMENT 1. at the end of this file for the algorithm.*/
+void rgroup_PartResources(void) {
+    /* Partition resources for this year among the resource
+    groups. The allocation happens in three steps: basic
+    group allocation, partitioning of extra resources in _res_part_extra(),
+    and further partitioning to individuals in the group _ResPartIndiv().
+    See COMMENT 1. at the end of this file for the algorithm.*/
 
-	GrpIndex rg;
-	Bool noplants = TRUE;
-	const Bool no_seeds = FALSE;
-	GroupType *g; /* shorthand for RGroup[rg] */
+    GrpIndex rg;
+    Bool noplants = TRUE;
+    const Bool no_seeds = FALSE;
+    GroupType *g; /* shorthand for RGroup[rg] */
 
-	/* ----- distribute basic (minimum) resources */
-	ForEachGroup(rg)
-	{
-		g = RGroup[rg];
+    /* ----- distribute basic (minimum) resources */
+    ForEachGroup(rg) {
+        g = RGroup[rg];
 
-		//next two lines have been deleted in annual_final branch
-		if (g->max_age == 1)
-			g->relsize = _add_annuals(rg, 1.0, no_seeds);
+        //next two lines have been deleted in annual_final branch
+        if (g->max_age == 1)
+            g->relsize = _add_annuals(rg, 1.0, no_seeds);
 
-		g->res_required = RGroup_GetBiomass(rg);
-		g->res_avail = SXW_GetTranspiration(rg); 
-		//printf("g->res_avail = %f\n,Group = %s \n",RGroup[rg]->name,  g->res_avail); 
+        g->res_required = RGroup_GetBiomass(rg);
+        g->res_avail = SXW_GetTranspiration(rg);
+        //printf("g->res_avail = %f\n,Group = %s \n",RGroup[rg]->name,  g->res_avail); 
         //printf("g->res_required = %f\n,Group = %s \n",RGroup[rg]->name,  g->res_required); 
-        
-		//A check and reset of res_required and res_avail, this should never happen
-		if(ZRO(g->res_avail) && g->res_required > 0)
-		{
-			g->res_required = g->estabs;
-			g->res_avail = 1;
-			LogError(logfp, LOGWARN, "RGroup %s : res_avail is Zero and res_required > 0", g->name);
-		}
-        
-		/* Annuals seem to have a artificial limit of 20. We do Annuals here differently. 
-		This will be re-evaluated when annual_final is merged in. I would opt to remove,
-        but additional testing is required with the new annual code. */
-		if(g->max_age == 1)
-		{
-			if(!ZRO(g->res_avail) && g->res_required / g->res_avail > 20)
-			{
-				g->res_required = 20;
-				g->res_avail = 1;
-			}
-			if(ZRO(g->res_avail) && g->res_required > 0)
-			{
-				g->res_required = 20;
-				g->res_avail = 1;
-			}
-		}
 
-	  /* If relsize>0, reset noplants from TRUE to FALSE and if noplants=TRUE, exit from the loop */
-		if (GT(g->relsize, 0.))
-			noplants = FALSE;
+        //A check and reset of res_required and res_avail, this should never happen
+        if (ZRO(g->res_avail) && g->res_required > 0) {
+            g->res_required = g->estabs;
+            g->res_avail = 1;
+            LogError(logfp, LOGWARN, "RGroup %s : res_avail is Zero and res_required > 0", g->name);
+        }
 
-	} /* End ForEachGroup(rg) */
+        /* Annuals seem to have a artificial limit of 20. We do Annuals here differently.
+         * This will be re-evaluated when annual_final is merged in. I would opt to remove,
+         * but additional testing is required with the new annual code. */
+        if (g->max_age == 1) {
+            if (!ZRO(g->res_avail) && g->res_required / g->res_avail > 20) {
+                g->res_required = 20;
+                g->res_avail = 1;
+            }
+            if (ZRO(g->res_avail) && g->res_required > 0) {
+                g->res_required = 20;
+                g->res_avail = 1;
+            }
+        }
 
-	if (noplants)
-		return;
+        /* Calculate PR at the functional group level: resources required/resources available */
+        g->pr = ZRO(g->res_avail) ? 0. : g->res_required / g->res_avail;
+        //printf("g->pr = %f\n,Group = %s \n",RGroup[rg]->name,  g->pr);
 
-	//calculate PR at the group level: resources required/resources available  
-	ForEachGroup(rg)
-	{
-		g = RGroup[rg];
-		g->pr = ZRO(g->res_avail) ? 0. : g->res_required / g->res_avail;
-		//printf("g->pr = %f\n,Group = %s \n",RGroup[rg]->name,  g->pr);
-	}
+        /* If relsize>0, reset noplants from TRUE to FALSE */
+        if (GT(g->relsize, 0.))
+            noplants = FALSE;
 
- 	//partition resources to individuals and determine 'extra' resources
-	rgroup_ResPartIndiv();
+    } /* End ForEachGroup(rg) */
 
+    /* If noplants=TRUE, exit from the loop */
+    if (noplants)
+        return;
+
+    //partition resources to individuals and determine 'extra' resources
+    rgroup_ResPartIndiv();
 }
 
 static RealF _add_annuals(const GrpIndex rg, const RealF g_pr,
