@@ -548,7 +548,7 @@ static void _extra_growth(GrpIndex rg) {
      rather than at the species level. */
 
     Int j;
-    RealF extra, indivpergram;
+    RealF extra_ndv, indivpergram;
     GroupType *g;
     SpeciesType *s;
     IndivType *ndv;
@@ -574,7 +574,7 @@ static void _extra_growth(GrpIndex rg) {
 
         ForEachIndiv(ndv, s) {
             /* Clear extra for each individual*/
-            extra = 0.0;
+            extra_ndv = 0.0;
 
             /* Calculate the extra resource available to each individual based on size */
             ndv->res_extra = ndv->grp_res_prop * g->res_extra;
@@ -583,15 +583,15 @@ static void _extra_growth(GrpIndex rg) {
 
             /* Calculate the increment in size due to res_extra for each individual 
             Note, we have not actually updated the ndv->relsize here */
-            extra = ndv->res_extra * g->xgrow * indivpergram;
+            extra_ndv = ndv->res_extra * g->xgrow * indivpergram;
             //printf("extra = %f\n,Species = %s \n", Species[sp]->name, extra);
             //printf("indivpergram = %f\n,Species = %s \n", Species[sp]->name, indivpergram);
 
             /* Check to make sure extra does not result in ndv->relsize > 1 (full-sized individual) */
-            extra = GT(extra, 1 - ndv->relsize) ? 1 - ndv->relsize : extra;
+            extra_ndv = GT(extra_ndv, 1 - ndv->relsize) ? 1 - ndv->relsize : extra_ndv;
 
             /* Sum extra growth of all individuals for each species */
-            Species[sp]->extragrowth += extra;
+            Species[sp]->extragrowth += extra_ndv;
             //printf("s->extragrowth  = %f\n, Species = %s \n", Species[sp]->name,s->extragrowth);
 
         } /*END ForEachIndiv */
