@@ -32,7 +32,7 @@
 # 'wk' for week, 'mo' for month, and 'yr' for year after TIMESTEP
 # in any order. For example: 'TIMESTEP mo wk' will output for month and week
 
-TIMESTEP dy yr # must be lowercase
+TIMESTEP dy mo yr # must be lowercase
 
 #      key     SUMTYPE   PERIOD   start    end    filename_prefix   comment
          TEMP     AVG       YR       1     end        temp_air      /* max., min, average temperature (C) */
