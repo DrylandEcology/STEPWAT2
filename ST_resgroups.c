@@ -7,7 +7,7 @@
             at the group level.
    History:
       (6/15/2000) -- INITIAL CODING - cwb
- 
+
 * =================================================== *
 *                INCLUDES / DEFINES                   *
 * --------------------------------------------------- */
@@ -79,18 +79,28 @@ void rgroup_PartResources(void) {
 
         g->res_required = RGroup_GetBiomass(rg);
         g->res_avail = SXW_GetTranspiration(rg);
-        //printf("g->res_avail = %f\n,Group = %s \n",RGroup[rg]->name,  g->res_avail); 
-        //printf("g->res_required = %f\n,Group = %s \n",RGroup[rg]->name,  g->res_required); 
+        //printf("g->res_avail = %f\n,Group = %s \n",RGroup[rg]->name,  g->res_avail);
+        //printf("g->res_required = %f\n,Group = %s \n",RGroup[rg]->name,  g->res_required);
 
         //A check and reset of res_required and res_avail, this should never happen
         if (ZRO(g->res_avail) && g->res_required > 0) {
+            printf("'rgroup_PartResources': Group = %s(%d) error with res (relsize = %f, pr = %f): \n",
+                g->name, rg, g->relsize, g->pr);
+            printf("\tbefore correction: res_avail = %f, res_required = %f\n",
+                g->res_avail, g->res_required);
+
             g->res_required = 0.0;
             Int i;
             ForEachEstSpp2(rg, i) {
                 g->res_required += Species[g->est_spp[i]]->est_count;
             }
+
             g->res_avail = 1;
-            LogError(logfp, LOGWARN, "RGroup %s : res_avail is Zero and res_required > 0", g->name);
+
+            printf("\tafter correction: res_avail = %f, res_required = %f\n",
+                g->res_avail, g->res_required);
+
+            LogError(logfp, LOGFATAL, "RGroup %s : res_avail is Zero and res_required > 0", g->name);
         }
 
         /* Annuals seem to have a artificial limit of 20. We do Annuals here differently.
@@ -264,13 +274,13 @@ static void _res_part_extra(RealF extra, RealF size[]) {
         if (g->est_count == 0)
             continue;
 
-        //where size = size_obase, which is biomass(g/m2) or 0 if the group can't use resources       
+        //where size = size_obase, which is biomass(g/m2) or 0 if the group can't use resources
         sum_size += size[rg];
         //printf("size[rg]  = %f\n,Rgroup = %s \n",RGroup[rg]->name, size[rg]);
         //printf("sum_size  = %f\n,Rgroup = %s \n",RGroup[rg]->name, sum_size);
-        
+
     } /* End ForEachGroup(rg) */
-    
+
     //printf("sum_size  = %f\n", sum_size);
 
     ForEachGroup(rg) {
@@ -283,17 +293,17 @@ static void _res_part_extra(RealF extra, RealF size[]) {
         /* Check to avoid dividing by 0 */
         if (sum_size == 0.)
             req_prop = 0.;
-        
-        /* Calculate proportional biomass of each group out of the total biomass 
+
+        /* Calculate proportional biomass of each group out of the total biomass
          * of all functional groups that can use extra resources */
         else
             req_prop = size[rg] / sum_size;
-        
-        /* If the group can use extra resources, divide out extra based on 
+
+        /* If the group can use extra resources, divide out extra based on
          * proportional biomass */
         if (g->use_extra_res)
             g->res_extra = req_prop * extra;
-        
+
         /* If the group can't use extra resources, set res_extra to 0 */
         else
             g->res_extra = 0.;
@@ -382,13 +392,13 @@ void rgroup_ResPartIndiv(void) {
         g = RGroup[rg];
         if (g->est_count == 0)
             continue;
-        
+
         // Check to see if there are extra resources and if the group can use them
         if (!g->use_extra_res)
             continue;
         if (ZRO(g->res_extra))
             continue;
-        
+
         //printf("g->res_extra = %f\n, RGroup= %s \n", RGroup[rg]->name, g->res_extra);
 
         /* --- allocate the temporary group-oriented arrays */
@@ -405,8 +415,8 @@ void rgroup_ResPartIndiv(void) {
                     // if individuals already have the resources they require do not assign extra
                     if (ndv->res_avail == ndv->res_required) {
                         ndv->res_extra = 0.0;
-                        //printf("ndv->res_extra = %f\n", ndv->res_extra);    
-                    }    
+                        //printf("ndv->res_extra = %f\n", ndv->res_extra);
+                    }
                         /* assign extra resource as the difference of what is required
                          * by the individual - what was assigned to the individual through
                          * partitioning of normal resources */
@@ -422,16 +432,16 @@ void rgroup_ResPartIndiv(void) {
 
                         /* Remaining extra resources */
                         g->res_extra = fmax(g->res_extra - ndv->res_extra, 0.);
-                        //printf("g->res_extra in loop = %f\n,Group = %s \n",RGroup[rg]->name,  g->res_extra); 
+                        //printf("g->res_extra in loop = %f\n,Group = %s \n",RGroup[rg]->name,  g->res_extra);
                     }
-                
+
                 /* Calculate the PR value, or dflt to 100, used in growth module */
                 ndv->pr = GT(ndv->res_avail, 0.) ? ndv->res_required / ndv->res_avail : 100.;
                 //printf("ndv->pr  = %f\n", ndv->pr);
             }
         } /* end ForEachEstSpp() */
 
-        //printf("g->res_extra after = %f\n,Group = %s \n",RGroup[rg]->name,  g->res_extra); 
+        //printf("g->res_extra after = %f\n,Group = %s \n",RGroup[rg]->name,  g->res_extra);
 
         Mem_Free(indivs);
 
@@ -444,7 +454,7 @@ void rgroup_Grow(void) {
      * Main loop to grow all the plants.
      *
      * HISTORY *
-     * Chris Bennett @ LTER-CSU 6/15/2000            
+     * Chris Bennett @ LTER-CSU 6/15/2000
      *  7-Nov-03 (cwb) Annuals have a completely new method of
      *     propogation, growth, and death.  Most notably, they
      *     aren't subject to the growth mechanism here, so they
@@ -492,7 +502,7 @@ void rgroup_Grow(void) {
 
             /* now grow the individual plants of current species*/
             ForEachIndiv(ndv, s) {
-                /* Modify growth rate based on resource availability. Values for gmod range 
+                /* Modify growth rate based on resource availability. Values for gmod range
                 between 0.05 and 0.95 similiar to Coffin and Lauenroth 1990 */
                 gmod = 1.0 - OPT_SLOPE;
 
@@ -565,11 +575,11 @@ static void _extra_growth(GrpIndex rg) {
     if (ZRO(g->res_extra))
         return;
 
-    //printf("g->res_extra growth = %f\n,Group = %s \n",RGroup[rg]->name, g->res_extra); 
+    //printf("g->res_extra growth = %f\n,Group = %s \n",RGroup[rg]->name, g->res_extra);
 
     ForEachEstSpp(sp, rg, j) {
         s = Species[sp];
-        
+
         /* Clear extra for each species*/
         Species[sp]->extragrowth = 0.0;
 
@@ -585,7 +595,7 @@ static void _extra_growth(GrpIndex rg) {
             //printf("ndv->res_extra = %f\n,Species = %s \n", Species[sp]->name, ndv->res_extra);
             //printf("ndv->grp_res_prop = %f\n,Species = %s \n", Species[sp]->name, ndv->grp_res_prop);
 
-            /* Calculate the increment in size due to res_extra for each individual 
+            /* Calculate the increment in size due to res_extra for each individual
             Note, we have not actually updated the ndv->relsize here */
             extra_ndv = ndv->res_extra * g->xgrow * indivpergram;
             //printf("extra = %f\n,Species = %s \n", Species[sp]->name, extra);
@@ -828,6 +838,10 @@ void RGroup_Update_Newsize(GrpIndex rg)
 		//For calculating rgroup relSize, sumsize should be divide by no of current established species in rgroup rather than total no of species in rgroup.
 		RGroup[rg]->relsize = sumsize / (RealF) RGroup[rg]->est_count;
 	}
+
+    /*printf("'RGroup_Update_Newsize': Group = %s, sumsize = %f, est_count = %d, relsize = %f\n",
+        RGroup[rg]->name, sumsize, RGroup[rg]->est_count, RGroup[rg]->relsize);
+    */
 
 	///if (RGroup[rg]->max_age != 1) {
 	numindvs = 0; // set to 0 so no problems passing to function
