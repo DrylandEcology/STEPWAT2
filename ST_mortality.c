@@ -180,6 +180,10 @@ void mort_Main( Bool *killed) {
 
     } /* end for each species*/
 
+    /*printf("'mort_Main': Group = %s, relsize = %f, est_count = %d\n",
+      RGroup[rg]->name, RGroup[rg]->relsize, RGroup[rg]->est_count);
+    */
+
   } /* end ForEachGroup(rg) */
 
   *killed = _SomeKillage;
@@ -233,6 +237,10 @@ void mort_EndOfYear( void)
 		{
 			RGroup_Kill(rg);
 		}
+
+    /*printf("'mort_EndOfYear': Group = %s, relsize = %f, est_count = %d\n",
+      RGroup[rg]->name, RGroup[rg]->relsize, RGroup[rg]->est_count);
+    */
 
 	}
 
@@ -295,6 +303,10 @@ void grazing_EndOfYear( void){
 				Species_Proportion_Grazing(RGroup[rg]->est_spp[i],RGroup[rg]->proportion_grazing );
 			}
 		}
+
+    /*printf("'grazing_EndOfYear': Group = %s, relsize = %f, est_count = %d\n",
+      RGroup[rg]->name, RGroup[rg]->relsize, RGroup[rg]->est_count);
+    */
 
 	}
 
@@ -817,21 +829,21 @@ void _kill_extra_growth( void) {
   g = RGroup[rg];
 
   ForEachGroup(rg) {
-		
+
     if (!RGroup[rg]->use_extra_res)
     	continue;
-    	
+
     if (ZRO(g->res_extra))
-        continue; 
-    	
+        continue;
+
     ForEachEstSpp(sp, rg, j) {
-      
+
       if (ZRO(Species[sp]->extragrowth)) continue;
     	//printf("s->relsize kill before = %f\n, Species = %s \n", Species[sp]->name, Species[sp]->relsize);
     	//printf("s->extragrowth kill before  = %f\n", Species[sp]->extragrowth);
-      
+
       Species_Update_Newsize(sp, -Species[sp]->extragrowth);
-      //printf("s->relsize kill after  = %f\n", Species[sp]->relsize);   
+      //printf("s->relsize kill after  = %f\n", Species[sp]->relsize);
       Species[sp]->extragrowth = 0.0;
     }
   }

@@ -192,7 +192,10 @@ int main(int argc, char **argv) {
 		Globals.currIter = iter;
 
 		/* ------  Begin running the model ------ */
-		for (year = 1; year <= Globals.runModelYears; year++){
+		for (year = 1; year <= Globals.runModelYears; year++) {
+
+      //printf("------------------------Repetition/year = %d / %d\n", iter, year);
+
 			Globals.currYear = year;
 
 			rgroup_Establish();

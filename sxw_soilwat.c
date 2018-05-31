@@ -153,9 +153,15 @@ static void _update_transp_coeff(RealF relsize[]) {
 		y = SW_Site.lyr[t];
 		y->transp_coeff[SW_SHRUB] = 0.;
 		ForEachGroup(g)
-			if(RGroup[g]->veg_prod_type == 2)
+			if(RGroup[g]->veg_prod_type == 2) {
 				if (getNTranspLayers(RGroup[g]->veg_prod_type))
 					y->transp_coeff[SW_SHRUB] += (RealF) _roots_max[Ilg(t, g)] * RGroup[g]->relsize;
+
+        /*printf("* lyr=%d, group=%s(%d), type=%d, tl=%d, rootmax=%f, relsize1=%f, relsize2=%f, trco=%f\n",
+          t, RGroup[g]->name, g, RGroup[g]->veg_prod_type, getNTranspLayers(RGroup[g]->veg_prod_type),
+          _roots_max[Ilg(t, g)], relsize[g], RGroup[g]->relsize, y->transp_coeff[SW_SHRUB]);
+        */
+      }
 		sum[SW_SHRUB] += y->transp_coeff[SW_SHRUB];
 	}
 
@@ -190,6 +196,13 @@ static void _update_transp_coeff(RealF relsize[]) {
 		if(!ZRO(sum[SW_GRASS])) SW_Site.lyr[t]->transp_coeff[SW_GRASS] /= sum[SW_GRASS];
 	ForEachForbTranspLayer(t)
 		if(!ZRO(sum[SW_FORBS])) SW_Site.lyr[t]->transp_coeff[SW_FORBS] /= sum[SW_FORBS];
+
+  /*printf("'_update_transp_coeff': ShrubTranspCoef: ");
+  ForEachSoilLayer(t) {
+    printf("[%d] = %.4f - ", t, SW_Site.lyr[t]->transp_coeff[SW_SHRUB]);
+  }
+  printf("\n");
+  */
 
 }
 

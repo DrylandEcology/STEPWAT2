@@ -324,6 +324,10 @@ void Species_Update_Newsize(SppIndex sp, RealF newsize)
 	if (ZERO(Species[sp]->relsize))
 		Species[sp]->relsize = 0.0;
 
+    /*printf("'Species_Update_Newsize': Species = %s, relsize = %f, est_count = %d\n",
+        Species[sp]->name, Species[sp]->relsize, Species[sp]->est_count);
+    */
+
 #undef xF_DELTA
 #undef xD_DELTA
 #undef ZERO

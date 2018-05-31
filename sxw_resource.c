@@ -282,19 +282,25 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
 		for (t = 0; t < SXW.NSoLyrs; t++)
 			sumTranspTotal += SXW.transpTotal[Ilp(t, p)];
 	}
+
     TranspRemaining = sumTranspTotal - sumUsedByGroup;
     //printf(" sumTranspTotal=%f, sumUsedByGroup=%f  TranspRemaining=%f \n",sumTranspTotal,sumUsedByGroup,TranspRemaining);
 
-        ForEachGroup(g)
-		{
-			if(!ZRO(use_by_group[g])) {
-                use_by_group[g] += (use_by_group[g]/sumUsedByGroup) * TranspRemaining;
-                //printf("for groupName= %s, after sum use_by_group[g]= %f \n",RGroup[g]->name,use_by_group[g] );
+    ForEachGroup(g)
+    {
+        if (!ZRO(use_by_group[g])) {
+            use_by_group[g] += (use_by_group[g]/sumUsedByGroup) * TranspRemaining;
+            //printf("for groupName= %s, after sum use_by_group[g]= %f \n",RGroup[g]->name,use_by_group[g] );
 
-                SXW.transp_SWA[currentYear][g] = use_by_group[g];
-                //printf("for groupName= %s, SXW.transp_SWA[g] in transp= %f \n",RGroup[g]->name,SXW.transp_SWA[currentYear][g]);
-            }
+            SXW.transp_SWA[currentYear][g] = use_by_group[g];
+            //printf("for groupName= %s, SXW.transp_SWA[g] in transp= %f \n",RGroup[g]->name,SXW.transp_SWA[currentYear][g]);
         }
+
+        /*printf("'_transp_contribution_by_group': Group = %s, SXW.transp_SWA[g] = %f \n",
+          RGroup[g]->name, SXW.transp_SWA[currentYear][g]);
+        */
+
+    }
 }
 
 static void _SWA_contribution_by_group(RealF use_by_group[]) {
