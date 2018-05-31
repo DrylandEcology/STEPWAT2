@@ -1,5 +1,5 @@
 [submodule "sw_src"]
 	path = sw_src
 	url = https://github.com/Burke-Lauenroth-Lab/SOILWAT2.git
-	branch = master
+	branch = bugfix_109STEPWAT2
         ignore = dirty
