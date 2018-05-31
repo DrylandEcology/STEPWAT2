@@ -53,6 +53,7 @@ Thumbs.db
 *outsetup_v30.in
 testing_shortegrass/
 stepwat
+stepwat.dSYM/
 testing/stepwat
 testing/valgrind.out
 testing/stepwat.dSYM/
