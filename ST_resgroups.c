@@ -84,7 +84,11 @@ void rgroup_PartResources(void) {
 
         //A check and reset of res_required and res_avail, this should never happen
         if (ZRO(g->res_avail) && g->res_required > 0) {
-            g->res_required = g->estabs;
+            g->res_required = 0.0;
+            Int i;
+            ForEachEstSpp2(rg, i) {
+                g->res_required += Species[g->est_spp[i]]->est_count;
+            }
             g->res_avail = 1;
             LogError(logfp, LOGWARN, "RGroup %s : res_avail is Zero and res_required > 0", g->name);
         }
