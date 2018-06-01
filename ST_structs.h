@@ -154,7 +154,8 @@ struct resourcegroup_st {
         res_avail,    /* resource available from environment X competition */
         res_extra,    /* if requested, resource above 1.0 when PR < 1.0 */
         pr,           /* resources required / resources available */
-        relsize;      /* size of all species' indivs' relsizes scaled to 1.0 */
+        relsize,      /* size of all species' indivs' relsizes scaled to 1.0 */
+        rgroupFractionOfVegTypeBiomass; /*proportional biomass of the STEPPE functional group out of the SOILWAT2 functional type biomass */
   SppIndex est_count, /* number of species actually established in group*/
            est_spp[MAX_SPP_PER_GRP]; /*list of spp actually estab in grp*/
   Bool extirpated,    /* group extirpated, no more regen */
