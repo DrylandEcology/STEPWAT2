@@ -351,23 +351,7 @@ void indiv_Kill_Complete( IndivType *ndv, int killType) {
 //	  insertIndivKill(ndv->id,killType);
   species_Update_Kills(ndv->myspecies, ndv->age);
 
-if (Species[ndv->myspecies]->res_grp == 6 && Species[ndv->myspecies]->sp_num == 11) {
-printf("'indiv_Kill_Complete' after 'species_Update_Kills': \n" \
-  "\t%s, relsize = %.2f, est_count = %d\n" \
-  "\t%s, relsize = %.2f, ndv->relsize = %.2f, est_count = %d\n",
-  RGroup[6]->name, RGroup[6]->relsize, RGroup[6]->est_count,
-  Species[11]->name, Species[11]->relsize, ndv->relsize, Species[11]->est_count);
-}
-
   Species_Update_Newsize(ndv->myspecies, -ndv->relsize);
-
-if (Species[ndv->myspecies]->res_grp == 6 && Species[ndv->myspecies]->sp_num == 11) {
-printf("'indiv_Kill_Complete' after 'Species_Update_Newsize': \n" \
-  "\t%s, relsize = %.2f, est_count = %d\n" \
-  "\t%s, relsize = %.2f, est_count = %d\n",
-  RGroup[6]->name, RGroup[6]->relsize, RGroup[6]->est_count,
-  Species[11]->name, Species[11]->relsize, Species[11]->est_count);
-}
 
   _delete(ndv); // `_delete` updates the Species[ndv->myspecies]->est_count, i.e., removes one individual
 
