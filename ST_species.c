@@ -37,6 +37,7 @@ void indiv_proportion_Recovery(IndivType *ndv, int killType,
 void indiv_proportion_Grazing(IndivType *ndv, RealF proportionGrazing);
 
 void _delete(IndivType *ndv);
+void save_annual_species_relsize(void);
 
 /*------------------------------------------------------*/
 /* Modular functions only used on one or two specific   */
@@ -299,28 +300,12 @@ void Species_Update_Newsize(SppIndex sp, RealF newsize)
 	Species[sp]->relsize += newsize;
 //	printf("After adding or sub relsize Species[sp]->relsize=%.5f \n ",Species[sp]->relsize);
 
-	// if (Species[sp]->max_age == 1)
-	//  printf("before hard reset: indiv =%d, sp relSize=%0.6f\n\n",Species[sp]->est_count,Species[sp]->relsize );
-
-	/* this is a hard coded reset - if relsize is greater than 100
-	 the code will set the species relsize to 100 */
-	// (TEM 10-27-2015)
-	//KAP: since changes in the annual code, this hard coded reset is no longer necessary 11-10-16
-	//if (GT(Species[sp]->relsize, 100.))
-	//{
-	//	Species[sp]->relsize = 100;
-	//}
-
-	//if (Species[sp]->max_age == 1)
-	// printf("after hard reset: indiv =%d, sp relSize=%0.6f\n\n",Species[sp]->est_count,Species[sp]->relsize );
 	RGroup_Update_Newsize(rg);
 
-	//if ( Species[sp]->max_age != 1) {
-	//above deleted to include annuals (TEM 10-27-2015)
 	/* make sure zeros are actually zeroed */
 	if (Species[sp]->est_count < 0)
 		Species[sp]->est_count = 0;
-	//}
+
 	if (ZERO(Species[sp]->relsize))
 		Species[sp]->relsize = 0.0;
 
@@ -615,6 +600,18 @@ void Species_Kill(const SppIndex sp, int killType)
 
 	rgroup_DropSpecies(sp);
 
+}
+void save_annual_species_relsize() {
+    int sp = 0;
+
+    ForEachSpecies(sp) {
+        if (Species[sp]->max_age == 1) {
+            //printf("Globals.currYear = %d, sp=%d , Species[sp]->relsize=%.5f ,old value lastyear_relsize : %.5f \n", Globals.currYear, sp, Species[sp]->relsize, Species[sp]->lastyear_relsize);
+            Species[sp]->lastyear_relsize = Species[sp]->relsize;
+            //Species[sp]->lastyear_relsize = 2;
+            //printf("Globals.currYear = %d, sp=%d new updated value lastyear_relsize : %.5f \n", Globals.currYear, sp, Species[sp]->lastyear_relsize);
+        }
+    }
 }
 
 #ifdef DEBUG_MEM

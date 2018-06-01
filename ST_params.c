@@ -1074,10 +1074,11 @@ static void _species_init( void) {
        temp,
        turnon,
        turnondispersal,
-       viable;
+       viable,
+       pseed;
    RealF irate, ratep, estab, minb, maxb, cohort, xdecay,
          p1, p2, p3, p4, p5, p6, p7;
-
+   float var;
    char clonal[5];
 
    MyFileName = Parm_name( F_Species);
@@ -1091,10 +1092,10 @@ static void _species_init( void) {
       }
 
 		x = sscanf(inbuf,
-				"%s %hd %hd %f %f %hd %hd %f %hd %f %f %s %hd %hd %f %hd",
+				"%s %hd %hd %f %f %hd %hd %f %hd %f %f %s %hd %hd %f %hd %f %hd",
 				name, &rg, &age, &irate, &ratep, &slow, &dist, &estab, &eind,
-				&minb, &maxb, clonal, &vegi, &temp, &cohort, &turnon);
-      if (x != 16) {
+				&minb, &maxb, clonal, &vegi, &temp, &cohort, &turnon, &var, &pseed);
+      if (x != 18) {
         LogError(logfp, LOGFATAL, "%s: Wrong number of columns in species",
                 MyFileName);
       }
@@ -1138,13 +1139,28 @@ static void _species_init( void) {
       Species[sp]->use_me = (RGroup[rg-1]->use_me) ? itob(turnon) : FALSE ;
       Species[sp]->received_prob = 0;
       Species[sp]->cohort_surv = cohort;
+      Species[sp]->var = var;
+      Species[sp]->pseed = pseed / Globals.plotsize;
 /*      Species[sp]->ann_mort_prob = (age > 0)
-                                 ? -log(cohort)/age
-                                 : 0.0;
-*/
+                                         ? -log(cohort)/age
+                                         : 0.0;
+         */
+        /*Calculate alpha and beta for each species based on mean (pestab) and variance (var)*/
+        Species[sp]->alpha = ((pow(Species[sp]->seedling_estab_prob, 2) - pow(Species[sp]->seedling_estab_prob, 3)) / Species[sp]->var) - Species[sp]->seedling_estab_prob;
+        Species[sp]->beta = (Species[sp]->alpha / Species[sp]->seedling_estab_prob) - Species[sp]->alpha;
 
-
-   }/* end while*/
+        /*If the following two conditions are met, the beta distribution is bimodal or nearly bimodal,
+         * which is not the desired outcome. The variance (s->var) and mean (pestab) should be adjusted
+         * to obtain an unimodal beta-distribution with density > 0 */
+        if (Species[sp]->alpha < 1) {
+            LogError(logfp, LOGWARN, "Species %s, alpha less than 1: %f \n", Species[sp]->name,
+                    Species[sp]->alpha);
+        }
+        if (Species[sp]->beta < 1) {
+            LogError(logfp, LOGWARN, "Species %s, beta less than 1: %f \n", Species[sp]->name,
+                    Species[sp]->beta);
+        }
+    }/* end while*/
 
    if (!sppok) {
       LogError(logfp, LOGFATAL, "%s: Incorrect/incomplete input",
@@ -1179,7 +1195,7 @@ static void _species_init( void) {
 
      Species[sp]->viable_yrs = viable;
      Species[sp]->exp_decay  = xdecay;
-     Species[sp]->seedprod = (RealF *) Mem_Calloc( viable, sizeof(RealF), "species_init()");
+     Species[sp]->seedprod = (IntUS *) Mem_Calloc( viable, sizeof(IntUS), "species_init()");
 
    } /* end while readspp*/
 
