@@ -148,6 +148,13 @@ void mort_Main( Bool *killed) {
     if ( GT(g->pr, 1.0) ) {
        if (++g->yrs_neg_pr >= g->max_stretch)
           _no_resources( rg);
+
+if (rg == 6) printf("'mort_Main' after '_no_resources': \n" \
+  "\t%s, relsize = %.2f, est_count = %d\n" \
+  "\t%s, relsize = %.2f, est_count = %d\n",
+  RGroup[6]->name, RGroup[6]->relsize, RGroup[6]->est_count,
+  Species[11]->name, Species[11]->relsize, Species[11]->est_count);
+
     } else {
       g->yrs_neg_pr = 0;
     }
@@ -157,7 +164,21 @@ void mort_Main( Bool *killed) {
       /* Take care of mortality types 1 and 2*/
       if ( g->use_mort ) {
         _age_independent( sp );
+
+if (rg == 6 && sp == 11) printf("'mort_Main' after '_age_independent': \n" \
+  "\t%s, relsize = %.2f, est_count = %d\n" \
+  "\t%s, relsize = %.2f, est_count = %d\n",
+  RGroup[6]->name, RGroup[6]->relsize, RGroup[6]->est_count,
+  Species[11]->name, Species[11]->relsize, Species[11]->est_count);
+
         _slow_growth( sp );
+
+if (rg == 6 && sp == 11) printf("'mort_Main' after '_slow_growth': \n" \
+  "\t%s, relsize = %.2f, est_count = %d\n" \
+  "\t%s, relsize = %.2f, est_count = %d\n",
+  RGroup[6]->name, RGroup[6]->relsize, RGroup[6]->est_count,
+  Species[11]->name, Species[11]->relsize, Species[11]->est_count);
+
       }
       /* now deal with succulents problems*/
       if (g->succulent
@@ -176,6 +197,13 @@ void mort_Main( Bool *killed) {
         case Burrow:
              _burrow( sp);
              break;
+
+if (rg == 6 && sp == 11) printf("'mort_Main' after 'Plot.disturbance': \n" \
+  "\t%s, relsize = %.2f, est_count = %d\n" \
+  "\t%s, relsize = %.2f, est_count = %d\n",
+  RGroup[6]->name, RGroup[6]->relsize, RGroup[6]->est_count,
+  Species[11]->name, Species[11]->relsize, Species[11]->est_count);
+
       }
 
     } /* end for each species*/
@@ -598,14 +626,52 @@ static void _age_independent( const SppIndex sp) {
       kills[++k] = ndv;
   }
 
+if (Species[sp]->res_grp == 6 && sp == 11) {
+  int kk = 0;
+  printf("'_age_independent': individuals of %s/%s with relsize = %.2f\n",
+    RGroup[6]->name, Species[11]->name, Species[11]->relsize);
+
+  ForEachIndiv (ndv, Species[sp]) {
+    printf("\t%d, relsize = %.2f\n",
+      kk, ndv->relsize);
+    kk++;
+  }
+
+  printf("'_age_independent': individuals of %s/%s slated to kill\n",
+    RGroup[6]->name, Species[11]->name);
+
   for( n=0; n <= k; n++ ) {
+    printf("\t%d, relsize = %.2f\n", n, kills[n]->relsize);
+  }
+}
+
+
+  for( n=0; n <= k; n++ ) {
+    printf("'_age_independent' calling 'indiv_Kill_Complete': n=%d <= k=%d\n", n, k);
     indiv_Kill_Complete(kills[n], 9);
   }
 
+if (Species[sp]->res_grp == 6 && sp == 11) {
+  printf("'_age_independent' after 'indiv_Kill_Complete': \n" \
+  "\t%s, relsize = %.2f, est_count = %d\n" \
+  "\t%s, relsize = %.2f, est_count = %d\n",
+  RGroup[6]->name, RGroup[6]->relsize, RGroup[6]->est_count,
+  Species[11]->name, Species[11]->relsize, Species[11]->est_count);
+}
 
   if (k >= 0) _SomeKillage = TRUE;
 
   Mem_Free(kills);
+
+
+if (Species[sp]->res_grp == 6 && sp == 11) {
+  printf("'_age_independent' after 'Mem_Free': \n" \
+  "\t%s, relsize = %.2f, est_count = %d\n" \
+  "\t%s, relsize = %.2f, est_count = %d\n",
+  RGroup[6]->name, RGroup[6]->relsize, RGroup[6]->est_count,
+  Species[11]->name, Species[11]->relsize, Species[11]->est_count);
+}
+
 }
 
 /***********************************************************/

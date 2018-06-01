@@ -308,12 +308,19 @@ void indiv_proportion_Recovery( IndivType *ndv, int killType,RealF proportionRec
 
    // using  individual killing year old real size and reduction for making base for calculating proportional recovery
 	RealF prev_reduction = ndv->prv_yr_relsize * proportionKilled;
-  	RealF increase = prev_reduction * proportionRecovery;
+	RealF increase = prev_reduction * proportionRecovery;
 	ndv->relsize = ndv->relsize + increase;
 	Species_Update_Newsize(ndv->myspecies, increase);
 
 	if (ZERO(ndv->relsize) || LT(ndv->relsize, 0.0))
 	{
+    // this should never happend because `increase` should always be positive
+    LogError(logfp, LOGWARN, "'indiv_proportion_Recovery': an individual of "\
+      "%s reached relsize of 0 and is removed (increase = %.3f): for " \
+      "killType = %d, proportionKilled = %.2f, proportionRecovery = %.2f",
+      Species[ndv->myspecies]->name, increase,
+      killType, proportionKilled, proportionRecovery);
+
 		_delete(ndv);
 	}
 	#undef xF_DELTA
@@ -343,8 +350,26 @@ void indiv_Kill_Complete( IndivType *ndv, int killType) {
  // if(!UseGrid)
 //	  insertIndivKill(ndv->id,killType);
   species_Update_Kills(ndv->myspecies, ndv->age);
+
+if (Species[ndv->myspecies]->res_grp == 6 && Species[ndv->myspecies]->sp_num == 11) {
+printf("'indiv_Kill_Complete' after 'species_Update_Kills': \n" \
+  "\t%s, relsize = %.2f, est_count = %d\n" \
+  "\t%s, relsize = %.2f, ndv->relsize = %.2f, est_count = %d\n",
+  RGroup[6]->name, RGroup[6]->relsize, RGroup[6]->est_count,
+  Species[11]->name, Species[11]->relsize, ndv->relsize, Species[11]->est_count);
+}
+
   Species_Update_Newsize(ndv->myspecies, -ndv->relsize);
-  _delete(ndv);
+
+if (Species[ndv->myspecies]->res_grp == 6 && Species[ndv->myspecies]->sp_num == 11) {
+printf("'indiv_Kill_Complete' after 'Species_Update_Newsize': \n" \
+  "\t%s, relsize = %.2f, est_count = %d\n" \
+  "\t%s, relsize = %.2f, est_count = %d\n",
+  RGroup[6]->name, RGroup[6]->relsize, RGroup[6]->est_count,
+  Species[11]->name, Species[11]->relsize, Species[11]->est_count);
+}
+
+  _delete(ndv); // `_delete` updates the Species[ndv->myspecies]->est_count, i.e., removes one individual
 
 }
 
@@ -352,7 +377,8 @@ void indiv_Kill_Complete( IndivType *ndv, int killType) {
 void _delete (IndivType *ndv) {
 /*======================================================*/
 /* PURPOSE */
-/* Local routine to remove the data object of an individual.
+/* Local routine to remove the data object of an individual and update
+ * the number of individuals `Species[ndv->myspecies]->est_count`
  * Called from indiv_Kill_Complete().
 */
 /* HISTORY */
@@ -387,9 +413,13 @@ void _delete (IndivType *ndv) {
       ndv->Next->Prev = ndv->Prev;
   }
 
-  if( --s->est_count == 0)
+  // update Species[ndv->myspecies]->est_count, i.e.,
+  // remove one individual from tally
+  if( --s->est_count == 0) {
+    // if there are no individual left of this species, then remove species
+    // from resource group and update `est_count` of the resource group
     rgroup_DropSpecies(sp);
-
+  }
 
   if ((s->est_count > 0 && s->IndvHead == NULL)
      || (s->est_count == 0 && s->IndvHead != NULL))

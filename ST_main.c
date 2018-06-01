@@ -195,45 +195,121 @@ int main(int argc, char **argv) {
 		/* ------  Begin running the model ------ */
 		for (year = 1; year <= Globals.runModelYears; year++) {
 
-      //printf("------------------------Repetition/year = %d / %d\n", iter, year);
+      printf("------------------------Repetition/year = %d / %d\n", iter, year);
 
 			Globals.currYear = year;
 
 			rgroup_Establish();
+      printf("'main' after 'rgroup_Establish': \n" \
+        "\t%s, relsize = %.2f, est_count = %d\n" \
+        "\t%s, relsize = %.2f, est_count = %d\n",
+        RGroup[6]->name, RGroup[6]->relsize, RGroup[6]->est_count,
+        Species[11]->name, Species[11]->relsize, Species[11]->est_count);
+      check_sizes("'main' after 'rgroup_Establish'");
 
 			Env_Generate();
 
 			rgroup_PartResources();
+      printf("'main' after 'rgroup_PartResources': \n" \
+        "\t%s, relsize = %.2f, est_count = %d\n" \
+        "\t%s, relsize = %.2f, est_count = %d\n",
+        RGroup[6]->name, RGroup[6]->relsize, RGroup[6]->est_count,
+        Species[11]->name, Species[11]->relsize, Species[11]->est_count);
+      check_sizes("'main' after 'rgroup_PartResources'");
 
 #ifdef STEPWAT
 			if (!isnull(SXW.debugfile) ) SXW_PrintDebug(0);
 #endif
 
 			rgroup_Grow();
+      printf("'main' after 'rgroup_Grow': \n" \
+        "\t%s, relsize = %.2f, est_count = %d\n" \
+        "\t%s, relsize = %.2f, est_count = %d\n",
+        RGroup[6]->name, RGroup[6]->relsize, RGroup[6]->est_count,
+        Species[11]->name, Species[11]->relsize, Species[11]->est_count);
+      check_sizes("'main' after 'rgroup_Grow'");
 
 			mort_Main(&killedany);
+      printf("'main' after 'mort_Main': \n" \
+        "\t%s, relsize = %.2f, est_count = %d\n" \
+        "\t%s, relsize = %.2f, est_count = %d\n",
+        RGroup[6]->name, RGroup[6]->relsize, RGroup[6]->est_count,
+        Species[11]->name, Species[11]->relsize, Species[11]->est_count);
+      check_sizes("'main' after 'mort_Main'");
 
 			rgroup_IncrAges();
+      printf("'main' after 'rgroup_IncrAges': \n" \
+        "\t%s, relsize = %.2f, est_count = %d\n" \
+        "\t%s, relsize = %.2f, est_count = %d\n",
+        RGroup[6]->name, RGroup[6]->relsize, RGroup[6]->est_count,
+        Species[11]->name, Species[11]->relsize, Species[11]->est_count);
+      check_sizes("'main' after 'rgroup_IncrAges'");
 
       // Added functions for Grazing and mort_end_year as proportional killing effect before exporting biomass end of the year
 			grazing_EndOfYear();
-                        save_annual_species_relsize();
+      printf("'main' after 'grazing_EndOfYear': \n" \
+        "\t%s, relsize = %.2f, est_count = %d\n" \
+        "\t%s, relsize = %.2f, est_count = %d\n",
+        RGroup[6]->name, RGroup[6]->relsize, RGroup[6]->est_count,
+        Species[11]->name, Species[11]->relsize, Species[11]->est_count);
+      check_sizes("'main' after 'grazing_EndOfYear'");
+
+
+      save_annual_species_relsize();
+      printf("'main' after 'save_annual_species_relsize': \n" \
+        "\t%s, relsize = %.2f, est_count = %d\n" \
+        "\t%s, relsize = %.2f, est_count = %d\n",
+        RGroup[6]->name, RGroup[6]->relsize, RGroup[6]->est_count,
+        Species[11]->name, Species[11]->relsize, Species[11]->est_count);
+      check_sizes("'main' after 'save_annual_species_relsize'");
+
 
 			mort_EndOfYear();
+      printf("'main' after 'mort_EndOfYear': \n" \
+        "\t%s, relsize = %.2f, est_count = %d\n" \
+        "\t%s, relsize = %.2f, est_count = %d\n",
+        RGroup[6]->name, RGroup[6]->relsize, RGroup[6]->est_count,
+        Species[11]->name, Species[11]->relsize, Species[11]->est_count);
+      check_sizes("'main' after 'mort_EndOfYear'");
 
 			stat_Collect(year);
+      printf("'main' after 'stat_Collect': \n" \
+        "\t%s, relsize = %.2f, est_count = %d\n" \
+        "\t%s, relsize = %.2f, est_count = %d\n",
+        RGroup[6]->name, RGroup[6]->relsize, RGroup[6]->est_count,
+        Species[11]->name, Species[11]->relsize, Species[11]->est_count);
+      check_sizes("'main' after 'stat_Collect'");
 
 			if (BmassFlags.yearly)
 				output_Bmass_Yearly(year);
 
        // Moved kill annual and kill extra growth after we export biomass, and recovery of biomass after fire before the next year
 			_kill_annuals();
-			 proportion_Recovery();
+      printf("'main' after '_kill_annuals': \n" \
+        "\t%s, relsize = %.2f, est_count = %d\n" \
+        "\t%s, relsize = %.2f, est_count = %d\n",
+        RGroup[6]->name, RGroup[6]->relsize, RGroup[6]->est_count,
+        Species[11]->name, Species[11]->relsize, Species[11]->est_count);
+      check_sizes("'main' after '_kill_annuals'");
+
+			proportion_Recovery();
+      printf("'main' after 'proportion_Recovery': \n" \
+        "\t%s, relsize = %.2f, est_count = %d\n" \
+        "\t%s, relsize = %.2f, est_count = %d\n",
+        RGroup[6]->name, RGroup[6]->relsize, RGroup[6]->est_count,
+        Species[11]->name, Species[11]->relsize, Species[11]->est_count);
+      check_sizes("'main' after 'proportion_Recovery'");
+
 			_kill_extra_growth();
 
 			// Check that relsizes match up at end of year after extra growth is removed
 			// may want to wrap this in #ifdef DEBUG once problem is fixed
 			check_sizes("'main' at end of year");
+      printf("'main' after '_kill_extra_growth': \n" \
+        "\t%s, relsize = %.2f, est_count = %d\n" \
+        "\t%s, relsize = %.2f, est_count = %d\n",
+        RGroup[6]->name, RGroup[6]->relsize, RGroup[6]->est_count,
+        Species[11]->name, Species[11]->relsize, Species[11]->est_count);
 		} /* end model run for this year*/
 
 		if (MortFlags.summary) {
@@ -550,7 +626,7 @@ void check_sizes(const char *chkpt) {
 
       if (LT(diff, fabs(spsize - Species[sp]->relsize)) ) {
         LogError(stdout, LOGWARN, "%s (%d:%d): SP: \"%s\" size error: "
-                                  "SP=%.9f, ndv=%.9f\n",
+                                  "SP=%.3f, ndv=%.3f",
                 chkpt, Globals.currIter, Globals.currYear,
                 Species[sp]->name, Species[sp]->relsize, spsize);
       }
@@ -558,7 +634,7 @@ void check_sizes(const char *chkpt) {
 
     if ( LT(diff, fabs(rgsize -RGroup[rg]->relsize)) ) {
       LogError(stdout, LOGWARN, "%s (%d:%d): RG \"%s\" size error: "
-                                "RG=%.9f, ndv=%.9f\n",
+                                "RG=%.3f, ndv=%.3f",
               chkpt, Globals.currIter, Globals.currYear,
               RGroup[rg]->name, RGroup[rg]->relsize, rgsize);
     }
