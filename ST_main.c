@@ -230,6 +230,10 @@ int main(int argc, char **argv) {
 			_kill_annuals();
 			 proportion_Recovery();
 			_kill_extra_growth();
+
+			// Check that relsizes match up at end of year after extra growth is removed
+			// may want to wrap this in #ifdef DEBUG once problem is fixed
+			check_sizes("'main' at end of year");
 		} /* end model run for this year*/
 
 		if (MortFlags.summary) {
@@ -544,7 +548,7 @@ void check_sizes(const char *chkpt) {
       ForEachIndiv(ndv, Species[sp]) spsize += ndv->relsize;
       rgsize += spsize;
 
-      if (LT(diff, abs(spsize - Species[sp]->relsize)) ) {
+      if (LT(diff, fabs(spsize - Species[sp]->relsize)) ) {
         LogError(stdout, LOGWARN, "%s (%d:%d): SP: \"%s\" size error: "
                                   "SP=%.9f, ndv=%.9f\n",
                 chkpt, Globals.currIter, Globals.currYear,
@@ -552,7 +556,7 @@ void check_sizes(const char *chkpt) {
       }
     }
 
-    if ( LT(diff, abs(rgsize -RGroup[rg]->relsize)) ) {
+    if ( LT(diff, fabs(rgsize -RGroup[rg]->relsize)) ) {
       LogError(stdout, LOGWARN, "%s (%d:%d): RG \"%s\" size error: "
                                 "RG=%.9f, ndv=%.9f\n",
               chkpt, Globals.currIter, Globals.currYear,
