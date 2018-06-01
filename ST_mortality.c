@@ -899,9 +899,6 @@ void _kill_extra_growth( void) {
     if (!RGroup[rg]->use_extra_res)
     	continue;
 
-    if (ZRO(g->res_extra))
-        continue;
-
     ForEachEstSpp(sp, rg, j) {
 
       if (ZRO(Species[sp]->extragrowth)) continue;
