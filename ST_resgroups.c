@@ -95,7 +95,7 @@ void rgroup_PartResources(void) {
             printf("\tafter correction: res_avail = %f, res_required = %f\n",
                 g->res_avail, g->res_required);
 
-            LogError(logfp, LOGFATAL, "RGroup %s : res_avail is Zero and res_required > 0", g->name);
+            LogError(logfp, LOGWARN, "RGroup %s : res_avail is Zero and res_required > 0", g->name);
         }
 
         /* Annuals seem to have a artificial limit of 20. We do Annuals here differently.
