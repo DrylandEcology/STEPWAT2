@@ -79,10 +79,10 @@ void rgroup_PartResources(void) {
 
         //A check and reset of res_required and res_avail, this should never happen
         if (ZRO(g->res_avail) && g->res_required > 0) {
-            printf("'rgroup_PartResources': Group = %s(%d) error with res (relsize = %f, pr = %f): \n",
-                g->name, rg, g->relsize, g->pr);
-            printf("\tbefore correction: res_avail = %f, res_required = %f\n",
-                g->res_avail, g->res_required);
+            //printf("'rgroup_PartResources': Group = %s(%d) error with res (relsize = %f, pr = %f): \n",
+            //    g->name, rg, g->relsize, g->pr);
+            //printf("\tbefore correction: res_avail = %f, res_required = %f\n",
+            //    g->res_avail, g->res_required);
 
             g->res_required = 0.0;
             Int i;
@@ -92,8 +92,8 @@ void rgroup_PartResources(void) {
 
             g->res_avail = 1;
 
-            printf("\tafter correction: res_avail = %f, res_required = %f\n",
-                g->res_avail, g->res_required);
+           // printf("\tafter correction: res_avail = %f, res_required = %f\n",
+           //     g->res_avail, g->res_required);
 
             LogError(logfp, LOGWARN, "RGroup %s : res_avail is Zero and res_required > 0", g->name);
         }
