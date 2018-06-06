@@ -506,7 +506,7 @@ void rgroup_Grow(void) {
 
         } /* ENDFOR j (for each species)*/
 
-        //_extra_growth(rg);
+        _extra_growth(rg);
 
     } /* END ForEachGroup(rg)*/
 }

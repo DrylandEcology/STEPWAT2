@@ -247,7 +247,7 @@ int main(int argc, char **argv) {
      
       //check_sizes("'main' after 'proportion_Recovery'");
 
-			//_kill_extra_growth();
+			_kill_extra_growth();
 
 			// Check that relsizes match up at end of year after extra growth is removed
 			// may want to wrap this in #ifdef DEBUG once problem is fixed

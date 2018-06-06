@@ -486,7 +486,7 @@ static void _succulents( const SppIndex sp) {
  *      returns FALSE if the amount to kill is greater
  *      than the size of the plant.  This routine was
  *      modified to make a new list of the dead plants
- *      and remove them properly.
+ *      and remove them properly. */
 /*------------------------------------------------------*/
 
   IndivType *p,
@@ -526,7 +526,7 @@ static void _slow_growth( const SppIndex sp) {
    to define it in the groups or species parameters.
 
    Of course, annuals aren't subject to this mortality,
-   nor are new plants.
+   nor are new plants. */
 
 /* HISTORY */
 /* Chris Bennett @ LTER-CSU 6/15/2000            */
@@ -573,7 +573,7 @@ static void _age_independent( const SppIndex sp) {
 /* 5/22/01 (cwb) - don't kill annuals here or else they
       die too early in the process and stats don't work, use
       mort_EndOfYear() instead. also, skip species with
-      max_age==0 (longest lived).
+      max_age==0 (longest lived). */
 /*------------------------------------------------------*/
   Int n, k=-1;
 
@@ -789,8 +789,7 @@ void _kill_annuals( void) {
  *       Still, the original code works, if not most
  *       efficiently.  Chances are I won't optimize it
  *       because I want to convert the whole thing to C++.
-
-/*------------------------------------------------------*/
+*------------------------------------------------------*/
 
   GrpIndex rg;
   SppIndex sp;
@@ -807,45 +806,51 @@ void _kill_annuals( void) {
 
 }
 
-
 /***********************************************************/
-void _kill_extra_growth( void) {
-/*======================================================*
-* PURPOSE *
-* Remove any extra growth accumulated during the growing
-   season. This should be done after all the statistics
-   are accumulated for the year.
-   Note that extra growth is not stored by the individuals
-   but only by Species and RGroup.
-  This should probably be split into separate functions
-  so the actual killing of extra growth is one function
-  that can be called from anywhere, and the looping is
-  in another function with another name.
-  That way, individual functions can kill specific
-  extra growth without affecting others.*/
-/*------------------------------------------------------*/
-  IntU j;
-  GrpIndex rg;
-  SppIndex sp;
-  GroupType *g;
-  SpeciesType *s;
+void _kill_extra_growth(void) {
+    /*======================================================*
+     * PURPOSE *
+     * Remove any extra growth accumulated during the growing
+       season. This should be done after all the statistics
+       are accumulated for the year.
+       Note that extra growth is not stored by the individuals
+       but only by Species and RGroup.
+      This should probably be split into separate functions
+      so the actual killing of extra growth is one function
+      that can be called from anywhere, and the looping is
+      in another function with another name.
+      That way, individual functions can kill specific
+      extra growth without affecting others.*/
+    /*------------------------------------------------------*/
+    IntU j;
+    GrpIndex rg;
+    SppIndex sp;
+    GroupType *g;
 
-  g = RGroup[rg];
+    g = RGroup[rg];
 
-  ForEachGroup(rg) {
+    ForEachGroup(rg) {
 
-    if (!RGroup[rg]->use_extra_res)
-    	continue;
+        if (!RGroup[rg]->use_extra_res)
+            continue;
 
-    ForEachEstSpp(sp, rg, j) {
+        ForEachGroupSpp(sp, rg, j) {
+            /* If the species is turned off, continue */
+            if (!Species[sp]->use_me)
+                continue;
 
-      if (ZRO(Species[sp]->extragrowth)) continue;
-    	//printf("s->relsize kill before = %f\n, Species = %s \n", Species[sp]->name, Species[sp]->relsize);
-    	//printf("s->extragrowth kill before  = %f\n", Species[sp]->extragrowth);
+            /* Relsize for annuals has already been set to 0.0 in _kill_annuals*/
+            if (Species[sp]->max_age == 1)
+                continue;
+            //printf("s->extragrowth kill before  = %f\n", Species[sp]->extragrowth);
 
-      Species_Update_Newsize(sp, -Species[sp]->extragrowth);
-      //printf("s->relsize kill after  = %f\n", Species[sp]->relsize);
-      Species[sp]->extragrowth = 0.0;
+            if (ZRO(Species[sp]->extragrowth)) continue;
+            //printf("s->relsize kill before = %f\n, Species = %s \n", Species[sp]->name, Species[sp]->relsize);
+            //printf("s->extragrowth kill before  = %f\n", Species[sp]->extragrowth);
+
+            Species_Update_Newsize(sp, -Species[sp]->extragrowth);
+            //printf("s->relsize kill after  = %f\n", Species[sp]->relsize);
+            Species[sp]->extragrowth = 0.0;
+        }
     }
-  }
 }
