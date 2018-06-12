@@ -293,10 +293,9 @@ void indiv_proportion_Recovery( IndivType *ndv, int killType,RealF proportionRec
 	/* PURPOSE */
 	/* Recover individual proportionally and adjust relative sizes of the
 	 * RGroup and Species upward proportionally by the size of the indiv.
-	 * Also keep up with survivorship data.
-	 */
+	 * Also keep up with survivorship data. */
 	/* HISTORY */
-	/* 1st Nov 2015- AT
+	/* 1st Nov 2015- AT */
 	/*------------------------------------------------------*/
 
 	#define xF_DELTA (20*F_DELTA)
@@ -309,8 +308,14 @@ void indiv_proportion_Recovery( IndivType *ndv, int killType,RealF proportionRec
    // using  individual killing year old real size and reduction for making base for calculating proportional recovery
 	RealF prev_reduction = ndv->prv_yr_relsize * proportionKilled;
 	RealF increase = prev_reduction * proportionRecovery;
-	ndv->relsize = ndv->relsize + increase;
+	
+        //printf("previous year ndv->relsize before = %f\n, Species = %s \n", ndv->prv_yr_relsize, Species[ndv->myspecies]->name);
+        //printf("ndv->relsize before = %f\n, Species = %s \n", ndv->relsize, Species[ndv->myspecies]->name);
+        //printf("increase = %f\n, Species = %s \n", increase, Species[ndv->myspecies]->name);
+
+        ndv->relsize = ndv->relsize + increase;
 	Species_Update_Newsize(ndv->myspecies, increase);
+        //printf("ndv->relsize after = %f\n,Species = %s \n", ndv->relsize, Species[ndv->myspecies]->name);
 
 	if (ZERO(ndv->relsize) || LT(ndv->relsize, 0.0))
 	{
@@ -363,14 +368,13 @@ void _delete (IndivType *ndv) {
 /* PURPOSE */
 /* Local routine to remove the data object of an individual and update
  * the number of individuals `Species[ndv->myspecies]->est_count`
- * Called from indiv_Kill_Complete().
-*/
+ * Called from indiv_Kill_Complete().*/
 /* HISTORY */
 /* Chris Bennett @ LTER-CSU 6/15/2000
  *   a species' list of indivs is kept as a doubly linked list.
  *   although a singly linked list would work, I implemented
  *   the double just in case it might be useful in the future.
- *   as of 12/02 it hasn't been, but who knows?
+ *   as of 12/02 it hasn't been, but who knows? */
 
 /*------------------------------------------------------*/
   SppIndex sp;
@@ -419,13 +423,10 @@ void Indiv_SortSize( const byte sorttype,
 /*======================================================*/
 /* Sort a list of pointers to individuals according to the
  * size of the individuals irrespective of species, age, etc.
- *
  * sorttype - indicates whether ascending or descending
  * n - number of individuals to be sorted
  * list[]  - an array of n pointers to individuals to be sorted.
- *           the list is returned sorted.
- *
-
+ * the list is returned sorted. */
 /* HISTORY */
 /* Chris Bennett @ LTER-CSU 12/15/2000            */
 /*     8/2/01 - cwb - replaced shell sort with qsort(). */
