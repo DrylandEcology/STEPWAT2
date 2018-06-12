@@ -95,15 +95,16 @@ IntS Species_NumEstablish(SppIndex sp)
 }
 
 /**************************************************************/
-RealF Species_GetBiomass(SppIndex sp)
-{
+RealF Species_GetBiomass(SppIndex sp) {
 	/*======================================================*/
 	/* PURPOSE */
-
+    /* Retrieve species biomass */
 	/* HISTORY */
 	/* Chris Bennett @ LTER-CSU 6/15/2000            */
-
 	/*------------------------------------------------------*/
+	
+	if (Species[sp]->est_count == 0)
+        return 0.0;
 	return (Species[sp]->relsize * Species[sp]->mature_biomass);
 }
 
