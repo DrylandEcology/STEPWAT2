@@ -254,83 +254,89 @@ void indiv_proportion_Kill(IndivType *ndv, int killType, RealF proportKilled)
 }
 void indiv_proportion_Grazing( IndivType *ndv, RealF proportionGrazing)
 {
-	/*======================================================*/
-	/* PURPOSE */
-	/* Do individual grazing proportionally and adjust relative sizes of the
-	 * RGroup and Species downward proportionally by the size of the indiv.
-	 * Also keep up with survivorship data.
-	 */
-	/* HISTORY */
-	/* 1st Nov 2015- AT
-	/*------------------------------------------------------*/
+    /*======================================================*/
+    /* PURPOSE */
+    /* Do individual grazing proportionally and adjust relative sizes of the
+     * RGroup and Species downward proportionally by the size of the indiv.
+     * Also keep up with survivorship data.
+     */
+    /* HISTORY */
+    /* 1st Nov 2015- AT */
+    /*------------------------------------------------------*/
 
-	#define xF_DELTA (20*F_DELTA)
-	#define xD_DELTA (20*D_DELTA)
-	#define ZERO(x) \
+#define xF_DELTA (20*F_DELTA)
+#define xD_DELTA (20*D_DELTA)
+#define ZERO(x) \
 	( (sizeof(x) == sizeof(float)) \
 			? ((x)>-xF_DELTA && (x)<xF_DELTA) \
 					: ((x)>-xD_DELTA && (x)<xD_DELTA) )
 
 
-	RealF grazing_reduce = -(ndv->relsize * proportionGrazing);
-//	printf("inside indiv_proportion_Grazing() old indiv rel_size=%f, grazing_reduce=%f \n",ndv->relsize,grazing_reduce);
-	ndv->relsize = ndv->relsize + grazing_reduce;
-//	printf("inside indiv_proportion_Grazing() new indiv rel_size=%f \n",ndv->relsize);
-	Species_Update_Newsize(ndv->myspecies, grazing_reduce);
+    RealF grazing_reduce = -(ndv->relsize * proportionGrazing);
+    //	printf("inside indiv_proportion_Grazing() old indiv rel_size=%f, grazing_reduce=%f \n",ndv->relsize,grazing_reduce);
+    ndv->relsize = ndv->relsize + grazing_reduce;
+    //	printf("inside indiv_proportion_Grazing() new indiv rel_size=%f \n",ndv->relsize);
+    Species_Update_Newsize(ndv->myspecies, grazing_reduce);
 
 	if (ZERO(ndv->relsize) || LT(ndv->relsize, 0.0))
 	{
-		ndv->relsize = 0.0;
-	}
-	#undef xF_DELTA
-	#undef xD_DELTA
-	#undef ZERO
+        ndv->relsize = 0.0;
+    }
+#undef xF_DELTA
+#undef xD_DELTA
+#undef ZERO
 }
 
-void indiv_proportion_Recovery( IndivType *ndv, int killType,RealF proportionRecovery,RealF proportionKilled)
-{
-	/*======================================================*/
-	/* PURPOSE */
-	/* Recover individual proportionally and adjust relative sizes of the
-	 * RGroup and Species upward proportionally by the size of the indiv.
-	 * Also keep up with survivorship data. */
-	/* HISTORY */
-	/* 1st Nov 2015- AT */
-	/*------------------------------------------------------*/
+void indiv_proportion_Recovery(IndivType *ndv, int killType, RealF proportionRecovery, RealF proportionKilled) {
+    /*======================================================*/
+    /* PURPOSE */
+    /* Recover individuals proportionally after fire and adjust relative sizes 
+     * of the RGroup and Species upward proportionally by the size of the indiv.
+     * Also keep up with survivorship data. */
+    /* HISTORY */
+    /* 1st Nov 2015- AT */
+    /*------------------------------------------------------*/
 
-	#define xF_DELTA (20*F_DELTA)
-	#define xD_DELTA (20*D_DELTA)
-	#define ZERO(x) \
+#define xF_DELTA (20*F_DELTA)
+#define xD_DELTA (20*D_DELTA)
+#define ZERO(x) \
 	( (sizeof(x) == sizeof(float)) \
 			? ((x)>-xF_DELTA && (x)<xF_DELTA) \
 					: ((x)>-xD_DELTA && (x)<xD_DELTA) )
 
-   // using  individual killing year old real size and reduction for making base for calculating proportional recovery
-	RealF prev_reduction = ndv->prv_yr_relsize * proportionKilled;
-	RealF increase = prev_reduction * proportionRecovery;
-	
-        //printf("previous year ndv->relsize before = %f\n, Species = %s \n", ndv->prv_yr_relsize, Species[ndv->myspecies]->name);
-        //printf("ndv->relsize before = %f\n, Species = %s \n", ndv->relsize, Species[ndv->myspecies]->name);
-        //printf("increase = %f\n, Species = %s \n", increase, Species[ndv->myspecies]->name);
+    /* Utilize individual relsize saved before killing and proportionKilled 
+     * to determine proportional recovery */
+    RealF prev_reduction = ndv->prv_yr_relsize * proportionKilled;
+    RealF increase = prev_reduction * proportionRecovery;
 
-        ndv->relsize = ndv->relsize + increase;
-	Species_Update_Newsize(ndv->myspecies, increase);
-        //printf("ndv->relsize after = %f\n,Species = %s \n", ndv->relsize, Species[ndv->myspecies]->name);
+    //printf("previous year ndv->relsize before = %f\n, Species = %s \n", ndv->prv_yr_relsize, Species[ndv->myspecies]->name);
+    //printf("ndv->relsize before = %f\n, Species = %s \n", ndv->relsize, Species[ndv->myspecies]->name);
+    //printf("increase = %f\n, Species = %s \n", increase, Species[ndv->myspecies]->name);
 
-	if (ZERO(ndv->relsize) || LT(ndv->relsize, 0.0))
-	{
-    // this should never happend because `increase` should always be positive
-    LogError(logfp, LOGWARN, "'indiv_proportion_Recovery': an individual of "\
-      "%s reached relsize of 0 and is removed (increase = %.3f): for " \
+    ndv->relsize = ndv->relsize + increase;
+
+    Species_Update_Newsize(ndv->myspecies, increase);
+    //printf("ndv->relsize after = %f\n,Species = %s \n", ndv->relsize, Species[ndv->myspecies]->name);
+
+    /* This should never happen because proportion recovered should always be 
+     * positive or zero */
+    if (LT(ndv->relsize, 0.0)) {
+        // this should never happend because `increase` should always be positive
+        LogError(logfp, LOGWARN, "'indiv_proportion_Recovery': an individual of "\
+      "%s reached relsize < 0 and is removed (increase = %.3f): for " \
       "killType = %d, proportionKilled = %.2f, proportionRecovery = %.2f",
-      Species[ndv->myspecies]->name, increase,
-      killType, proportionKilled, proportionRecovery);
+                Species[ndv->myspecies]->name, increase,
+                killType, proportionKilled, proportionRecovery);
+    }
 
-		_delete(ndv);
-	}
-	#undef xF_DELTA
-	#undef xD_DELTA
-	#undef ZERO
+    /* If the relsize is still zero or is less than zero, remove the individual */
+    if (ZERO(ndv->relsize) || LT(ndv->relsize, 0.0)) {
+        _delete(ndv);
+    }
+
+#undef xF_DELTA
+#undef xD_DELTA
+#undef ZERO
 }
 
 /**************************************************************/

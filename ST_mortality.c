@@ -316,61 +316,70 @@ void grazing_EndOfYear( void){
 
 }
 
-void proportion_Recovery(void)
-{
-	/*======================================================*/
+void proportion_Recovery(void) {
+    /*======================================================*/
     /* PURPOSE */
-	/* Perform the sorts of proportion_Recovery one might expect at next year after the killing year
+    /* Perform recovery of biomass that represents re-sprouting after a fire. This
+     * is controlled by proportion_recovered, specified in inputs and can be turned
+     * on or off for each functional group, depending on their ability to resprout. */
     /* HISTORY */
-	/* 1st Nov 2015 -AT -Added Species Proportion Recovery  */
-	/*======================================================*/
+    /* 1st Nov 2015 -AT -Added Species Proportion Recovery  */
+    /*======================================================*/
 
-	GrpIndex rg;
-	GroupType *g;
+    GrpIndex rg;
+    GroupType *g;
+    SppIndex sp;
 
-	ForEachGroup(rg)
-	{
+    ForEachGroup(rg) {
 
-		if (Globals.currYear < RGroup[rg]->startyr)
-		{
-			/* don't start trying to grow  until RGroup[rg]->startyr year */
-			continue;
-		}
+        if (Globals.currYear < RGroup[rg]->startyr) {
+            /* don't start trying to grow  until RGroup[rg]->startyr year */
+            continue;
+        }
 
-		g = RGroup[rg];
+        g = RGroup[rg];
 
-		if ((Globals.currYear >= g->killfreq_startyr) && GT(g->killfreq, 0.))
-		{
-			if (LT(g->killfreq, 1.0))
-			{
-				if (RandUni() <= g->killfreq)
-				{
-					g->killyr = Globals.currYear;
-				}
+        if ((Globals.currYear >= g->killfreq_startyr) && GT(g->killfreq, 0.)) {
+            if (LT(g->killfreq, 1.0)) {
+                if (RandUni() <= g->killfreq) {
+                    g->killyr = Globals.currYear;
+                }
 
-			}
-			else if (((Globals.currYear - g->killfreq_startyr) % (IntU) g->killfreq) == 0)
-			{
-				g->killyr = Globals.currYear;
-			}
+            } else if (((Globals.currYear - g->killfreq_startyr) % (IntU) g->killfreq) == 0) {
+                g->killyr = Globals.currYear;
+            }
 
-		}
+        }
 
-		//rgroup proportion recovery
-		if (Globals.currYear == RGroup[rg]->killyr)
-		{
-			Int i;
-			ForEachEstSpp2( rg, i)
-			{
-				Species_Proportion_Recovery(RGroup[rg]->est_spp[i], 6,
-						RGroup[rg]->proportion_recovered,
-						RGroup[rg]->proportion_killed);
-			}
-		}
+        //rgroup proportion recovery
+        if (Globals.currYear == RGroup[rg]->killyr) {
+            Int i;
 
-	}
+            //printf("'before proportion_recovery': Group = %s, relsize = %f, est_count = %d\n",
+            //RGroup[rg]->name, RGroup[rg]->relsize, RGroup[rg]->est_count);
+
+            ForEachEstSpp(sp, rg, i) {
+
+                /* Annuals have already been killed in _kill_annuals and are not 
+                 * subject to proportion recovery after fire */
+                if (Species[sp]->max_age == 1)
+                    continue;
+
+                //printf("'before proportion_recovery': Species = %s, relsize = %f, est_count = %d\n",
+                // Species[sp]->name, Species[sp]->relsize, Species[sp]->est_count); 
+
+                Species_Proportion_Recovery(RGroup[rg]->est_spp[i], 6,
+                        RGroup[rg]->proportion_recovered,
+                        RGroup[rg]->proportion_killed);
+
+                //printf("'after proportion_recovery': Species = %s, relsize = %f, est_count = %d\n",
+                //Species[sp]->name, Species[sp]->relsize, Species[sp]->est_count); 
+            }
+            //printf("'after proportion_recovery': Group = %s, relsize = %f, est_count = %d\n",
+            // RGroup[rg]->name, RGroup[rg]->relsize, RGroup[rg]->est_count); 
+        }
+    }
 }
-
 
 /***********************************************************/
 static void _pat( const SppIndex sp) {

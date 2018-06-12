@@ -332,7 +332,7 @@ SppIndex species_New(void)
 	 * but the list of individuals in the species is
 	 * maintained by a linked list which is of course
 	 * empty when the species is first created.  See the
-	 * Indiv module for details.
+	 * Indiv module for details. */
 
 	 /* HISTORY */
 	/* Chris Bennett @ LTER-CSU 6/15/2000            */
@@ -441,7 +441,7 @@ void Species_Proportion_Kill(const SppIndex sp, int killType,
 	 *
 	 * Note the special loop construct.  we have to save the
 	 * pointer to next prior to killing because the object
-	 * is deleted.
+	 * is deleted. */
 
 	 /* HISTORY */
 	/* Chris Bennett @ LTER-CSU 11/15/2000            */
@@ -486,7 +486,7 @@ void Species_Proportion_Grazing(const SppIndex sp, RealF proportionGrazing)
 	/* Proportion Grazing all established individuals in a species at Grazing year.
 	 * Note the special loop construct.  we have to save the
 	 * pointer to next prior to killing because the object
-	 * is deleted.
+	 * is deleted. */
 	 /* HISTORY */
 	/* AT  1st Nov 2015 -Added Species Proportion Grazing for all even for annual */
 	/*------------------------------------------------------*/
@@ -518,18 +518,16 @@ void Species_Proportion_Grazing(const SppIndex sp, RealF proportionGrazing)
 }
 
 void Species_Proportion_Recovery(const SppIndex sp, int killType,
-		RealF proportionRecovery, RealF proportionKilled)
-{
-	/*======================================================*/
-	/* PURPOSE */
-	/* Proportion Recovery all established individuals in a species after killing year.
-
-	 * Note the special loop construct.  we have to save the
-	 * pointer to next prior to killing because the object
-	 * is deleted.
-	 /* HISTORY */
-	/* AT  1st Nov 2015 -Added Species Proportion Recovery  */
-	/*------------------------------------------------------*/
+        RealF proportionRecovery, RealF proportionKilled) {
+    /*======================================================*/
+    /* PURPOSE */
+    /* Proportion Recovery (representing re-sprouting after fire) for all 
+     * established individuals in a species. Note the special loop construct.  
+     * We have to save the pointer to next prior to killing because the object
+     * is deleted. */
+    /* HISTORY */
+    /* AT  1st Nov 2015 -Added Species Proportion Recovery  */
+    /*------------------------------------------------------*/
 #define xF_DELTA (20*F_DELTA)
 #define xD_DELTA (20*D_DELTA)
 #define ZERO(x) \
@@ -537,28 +535,29 @@ void Species_Proportion_Recovery(const SppIndex sp, int killType,
 				? ((x)>-xF_DELTA && (x)<xF_DELTA) \
 						: ((x)>-xD_DELTA && (x)<xD_DELTA) )
 
-	IndivType *p = Species[sp]->IndvHead, *t;
-	//Recover all the species individuals  proportionally or adjust their real size irrespective of being annual or perennial, both will have this effect
-	while (p)
-	{
-		t = p->Next;
-		indiv_proportion_Recovery(p, killType, proportionRecovery,
-				proportionKilled);
-		p = t;
-	}
+    IndivType *p = Species[sp]->IndvHead, *t;
+    //Recover biomass for each perennial species that is established
+    while (p) {
+        t = p->Next;
+        indiv_proportion_Recovery(p, killType, proportionRecovery,
+                proportionKilled);
+        p = t;
+    }
+    //printf("'within proportion_recovery after first killing': Species = %s, relsize = %f, est_count = %d\n",Species[sp]->name, Species[sp]->relsize, Species[sp]->est_count);
 
-	//Kill all the species individuals and free the assigned memory and finally drop the species as well if real size is zero
-	if (ZERO(Species[sp]->relsize) || LT(Species[sp]->relsize, 0.0))
-	{
-		IndivType *p1 = Species[sp]->IndvHead, *t1;
-		while (p1)
-		{
-			t1 = p1->Next;
-			_delete(p1);
-			p1 = t1;
-		}
-		rgroup_DropSpecies(sp);
-	}
+    /* Kill all the species individuals and free the assigned memory and finally 
+     * drop the species as well if relsize is zero */
+    if (ZERO(Species[sp]->relsize) || LT(Species[sp]->relsize, 0.0)) {
+        IndivType *p1 = Species[sp]->IndvHead, *t1;
+        while (p1) {
+            t1 = p1->Next;
+            _delete(p1);
+            p1 = t1;
+        }
+        //printf("'within proportion_recovery after second killing': Species = %s, relsize = %f, est_count = %d\n",Species[sp]->name, Species[sp]->relsize, Species[sp]->est_count);
+
+        rgroup_DropSpecies(sp);
+    }
 
 #undef xF_DELTA
 #undef xD_DELTA
@@ -568,37 +567,37 @@ void Species_Proportion_Recovery(const SppIndex sp, int killType,
 /**************************************************************/
 void Species_Kill(const SppIndex sp, int killType)
 {
-	/*======================================================*/
-	/* PURPOSE */
-	/* Kill all established individuals in a species.
-	 *
-	 * Note the special loop construct.  we have to save the
-	 * pointer to next prior to killing because the object
-	 * is deleted.
+    /*======================================================*/
+    /* PURPOSE */
+    /* Kill all established individuals in a species.
+     *
+     * Note the special loop construct.  we have to save the
+     * pointer to next prior to killing because the object
+     * is deleted. */
 
-	 /* HISTORY */
-	/* Chris Bennett @ LTER-CSU 11/15/2000            */
-	/*   8/3/01 - cwb - added linked list processing.
-	 */
+     /* HISTORY */
+    /* Chris Bennett @ LTER-CSU 11/15/2000            */
+    /*   8/3/01 - cwb - added linked list processing.
+     */
 
-	/*------------------------------------------------------*/
-	IndivType *p = Species[sp]->IndvHead, *t;
+    /*------------------------------------------------------*/
+    IndivType *p = Species[sp]->IndvHead, *t;
 
 	if (Species[sp]->max_age == 1)
 	{
-		Species_Update_Newsize(sp, -Species[sp]->relsize);
+        Species_Update_Newsize(sp, -Species[sp]->relsize);
 	}
 	else
 	{
 		while (p)
 		{
-			t = p->Next;
-			indiv_Kill_Complete(p, killType);
-			p = t;
-		}
-	}
+            t = p->Next;
+            indiv_Kill_Complete(p, killType);
+            p = t;
+        }
+    }
 
-	rgroup_DropSpecies(sp);
+    rgroup_DropSpecies(sp);
 
 }
 void save_annual_species_relsize() {
