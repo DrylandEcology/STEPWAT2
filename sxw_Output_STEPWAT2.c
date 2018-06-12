@@ -60,14 +60,112 @@ extern SW_OUTPUT SW_Output[SW_OUTNKEYS]; // defined in `SW_Output_core.c`
 extern SXW_t SXW; // structure to store values in and pass back to STEPPE
 extern SXW_avg SXW_AVG;
 //extern ModelType Globals; // defined in `ST_Main.c`, but externed by `ST_globals.h`
-extern Bool isPartialSoilwatOutput;
-extern Bool storeAllIterations;
-extern char outstr_all_iters[OUTSTRLEN];
+extern Bool isPartialSoilwatOutput; // defined in `SW_Output_core.c`
+extern Bool storeAllIterations; // defined in `SW_Output_core.c`
+extern char sw_outstr_agg[OUTSTRLEN]; // defined in `SW_Output_core.c`
 
 extern char _Sep; // defined in `SW_Output_core.c`: output delimiter
 extern TimeInt tOffset; // defined in `SW_Output_core.c`: 1 or 0 means we're writing previous or current period
 extern Bool bFlush_output; // defined in `SW_Output_core.c`: process partial period ?
 extern char sw_outstr[OUTSTRLEN]; // defined in `SW_Output_core.c`: string with formatted output which is to be written to output files
+
+
+
+/* =================================================== */
+/* =================================================== */
+/*             Private Functions                       */
+/* --------------------------------------------------- */
+
+static void _create_filename_ST(char *str, char *flag, int iteration, char *filename);
+static void _create_csv_file_ST(int iteration, OutPeriod pd);
+
+/** Splits a filename such as `name.ext` into its two parts `name` and `ext`;
+		appends `flag` and, if positive, `iteration` to `name` with `_` as
+		separator; and returns the full name concatenated
+
+		\return `name_flagiteration.ext`
+*/
+static void _create_filename_ST(char *str, char *flag, int iteration, char *filename) {
+	char *basename;
+	char *ext;
+	char *fileDup = (char *)malloc(strlen(str) + 1);
+
+	// Determine basename and file extension
+	strcpy(fileDup, str); // copy file name to new variable
+	basename = strtok(fileDup, ".");
+	ext = strtok(NULL, ".");
+	free(fileDup);
+
+	// Put new file together
+	if (iteration > 0) {
+		sprintf(filename, "%s_%s%d.%s", basename, flag, iteration, ext);
+	} else {
+		sprintf(filename, "%s_%s.%s", basename, flag, ext);
+	}
+}
+
+
+/**
+  \fn void _create_csv_file_ST(int iteration, OutPeriod pd)
+
+  Creates `csv` output files for specified time step depending on
+  `-o` and `-i` flags, for `STEPWAT2`.
+
+  If `-i` flag is used, then this function creates a file for each `iteration`
+  with the file name containing the value of `iteration`.
+
+  If `-o` flag is used, then this function creates only one set of output files.
+
+  \param iteration. Current iteration value that is used for the file name
+    if -i flag used in STEPWAT2. Set to a negative value otherwise.
+  \param pd. The output time step.
+*/
+/***********************************************************/
+static void _create_csv_file_ST(int iteration, OutPeriod pd)
+{
+	char filename[FILENAME_MAX];
+
+	if (iteration <= 0)
+	{ // STEPWAT2: aggregated values over all iterations or SOILWAT2-standalone
+		if (SW_OutFiles.make_regular) {
+			// PROGRAMMER Note: `eOutputDaily + pd` is not very elegant and assumes
+			// a specific order of `SW_FileIndex` --> fix and create something that
+			// allows subsetting such as `eOutputFile[pd]` or append time period to
+			// a basename, etc.
+			_create_filename_ST(SW_F_name(eOutputDaily + pd), "agg", 0, filename);
+			SW_OutFiles.fp_reg_agg[pd] = OpenFile(filename, "w");
+		}
+
+		if (SW_OutFiles.make_soil) {
+			_create_filename_ST(SW_F_name(eOutputDaily_soil + pd), "agg", 0, filename);
+			SW_OutFiles.fp_soil_agg[pd] = OpenFile(filename, "w");
+		}
+
+	} else
+	{ // STEPWAT2: storing values for every iteration
+		if (iteration > 1) {
+			// close files from previous iteration
+			if (SW_OutFiles.make_regular) {
+				CloseFile(&SW_OutFiles.fp_reg[pd]);
+			}
+			if (SW_OutFiles.make_soil) {
+				CloseFile(&SW_OutFiles.fp_soil[pd]);
+			}
+		}
+
+		if (SW_OutFiles.make_regular) {
+			_create_filename_ST(SW_F_name(eOutputDaily + pd), "rep", iteration, filename);
+			SW_OutFiles.fp_reg[pd] = OpenFile(filename, "w");
+		}
+
+		if (SW_OutFiles.make_soil) {
+			_create_filename_ST(SW_F_name(eOutputDaily_soil + pd), "rep", iteration, filename);
+			SW_OutFiles.fp_soil[pd] = OpenFile(filename, "w");
+		}
+	}
+	#endif
+}
+
 
 
 /* =================================================== */
@@ -76,22 +174,38 @@ extern char sw_outstr[OUTSTRLEN]; // defined in `SW_Output_core.c`: string with 
 /*             (declared in SW_Output.h)               */
 /* --------------------------------------------------- */
 
-static void get_outstrleader2(TimeInt pd);
 
+void SW_OUT_create_summary_files(void) {
+	OutPeriod p;
 
-/** `STEPWAT2`-version of function `get_outstrleader2`
-	* Prepares both `sw_outstr` and `outstr_all_iters`.
-*/
-static void get_outstrleader2(TimeInt pd)
-{
-	// set `sw_outstr`
-	get_outstrleader(pd);
+		if (!isPartialSoilwatOutput)
+		{
+			ForEachOutPeriod(p) {
+				if (use_OutPeriod[p]) {
+					_create_csv_file_ST(-1, p);
+
+					write_headers_to_csv(p, SW_OutFiles.fp_reg_agg[p],
+						SW_OutFiles.fp_soil_agg[p], swTRUE);
+				}
+			}
+		}
+}
+
+void SW_OUT_create_iteration_files(void) {
+	OutPeriod p;
 
 	if (storeAllIterations) {
-		// copy content of `sw_outstr` to `outstr_all_iters`
-		strcpy(outstr_all_iters, sw_outstr);
+		ForEachOutPeriod(p) {
+			if (use_OutPeriod[p]) {
+				_create_csv_file_ST(Globals.currIter + 1, p);
+
+				write_headers_to_csv(p, SW_OutFiles.fp_reg[p],
+					SW_OutFiles.fp_soil[p], swFALSE);
+			}
+		}
 	}
 }
+
 
 
 void get_co2effects(OutPeriod pd) {
@@ -333,7 +447,7 @@ void get_co2effects(OutPeriod pd) {
 			_Sep, wue_mult_shrub,
 			_Sep, wue_mult_tree,
 			_Sep, wue_mult_forb);
-			strcat(outstr_all_iters, str_iters);
+			strcat(sw_outstr_agg, str_iters);
 		}
 }
 
@@ -397,7 +511,7 @@ void get_estab(OutPeriod pd)
 			}
 			if(storeAllIterations){
 				sprintf(str_iters, "%c%d", _Sep, v->parms[i]->estab_doy);
-				strcat(outstr_all_iters, str_iters);
+				strcat(sw_outstr_agg, str_iters);
 			}
 	}
 }
@@ -501,7 +615,7 @@ void get_temp(OutPeriod pd)
 	if(storeAllIterations){
 		sprintf(str_iters, "%c%7.6f%c%7.6f%c%7.6f%c%7.6f", _Sep, v_max, _Sep, v_min, _Sep,
 			v_avg, _Sep, surfaceTempVal);
-		strcat(outstr_all_iters, str_iters);
+		strcat(sw_outstr_agg, str_iters);
 	}
 
 	SXW.temp = v_avg;
@@ -615,7 +729,7 @@ void get_precip(OutPeriod pd)
 	if(storeAllIterations){
 		sprintf(str_iters, "%c%7.6f%c%7.6f%c%7.6f%c%7.6f%c%7.6f", _Sep, val_ppt, _Sep,
 			val_rain, _Sep, val_snow, _Sep, val_snowmelt, _Sep, val_snowloss);
-		strcat(outstr_all_iters, str_iters);
+		strcat(sw_outstr_agg, str_iters);
 	}
 	SXW.ppt = val_ppt;
 }
@@ -694,7 +808,7 @@ ForEachSoilLayer(i){
 		}
 		if(storeAllIterations){
 			sprintf(str_iters, "%c%7.6f", _Sep, val[i]);
-			strcat(outstr_all_iters, str_iters);
+			strcat(sw_outstr_agg, str_iters);
 		}
 	}
 
@@ -793,7 +907,7 @@ ForEachSoilLayer(i){
 	}
 	if(storeAllIterations){
 		sprintf(str_iters, "%c%7.6f", _Sep, val[i]);
-		strcat(outstr_all_iters, str_iters);
+		strcat(sw_outstr_agg, str_iters);
 	}
 }
 	free(val);
@@ -844,7 +958,7 @@ void get_swa(OutPeriod pd)
 
 			if(storeAllIterations){
 				sprintf(str_iters, "%c%7.6f%c%7.6f%c%7.6f%c%7.6f",_Sep, val[0][i], _Sep, val[1][i], _Sep, val[2][i], _Sep, val[3][i]);
-				strcat(outstr_all_iters, str_iters);
+				strcat(sw_outstr_agg, str_iters);
 			}
 
 			if (isPartialSoilwatOutput == FALSE)
@@ -932,7 +1046,7 @@ void get_swcBulk(OutPeriod pd)
 		}
 		if(storeAllIterations){
 			sprintf(str_iters, "%c%7.6f", _Sep, val);
-			strcat(outstr_all_iters, str_iters);
+			strcat(sw_outstr_agg, str_iters);
 		}
 		if (isPartialSoilwatOutput == FALSE)
 		{
@@ -1028,7 +1142,7 @@ void get_swpMatric(OutPeriod pd)
 	}
 	if(storeAllIterations){
 		sprintf(str_iters, "%c%7.6f", _Sep, val);
-		strcat(outstr_all_iters, str_iters);
+		strcat(sw_outstr_agg, str_iters);
 	}
 }
 }
@@ -1090,7 +1204,7 @@ void get_swaBulk(OutPeriod pd)
 		}
 		if(storeAllIterations){
 			sprintf(str_iters, "%c%7.6f", _Sep, val);
-			strcat(outstr_all_iters, str_iters);
+			strcat(sw_outstr_agg, str_iters);
 		}
 	}
 }
@@ -1153,7 +1267,7 @@ void get_swaMatric(OutPeriod pd)
 		}
 		if(storeAllIterations){
 			sprintf(str_iters, "%c%7.6f", _Sep, val);
-			strcat(outstr_all_iters, str_iters);
+			strcat(sw_outstr_agg, str_iters);
 		}
 	}
 }
@@ -1212,7 +1326,7 @@ void get_surfaceWater(OutPeriod pd)
 		}
 		if(storeAllIterations){
 			sprintf(str_iters, "%c%7.6f", _Sep, val_surfacewater);
-			strcat(outstr_all_iters, str_iters);
+			strcat(sw_outstr_agg, str_iters);
 		}
 }
 
@@ -1301,7 +1415,7 @@ void get_runoffrunon(OutPeriod pd) {
 		if(storeAllIterations){
 			sprintf(str_iters, "%c%7.6f%c%7.6f%c%7.6f%c%7.6f", _Sep, val_netRunoff,
 		      _Sep, val_surfaceRunoff, _Sep, val_snowRunoff, _Sep, val_surfaceRunon);
-			strcat(outstr_all_iters, str_iters);
+			strcat(sw_outstr_agg, str_iters);
 		}
 }
 
@@ -1538,7 +1652,7 @@ ForEachSoilLayer(i)
 	if(storeAllIterations){
 		sprintf(str_iters, "%c%7.6f%c%7.6f%c%7.6f%c%7.6f%c%7.6f",
 			_Sep, val_total[i], _Sep, val_tree[i], _Sep, val_shrub[i], _Sep, val_forb[i], _Sep, val_grass[i]);
-		strcat(outstr_all_iters, str_iters);
+		strcat(sw_outstr_agg, str_iters);
 	}
 }
 free(val_total);
@@ -1605,7 +1719,7 @@ void get_evapSoil(OutPeriod pd)
 		}
 		if(storeAllIterations){
 			sprintf(str_iters, "%c%7.6f", _Sep, val);
-			strcat(outstr_all_iters, str_iters);
+			strcat(sw_outstr_agg, str_iters);
 		}
 	}
 }
@@ -1728,7 +1842,7 @@ void get_evapSurface(OutPeriod pd)
 		if(storeAllIterations){
 			sprintf(str_iters, "%c%7.6f%c%7.6f%c%7.6f%c%7.6f%c%7.6f%c%7.6f%c%7.6f",
 				_Sep, val_tot, _Sep, val_tree, _Sep, val_shrub, _Sep, val_forb, _Sep, val_grass, _Sep, val_litter, _Sep, val_water);
-			strcat(outstr_all_iters, str_iters);
+			strcat(sw_outstr_agg, str_iters);
 		}
 }
 
@@ -1841,7 +1955,7 @@ void get_interception(OutPeriod pd)
 			}
 			if(storeAllIterations){
 				sprintf(str_iters, "%c%7.6f%c%7.6f%c%7.6f%c%7.6f%c%7.6f%c%7.6f", _Sep, val_tot, _Sep, val_tree, _Sep, val_shrub, _Sep, val_forb, _Sep, val_grass, _Sep, val_litter);
-				strcat(outstr_all_iters, str_iters);
+				strcat(sw_outstr_agg, str_iters);
 			}
 }
 
@@ -1901,7 +2015,7 @@ void get_soilinf(OutPeriod pd)
 		}
 		if(storeAllIterations){
 			sprintf(str_iters, "%c%7.6f", _Sep, val_inf);
-			strcat(outstr_all_iters, str_iters);
+			strcat(sw_outstr_agg, str_iters);
 		}
 }
 
@@ -1961,7 +2075,7 @@ void get_lyrdrain(OutPeriod pd)
 		}
 		if(storeAllIterations){
 			sprintf(str_iters, "%c%7.6f", _Sep, val);
-			strcat(outstr_all_iters, str_iters);
+			strcat(sw_outstr_agg, str_iters);
 		}
 	}
 }
@@ -2066,7 +2180,7 @@ void get_hydred(OutPeriod pd)
 		}
 		if(storeAllIterations){
 			sprintf(str_iters, "%c%7.6f%c%7.6f%c%7.6f%c%7.6f%c%7.6f", _Sep, val_total, _Sep, val_tree, _Sep, val_shrub, _Sep, val_forb, _Sep, val_grass);
-			strcat(outstr_all_iters, str_iters);
+			strcat(sw_outstr_agg, str_iters);
 		}
 	}
 }
@@ -2136,7 +2250,7 @@ void get_aet(OutPeriod pd)
 
 	if(storeAllIterations){
 		sprintf(str_iters, "%c%7.6f", _Sep, val);
-		strcat(outstr_all_iters, str_iters);
+		strcat(sw_outstr_agg, str_iters);
 	}
 		SXW.aet += val;
 }
@@ -2195,7 +2309,7 @@ void get_pet(OutPeriod pd)
 		}
 		if(storeAllIterations){
 			sprintf(str_iters, "%c%7.6f", _Sep, val);
-			strcat(outstr_all_iters, str_iters);
+			strcat(sw_outstr_agg, str_iters);
 		}
 }
 
@@ -2253,7 +2367,7 @@ void get_wetdays(OutPeriod pd)
 		}
 		if(storeAllIterations){
 			sprintf(str_iters, "%c%i", _Sep, val);
-			strcat(outstr_all_iters, str_iters);
+			strcat(sw_outstr_agg, str_iters);
 		}
 	}
 }
@@ -2320,7 +2434,7 @@ void get_snowpack(OutPeriod pd)
 		}
 		if(storeAllIterations){
 			sprintf(str_iters, "%c%7.6f%c%7.6f", _Sep, val_swe, _Sep, val_depth);
-			strcat(outstr_all_iters, str_iters);
+			strcat(sw_outstr_agg, str_iters);
 		}
 }
 
@@ -2376,7 +2490,7 @@ void get_deepswc(OutPeriod pd)
 		}
 		if(storeAllIterations){
 			sprintf(str_iters, "%c%7.6f", _Sep, val);
-			strcat(outstr_all_iters, str_iters);
+			strcat(sw_outstr_agg, str_iters);
 		}
 }
 
@@ -2434,7 +2548,7 @@ void get_soiltemp(OutPeriod pd)
 		}
 		if(storeAllIterations){
 			sprintf(str_iters, "%c%7.6f", _Sep, val);
-			strcat(outstr_all_iters, str_iters);
+			strcat(sw_outstr_agg, str_iters);
 		}
 	}
 }

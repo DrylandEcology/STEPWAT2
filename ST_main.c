@@ -168,7 +168,9 @@ int main(int argc, char **argv) {
 
 	if (UseSoilwat){
 		SXW_Init(TRUE, NULL);
-    SW_OUT_set_ncol(); // set number of columns
+    SW_OUT_set_ncol(); // set number of output columns
+    SW_OUT_set_colnames(); // set column names for output files
+    SW_OUT_create_summary_files();
   }
 
 	incr = (IntS) ((float) Globals.runModelIterations / 10);
@@ -199,12 +201,16 @@ int main(int argc, char **argv) {
 
 			Globals.currYear = year;
 
+			if (UseSoilwat) {
+				SW_OUT_create_iteration_files();
+			}
+
 			rgroup_Establish();
-     
+
 			Env_Generate();
 
 			rgroup_PartResources();
-   
+
          //check_sizes("'main' after 'rgroup_PartResources'");
 
 #ifdef STEPWAT
@@ -212,39 +218,39 @@ int main(int argc, char **argv) {
 #endif
 
 			rgroup_Grow();
-      
+
       //check_sizes("'main' after 'rgroup_Grow'");
 
 			mort_Main(&killedany);
-      
+
       //check_sizes("'main' after 'mort_Main'");
 
 			rgroup_IncrAges();
-      
+
       //check_sizes("'main' after 'rgroup_IncrAges'");
 
       // Added functions for Grazing and mort_end_year as proportional killing effect before exporting biomass end of the year
 			grazing_EndOfYear();
-      
+
       //check_sizes("'main' after 'grazing_EndOfYear'");
 
 
       save_annual_species_relsize();
-     
+
       		mort_EndOfYear();
-      
+
       //check_sizes("'main' after 'mort_EndOfYear'");
 
 			stat_Collect(year);
-      
+
 			if (BmassFlags.yearly)
 				output_Bmass_Yearly(year);
 
        // Moved kill annual and kill extra growth after we export biomass, and recovery of biomass after fire before the next year
 			_kill_annuals();
-     
+
 			proportion_Recovery();
-     
+
       //check_sizes("'main' after 'proportion_Recovery'");
 
 			//_kill_extra_growth();
@@ -252,7 +258,7 @@ int main(int argc, char **argv) {
 			// Check that relsizes match up at end of year after extra growth is removed
 			// may want to wrap this in #ifdef DEBUG once problem is fixed
 			//check_sizes("'main' at end of year");
-     
+
 		} /* end model run for this year*/
 
 		if (MortFlags.summary) {
@@ -285,7 +291,9 @@ int main(int argc, char **argv) {
         SXW_PrintDebug(1);
       }
 #endif
-  SW_OUT_close_files();
+  if (UseSoilwat){
+    SW_OUT_close_files();
+  }
   free_all_sxw_memory();
   printf("\nend program\n");
 	fprintf(progfp, "\n");
