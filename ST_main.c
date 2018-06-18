@@ -30,12 +30,13 @@
   #include "sxw_funcs.h"
   #include "sxw.h"
   #include "sw_src/SW_Output.h"
+  #include "sw_src/SW_Output_outtext.h"
   #include "sw_src/rands.h"
   extern SXW_t SXW;
 #endif
 
-extern Bool isPartialSoilwatOutput;
-extern Bool storeAllIterations;
+extern Bool prepare_IterationSummary; // defined in `SOILWAT2/SW_Output.c`
+extern Bool storeAllIterations; // defined in `SOILWAT2/SW_Output.c`
 extern SW_VEGPROD SW_VegProd;
 SW_FILE_STATUS SW_File_Status;
 
@@ -152,7 +153,7 @@ int main(int argc, char **argv) {
 	/* provides a way to inform user that something
 	 * was logged.  see generic.h */
 
-  isPartialSoilwatOutput = TRUE; // dont want to get soilwat output unless -o flag
+  prepare_IterationSummary = FALSE; // dont want to get soilwat output unless -o flag
   storeAllIterations = FALSE; // dont want to store all soilwat output iterations unless -i flag
 
 	init_args(argc, argv); // read input arguments and intialize proper flags
@@ -517,7 +518,7 @@ static void init_args(int argc, char **argv) {
 
 		case 7:
       printf("storing SOILWAT output (flag -o)\n");
-      isPartialSoilwatOutput = FALSE;
+      prepare_IterationSummary = TRUE;
 			break; /* -o    also get all the soilwat output*/
 
     case 8: // -i
