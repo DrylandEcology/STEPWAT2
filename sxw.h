@@ -27,16 +27,18 @@
 #include "generic.h"
 #include "SW_Times.h"
 #include "ST_defines.h"
+#include "sw_src/SW_Defines.h"
 
 int getNTranspLayers(int veg_prod_type);
 void free_all_sxw_memory( void );
 
 struct stepwat_st {
-  RealD *transpTotal; /* points to dynamic array indexed by Ilp() */
-  RealD *transpTrees;
-  RealD *transpShrubs;
-  RealD *transpForbs;
-  RealD *transpGrasses;
+  // ------ Values from SOILWAT2:
+  // dynamic arrays indexed by Ilp(), i.e., monthly x soil layer:
+  // transpXXX: monthly sum of soilwat's transpiration by soil layer
+  RealD *transpTotal, // total transpiration, i.e., sum across vegetation types
+        *transpVeg[NVEGTYPES]; // transpiration as contributed by vegetation types
+  RealF *swc; // monthly mean SWCbulk for each soil layer
 
   RealD *transpTotal_avg,
         *transpTrees_avg,
@@ -44,37 +46,18 @@ struct stepwat_st {
         *transpForbs_avg,
         *transpGrasses_avg;
 
-  RealF  temp,   /* soilwat's MAT */
-         ppt;    /* soilwat's MAP */
-  TimeInt NPds;  /* number of transp periods= maxdays, maxweeks, maxmonths */
-  IntUS NTrLyrs, /* # transp. layers taken from SOILWAT */
-        NGrps;   /* # plant groups taken from STEPPE */
-  IntUS NSoLyrs;  /* number of soil layers defined */
+  // fixed monthly array:
+  RealF ppt_monthly[MAX_MONTHS];  // monthly sum of soilwat's precipitation
 
-  /* These are file names */
-  char  *f_files,  /* list of input files for sxw */
-        *f_roots,  /* root distributions */
-        *f_phen,   /* phenology */
-        *f_bvt,    /* biomass vs transpiration 12/29/03 */
-        *f_prod,   /* biomass to prod. conv. nos. */
-        *f_watin;  /* soilwat's input file */
+  // annual values:
+  RealF temp,   // annual mean soilwat's air temperature
+        ppt,    // annual sum of soilwat's precipitation
+        aet;    // annual sum of soilwat's evapotranspiration
 
-  /* DEBUG stuff */
-  char *debugfile; /* added in ST_Main(), read to get debug instructions */
-  RealF *swc, /* dynamic array(Ilp) of SWC from SOILWAT */
-         aet;
-              /* soilwat's evapotranspiration for the year */
-  RealD  surfaceTemp;   /* soilwat's surfaceTemp */
-
-  // PPT variables
-  int    yearInterval, // keep track of years
-         curMonth;
-
-  RealF PPT_sum,
-        PPT_rain,
-        PPT_snow_fall,
-        PPT_snow_melt,
-        PPT_snow_loss;
+  /* All `SWA`-related variables are currently not implemented because
+    the former implementation was incorrect (#133 and #138),
+    please, see https://github.com/DrylandEcology/STEPWAT2/issues/136 for
+    details.
 
   RealF *SWA_grass_avg, // 2D array to store SWA vals ([days of year][number of max layers])
         *SWA_shrub_avg,
@@ -83,7 +66,26 @@ struct stepwat_st {
 
   RealF *sum_dSWA_repartitioned;
 
-  RealF transp_SWA[MAX_YEARS][11]; // store the sum of SWA and transp for each year and resource. transp_SWA[year][steppe_resource_group]
+  RealF transp_SWA[MAX_YEARS][MAX_RGROUPS]; // store the sum of SWA and transp for each year and resource. transp_SWA[year][steppe_resource_group]
+  */
+
+
+  // ------ Size variables:
+  TimeInt NPds;  /* number of transp periods= maxdays, maxweeks, maxmonths */
+  IntUS NTrLyrs, /* # transp. layers taken from SOILWAT */
+        NGrps;   /* # plant groups taken from STEPPE */
+  IntUS NSoLyrs;  /* number of soil layers defined */
+
+  // ------ These are file names:
+  char  *f_files,  /* list of input files for sxw */
+        *f_roots,  /* root distributions */
+        *f_phen,   /* phenology */
+        *f_bvt,    /* biomass vs transpiration 12/29/03 */
+        *f_prod,   /* biomass to prod. conv. nos. */
+        *f_watin;  /* soilwat's input file */
+
+  // ------ DEBUG stuff:
+  char *debugfile; /* added in ST_Main(), read to get debug instructions */
 };
 
 struct soilwat_average{
