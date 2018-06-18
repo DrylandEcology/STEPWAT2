@@ -244,16 +244,16 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
 
 		switch(t) {
 		case 0://Tree
-			transp = SXW.transpTrees;
+			transp = SXW.transpVeg[SW_TREES];
 			break;
 		case 1://Shrub
-			transp = SXW.transpShrubs;
+			transp = SXW.transpVeg[SW_SHRUB];
 			break;
 		case 2://Grass
-			transp = SXW.transpGrasses;
+			transp = SXW.transpVeg[SW_GRASS];
 			break;
 		case 3://Forb
-			transp = SXW.transpForbs;
+			transp = SXW.transpVeg[SW_FORBS];
 			break;
 		default:
 			transp = SXW.transpTotal;

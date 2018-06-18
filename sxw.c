@@ -83,7 +83,8 @@ extern SW_WEATHER SW_Weather;
 extern SW_MARKOV SW_Markov;
 //extern SW_SOILWAT SW_Soilwat;
 
-extern Bool isPartialSoilwatOutput;
+// defined in `SW_Output.c`:
+extern Bool prepare_IterationSummary;
 extern Bool storeAllIterations;
 
 
@@ -741,8 +742,10 @@ static void _make_arrays(void) {
   _make_swa_array();
 	_make_swc_array();
   // only make output storage if -o or -i flags
-  if(storeAllIterations || isPartialSoilwatOutput == FALSE)
+  if (storeAllIterations || prepare_IterationSummary)
+  {
     _make_soil_arrays();
+  }
 }
 
 static void _make_roots_arrays(void) {
@@ -788,15 +791,15 @@ static void _make_transp_arrays(void) {
  * both are indexed by the macro Ilp().
  */
 	char *fstr = "_make_transp_array()";
-	int size;
+	int size, k;
   //int avg_size;
 
 	size = (SXW.NPds * SXW.NSoLyrs) * MAX_DAYS;
 	SXW.transpTotal = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
-	SXW.transpTrees = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
-	SXW.transpShrubs = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
-	SXW.transpForbs = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
-	SXW.transpGrasses = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
+
+	ForEachVegType(k) {
+		SXW.transpVeg[k] = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
+	}
 }
 
 static void _make_swa_array(void){
@@ -815,7 +818,7 @@ static void _make_swc_array(void) {
  * specified with debugfile
  */
 	char *fstr = "_make_swc_array()";
-	int size = SXW.NPds * SXW.NSoLyrs * MAX_DAYS;
+	int size = SXW.NPds * SXW.NSoLyrs;
 
 	SXW.swc = (RealF *) Mem_Calloc(size, sizeof(RealF *), fstr);
 }
@@ -1327,6 +1330,8 @@ int getNTranspLayers(int veg_prod_type) {
 
 /***********************************************************/
 void free_all_sxw_memory( void ) {
+	int k;
+
   free_sxw_memory();
   Mem_Free(SXW.f_files);
 	Mem_Free(SXW.f_roots);
@@ -1336,10 +1341,9 @@ void free_all_sxw_memory( void ) {
 	Mem_Free(SXW.f_watin);
 
 	Mem_Free(SXW.transpTotal);
-	Mem_Free(SXW.transpTrees);
-	Mem_Free(SXW.transpShrubs);
-	Mem_Free(SXW.transpForbs);
-	Mem_Free(SXW.transpGrasses);
+	ForEachVegType(k) {
+		Mem_Free(SXW.transpVeg[k]);
+	}
   Mem_Free(SXW.transpTotal_avg);
 	Mem_Free(SXW.transpTrees_avg);
 	Mem_Free(SXW.transpShrubs_avg);

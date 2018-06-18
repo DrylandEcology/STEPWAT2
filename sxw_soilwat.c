@@ -89,10 +89,10 @@ void _sxw_sw_setup (RealF sizes[]) {
 /*======================================================*/
 	int doy, k;
 	SW_VEGPROD *v = &SW_VegProd;
-        
+
         _update_productivity();
 	_update_transp_coeff(sizes);
-	
+
 #ifndef SXW_BYMAXSIZE
   for (doy = 1; doy <= MAX_DAYS; doy++) {
     ForEachVegType(k) {
@@ -116,11 +116,12 @@ void _sxw_sw_run(void) {
 
 void _sxw_sw_clear_transp(void) {
 /*======================================================*/
+	int k;
+
 	Mem_Set(SXW.transpTotal, 0, SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
-	Mem_Set(SXW.transpTrees, 0, SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
-	Mem_Set(SXW.transpShrubs, 0, SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
-	Mem_Set(SXW.transpForbs, 0, SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
-	Mem_Set(SXW.transpGrasses, 0, SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
+	ForEachVegType(k) {
+		Mem_Set(SXW.transpVeg[k], 0, SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
+	}
 }
 
 static void _update_transp_coeff(RealF relsize[]) {
