@@ -607,19 +607,6 @@ void stat_Save_Accumulators(int cell, int year) {
 
 }
 
-float get_running_avg(float old_val, float val_to_add){
-	float new_avg;
-	new_avg = old_val + (val_to_add - old_val) / Globals.currIter;
-	return new_avg;
-}
-
-float get_running_sqr(float old_val, float val_to_add, float run_avg){
-	float run_sqr;
-	run_sqr = (val_to_add-old_val) * (val_to_add-run_avg);
-
-	return run_sqr;
-}
-
 /***********************************************************/
 void stat_Free_Accumulators( void ) {
 	//frees all the memory allocated in stat_init_Accumulators()

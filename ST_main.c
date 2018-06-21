@@ -172,6 +172,10 @@ int main(int argc, char **argv) {
     SW_OUT_set_ncol(); // set number of output columns
     SW_OUT_set_colnames(); // set column names for output files
     SW_OUT_create_summary_files();
+    if (prepare_IterationSummary) {
+      // setup `p_OUT` and `p_OUTsd` arrays to aggregate SOILWAT output across iterations
+      setGlobalSTEPWAT2_OutputVariables();
+    }
   }
 
 	incr = (IntS) ((float) Globals.runModelIterations / 10);
@@ -366,7 +370,6 @@ void Plot_Initialize(void) {
 		RGroup[rg]->yrs_neg_pr = 0;
 		RGroup[rg]->extirpated = FALSE;
 	}
-  memset(SXW.transp_SWA, 0, sizeof(SXW.transp_SWA)); // set transp_SWA to 0; needs to be reset each iteration
 
 	if (UseSoilwat)
 		SXW_InitPlot();
