@@ -37,6 +37,7 @@
 #endif
 
 extern Bool prepare_IterationSummary; // defined in `SOILWAT2/SW_Output.c`
+extern Bool print_IterationSummary; // defined in `SOILWAT2/SW_Output_outtext.c`
 extern Bool storeAllIterations; // defined in `SOILWAT2/SW_Output.c`
 extern SW_VEGPROD SW_VegProd;
 SW_FILE_STATUS SW_File_Status;
@@ -201,6 +202,10 @@ int main(int argc, char **argv) {
 
 		if (UseSoilwat && storeAllIterations) {
 			SW_OUT_create_iteration_files(Globals.currIter);
+		}
+
+		if (UseSoilwat && prepare_IterationSummary) {
+			print_IterationSummary = (Bool) (Globals.currIter == Globals.runModelIterations);
 		}
 
 		/* ------  Begin running the model ------ */
