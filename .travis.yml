@@ -7,6 +7,6 @@ script:
   # check that we can compile STEPWAT2
   - set CPPFLAGS=-DSWDEBUG && make clean && make
   # check that we can run the 'default' example
-  - testing.sagebrush.master/Stepwat_Inputs/stepwat -d testing.sagebrush.master/Stepwat_Inputs/ -f files.in -s -o -i
+  - ./testing.sagebrush.master/Stepwat_Inputs/stepwat -d testing.sagebrush.master/Stepwat_Inputs/ -f files.in -s -o -i
   # remove created files including (possibly) large output
   - make cleanall
