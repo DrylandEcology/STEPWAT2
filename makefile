@@ -122,15 +122,24 @@ all:	$(ALLTGT)
 
 objs:	$(ALLOBJS)
 
+.PHONY : cleanobjs
 cleanobjs:
-	rm -f $(ALLOBJS)
+		@rm -f $(ALLOBJS)
 
+.PHONY : cleanbin
 cleanbin:
-	rm -f $(ALLBIN)
+		@rm -f $(ALLBIN)
 
+.PHONY : output_clean
+output_clean :
+		@rm -fr testing.sagebrush.master/Output/*
+		@rm -fr testing.sagebrush.master/Stepwat_Inputs/Output/*
+
+.PHONY : clean
 clean:	cleanobjs cleanbin
 
-cleanall:	cleanobjs cleanbin
+.PHONY : cleanall
+cleanall: clean output_clean
 
 #@# User Targets follow ---------------------------------
 
