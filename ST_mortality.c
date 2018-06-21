@@ -190,14 +190,55 @@ void mort_EndOfYear( void)
 {
 /*======================================================*/
 /* PURPOSE */
-/* Implements killing of plants through fire or another event
+/* Implements killing of plants through wildfire, prescribed fire, or another event
  * that would result in mortality in single year (killyr) or
  * extirpation (extirp) where plants are killed and do not return. */
 
-	//printf("inside mort_EndOfYear() \n");
-	GrpIndex rg;
-	GroupType *g;
-
+    //printf("inside mort_EndOfYear() \n");
+    GrpIndex rg;
+    GroupType *g;
+    RealF fire_possibility, Wildfire_controller, Bio_cheatgrass;
+    char *checkname = "brte"; 
+    int i = 0;
+    /* Check species index number from the beginning to all the species in
+     *  species.in , if the species name == checkname then get the biomass and stop the loop*/
+    for( i = 0; i < Globals.sppCount; i++)
+    { /* if species name = checkname = brte then get the biomass of brte(cheatgrass)*/
+      if (strcmp(checkname,Species[i]->name) == 0)
+      {
+      Bio_cheatgrass = Species_GetBiomass (i);    /* calculate biomass of cheatgrass*/
+    //  printf("Cheatgrass: %s\n",Species[i]->name);
+      break;
+      }
+    }         
+        /* Set a random number outside of the loop to make sure the kill probability for each functional group is the same */
+        Wildfire_controller = RandUni(); 
+        //printf("[Cheatgrass: %f\n",Bio_cheatgrass);
+        
+        /* If cheatgrass biomass is less than the biomass required for wildfire ignition, wildfire probability is very low*/
+        if (Bio_cheatgrass < g->ignition)
+                    {
+                       fire_possibility = 1.0 / Globals.runModelYears;  
+                    } 
+        /* Otherwise a wildfire probability is calculated, which increases with cheatgrass biomass*/
+        if (Bio_cheatgrass >= g->ignition)
+                    {
+                        fire_possibility = g->cheatgrass_coefficient + g->wild_fire_slope * Bio_cheatgrass;
+                    }
+        
+        /* If ignition =0, no wildfire occurs */
+        if (g->ignition == 0)
+                    {
+                       fire_possibility = 0; 
+                     } 
+        
+        /* If the input killfreq < 1; both wildfire and prescribed fire occur, 
+        * while if killfreq >1, only prescribed fire happens */
+        if GT (g->killfreq, fire_possibility)
+                    { 
+                         fire_possibility = g->killfreq;
+                    }
+        //printf("fire_possibility: %f\n",fire_possibility);   
 	ForEachGroup(rg)
 	{
 		if (Globals.currYear < RGroup[rg]->startyr)
@@ -205,25 +246,33 @@ void mort_EndOfYear( void)
 			/* don't start trying to kill or grow or do grazing until RGroup[rg]->startyr year */
 			continue;
 		}
-
 		g = RGroup[rg];
-
-		if ((Globals.currYear >= g->killfreq_startyr) && GT(g->killfreq, 0.))
-		{
-			if (LT(g->killfreq, 1.0))
+                g->prescribedfire =0;
+                g->wildfire =0;
+                
+                /* check wildfire first*/
+                if ((Globals.currYear >= g->killfreq_startyr) && GT(fire_possibility, 0.))
+                    {
+			if (LT(fire_possibility, 1.0))
 			{
-				if (RandUni() <= g->killfreq)
+				if (Wildfire_controller <= fire_possibility)
 				{
 					g->killyr = Globals.currYear;
+                /* Calculate the wild fire counts */
+                                        g->wildfire = 1;
+                                        //printf("[Rui] Wildfire_count: %d\n",  g->wildfire);
 				}
-
 			}
+                /* then check prescribed fire*/
 			else if (((Globals.currYear - g->killfreq_startyr) % (IntU) g->killfreq) == 0)
 			{
 				g->killyr = Globals.currYear;
+                /* Calculate the prescribed fire counts */
+                                g->prescribedfire = 1;
+                                //printf("[Rui] Prescribedfire_count: %d\n", g->prescribedfire);
 			}
 
-		}
+                    }
 
 		if (Globals.currYear == RGroup[rg]->extirp)
 		{
@@ -232,10 +281,11 @@ void mort_EndOfYear( void)
 		else if (Globals.currYear == RGroup[rg]->killyr)
 		{
 			RGroup_Kill(rg);
+                        //printf("[Rui] Fire_happened_year: %d\n", RGroup[rg]->killyr);
 		}
-
+                
 	}
-
+ 
 }
 
 void grazing_EndOfYear( void){
@@ -323,23 +373,7 @@ void proportion_Recovery(void)
 
 		g = RGroup[rg];
 
-		if ((Globals.currYear >= g->killfreq_startyr) && GT(g->killfreq, 0.))
-		{
-			if (LT(g->killfreq, 1.0))
-			{
-				if (RandUni() <= g->killfreq)
-				{
-					g->killyr = Globals.currYear;
-				}
-
-			}
-			else if (((Globals.currYear - g->killfreq_startyr) % (IntU) g->killfreq) == 0)
-			{
-				g->killyr = Globals.currYear;
-			}
-
-		}
-
+		
 		//rgroup proportion recovery
 		if (Globals.currYear == RGroup[rg]->killyr)
 		{
