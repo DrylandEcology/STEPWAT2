@@ -260,7 +260,7 @@ void mort_EndOfYear( void)
 					g->killyr = Globals.currYear;
                 /* Calculate the wild fire counts */
                                         g->wildfire = 1;
-                                        printf("[Rui] Wildfire_count: %d\n",  g->wildfire);
+                                        //printf("[Rui] Wildfire_count: %d\n",  g->wildfire);
 				}
 			}
                 /* then check prescribed fire*/
@@ -269,7 +269,7 @@ void mort_EndOfYear( void)
 				g->killyr = Globals.currYear;
                 /* Calculate the prescribed fire counts */
                                 g->prescribedfire = 1;
-                                printf("[Rui] Prescribedfire_count: %d\n", g->prescribedfire);
+                                //printf("[Rui] Prescribedfire_count: %d\n", g->prescribedfire);
 			}
 
                     }
@@ -281,7 +281,7 @@ void mort_EndOfYear( void)
 		else if (Globals.currYear == RGroup[rg]->killyr)
 		{
 			RGroup_Kill(rg);
-                        printf("[Rui] Fire_happened_year: %d\n", RGroup[rg]->killyr);
+                        //printf("[Rui] Fire_happened_year: %d\n", RGroup[rg]->killyr);
 		}
                 
 	}
