@@ -258,7 +258,7 @@ int main(int argc, char **argv) {
 
       //check_sizes("'main' after 'proportion_Recovery'");
 
-			//_kill_extra_growth();
+			_kill_extra_growth();
 
 			// Check that relsizes match up at end of year after extra growth is removed
 			// may want to wrap this in #ifdef DEBUG once problem is fixed
@@ -581,7 +581,7 @@ void check_sizes(const char *chkpt) {
 
       if (LT(diff, fabs(spsize - Species[sp]->relsize)) ) {
         LogError(stdout, LOGWARN, "%s (%d:%d): SP: \"%s\" size error: "
-                                  "SP=%.3f, ndv=%.3f",
+                                  "SP=%.7f, ndv=%.7f",
                 chkpt, Globals.currIter, Globals.currYear,
                 Species[sp]->name, Species[sp]->relsize, spsize);
       }
@@ -589,7 +589,7 @@ void check_sizes(const char *chkpt) {
 
     if ( LT(diff, fabs(rgsize -RGroup[rg]->relsize)) ) {
       LogError(stdout, LOGWARN, "%s (%d:%d): RG \"%s\" size error: "
-                                "RG=%.3f, ndv=%.3f",
+                                "RG=%.7f, ndv=%.7f",
               chkpt, Globals.currIter, Globals.currYear,
               RGroup[rg]->name, RGroup[rg]->relsize, rgsize);
     }

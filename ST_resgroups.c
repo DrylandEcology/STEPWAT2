@@ -65,7 +65,6 @@ void rgroup_PartResources(void) {
 
     GrpIndex rg;
     Bool noplants = TRUE;
-    const Bool no_seeds = FALSE;
     GroupType *g; /* shorthand for RGroup[rg] */
 
     /* ----- distribute basic (minimum) resources */
@@ -96,20 +95,6 @@ void rgroup_PartResources(void) {
            //     g->res_avail, g->res_required);
 
             LogError(logfp, LOGWARN, "RGroup %s : res_avail is Zero and res_required > 0", g->name);
-        }
-
-        /* Annuals seem to have a artificial limit of 20. We do Annuals here differently.
-         * This will be re-evaluated when annual_final is merged in. I would opt to remove,
-         * but additional testing is required with the new annual code. */
-        if (g->max_age == 1) {
-            if (!ZRO(g->res_avail) && g->res_required / g->res_avail > 20) {
-                g->res_required = 20;
-                g->res_avail = 1;
-            }
-            if (ZRO(g->res_avail) && g->res_required > 0) {
-                g->res_required = 20;
-                g->res_avail = 1;
-            }
         }
 
         /* Calculate PR at the functional group level: resources required/resources available */
@@ -506,7 +491,7 @@ void rgroup_Grow(void) {
 
         } /* ENDFOR j (for each species)*/
 
-        //_extra_growth(rg);
+        _extra_growth(rg);
 
     } /* END ForEachGroup(rg)*/
 }
