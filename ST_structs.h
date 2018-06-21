@@ -56,10 +56,10 @@ struct indiv_st {
   MortalityType killedby;
   Bool killed;        /* only for clonal plants, means veggrow possible*/
   RealF relsize,      /* relative to full-sized individual -- 0-1.0) */
-       prv_yr_relsize, /*previous year real rize relative to full-sized individual, saving before killing, used for proportional recovery calculation) */
+       prv_yr_relsize, /*previous year relsize relative to full-sized individual, saving before killing, used for proportional recovery calculation) */
        grp_res_prop,  /* prop'l contribution this indiv makes to group relsize */
-       res_required, /* min_res_req * relsize */
-       res_avail,    /* resource * min_res_req */
+       res_required, /* resources required, biomass of the individual */
+       res_avail,    /* resource available */
        res_extra,    /* resource applied to superficial growth */
        pr,           /* ratio of resources required to amt available */
        growthrate,   /* actual growth rate*/
@@ -74,8 +74,8 @@ struct indiv_ann_st {
       myspecies;
   RealF relsize,      /* relative to full-sized individual -- 0-1.0) */
        grp_res_prop,  /* prop'l contribution this indiv makes to group relsize */
-       res_required, /* min_res_req * relsize */
-       res_avail,    /* resource * min_res_req */
+       res_required, /* resources required, biomass of the individual */
+       res_avail,    /* resource available */
        res_extra,    /* resource applied to superficial growth */
        pr,           /* ratio of resources required to amt available */
        growthrate;   /* actual growth rate*/
@@ -154,7 +154,8 @@ struct resourcegroup_st {
         res_avail,    /* resource available from environment X competition */
         res_extra,    /* if requested, resource above 1.0 when PR < 1.0 */
         pr,           /* resources required / resources available */
-        relsize;      /* size of all species' indivs' relsizes scaled to 1.0 */
+        relsize,      /* size of all species' indivs' relsizes scaled to 1.0 */
+        rgroupFractionOfVegTypeBiomass; /*proportional biomass of the STEPPE functional group out of the SOILWAT2 functional type biomass */
   SppIndex est_count, /* number of species actually established in group*/
            est_spp[MAX_SPP_PER_GRP]; /*list of spp actually estab in grp*/
   Bool extirpated,    /* group extirpated, no more regen */

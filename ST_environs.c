@@ -65,14 +65,11 @@ void Env_Generate( void) {
          break;
   }
 
-
   _make_ppt();
   _make_temp();
   _set_ppt_reduction();
   _set_temp_reduction();
-  _make_disturbance( );
-
-
+  _make_disturbance();
 }
 
 /**************************************************************/

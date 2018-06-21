@@ -55,8 +55,6 @@ void Indiv_SortSize( const byte sorttype,
 int Indiv_CompSize_A( const void *key1, const void *key2);
 int Indiv_CompSize_D( const void *key1, const void *key2);
 
-float get_running_avg(float old_val, float val_to_add);
-float get_running_sqr(float old_val, float val_to_add, float run_avg);
 
 
 #ifdef DEBUG_MEM

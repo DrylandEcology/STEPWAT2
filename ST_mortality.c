@@ -139,7 +139,7 @@ void mort_Main( Bool *killed) {
 
   ForEachGroup(rg) {
     g = RGroup[rg];
-    if (!g->est_count) continue;
+    if (g->est_count == 0) continue;
     if (g->max_age == 1) continue;  /* annuals get theirs in EndOfYear() */
 
     /* mortify plants if low resources for consecutive years */
@@ -148,6 +148,7 @@ void mort_Main( Bool *killed) {
     if ( GT(g->pr, 1.0) ) {
        if (++g->yrs_neg_pr >= g->max_stretch)
           _no_resources( rg);
+
     } else {
       g->yrs_neg_pr = 0;
     }
@@ -157,7 +158,9 @@ void mort_Main( Bool *killed) {
       /* Take care of mortality types 1 and 2*/
       if ( g->use_mort ) {
         _age_independent( sp );
+
         _slow_growth( sp );
+
       }
       /* now deal with succulents problems*/
       if (g->succulent
@@ -176,9 +179,14 @@ void mort_Main( Bool *killed) {
         case Burrow:
              _burrow( sp);
              break;
+
       }
 
     } /* end for each species*/
+
+    /*printf("'mort_Main': Group = %s, relsize = %f, est_count = %d\n",
+      RGroup[rg]->name, RGroup[rg]->relsize, RGroup[rg]->est_count);
+    */
 
   } /* end ForEachGroup(rg) */
 
@@ -233,6 +241,10 @@ void mort_EndOfYear( void)
 		{
 			RGroup_Kill(rg);
 		}
+
+    /*printf("'mort_EndOfYear': Group = %s, relsize = %f, est_count = %d\n",
+      RGroup[rg]->name, RGroup[rg]->relsize, RGroup[rg]->est_count);
+    */
 
 	}
 
@@ -296,65 +308,78 @@ void grazing_EndOfYear( void){
 			}
 		}
 
+    /*printf("'grazing_EndOfYear': Group = %s, relsize = %f, est_count = %d\n",
+      RGroup[rg]->name, RGroup[rg]->relsize, RGroup[rg]->est_count);
+    */
+
 	}
 
 }
 
-void proportion_Recovery(void)
-{
-	/*======================================================*/
+void proportion_Recovery(void) {
+    /*======================================================*/
     /* PURPOSE */
-	/* Perform the sorts of proportion_Recovery one might expect at next year after the killing year
+    /* Perform recovery of biomass that represents re-sprouting after a fire. This
+     * is controlled by proportion_recovered, specified in inputs and can be turned
+     * on or off for each functional group, depending on their ability to resprout. */
     /* HISTORY */
-	/* 1st Nov 2015 -AT -Added Species Proportion Recovery  */
-	/*======================================================*/
+    /* 1st Nov 2015 -AT -Added Species Proportion Recovery  */
+    /*======================================================*/
 
-	GrpIndex rg;
-	GroupType *g;
+    GrpIndex rg;
+    GroupType *g;
+    SppIndex sp;
 
-	ForEachGroup(rg)
-	{
+    ForEachGroup(rg) {
 
-		if (Globals.currYear < RGroup[rg]->startyr)
-		{
-			/* don't start trying to grow  until RGroup[rg]->startyr year */
-			continue;
-		}
+        if (Globals.currYear < RGroup[rg]->startyr) {
+            /* don't start trying to grow  until RGroup[rg]->startyr year */
+            continue;
+        }
 
-		g = RGroup[rg];
+        g = RGroup[rg];
 
-		if ((Globals.currYear >= g->killfreq_startyr) && GT(g->killfreq, 0.))
-		{
-			if (LT(g->killfreq, 1.0))
-			{
-				if (RandUni() <= g->killfreq)
-				{
-					g->killyr = Globals.currYear;
-				}
+        if ((Globals.currYear >= g->killfreq_startyr) && GT(g->killfreq, 0.)) {
+            if (LT(g->killfreq, 1.0)) {
+                if (RandUni() <= g->killfreq) {
+                    g->killyr = Globals.currYear;
+                }
 
-			}
-			else if (((Globals.currYear - g->killfreq_startyr) % (IntU) g->killfreq) == 0)
-			{
-				g->killyr = Globals.currYear;
-			}
+            } else if (((Globals.currYear - g->killfreq_startyr) % (IntU) g->killfreq) == 0) {
+                g->killyr = Globals.currYear;
+            }
 
-		}
+        }
 
-		//rgroup proportion recovery
-		if (Globals.currYear == RGroup[rg]->killyr)
-		{
-			Int i;
-			ForEachEstSpp2( rg, i)
-			{
-				Species_Proportion_Recovery(RGroup[rg]->est_spp[i], 6,
-						RGroup[rg]->proportion_recovered,
-						RGroup[rg]->proportion_killed);
-			}
-		}
+        //rgroup proportion recovery
+        if (Globals.currYear == RGroup[rg]->killyr) {
+            Int i;
 
-	}
+            //printf("'before proportion_recovery': Group = %s, relsize = %f, est_count = %d\n",
+            //RGroup[rg]->name, RGroup[rg]->relsize, RGroup[rg]->est_count);
+
+            ForEachEstSpp(sp, rg, i) {
+
+                /* Annuals have already been killed in _kill_annuals and are not 
+                 * subject to proportion recovery after fire */
+                if (Species[sp]->max_age == 1)
+                    continue;
+
+                //printf("'before proportion_recovery': Species = %s, relsize = %f, est_count = %d\n",
+                // Species[sp]->name, Species[sp]->relsize, Species[sp]->est_count); 
+
+                Species_Proportion_Recovery(RGroup[rg]->est_spp[i], 6,
+                        RGroup[rg]->proportion_recovered,
+                        RGroup[rg]->proportion_killed);
+
+                //printf("'after proportion_recovery': Species = %s, relsize = %f, est_count = %d\n",
+                //Species[sp]->name, Species[sp]->relsize, Species[sp]->est_count); 
+            }
+            //printf("'after proportion_recovery': Group = %s, relsize = %f, est_count = %d\n",
+            // RGroup[rg]->name, RGroup[rg]->relsize, RGroup[rg]->est_count); 
+        }
+    }
 }
-
 
 /***********************************************************/
 static void _pat( const SppIndex sp) {
@@ -470,7 +495,7 @@ static void _succulents( const SppIndex sp) {
  *      returns FALSE if the amount to kill is greater
  *      than the size of the plant.  This routine was
  *      modified to make a new list of the dead plants
- *      and remove them properly.
+ *      and remove them properly. */
 /*------------------------------------------------------*/
 
   IndivType *p,
@@ -510,7 +535,7 @@ static void _slow_growth( const SppIndex sp) {
    to define it in the groups or species parameters.
 
    Of course, annuals aren't subject to this mortality,
-   nor are new plants.
+   nor are new plants. */
 
 /* HISTORY */
 /* Chris Bennett @ LTER-CSU 6/15/2000            */
@@ -557,7 +582,7 @@ static void _age_independent( const SppIndex sp) {
 /* 5/22/01 (cwb) - don't kill annuals here or else they
       die too early in the process and stats don't work, use
       mort_EndOfYear() instead. also, skip species with
-      max_age==0 (longest lived).
+      max_age==0 (longest lived). */
 /*------------------------------------------------------*/
   Int n, k=-1;
 
@@ -590,10 +615,10 @@ static void _age_independent( const SppIndex sp) {
     indiv_Kill_Complete(kills[n], 9);
   }
 
-
   if (k >= 0) _SomeKillage = TRUE;
 
   Mem_Free(kills);
+
 }
 
 /***********************************************************/
@@ -773,8 +798,7 @@ void _kill_annuals( void) {
  *       Still, the original code works, if not most
  *       efficiently.  Chances are I won't optimize it
  *       because I want to convert the whole thing to C++.
-
-/*------------------------------------------------------*/
+*------------------------------------------------------*/
 
   GrpIndex rg;
   SppIndex sp;
@@ -791,44 +815,51 @@ void _kill_annuals( void) {
 
 }
 
-
 /***********************************************************/
-void _kill_extra_growth( void) {
-/*======================================================*/
-/* PURPOSE */
-/* Remove any extra growth accumulated during the growing
-   season.  This should be done after all the statistics
-   are accumulated for the year.
+void _kill_extra_growth(void) {
+    /*======================================================*
+     * PURPOSE *
+     * Remove any extra growth accumulated during the growing
+       season. This should be done after all the statistics
+       are accumulated for the year.
+       Note that extra growth is not stored by the individuals
+       but only by Species and RGroup.
+      This should probably be split into separate functions
+      so the actual killing of extra growth is one function
+      that can be called from anywhere, and the looping is
+      in another function with another name.
+      That way, individual functions can kill specific
+      extra growth without affecting others.*/
+    /*------------------------------------------------------*/
+    IntU j;
+    GrpIndex rg;
+    SppIndex sp;
+    GroupType *g;
 
-   Note that extra growth is not stored by the individuals
-   but only by Species and RGroup.
+    g = RGroup[rg];
 
-  This should probably be split into separate functions
-  so the actual killing of extra growth is one function
-  that can be called from anywhere, and the looping is
-  in another function with another name.
-  That way, individual functions can kill specific
-  extra growth without affecting others.
-*/
+    ForEachGroup(rg) {
 
-/* HISTORY */
-/* Chris Bennett @ LTER-CSU 10/26/2000            */
+        if (!RGroup[rg]->use_extra_res)
+            continue;
 
-/*------------------------------------------------------*/
+        ForEachGroupSpp(sp, rg, j) {
+            /* If the species is turned off, continue */
+            if (!Species[sp]->use_me)
+                continue;
 
-  IntU j;
-  GrpIndex rg;
-  SppIndex sp;
+            /* Relsize for annuals has already been set to 0.0 in _kill_annuals*/
+            if (Species[sp]->max_age == 1)
+                continue;
+            //printf("s->extragrowth kill before  = %f\n", Species[sp]->extragrowth);
 
+            if (ZRO(Species[sp]->extragrowth)) continue;
+            //printf("s->relsize kill before = %f\n, Species = %s \n", Species[sp]->name, Species[sp]->relsize);
+            //printf("s->extragrowth kill before  = %f\n", Species[sp]->extragrowth);
 
-  ForEachGroup(rg) {
-    if (!RGroup[rg]->use_extra_res) continue;
-    ForEachEstSpp( sp, rg, j) {
-      if ( ZRO(Species[sp]->extragrowth) ) continue;
-      Species_Update_Newsize( sp, -Species[sp]->extragrowth);
-      Species[sp]->extragrowth = 0.0;
+            Species_Update_Newsize(sp, -Species[sp]->extragrowth);
+            //printf("s->relsize kill after  = %f\n", Species[sp]->relsize);
+            Species[sp]->extragrowth = 0.0;
+        }
     }
-  }
-
-
 }

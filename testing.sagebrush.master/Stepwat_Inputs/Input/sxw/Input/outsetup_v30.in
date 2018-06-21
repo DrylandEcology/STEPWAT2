@@ -31,8 +31,10 @@
 # you want. To change which periods to output type 'dy' for day,
 # 'wk' for week, 'mo' for month, and 'yr' for year after TIMESTEP
 # in any order. For example: 'TIMESTEP mo wk' will output for month and week
+# IMPORTANT!! mo must be set for monthly transpiration to be passed to STEPPE, which 
+# determines resources each year. If month is not specified, the code will break.
 
-TIMESTEP dy yr # must be lowercase
+TIMESTEP dy mo yr # must be lowercase
 
 #      key     SUMTYPE   PERIOD   start    end    filename_prefix   comment
          TEMP     AVG       YR       1     end        temp_air      /* max., min, average temperature (C) */

@@ -1007,7 +1007,7 @@ static void _load_grid_globals(void)
 {
 	//this initializes/allocates memory needed... this step is needed to be done for every iteration
 
-	int i, j;
+	int i, j, k;
 	GrpIndex c;
 	SppIndex s;
 
@@ -1079,27 +1079,19 @@ static void _load_grid_globals(void)
 
 			grid_SXW[i].transpTotal = Mem_Calloc(SXW.NPds * SXW.NSoLyrs,
 					sizeof(RealD), "_init_grid_globals()");
-			grid_SXW[i].transpTrees = Mem_Calloc(SXW.NPds * SXW.NSoLyrs,
-					sizeof(RealD), "_init_grid_globals()");
-			grid_SXW[i].transpShrubs = Mem_Calloc(SXW.NPds * SXW.NSoLyrs,
-					sizeof(RealD), "_init_grid_globals()");
-			grid_SXW[i].transpGrasses = Mem_Calloc(SXW.NPds * SXW.NSoLyrs,
-					sizeof(RealD), "_init_grid_globals()");
-			grid_SXW[i].transpForbs = Mem_Calloc(SXW.NPds * SXW.NSoLyrs,
-					sizeof(RealD), "_init_grid_globals()");
+			ForEachVegType(k) {
+				grid_SXW[i].transpVeg[k] = Mem_Calloc(SXW.NPds * SXW.NSoLyrs,
+						sizeof(RealD), "_init_grid_globals()");
+			}
 			grid_SXW[i].swc = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealF),
 					"_init_grid_globals()");
 
 			memcpy(grid_SXW[i].transpTotal, SXW.transpTotal,
 					SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
-			memcpy(grid_SXW[i].transpTrees, SXW.transpTrees,
-					SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
-			memcpy(grid_SXW[i].transpShrubs, SXW.transpShrubs,
-					SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
-			memcpy(grid_SXW[i].transpGrasses, SXW.transpGrasses,
-					SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
-			memcpy(grid_SXW[i].transpForbs, SXW.transpForbs,
-					SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
+			ForEachVegType(k) {
+				memcpy(grid_SXW[i].transpVeg[k], SXW.transpVeg[k],
+						SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
+			}
 			memcpy(grid_SXW[i].swc, SXW.swc,
 					SXW.NPds * SXW.NSoLyrs * sizeof(RealF));
 
@@ -1129,7 +1121,7 @@ static void _load_spinup_globals(void)
 {
 	//this initializes/allocates memory needed... this step is needed to be done for every iteration
 
-	int i, j;
+	int i, j, k;
 	GrpIndex c;
 	SppIndex s;
 
@@ -1203,27 +1195,19 @@ static void _load_spinup_globals(void)
 
 			spinup_SXW[i].transpTotal = Mem_Calloc(SXW.NPds * SXW.NSoLyrs,
 					sizeof(RealD), "_init_spinup_globals()");
-			spinup_SXW[i].transpTrees = Mem_Calloc(SXW.NPds * SXW.NSoLyrs,
-					sizeof(RealD), "_init_grid_globals()");
-			spinup_SXW[i].transpShrubs = Mem_Calloc(SXW.NPds * SXW.NSoLyrs,
-					sizeof(RealD), "_init_grid_globals()");
-			spinup_SXW[i].transpGrasses = Mem_Calloc(SXW.NPds * SXW.NSoLyrs,
-					sizeof(RealD), "_init_grid_globals()");
-			spinup_SXW[i].transpForbs = Mem_Calloc(SXW.NPds * SXW.NSoLyrs,
-					sizeof(RealD), "_init_grid_globals()");
+			ForEachVegType(k) {
+				spinup_SXW[i].transpVeg[k] = Mem_Calloc(SXW.NPds * SXW.NSoLyrs,
+						sizeof(RealD), "_init_grid_globals()");
+			}
 			spinup_SXW[i].swc = Mem_Calloc(SXW.NPds * SXW.NSoLyrs,
 					sizeof(RealF), "_init_grid_globals()");
 
 			memcpy(spinup_SXW[i].transpTotal, SXW.transpTotal,
 					SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
-			memcpy(spinup_SXW[i].transpTrees, SXW.transpTrees,
-					SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
-			memcpy(spinup_SXW[i].transpShrubs, SXW.transpShrubs,
-					SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
-			memcpy(spinup_SXW[i].transpGrasses, SXW.transpGrasses,
-					SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
-			memcpy(spinup_SXW[i].transpForbs, SXW.transpForbs,
-					SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
+			ForEachVegType(k) {
+				memcpy(spinup_SXW[i].transpVeg[k], SXW.transpVeg[k],
+						SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
+			}
 			memcpy(spinup_SXW[i].swc, SXW.swc,
 					SXW.NPds * SXW.NSoLyrs * sizeof(RealF));
 
@@ -1252,7 +1236,7 @@ static void _load_spinup_globals(void)
 static void _free_grid_globals(void)
 {
 	//frees memory allocated in _load_grid_globals() function.
-	int i, j;
+	int i, j, k;
 	GrpIndex c;
 	SppIndex s;
 
@@ -1280,10 +1264,9 @@ static void _free_grid_globals(void)
 			Mem_Free(grid_SXW[i].f_prod);
 			Mem_Free(grid_SXW[i].f_watin);
 			Mem_Free(grid_SXW[i].transpTotal);
-			Mem_Free(grid_SXW[i].transpTrees);
-			Mem_Free(grid_SXW[i].transpShrubs);
-			Mem_Free(grid_SXW[i].transpGrasses);
-			Mem_Free(grid_SXW[i].transpForbs);
+			ForEachVegType(k) {
+				Mem_Free(grid_SXW[i].transpVeg[k]);
+			}
 			Mem_Free(grid_SXW[i].swc);
 			if (UseSoils)
 			{
@@ -1312,7 +1295,7 @@ static void _free_grid_globals(void)
 static void _free_spinup_globals(void)
 {
 	//frees memory allocated in _load_spinup_globals() function.
-	int i, j;
+	int i, j, k;
 	GrpIndex c;
 	SppIndex s;
 
@@ -1340,10 +1323,9 @@ static void _free_spinup_globals(void)
 			Mem_Free(spinup_SXW[i].f_prod);
 			Mem_Free(spinup_SXW[i].f_watin);
 			Mem_Free(spinup_SXW[i].transpTotal);
-			Mem_Free(spinup_SXW[i].transpTrees);
-			Mem_Free(spinup_SXW[i].transpShrubs);
-			Mem_Free(spinup_SXW[i].transpGrasses);
-			Mem_Free(spinup_SXW[i].transpForbs);
+			ForEachVegType(k) {
+				Mem_Free(spinup_SXW[i].transpVeg[k]);
+			}
 			Mem_Free(spinup_SXW[i].swc);
 			if (UseSoils)
 			{
@@ -1507,7 +1489,7 @@ static void _load_cell(int row, int col, int year, Bool useAccumulators)
 	// loads the specified cell into the global variables
 
 	int cell = col + ((row - 1) * grid_Cols) - 1; // converts the row/col into an array index
-	int j;
+	int j, k;
 	GrpIndex c;
 	SppIndex s;
 	//fprintf(stderr, " loading cell: %d; ", cell);
@@ -1565,10 +1547,9 @@ static void _load_cell(int row, int col, int year, Bool useAccumulators)
 		Mem_Free(SXW.f_prod);
 		Mem_Free(SXW.f_watin);
 		Mem_Free(SXW.transpTotal);
-		Mem_Free(SXW.transpTrees);
-		Mem_Free(SXW.transpShrubs);
-		Mem_Free(SXW.transpGrasses);
-		Mem_Free(SXW.transpForbs);
+		ForEachVegType(k) {
+			Mem_Free(SXW.transpVeg[k]);
+		}
 
 		if (SXW.swc != NULL)
 			Mem_Free(SXW.swc);
@@ -1583,14 +1564,10 @@ static void _load_cell(int row, int col, int year, Bool useAccumulators)
 
 		SXW.transpTotal = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealD),
 				"_load_cell(SXW.transp)");
-		SXW.transpTrees = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealD),
-				"_load_cell(SXW.transp)");
-		SXW.transpShrubs = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealD),
-				"_load_cell(SXW.transp)");
-		SXW.transpGrasses = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealD),
-				"_load_cell(SXW.transp)");
-		SXW.transpForbs = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealD),
-				"_load_cell(SXW.transp)");
+		ForEachVegType(k) {
+			SXW.transpVeg[k] = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealD),
+					"_load_cell(SXW.transp)");
+		}
 		SXW.swc = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealF),
 				"_load_cell(SXW.swc)");
 
@@ -1601,14 +1578,10 @@ static void _load_cell(int row, int col, int year, Bool useAccumulators)
 		SXW.f_watin = Str_Dup(grid_SXW[cell].f_watin);
 		memcpy(SXW.transpTotal, grid_SXW[cell].transpTotal,
 				SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
-		memcpy(SXW.transpTrees, grid_SXW[cell].transpTrees,
-				SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
-		memcpy(SXW.transpShrubs, grid_SXW[cell].transpShrubs,
-				SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
-		memcpy(SXW.transpGrasses, grid_SXW[cell].transpGrasses,
-				SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
-		memcpy(SXW.transpForbs, grid_SXW[cell].transpForbs,
-				SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
+		ForEachVegType(k) {
+			memcpy(SXW.transpVeg[k], grid_SXW[cell].transpVeg[k],
+					SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
+		}
 		memcpy(SXW.swc, grid_SXW[cell].swc,
 				SXW.NPds * SXW.NSoLyrs * sizeof(RealF));
 
@@ -1641,7 +1614,7 @@ static void _load_spinup_cell(int cell)
 {
 	// loads the specified cell into the global variables (from the spinup)
 
-	int j;
+	int j, k;
 	GrpIndex c;
 	SppIndex s;
 
@@ -1696,10 +1669,9 @@ static void _load_spinup_cell(int cell)
 		Mem_Free(SXW.f_prod);
 		Mem_Free(SXW.f_watin);
 		Mem_Free(SXW.transpTotal);
-		Mem_Free(SXW.transpTrees);
-		Mem_Free(SXW.transpShrubs);
-		Mem_Free(SXW.transpGrasses);
-		Mem_Free(SXW.transpForbs);
+		ForEachVegType(k) {
+			Mem_Free(SXW.transpVeg[k]);
+		}
 		if (SXW.swc != NULL)
 			Mem_Free(SXW.swc);
 		for (j = 0; j < SW_Site.n_layers + SW_Site.deepdrain; j++)
@@ -1713,14 +1685,10 @@ static void _load_spinup_cell(int cell)
 
 		SXW.transpTotal = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealD),
 				"_load_spinup_cell(SXW.transpTotal)");
-		SXW.transpTrees = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealD),
-				"_load_spinup_cell(SXW.transpTrees)");
-		SXW.transpShrubs = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealD),
-				"_load_spinup_cell(SXW.transpShrubs)");
-		SXW.transpGrasses = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealD),
-				"_load_spinup_cell(SXW.transpGrasses)");
-		SXW.transpForbs = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealD),
-				"_load_spinup_cell(SXW.transpForbs)");
+		ForEachVegType(k) {
+			SXW.transpVeg[k] = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealD),
+					"_load_spinup_cell(SXW.transpVeg)");
+		}
 		SXW.swc = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealF),
 				"_load_spinup_cell(SXW.swc)");
 
@@ -1731,14 +1699,10 @@ static void _load_spinup_cell(int cell)
 		SXW.f_watin = Str_Dup(spinup_SXW[cell].f_watin);
 		memcpy(SXW.transpTotal, spinup_SXW[cell].transpTotal,
 				SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
-		memcpy(SXW.transpTrees, spinup_SXW[cell].transpTrees,
-				SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
-		memcpy(SXW.transpShrubs, spinup_SXW[cell].transpShrubs,
-				SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
-		memcpy(SXW.transpGrasses, spinup_SXW[cell].transpGrasses,
-				SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
-		memcpy(SXW.transpForbs, spinup_SXW[cell].transpForbs,
-				SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
+		ForEachVegType(k) {
+			memcpy(SXW.transpVeg[k], spinup_SXW[cell].transpVeg[k],
+					SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
+		}
 		memcpy(SXW.swc, spinup_SXW[cell].swc,
 				SXW.NPds * SXW.NSoLyrs * sizeof(RealF));
 
@@ -1774,7 +1738,7 @@ static void _save_cell(int row, int col, int year, Bool useAccumulators)
 	// saves the specified cell into the grid variables
 
 	int cell = col + ((row - 1) * grid_Cols) - 1; // converts the row/col into an array index
-	int j;
+	int j, k;
 	GrpIndex c;
 	SppIndex s;
 	//fprintf(stderr, "saving cell: %d\n", cell);
@@ -1832,10 +1796,9 @@ static void _save_cell(int row, int col, int year, Bool useAccumulators)
 		Mem_Free(grid_SXW[cell].f_prod);
 		Mem_Free(grid_SXW[cell].f_watin);
 		Mem_Free(grid_SXW[cell].transpTotal);
-		Mem_Free(grid_SXW[cell].transpTrees);
-		Mem_Free(grid_SXW[cell].transpShrubs);
-		Mem_Free(grid_SXW[cell].transpGrasses);
-		Mem_Free(grid_SXW[cell].transpForbs);
+		ForEachVegType(k) {
+			Mem_Free(grid_SXW[cell].transpVeg[k]);
+		}
 		Mem_Free(grid_SXW[cell].swc);
 		for (j = 0;
 				j < grid_SW_Site[cell].n_layers + grid_SW_Site[cell].deepdrain;
@@ -1850,14 +1813,10 @@ static void _save_cell(int row, int col, int year, Bool useAccumulators)
 
 		grid_SXW[cell].transpTotal = Mem_Calloc(SXW.NPds * SXW.NSoLyrs,
 				sizeof(RealD), "_save_cell(grid_SXW[cell].transp)");
-		grid_SXW[cell].transpTrees = Mem_Calloc(SXW.NPds * SXW.NSoLyrs,
-				sizeof(RealD), "_save_cell(grid_SXW[cell].transp)");
-		grid_SXW[cell].transpShrubs = Mem_Calloc(SXW.NPds * SXW.NSoLyrs,
-				sizeof(RealD), "_save_cell(grid_SXW[cell].transp)");
-		grid_SXW[cell].transpGrasses = Mem_Calloc(SXW.NPds * SXW.NSoLyrs,
-				sizeof(RealD), "_save_cell(grid_SXW[cell].transp)");
-		grid_SXW[cell].transpForbs = Mem_Calloc(SXW.NPds * SXW.NSoLyrs,
-				sizeof(RealD), "_save_cell(grid_SXW[cell].transp)");
+		ForEachVegType(k) {
+			grid_SXW[cell].transpVeg[k] = Mem_Calloc(SXW.NPds * SXW.NSoLyrs,
+					sizeof(RealD), "_save_cell(grid_SXW[cell].transp)");
+		}
 		grid_SXW[cell].swc = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealF),
 				"_save_cell(grid_SXW[cell].swc)");
 
@@ -1868,14 +1827,10 @@ static void _save_cell(int row, int col, int year, Bool useAccumulators)
 		grid_SXW[cell].f_watin = Str_Dup(SXW.f_watin);
 		memcpy(grid_SXW[cell].transpTotal, SXW.transpTotal,
 				SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
-		memcpy(grid_SXW[cell].transpTrees, SXW.transpTotal,
-				SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
-		memcpy(grid_SXW[cell].transpShrubs, SXW.transpTotal,
-				SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
-		memcpy(grid_SXW[cell].transpGrasses, SXW.transpTotal,
-				SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
-		memcpy(grid_SXW[cell].transpForbs, SXW.transpTotal,
-				SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
+		ForEachVegType(k) {
+			memcpy(grid_SXW[cell].transpVeg[k], SXW.transpVeg[k],
+					SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
+		}
 		memcpy(grid_SXW[cell].swc, SXW.swc,
 				SXW.NPds * SXW.NSoLyrs * sizeof(RealF));
 
@@ -1906,7 +1861,7 @@ static void _save_spinup_cell(int cell)
 {
 	// saves the specified cell into the grid variables (from the spinup)
 
-	int j;
+	int j, k;
 	GrpIndex c;
 	SppIndex s;
 
@@ -1960,10 +1915,9 @@ static void _save_spinup_cell(int cell)
 		Mem_Free(spinup_SXW[cell].f_prod);
 		Mem_Free(spinup_SXW[cell].f_watin);
 		Mem_Free(spinup_SXW[cell].transpTotal);
-		Mem_Free(spinup_SXW[cell].transpTrees);
-		Mem_Free(spinup_SXW[cell].transpShrubs);
-		Mem_Free(spinup_SXW[cell].transpGrasses);
-		Mem_Free(spinup_SXW[cell].transpForbs);
+		ForEachVegType(k) {
+			Mem_Free(spinup_SXW[cell].transpVeg[k]);
+		}
 		Mem_Free(spinup_SXW[cell].swc);
 		for (j = 0;
 				j
@@ -1979,14 +1933,10 @@ static void _save_spinup_cell(int cell)
 
 		spinup_SXW[cell].transpTotal = Mem_Calloc(SXW.NPds * SXW.NSoLyrs,
 				sizeof(RealD), "_save_cell(grid_SXW[cell].transp)");
-		spinup_SXW[cell].transpTrees = Mem_Calloc(SXW.NPds * SXW.NSoLyrs,
-				sizeof(RealD), "_save_cell(grid_SXW[cell].transp)");
-		spinup_SXW[cell].transpShrubs = Mem_Calloc(SXW.NPds * SXW.NSoLyrs,
-				sizeof(RealD), "_save_cell(grid_SXW[cell].transp)");
-		spinup_SXW[cell].transpGrasses = Mem_Calloc(SXW.NPds * SXW.NSoLyrs,
-				sizeof(RealD), "_save_cell(grid_SXW[cell].transp)");
-		spinup_SXW[cell].transpForbs = Mem_Calloc(SXW.NPds * SXW.NSoLyrs,
-				sizeof(RealD), "_save_cell(grid_SXW[cell].transp)");
+		ForEachVegType(k) {
+			spinup_SXW[cell].transpVeg[k] = Mem_Calloc(SXW.NPds * SXW.NSoLyrs,
+					sizeof(RealD), "_save_cell(grid_SXW[cell].transp)");
+		}
 		spinup_SXW[cell].swc = Mem_Calloc(SXW.NPds * SXW.NSoLyrs, sizeof(RealF),
 				"_save_cell(grid_SXW[cell].swc)");
 
@@ -1997,14 +1947,10 @@ static void _save_spinup_cell(int cell)
 		spinup_SXW[cell].f_watin = Str_Dup(SXW.f_watin);
 		memcpy(spinup_SXW[cell].transpTotal, SXW.transpTotal,
 				SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
-		memcpy(spinup_SXW[cell].transpTrees, SXW.transpTotal,
-				SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
-		memcpy(spinup_SXW[cell].transpShrubs, SXW.transpTotal,
-				SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
-		memcpy(spinup_SXW[cell].transpGrasses, SXW.transpTotal,
-				SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
-		memcpy(spinup_SXW[cell].transpForbs, SXW.transpTotal,
-				SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
+		ForEachVegType(k) {
+			memcpy(spinup_SXW[cell].transpVeg[k], SXW.transpVeg[k],
+					SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
+		}
 		memcpy(spinup_SXW[cell].swc, SXW.swc,
 				SXW.NPds * SXW.NSoLyrs * sizeof(RealF));
 

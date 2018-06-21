@@ -30,12 +30,13 @@
   #include "sxw_funcs.h"
   #include "sxw.h"
   #include "sw_src/SW_Output.h"
+  #include "sw_src/SW_Output_outtext.h"
   #include "sw_src/rands.h"
   extern SXW_t SXW;
 #endif
 
-extern Bool isPartialSoilwatOutput;
-extern Bool storeAllIterations;
+extern Bool prepare_IterationSummary; // defined in `SOILWAT2/SW_Output.c`
+extern Bool storeAllIterations; // defined in `SOILWAT2/SW_Output.c`
 extern SW_VEGPROD SW_VegProd;
 SW_FILE_STATUS SW_File_Status;
 
@@ -152,7 +153,7 @@ int main(int argc, char **argv) {
 	/* provides a way to inform user that something
 	 * was logged.  see generic.h */
 
-  isPartialSoilwatOutput = TRUE; // dont want to get soilwat output unless -o flag
+  prepare_IterationSummary = FALSE; // dont want to get soilwat output unless -o flag
   storeAllIterations = FALSE; // dont want to store all soilwat output iterations unless -i flag
 
 	init_args(argc, argv); // read input arguments and intialize proper flags
@@ -168,7 +169,13 @@ int main(int argc, char **argv) {
 
 	if (UseSoilwat){
 		SXW_Init(TRUE, NULL);
-    SW_OUT_set_ncol(); // set number of columns
+    SW_OUT_set_ncol(); // set number of output columns
+    SW_OUT_set_colnames(); // set column names for output files
+    SW_OUT_create_summary_files();
+    if (prepare_IterationSummary) {
+      // setup `p_OUT` and `p_OUTsd` arrays to aggregate SOILWAT output across iterations
+      setGlobalSTEPWAT2_OutputVariables();
+    }
   }
 
 	incr = (IntS) ((float) Globals.runModelIterations / 10);
@@ -193,8 +200,15 @@ int main(int argc, char **argv) {
 		Globals.currIter = iter;
 
 		/* ------  Begin running the model ------ */
-		for (year = 1; year <= Globals.runModelYears; year++){
+		for (year = 1; year <= Globals.runModelYears; year++) {
+
+      //printf("------------------------Repetition/year = %d / %d\n", iter, year);
+
 			Globals.currYear = year;
+
+			if (UseSoilwat) {
+				SW_OUT_create_iteration_files();
+			}
 
 			rgroup_Establish();
 
@@ -202,21 +216,35 @@ int main(int argc, char **argv) {
 
 			rgroup_PartResources();
 
+         //check_sizes("'main' after 'rgroup_PartResources'");
+
 #ifdef STEPWAT
 			if (!isnull(SXW.debugfile) ) SXW_PrintDebug(0);
 #endif
 
 			rgroup_Grow();
 
+      //check_sizes("'main' after 'rgroup_Grow'");
+
 			mort_Main(&killedany);
+
+      //check_sizes("'main' after 'mort_Main'");
 
 			rgroup_IncrAges();
 
+      //check_sizes("'main' after 'rgroup_IncrAges'");
+
       // Added functions for Grazing and mort_end_year as proportional killing effect before exporting biomass end of the year
 			grazing_EndOfYear();
-                        save_annual_species_relsize();
 
-			mort_EndOfYear();
+      //check_sizes("'main' after 'grazing_EndOfYear'");
+
+
+      save_annual_species_relsize();
+
+      		mort_EndOfYear();
+
+      //check_sizes("'main' after 'mort_EndOfYear'");
 
 			stat_Collect(year);
 
@@ -225,8 +253,17 @@ int main(int argc, char **argv) {
 
        // Moved kill annual and kill extra growth after we export biomass, and recovery of biomass after fire before the next year
 			_kill_annuals();
-			 proportion_Recovery();
+
+			proportion_Recovery();
+
+      //check_sizes("'main' after 'proportion_Recovery'");
+
 			_kill_extra_growth();
+
+			// Check that relsizes match up at end of year after extra growth is removed
+			// may want to wrap this in #ifdef DEBUG once problem is fixed
+			//check_sizes("'main' at end of year");
+
 		} /* end model run for this year*/
 
 		if (MortFlags.summary) {
@@ -259,7 +296,9 @@ int main(int argc, char **argv) {
         SXW_PrintDebug(1);
       }
 #endif
-  SW_OUT_close_files();
+  if (UseSoilwat){
+    SW_OUT_close_files();
+  }
   free_all_sxw_memory();
   printf("\nend program\n");
 	fprintf(progfp, "\n");
@@ -331,7 +370,6 @@ void Plot_Initialize(void) {
 		RGroup[rg]->yrs_neg_pr = 0;
 		RGroup[rg]->extirpated = FALSE;
 	}
-  memset(SXW.transp_SWA, 0, sizeof(SXW.transp_SWA)); // set transp_SWA to 0; needs to be reset each iteration
 
 	if (UseSoilwat)
 		SXW_InitPlot();
@@ -483,7 +521,7 @@ static void init_args(int argc, char **argv) {
 
 		case 7:
       printf("storing SOILWAT output (flag -o)\n");
-      isPartialSoilwatOutput = FALSE;
+      prepare_IterationSummary = TRUE;
 			break; /* -o    also get all the soilwat output*/
 
     case 8: // -i
@@ -541,17 +579,17 @@ void check_sizes(const char *chkpt) {
       ForEachIndiv(ndv, Species[sp]) spsize += ndv->relsize;
       rgsize += spsize;
 
-      if (LT(diff, abs(spsize - Species[sp]->relsize)) ) {
+      if (LT(diff, fabs(spsize - Species[sp]->relsize)) ) {
         LogError(stdout, LOGWARN, "%s (%d:%d): SP: \"%s\" size error: "
-                                  "SP=%.9f, ndv=%.9f\n",
+                                  "SP=%.7f, ndv=%.7f",
                 chkpt, Globals.currIter, Globals.currYear,
                 Species[sp]->name, Species[sp]->relsize, spsize);
       }
     }
 
-    if ( LT(diff, abs(rgsize -RGroup[rg]->relsize)) ) {
+    if ( LT(diff, fabs(rgsize -RGroup[rg]->relsize)) ) {
       LogError(stdout, LOGWARN, "%s (%d:%d): RG \"%s\" size error: "
-                                "RG=%.9f, ndv=%.9f\n",
+                                "RG=%.7f, ndv=%.7f",
               chkpt, Globals.currIter, Globals.currYear,
               RGroup[rg]->name, RGroup[rg]->relsize, rgsize);
     }

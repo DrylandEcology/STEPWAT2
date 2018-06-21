@@ -612,7 +612,7 @@ void insertTranspiration() {
 	//Tree - 1
 	for (l = 0; l < SXW.NSoLyrs; l++) {
 		for(p=0;p<12;p++) {
-			m[p] = SXW.transpTrees[Ilp(l, p)];
+			m[p] = SXW.transpVeg[SW_TREES][Ilp(l, p)];
 		}
 		insertSXWoutputTranspirationRow(Year,Iteration,l+1,1,m[0],m[1],m[2],m[3],m[4],m[5],m[6],m[7],m[8],m[9],m[10],m[11]);
 	}
@@ -620,7 +620,7 @@ void insertTranspiration() {
 	//Shrub - 2
 	for (l = 0; l < SXW.NSoLyrs; l++) {
 		for(p=0;p<12;p++) {
-			m[p] = SXW.transpShrubs[Ilp(l, p)];
+			m[p] = SXW.transpVeg[SW_SHRUB][Ilp(l, p)];
 		}
 		insertSXWoutputTranspirationRow(Year,Iteration,l+1,2,m[0],m[1],m[2],m[3],m[4],m[5],m[6],m[7],m[8],m[9],m[10],m[11]);
 	}
@@ -628,7 +628,7 @@ void insertTranspiration() {
 	//Grass - 3
 	for (l = 0; l < SXW.NSoLyrs; l++) {
 		for (p = 0; p < 12; p++) {
-			m[p] = SXW.transpGrasses[Ilp(l, p)];
+			m[p] = SXW.transpVeg[SW_GRASS][Ilp(l, p)];
 		}
 		insertSXWoutputTranspirationRow(Year, Iteration, l+1, 3, m[0], m[1], m[2],
 				m[3], m[4], m[5], m[6], m[7], m[8], m[9], m[10], m[11]);
@@ -637,7 +637,7 @@ void insertTranspiration() {
 	//Forb - 4
 	for (l = 0; l < SXW.NSoLyrs; l++) {
 		for (p = 0; p < 12; p++) {
-			m[p] = SXW.transpForbs[Ilp(l, p)];
+			m[p] = SXW.transpVeg[SW_FORBS][Ilp(l, p)];
 		}
 		insertSXWoutputTranspirationRow(Year, Iteration, l+1, 4, m[0], m[1], m[2],
 				m[3], m[4], m[5], m[6], m[7], m[8], m[9], m[10], m[11]);
