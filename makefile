@@ -264,7 +264,7 @@ $(oDir)/sw_src/SW_Carbon.o: sw_src/SW_Carbon.c sw_src/generic.h \
 
 $(oDir)/sw_src/SW_Flow.o: sw_src/SW_Flow.c sw_src/generic.h sw_src/filefuncs.h \
  sw_src/SW_Defines.h sw_src/SW_Model.h sw_src/SW_Times.h sw_src/SW_Site.h sw_src/SW_SoilWater.h \
- sw_src/SW_Flow_lib.h sw_src/SW_VegProd.h sw_src/SW_Weather.h sw_src/SW_Sky.h
+ sw_src/SW_Flow_lib.h sw_src/SW_VegProd.h sw_src/SW_Weather.h sw_src/SW_Sky.h sw_src/SW_Flow.h
 	$(CC) $(C_FLAGS) $(CPPFLAGS) $(incDirs) -c -o $@ $<
 
 $(oDir)/ST_environs.o: ST_environs.c ST_steppe.h ST_defines.h \
@@ -276,13 +276,13 @@ $(oDir)/sw_src/SW_Control.o: sw_src/SW_Control.c sw_src/generic.h \
   sw_src/filefuncs.h sw_src/rands.h sw_src/SW_Defines.h sw_src/SW_Files.h \
   sw_src/SW_Carbon.h sw_src/SW_Control.h sw_src/SW_Model.h sw_src/SW_Times.h \
   sw_src/SW_Output.h sw_src/SW_Site.h sw_src/SW_SoilWater.h \
-  sw_src/SW_VegProd.h sw_src/SW_Weather.h
+  sw_src/SW_VegProd.h sw_src/SW_Weather.h  sw_src/SW_Flow.h
 	$(CC) $(C_FLAGS) $(CPPFLAGS) $(incDirs) -c -o $@ $<
 
 $(oDir)/sw_src/SW_SoilWater.o: sw_src/SW_SoilWater.c sw_src/generic.h \
   sw_src/filefuncs.h sw_src/myMemory.h sw_src/SW_Defines.h \
   sw_src/SW_Files.h sw_src/SW_Model.h sw_src/SW_Times.h sw_src/SW_Site.h \
-  sw_src/SW_SoilWater.h
+  sw_src/SW_SoilWater.h  sw_src/SW_Flow.h
 	$(CC) $(C_FLAGS) $(CPPFLAGS) $(incDirs) -c -o $@ $<
 
 $(oDir)/ST_indivs.o: ST_indivs.c ST_steppe.h ST_defines.h \
