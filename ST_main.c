@@ -31,6 +31,7 @@
   #include "sxw.h"
   #include "sw_src/SW_Output.h"
   #include "sw_src/SW_Output_outtext.h"
+  #include "sw_src/SW_Output_outarray.h"
   #include "sw_src/rands.h"
   extern SXW_t SXW;
 #endif
@@ -169,14 +170,14 @@ int main(int argc, char **argv) {
 
 	if (UseSoilwat){
 		SXW_Init(TRUE, NULL);
-    SW_OUT_set_ncol(); // set number of output columns
-    SW_OUT_set_colnames(); // set column names for output files
-    SW_OUT_create_summary_files();
-    if (prepare_IterationSummary) {
-      // setup `p_OUT` and `p_OUTsd` arrays to aggregate SOILWAT output across iterations
-      setGlobalSTEPWAT2_OutputVariables();
-    }
-  }
+		SW_OUT_set_ncol(); // set number of output columns
+		SW_OUT_set_colnames(); // set column names for output files
+		if (prepare_IterationSummary) {
+			SW_OUT_create_summary_files();
+			// setup `p_OUT` and `p_OUTsd` arrays to aggregate SOILWAT output across iterations
+			setGlobalSTEPWAT2_OutputVariables();
+		}
+	}
 
 	incr = (IntS) ((float) Globals.runModelIterations / 10);
 	if (incr == 0)
@@ -191,7 +192,6 @@ int main(int argc, char **argv) {
 			fprintf(progfp, "%d\n", iter);
 		}
 
-
 		if (BmassFlags.yearly || MortFlags.yearly)
 			parm_Initialize(iter);
 
@@ -199,16 +199,16 @@ int main(int argc, char **argv) {
 		RandSeed(Globals.randseed);
 		Globals.currIter = iter;
 
+		if (UseSoilwat && storeAllIterations) {
+			SW_OUT_create_iteration_files(Globals.currIter);
+		}
+
 		/* ------  Begin running the model ------ */
 		for (year = 1; year <= Globals.runModelYears; year++) {
 
-      //printf("------------------------Repetition/year = %d / %d\n", iter, year);
+      printf("------------------------Repetition/year = %d / %d\n", iter, year);
 
 			Globals.currYear = year;
-
-			if (UseSoilwat) {
-				SW_OUT_create_iteration_files();
-			}
 
 			rgroup_Establish();
 
