@@ -171,7 +171,7 @@ extern SW_WEATHER SW_Weather;
 
 //This is Rgroup structure pointer that will read rgroup disturbance value, will be used in
 // grid disturbance
-extern GroupType     *RGroup [MAX_RGROUPS];
+//extern GroupType     *RGroup [MAX_RGROUPS]; // don't need to extern here, because this is done in ST_globals.h
 
 // these are grids to store the SOILWAT variables... also dynamically allocated/freed
 SW_SOILWAT *grid_SW_Soilwat, *spinup_SW_Soilwat;
@@ -197,7 +197,11 @@ extern Bool UseProgressBar;
 /* -- truly global functions are declared in functions.h --*/
 /***********************************************************/
 
+// Declare functions defined elsewhere:
 void runGrid(void); //to be called from ST_main.c
+void _kill_annuals(void);
+void _kill_extra_growth(void);
+void rgroup_Extirpate(GrpIndex rg);
 
 /************* External Function Declarations **************/
 /***********************************************************/
@@ -251,9 +255,6 @@ void save_sxw_memory(RealD * grid_roots_max, RealD* grid_rootsXphen,
 		RealD* grid_prod_pctlive);
 //void SXW_init( Bool init_SW );
 
-//from SW_Site.c (both needed to initialize the soil layers properly)
-void water_eqn(RealD fractionGravel, RealD sand, RealD clay, LyrIndex n);
-void init_site_info(void);
 
 /*********** Locally Used Function Declarations ************/
 /***********************************************************/
@@ -631,9 +632,9 @@ static void _run_spinup(void)
 			for (spinup_Cell = 0; spinup_Cell < nSoilTypes; spinup_Cell++)
 			{ // for each different soil type
 
-				int cell = soilTypes_Array[spinup_Cell]; // this is the first cell of this soiltypes actual cell number
-				int j = cell % grid_Cols + 1; // this is the column of the first cell of this soiltype
-				int i = ((cell + 1 - j) / grid_Cols) + 1; // this is the row of the first cell of this soiltype
+				//int cell = soilTypes_Array[spinup_Cell]; // this is the first cell of this soiltypes actual cell number
+				//int j = cell % grid_Cols + 1; // this is the column of the first cell of this soiltype
+				//int i = ((cell + 1 - j) / grid_Cols) + 1; // this is the row of the first cell of this soiltype
 
 				_load_spinup_cell(spinup_Cell);
 				Globals.currYear = year;
@@ -2008,16 +2009,19 @@ static void _read_disturbances_in(void)
 	// there should be no spaces in between, just commas separating the values
 	// kill_yr will overwrite the kill year for each RGroup in the cell (0 means don't use, a # > 0 means kill everything at this year)
 
+	/*
+	//printf("inside _read_disturbances_in ()\n");
 
 	GrpIndex rg;
 	GroupType *g;
-	//printf("inside _read_disturbances_in ()\n");
+
 	ForEachGroup(rg)
 	{
 		g = RGroup[rg];
 	//	printf(" rgroup name= %s , killYear:%d, proportion_killed=%f,proportion_recovered=%f ,proportion_grazing=%f \n",
 	//			g->name, g->killyr, g->proportion_killed, g->proportion_recovered, g->proportion_grazing);
 	}
+	*/
 
 	FILE *f;
 	char buf[1024];

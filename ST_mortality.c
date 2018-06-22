@@ -360,23 +360,23 @@ void proportion_Recovery(void) {
 
             ForEachEstSpp(sp, rg, i) {
 
-                /* Annuals have already been killed in _kill_annuals and are not 
+                /* Annuals have already been killed in _kill_annuals and are not
                  * subject to proportion recovery after fire */
                 if (Species[sp]->max_age == 1)
                     continue;
 
                 //printf("'before proportion_recovery': Species = %s, relsize = %f, est_count = %d\n",
-                // Species[sp]->name, Species[sp]->relsize, Species[sp]->est_count); 
+                // Species[sp]->name, Species[sp]->relsize, Species[sp]->est_count);
 
                 Species_Proportion_Recovery(RGroup[rg]->est_spp[i], 6,
                         RGroup[rg]->proportion_recovered,
                         RGroup[rg]->proportion_killed);
 
                 //printf("'after proportion_recovery': Species = %s, relsize = %f, est_count = %d\n",
-                //Species[sp]->name, Species[sp]->relsize, Species[sp]->est_count); 
+                //Species[sp]->name, Species[sp]->relsize, Species[sp]->est_count);
             }
             //printf("'after proportion_recovery': Group = %s, relsize = %f, est_count = %d\n",
-            // RGroup[rg]->name, RGroup[rg]->relsize, RGroup[rg]->est_count); 
+            // RGroup[rg]->name, RGroup[rg]->relsize, RGroup[rg]->est_count);
         }
     }
 }
@@ -834,9 +834,7 @@ void _kill_extra_growth(void) {
     IntU j;
     GrpIndex rg;
     SppIndex sp;
-    GroupType *g;
-
-    g = RGroup[rg];
+    //GroupType *g = &RGroup[rg];
 
     ForEachGroup(rg) {
 
