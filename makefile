@@ -122,6 +122,16 @@ all:	$(ALLTGT)
 
 objs:	$(ALLOBJS)
 
+.PHONY : bint_testing_nongridded
+bint_testing_nongridded : $(ALLTGT)
+		cp stepwat testing.sagebrush.master/Stepwat_Inputs/
+		./testing.sagebrush.master/Stepwat_Inputs/stepwat -d testing.sagebrush.master/Stepwat_Inputs/ -f files.in -s -o -i
+
+.PHONY : bint_testing_gridded
+bint_testing_gridded : $(ALLTGT)
+		cp stepwat testing.sagebrush.master/
+		./testing.sagebrush.master/stepwat -d testing.sagebrush.master/ -f files.in -g -s
+
 .PHONY : cleanobjs
 cleanobjs:
 		@rm -f $(ALLOBJS)

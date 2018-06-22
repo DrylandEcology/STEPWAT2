@@ -11,9 +11,7 @@ install:
 # to run your custom scripts instead of automatic MSBuild
 build_script:
   - set PATH=%PATH%;c:\cygwin\bin
-  # check that we can compile STEPWAT2
-  - set CPPFLAGS=-DSWDEBUG && make clean && make
-  # check that we can run the 'default' example
-  - ./testing.sagebrush.master/Stepwat_Inputs/stepwat -d testing.sagebrush.master/Stepwat_Inputs/ -f files.in -s -o -i
+  # check that we can cleanly compile STEPWAT2 and run the `default`, non-gridded example project
+  - make clean bint_testing_nongridded CPPFLAGS=-DSWDEBUG
   # remove created files including (possibly) large output
   - make cleanall
