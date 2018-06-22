@@ -254,20 +254,20 @@ void SXW_Init( Bool init_SW, char *f_roots ) {
 }
 
 /**
- * This function resets the model to default conditions
+		@brief This function resets the model to default conditions
+
+		It clears SOILWAT2-memory, initializes and allocates SOILWAT2 structures,
+		and reads SOIILWAT2 inputs.
+
+		However, it does **not** reset memory allocated by
+		`setGlobalSTEPWAT2_OutputVariables` because those variables are carrying
+		over from one STEPWAT2 iteration to the next. They are only de-allocated
+		at the end of an entire STEPWAT2 run (see `ST_main.c/main()`).
  */
 void SXW_Reset(void) {
 	char * temp;
 
-	if (SW_Weather.use_markov) {
-		free(SW_Markov.avg_ppt);
-		free(SW_Markov.dryprob);
-		free(SW_Markov.std_ppt);
-		free(SW_Markov.wetprob);
-	}
-
-	SW_SIT_clear_layers();
-	SW_WTH_clear_runavg_list();
+	SW_CTL_clear_model(FALSE); // don't reset output arrays
 
 	temp = strdup(SXW.f_watin);
 	SW_CTL_init_model(temp);

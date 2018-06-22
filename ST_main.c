@@ -24,6 +24,7 @@
 #include "filefuncs.h"
 #include "myMemory.h"
 #include "SW_VegProd.h"
+#include "SW_Control.h"
 
 
 #ifdef STEPWAT
@@ -169,13 +170,14 @@ int main(int argc, char **argv) {
 
 	parm_Initialize(0);
 
-	if (UseSoilwat){
-		SXW_Init(TRUE, NULL);
+	if (UseSoilwat)
+	{
+		SXW_Init(TRUE, NULL); // allocate SOILWAT2-memory
 		SW_OUT_set_ncol(); // set number of output columns
 		SW_OUT_set_colnames(); // set column names for output files
 		if (prepare_IterationSummary) {
 			SW_OUT_create_summary_files();
-			// setup `p_OUT` and `p_OUTsd` arrays to aggregate SOILWAT output across iterations
+			// allocate `p_OUT` and `p_OUTsd` arrays to aggregate SOILWAT2 output across iterations
 			setGlobalSTEPWAT2_OutputVariables();
 		}
 	}
@@ -280,13 +282,17 @@ int main(int argc, char **argv) {
 			output_Mort_Yearly(); // writes yearly file
 
 		if (UseSoilwat)
+		{
+			//stat_Output_AllSoilwatVariables();
+			// dont need to restart if last iteration finished
+			// this keeps it from re-writing the output folder and overwriting output files
+			if (Globals.currIter != Globals.runModelIterations)
 			{
-		     	//stat_Output_AllSoilwatVariables();
-          // dont need to restart if last iteration finished
-          // this keeps it from re-writing the output folder and overwriting output files
-          if(Globals.currIter != Globals.runModelIterations)
-            SXW_Reset();
+				// don't reset in last iteration because we need to close files
+				// before clearing/de-allocated SOILWAT2-memory
+				SXW_Reset();
 			}
+		}
 	} /* end model run for this iteration*/
 
 	/*------------------------------------------------------*/
@@ -301,12 +307,17 @@ int main(int argc, char **argv) {
         SXW_PrintDebug(1);
       }
 #endif
-  if (UseSoilwat){
+
+  if (UseSoilwat)
+  {
     SW_OUT_close_files();
+    SW_CTL_clear_model(TRUE); // de-allocate all memory
   }
   free_all_sxw_memory();
+
   printf("\nend program\n");
 	fprintf(progfp, "\n");
+
 	return 0;
 }
 /* END PROGRAM */
