@@ -152,7 +152,7 @@ static RealF _add_annuals(const GrpIndex rg, const SppIndex sp, const RealF last
     /*Multiple the proportion of seeds in each viable year array by the total
     number of seeds that germinated as seedlings and subtract those seeds from
     the relevant seedprod array.*/
-       for (i = 0; i <= s->viable_yrs; i++) {
+       for (i = 0; i < s->viable_yrs; i++) {
         //printf("Species name=%s , old calculated value s->seedprod[%hu]= %d \n", s->name, i, s->seedprod[i]);
         s->seedprod[i] =  s->seedprod[i] -  round(num_est * s->seedprod[i] / viable_seeds);
         //printf("Species name=%s , so new calculated value s->seedprod[%hu]= %d \n", s->name, i, s->seedprod[i]);
@@ -168,7 +168,7 @@ static RealF _get_annual_maxestab(SppIndex sp) {
     RealF sum = 0.; //sum of the viable seedbank
     SpeciesType *s = Species[sp];
 
-    for (i = 0; i <= s->viable_yrs; i++) {
+    for (i = 0; i < s->viable_yrs; i++) {
         sum += s->seedprod[i];
     }
     //printf("sum =%f \n",sum);
