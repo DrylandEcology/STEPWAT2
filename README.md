@@ -76,6 +76,21 @@ cd testing.sagebrush.master/Stepwat_Inputs/
 ./stepwat -f files.in -o -i -s
 ```
 
+* Alternatively, use `makefile` targets (compile, copy, and execute in one command)
+  - Non-gridded version, with SOILWAT2 water cycle, and with iteration and aggregated SOILWAT2-output:
+    ```
+    make bint_testing_nongridded
+    ```
+  - Gridded version with SOILWAT2 water cycle
+    ```
+    make bint_testing_gridded
+    ```
+  - If you need to clean up first, then run, e.g.,
+    ```
+    make cleanall bint_testing_nongridded
+    ```
+
+
 
 <br>
 
