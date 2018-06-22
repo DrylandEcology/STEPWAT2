@@ -1,0 +1,10 @@
+language: c
+compiler:
+  - clang
+  - gcc
+
+script:
+  # check that we can cleanly compile STEPWAT2 and run the `default`, non-gridded example project
+  - make clean bint_testing_nongridded CPPFLAGS=-DSWDEBUG
+  # remove created files including (possibly) large output
+  - make cleanall
