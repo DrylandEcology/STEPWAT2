@@ -868,7 +868,7 @@ static IndivType* _copy_head(IndivType *head)
  _free_head(to->IndvHead); //free_head() frees the memory allocated by the head and the memory allocated by each part of the linked list
  }
 
- to = *from;
+ *to = *from;
  to->est_count = from->est_count;
  to->estabs = from->estabs;
  to->relsize = from->relsize;
