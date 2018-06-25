@@ -777,7 +777,8 @@ void RGroup_Update_Newsize(GrpIndex rg)
 	indivs = RGroup_GetIndivs(rg, SORT_0, &numindvs);
 	for (n = 0; n < numindvs; n++)
 		indivs[n]->grp_res_prop = indivs[n]->relsize / sumsize;
-	//Mem_Free(indivs); // dont call free on variable unless it was initialized with malloc or calloc
+
+	Mem_Free(indivs);
 
 	/* double check some assumptions */
 	if (RGroup[rg]->est_count < 0)
