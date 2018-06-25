@@ -116,9 +116,9 @@ static void _make_header( char *buf);
 static void _make_header_with_std( char *buf);
 
 /* I'm making this a macro because it gets called a lot, but
-/* note that the syntax checker is obviated, so make sure
-/* you follow the this prototype:
-/* static void _collect_add(struct accumulators_st *p, double v) */
+ * note that the syntax checker is obviated, so make sure
+ * you follow the this prototype:
+ * static void _collect_add(struct accumulators_st *p, double v) */
 #define _collect_add(p, v) { \
    (p)->sum += (v);              \
    (p)->sum_sq += (v)*(v);       \

@@ -1,20 +1,16 @@
 /********************************************************/
 /********************************************************/
 /*  Source file: sxw_soilwat.c
-/*  Type: module
- *
-/*  Purpose: Subroutines to handle interactions with the
+ *  Type: module
+ *  Purpose: Subroutines to handle interactions with the
  *           SOILWAT model including setting up input/output
  *           files, writing to internal data structures,
  *           and actually running the model.
- *
-/*  Called by: sxw.c
- *
-/*  Application: STEPWAT - plant community dynamics simulator
- *               coupled with the  SOILWAT model.
+ *  Called by: sxw.c
+ *  Application: STEPWAT - plant community dynamics simulator
+ *               coupled with the  SOILWAT model. */
 /*  History:
-/*     (14-Apr-2002) -- INITIAL CODING - cwb
- *
+ *     (14-Apr-2002) -- INITIAL CODING - cwb
  *     28-Feb-02 - cwb - The model runs but plants die
  *         soon after establishment in a way that suggests
  *         chronic stretching of resources.  At this time
@@ -30,8 +26,8 @@
  *                 types for internal dynamic matrices and
  *                 other affected variables.  See notes in
  *                 sxw.c.
- *		08/01/2012 - DLM - updated _update_productivity() function to use the 3 different VegProds now used in soilwat...
-/*
+ *	08/01/2012 - DLM - updated _update_productivity() function 
+ *          to use the 3 different VegProds now used in soilwat */
 /********************************************************/
 /********************************************************/
 

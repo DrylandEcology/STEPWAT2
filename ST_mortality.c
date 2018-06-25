@@ -1,15 +1,14 @@
 /********************************************************/
 /********************************************************/
 /*  Source file: mortality.c
-/*  Type: module
-/*  Application: STEPPE - plant community dynamics simulator
-/*  Purpose: This collection of routines implements all of
+ *  Type: module
+ *  Application: STEPPE - plant community dynamics simulator
+ *  Purpose: This collection of routines implements all of
  *           the mortality functions.  mort_Main() is the
  *           entry point. All the other functions implement
- *           a specific mortality or are support routines.
-/*  History:
-/*     (6/15/2000) -- INITIAL CODING - cwb
-/*
+ *           a specific mortality or are support routines. */
+/*  History */
+/*     (6/15/2000) -- INITIAL CODING - cwb */
 /********************************************************/
 /********************************************************/
 
@@ -122,12 +121,10 @@ void mort_Main( Bool *killed) {
 /* HISTORY */
 /* Chris Bennett @ LTER-CSU 6/15/2000            */
 /*   11/5/00 - moved NoResources() from growth routine
-               to here.
-
+ *              to here.
  *   7-Nov-03 (cwb) No need to apply this mortality system
  *             to annuals.  That is now done in mort_EndOfYear()
- *             so the statistics can be accumulated.
-
+ *             so the statistics can be accumulated. */
 /*------------------------------------------------------*/
 
   Int j;
@@ -254,7 +251,7 @@ void grazing_EndOfYear( void){
 
 	/*======================================================*/
     /* PURPOSE */
-	/* Perform the sorts of grazing one might expect at end of year, it is based on grazing frequency
+    /* Perform the sorts of grazing one might expect at end of year, it is based on grazing frequency */
     /* HISTORY */
 	/* 1st Nov 2015 -AT  -Added Species grazing EndOfYear  */
 	/*======================================================*/

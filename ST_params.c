@@ -1,15 +1,14 @@
 /********************************************************/
 /*  Source file: params.c
-/*  Type: module
-/*  Application: STEPPE - plant community dynamics simulator
-/*  Purpose: This module handles the reading and initialization
+ *  Type: module
+ *  Application: STEPPE - plant community dynamics simulator
+ *  Purpose: This module handles the reading and initialization
  *           of the model parameters.  Mostly these come from
- *           the *.in files, but a fair amount are computed.
-/*  History:
+ *           the *.in files, but a fair amount are computed. */
+/*  History */
 /*     (6/15/2000) -- INITIAL CODING - cwb
-/*      15-Apr-02  -- added code to interface with SOILWAT (cwb)
- *                    only modified parm_Files_Init().
-/*
+ *      15-Apr-02  -- added code to interface with SOILWAT (cwb)
+ *                    only modified parm_Files_Init(). */
 /********************************************************/
 /********************************************************/
 

@@ -1,14 +1,13 @@
 /********************************************************/
 /********************************************************/
 /*  Source file: species.c
- /*  Type: module
- /*  Application: STEPPE - plant community dynamics simulator
- /*  Purpose: Read / write and otherwise manage the
+ *  Type: module
+ *  Application: STEPPE - plant community dynamics simulator
+ *  Purpose: Read / write and otherwise manage the
  *           site specific information.  See also the
- *           Layer module.
+ *           Layer module. */
  /*  History:
- /*     (6/15/2000) -- INITIAL CODING - cwb
- /*
+  *     (6/15/2000) -- INITIAL CODING - cwb */
  /********************************************************/
 /********************************************************/
 

@@ -1,24 +1,18 @@
 /********************************************************/
 /********************************************************/
 /*  Source file: sxw_resource.c
- *
-/*  Type: module
- *
-/*  Purpose: Compute resource vector for STEPPE based on
+ *  Type: module
+ *  Purpose: Compute resource vector for STEPPE based on
  *           transpiration values from SOILWAT.
- *
-/*  Dependency:  sxw.c
- *
-/*  Application: STEPWAT - plant community dynamics simulator
- *               coupled with the  SOILWAT model.
- *
+ *  Dependency:  sxw.c
+ *  Application: STEPWAT - plant community dynamics simulator
+ *               coupled with the  SOILWAT model. */
 /*  History:
-/*     (21-May-2002) -- INITIAL CODING - cwb
+ *     (21-May-2002) -- INITIAL CODING - cwb
  *     19-Jun-2003 - cwb - Added RealD (double precision)
  *                 types for internal dynamic matrices and
  *                 other affected variables.  See notes in
- *                 sxw.c.
-/*
+ *                 sxw.c. */
 /********************************************************/
 /********************************************************/
 

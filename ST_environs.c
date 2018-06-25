@@ -1,14 +1,13 @@
 /********************************************************/
 /********************************************************/
 /*  Source file: environs.c
-/*  Type: module
-/*  Application: STEPPE - plant community dynamics simulator
-/*  Purpose: Controls all environmental phenomenon from
+ *  Type: module
+ *  Application: STEPPE - plant community dynamics simulator
+ *  Purpose: Controls all environmental phenomenon from
  *           creating ppt and temp to creating the
- *           disturbances.
+ *           disturbances. */
 /*  History:
-/*     (6/15/2000) -- INITIAL CODING - cwb
-/*
+ *     (6/15/2000) -- INITIAL CODING - cwb */
 /********************************************************/
 /********************************************************/
 
@@ -92,7 +91,7 @@ static void _make_ppt( void) {
  *      and ppt.wet is currently fixed each year and read from env.in
  *      We should consider calculating gsspt in the _sxw_set_environs
  *      function when running SOILWAT (so it is not fixed), and allowing
- *      what constitutes a wet and dry year to vary across sites.
+ *      what constitutes a wet and dry year to vary across sites. */
 
 /*------------------------------------------------------*/
 
@@ -135,7 +134,7 @@ static void _make_temp( void) {
 /* HISTORY */
 /* Chris Bennett @ LTER-CSU 6/15/2000            */
 /* cwb - 6-Dec-02 -- added interface to STEPWAT.  Temp is
- *       set in _sxw_set_environs().
+ *       set in _sxw_set_environs(). */
 
 /*------------------------------------------------------*/
 
@@ -187,7 +186,7 @@ static void _set_temp_reduction( void) {
  *             a hack to compensate somewhat until a better
  *             method comes along.  The current fix is to
  *             account for the fact that the MAT is actually
- *             about 1/3 of optimal max yearly temp.
+ *             about 1/3 of optimal max yearly temp. */
 
 /*------------------------------------------------------*/
   int i;
@@ -220,10 +219,9 @@ static void _set_temp_reduction( void) {
 static void _make_disturbance( void) {
 /*======================================================*/
 /* PURPOSE */
-/* Generate disturbances, if any, for this year.
-*/
+/* Generate disturbances, if any, for this year. */
 /* HISTORY */
-/* Chris Bennett @ LTER-CSU 6/15/2000            */
+/* Chris Bennett @ LTER-CSU 6/15/2000 */
 
 /*------------------------------------------------------*/
   RealF pc; /* probability of colonization if current */
@@ -262,7 +260,7 @@ static void _make_disturbance( void) {
   }
 
   /* if the disturbance was expired above, */
-  /* we can generate a new one immediately*/
+  /* we can generate a new one immediately */
   if (Plot.disturbance == NoDisturb) {
 
     /* pick some type of disturbance (other than none)*/

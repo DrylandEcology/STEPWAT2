@@ -1,21 +1,15 @@
 /********************************************************/
 /********************************************************/
 /*  Source file: sxw.c
- *
-/*  Type: module
- *
-/*  Purpose: Interface module for the STEPPE to SOILWAT
+ *  Type: module
+ *  Purpose: Interface module for the STEPPE to SOILWAT
  *           data flow.  Oversees transformation of
  *           data from STEPPE to SOILWAT.
- *
-/*  Calls:  sxw2wat.c
- *
+ *  Calls:  sxw2wat.c */
 /*  Application: STEPWAT - plant community dynamics simulator
- *               coupled with the  SOILWAT model.
- *
-/*  History:
+ *  coupled with the  SOILWAT model. */
+/*  History */
 /*     (9-May-2002) -- INITIAL CODING - cwb
- *
  *     28-Feb-02 - cwb - The model runs but plants die
  *         soon after establishment in a way that suggests
  *         chronic stretching of resources.  At this time
@@ -27,7 +21,6 @@
  *         of each group _Grp_BMass[].  The only affected routines
  *         in this file are SXW_Init() and SXW_Run_SOILWAT().
  *         But see also sxw_soilwat.c.
-
  *      18-Jun-03 - cwb - Solved the basic problem above but
  *         we're still getting rapid increase in PR.  Stepping
  *         through the code and comparing with the spreadsheet
@@ -39,9 +32,8 @@
  *         routines, so pay attention to which arrays are
  *         defined with double vs single precision and take
  *         appropriate casting measures.
- *
- *		07-16-12 (DLM) - made a ton of changes to try and get it to compile with the new updated version of soilwat (version 23)
-/*
+ *	07-16-12 (DLM) - made a ton of changes to try and 
+ *          get it to compile with the new updated version of soilwat (version 23) */
 /********************************************************/
 /********************************************************/
 

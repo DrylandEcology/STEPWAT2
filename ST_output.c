@@ -1,14 +1,12 @@
 /********************************************************/
 /********************************************************/
 /*  Source file: output.c
-/*  Type: module
-/*  Application: STEPPE - plant community dynamics simulator
-/*  Purpose: All functions pertaining to producing output
- *           should go here.
-/*
-/*  History:
-/*     (6/15/2000) -- INITIAL CODING - cwb
-/*
+ *  Type: module
+ *  Application: STEPPE - plant community dynamics simulator
+ *  Purpose: All functions pertaining to producing output
+ *           should go here. */
+/*  History */
+/*     (6/15/2000) -- INITIAL CODING - cwb */
 /********************************************************/
 /********************************************************/
 

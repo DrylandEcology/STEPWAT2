@@ -1,15 +1,14 @@
 /********************************************************/
 /********************************************************/
 /*  Source file: sxw.h
-/*  Type: header
-/*  Purpose: Contains pertinent declarations, global variables,
+ *  Type: header
+ *  Purpose: Contains pertinent declarations, global variables,
  *           etc required to support new functions that
  *           interface STEPPE with SOILWAT.
-/*  Application: STEPWAT - plant community dynamics simulator
- *               coupled with the  SOILWAT model.
-/*  History:
-/*     (14-Apr-2002) -- INITIAL CODING - cwb
-/*
+ *  Application: STEPWAT - plant community dynamics simulator
+ *               coupled with the  SOILWAT model. */
+/*  History: 
+ *     (14-Apr-2002) -- INITIAL CODING - cwb */
 /********************************************************/
 /********************************************************/
 

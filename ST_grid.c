@@ -868,7 +868,7 @@ static IndivType* _copy_head(IndivType *head)
  _free_head(to->IndvHead); //free_head() frees the memory allocated by the head and the memory allocated by each part of the linked list
  }
 
- //*to = *from;
+ to = *from;
  to->est_count = from->est_count;
  to->estabs = from->estabs;
  to->relsize = from->relsize;
@@ -2968,8 +2968,8 @@ static void _do_grid_grazing_EndOfYear(int row, int col)
 
 	/*======================================================*/
 	/* PURPOSE */
-	/* Perform the sorts of grazing one might expect at end of year, it is based on grazing frequency
-	 /* HISTORY */
+	/* Perform the sorts of grazing one might expect at end of year, it is based on grazing frequency */
+	/* HISTORY */
 	/*  Nov 22 2016 -AKT  -Added Species grazing EndOfYear for grid model  */
 	/*======================================================*/
 
