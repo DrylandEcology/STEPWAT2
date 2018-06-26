@@ -7,7 +7,7 @@
 /*  History:
  *     (6/15/2000) -- INITIAL CODING - cwb
  *     15-Apr-02 (cwb) -- added code to interface with SOILWAT
- *	   5-24-2013 (DLM) -- added gridded option to program... see ST_grid.c 
+ *	   5-24-2013 (DLM) -- added gridded option to program... see ST_grid.c
  * source file for the rest of the gridded code */
 /********************************************************/
 /********************************************************/
@@ -536,12 +536,12 @@ static void init_args(int argc, char **argv) {
 			break; /* -g */
 
 		case 7:
-      printf("storing SOILWAT output (flag -o)\n");
+      printf("storing SOILWAT output aggregated across-iterations (flag -o)\n");
       prepare_IterationSummary = TRUE;
-			break; /* -o    also get all the soilwat output*/
+			break; /* -o */
 
     case 8: // -i
-      printf("storing SOILWAT output for all iterations\n");
+      printf("storing SOILWAT output for each iteration (-i flag)\n");
       storeAllIterations = TRUE;
       break;
 
