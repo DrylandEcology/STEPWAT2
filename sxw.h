@@ -7,7 +7,7 @@
  *           interface STEPPE with SOILWAT.
  *  Application: STEPWAT - plant community dynamics simulator
  *               coupled with the  SOILWAT model. */
-/*  History: 
+/*  History:
  *     (14-Apr-2002) -- INITIAL CODING - cwb */
 /********************************************************/
 /********************************************************/
@@ -33,8 +33,11 @@ void free_all_sxw_memory( void );
 
 struct stepwat_st {
   // ------ Values from SOILWAT2:
-  // dynamic arrays indexed by Ilp(), i.e., monthly x soil layer:
+  // Note: the function `SW_OUT_set_SXWrequests` specifies the required
+  // output time periods and output aggregation types
+
   // transpXXX: monthly sum of soilwat's transpiration by soil layer
+  // * these are dynamic arrays that are indexed by Ilp()
   RealD *transpTotal, // total transpiration, i.e., sum across vegetation types
         *transpVeg[NVEGTYPES]; // transpiration as contributed by vegetation types
   RealF *swc; // monthly mean SWCbulk for each soil layer
@@ -47,6 +50,8 @@ struct stepwat_st {
         ppt,    // annual sum of soilwat's precipitation
         aet;    // annual sum of soilwat's evapotranspiration
 
+
+  // ------ Resource values partitioned by STEPWAT2:
   // current years 'resources' partitioned to each STEPWAT resource group:
   RealF transp_SWA[MAX_RGROUPS];
 

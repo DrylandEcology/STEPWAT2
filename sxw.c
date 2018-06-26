@@ -32,7 +32,7 @@
  *         routines, so pay attention to which arrays are
  *         defined with double vs single precision and take
  *         appropriate casting measures.
- *	07-16-12 (DLM) - made a ton of changes to try and 
+ *	07-16-12 (DLM) - made a ton of changes to try and
  *          get it to compile with the new updated version of soilwat (version 23) */
 /********************************************************/
 /********************************************************/
@@ -151,6 +151,7 @@ void debugCleanUp(void);
 static void _make_swc_array(void);
 static void SXW_SW_Setup_Echo(void);
 //static void SXW_SW_Output_Echo(void);
+static void SXW_Reinit(void);
 
 //these last four functions are to be used in ST_grid.c
 void load_sxw_memory( RealD * grid_roots_max, RealD* grid_rootsXphen, RealD* grid_roots_active, RealD* grid_roots_active_rel, RealD* grid_roots_active_sum, RealD* grid_phen, RealD* grid_prod_bmass, RealD* grid_prod_pctlive );
@@ -171,8 +172,7 @@ void SXW_Init( Bool init_SW, char *f_roots ) {
    * 	roots file. This is for the gridded version where soils needs to
    * 	match sxwroots.in
    */
-	char * temp;
-	char roots[512] = { '\0' };
+	char roots[MAX_FILENAMESIZE] = { '\0' };
 
 #ifdef SXW_BYMAXSIZE
    GrpIndex rg; SppIndex sp;
@@ -207,11 +207,9 @@ void SXW_Init( Bool init_SW, char *f_roots ) {
 	  _read_debugfile();
 
 
-  if(init_SW) {
-	  temp = strdup(SXW.f_watin);
-	  SW_CTL_init_model(temp);
-	  SW_CTL_obtain_inputs();
-	  free(temp);
+  if (init_SW)
+  {
+		SXW_Reinit();
   }
 
   SXW.NTrLyrs = SW_Site.n_transp_lyrs[0];
@@ -246,6 +244,21 @@ void SXW_Init( Bool init_SW, char *f_roots ) {
 }
 
 /**
+		@brief This function initializes and allocates SOILWAT2 structures,
+		and reads SOIILWAT2 inputs.
+ */
+static void SXW_Reinit(void) {
+	char *temp;
+
+	temp = strdup(SXW.f_watin);
+	SW_CTL_init_model(temp);
+	SW_CTL_obtain_inputs();
+	SW_OUT_set_SXWrequests();
+  free(temp);
+}
+
+
+/**
 		@brief This function resets the model to default conditions
 
 		It clears SOILWAT2-memory, initializes and allocates SOILWAT2 structures,
@@ -257,14 +270,8 @@ void SXW_Init( Bool init_SW, char *f_roots ) {
 		at the end of an entire STEPWAT2 run (see `ST_main.c/main()`).
  */
 void SXW_Reset(void) {
-	char * temp;
-
 	SW_CTL_clear_model(FALSE); // don't reset output arrays
-
-	temp = strdup(SXW.f_watin);
-	SW_CTL_init_model(temp);
-	SW_CTL_obtain_inputs();
-  free(temp);
+	SXW_Reinit();
 }
 
 void SXW_InitPlot (void) {
