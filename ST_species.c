@@ -280,7 +280,7 @@ void Species_Update_Newsize(SppIndex sp, RealF newsize)
 	if (LT(Species[sp]->relsize, 0.0))
 	{
 		LogError(logfp, LOGWARN,
-				"Species_Update_Newsize: %s relsize < 0.0 (=%.1f)"
+				"Species_Update_Newsize: %s relsize < 0.0 (=%.6f)"
 						" year=%d, iter=%d", Species[sp]->name,
 				Species[sp]->relsize, Globals.currYear, Globals.currIter);
 	}
