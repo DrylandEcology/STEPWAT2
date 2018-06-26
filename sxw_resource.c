@@ -276,7 +276,7 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
 
     ForEachGroup(g)
     {
-        if (!ZRO(use_by_group[g])) {
+        if (!ZRO(sumUsedByGroup)) {
             use_by_group[g] += (use_by_group[g]/sumUsedByGroup) * TranspRemaining;
             //printf("for groupName= %s, after sum use_by_group[g]= %f \n",RGroup[g]->name,use_by_group[g] );
 
