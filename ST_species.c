@@ -283,6 +283,7 @@ void Species_Update_Newsize(SppIndex sp, RealF newsize)
 				"Species_Update_Newsize: %s relsize < 0.0 (=%.6f)"
 						" year=%d, iter=%d", Species[sp]->name,
 				Species[sp]->relsize, Globals.currYear, Globals.currIter);
+                //printf("Species relsize <0: name=%s, Species[sp]->relsize=%.5f \n ",Species[sp]->name, Species[sp]->relsize);
 	}
 	if (GT(Species[sp]->relsize, 100.))
 	{

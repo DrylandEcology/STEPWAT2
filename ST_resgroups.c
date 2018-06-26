@@ -400,6 +400,7 @@ void rgroup_ResPartIndiv(void) {
 
     } /* end ForEachGroup() */
 }
+
 /***********************************************************/
 void rgroup_Grow(void) {
     /*======================================================*
@@ -442,6 +443,10 @@ void rgroup_Grow(void) {
         /* grow individuals and increment size */
         ForEachEstSpp(sp, rg, j) {
             s = Species[sp];
+
+            /* printf("%s:In rgroup_grow: relsize before = %.3f || %s: relsize after = %.3f\n",
+            Species[sp]->name, Species[sp]->relsize,
+            RGroup[rg]->name, RGroup[rg]->relsize); */
 
             sppgrowth = 0.0;
             if (!Species[sp]->allow_growth)
@@ -488,6 +493,10 @@ void rgroup_Grow(void) {
             } /*END ForEachIndiv */
 
             Species_Update_Newsize(sp, sppgrowth);
+
+            /*printf("%s:In rgroup_grow: relsize after = %.3f || %s: relsize after = %.3f\n",
+            Species[sp]->name, Species[sp]->relsize,
+            RGroup[rg]->name, RGroup[rg]->relsize); */
 
         } /* ENDFOR j (for each species)*/
 

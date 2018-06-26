@@ -852,6 +852,10 @@ void _kill_extra_growth(void) {
             //printf("s->relsize kill before = %f\n, Species = %s \n", Species[sp]->name, Species[sp]->relsize);
             //printf("s->extragrowth kill before  = %f\n", Species[sp]->extragrowth);
 
+            /* Check that extragrowth <= s->relsize, otherwise relsize will 
+             become negative. If not, then reset to s->relsize*/
+            Species[sp]->extragrowth = LE(Species[sp]->extragrowth, Species[sp]->relsize) ? Species[sp]->extragrowth : Species[sp]->relsize;
+
             Species_Update_Newsize(sp, -Species[sp]->extragrowth);
             //printf("s->relsize kill after  = %f\n", Species[sp]->relsize);
             Species[sp]->extragrowth = 0.0;
