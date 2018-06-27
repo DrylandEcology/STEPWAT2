@@ -109,20 +109,6 @@ typedef struct stepwat_st SXW_t;
  */
 #define Itlp(t,l,p) (((t)*SXW.NTrLyrs*SXW.NPds) + ((l)*SXW.NPds) + (p))
 
-/* convert 4-d index to actual array index for
- * veg-prod-type/crit-value/layer/phenology
- */
- //veg_type, new_critical_value, layer, timeperiod
-#define Itclp(t,c,l,p) (((t)*SXW.NTrLyrs*SXW.NPds) + ((c)*NVEGTYPES) + ((l)*SXW.NPds) + (p)) // c*4 is because there are 4 critical values
-
-// for use with avg values
-// year, layer, timeperiod, avg/std
-#define Iylp(y,l,p,pd,x) (((y)*Globals.runModelYears * SXW.NTrLyrs * 4 * SXW.NPds * 2) + ((l)*SXW.NTrLyrs * 4 * SXW.NPds * 2) + ((p) * 4 * SXW.NPds * 2) + ((pd)*4*2) + ((x) * 2))
-
-// for soilwat average and standard deviation
-// year, timeperiod, choice (avg or std), timeperiod (dy, wk, mo, yr)
-// difference between p and b is p is current period within period (ie. for day it could be 0 to 364) and b is just timeperiod (0 to 3 where 0 is day and 3 is yr)
-#define Iypc(y,p,c,b) (((y)*Globals.runModelYears * SXW.NPds * NVEGTYPES) + ((p)*SXW.NPds * NVEGTYPES) + ((c) * NVEGTYPES) + (b))
 
 // veg type, layer, timeperiod
 #define Ivlp(v,l,p) (((v)*NVEGTYPES * SXW.NTrLyrs * SXW.NPds) + ((l)*SXW.NTrLyrs * SXW.NPds) + ((p)*SXW.NPds))
