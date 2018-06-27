@@ -22,6 +22,14 @@
  */
 /*#define SXW_BYMAXSIZE*/
 
+// Months with a mean temperature >= base are contributing to growing season
+// precipitation:
+// Coffin & Lauenroth 1990 Ecological Modelling:
+//  * growing season at CPER is 1 April - 30 September
+//  * growing season ppt = 0.86 * annual ppt at CPER
+// A base of 5 C will on average include April - October for Fort Collins recent climate
+#define GROWING_BASE_TEMP 5. // base-temperature in degree Celsius
+
 
 #include "generic.h"
 #include "SW_Times.h"

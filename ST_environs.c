@@ -24,7 +24,10 @@
 
 #ifdef STEPWAT
   #include "sxw_funcs.h"
+  #include "sw_src/filefuncs.h"
+  #include "sw_src/Times.h"
   extern Bool UseSoilwat;
+  extern SXW_t SXW;
 #endif
 
 /*********** Locally Used Function Declarations ************/
@@ -95,13 +98,39 @@ static void _make_ppt( void) {
 
 /*------------------------------------------------------*/
 
-  IntS r=0;
+  IntS r=0, i;
 
 #ifdef DEBUG_ENVCONST
   r=320;
 #endif
 
-  if (!UseSoilwat) {
+  if (UseSoilwat)
+  { // Run with SOILWAT2: we have monthly PPT and temperature to calculate
+    // growing season precipitation as sum of monthly precipitation of those
+    // months when mean air temperature exceeds a threshold `GROWING_BASE_TEMP`
+    Env.gsppt = 0; // gsppt is defined as IntS and units are millimeters
+
+    for (i = 0; i < MAX_MONTHS; i++)
+    {
+      Env.gsppt += GE(SXW.temp_monthly[i], GROWING_BASE_TEMP) ?
+        (IntS) (SXW.ppt_monthly[i] * 10. + 0.5) : 0;
+    }
+
+    if (Env.gsppt <= 0)
+    {
+      LogError(logfp, LOGWARN, "Zero growing season precipitation in "\
+        "year = %d of iteration = %d", Globals.currYear, Globals.currIter);
+      Env.gsppt = 0;
+    }
+
+    /*
+    printf("_make_ppt (year = %d of iteration = %d): "\
+      "Env.gsppt(SOILWAT2) = %d would be gsppt(fixed proportion) = %.1f\n",
+      Globals.currYear, Globals.currIter, Env.gsppt, Globals.gsppt_prop * Env.ppt);
+    */
+
+  } else {
+    // run as STEPPE without SOILWAT2:
     while ( r < Globals.ppt.min || r > Globals.ppt.max )
       r = (IntS)(RandNorm( Globals.ppt.avg,  Globals.ppt.std) +.5);
     if (Env.ppt > 0) {
@@ -110,9 +139,9 @@ static void _make_ppt( void) {
     } else {
       Env.lyppt = Env.ppt = r;
     }
-  }
 
-  Env.gsppt = (IntS) (Globals.gsppt_prop * Env.ppt);
+    Env.gsppt = (IntS) (Globals.gsppt_prop * Env.ppt);
+  }
 
   if ( Env.ppt <= Globals.ppt.dry )
     Env.wet_dry = Ppt_Dry;
@@ -120,8 +149,6 @@ static void _make_ppt( void) {
     Env.wet_dry = Ppt_Wet;
   else
     Env.wet_dry = Ppt_Norm;
-
-
 }
 
 /**************************************************************/
