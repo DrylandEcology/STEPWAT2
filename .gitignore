@@ -64,3 +64,13 @@ testing.sagebrush.MT_drs/Stepwat_Inputs/Input/sxw/Input/outsetup_v30.in
 
 */Output
 */Stepwat_Inputs/Output
+
+# Netbeans project files
+#######################
+nbproject/configurations.xml
+nbproject/private/CodeAssistancePathMapper.properties
+nbproject/private/configurations.xml
+nbproject/private/Default.properties
+nbproject/private/launcher.properties
+nbproject/private/private.xml
+nbproject/project.xml

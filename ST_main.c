@@ -376,6 +376,18 @@ void Plot_Initialize(void) {
 		if (!isnull(RGroup[rg]->kills))
 			Mem_Set(RGroup[rg]->kills, 0, sizeof(IntUS) * GrpMaxAge(rg));
 
+                /* programmer alert: INVESTIGATE WHY THIS OCCURS */
+		if (!ZRO(RGroup[rg]->relsize)) {
+			LogError(logfp, LOGNOTE, "%s relsize (%f) forced "
+					"in Plot_Initialize", RGroup[rg]->name,
+					RGroup[rg]->relsize);
+                        /*printf("in plot_initialize before forcing, Rgroup = %s, relsize = %f, est_count= %d\n",
+                        RGroup[rg]->name, RGroup[rg]->relsize, RGroup[rg]->est_count); */
+			RGroup[rg]->relsize = 0.0;
+                        /*printf("in plot_initialize after forcing, Rgroup = %s, relsize = %f, est_count= %d\n",
+                        RGroup[rg]->name, RGroup[rg]->relsize, RGroup[rg]->est_count); */
+		}
+                
 		/* THIS NEVER SEEMS TO OCCUR */
 		if (RGroup[rg]->est_count) {
 			LogError(logfp, LOGNOTE, "%s est_count (%d) forced "
