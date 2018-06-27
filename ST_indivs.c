@@ -1,14 +1,13 @@
 /********************************************************/
 /********************************************************/
 /*  Source file: indivs.c
-/*  Type: module
-/*  Application: STEPPE - plant community dynamics simulator
-/*  Purpose: This module manages the comings and goings of
+ *  Type: module
+ *  Application: STEPPE - plant community dynamics simulator
+ *  Purpose: This module manages the comings and goings of
  *           individual plants, plus a function for sorting
- *           based on size.
-/*  History:
-/*     (6/15/2000) -- INITIAL CODING - cwb
-/*
+ *           based on size. */
+/*  History */
+/*     (6/15/2000) -- INITIAL CODING - cwb */
 /********************************************************/
 /********************************************************/
 
@@ -177,8 +176,7 @@ Bool indiv_Kill_Partial( MortalityType code,
  *
  *   2/25/03 - Egad! Can't believe I never noticed there was
  *       no call to update the size in the higher echelons.
- *       Added call to Species_Update_Newsize().
-
+ *       Added call to Species_Update_Newsize(). */
 /*------------------------------------------------------*/
   SppIndex sp;
   Bool result = FALSE;

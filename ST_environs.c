@@ -1,14 +1,13 @@
 /********************************************************/
 /********************************************************/
 /*  Source file: environs.c
-/*  Type: module
-/*  Application: STEPPE - plant community dynamics simulator
-/*  Purpose: Controls all environmental phenomenon from
+ *  Type: module
+ *  Application: STEPPE - plant community dynamics simulator
+ *  Purpose: Controls all environmental phenomenon from
  *           creating ppt and temp to creating the
- *           disturbances.
+ *           disturbances. */
 /*  History:
-/*     (6/15/2000) -- INITIAL CODING - cwb
-/*
+ *     (6/15/2000) -- INITIAL CODING - cwb */
 /********************************************************/
 /********************************************************/
 
@@ -25,7 +24,10 @@
 
 #ifdef STEPWAT
   #include "sxw_funcs.h"
+  #include "sw_src/filefuncs.h"
+  #include "sw_src/Times.h"
   extern Bool UseSoilwat;
+  extern SXW_t SXW;
 #endif
 
 /*********** Locally Used Function Declarations ************/
@@ -65,14 +67,11 @@ void Env_Generate( void) {
          break;
   }
 
-
   _make_ppt();
   _make_temp();
   _set_ppt_reduction();
   _set_temp_reduction();
-  _make_disturbance( );
-
-
+  _make_disturbance();
 }
 
 /**************************************************************/
@@ -95,17 +94,43 @@ static void _make_ppt( void) {
  *      and ppt.wet is currently fixed each year and read from env.in
  *      We should consider calculating gsspt in the _sxw_set_environs
  *      function when running SOILWAT (so it is not fixed), and allowing
- *      what constitutes a wet and dry year to vary across sites.
+ *      what constitutes a wet and dry year to vary across sites. */
 
 /*------------------------------------------------------*/
 
-  IntS r=0;
+  IntS r=0, i;
 
 #ifdef DEBUG_ENVCONST
   r=320;
 #endif
 
-  if (!UseSoilwat) {
+  if (UseSoilwat)
+  { // Run with SOILWAT2: we have monthly PPT and temperature to calculate
+    // growing season precipitation as sum of monthly precipitation of those
+    // months when mean air temperature exceeds a threshold `GROWING_BASE_TEMP`
+    Env.gsppt = 0; // gsppt is defined as IntS and units are millimeters
+
+    for (i = 0; i < MAX_MONTHS; i++)
+    {
+      Env.gsppt += GE(SXW.temp_monthly[i], GROWING_BASE_TEMP) ?
+        (IntS) (SXW.ppt_monthly[i] * 10. + 0.5) : 0;
+    }
+
+    if (Env.gsppt <= 0)
+    {
+      LogError(logfp, LOGWARN, "Zero growing season precipitation in "\
+        "year = %d of iteration = %d", Globals.currYear, Globals.currIter);
+      Env.gsppt = 0;
+    }
+
+    /*
+    printf("_make_ppt (year = %d of iteration = %d): "\
+      "Env.gsppt(SOILWAT2) = %d would be gsppt(fixed proportion) = %.1f\n",
+      Globals.currYear, Globals.currIter, Env.gsppt, Globals.gsppt_prop * Env.ppt);
+    */
+
+  } else {
+    // run as STEPPE without SOILWAT2:
     while ( r < Globals.ppt.min || r > Globals.ppt.max )
       r = (IntS)(RandNorm( Globals.ppt.avg,  Globals.ppt.std) +.5);
     if (Env.ppt > 0) {
@@ -114,9 +139,9 @@ static void _make_ppt( void) {
     } else {
       Env.lyppt = Env.ppt = r;
     }
-  }
 
-  Env.gsppt = (IntS) (Globals.gsppt_prop * Env.ppt);
+    Env.gsppt = (IntS) (Globals.gsppt_prop * Env.ppt);
+  }
 
   if ( Env.ppt <= Globals.ppt.dry )
     Env.wet_dry = Ppt_Dry;
@@ -124,8 +149,6 @@ static void _make_ppt( void) {
     Env.wet_dry = Ppt_Wet;
   else
     Env.wet_dry = Ppt_Norm;
-
-
 }
 
 /**************************************************************/
@@ -138,7 +161,7 @@ static void _make_temp( void) {
 /* HISTORY */
 /* Chris Bennett @ LTER-CSU 6/15/2000            */
 /* cwb - 6-Dec-02 -- added interface to STEPWAT.  Temp is
- *       set in _sxw_set_environs().
+ *       set in _sxw_set_environs(). */
 
 /*------------------------------------------------------*/
 
@@ -190,7 +213,7 @@ static void _set_temp_reduction( void) {
  *             a hack to compensate somewhat until a better
  *             method comes along.  The current fix is to
  *             account for the fact that the MAT is actually
- *             about 1/3 of optimal max yearly temp.
+ *             about 1/3 of optimal max yearly temp. */
 
 /*------------------------------------------------------*/
   int i;
@@ -223,10 +246,9 @@ static void _set_temp_reduction( void) {
 static void _make_disturbance( void) {
 /*======================================================*/
 /* PURPOSE */
-/* Generate disturbances, if any, for this year.
-*/
+/* Generate disturbances, if any, for this year. */
 /* HISTORY */
-/* Chris Bennett @ LTER-CSU 6/15/2000            */
+/* Chris Bennett @ LTER-CSU 6/15/2000 */
 
 /*------------------------------------------------------*/
   RealF pc; /* probability of colonization if current */
@@ -265,7 +287,7 @@ static void _make_disturbance( void) {
   }
 
   /* if the disturbance was expired above, */
-  /* we can generate a new one immediately*/
+  /* we can generate a new one immediately */
   if (Plot.disturbance == NoDisturb) {
 
     /* pick some type of disturbance (other than none)*/

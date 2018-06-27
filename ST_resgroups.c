@@ -152,7 +152,7 @@ static RealF _add_annuals(const GrpIndex rg, const SppIndex sp, const RealF last
     /*Multiple the proportion of seeds in each viable year array by the total
     number of seeds that germinated as seedlings and subtract those seeds from
     the relevant seedprod array.*/
-       for (i = 0; i <= s->viable_yrs; i++) {
+       for (i = 0; i < s->viable_yrs; i++) {
         //printf("Species name=%s , old calculated value s->seedprod[%hu]= %d \n", s->name, i, s->seedprod[i]);
         s->seedprod[i] =  s->seedprod[i] -  round(num_est * s->seedprod[i] / viable_seeds);
         //printf("Species name=%s , so new calculated value s->seedprod[%hu]= %d \n", s->name, i, s->seedprod[i]);
@@ -168,7 +168,7 @@ static RealF _get_annual_maxestab(SppIndex sp) {
     RealF sum = 0.; //sum of the viable seedbank
     SpeciesType *s = Species[sp];
 
-    for (i = 0; i <= s->viable_yrs; i++) {
+    for (i = 0; i < s->viable_yrs; i++) {
         sum += s->seedprod[i];
     }
     //printf("sum =%f \n",sum);
@@ -400,6 +400,7 @@ void rgroup_ResPartIndiv(void) {
 
     } /* end ForEachGroup() */
 }
+
 /***********************************************************/
 void rgroup_Grow(void) {
     /*======================================================*
@@ -442,6 +443,10 @@ void rgroup_Grow(void) {
         /* grow individuals and increment size */
         ForEachEstSpp(sp, rg, j) {
             s = Species[sp];
+
+            /* printf("%s:In rgroup_grow: relsize before = %.3f || %s: relsize after = %.3f\n",
+            Species[sp]->name, Species[sp]->relsize,
+            RGroup[rg]->name, RGroup[rg]->relsize); */
 
             sppgrowth = 0.0;
             if (!Species[sp]->allow_growth)
@@ -488,6 +493,10 @@ void rgroup_Grow(void) {
             } /*END ForEachIndiv */
 
             Species_Update_Newsize(sp, sppgrowth);
+
+            /*printf("%s:In rgroup_grow: relsize after = %.3f || %s: relsize after = %.3f\n",
+            Species[sp]->name, Species[sp]->relsize,
+            RGroup[rg]->name, RGroup[rg]->relsize); */
 
         } /* ENDFOR j (for each species)*/
 
@@ -777,7 +786,8 @@ void RGroup_Update_Newsize(GrpIndex rg)
 	indivs = RGroup_GetIndivs(rg, SORT_0, &numindvs);
 	for (n = 0; n < numindvs; n++)
 		indivs[n]->grp_res_prop = indivs[n]->relsize / sumsize;
-	//Mem_Free(indivs); // dont call free on variable unless it was initialized with malloc or calloc
+
+	Mem_Free(indivs);
 
 	/* double check some assumptions */
 	if (RGroup[rg]->est_count < 0)

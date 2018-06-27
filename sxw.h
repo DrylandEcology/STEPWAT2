@@ -1,15 +1,14 @@
 /********************************************************/
 /********************************************************/
 /*  Source file: sxw.h
-/*  Type: header
-/*  Purpose: Contains pertinent declarations, global variables,
+ *  Type: header
+ *  Purpose: Contains pertinent declarations, global variables,
  *           etc required to support new functions that
  *           interface STEPPE with SOILWAT.
-/*  Application: STEPWAT - plant community dynamics simulator
- *               coupled with the  SOILWAT model.
+ *  Application: STEPWAT - plant community dynamics simulator
+ *               coupled with the  SOILWAT model. */
 /*  History:
-/*     (14-Apr-2002) -- INITIAL CODING - cwb
-/*
+ *     (14-Apr-2002) -- INITIAL CODING - cwb */
 /********************************************************/
 /********************************************************/
 
@@ -23,35 +22,66 @@
  */
 /*#define SXW_BYMAXSIZE*/
 
+// Months with a mean temperature >= base are contributing to growing season
+// precipitation:
+// Coffin & Lauenroth 1990 Ecological Modelling:
+//  * growing season at CPER is 1 April - 30 September
+//  * growing season ppt = 0.86 * annual ppt at CPER
+// A base of 5 C will on average include April - October for Fort Collins recent climate
+// A base of 4.4 C as described in Sims et al. 1978 Journal of Ecology
+// Additional testing required here and GROWING_BASE_TEMP should eventually be moved to env.in
+#define GROWING_BASE_TEMP 4.4 // base-temperature in degree Celsius
+
 
 #include "generic.h"
 #include "SW_Times.h"
 #include "ST_defines.h"
+#include "sw_src/SW_Defines.h"
 
 int getNTranspLayers(int veg_prod_type);
 void free_all_sxw_memory( void );
 
 struct stepwat_st {
-  RealD *transpTotal; /* points to dynamic array indexed by Ilp() */
-  RealD *transpTrees;
-  RealD *transpShrubs;
-  RealD *transpForbs;
-  RealD *transpGrasses;
+  // ------ Values from SOILWAT2:
+  // Note: the function `SW_OUT_set_SXWrequests` specifies the required
+  // output time periods and output aggregation types
 
-  RealD *transpTotal_avg,
-        *transpTrees_avg,
-        *transpShrubs_avg,
-        *transpForbs_avg,
-        *transpGrasses_avg;
+  // transpXXX: monthly sum of soilwat's transpiration by soil layer
+  // * these are dynamic arrays that are indexed by Ilp()
+  RealD *transpTotal, // total transpiration, i.e., sum across vegetation types
+        *transpVeg[NVEGTYPES]; // transpiration as contributed by vegetation types
+  RealF *swc; // monthly mean SWCbulk for each soil layer
 
-  RealF  temp,   /* soilwat's MAT */
-         ppt;    /* soilwat's MAP */
+  // fixed monthly array:
+  RealF ppt_monthly[MAX_MONTHS];  // monthly sum of soilwat's precipitation
+  RealF temp_monthly[MAX_MONTHS];  // monthly mean soilwat's air temperature
+
+  // annual values:
+  RealF temp,   // annual mean soilwat's air temperature
+        ppt,    // annual sum of soilwat's precipitation
+        aet;    // annual sum of soilwat's evapotranspiration
+
+
+  // ------ Resource values partitioned by STEPWAT2:
+  // current years 'resources' partitioned to each STEPWAT resource group:
+  RealF transp_SWA[MAX_RGROUPS];
+
+  /* `SWA`-related resource functionality is currently not implemented because
+    the former implementation was incorrect (#133 and #138),
+    please, see https://github.com/DrylandEcology/STEPWAT2/issues/136 for
+    details.
+
+  RealF *sum_dSWA_repartitioned; // required for `_SWA_contribution_by_group`
+  */
+
+
+  // ------ Size variables:
   TimeInt NPds;  /* number of transp periods= maxdays, maxweeks, maxmonths */
   IntUS NTrLyrs, /* # transp. layers taken from SOILWAT */
         NGrps;   /* # plant groups taken from STEPPE */
   IntUS NSoLyrs;  /* number of soil layers defined */
 
-  /* These are file names */
+  // ------ These are file names:
   char  *f_files,  /* list of input files for sxw */
         *f_roots,  /* root distributions */
         *f_phen,   /* phenology */
@@ -59,118 +89,13 @@ struct stepwat_st {
         *f_prod,   /* biomass to prod. conv. nos. */
         *f_watin;  /* soilwat's input file */
 
-  /* DEBUG stuff */
+  // ------ DEBUG stuff:
   char *debugfile; /* added in ST_Main(), read to get debug instructions */
-  RealF *swc, /* dynamic array(Ilp) of SWC from SOILWAT */
-         aet;
-              /* soilwat's evapotranspiration for the year */
-  RealD  surfaceTemp;   /* soilwat's surfaceTemp */
-
-  // PPT variables
-  int    yearInterval, // keep track of years
-         curMonth;
-
-  RealF PPT_sum,
-        PPT_rain,
-        PPT_snow_fall,
-        PPT_snow_melt,
-        PPT_snow_loss;
-
-  RealF *SWA_grass_avg, // 2D array to store SWA vals ([days of year][number of max layers])
-        *SWA_shrub_avg,
-        *SWA_tree_avg,
-        *SWA_forb_avg;
-
-  RealF *sum_dSWA_repartitioned;
-
-  RealF transp_SWA[MAX_YEARS][11]; // store the sum of SWA and transp for each year and resource. transp_SWA[year][steppe_resource_group]
-};
-
-struct soilwat_average{
-  RealF *soilinfilt_avg,
-        *runoff_total_avg,
-        *surface_runoff_avg,
-        *surface_runon_avg,
-        *runoff_snow_avg,
-        *vwcbulk_avg,
-        *vwcmatric_avg,
-        *swamatric_avg,
-        *swabulk_avg,
-        *swpmatric_avg,
-        *surfacewater_avg,
-        *evapsoil_avg,
-        *evapsurface_total_avg,
-        *evapsurface_tree_avg,
-        *evapsurface_shrub_avg,
-        *evapsurface_forb_avg,
-        *evapsurface_grass_avg,
-        *evapsurface_litter_avg,
-        *evapsurface_water_avg,
-
-        *interception_total_avg,
-        *interception_tree_avg,
-        *interception_shrub_avg,
-        *interception_forb_avg,
-        *interception_grass_avg,
-        *interception_litter_avg,
-
-        *lyrdrain_avg,
-
-        *hydred_total_avg,
-        *hydred_tree_avg,
-        *hydred_shrub_avg,
-        *hydred_forb_avg,
-        *hydred_grass_avg,
-
-        *pet_avg,
-        *wetday_avg,
-        *snowpack_water_eqv_avg,
-        *snowpack_depth_avg,
-        *deepswc_avg,
-        *soiltemp_avg,
-        *estab_avg,
-        *max_temp_avg,
-        *min_temp_avg,
-        *avg_temp_avg,
-        *aet_avg,
-        *ppt_avg,
-        *val_rain_avg,
-        *val_snow_avg,
-        *val_snowmelt_avg,
-        *val_snowloss_avg;
-
-    RealD *surfaceTemp_avg;
-
-    // Carbon Variables
-    RealD *biomass_grass_avg,
-          *biomass_shrub_avg,
-          *biomass_tree_avg,
-      		*biomass_forb_avg,
-      		*biomass_total_avg,
-
-      		*biolive_grass_avg,
-      		*biolive_shrub_avg,
-      		*biolive_tree_avg,
-      		*biolive_forb_avg,
-      		*biolive_total_avg,
-
-      		*bio_mult_grass_avg,
-      		*bio_mult_shrub_avg,
-      		*bio_mult_tree_avg,
-      		*bio_mult_forb_avg,
-
-      		*wue_mult_grass_avg,
-      		*wue_mult_shrub_avg,
-      		*wue_mult_tree_avg,
-      		*wue_mult_forb_avg;
-
-    RealF *swc_avg;
 };
 
 #define SXW_NFILES 5
 
 typedef struct stepwat_st SXW_t;
-typedef struct soilwat_average SXW_avg;
 
 #define ForEachTrPeriod(i) for((i)=0; (i)< SXW.NPds; (i)++)
 

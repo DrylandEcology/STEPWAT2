@@ -1,23 +1,23 @@
-# List of input files for SOILWAT v32
-# This is the first file read. Simulation information =
+# List of input files for SOILWAT2
+# This is the first file read.
 
 # Model
 Input/years.in	# years for model operation
 Output/logfile.log	# errors or important info (can also be stdout)
 
 #Site
-Input/siteparam_v26.in	# site parameters
-Input/soils_v30.in	# soil layer definitions
+Input/siteparam.in	# site parameters
+Input/soils.in	# soil layer definitions
 
-#Weather
-Input/weathsetup_v20.in	# weather parameters
+#Weather & climate
+Input/weathsetup.in	# weather parameters
 Input/sxw/Input/randomdata/weath	# data file containing historical weather (can include path)
-Input/randomdata/mkv_prob.in	# precip probs; required for markov weather
-Input/randomdata/mkv_covar.in	# covariance table required for markov weather
-Input/randomdata/cloud_v20.in	# general atmospheric params
+Input/mkv_prob.in	# precip probs; required for markov weather
+Input/mkv_covar.in	# covariance table required for markov weather
+Input/climate.in	# general atmospheric params
 
 #Vegetation
-Input/sbe_prod_v31.in	# productivity values
+Input/veg.in	# productivity values
 Input/estab.in	# plant establishment start file
 
 #CO2
@@ -27,8 +27,8 @@ Input/carbon.in
 Input/swcsetup.in	# params for handling measured swc
 
 #Output
-Output/	# 'relative' path for output files: / for same directory, or e.g., Output/
-Input/outsetup_v30.in	# define output quantities
+Output/	# 'relative' path for output files: / for same directory, or e.g., Output/; PROGRAMMER NOTE: This is currently the 13th position; if this changes then update function SW_Files.c/SW_F_read()
+Input/outsetup.in	# define output quantities
 Output/sw_output/sw2_daily.csv	#output
 Output/sw_output/sw2_weekly.csv	#output
 Output/sw_output/sw2_monthly.csv	#output

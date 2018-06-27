@@ -1,18 +1,14 @@
 /********************************************************/
 /********************************************************/
 /*  Source file: sxw_module.h
-/*  Type: header
-/*  Application: STEPWAT - plant community dynamics simulator
+ *  Type: header
+ *  Application: STEPWAT - plant community dynamics simulator
  *               coupled with the  SOILWAT model.
- *
-/*  Purpose: Contains declarations relevant for the SXW_
+ *  Purpose: Contains declarations relevant for the SXW_
  *           "module" made up of several source files.
- *
-/*  Applies to: sxw.c sxw_steppe.c sxw_soilwat.c
- *
+ *  Applies to: sxw.c sxw_steppe.c sxw_soilwat.c */
 /*  History:
-/*     (22-May-2002) -- INITIAL CODING - cwb
-/*
+ *     (22-May-2002) -- INITIAL CODING - cwb */
 /********************************************************/
 /********************************************************/
 

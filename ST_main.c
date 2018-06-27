@@ -1,14 +1,14 @@
 /********************************************************/
 /********************************************************/
 /*  Source file: ST_main.c
-/*  Type: module
-/*  Application: STEPPE - plant community dynamics simulator
-/*  Purpose: Main program loop and initializations.
+ *  Type: module
+ *  Application: STEPPE - plant community dynamics simulator
+ *  Purpose: Main program loop and initializations. */
 /*  History:
-/*     (6/15/2000) -- INITIAL CODING - cwb
+ *     (6/15/2000) -- INITIAL CODING - cwb
  *     15-Apr-02 (cwb) -- added code to interface with SOILWAT
- *	   5-24-2013 (DLM) -- added gridded option to program... see ST_grid.c source file for the rest of the gridded code
-/*
+ *	   5-24-2013 (DLM) -- added gridded option to program... see ST_grid.c
+ * source file for the rest of the gridded code */
 /********************************************************/
 /********************************************************/
 
@@ -24,18 +24,22 @@
 #include "filefuncs.h"
 #include "myMemory.h"
 #include "SW_VegProd.h"
+#include "SW_Control.h"
 
 
 #ifdef STEPWAT
   #include "sxw_funcs.h"
   #include "sxw.h"
   #include "sw_src/SW_Output.h"
+  #include "sw_src/SW_Output_outtext.h"
+  #include "sw_src/SW_Output_outarray.h"
   #include "sw_src/rands.h"
   extern SXW_t SXW;
 #endif
 
-extern Bool isPartialSoilwatOutput;
-extern Bool storeAllIterations;
+extern Bool prepare_IterationSummary; // defined in `SOILWAT2/SW_Output.c`
+extern Bool print_IterationSummary; // defined in `SOILWAT2/SW_Output_outtext.c`
+extern Bool storeAllIterations; // defined in `SOILWAT2/SW_Output.c`
 extern SW_VEGPROD SW_VegProd;
 SW_FILE_STATUS SW_File_Status;
 
@@ -152,7 +156,7 @@ int main(int argc, char **argv) {
 	/* provides a way to inform user that something
 	 * was logged.  see generic.h */
 
-  isPartialSoilwatOutput = TRUE; // dont want to get soilwat output unless -o flag
+  prepare_IterationSummary = FALSE; // dont want to get soilwat output unless -o flag
   storeAllIterations = FALSE; // dont want to store all soilwat output iterations unless -i flag
 
 	init_args(argc, argv); // read input arguments and intialize proper flags
@@ -166,10 +170,17 @@ int main(int argc, char **argv) {
 
 	parm_Initialize(0);
 
-	if (UseSoilwat){
-		SXW_Init(TRUE, NULL);
-    SW_OUT_set_ncol(); // set number of columns
-  }
+	if (UseSoilwat)
+	{
+		SXW_Init(TRUE, NULL); // allocate SOILWAT2-memory
+		SW_OUT_set_ncol(); // set number of output columns
+		SW_OUT_set_colnames(); // set column names for output files
+		if (prepare_IterationSummary) {
+			SW_OUT_create_summary_files();
+			// allocate `p_OUT` and `p_OUTsd` arrays to aggregate SOILWAT2 output across iterations
+			setGlobalSTEPWAT2_OutputVariables();
+		}
+	}
 
 	incr = (IntS) ((float) Globals.runModelIterations / 10);
 	if (incr == 0)
@@ -184,13 +195,20 @@ int main(int argc, char **argv) {
 			fprintf(progfp, "%d\n", iter);
 		}
 
-
 		if (BmassFlags.yearly || MortFlags.yearly)
 			parm_Initialize(iter);
 
 		Plot_Initialize();
 		RandSeed(Globals.randseed);
 		Globals.currIter = iter;
+
+		if (UseSoilwat && storeAllIterations) {
+			SW_OUT_create_iteration_files(Globals.currIter);
+		}
+
+		if (UseSoilwat && prepare_IterationSummary) {
+			print_IterationSummary = (Bool) (Globals.currIter == Globals.runModelIterations);
+		}
 
 		/* ------  Begin running the model ------ */
 		for (year = 1; year <= Globals.runModelYears; year++) {
@@ -200,11 +218,11 @@ int main(int argc, char **argv) {
 			Globals.currYear = year;
 
 			rgroup_Establish();
-     
+
 			Env_Generate();
 
 			rgroup_PartResources();
-   
+
          //check_sizes("'main' after 'rgroup_PartResources'");
 
 #ifdef STEPWAT
@@ -212,39 +230,39 @@ int main(int argc, char **argv) {
 #endif
 
 			rgroup_Grow();
-      
+
       //check_sizes("'main' after 'rgroup_Grow'");
 
 			mort_Main(&killedany);
-      
+
       //check_sizes("'main' after 'mort_Main'");
 
 			rgroup_IncrAges();
-      
+
       //check_sizes("'main' after 'rgroup_IncrAges'");
 
       // Added functions for Grazing and mort_end_year as proportional killing effect before exporting biomass end of the year
 			grazing_EndOfYear();
-      
+
       //check_sizes("'main' after 'grazing_EndOfYear'");
 
 
       save_annual_species_relsize();
-     
+
       		mort_EndOfYear();
-      
+
       //check_sizes("'main' after 'mort_EndOfYear'");
 
 			stat_Collect(year);
-      
+
 			if (BmassFlags.yearly)
 				output_Bmass_Yearly(year);
 
        // Moved kill annual and kill extra growth after we export biomass, and recovery of biomass after fire before the next year
 			_kill_annuals();
-     
+
 			proportion_Recovery();
-     
+
       //check_sizes("'main' after 'proportion_Recovery'");
 
 			_kill_extra_growth();
@@ -252,7 +270,7 @@ int main(int argc, char **argv) {
 			// Check that relsizes match up at end of year after extra growth is removed
 			// may want to wrap this in #ifdef DEBUG once problem is fixed
 			//check_sizes("'main' at end of year");
-     
+
 		} /* end model run for this year*/
 
 		if (MortFlags.summary) {
@@ -264,13 +282,17 @@ int main(int argc, char **argv) {
 			output_Mort_Yearly(); // writes yearly file
 
 		if (UseSoilwat)
+		{
+			//stat_Output_AllSoilwatVariables();
+			// dont need to restart if last iteration finished
+			// this keeps it from re-writing the output folder and overwriting output files
+			if (Globals.currIter != Globals.runModelIterations)
 			{
-		     	//stat_Output_AllSoilwatVariables();
-          // dont need to restart if last iteration finished
-          // this keeps it from re-writing the output folder and overwriting output files
-          if(Globals.currIter != Globals.runModelIterations)
-            SXW_Reset();
+				// don't reset in last iteration because we need to close files
+				// before clearing/de-allocated SOILWAT2-memory
+				SXW_Reset();
 			}
+		}
 	} /* end model run for this iteration*/
 
 	/*------------------------------------------------------*/
@@ -285,10 +307,17 @@ int main(int argc, char **argv) {
         SXW_PrintDebug(1);
       }
 #endif
-  SW_OUT_close_files();
+
+  if (UseSoilwat)
+  {
+    SW_OUT_close_files();
+    SW_CTL_clear_model(TRUE); // de-allocate all memory
+  }
   free_all_sxw_memory();
+
   printf("\nend program\n");
 	fprintf(progfp, "\n");
+
 	return 0;
 }
 /* END PROGRAM */
@@ -347,6 +376,18 @@ void Plot_Initialize(void) {
 		if (!isnull(RGroup[rg]->kills))
 			Mem_Set(RGroup[rg]->kills, 0, sizeof(IntUS) * GrpMaxAge(rg));
 
+                /* programmer alert: INVESTIGATE WHY THIS OCCURS */
+		if (!ZRO(RGroup[rg]->relsize)) {
+			LogError(logfp, LOGNOTE, "%s relsize (%f) forced "
+					"in Plot_Initialize", RGroup[rg]->name,
+					RGroup[rg]->relsize);
+                        /*printf("in plot_initialize before forcing, Rgroup = %s, relsize = %f, est_count= %d\n",
+                        RGroup[rg]->name, RGroup[rg]->relsize, RGroup[rg]->est_count); */
+			RGroup[rg]->relsize = 0.0;
+                        /*printf("in plot_initialize after forcing, Rgroup = %s, relsize = %f, est_count= %d\n",
+                        RGroup[rg]->name, RGroup[rg]->relsize, RGroup[rg]->est_count); */
+		}
+                
 		/* THIS NEVER SEEMS TO OCCUR */
 		if (RGroup[rg]->est_count) {
 			LogError(logfp, LOGNOTE, "%s est_count (%d) forced "
@@ -357,7 +398,6 @@ void Plot_Initialize(void) {
 		RGroup[rg]->yrs_neg_pr = 0;
 		RGroup[rg]->extirpated = FALSE;
 	}
-  memset(SXW.transp_SWA, 0, sizeof(SXW.transp_SWA)); // set transp_SWA to 0; needs to be reset each iteration
 
 	if (UseSoilwat)
 		SXW_InitPlot();
@@ -508,12 +548,12 @@ static void init_args(int argc, char **argv) {
 			break; /* -g */
 
 		case 7:
-      printf("storing SOILWAT output (flag -o)\n");
-      isPartialSoilwatOutput = FALSE;
-			break; /* -o    also get all the soilwat output*/
+      printf("storing SOILWAT output aggregated across-iterations (-o flag)\n");
+      prepare_IterationSummary = TRUE;
+			break; /* -o */
 
     case 8: // -i
-      printf("storing SOILWAT output for all iterations\n");
+      printf("storing SOILWAT output for each iteration (-i flag)\n");
       storeAllIterations = TRUE;
       break;
 

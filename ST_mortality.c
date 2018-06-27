@@ -1,15 +1,14 @@
 /********************************************************/
 /********************************************************/
 /*  Source file: mortality.c
-/*  Type: module
-/*  Application: STEPPE - plant community dynamics simulator
-/*  Purpose: This collection of routines implements all of
+ *  Type: module
+ *  Application: STEPPE - plant community dynamics simulator
+ *  Purpose: This collection of routines implements all of
  *           the mortality functions.  mort_Main() is the
  *           entry point. All the other functions implement
- *           a specific mortality or are support routines.
-/*  History:
-/*     (6/15/2000) -- INITIAL CODING - cwb
-/*
+ *           a specific mortality or are support routines. */
+/*  History */
+/*     (6/15/2000) -- INITIAL CODING - cwb */
 /********************************************************/
 /********************************************************/
 
@@ -122,12 +121,10 @@ void mort_Main( Bool *killed) {
 /* HISTORY */
 /* Chris Bennett @ LTER-CSU 6/15/2000            */
 /*   11/5/00 - moved NoResources() from growth routine
-               to here.
-
+ *              to here.
  *   7-Nov-03 (cwb) No need to apply this mortality system
  *             to annuals.  That is now done in mort_EndOfYear()
- *             so the statistics can be accumulated.
-
+ *             so the statistics can be accumulated. */
 /*------------------------------------------------------*/
 
   Int j;
@@ -254,7 +251,7 @@ void grazing_EndOfYear( void){
 
 	/*======================================================*/
     /* PURPOSE */
-	/* Perform the sorts of grazing one might expect at end of year, it is based on grazing frequency
+    /* Perform the sorts of grazing one might expect at end of year, it is based on grazing frequency */
     /* HISTORY */
 	/* 1st Nov 2015 -AT  -Added Species grazing EndOfYear  */
 	/*======================================================*/
@@ -360,23 +357,23 @@ void proportion_Recovery(void) {
 
             ForEachEstSpp(sp, rg, i) {
 
-                /* Annuals have already been killed in _kill_annuals and are not 
+                /* Annuals have already been killed in _kill_annuals and are not
                  * subject to proportion recovery after fire */
                 if (Species[sp]->max_age == 1)
                     continue;
 
                 //printf("'before proportion_recovery': Species = %s, relsize = %f, est_count = %d\n",
-                // Species[sp]->name, Species[sp]->relsize, Species[sp]->est_count); 
+                // Species[sp]->name, Species[sp]->relsize, Species[sp]->est_count);
 
                 Species_Proportion_Recovery(RGroup[rg]->est_spp[i], 6,
                         RGroup[rg]->proportion_recovered,
                         RGroup[rg]->proportion_killed);
 
                 //printf("'after proportion_recovery': Species = %s, relsize = %f, est_count = %d\n",
-                //Species[sp]->name, Species[sp]->relsize, Species[sp]->est_count); 
+                //Species[sp]->name, Species[sp]->relsize, Species[sp]->est_count);
             }
             //printf("'after proportion_recovery': Group = %s, relsize = %f, est_count = %d\n",
-            // RGroup[rg]->name, RGroup[rg]->relsize, RGroup[rg]->est_count); 
+            // RGroup[rg]->name, RGroup[rg]->relsize, RGroup[rg]->est_count);
         }
     }
 }
@@ -834,9 +831,7 @@ void _kill_extra_growth(void) {
     IntU j;
     GrpIndex rg;
     SppIndex sp;
-    GroupType *g;
-
-    g = RGroup[rg];
+    //GroupType *g = &RGroup[rg];
 
     ForEachGroup(rg) {
 
@@ -856,6 +851,10 @@ void _kill_extra_growth(void) {
             if (ZRO(Species[sp]->extragrowth)) continue;
             //printf("s->relsize kill before = %f\n, Species = %s \n", Species[sp]->name, Species[sp]->relsize);
             //printf("s->extragrowth kill before  = %f\n", Species[sp]->extragrowth);
+
+            /* Check that extragrowth <= s->relsize, otherwise relsize will 
+             become negative. If not, then reset to s->relsize*/
+            Species[sp]->extragrowth = LE(Species[sp]->extragrowth, Species[sp]->relsize) ? Species[sp]->extragrowth : Species[sp]->relsize;
 
             Species_Update_Newsize(sp, -Species[sp]->extragrowth);
             //printf("s->relsize kill after  = %f\n", Species[sp]->relsize);

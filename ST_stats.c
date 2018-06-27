@@ -116,9 +116,9 @@ static void _make_header( char *buf);
 static void _make_header_with_std( char *buf);
 
 /* I'm making this a macro because it gets called a lot, but
-/* note that the syntax checker is obviated, so make sure
-/* you follow the this prototype:
-/* static void _collect_add(struct accumulators_st *p, double v) */
+ * note that the syntax checker is obviated, so make sure
+ * you follow the this prototype:
+ * static void _collect_add(struct accumulators_st *p, double v) */
 #define _collect_add(p, v) { \
    (p)->sum += (v);              \
    (p)->sum_sq += (v)*(v);       \
@@ -605,19 +605,6 @@ void stat_Save_Accumulators(int cell, int year) {
 			_copy_over(&grid_Stat[cell].sreceived[yr][s], &_Sreceived[s].s[yr]);
 	}
 
-}
-
-float get_running_avg(float old_val, float val_to_add){
-	float new_avg;
-	new_avg = old_val + (val_to_add - old_val) / Globals.currIter;
-	return new_avg;
-}
-
-float get_running_sqr(float old_val, float val_to_add, float run_avg){
-	float run_sqr;
-	run_sqr = (val_to_add-old_val) * (val_to_add-run_avg);
-
-	return run_sqr;
 }
 
 /***********************************************************/

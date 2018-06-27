@@ -1,14 +1,13 @@
 /********************************************************/
 /********************************************************/
 /*  Source file: species.c
- /*  Type: module
- /*  Application: STEPPE - plant community dynamics simulator
- /*  Purpose: Read / write and otherwise manage the
+ *  Type: module
+ *  Application: STEPPE - plant community dynamics simulator
+ *  Purpose: Read / write and otherwise manage the
  *           site specific information.  See also the
- *           Layer module.
+ *           Layer module. */
  /*  History:
- /*     (6/15/2000) -- INITIAL CODING - cwb
- /*
+  *     (6/15/2000) -- INITIAL CODING - cwb */
  /********************************************************/
 /********************************************************/
 
@@ -281,9 +280,10 @@ void Species_Update_Newsize(SppIndex sp, RealF newsize)
 	if (LT(Species[sp]->relsize, 0.0))
 	{
 		LogError(logfp, LOGWARN,
-				"Species_Update_Newsize: %s relsize < 0.0 (=%.1f)"
+				"Species_Update_Newsize: %s relsize < 0.0 (=%.6f)"
 						" year=%d, iter=%d", Species[sp]->name,
 				Species[sp]->relsize, Globals.currYear, Globals.currIter);
+                //printf("Species relsize <0: name=%s, Species[sp]->relsize=%.5f \n ",Species[sp]->name, Species[sp]->relsize);
 	}
 	if (GT(Species[sp]->relsize, 100.))
 	{
@@ -544,7 +544,21 @@ void Species_Proportion_Recovery(const SppIndex sp, int killType,
                 proportionKilled);
         p = t;
     }
-    //printf("'within proportion_recovery after killing': Species = %s, relsize = %f, est_count = %d\n",Species[sp]->name, Species[sp]->relsize, Species[sp]->est_count);
+    //printf("'within proportion_recovery after first killing': Species = %s, relsize = %f, est_count = %d\n",Species[sp]->name, Species[sp]->relsize, Species[sp]->est_count);
+
+    /* Kill all the species individuals and free the assigned memory and finally 
+     * drop the species as well if relsize is zero */
+    if (ZERO(Species[sp]->relsize) || LT(Species[sp]->relsize, 0.0)) {
+        IndivType *p1 = Species[sp]->IndvHead, *t1;
+        while (p1) {
+            t1 = p1->Next;
+            _delete(p1);
+            p1 = t1;
+        }
+        //printf("'within proportion_recovery after second killing': Species = %s, relsize = %f, est_count = %d\n",Species[sp]->name, Species[sp]->relsize, Species[sp]->est_count);
+
+        rgroup_DropSpecies(sp);
+    }
 
 #undef xF_DELTA
 #undef xD_DELTA
