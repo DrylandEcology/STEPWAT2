@@ -44,6 +44,7 @@ struct stepwat_st {
 
   // fixed monthly array:
   RealF ppt_monthly[MAX_MONTHS];  // monthly sum of soilwat's precipitation
+  RealF temp_monthly[MAX_MONTHS];  // monthly mean soilwat's air temperature
 
   // annual values:
   RealF temp,   // annual mean soilwat's air temperature
