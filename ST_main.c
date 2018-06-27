@@ -536,7 +536,7 @@ static void init_args(int argc, char **argv) {
 			break; /* -g */
 
 		case 7:
-      printf("storing SOILWAT output aggregated across-iterations (flag -o)\n");
+      printf("storing SOILWAT output aggregated across-iterations (-o flag)\n");
       prepare_IterationSummary = TRUE;
 			break; /* -o */
 

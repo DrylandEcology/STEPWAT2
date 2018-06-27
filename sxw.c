@@ -62,6 +62,8 @@
 #include "sw_src/SW_Files.h"
 #include "sw_src/SW_Weather.h"
 #include "sw_src/SW_Markov.h"
+#include "sw_src/SW_Output.h"
+
 
 /*************** Global Variable Declarations ***************/
 /***********************************************************/
