@@ -831,7 +831,6 @@ void _kill_extra_growth(void) {
     IntU j;
     GrpIndex rg;
     SppIndex sp;
-    //GroupType *g = &RGroup[rg];
 
     ForEachGroup(rg) {
 
@@ -848,9 +847,9 @@ void _kill_extra_growth(void) {
                 continue;
             //printf("s->extragrowth kill before  = %f\n", Species[sp]->extragrowth);
 
-            if (ZRO(Species[sp]->extragrowth)) continue;
+            if (Species[sp]->extragrowth == 0.0) continue;
             //printf("s->relsize kill before = %f\n, Species = %s \n", Species[sp]->name, Species[sp]->relsize);
-            //printf("s->extragrowth kill before  = %f\n", Species[sp]->extragrowth);
+            //printf("s->extragrowth kill before  = %.9f\n", Species[sp]->extragrowth);
 
             /* Check that extragrowth <= s->relsize, otherwise relsize will 
              become negative. If not, then reset to s->relsize*/
