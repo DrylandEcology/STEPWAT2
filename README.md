@@ -1,3 +1,22 @@
+| Unix | Windows | Release | License | Coverage | Downloads |
+| :---- | :---- | :---- | :---- | :---- | :---- |
+[ ![Travis build status][1]][2] | [![Appveyor build status][3]][4] | [ ![github release][5]][6] | [![license][7]][8] | [![codecov status][9]][10] | [![github downloads][11]][12] |
+
+[1]: https://travis-ci.org/DrylandEcology/STEPWAT2.svg?branch=master
+[2]: https://travis-ci.org/DrylandEcology/STEPWAT2
+[3]: https://ci.appveyor.com/api/projects/status/qx2o3j4jpp0ej0on/branch/master?svg=true
+[4]: https://ci.appveyor.com/project/DrylandEcologyGit/stepwat2/branch/master
+[5]: https://img.shields.io/github/release/DrylandEcology/STEPWAT2.svg?label=current+release
+[6]: https://github.com/DrylandEcology/STEPWAT2/releases
+[7]: https://img.shields.io/github/license/DrylandEcology/STEPWAT2.svg
+[8]: https://www.gnu.org/licenses/gpl.html
+[9]: https://codecov.io/gh/DrylandEcology/STEPWAT2/branch/master/graph/badge.svg
+[10]: https://codecov.io/gh/DrylandEcology/STEPWAT2
+[11]: https://img.shields.io/github/downloads/DrylandEcology/STEPWAT2/total.svg
+[12]: https://github.com/DrylandEcology/STEPWAT2
+
+<br>
+
 # STEPWAT2
 
 <br>
