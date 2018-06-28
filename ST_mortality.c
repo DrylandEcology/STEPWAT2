@@ -36,6 +36,7 @@ Bool indiv_Kill_Partial( MortalityType code,
                           RealF killamt);
 void indiv_Kill_Complete( IndivType *ndv, int killType);
 void check_sizes(const char *); /* found in main */
+void _delete(IndivType *ndv);
 
 /*------------------------------------------------------*/
 /* Modular functions only used on one or two specific   */
@@ -45,6 +46,7 @@ void mort_Main( Bool *killed);
 void mort_EndOfYear( void);
 void proportion_Recovery(void);
 void grazing_EndOfYear( void);
+void rgroup_DropSpecies(SppIndex sp);
 
 /*********** Locally Used Function Declarations ************/
 /***********************************************************/
@@ -178,7 +180,9 @@ void mort_Main( Bool *killed) {
              break;
 
       }
-
+      /*printf("'mort_Main': Species = %s, relsize = %f, est_count = %d\n",
+      Species[sp]->name, Species[sp]->relsize, Species[sp]->est_count); */
+      
     } /* end for each species*/
 
     /*printf("'mort_Main': Group = %s, relsize = %f, est_count = %d\n",
@@ -831,11 +835,14 @@ void _kill_extra_growth(void) {
     IntU j;
     GrpIndex rg;
     SppIndex sp;
+#define xF_DELTA (20*F_DELTA)
+#define xD_DELTA (20*D_DELTA)
+#define ZERO(x) \
+		( (sizeof(x) == sizeof(float)) \
+				? ((x)>-xF_DELTA && (x)<xF_DELTA) \
+						: ((x)>-xD_DELTA && (x)<xD_DELTA) )
 
     ForEachGroup(rg) {
-
-        if (!RGroup[rg]->use_extra_res)
-            continue;
 
         ForEachGroupSpp(sp, rg, j) {
             /* If the species is turned off, continue */
@@ -847,17 +854,34 @@ void _kill_extra_growth(void) {
                 continue;
             //printf("s->extragrowth kill before  = %f\n", Species[sp]->extragrowth);
 
-            if (Species[sp]->extragrowth == 0.0) continue;
-            //printf("s->relsize kill before = %f\n, Species = %s \n", Species[sp]->name, Species[sp]->relsize);
-            //printf("s->extragrowth kill before  = %.9f\n", Species[sp]->extragrowth);
-
             /* Check that extragrowth <= s->relsize, otherwise relsize will 
              become negative. If not, then reset to s->relsize*/
-            Species[sp]->extragrowth = LE(Species[sp]->extragrowth, Species[sp]->relsize) ? Species[sp]->extragrowth : Species[sp]->relsize;
+            if (!ZERO(Species[sp]->extragrowth)) {
+                Species[sp]->extragrowth = LE(Species[sp]->extragrowth, Species[sp]->relsize) ? Species[sp]->extragrowth : Species[sp]->relsize;
 
-            Species_Update_Newsize(sp, -Species[sp]->extragrowth);
-            //printf("s->relsize kill after  = %f\n", Species[sp]->relsize);
-            Species[sp]->extragrowth = 0.0;
+                Species_Update_Newsize(sp, -Species[sp]->extragrowth);
+                //printf("s->relsize kill after  = %f\n", Species[sp]->relsize);
+                Species[sp]->extragrowth = 0.0;
+            }
+            /* Now FINALLY remove individuals that were killed because of fire or grazing and set 
+             * relsizes to 0, and remove the Species if the following cases are true */
+            if (ZERO(Species[sp]->relsize) || LT(Species[sp]->relsize, 0.0)) {
+                // printf("s->relsize in _kill_extra_growth check1 before = %f\n", Species[sp]->relsize);
+                Species[sp]->relsize = 0.0;
+                RGroup[rg]->relsize = 0.0;
+                // printf("s->relsize in _kill_extra_growth check1 after = %f\n", Species[sp]->relsize);
+
+                IndivType *p1 = Species[sp]->IndvHead, *t1;
+                while (p1) {
+                    t1 = p1->Next;
+                    _delete(p1);
+                    p1 = t1;
+                }
+                rgroup_DropSpecies(sp);
+            }
         }
     }
+#undef xF_DELTA
+#undef xD_DELTA
+#undef ZERO    
 }
