@@ -195,59 +195,75 @@ void mort_Main( Bool *killed) {
 }
 
 /***********************************************************/
-void mort_EndOfYear( void)
-{
-/*======================================================*/
-/* PURPOSE */
-/* Implements killing of plants through fire or another event
- * that would result in mortality in single year (killyr) or
- * extirpation (extirp) where plants are killed and do not return. */
+void mort_EndOfYear(void) {
+    /*======================================================*/
+    /* PURPOSE */
+    /* Implements killing of plants through fire or another event
+     * that would result in mortality in single year (killyr) or
+     * extirpation (extirp) where plants are killed and do not return. */
 
-	//printf("inside mort_EndOfYear() \n");
-	GrpIndex rg;
-	GroupType *g;
+    //printf("inside mort_EndOfYear() \n");
+    GrpIndex rg;
+    GroupType *g;
+    SppIndex sp;
+    IntU j;
 
-	ForEachGroup(rg)
-	{
-		if (Globals.currYear < RGroup[rg]->startyr)
-		{
-			/* don't start trying to kill or grow or do grazing until RGroup[rg]->startyr year */
-			continue;
-		}
+    ForEachGroup(rg) {
+        if (Globals.currYear < RGroup[rg]->startyr) {
+            /* don't start trying to kill or grow or do grazing until RGroup[rg]->startyr year */
+            continue;
+        }
 
-		g = RGroup[rg];
+        g = RGroup[rg];
 
-		if ((Globals.currYear >= g->killfreq_startyr) && GT(g->killfreq, 0.))
-		{
-			if (LT(g->killfreq, 1.0))
-			{
-				if (RandUni() <= g->killfreq)
-				{
-					g->killyr = Globals.currYear;
-				}
+        if ((Globals.currYear >= g->killfreq_startyr) && GT(g->killfreq, 0.)) {
+            if (LT(g->killfreq, 1.0)) {
+                if (RandUni() <= g->killfreq) {
+                    g->killyr = Globals.currYear;
+                }
 
-			}
-			else if (((Globals.currYear - g->killfreq_startyr) % (IntU) g->killfreq) == 0)
-			{
-				g->killyr = Globals.currYear;
-			}
+            } else if (((Globals.currYear - g->killfreq_startyr) % (IntU) g->killfreq) == 0) {
+                g->killyr = Globals.currYear;
+            }
 
-		}
+        }
 
-		if (Globals.currYear == RGroup[rg]->extirp)
-		{
-			rgroup_Extirpate(rg);
-		}
-		else if (Globals.currYear == RGroup[rg]->killyr)
-		{
-			RGroup_Kill(rg);
-		}
+        if (Globals.currYear == RGroup[rg]->extirp) {
+            rgroup_Extirpate(rg);
+        } else if (Globals.currYear == RGroup[rg]->killyr) {
+            RGroup_Kill(rg);
+        }
 
-    /*printf("'mort_EndOfYear': Group = %s, relsize = %f, est_count = %d\n",
-      RGroup[rg]->name, RGroup[rg]->relsize, RGroup[rg]->est_count);
-    */
+        /*printf("'mort_EndOfYear': Group = %s, relsize = %f, est_count = %d\n",
+          RGroup[rg]->name, RGroup[rg]->relsize, RGroup[rg]->est_count);
+         */
 
-	}
+        /* If the current year is a fire year, then remove extra_growth here
+        instead of in _kill_extra_growth called in ST_main.c. Otherwise, 
+        biomass will be non-zero in a fire year with complete killing */
+        if (Globals.currYear == RGroup[rg]->killyr) {
+            if (!RGroup[rg]->use_extra_res)
+                continue;
+
+            ForEachGroupSpp(sp, rg, j) {
+                /* If the species is turned off, continue */
+                if (!Species[sp]->use_me)
+                    continue;
+
+                //printf("s->extragrowth kill before  = %f\n", Species[sp]->extragrowth);
+
+                if (ZRO(Species[sp]->extragrowth)) continue;
+                //printf("s->relsize kill before = %f\n, Species = %s \n", Species[sp]->name, Species[sp]->relsize);
+                //printf("s->extragrowth kill before  = %f\n", Species[sp]->extragrowth);
+
+                Species[sp]->extragrowth = LE(Species[sp]->extragrowth, Species[sp]->relsize) ? Species[sp]->extragrowth : Species[sp]->relsize;
+
+                Species_Update_Newsize(sp, -Species[sp]->extragrowth);
+                //printf("s->relsize kill after  = %f\n", Species[sp]->relsize);
+                Species[sp]->extragrowth = 0.0;
+            }
+        }
+    }
 
 }
 
@@ -838,9 +854,9 @@ void _kill_extra_growth(void) {
 #define xF_DELTA (20*F_DELTA)
 #define xD_DELTA (20*D_DELTA)
 #define ZERO(x) \
-		( (sizeof(x) == sizeof(float)) \
-				? ((x)>-xF_DELTA && (x)<xF_DELTA) \
-						: ((x)>-xD_DELTA && (x)<xD_DELTA) )
+                ( (sizeof(x) == sizeof(float)) \
+                                ? ((x)>-xF_DELTA && (x)<xF_DELTA) \
+                                                : ((x)>-xD_DELTA && (x)<xD_DELTA) )
 
     ForEachGroup(rg) {
 
@@ -855,14 +871,17 @@ void _kill_extra_growth(void) {
             //printf("s->extragrowth kill before  = %f\n", Species[sp]->extragrowth);
 
             /* Check that extragrowth <= s->relsize, otherwise relsize will 
-             become negative. If not, then reset to s->relsize*/
-            if (!ZERO(Species[sp]->extragrowth)) {
+             become negative. If not, then reset to s->relsize.
+            If the current year is a fire year, return, as killing of extragrowth 
+            has already occurred in Mort_EndofYear */
+            if (!ZERO(Species[sp]->extragrowth) && Globals.currYear != RGroup[rg]->killyr) {
                 Species[sp]->extragrowth = LE(Species[sp]->extragrowth, Species[sp]->relsize) ? Species[sp]->extragrowth : Species[sp]->relsize;
 
                 Species_Update_Newsize(sp, -Species[sp]->extragrowth);
                 //printf("s->relsize kill after  = %f\n", Species[sp]->relsize);
                 Species[sp]->extragrowth = 0.0;
             }
+            
             /* Now FINALLY remove individuals that were killed because of fire or grazing and set 
              * relsizes to 0, and remove the Species if the following cases are true */
             if (ZERO(Species[sp]->relsize) || LT(Species[sp]->relsize, 0.0)) {
