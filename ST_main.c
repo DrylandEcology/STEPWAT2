@@ -582,46 +582,50 @@ static void check_log(void) {
 
 }
 
-
 void check_sizes(const char *chkpt) {
-/* =================================================== */
-/* Use this for debugging to check that the sum of the individual
- * sizes add up to the RGroup and Species relsize registers.
- * The chkpt is a string that gets output to help you know where
- * the difference was found.
- */
-  GrpIndex rg;
-  SppIndex sp;
-  IndivType *ndv;
-  int i;
-  RealF spsize, rgsize,
-        diff=.000005;    /* amount of difference allowed */
+    /* =================================================== */
+    /* Use this for debugging to check that the sum of the individual
+     * sizes add up to the RGroup and Species relsize registers.
+     * The chkpt is a string that gets output to help you know where
+     * the difference was found.
+     */
+    GrpIndex rg;
+    SppIndex sp;
+    IndivType *ndv;
+    int i;
+    RealF spsize, rgsize,
+            diff = .000005, /* amount of difference allowed */
+            diff_size = 0.0, //difference between species relsize and summed individual relsize
+            extra_diff = 0.0; //difference between diff_size and extragrowth
 
+    ForEachGroup(rg) {
 
-  ForEachGroup(rg) {
+        rgsize = 0.0;
 
-    rgsize=0.0;
-    ForEachEstSpp(sp, rg, i) {
+        ForEachEstSpp(sp, rg, i) {
 
-      spsize = 0.0;
-      ForEachIndiv(ndv, Species[sp]) spsize += ndv->relsize;
-      rgsize += spsize;
+            spsize = 0.0;
+            ForEachIndiv(ndv, Species[sp]) spsize += ndv->relsize;
+            rgsize += spsize;
 
-      if (LT(diff, fabs(spsize - Species[sp]->relsize)) ) {
-        LogError(stdout, LOGWARN, "%s (%d:%d): SP: \"%s\" size error: "
-                                  "SP=%.7f, ndv=%.7f",
-                chkpt, Globals.currIter, Globals.currYear,
-                Species[sp]->name, Species[sp]->relsize, spsize);
-      }
+            if (LT(diff, fabs(spsize - Species[sp]->relsize))) {
+                LogError(stdout, LOGWARN, "%s (%d:%d): SP: \"%s\" size error: "
+                        "SP=%.7f, ndv=%.7f",
+                        chkpt, Globals.currIter, Globals.currYear,
+                        Species[sp]->name, Species[sp]->relsize, spsize);
+                diff_size = Species[sp]->relsize - spsize;
+                extra_diff = diff - Species[sp]->extragrowth;
+                //printf("diff considering extragrowth  = %.8f\n, Species = %s \n", extra_diff, Species[sp]->name);
+            }
+        }
+
+        if (LT(diff, fabs(rgsize - RGroup[rg]->relsize))) {
+            LogError(stdout, LOGWARN, "%s (%d:%d): RG \"%s\" size error: "
+                    "RG=%.7f, ndv=%.7f",
+                    chkpt, Globals.currIter, Globals.currYear,
+                    RGroup[rg]->name, RGroup[rg]->relsize, rgsize);
+        }
     }
-
-    if ( LT(diff, fabs(rgsize -RGroup[rg]->relsize)) ) {
-      LogError(stdout, LOGWARN, "%s (%d:%d): RG \"%s\" size error: "
-                                "RG=%.7f, ndv=%.7f",
-              chkpt, Globals.currIter, Globals.currYear,
-              RGroup[rg]->name, RGroup[rg]->relsize, rgsize);
-    }
-  }
 
 }
 
