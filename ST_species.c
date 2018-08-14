@@ -484,8 +484,8 @@ void Species_Proportion_Grazing(const SppIndex sp, RealF proportionGrazing)
 
 	/*======================================================*/
 	/* PURPOSE */
-	/* Proportion Grazing on all individuals and on the extra growth stored in
-	/* Species->extragrowth. */
+	/* Proportion Grazing on all individuals and on the extra growth that 
+         * resulted from extra resources this year,stored in Species->extragrowth. */
 	 /* HISTORY */
 	/* AT  1st Nov 2015 -Added Species Proportion Grazing for all even for annual */
 	/* 14 August 2018 -CH -Added functionality to graze the species' extra growth. */
@@ -509,7 +509,7 @@ void Species_Proportion_Grazing(const SppIndex sp, RealF proportionGrazing)
 	Species[sp]->extragrowth -= loss;	// remove the loss from extragrowth 
 	Species_Update_Newsize(sp, -loss);	// remove the loss from Species
 
-	//do proportional Grazing adjustment for all the species.
+	//do proportional grazing adjustment on normal growth for all individuals in each species.
 	IndivType *t, *p = Species[sp]->IndvHead;
 	while (p) //while p points to an individual
 	{
