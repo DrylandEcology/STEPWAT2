@@ -497,6 +497,12 @@ void Species_Proportion_Grazing(const SppIndex sp, RealF proportionGrazing)
 		( (sizeof(x) == sizeof(float)) \
 				? ((x)>-xF_DELTA && (x)<xF_DELTA) \
 						: ((x)>-xD_DELTA && (x)<xD_DELTA) )
+	
+	//CH- extra growth is only stored at the species level. This will graze extra
+	//    growth for the whole species.
+	RealF loss = Species[sp]->extragrowth * proportionGrazing;
+	Species[sp]->extragrowth -= loss;
+	Species_Update_Newsize(sp, -loss);	
 
 	IndivType *p = Species[sp]->IndvHead, *t;
 	//do proportional Grazing adjustment for all the species individuals irrespective of being annual or perennial, both will have this effect

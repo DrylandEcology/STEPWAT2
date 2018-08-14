@@ -59,6 +59,7 @@ struct indiv_st {
        res_extra,    /* resource applied to superficial growth */
        pr,           /* ratio of resources required to amt available */
        growthrate,   /* actual growth rate*/
+       normal_growth, /* Chandler- biomass the plant gained this year, excluding superfluous biomass */
        prob_veggrow; /* set when killed; 0 if not clonal*/
   struct indiv_st *Next, *Prev;  /* facility for linked list 8/3/01 */
 };
