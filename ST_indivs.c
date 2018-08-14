@@ -254,13 +254,12 @@ void indiv_proportion_Grazing( IndivType *ndv, RealF proportionGrazing)
 {
     /*======================================================*/
     /* PURPOSE */
-    /* Do individual grazing proportionally and adjust relative sizes of the
+    /* Implement grazing for each individual and adjust relative sizes of the
      * RGroup and Species downward proportionally by amount of growth the 
-     * individual experienced this year.
-     * Also keep up with survivorship data.
-     */
+     * individual experienced this year. Also keep up with survivorship data.*/
     /* HISTORY */
     /* 1st Nov 2015- AT */
+    /* 14th Aug 2018 - CH */
     /*------------------------------------------------------*/
 
 #define xF_DELTA (20*F_DELTA)
@@ -269,7 +268,6 @@ void indiv_proportion_Grazing( IndivType *ndv, RealF proportionGrazing)
 	( (sizeof(x) == sizeof(float)) \
 			? ((x)>-xF_DELTA && (x)<xF_DELTA) \
 					: ((x)>-xD_DELTA && (x)<xD_DELTA) )
-
 
     RealF grazing_reduce = -(ndv->normal_growth * proportionGrazing);
     //	printf("inside indiv_proportion_Grazing() old indiv rel_size=%f, grazing_reduce=%f \n",ndv->relsize,grazing_reduce);
