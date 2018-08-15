@@ -485,6 +485,7 @@ void rgroup_Grow(void) {
                 ndv->relsize += growth1;
                 //printf("new ndv->relsize  = %f\n, Species = %s \n", Species[sp]->name,ndv->relsize);
 
+		// Saving normal growth for use in grazing.
 		ndv->normal_growth = growth1;
 
                 ndv->growthrate = rate1;
