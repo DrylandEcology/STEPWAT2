@@ -484,12 +484,11 @@ void Species_Proportion_Grazing(const SppIndex sp, RealF proportionGrazing)
 
 	/*======================================================*/
 	/* PURPOSE */
-	/* Proportion Grazing all established individuals in a species at Grazing year.
-	 * Note the special loop construct.  we have to save the
-	 * pointer to next prior to killing because the object
-	 * is deleted. */
+	/* Proportion Grazing on all individuals and on the extra growth that 
+         * resulted from extra resources this year,stored in Species->extragrowth. */
 	 /* HISTORY */
 	/* AT  1st Nov 2015 -Added Species Proportion Grazing for all even for annual */
+	/* 14 August 2018 -CH -Added functionality to graze the species' extra growth. */
 	/*------------------------------------------------------*/
 #define xF_DELTA (20*F_DELTA)
 #define xD_DELTA (20*D_DELTA)
@@ -497,14 +496,26 @@ void Species_Proportion_Grazing(const SppIndex sp, RealF proportionGrazing)
 		( (sizeof(x) == sizeof(float)) \
 				? ((x)>-xF_DELTA && (x)<xF_DELTA) \
 						: ((x)>-xD_DELTA && (x)<xD_DELTA) )
+	
+	//CH- extra growth is only stored at the species level. This will graze extra
+	//    growth for the whole species.
+	//    loss represents the proportion of extragrowth that is eaten by livestock
+	RealF loss = Species[sp]->extragrowth * proportionGrazing;
 
-	IndivType *p = Species[sp]->IndvHead, *t;
-	//do proportional Grazing adjustment for all the species individuals irrespective of being annual or perennial, both will have this effect
-	while (p)
+	//CH- To make sure that _kill_extra_growth() does not remove too much biomass
+	//    I subtracted loss from both extragrowth and Species relsize.
+	//    This way when the extra growth is removed it will have already lost the 
+	//    proportion due to grazing.
+	Species[sp]->extragrowth -= loss;	// remove the loss from extragrowth 
+	Species_Update_Newsize(sp, -loss);	// remove the loss from Species
+
+	//do proportional grazing adjustment on normal growth for all individuals in each species.
+	IndivType *t, *p = Species[sp]->IndvHead;
+	while (p) //while p points to an individual
 	{
-		t = p->Next;
+		t = p->Next; //must store Next since p might be deleted at any time.
 		indiv_proportion_Grazing(p, proportionGrazing);
-		p = t;
+		p = t; //move to the next plant.
 	}
 
 	if (ZERO(Species[sp]->relsize) || LT(Species[sp]->relsize, 0.0))
