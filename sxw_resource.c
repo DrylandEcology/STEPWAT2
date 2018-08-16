@@ -22,6 +22,7 @@
 
 #include <stdio.h>
 #include "generic.h"
+#include "rands.h"
 #include "filefuncs.h"
 #include "myMemory.h"
 #include "ST_steppe.h"
@@ -72,6 +73,11 @@ extern
 
 extern
   RealF _bvt;
+
+/* ------ Running Averages ------ */
+extern
+  RealF transp_running_average;
+  RealF transp_ratio_running_average;
 
 //void _print_debuginfo(void);
 
@@ -273,6 +279,58 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
 
     TranspRemaining = sumTranspTotal - sumUsedByGroup;
     //printf(" sumTranspTotal=%f, sumUsedByGroup=%f  TranspRemaining=%f \n",sumTranspTotal,sumUsedByGroup,TranspRemaining);
+
+    /* ------------- Begin testing to see if additional transpiration is necessary ------------- */
+    // Determines if the current year transpiration/ppt is greater than 1 standard deviation away
+    // from the mean. If TRUE, add additional transpiration.
+    RealF ratio = sumTranspTotal / SXW.ppt;
+    RealF sum_of_squares, sd, add_transp = 0;
+    RealF old_ratio_average = transp_ratio_running_average;
+    
+    if(Globals.currYear > 0) //no transpiration happens prior to year 1.
+    {
+        // update the running averages.
+        transp_running_average = get_running_mean(Globals.currYear, transp_running_average, sumTranspTotal);
+        transp_ratio_running_average = get_running_mean(Globals.currYear, transp_ratio_running_average, ratio);
+	
+        // calculate the running standard deviation
+        sum_of_squares = get_running_sqr(old_ratio_average, transp_ratio_running_average, ratio);
+        sd = final_running_sd(Globals.currYear, sum_of_squares);
+
+        // if this years transpiration is notably low (2 sd below the mean)
+        if(ratio < (transp_ratio_running_average - 2 * sd))
+        {
+            // variance must be less than (mean * (1 - mean)) to meet the assumptions of a beta distribution.
+            if(pow(sd, 2) < (transp_ratio_running_average * (1 - transp_ratio_running_average)))
+            {
+                float alpha = ((pow(transp_ratio_running_average,2) - pow(transp_ratio_running_average,3)) /
+                               pow(sd,2)) - transp_running_average;
+                float beta = (alpha / transp_ratio_running_average) - alpha;
+
+                if(alpha < 1.0)
+                {
+                    // 0 < alpha < 1 could be an issue, but would not crash the program
+                    LogError(logfp, LOGWARN, "Year %d, transpiration ratio alpha less than 1: %f\n",
+                             Globals.currYear, alpha);
+                }
+                if(beta < 1.0)
+                {
+                    // 0 < beta < 1 could be an issue, but would not crash the program
+                    LogError(logfp, LOGWARN, "Year %d, transpiration ratio beta less than 1: %f\n",
+                             Globals.currYear, beta);
+                }
+                add_transp = (1 - ratio / RandBeta(alpha,beta)) * transp_running_average;
+                
+            } else { //If trying to create a beta distribution would cause the program to crash
+                LogError(logfp, LOGWARN, 
+                         "Year %d, transpiration ratio variance does not meet beta distribution assumption.\n",
+                         Globals.currYear);
+            }
+        }
+    }
+		//TODO: If water should be added, figure out how to do so.
+
+    /* ------------ End testing to see if additional transpiration is necessary ---------- */
 
     ForEachGroup(g)
     {

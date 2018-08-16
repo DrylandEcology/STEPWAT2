@@ -108,7 +108,9 @@ RealD * _roots_max,     /* read from root distr. file */
 /* curr/equ gives the available/required ratio */
 RealF _resource_cur[MAX_RGROUPS],  /* current resource utilization */
       _resource_cur_swa[MAX_RGROUPS],
-      _resource_pr[MAX_RGROUPS];   /* resource convertable to PR */
+      _resource_pr[MAX_RGROUPS],   /* resource convertable to PR */
+      transp_running_average, /* used to determine if additional transpiration is necessary */
+      transp_ratio_running_average; /* used to calculate added transpiration if necessary */
 
 #ifdef SXW_BYMAXSIZE
 /* addition to meet changes specified at the top of the file */
