@@ -281,6 +281,7 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
     //printf(" sumTranspTotal=%f, sumUsedByGroup=%f  TranspRemaining=%f \n",sumTranspTotal,sumUsedByGroup,TranspRemaining);
 
     /* ------------- Begin testing to see if additional transpiration is necessary ------------- */
+
     // Determines if the current year transpiration/ppt is greater than 1 standard deviation away
     // from the mean. If TRUE, add additional transpiration.
     RealF ratio = sumTranspTotal / SXW.ppt;
@@ -297,12 +298,13 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
         sum_of_squares = get_running_sqr(old_ratio_average, transp_ratio_running_average, ratio);
         sd = final_running_sd(Globals.currYear, sum_of_squares);
 
-        // if this years transpiration is notably low (2 sd below the mean)
+        // if this year's transpiration is notably low (2 sd below the mean)
         if(ratio < (transp_ratio_running_average - 2 * sd))
         {
             // variance must be less than (mean * (1 - mean)) to meet the assumptions of a beta distribution.
             if(pow(sd, 2) < (transp_ratio_running_average * (1 - transp_ratio_running_average)))
             {
+                // Variables needed for a beta distribution
                 float alpha = ((pow(transp_ratio_running_average,2) - pow(transp_ratio_running_average,3)) /
                                pow(sd,2)) - transp_running_average;
                 float beta = (alpha / transp_ratio_running_average) - alpha;
@@ -319,6 +321,8 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
                     LogError(logfp, LOGWARN, "Year %d, transpiration ratio beta less than 1: %f\n",
                              Globals.currYear, beta);
                 }
+
+                //This transpiration will be added to each group
                 add_transp = (1 - ratio / RandBeta(alpha,beta)) * transp_running_average;
                 
             } else { //If trying to create a beta distribution would cause the program to crash
@@ -328,9 +332,12 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
             }
         }
     }
-		//TODO: If water should be added, figure out how to do so.
-
+  
     /* ------------ End testing to see if additional transpiration is necessary ---------- */
+
+    // Adds the addition to the remaining transpiration so it can be distributed to each group.
+    // If no transpiration was needed then add_transp = 0.
+    TranspRemaining += add_transp;
 
     ForEachGroup(g)
     {
