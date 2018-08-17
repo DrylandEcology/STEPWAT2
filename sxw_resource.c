@@ -230,6 +230,9 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
 	int t;
 	RealD *transp;
 	RealF sumUsedByGroup = 0., sumTranspTotal = 0., TranspRemaining = 0.;
+        RealF transp_ratio, add_transp = 0;
+        RealF transp_ratio_sum_of_squares, transp_ratio_sd;
+        RealF old_ratio_average = transp_ratio_running_average;
 
 	ForEachGroup(g) //Steppe functional group
 	{
@@ -280,42 +283,44 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
     TranspRemaining = sumTranspTotal - sumUsedByGroup;
     //printf(" sumTranspTotal=%f, sumUsedByGroup=%f  TranspRemaining=%f \n",sumTranspTotal,sumUsedByGroup,TranspRemaining);
 
+    transp_ratio = sumTranspTotal / SXW.ppt;
+
     /* ------------- Begin testing to see if additional transpiration is necessary ------------- */
 
     // Determines if the current year transpiration/ppt is greater than 1 standard deviation away
     // from the mean. If TRUE, add additional transpiration.
-    RealF ratio = sumTranspTotal / SXW.ppt;
-    RealF sum_of_squares, sd, add_transp = 0;
-    RealF old_ratio_average = transp_ratio_running_average;
-    
     if(Globals.currYear > 0) //no transpiration happens prior to year 1.
     {
         // update the running averages.
         transp_running_average = get_running_mean(Globals.currYear, transp_running_average, sumTranspTotal);
-        transp_ratio_running_average = get_running_mean(Globals.currYear, transp_ratio_running_average, ratio);
-	
+        transp_ratio_running_average = get_running_mean(Globals.currYear, transp_ratio_running_average,
+                                                        transp_ratio);
+//printf("Transpiration ratio average: %f\t Transpiration average: %f\n",transp_ratio_running_average, transp_running_average);
         // calculate the running standard deviation
-        sum_of_squares = get_running_sqr(old_ratio_average, transp_ratio_running_average, ratio);
-        sd = final_running_sd(Globals.currYear, sum_of_squares);
+        transp_ratio_sum_of_squares = get_running_sqr(old_ratio_average, transp_ratio_running_average,
+                                                      transp_ratio);
+        transp_ratio_sd = final_running_sd(Globals.currYear, transp_ratio_sum_of_squares);
 
         // if this year's transpiration is notably low (2 sd below the mean)
-        if(ratio < (transp_ratio_running_average - 2 * sd))
+        if(transp_ratio < (transp_ratio_running_average - 2 * transp_ratio_sd))
         {
+//printf("Year %d: ratio below 2 sd. ratio = %f, average = %f, sd = %f\n",Globals.currYear, ratio,transp_ratio_running_average, transp_ratio_sd);
             // variance must be less than (mean * (1 - mean)) to meet the assumptions of a beta distribution.
-            if(pow(sd, 2) < (transp_ratio_running_average * (1 - transp_ratio_running_average)))
+            if(pow(transp_ratio_sd, 2) < (transp_ratio_running_average * (1 - transp_ratio_running_average)))
             {
                 // Variables needed for a beta distribution
                 float alpha = ((pow(transp_ratio_running_average,2) - pow(transp_ratio_running_average,3)) /
-                               pow(sd,2)) - transp_running_average;
+                               pow(transp_ratio_sd,2)) - transp_ratio_running_average;		
+//printf("alpha: %f\tsd^2: %f\n", alpha,pow(transp_ratio_sd,2));
                 float beta = (alpha / transp_ratio_running_average) - alpha;
 
-                if(alpha < 1.0)
+                if(alpha < 1.0) // alpha > 0 guaranteed by previous if statement.
                 {
                     // 0 < alpha < 1 could be an issue, but would not crash the program
                     LogError(logfp, LOGWARN, "Year %d, transpiration ratio alpha less than 1: %f\n",
                              Globals.currYear, alpha);
                 }
-                if(beta < 1.0)
+                if(beta < 1.0) // beta > 0 guaranteed by previous if statement.
                 {
                     // 0 < beta < 1 could be an issue, but would not crash the program
                     LogError(logfp, LOGWARN, "Year %d, transpiration ratio beta less than 1: %f\n",
@@ -323,7 +328,8 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
                 }
 
                 //This transpiration will be added to each group
-                add_transp = (1 - ratio / RandBeta(alpha,beta)) * transp_running_average;
+                add_transp = (1 - transp_ratio / RandBeta(alpha,beta)) * transp_running_average;
+//printf("Year %d:\tTranspiration to add: %f\n",Globals.currYear,add_transp);
                 
             } else { //If trying to create a beta distribution would cause the program to crash
                 LogError(logfp, LOGWARN, 
@@ -337,6 +343,7 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
 
     // Adds the addition to the remaining transpiration so it can be distributed to each group.
     // If no transpiration was needed then add_transp = 0.
+//printf("TranspRemaining: %f\tTranspRemaining+add_transp: %f\n",TranspRemaining,add_transp+TranspRemaining);
     TranspRemaining += add_transp;
 
     ForEachGroup(g)
