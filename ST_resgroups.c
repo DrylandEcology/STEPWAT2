@@ -60,8 +60,7 @@ void rgroup_PartResources(void) {
     /* Partition resources for this year among the resource
     groups. The allocation happens in three steps: basic
     group allocation, partitioning of extra resources in _res_part_extra(),
-    and further partitioning to individuals in the group _ResPartIndiv().
-    See COMMENT 1. at the end of this file for the algorithm.*/
+    and further partitioning to individuals in the group _ResPartIndiv(). */
 
     GrpIndex rg;
     Bool noplants = TRUE;
@@ -70,13 +69,15 @@ void rgroup_PartResources(void) {
     /* ----- distribute basic (minimum) resources */
     ForEachGroup(rg) {
         g = RGroup[rg];
-
+        
+        //Set resources available and resources required for each resource group
         g->res_required = RGroup_GetBiomass(rg);
         g->res_avail = SXW_GetTranspiration(rg);
         //printf("g->res_avail = %f\n,Group = %s \n",RGroup[rg]->name,  g->res_avail);
         //printf("g->res_required = %f\n,Group = %s \n",RGroup[rg]->name,  g->res_required);
 
-        //A check and reset of res_required and res_avail, this should never happen
+        /* A check, which should not happen. Res_required is set to the number of
+        established individuals for the species */
         if (ZRO(g->res_avail) && g->res_required > 0) {
             //printf("'rgroup_PartResources': Group = %s(%d) error with res (relsize = %f, pr = %f): \n",
             //    g->name, rg, g->relsize, g->pr);
@@ -111,7 +112,7 @@ void rgroup_PartResources(void) {
     if (noplants)
         return;
 
-    //partition resources to individuals and determine 'extra' resources
+    //Partition resources to individuals and determine 'extra' resources
     rgroup_ResPartIndiv();
 }
 
@@ -213,7 +214,9 @@ static void _res_part_extra(RealF extra, RealF size[]) {
     /*======================================================*
      * PURPOSE *
      * Partitions "extra" resources to other groups that can use them
-     * (if any).*/
+     * (if any). 
+     * HISTORY *
+     * Updated by KAP 5/2018 */
 
     GrpIndex rg;
     GroupType *g; /* shorthand for RGroup[rg] */
@@ -267,14 +270,14 @@ static void _res_part_extra(RealF extra, RealF size[]) {
 }
 /***********************************************************/
 void rgroup_ResPartIndiv(void) {
-    /* The PR value used in the growth loop is now at the
-     individual level rather than the group level, so the
-     resource availability for the group is divided between
-     individuals of the group, largest to smallest. Species
-     distinctions within the group are ignored.The partitioning of resources
-     to individuals is done proportionally based on size so that individuals
-     should get more resources than their less-developed competitors.
-     Chris Bennett @ LTER-CSU 12/21/2000*/
+    /* Resources at the functional group level are divided among individuals in 
+     * the group, largest to smallest. Species distinctions within the group are 
+     * ignored. The partitioning of resources to individuals is done proportionally 
+     * based on size so that large individuals get more resources than their 
+     * less-developed competitors.
+     * HISTORY:
+     * Chris Bennett @ LTER-CSU 12/21/2000
+     * Updated by KAP 5/2018 */
 
     GrpIndex rg;
     GroupType *g; /* shorthand for RGroup[rg] */
@@ -285,16 +288,16 @@ void rgroup_ResPartIndiv(void) {
     IntS numindvs, n;
     RealF base_rem = 0., /* remainder of resource after allocating to an indiv */
             xtra_obase = 0., /* summed extra resources across all groups */
-            size_base[MAX_RGROUPS] = {0}, /* total res. contrib to base, all groups */
-    		size_obase[MAX_RGROUPS] = {0}; /* total res. contrib. if xtra_obase */
+            size_base[MAX_RGROUPS] = {0}, /* biomass of the functional group */
+    		size_obase[MAX_RGROUPS] = {0}; /* biomass of functional groups that can use extra resources */
 
-    /* -- apportion each group's normal resources to individuals */
+    /* Divide each group's normal resources to individuals */
     ForEachGroup(rg) {
         g = RGroup[rg];
         if (g->est_count == 0)
             continue;
 
-        /* --- allocate the temporary group-oriented arrays */
+        /* Allocate the temporary group-oriented arrays */
         indivs = RGroup_GetIndivs(rg, SORT_D, &numindvs);
 
         /* Set resources available at the group level to base_rem */
@@ -320,12 +323,12 @@ void rgroup_ResPartIndiv(void) {
             }
         } /* end ForEachEstSpp() */
 
-        //sum "extra" resources for all functional groups
+        /* Sum "extra" resources for all functional groups */
         xtra_obase += base_rem;
         //printf("xtra_obase = %f\n", xtra_obase);
 
-        /*check to see if each functional group can use extra resources,
-        if so, then pass the biomass of the FG, otherwise pass 0 in _res_part_extra */
+        /* Check to see if each functional group can use extra resources. If so,
+         * then pass the biomass of the FG, otherwise pass 0 into _res_part_extra */
         size_base[rg] = RGroup_GetBiomass(rg);
         size_obase[rg] = (g->use_extra_res) ? size_base[rg] : 0.;
         //printf("size_obase = %f\n", size_obase[rg]);
@@ -334,10 +337,10 @@ void rgroup_ResPartIndiv(void) {
 
     } /* end ForEachGroup() */
 
-    //assign extra resources to functional groups that can use them
+    /* Assign extra resources to functional groups that can use them */
     _res_part_extra(xtra_obase, size_obase);
 
-    /* now loop back through all individuals in each group, assign extra resource
+    /* Now loop back through all individuals in each group, assign extra resource
      * and calculate PR at the individual level. This extra resource will be used to
      * increment plant sizes. Extra resources that apply to superfluous biomass increment
      * that will ultimately be killed at the end of the year is assigned in _extra_growth */
@@ -354,41 +357,43 @@ void rgroup_ResPartIndiv(void) {
 
         //printf("g->res_extra = %f\n, RGroup= %s \n", RGroup[rg]->name, g->res_extra);
 
-        /* --- allocate the temporary group-oriented arrays */
+        /* Allocate the temporary group-oriented arrays */
         indivs = RGroup_GetIndivs(rg, SORT_D, &numindvs);
 
         ForEachEstSpp(sp, rg, j) {
 
-            /* --- compute PR, but on the way, assign extra resource */
+            /* Compute PR at the individual level and assign extra resources */
             for (n = 0; n < numindvs; n++) {
                 ndv = indivs[n];
 
                     //printf("ndv->res_avail before  = %f\n", ndv->res_avail);
 
-                    // if individuals already have the resources they require do not assign extra
+                    /* If individuals already have the resources they require do 
+                     * not assign extra */
                     if (ndv->res_avail == ndv->res_required) {
                         ndv->res_extra = 0.0;
                         //printf("ndv->res_extra = %f\n", ndv->res_extra);
                     }
-                        /* assign extra resource as the difference of what is required
-                         * by the individual - what was assigned to the individual through
-                         * partitioning of normal resources */
+                    
+                    /* Assign extra resource as the difference of what is required
+                    * by the individual using what was assigned to the individual 
+                    * through partitioning of normal resources */
                     else {
                         ndv->res_extra = fmin(ndv->res_required - ndv->res_avail, g->res_extra);
                         //printf("ndv->res_required = %f\n", ndv->res_required);
                         //printf("ndv->res_avail = %f\n", ndv->res_avail);
                         //printf("ndv->res_extra = %f\n", ndv->res_extra);
 
-                        /* Updated resources available for each individual to include extra*/
+                        /* Updated resources available for each individual to include extra */
                         ndv->res_avail += ndv->res_extra;
                         //printf("ndv->res_avail after = %f\n", ndv->res_avail);
 
-                        /* Remaining extra resources */
+                        /* Remaining extra resources to be used for superfluous growth */
                         g->res_extra = fmax(g->res_extra - ndv->res_extra, 0.);
                         //printf("g->res_extra in loop = %f\n,Group = %s \n",RGroup[rg]->name,  g->res_extra);
                     }
 
-                /* Calculate the PR value, or dflt to 100, used in growth module */
+                /* Calculate the PR value, or dflt to 100. Used in growth module */
                 ndv->pr = GT(ndv->res_avail, 0.) ? ndv->res_required / ndv->res_avail : 100.;
                 //printf("ndv->pr  = %f\n", ndv->pr);
             }
@@ -406,7 +411,6 @@ void rgroup_Grow(void) {
     /*======================================================*
      * PURPOSE *
      * Main loop to grow all the plants.
-     *
      * HISTORY *
      * Chris Bennett @ LTER-CSU 6/15/2000
      *  7-Nov-03 (cwb) Annuals have a completely new method of
@@ -414,15 +418,16 @@ void rgroup_Grow(void) {
      *     aren't subject to the growth mechanism here, so they
      *     are now excluded from this code.  All of the annual
      *     generation occurs in the PartResources() function.
-     *  7/13/2016 This comment by cwb is now outdated. We had added
-     * functionality so that annuals now grow on an annual basis.*/
+     *  7/13/2016 KAP: This comment by cwb is now outdated. We had added
+     * functionality so that annuals now grow on an annual basis.
+     * Updated by KAP 5/2018 */
 
     IntU j;
     GrpIndex rg;
     SppIndex sp;
     GroupType *g;
     SpeciesType *s;
-    const RealF OPT_SLOPE = .05; /*from Coffin and Lauenroth 1990, EQN 5 */
+    const RealF OPT_SLOPE = .05; /* from Coffin and Lauenroth 1990, EQN 5 */
     RealF growth1, /* growth of one individual */
             sppgrowth, /* sum of growth for a species' indivs */
             rate1, /* rate of growth for an individual */
@@ -436,11 +441,11 @@ void rgroup_Grow(void) {
         if (g->est_count == 0)
             continue;
 
-        /* can't grow succulents if a wet year, so skip this group */
+        /* Succulents can't grow if it is a wet year, so skip */
         if (g->succulent && Env.wet_dry == Ppt_Wet)
             continue;
 
-        /* grow individuals and increment size */
+        /* Increment size of each individual in response to normal resources */
         ForEachEstSpp(sp, rg, j) {
             s = Species[sp];
 
@@ -456,26 +461,30 @@ void rgroup_Grow(void) {
             if (s->tempclass != NoSeason)
                 tgmod = Env.temp_reduction[s->tempclass];
 
-            /* now grow the individual plants of current species*/
+            /* Now increase size of the individual plants of current species */
             ForEachIndiv(ndv, s) {
-                /* Modify growth rate based on resource availability. Values for gmod range
-                between 0.05 and 0.95 similiar to Coffin and Lauenroth 1990 */
+                /* Growth rate (gmod) initially set to 0.95. Values for gmod range
+                between 0.05 and 0.95 similar to Coffin and Lauenroth 1990 */
                 gmod = 1.0 - OPT_SLOPE;
-
+                
+                /* Reduction in gmod if PR > 1 (resource limitation) */
                 if (GT(ndv->pr, 1.0))
                     gmod /= ndv->pr;
-
+                
+                /* Further modification of gmod based on this year's temperature */
                 gmod *= tgmod;
-
+                
+                /* For clonal species, if the individual appears killed it was 
+                 * reduced due to low resources last year. It can reproduce vegetatively 
+                 * this year but couldn't last year. */
                 if (ndv->killed && RandUni() < ndv->prob_veggrow) {
-                    /* if indiv appears killed it was reduced due to low resources */
-                    /* last year. it can veg. prop. this year but couldn't last year.*/
                     growth1 = s->relseedlingsize * RandUniRange(1, s->max_vegunits);
                     rate1 = growth1 / ndv->relsize;
                     ndv->killed = FALSE;
                     //printf("growth1 killed  = %f\n", growth1);
                 } else {
-                    /* normal growth: modifier times optimal growth rate (EQN 1)in Coffin and Lauenroth 1990 */
+                    /* Normal growth: modifier times optimal growth rate (EQN 1)
+                     * in Coffin and Lauenroth 1990 */
                     rate1 = gmod * s->intrin_rate * (1.0 - ndv->relsize);
                     growth1 = rate1 * ndv->relsize;
                 }
@@ -485,7 +494,7 @@ void rgroup_Grow(void) {
                 ndv->relsize += growth1;
                 //printf("new ndv->relsize  = %f\n, Species = %s \n", Species[sp]->name,ndv->relsize);
 
-		// Saving normal growth for use in grazing.
+		// Save the increment in size due to normal resources for use in the grazing module.
 		ndv->normal_growth = growth1;
 
                 ndv->growthrate = rate1;
@@ -502,7 +511,9 @@ void rgroup_Grow(void) {
             RGroup[rg]->name, RGroup[rg]->relsize); */
 
         } /* ENDFOR j (for each species)*/
-
+        
+        /* Implement growth due to extra resources which will support superfluous 
+         * increases in biomass that are ultimately removed at the end of the year */
         _extra_growth(rg);
 
     } /* END ForEachGroup(rg)*/
@@ -512,17 +523,12 @@ void rgroup_Grow(void) {
 static void _extra_growth(GrpIndex rg) {
     /*======================================================*/
     /* PURPOSE */
-    /* When there are resources beyond the minimum necessary
-     for "optimal" growth, ie, use of eqn 5, the extra
-     resources are converted to superfluous growth that
-     only counts for the current year and is removed at
-     the beginning of the next year. */
+    /* When there are resources beyond the minimum necessary for "normal" growth, 
+     * the extra resources are converted to superfluous growth in the current year 
+     * and is removed at the end of the year in _kill_extra_growth. */
     /* HISTORY */
-    /* Chris Bennett @ LTER-CSU 11/8/2000            */
-    /* 3/14/01 - made this a local function called from
-     Grow() and put killextragrowth() in Mort_*
-     3/27/01 - extra growth now occurs in individuals
-     rather than at the species level. */
+    /* Chris Bennett @ LTER-CSU 11/8/2000 */
+    /* Updated by KAP 5/2018 */
 
     Int j;
     RealF extra_ndv, indivpergram;
@@ -579,7 +585,8 @@ static void _extra_growth(GrpIndex rg) {
           Species[sp]->relsize + s->extragrowth,
           RGroup[rg]->name, rg, RGroup[rg]->relsize);
         */
-
+        
+        /* Update the species and rgroup relsizes based on extragrowth */
         Species_Update_Newsize(sp, Species[sp]->extragrowth);
 
         /*printf("%s: relsize after = %.3f || %s: relsize after = %.3f\n",

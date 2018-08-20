@@ -836,18 +836,13 @@ void _kill_annuals( void) {
 void _kill_extra_growth(void) {
     /*======================================================*
      * PURPOSE *
-     * Remove any extra growth accumulated during the growing
-       season. This should be done after all the statistics
-       are accumulated for the year.
-       Note that extra growth is not stored by the individuals
-       but only by Species and RGroup.
-      This should probably be split into separate functions
-      so the actual killing of extra growth is one function
-      that can be called from anywhere, and the looping is
-      in another function with another name.
-      That way, individual functions can kill specific
-      extra growth without affecting others.*/
+     * Remove superfluous growth due to extra resources accumulated during the 
+     * growing season. This should be done after all the statistics are accumulated 
+     * for the year. 
+     * HISTORY *
+     * Updated by KAP 5/2018 */
     /*------------------------------------------------------*/
+    
     IntU j;
     GrpIndex rg;
     SppIndex sp;
@@ -865,15 +860,15 @@ void _kill_extra_growth(void) {
             if (!Species[sp]->use_me)
                 continue;
 
-            /* Relsize for annuals has already been set to 0.0 in _kill_annuals*/
+            /* Annuals have already been killed and relsize for annuals  set to 
+             * 0.0 in _kill_annuals */
             if (Species[sp]->max_age == 1)
                 continue;
             //printf("s->extragrowth kill before  = %f\n", Species[sp]->extragrowth);
 
-            /* Check that extragrowth <= s->relsize, otherwise relsize will 
-             become negative. If not, then reset to s->relsize.
-            If the current year is a fire year, return, as killing of extragrowth 
-            has already occurred in Mort_EndofYear */
+            /* Check that extragrowth <= s->relsize, otherwise relsize will become 
+             * negative. If not, then reset to s->relsize. If the current year 
+             * is a fire year, return, as killing of extragrowth has already occurred in Mort_EndofYear */
             if (!ZERO(Species[sp]->extragrowth) && Globals.currYear != RGroup[rg]->killyr) {
                 Species[sp]->extragrowth = LE(Species[sp]->extragrowth, Species[sp]->relsize) ? Species[sp]->extragrowth : Species[sp]->relsize;
 
