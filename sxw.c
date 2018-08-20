@@ -326,10 +326,6 @@ void SXW_Run_SOILWAT (void) {
 	_sxw_sw_setup(sizes);
 #endif
 
-	// Initialize `SXW` values for current year's run:
-	SXW.aet = 0.; /* used to be in sw_setup() but it needs clearing each run */
-	memset(SXW.transp_resource, 0, sizeof(SXW.transp_resource));
-
 	//SXW_SW_Setup_Echo();
 	_sxw_sw_run();
 

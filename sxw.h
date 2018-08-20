@@ -61,11 +61,6 @@ struct stepwat_st {
         ppt,    // annual sum of soilwat's precipitation
         aet;    // annual sum of soilwat's evapotranspiration
 
-
-  // ------ Resource values partitioned by STEPWAT2:
-  // current years 'resources' partitioned to each STEPWAT resource group:
-  RealF transp_resource[MAX_RGROUPS];
-
   // ------ Size variables:
   TimeInt NPds;  /* number of transp periods= maxdays, maxweeks, maxmonths */
   IntUS NTrLyrs, /* # transp. layers taken from SOILWAT */

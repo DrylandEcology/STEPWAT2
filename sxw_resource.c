@@ -347,9 +347,6 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
         {
             use_by_group[g] += (use_by_group[g]/sumUsedByGroup) * TranspRemaining;
 //printf("for groupName= %s, after sum use_by_group[g]= %f \n",RGroup[g]->name,use_by_group[g]);
-
-            SXW.transp_resource[g] = use_by_group[g];
-//printf("for groupName= %s, SXW.transp_SWA[g] in transp= %f \n",RGroup[g]->name,SXW.transp_SWA[g]);
         }
 
         /*printf("'_transp_contribution_by_group': Group = %s, SXW.transp_SWA[g] = %f \n",
