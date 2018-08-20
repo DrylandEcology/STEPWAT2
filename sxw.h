@@ -15,13 +15,6 @@
 #ifndef SXW_DEF
 #define SXW_DEF
 
-/* comment the next line to use STEPPE-provided values
- * of biomass and size when computing SOILWAT parameters
- * or scaling transpiration.  If defined, the macro
- * sets the sizes to the maximum.
- */
-/*#define SXW_BYMAXSIZE*/
-
 // Months with a mean temperature >= base are contributing to growing season
 // precipitation:
 // Coffin & Lauenroth 1990 Ecological Modelling:

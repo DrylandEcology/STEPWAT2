@@ -147,14 +147,11 @@ static void _make_roots_arrays(void);
 static void _make_phen_arrays(void);
 static void _make_prod_arrays(void);
 static void _make_transp_arrays(void);
-//static void _recover_names(void);
 static void _read_debugfile(void);
 void _print_debuginfo(void);
 void debugCleanUp(void);
-//static void _make_swa_array(void);
 static void _make_swc_array(void);
 static void SXW_SW_Setup_Echo(void);
-//static void SXW_SW_Output_Echo(void);
 static void SXW_Reinit(void);
 
 //these last four functions are to be used in ST_grid.c
@@ -394,10 +391,6 @@ void SXW_SW_Setup_Echo(void) {
 	fprintf(f, "\n");
 	CloseFile(&f);
 }
-
-//void SXW_SW_Output_Echo() {
-//
-//}
 
 RealF SXW_GetPR( GrpIndex rg) {
 /*======================================================*/
