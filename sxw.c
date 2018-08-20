@@ -329,10 +329,10 @@ void SXW_Run_SOILWAT (void) {
 	//SXW_SW_Setup_Echo();
 	_sxw_sw_run();
 
-	/* now compute resource availability for the given plant sizes */
+	/* Now compute resource availability for each STEPPE functional group */
 	_sxw_update_resource();
 
-	/* and set environmental variables */
+	/* Set annual precipitation and annual temperature */
 	_sxw_set_environs();
 }
 
