@@ -64,16 +64,7 @@ struct stepwat_st {
 
   // ------ Resource values partitioned by STEPWAT2:
   // current years 'resources' partitioned to each STEPWAT resource group:
-  RealF transp_SWA[MAX_RGROUPS];
-
-  /* `SWA`-related resource functionality is currently not implemented because
-    the former implementation was incorrect (#133 and #138),
-    please, see https://github.com/DrylandEcology/STEPWAT2/issues/136 for
-    details.
-
-  RealF *sum_dSWA_repartitioned; // required for `_SWA_contribution_by_group`
-  */
-
+  RealF transp_resource[MAX_RGROUPS];
 
   // ------ Size variables:
   TimeInt NPds;  /* number of transp periods= maxdays, maxweeks, maxmonths */

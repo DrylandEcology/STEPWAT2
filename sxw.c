@@ -243,8 +243,6 @@ void SXW_Init( Bool init_SW, char *f_roots ) {
   _sxw_test();
   exit(0);
 #endif
-
-  //_recover_names();
 }
 
 /**
@@ -316,6 +314,7 @@ void SXW_Run_SOILWAT (void) {
  * 3/31/2003 - cwb - because we're always running soilwat to
  *             emulate full-size plants, computing roots etc
  *             gets done once during init plot.
+ * 8/20/2018 - CH - renamed SWA_transp to transp_resource
  */
 
 #ifndef SXW_BYMAXSIZE
@@ -329,7 +328,7 @@ void SXW_Run_SOILWAT (void) {
 
 	// Initialize `SXW` values for current year's run:
 	SXW.aet = 0.; /* used to be in sw_setup() but it needs clearing each run */
-	memset(SXW.transp_SWA, 0, sizeof(SXW.transp_SWA));
+	memset(SXW.transp_resource, 0, sizeof(SXW.transp_resource));
 
 	//SXW_SW_Setup_Echo();
 	_sxw_sw_run();
@@ -798,18 +797,6 @@ static void _make_transp_arrays(void) {
 	}
 }
 
-/*
-// required for function `_SWA_contribution_by_group` which uses `sum_dSWA_repartitioned`
-static void _make_swa_array(void){
-  char *fstr = "_make_swa_array()";
-  int size_sum = NVEGTYPES * MAX_DAYS * SXW.NSoLyrs;
-
-  SXW.sum_dSWA_repartitioned = (RealF *) Mem_Calloc(size_sum, sizeof(RealF), fstr);
-
-  Mem_Set(SXW.sum_dSWA_repartitioned, 0, size_sum * sizeof(RealF));
-}
-*/
-
 static void _make_swc_array(void) {
 /*======================================================*/
 /* SXW.swc holds year-to-year values and is populated in SOILWAT.
@@ -821,17 +808,6 @@ static void _make_swc_array(void) {
 
 	SXW.swc = (RealF *) Mem_Calloc(size, sizeof(RealF *), fstr);
 }
-
-
-
-/*static void _recover_names(void) {
-======================================================
-	int i;
-
-	for (i = 0; i < SXW_NFILES; i++) {
-		Mem_Free(*_sxwfiles[i]);
-	}
-}*/
 
 static void _read_debugfile(void) {
 /*======================================================*/

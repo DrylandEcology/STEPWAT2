@@ -86,9 +86,6 @@ extern
 
 static void _transp_contribution_by_group(RealF use_by_group[]);
 
-//static void _SWA_contribution_by_group(RealF use_by_group[]);
-
-
 /***********************************************************/
 /****************** Begin Function Code ********************/
 /***********************************************************/
@@ -139,7 +136,7 @@ void _sxw_update_resource(void) {
 	{
 		//RGroup[g]->veg_prod_type
 		sizes[g] = 0.;
-		//printf("_sxw_update_resource()RGroup Name= %s, RGroup[g]->regen_ok=%d \n ", RGroup[g]->name, RGroup[g]->regen_ok);
+//printf("_sxw_update_resource()RGroup Name= %s, RGroup[g]->regen_ok=%d \n ", RGroup[g]->name, RGroup[g]->regen_ok);
 		if (!RGroup[g]->regen_ok)
 			continue;
 		sizes[g] = RGroup_GetBiomass(g);
@@ -149,15 +146,12 @@ void _sxw_update_resource(void) {
 	_sxw_update_root_tables(sizes);
 	// add transpiration to `SXW.transp_SWA`:
 	_transp_contribution_by_group(_resource_cur);
-	// add SWA to `SXW.transp_SWA`:
-  //_SWA_contribution_by_group(SXW.sum_dSWA_repartitioned);
 
 	ForEachGroup(g)
 	{
-    _resource_cur[g] = SXW.transp_SWA[g];
-    //printf("for groupName= %smresource_cur prior to multiplication: %f\n",RGroup[g]->name, _resource_cur[g]);
+//printf("for groupName= %smresource_cur prior to multiplication: %f\n",RGroup[g]->name, _resource_cur[g]);
 		_resource_cur[g] = _resource_cur[g] * _bvt;
-    //printf("for groupName= %s, resource_cur post multiplication: %f\n\n",Rgroup[g]->name, _resource_cur[g]);
+//printf("for groupName= %s, resource_cur post multiplication: %f\n\n",Rgroup[g]->name, _resource_cur[g]);
 	}
 /* _print_debuginfo(); */
 }
@@ -166,7 +160,6 @@ void _sxw_update_root_tables( RealF sizes[] ) {
 /*======================================================*/
 /* sizes is a simple array that contains the groups'
  * actual biomass in grams in group order.
- *
  */
 
 	GrpIndex g;
@@ -222,7 +215,8 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
 	 * Must call _update_root_tables() before this.
 	 * Compute each group's amount of transpiration from SOILWAT2
 	 * based on its biomass, root distribution, and phenological
-	 * activity. */
+	 * activity. If transpiration is 2 standard deviations below
+	 * the mean, additional transpiration is added. */
 
 	GrpIndex g;
 	TimeInt p;
@@ -281,15 +275,15 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
 	}
 
     TranspRemaining = sumTranspTotal - sumUsedByGroup;
-    //printf(" sumTranspTotal=%f, sumUsedByGroup=%f  TranspRemaining=%f \n",sumTranspTotal,sumUsedByGroup,TranspRemaining);
-
-    transp_ratio = sumTranspTotal / SXW.ppt;
+//printf(" sumTranspTotal=%f, sumUsedByGroup=%f  TranspRemaining=%f"\n", sumTranspTotal, sumUsedByGroup, TranspRemaining);
 
     /* ------------- Begin testing to see if additional transpiration is necessary ------------- */
 
-    // Determines if the current year transpiration/ppt is greater than 1 standard deviation away
+    transp_ratio = sumTranspTotal / SXW.ppt;
+
+    // Determines if the current year transpiration/ppt is greater than 2 standard deviations away
     // from the mean. If TRUE, add additional transpiration.
-    if(Globals.currYear > 0) //no transpiration happens prior to year 1.
+    if(Globals.currYear > 0) //no transpiration happens prior to year 1. This avoids a divide by 0.
     {
         // update the running averages.
         transp_running_average = get_running_mean(Globals.currYear, transp_running_average, sumTranspTotal);
@@ -330,6 +324,10 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
                 //This transpiration will be added to each group
                 add_transp = (1 - transp_ratio / RandBeta(alpha,beta)) * transp_running_average;
 //printf("Year %d:\tTranspiration to add: %f\n",Globals.currYear,add_transp);
+
+                // Adds the additional transpiration to the remaining transpiration so it can be distributed.
+                TranspRemaining += add_transp;
+//printf("TranspRemaining: %f\tTranspRemaining+add_transp: %f\n",TranspRemaining,add_transp+TranspRemaining);
                 
             } else { //If trying to create a beta distribution would cause the program to crash
                 LogError(logfp, LOGWARN, 
@@ -341,65 +339,21 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
   
     /* ------------ End testing to see if additional transpiration is necessary ---------- */
 
-    // Adds the addition to the remaining transpiration so it can be distributed to each group.
-    // If no transpiration was needed then add_transp = 0.
-//printf("TranspRemaining: %f\tTranspRemaining+add_transp: %f\n",TranspRemaining,add_transp+TranspRemaining);
-    TranspRemaining += add_transp;
-
-    ForEachGroup(g)
+    // If there is transpiration this year add the remaining transpiration to each functional group.
+    // Else the sum of transpiration is 0. Therefore for each group there is also zero transpiration.
+    if(!ZRO(sumUsedByGroup))
     {
-        if (!ZRO(sumUsedByGroup)) {
+        ForEachGroup(g)
+        {
             use_by_group[g] += (use_by_group[g]/sumUsedByGroup) * TranspRemaining;
-            //printf("for groupName= %s, after sum use_by_group[g]= %f \n",RGroup[g]->name,use_by_group[g] );
+//printf("for groupName= %s, after sum use_by_group[g]= %f \n",RGroup[g]->name,use_by_group[g]);
 
-            SXW.transp_SWA[g] = use_by_group[g];
-            //printf("for groupName= %s, SXW.transp_SWA[g] in transp= %f \n",RGroup[g]->name,SXW.transp_SWA[g]);
+            SXW.transp_resource[g] = use_by_group[g];
+//printf("for groupName= %s, SXW.transp_SWA[g] in transp= %f \n",RGroup[g]->name,SXW.transp_SWA[g]);
         }
 
         /*printf("'_transp_contribution_by_group': Group = %s, SXW.transp_SWA[g] = %f \n",
           RGroup[g]->name, SXW.transp_SWA[g]);
         */
-
     }
 }
-
-/*======================================================*/
-/* use_by_group is the amount of plant available soil water (SWA,cm)
- * assigned to each STEPPE functional group.
- * Must call _update_root_tables() before this.
- * Compute each group's amount of SWA from SOILWAT2
- * based on its biomass, root distribution, and phenological
- * activity. */
-/*
-static void _SWA_contribution_by_group(RealF use_by_group[]) {
-
-	GrpIndex g;
-	TimeInt p;
-	LyrIndex l;
-	int t;
-	RealF sumUsedByGroup = 0.;
-
-	ForEachGroup(g) //Steppe functional group
-	{
-		use_by_group[g] = 0.;
-		t = RGroup[g]->veg_prod_type-1;
-        //printf("g, t || %d, %d\n", g, t);
-
-		ForEachTrPeriod(p)
-		{
-			for (l = 0; l < SXW.NSoLyrs; l++) {
-        //printf("%d,%d,%d\n", t,l,p);
-				use_by_group[g] += (RealF) (_roots_active_rel[Iglp(g, l, p)] * SXW.sum_dSWA_repartitioned[Ivlp(t,l,p)]);
-                //printf("for groupName= %s, layerIndex: %d, month: %d, in swa loop use_by_group[g]= %f \n",RGroup[g]->name,l,p,use_by_group[g]);
-			}
-		}
-		//printf("for groupName= %s, use_by_group[g] in swa= %f \n",RGroup[g]->name,use_by_group[g]);
-
-        sumUsedByGroup += use_by_group[g];
-        //printf(" sumUsedByGroup in swa=%f \n",sumUsedByGroup);
-
-        SXW.transp_SWA[g] += use_by_group[g];
-        //printf("SXW.transp_SWA[%d]: %f\n", g, SXW.transp_SWA[g]);
-	}
-}
-*/
