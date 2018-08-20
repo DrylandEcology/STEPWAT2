@@ -116,7 +116,13 @@ void _sxw_root_phen(void) {
 
 void _sxw_update_resource(void) {
 /*======================================================*/
-
+/* Determines resources available to each STEPPE functional group each year.
+ * The first step is to get the current biomass for each STEPPE functional group.
+ * Second, we re-calculate the relative active roots in each layer in each month
+ * using the updated functional group biomass. Third, we divide transpiration to
+ * each STEPPE functional group based on the matching of active roots in each 
+ * soil layer and month with transpiration in each layer and month. */
+  
   RealF sizes[MAX_RGROUPS] = {0.};
   GrpIndex g;
 
@@ -142,11 +148,15 @@ void _sxw_update_resource(void) {
 		sizes[g] = RGroup_GetBiomass(g);
 	}
   #endif
-
+        
+        /* Update the active relative roots based on current biomass values */
 	_sxw_update_root_tables(sizes);
-	// add transpiration to `SXW.transp_SWA`:
+        
+	/* Assign transpiration (resource availability) to each STEPPE functional group */
 	_transp_contribution_by_group(_resource_cur);
-
+        
+        /* Scale transpiration resources by a constant, bvt, to convert resources 
+         * (cm) to biomass that can be supported by those resources (g/cm) */
 	ForEachGroup(g)
 	{
 //printf("for groupName= %smresource_cur prior to multiplication: %f\n",RGroup[g]->name, _resource_cur[g]);
