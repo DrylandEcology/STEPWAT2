@@ -61,11 +61,11 @@ extern
 
 extern
        /* rgroup by layer */
-  RealD * _roots_max,     /* read from root distr. file */
-        * _roots_active_sum,
+  RealD * _roots_max,     /* root distribution with depth for STEPPE functional groups, read from input */
+        * _roots_active_sum, /* active roots in each month and soil layer for STEPPE functional groups in the current year */
 
        /* rgroup by period */
-        * _phen;          /* phenology read from file */
+        * _phen;          /* phenologic activity for each month for STEPPE functional groups, read from input */
 
 extern
   RealF _resource_pr[MAX_RGROUPS],  /* resource convertable to pr */
@@ -121,7 +121,8 @@ void _sxw_update_resource(void) {
  * Second, we re-calculate the relative active roots in each layer in each month
  * using the updated functional group biomass. Third, we divide transpiration to
  * each STEPPE functional group based on the matching of active roots in each 
- * soil layer and month with transpiration in each layer and month. */
+ * soil layer and month with transpiration in each layer and month. Finally, we 
+ * scale resources available (cm) to resources in terms of grams of biomass */
   
   RealF sizes[MAX_RGROUPS] = {0.};
   GrpIndex g;
@@ -168,9 +169,9 @@ void _sxw_update_resource(void) {
 
 void _sxw_update_root_tables( RealF sizes[] ) {
 /*======================================================*/
-/* sizes is a simple array that contains the groups'
- * actual biomass in grams in group order.
- */
+/* Updates the active relative roots array based on sizes, which contains the groups'
+ * actual biomass in grams. This array in utilized in partitioning of transpiration
+ * (resources) to each STEPPE functional group. */
 
 	GrpIndex g;
 	LyrIndex l;
@@ -178,9 +179,11 @@ void _sxw_update_root_tables( RealF sizes[] ) {
 	RealD x;
 	int t,nLyrs;
 
-	/* set some things to zero 4-Tree,Shrub,Grass,Forb*/
+	/* Set some things to zero where 4 refers to Tree, Shrub, Grass, Forb */
 	Mem_Set(_roots_active_sum, 0, 4 * SXW.NPds * SXW.NTrLyrs * sizeof(RealD));
-
+        
+        /* Calculate the active roots in each month and soil layer for each STEPPE
+         * functional group based on the functional group biomass this year */
 	ForEachGroup(g)
 	{
 		t = RGroup[g]->veg_prod_type-1;
@@ -195,10 +198,8 @@ void _sxw_update_root_tables( RealF sizes[] ) {
 		}
 	}
 
-	/* normalize the previous roots X phen table */
-	/* the relative "activity" of a group's roots in a
-	 * given layer in a given month is obtained by dividing
-	 * the cross product by the totals from above */
+	/* Rescale _roots_active_sum to represent the relative "activity" of a 
+         * STEPPE group's roots in a given layer in a given month */
 	ForEachGroup(g)
 	{
 		int t = RGroup[g]->veg_prod_type-1;
@@ -217,75 +218,74 @@ void _sxw_update_root_tables( RealF sizes[] ) {
 
 }
 
-
 static void _transp_contribution_by_group(RealF use_by_group[]) {
-	/*======================================================*/
-	/* use_by_group is the amount of transpiration (cm) assigned
-	 * to each STEPPE functional group.
-	 * Must call _update_root_tables() before this.
-	 * Compute each group's amount of transpiration from SOILWAT2
-	 * based on its biomass, root distribution, and phenological
-	 * activity. If transpiration is 2 standard deviations below
-	 * the mean, additional transpiration is added. */
+    /*======================================================*/
+    /* use_by_group is the amount of transpiration (cm) assigned to each STEPPE 
+     * functional group. Must call _update_root_tables() before this.
+     * Compute each group's amount of transpiration from SOILWAT2
+     * based on its biomass, root distribution, and phenological
+     * activity. This represents "normal" resources or transpiration each year.
+     * In cases where transpiration is significantly below the mean due to low
+     * biomass (e.g. fire years), additional transpiration is added. */
 
-	GrpIndex g;
-	TimeInt p;
-	LyrIndex l;
-	int t;
-	RealD *transp;
-	RealF sumUsedByGroup = 0., sumTranspTotal = 0., TranspRemaining = 0.;
-        RealF transp_ratio, add_transp = 0;
-        RealF transp_ratio_sum_of_squares, transp_ratio_sd;
-        RealF old_ratio_average = transp_ratio_running_average;
+    GrpIndex g;
+    TimeInt p;
+    LyrIndex l;
+    int t;
+    RealD *transp;
+    RealF sumUsedByGroup = 0., sumTranspTotal = 0., TranspRemaining = 0.;
+    RealF transp_ratio, add_transp = 0;
+    RealF transp_ratio_sum_of_squares, transp_ratio_sd;
+    RealF old_ratio_average = transp_ratio_running_average;
 
-	ForEachGroup(g) //Steppe functional group
-	{
-    use_by_group[g] = 0.;
-		t = RGroup[g]->veg_prod_type-1;
+    ForEachGroup(g) //Steppe functional group
+    {
+        use_by_group[g] = 0.;
+        t = RGroup[g]->veg_prod_type - 1;
 
-		switch(t) {
-		case 0://Tree
-			transp = SXW.transpVeg[SW_TREES];
-			break;
-		case 1://Shrub
-			transp = SXW.transpVeg[SW_SHRUB];
-			break;
-		case 2://Grass
-			transp = SXW.transpVeg[SW_GRASS];
-			break;
-		case 3://Forb
-			transp = SXW.transpVeg[SW_FORBS];
-			break;
-		default:
-			transp = SXW.transpTotal;
-			break;
-		}
+        switch (t) {
+            case 0://Tree
+                transp = SXW.transpVeg[SW_TREES];
+                break;
+            case 1://Shrub
+                transp = SXW.transpVeg[SW_SHRUB];
+                break;
+            case 2://Grass
+                transp = SXW.transpVeg[SW_GRASS];
+                break;
+            case 3://Forb
+                transp = SXW.transpVeg[SW_FORBS];
+                break;
+            default:
+                transp = SXW.transpTotal;
+                break;
+        }
 
-        //Loops through each month and calculates amount of transpiration for each steppe functional group
+        //Loops through each month and calculates amount of transpiration for each STEPPE functional group
         //according to whether that group has active living roots in each soil layer for each month
-            ForEachTrPeriod(p)
-            {
-                int nLyrs = getNTranspLayers(RGroup[g]->veg_prod_type);
-                for (l = 0; l < nLyrs; l++) {
-                    use_by_group[g] += (RealF) (_roots_active_rel[Iglp(g, l, p)] * transp[Ilp(l, p)]);
-                }
+
+        ForEachTrPeriod(p) {
+            int nLyrs = getNTranspLayers(RGroup[g]->veg_prod_type);
+            for (l = 0; l < nLyrs; l++) {
+                use_by_group[g] += (RealF) (_roots_active_rel[Iglp(g, l, p)] * transp[Ilp(l, p)]);
             }
-            //printf("for groupName= %s, use_by_group[g] in transp= %f \n",RGroup[g]->name,use_by_group[g] );
+        }
+        //printf("for groupName= %s, use_by_group[g] in transp= %f \n",RGroup[g]->name,use_by_group[g] );
 
         sumUsedByGroup += use_by_group[g];
         //printf(" sumUsedByGroup in transp=%f \n",sumUsedByGroup);
-	}
+    }
 
-	//Very small amounts of transpiration remain and not perfectly partitioned to functional groups.
-	//This check makes sure any remaining transpiration is divided proportionately among groups.
-	ForEachTrPeriod(p)
-	{
-		for (t = 0; t < SXW.NSoLyrs; t++)
-			sumTranspTotal += SXW.transpTotal[Ilp(t, p)];
-	}
+    //Very small amounts of transpiration remain and not perfectly partitioned to functional groups.
+    //This check makes sure any remaining transpiration is divided proportionately among groups.
+
+    ForEachTrPeriod(p) {
+        for (t = 0; t < SXW.NSoLyrs; t++)
+            sumTranspTotal += SXW.transpTotal[Ilp(t, p)];
+    }
 
     TranspRemaining = sumTranspTotal - sumUsedByGroup;
-//printf(" sumTranspTotal=%f, sumUsedByGroup=%f  TranspRemaining=%f"\n", sumTranspTotal, sumUsedByGroup, TranspRemaining);
+    //printf(" sumTranspTotal=%f, sumUsedByGroup=%f  TranspRemaining=%f"\n", sumTranspTotal, sumUsedByGroup, TranspRemaining);
 
     /* ------------- Begin testing to see if additional transpiration is necessary ------------- */
 
@@ -293,74 +293,74 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
 
     // Determines if the current year transpiration/ppt is greater than 2 standard deviations away
     // from the mean. If TRUE, add additional transpiration.
-    if(Globals.currYear > 0) //no transpiration happens prior to year 1. This avoids a divide by 0.
+    if (Globals.currYear > 0) //no transpiration happens prior to year 1. This avoids a divide by 0.
     {
-        // update the running averages.
+        // Update the running averages of transpiration and transp/PPT ratio
         transp_running_average = get_running_mean(Globals.currYear, transp_running_average, sumTranspTotal);
         transp_ratio_running_average = get_running_mean(Globals.currYear, transp_ratio_running_average,
-                                                        transp_ratio);
-//printf("Transpiration ratio average: %f\t Transpiration average: %f\n",transp_ratio_running_average, transp_running_average);
-        // calculate the running standard deviation
+                transp_ratio);
+        //printf("Transpiration ratio average: %f\t Transpiration average: %f\n",transp_ratio_running_average, transp_running_average);
+        
+        // Calculate the running standard deviation of the transp/PPT ratio
         transp_ratio_sum_of_squares = get_running_sqr(old_ratio_average, transp_ratio_running_average,
-                                                      transp_ratio);
+                transp_ratio);
         transp_ratio_sd = final_running_sd(Globals.currYear, transp_ratio_sum_of_squares);
 
-        // if this year's transpiration is notably low (2 sd below the mean)
-        if(transp_ratio < (transp_ratio_running_average - 2 * transp_ratio_sd))
-        {
-//printf("Year %d: ratio below 2 sd. ratio = %f, average = %f, sd = %f\n",Globals.currYear, ratio,transp_ratio_running_average, transp_ratio_sd);
-            // variance must be less than (mean * (1 - mean)) to meet the assumptions of a beta distribution.
-            if(pow(transp_ratio_sd, 2) < (transp_ratio_running_average * (1 - transp_ratio_running_average)))
-            {
-                // Variables needed for a beta distribution
-                float alpha = ((pow(transp_ratio_running_average,2) - pow(transp_ratio_running_average,3)) /
-                               pow(transp_ratio_sd,2)) - transp_ratio_running_average;		
-//printf("alpha: %f\tsd^2: %f\n", alpha,pow(transp_ratio_sd,2));
+        // If this year's transpiration is notably low (2 sd below the mean), add additional transpired water
+        if (transp_ratio < (transp_ratio_running_average - 2 * transp_ratio_sd)) {
+            //printf("Year %d: ratio below 2 sd. ratio = %f, average = %f, sd = %f\n",Globals.currYear, ratio,transp_ratio_running_average, transp_ratio_sd);
+           
+            // Variance must be less than (mean * (1 - mean)) to meet the assumptions of a beta distribution.
+            if (pow(transp_ratio_sd, 2) < (transp_ratio_running_average * (1 - transp_ratio_running_average))) {
+                // Shape parameters that are needed for calculation of a beta distribution
+                float alpha = ((pow(transp_ratio_running_average, 2) - pow(transp_ratio_running_average, 3)) /
+                        pow(transp_ratio_sd, 2)) - transp_ratio_running_average;
+                //printf("alpha: %f\tsd^2: %f\n", alpha,pow(transp_ratio_sd,2));
                 float beta = (alpha / transp_ratio_running_average) - alpha;
 
-                if(alpha < 1.0) // alpha > 0 guaranteed by previous if statement.
+                if (alpha < 1.0) // alpha > 0 guaranteed by previous if statement.
                 {
                     // 0 < alpha < 1 could be an issue, but would not crash the program
                     LogError(logfp, LOGWARN, "Year %d, transpiration ratio alpha less than 1: %f\n",
-                             Globals.currYear, alpha);
+                            Globals.currYear, alpha);
                 }
-                if(beta < 1.0) // beta > 0 guaranteed by previous if statement.
+                if (beta < 1.0) // beta > 0 guaranteed by previous if statement.
                 {
                     // 0 < beta < 1 could be an issue, but would not crash the program
                     LogError(logfp, LOGWARN, "Year %d, transpiration ratio beta less than 1: %f\n",
-                             Globals.currYear, beta);
+                            Globals.currYear, beta);
                 }
 
-                //This transpiration will be added to each group
-                add_transp = (1 - transp_ratio / RandBeta(alpha,beta)) * transp_running_average;
-//printf("Year %d:\tTranspiration to add: %f\n",Globals.currYear,add_transp);
+                // This transpiration will be added 
+                add_transp = (1 - transp_ratio / RandBeta(alpha, beta)) * transp_running_average;
+                //printf("Year %d:\tTranspiration to add: %f\n",Globals.currYear,add_transp);
 
-                // Adds the additional transpiration to the remaining transpiration so it can be distributed.
+                /* Adds the additional transpiration to the remaining transpiration 
+                 * so it can be distributed proportionally to the functional groups. */
                 TranspRemaining += add_transp;
-//printf("TranspRemaining: %f\tTranspRemaining+add_transp: %f\n",TranspRemaining,add_transp+TranspRemaining);
-                
-            } else { //If trying to create a beta distribution would cause the program to crash
-                LogError(logfp, LOGWARN, 
-                         "Year %d, transpiration ratio variance does not meet beta distribution assumption.\n",
-                         Globals.currYear);
+                //printf("TranspRemaining: %f\tTranspRemaining+add_transp: %f\n",TranspRemaining,add_transp+TranspRemaining);
+
+            } else { //If trying to create a beta distribution and assumptions are not met
+                LogError(logfp, LOGWARN,
+                        "Year %d, transpiration ratio variance does not meet beta distribution assumption.\n",
+                        Globals.currYear);
             }
         }
     }
-  
+
     /* ------------ End testing to see if additional transpiration is necessary ---------- */
 
-    // If there is transpiration this year add the remaining transpiration to each functional group.
-    // Else the sum of transpiration is 0. Therefore for each group there is also zero transpiration.
-    if(!ZRO(sumUsedByGroup))
-    {
-        ForEachGroup(g)
-        {
-            use_by_group[g] += (use_by_group[g]/sumUsedByGroup) * TranspRemaining;
-//printf("for groupName= %s, after sum use_by_group[g]= %f \n",RGroup[g]->name,use_by_group[g]);
+    // If there is transpiration this year add the remaining (and added) transpiration to each functional group.
+    // Else the sum of transpiration is 0 and for each group there is also zero transpiration.
+    if (!ZRO(sumUsedByGroup)) {
+
+        ForEachGroup(g) {
+            use_by_group[g] += (use_by_group[g] / sumUsedByGroup) * TranspRemaining;
+            //printf("for groupName= %s, after sum use_by_group[g]= %f \n",RGroup[g]->name,use_by_group[g]);
         }
 
         /*printf("'_transp_contribution_by_group': Group = %s, SXW.transp_SWA[g] = %f \n",
           RGroup[g]->name, SXW.transp_SWA[g]);
-        */
+         */
     }
 }

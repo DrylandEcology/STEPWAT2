@@ -66,11 +66,11 @@ void rgroup_PartResources(void) {
     Bool noplants = TRUE;
     GroupType *g; /* shorthand for RGroup[rg] */
 
-    /* ----- distribute basic (minimum) resources */
+    /* ----- distribute basic (normal) resources */
     ForEachGroup(rg) {
         g = RGroup[rg];
         
-        //Set resources available and resources required for each resource group
+        //Set resources available and resources required for each functional group
         g->res_required = RGroup_GetBiomass(rg);
         g->res_avail = SXW_GetTranspiration(rg);
         //printf("g->res_avail = %f\n,Group = %s \n",RGroup[rg]->name,  g->res_avail);
@@ -102,7 +102,7 @@ void rgroup_PartResources(void) {
         g->pr = ZRO(g->res_avail) ? 0. : g->res_required / g->res_avail;
         //printf("g->pr = %f\n,Group = %s \n",RGroup[rg]->name,  g->pr);
 
-        /* If relsize>0, reset noplants from TRUE to FALSE */
+        /* If relsize>0 and individuals are established, reset noplants from TRUE to FALSE */
         if (GT(g->relsize, 0.))
             noplants = FALSE;
 
@@ -213,16 +213,16 @@ static void _add_annual_seedprod(SppIndex sp, RealF lastyear_relsize) {
 static void _res_part_extra(RealF extra, RealF size[]) {
     /*======================================================*
      * PURPOSE *
-     * Partitions "extra" resources to other groups that can use them
-     * (if any). 
+     * Partitions "extra" resources to other groups that can use them (if any). 
      * HISTORY *
      * Updated by KAP 5/2018 */
 
     GrpIndex rg;
     GroupType *g; /* shorthand for RGroup[rg] */
     RealF req_prop, /* group's prop'l contrib to the total requirements */
-            sum_size = 0.; /* summed sizes of all functional groups that can use extra resources */
-
+            sum_size = 0.; /* summed size of all functional groups that can use extra resources */
+    
+    /* Determine the summed size of functional groups that can use extra resources */
     ForEachGroup(rg) {
         g = RGroup[rg];
         if (ZRO(g->relsize))
@@ -230,7 +230,7 @@ static void _res_part_extra(RealF extra, RealF size[]) {
         if (g->est_count == 0)
             continue;
 
-        //where size = size_obase, which is biomass(g/m2) or 0 if the group can't use resources
+        // Where size = size_obase, which is biomass(g/m2) or 0 if the group can't use resources
         sum_size += size[rg];
         //printf("size[rg]  = %f\n,Rgroup = %s \n",RGroup[rg]->name, size[rg]);
         //printf("sum_size  = %f\n,Rgroup = %s \n",RGroup[rg]->name, sum_size);
@@ -274,7 +274,7 @@ void rgroup_ResPartIndiv(void) {
      * the group, largest to smallest. Species distinctions within the group are 
      * ignored. The partitioning of resources to individuals is done proportionally 
      * based on size so that large individuals get more resources than their 
-     * less-developed competitors.
+     * smaller competitors.
      * HISTORY:
      * Chris Bennett @ LTER-CSU 12/21/2000
      * Updated by KAP 5/2018 */
@@ -342,8 +342,9 @@ void rgroup_ResPartIndiv(void) {
 
     /* Now loop back through all individuals in each group, assign extra resource
      * and calculate PR at the individual level. This extra resource will be used to
-     * increment plant sizes. Extra resources that apply to superfluous biomass increment
-     * that will ultimately be killed at the end of the year is assigned in _extra_growth */
+     * increment plant sizes. Extra resources that remain after this step which are 
+     * applied to superfluous biomass increment that will ultimately be killed at the 
+     * end of the year is assigned in _extra_growth */
     ForEachGroup(rg) {
         g = RGroup[rg];
         if (g->est_count == 0)
@@ -410,7 +411,7 @@ void rgroup_ResPartIndiv(void) {
 void rgroup_Grow(void) {
     /*======================================================*
      * PURPOSE *
-     * Main loop to grow all the plants.
+     * Main loop to allow for plant growth.
      * HISTORY *
      * Chris Bennett @ LTER-CSU 6/15/2000
      *  7-Nov-03 (cwb) Annuals have a completely new method of
