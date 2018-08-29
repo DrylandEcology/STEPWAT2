@@ -594,9 +594,7 @@ void check_sizes(const char *chkpt) {
     IndivType *ndv;
     int i;
     RealF spsize, rgsize,
-            diff = .000005, /* amount of difference allowed */
-            diff_size = 0.0, //difference between species relsize and summed individual relsize
-            extra_diff = 0.0; //difference between diff_size and extragrowth
+            diff = .000005; /* amount of difference allowed */
 
     ForEachGroup(rg) {
 
@@ -613,9 +611,6 @@ void check_sizes(const char *chkpt) {
                         "SP=%.7f, ndv=%.7f",
                         chkpt, Globals.currIter, Globals.currYear,
                         Species[sp]->name, Species[sp]->relsize, spsize);
-                diff_size = Species[sp]->relsize - spsize;
-                extra_diff = diff - Species[sp]->extragrowth;
-                //printf("diff considering extragrowth  = %.8f\n, Species = %s \n", extra_diff, Species[sp]->name);
             }
         }
 

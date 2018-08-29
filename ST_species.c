@@ -74,7 +74,9 @@ IntS Species_NumEstablish(SppIndex sp)
 				return (IntS) RandUniRange(1, Species[sp]->max_seed_estab);
 		}
 		else
+		{
 			return 0;
+		}
 
 	//float biomass = Species[sp]->relsize * Species[sp]->mature_biomass; //This line does nothing!
 	if (RGroup[Species[sp]->res_grp]->est_annually

@@ -278,6 +278,8 @@ static void _make_disturbance( void) {
              }
            }
            break;
+      case NoDisturb: // Does nothing but prevent a compiler warning
+      case LastDisturb:
       default:
            Plot.disturbed = (Plot.disturbed) ? Plot.disturbed -1 : 0;
     }
