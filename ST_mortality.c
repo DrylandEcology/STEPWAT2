@@ -259,6 +259,7 @@ void mort_EndOfYear(void) {
                 Species[sp]->extragrowth = LE(Species[sp]->extragrowth, Species[sp]->relsize) ? Species[sp]->extragrowth : Species[sp]->relsize;
 
                 Species_Update_Newsize(sp, -Species[sp]->extragrowth);
+
                 //printf("s->relsize kill after  = %f\n", Species[sp]->relsize);
                 Species[sp]->extragrowth = 0.0;
             }
@@ -872,7 +873,22 @@ void _kill_extra_growth(void) {
             if (!ZERO(Species[sp]->extragrowth) && Globals.currYear != RGroup[rg]->killyr) {
                 Species[sp]->extragrowth = LE(Species[sp]->extragrowth, Species[sp]->relsize) ? Species[sp]->extragrowth : Species[sp]->relsize;
 
-                Species_Update_Newsize(sp, -Species[sp]->extragrowth);
+            // Sets relsize to 0 then sums up all the the individuals' relsizes and adds them back.
+            // This has two effects:
+            // 1: removes extragowth from relsize by recalculating without it.
+            // 2: Removes any small differences between the sum of individual relsizes and the species
+            //    relsize. This ensures that Plot_Initialize in ST_main.c will alway set relsize to 0. 
+            IndivType *p = Species[sp]->IndvHead;
+            Species[sp]->relsize = 0;
+            while(p)
+            {
+                Species[sp]->relsize += p->relsize;
+                p = p->Next;
+            }
+            RGroup_Update_Newsize(Species[sp]->res_grp); //need to call this to sync species and resgroup.
+
+                //Species_Update_Newsize(sp, -Species[sp]->extragrowth);
+
                 //printf("s->relsize kill after  = %f\n", Species[sp]->relsize);
                 Species[sp]->extragrowth = 0.0;
             }
