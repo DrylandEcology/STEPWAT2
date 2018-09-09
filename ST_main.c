@@ -223,35 +223,22 @@ int main(int argc, char **argv) {
 
 			rgroup_PartResources();
 
-         //check_sizes("'main' after 'rgroup_PartResources'");
-
 #ifdef STEPWAT
 			if (!isnull(SXW.debugfile) ) SXW_PrintDebug(0);
 #endif
 
 			rgroup_Grow();
 
-      //check_sizes("'main' after 'rgroup_Grow'");
-
 			mort_Main(&killedany);
 
-      //check_sizes("'main' after 'mort_Main'");
-
 			rgroup_IncrAges();
-
-      //check_sizes("'main' after 'rgroup_IncrAges'");
 
       // Added functions for Grazing and mort_end_year as proportional killing effect before exporting biomass end of the year
 			grazing_EndOfYear();
 
-      //check_sizes("'main' after 'grazing_EndOfYear'");
-
-
       save_annual_species_relsize();
 
       		mort_EndOfYear();
-
-      //check_sizes("'main' after 'mort_EndOfYear'");
 
 			stat_Collect(year);
 
@@ -262,8 +249,6 @@ int main(int argc, char **argv) {
 			_kill_annuals();
 
 			proportion_Recovery();
-
-      //check_sizes("'main' after 'proportion_Recovery'");
 
 			_kill_extra_growth();
 

@@ -311,7 +311,6 @@ void SXW_Run_SOILWAT (void) {
  * 3/31/2003 - cwb - because we're always running soilwat to
  *             emulate full-size plants, computing roots etc
  *             gets done once during init plot.
- * 8/20/2018 - CH - renamed SWA_transp to transp_resource
  */
 
 #ifndef SXW_BYMAXSIZE
