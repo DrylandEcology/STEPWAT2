@@ -308,7 +308,7 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
 
         // If this year's transpiration is notably low (2 sd below the mean), add additional transpired water
         if (transp_ratio < (transp_ratio_running_average - 2 * transp_ratio_sd)) {
-            //printf("Year %d: ratio below 2 sd. ratio = %f, average = %f, sd = %f\n",Globals.currYear, ratio,transp_ratio_running_average, transp_ratio_sd);
+            //printf("Year %d: ratio below 2 sd. ratio = %f, average = %f, sd = %f\n",Globals.currYear, transp_ratio,transp_ratio_running_average, transp_ratio_sd);
            
             // Variance must be less than (mean * (1 - mean)) to meet the assumptions of a beta distribution.
             if (pow(transp_ratio_sd, 2) < (transp_ratio_running_average * (1 - transp_ratio_running_average))) {
