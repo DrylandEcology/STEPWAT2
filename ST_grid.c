@@ -198,6 +198,9 @@ extern Bool UseProgressBar;
 /***********************************************************/
 
 void runGrid(void); //to be called from ST_main.c
+void _kill_annuals(void);
+void _kill_extra_growth(void);
+void rgroup_Extirpate(GrpIndex rg);
 
 /************* External Function Declarations **************/
 /***********************************************************/
