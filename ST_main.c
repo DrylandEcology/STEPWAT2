@@ -140,6 +140,9 @@ Bool UseSeedDispersal;
 Bool DuringSpinup;
 Bool EchoInits;
 Bool UseProgressBar;
+GrpIndex rg;
+SppIndex sp;
+IndivType *ndv; /* shorthand for the current indiv */
 
 /******************** Begin Model Code *********************/
 /***********************************************************/
@@ -170,7 +173,11 @@ int main(int argc, char **argv) {
 		SXW_Init(TRUE, NULL);
     SW_OUT_set_ncol(); // set number of columns
   }
-
+        /*Connect to ST db and insert static data, NOTE: the function below is 
+         * commented out until a flag requesting ST debugging info is implemented, 
+         * do not delete */
+	//ST_connect("Output/stdebug");
+        
 	incr = (IntS) ((float) Globals.runModelIterations / 10);
 	if (incr == 0)
 		incr = 1;
@@ -191,7 +198,7 @@ int main(int argc, char **argv) {
 		Plot_Initialize();
 		RandSeed(Globals.randseed);
 		Globals.currIter = iter;
-
+                
 		/* ------  Begin running the model ------ */
 		for (year = 1; year <= Globals.runModelYears; year++){
 			Globals.currYear = year;
@@ -227,6 +234,18 @@ int main(int argc, char **argv) {
 			_kill_annuals();
 			 proportion_Recovery();
 			_kill_extra_growth();
+                        
+                        /*NOTE: the function below is commented out until a flag 
+                         * requesting ST debugging info is implemented, do not delete */
+                        /*ForEachGroup(rg) {                           
+				insertRGroupYearInfo(rg);
+			}
+			ForEachSpecies(sp) {
+				insertSpecieYearInfo(sp);
+				for ((ndv) = Species[sp]->IndvHead; (ndv) != NULL; (ndv) = (ndv)->Next) {
+					insertIndivYearInfo(ndv);
+				}
+			} */
 		} /* end model run for this year*/
 
 		if (MortFlags.summary) {
@@ -252,6 +271,10 @@ int main(int argc, char **argv) {
 		stat_Output_AllMorts();
 	if (BmassFlags.summary)
 		stat_Output_AllBmass();
+        
+        /*Disconnect from the database, NOTE: the function below is commented out 
+         * until a flag requesting ST debugging info is implemented, do not delete */
+	//ST_disconnect();
 
 #ifdef STEPWAT
 			if (!isnull(SXW.debugfile)){
