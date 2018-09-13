@@ -1,13 +1,13 @@
 /********************************************************/
 /********************************************************/
 /*  Source file: ST_defines.h
-/*  Type: header
-/*  Application: STEPPE - plant community dynamics simulator
-/*  Purpose: Generic model definitions such as constants,
+ *  Type: header
+ *  Application: STEPPE - plant community dynamics simulator
+ *  Purpose: Generic model definitions such as constants,
  *           enums, and looping contructs.
-/*  History:
-/*     (6/15/2000) -- INITIAL CODING - cwb
-/*
+ *  History:
+ *     (6/15/2000) -- INITIAL CODING - cwb
+ */
 /********************************************************/
 /********************************************************/
 

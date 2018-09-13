@@ -3020,10 +3020,11 @@ static void _do_grid_grazing_EndOfYear(int row, int col)
 {
 
 	/*======================================================*/
-	/* PURPOSE */
-	/* Perform the sorts of grazing one might expect at end of year, it is based on grazing frequency
-	 /* HISTORY */
-	/*  Nov 22 2016 -AKT  -Added Species grazing EndOfYear for grid model  */
+	/* PURPOSE
+	 * Perform the sorts of grazing one might expect at end of year, it is based on grazing frequency
+	 * HISTORY
+	 * Nov 22 2016 -AKT  -Added Species grazing EndOfYear for grid model  
+	 */
 	/*======================================================*/
 
 	if (UseDisturbances)
@@ -3031,9 +3032,9 @@ static void _do_grid_grazing_EndOfYear(int row, int col)
 		IntU grazingyr = 0;
 		int cell = col + ((row - 1) * grid_Cols) - 1;
 
-		if ((Globals.currYear >=grid_Disturb[cell].grazingfreq_startyr) && GT(grid_Disturb[cell].grazing_frq, 0.))
+		if ((Globals.currYear >=grid_Disturb[cell].grazingfreq_startyr) && grid_Disturb[cell].grazing_frq > 0.)
 		{
-			if (LT(grid_Disturb[cell].grazing_frq, 1.0))
+			if (grid_Disturb[cell].grazing_frq < 1.0)
 			{
 				if (RandUni() <= grid_Disturb[cell].grazing_frq)
 				{

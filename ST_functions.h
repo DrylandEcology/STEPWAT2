@@ -1,14 +1,14 @@
 /********************************************************/
 /********************************************************/
 /*  Source file: ST_functions.h
-/*  Type: header
-/*  Application: STEPPE - plant community dynamics simulator
-/*  Purpose: Declares public functions used throughout the
+ *  Type: header
+ *  Application: STEPPE - plant community dynamics simulator
+ *  Purpose: Declares public functions used throughout the
  *           model, although some are only used in specific
  *           places.
-/*  History:
-/*     (6/15/2000) -- INITIAL CODING - cwb
-/*
+ *  History:
+ *     (6/15/2000) -- INITIAL CODING - cwb
+ */
 /********************************************************/
 /********************************************************/
 
