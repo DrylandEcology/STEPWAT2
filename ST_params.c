@@ -147,7 +147,6 @@ void parm_Initialize( Int iter) {
 
 //    _bmasshdr_init();
 //    _morthdr_create();
-    RandSeed(Globals.randseed);
 
 	/*_recover_names();*/
     beenhere = TRUE;

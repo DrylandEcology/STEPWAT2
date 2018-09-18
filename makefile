@@ -55,6 +55,7 @@ SRCS	=\
 	$(Src)/sw_src/SW_Carbon.c\
 	$(Src)/sw_src/SW_Flow_lib.c\
 	$(Src)/sw_src/SW_Flow.c\
+	$(Src)/sw_src/pcg/pcg_basic.c\
 	$(Src)/ST_environs.c\
 	$(Src)/sw_src/SW_VegEstab.c\
 	$(Src)/sw_src/SW_Control.c\
@@ -96,6 +97,7 @@ EXOBJS	=\
 	$(oDir)/sw_src/SW_Carbon.o\
 	$(oDir)/sw_src/SW_Flow_lib.o\
 	$(oDir)/sw_src/SW_Flow.o\
+	$(oDir)/sw_src/pcg/pcg_basic.o\
 	$(oDir)/ST_environs.o\
 	$(oDir)/sw_src/SW_VegEstab.o\
 	$(oDir)/sw_src/SW_Control.o\
@@ -183,7 +185,7 @@ $(oDir)/sw_src/Times.o: sw_src/Times.c sw_src/generic.h sw_src/myMemory.h
 	$(CC) $(C_FLAGS) $(CPPFLAGS) $(incDirs) -c -o $@ $<
 
 $(oDir)/sw_src/rands.o: sw_src/rands.c sw_src/generic.h sw_src/rands.h \
- sw_src/myMemory.h
+ sw_src/myMemory.h sw_src/pcg/pcg_basic.h
 	$(CC) $(C_FLAGS) $(CPPFLAGS) $(incDirs) -c -o $@ $<
 
 $(oDir)/sxw_environs.o: sxw_environs.c sw_src/generic.h ST_steppe.h \
@@ -196,7 +198,7 @@ $(oDir)/sxw.o: sxw.c sw_src/generic.h sw_src/filefuncs.h \
  sw_src/myMemory.h ST_steppe.h ST_defines.h ST_structs.h \
  ST_functions.h ST_globals.h sw_src/SW_Defines.h sxw.h sw_src/SW_Times.h sxw_funcs.h \
  sxw_module.h sw_src/SW_Control.h sw_src/SW_Model.h sw_src/SW_Site.h sw_src/SW_SoilWater.h \
- sw_src/SW_Files.h sw_src/SW_VegProd.h sw_src/SW_Carbon.h
+ sw_src/SW_Files.h sw_src/SW_VegProd.h sw_src/SW_Carbon.h sw_src/pcg/pcg_basic.h
 	$(CC) $(C_FLAGS) $(CPPFLAGS) $(incDirs) -c -o $@ $<
 
 $(oDir)/sxw_sql.o: sxw_sql.c ST_steppe.h \
@@ -208,7 +210,8 @@ $(oDir)/sxw_resource.o: sxw_resource.c sw_src/generic.h \
  sw_src/filefuncs.h sw_src/myMemory.h ST_steppe.h \
  ST_defines.h ST_structs.h ST_functions.h ST_globals.h sw_src/SW_Defines.h \
  sxw.h sw_src/SW_Times.h sxw_module.h sxw_vars.h sw_src/SW_Control.h sw_src/SW_Model.h \
- sw_src/SW_Site.h sw_src/SW_SoilWater.h sw_src/SW_VegProd.h sw_src/SW_Files.h
+ sw_src/SW_Site.h sw_src/SW_SoilWater.h sw_src/SW_VegProd.h sw_src/SW_Files.h \
+ sw_src/pcg/pcg_basic.h
 	$(CC) $(C_FLAGS) $(CPPFLAGS) $(incDirs) -c -o $@ $<
 
 $(oDir)/sxw_soilwat.o: sxw_soilwat.c sw_src/generic.h \
@@ -221,7 +224,7 @@ $(oDir)/sxw_soilwat.o: sxw_soilwat.c sw_src/generic.h \
 $(oDir)/sw_src/SW_Markov.o: sw_src/SW_Markov.c sw_src/generic.h \
  sw_src/filefuncs.h sw_src/rands.h sw_src/myMemory.h \
  sw_src/SW_Defines.h sw_src/SW_Files.h sw_src/SW_Weather.h sw_src/SW_Times.h sw_src/SW_Model.h \
- sw_src/SW_Markov.h
+ sw_src/SW_Markov.h sw_src/pcg/pcg_basic.h
 	$(CC) $(C_FLAGS) $(CPPFLAGS) $(incDirs) -c -o $@ $<
 
 $(oDir)/sw_src/SW_Weather.o: sw_src/SW_Weather.c sw_src/generic.h \
@@ -237,6 +240,9 @@ $(oDir)/sw_src/SW_Files.o: sw_src/SW_Files.c sw_src/generic.h sw_src/filefuncs.h
 $(oDir)/sw_src/SW_Model.o: sw_src/SW_Model.c sw_src/generic.h sw_src/filefuncs.h \
  sw_src/rands.h sw_src/SW_Defines.h sw_src/SW_Files.h sw_src/SW_Weather.h sw_src/SW_Times.h \
  sw_src/SW_Site.h sw_src/SW_SoilWater.h sw_src/SW_Model.h
+	$(CC) $(C_FLAGS) $(CPPFLAGS) $(incDirs) -c -o $@ $<
+
+$(oDir)/sw_src/pcg/pcg_basic.o: sw_src/pcg/pcg_basic.c sw_src/pcg/pcg_basic.h
 	$(CC) $(C_FLAGS) $(CPPFLAGS) $(incDirs) -c -o $@ $<
 
 $(oDir)/sw_src/SW_Output.o: sw_src/SW_Output.c \
@@ -288,7 +294,7 @@ $(oDir)/sw_src/SW_Flow.o: sw_src/SW_Flow.c sw_src/generic.h sw_src/filefuncs.h \
 
 $(oDir)/ST_environs.o: ST_environs.c ST_steppe.h ST_defines.h \
  sw_src/generic.h ST_structs.h ST_functions.h ST_globals.h \
- sw_src/rands.h
+ sw_src/rands.h sw_src/pcg/pcg_basic.h
 	$(CC) $(C_FLAGS) $(CPPFLAGS) $(incDirs) -c -o $@ $<
 
 $(oDir)/sw_src/SW_Control.o: sw_src/SW_Control.c sw_src/generic.h \
@@ -311,12 +317,12 @@ $(oDir)/ST_indivs.o: ST_indivs.c ST_steppe.h ST_defines.h \
 
 $(oDir)/ST_main.o: ST_main.c ST_steppe.h ST_defines.h sw_src/generic.h \
  ST_structs.h ST_functions.h sw_src/filefuncs.h \
- sw_src/myMemory.h sw_src/SW_VegProd.h
+ sw_src/myMemory.h sw_src/SW_VegProd.h sw_src/pcg/pcg_basic.h
 	$(CC) $(C_FLAGS) $(CPPFLAGS) $(incDirs) -c -o $@ $<
 
 $(oDir)/ST_mortality.o: ST_mortality.c ST_steppe.h ST_defines.h \
  sw_src/generic.h ST_structs.h ST_functions.h ST_globals.h \
- sw_src/rands.h
+ sw_src/rands.h sw_src/pcg/pcg_basic.h
 	$(CC) $(C_FLAGS) $(CPPFLAGS) $(incDirs) -c -o $@ $<
 
 $(oDir)/ST_output.o: ST_output.c ST_steppe.h ST_defines.h \
@@ -332,12 +338,12 @@ $(oDir)/ST_params.o: ST_params.c ST_steppe.h ST_defines.h \
 
 $(oDir)/ST_resgroups.o: ST_resgroups.c ST_steppe.h ST_defines.h \
  sw_src/generic.h ST_structs.h ST_functions.h ST_globals.h \
- sw_src/myMemory.h sw_src/rands.h
+ sw_src/myMemory.h sw_src/rands.h sw_src/pcg/pcg_basic.h
 	$(CC) $(C_FLAGS) $(CPPFLAGS) $(incDirs) -c -o $@ $<
 
 $(oDir)/ST_species.o: ST_species.c ST_steppe.h ST_defines.h \
  sw_src/generic.h ST_structs.h ST_functions.h ST_globals.h \
- sw_src/myMemory.h sw_src/rands.h
+ sw_src/myMemory.h sw_src/rands.h sw_src/pcg/pcg_basic.h
 	$(CC) $(C_FLAGS) $(CPPFLAGS) $(incDirs) -c -o $@ $<
 
 $(oDir)/ST_stats.o: ST_stats.c ST_steppe.h ST_defines.h sw_src/generic.h \
@@ -365,8 +371,7 @@ $(oDir)/sw_src/SW_VegEstab.o: sw_src/SW_VegEstab.c sw_src/generic.h sw_src/filef
 		$(CC) $(C_FLAGS) $(CPPFLAGS) $(incDirs) -c -o $@ $<
 
 $(oDir)/ST_grid.o: ST_grid.c ST_steppe.h ST_defines.h sw_src/generic.h \
- ST_globals.h \
- sw_src/myMemory.h ST_globals.h
+ ST_globals.h sw_src/myMemory.h ST_globals.h sw_src/pcg/pcg_basic.h
 	$(CC) $(C_FLAGS) $(CPPFLAGS) $(incDirs) -c -o $@ $<
 
 $(oDir)/ST_sql.o: ST_sql.c ST_steppe.h ST_globals.h

@@ -37,6 +37,7 @@
 #include "SW_VegProd.h"
 #include "SW_Files.h"
 #include "SW_Times.h"
+#include "sw_src/pcg/pcg_basic.h"
 
 /*************** Global Variable Declarations ***************/
 /***********************************************************/
@@ -78,6 +79,10 @@ extern
 extern
   RealF transp_running_average;
   RealF transp_ratio_running_average;
+
+
+extern 
+  pcg32_random_t resource_rng;
 
 //void _print_debuginfo(void);
 
@@ -332,7 +337,7 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
                 }
 
                 // This transpiration will be added 
-                add_transp = (1 - transp_ratio / RandBeta(alpha, beta)) * transp_running_average;
+                add_transp = (1 - transp_ratio / RandBeta(alpha, beta, &resource_rng)) * transp_running_average;
                 //printf("Year %d:\tTranspiration to add: %f\n",Globals.currYear,add_transp);
 
                 /* Adds the additional transpiration to the remaining transpiration 

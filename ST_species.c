@@ -22,6 +22,10 @@
 #include "sw_src/filefuncs.h"
 #include "myMemory.h"
 #include "rands.h"
+#include "sw_src/pcg/pcg_basic.h"
+
+extern
+  pcg32_random_t species_rng;
 
 /******** Modular External Function Declarations ***********/
 /* -- truly global functions are declared in functions.h --*/
@@ -71,7 +75,7 @@ IntS Species_NumEstablish(SppIndex sp)
 			if (Species[sp]->max_seed_estab <= 1)
 				return 1;
 			else
-				return (IntS) RandUniRange(1, Species[sp]->max_seed_estab);
+				return (IntS) RandUniRange(1, Species[sp]->max_seed_estab, &species_rng);
 		}
 		else
 		{
@@ -80,13 +84,13 @@ IntS Species_NumEstablish(SppIndex sp)
 
 	//float biomass = Species[sp]->relsize * Species[sp]->mature_biomass; //This line does nothing!
 	if (RGroup[Species[sp]->res_grp]->est_annually
-			|| LE(RandUni(), Species[sp]->seedling_estab_prob)
+			|| LE(RandUni(&species_rng), Species[sp]->seedling_estab_prob)
 			|| (Species[sp]->sd_sgerm))
 	{
 		if (Species[sp]->max_seed_estab <= 1)
 			return 1;
 		else
-			return (IntS) RandUniRange(1, Species[sp]->max_seed_estab);
+			return (IntS) RandUniRange(1, Species[sp]->max_seed_estab, &species_rng);
 		/*    return Species[sp]->max_seed_estab; */
 	}
 	else

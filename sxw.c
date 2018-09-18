@@ -63,6 +63,8 @@
 #include "sw_src/SW_Weather.h"
 #include "sw_src/SW_Markov.h"
 #include "sw_src/SW_Output.h"
+#include "sw_src/rands.h"
+#include "sw_src/pcg/pcg_basic.h"
 
 
 /*************** Global Variable Declarations ***************/
@@ -111,6 +113,8 @@ RealF _resource_cur[MAX_RGROUPS],  /* current resource utilization */
       _resource_pr[MAX_RGROUPS],   /* resource convertable to PR */
       transp_running_average, /* used to determine if additional transpiration is necessary */
       transp_ratio_running_average; /* used to calculate added transpiration if necessary */
+
+pcg32_random_t resource_rng; //rng for swx_resource.c functions.
 
 #ifdef SXW_BYMAXSIZE
 /* addition to meet changes specified at the top of the file */
@@ -174,6 +178,8 @@ void SXW_Init( Bool init_SW, char *f_roots ) {
    * 	match sxwroots.in
    */
 	char roots[MAX_FILENAMESIZE] = { '\0' };
+
+RandSeed(Globals.randseed, &resource_rng);
 
 #ifdef SXW_BYMAXSIZE
    GrpIndex rg; SppIndex sp;

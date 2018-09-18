@@ -25,6 +25,7 @@
 #include "myMemory.h"
 #include "SW_VegProd.h"
 #include "SW_Control.h"
+#include "sw_src/pcg/pcg_basic.h"
 
 
 #ifdef STEPWAT
@@ -145,6 +146,13 @@ Bool DuringSpinup;
 Bool EchoInits;
 Bool UseProgressBar;
 
+pcg32_random_t environs_rng;
+pcg32_random_t mortality_rng;
+pcg32_random_t resgroups_rng;
+pcg32_random_t species_rng;
+pcg32_random_t grid_rng;
+pcg32_random_t markov_rng;
+
 /******************** Begin Model Code *********************/
 /***********************************************************/
 int main(int argc, char **argv) {
@@ -199,7 +207,13 @@ int main(int argc, char **argv) {
 			parm_Initialize(iter);
 
 		Plot_Initialize();
-		RandSeed(Globals.randseed);
+		RandSeed(Globals.randseed, &environs_rng);
+		RandSeed(Globals.randseed, &mortality_rng);
+		RandSeed(Globals.randseed, &resgroups_rng);
+		RandSeed(Globals.randseed, &species_rng);
+		RandSeed(Globals.randseed, &grid_rng);
+		RandSeed(Globals.randseed, &markov_rng);
+
 		Globals.currIter = iter;
 
 		if (UseSoilwat && storeAllIterations) {

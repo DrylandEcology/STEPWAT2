@@ -25,6 +25,9 @@
 #include "sxw_funcs.h"
 extern Bool UseSoilwat;
 
+extern
+  pcg32_random_t resgroups_rng;
+
 /******** Modular External Function Declarations ***********/
 /* -- truly global functions are declared in functions.h --*/
 /***********************************************************/
@@ -143,7 +146,7 @@ static RealF _add_annuals(const GrpIndex rg, const SppIndex sp, const RealF last
 
     /* Create a beta random number draw based on alpha and beta for each species
      * (calculated based on mean (s->seedling_estab_prob and variance (s->var)) */
-     var = RandBeta(Species[sp]->alpha, Species[sp]->beta);
+     var = RandBeta(Species[sp]->alpha, Species[sp]->beta, &resgroups_rng);
 
     /*Determine number of seedlings to add. If the number of seeds calculated
      * from the random draw is larger than max_seed_estab, max_seed_estab is used instead*/
@@ -200,7 +203,7 @@ static void _add_annual_seedprod(SppIndex sp, RealF lastyear_relsize) {
      * of the number of seeds produced per unit biomass multiplied by species biomass
      * (maximum species biomass * last year's species relative size). */
     if (Globals.currYear == 1) {
-        s->seedprod[0] = RandUniRange(1, s->max_seed_estab);
+        s->seedprod[0] = RandUniRange(1, s->max_seed_estab, &resgroups_rng);
         //printf("Species name=%s ,currYear =1 so new calculated value s->seedprod[%u]= %hu , s->max_seed_estab =%hu\n", s->name, i, s->seedprod[i], s->max_seed_estab);
 
     } else {
@@ -478,8 +481,8 @@ void rgroup_Grow(void) {
                 /* For clonal species, if the individual appears killed it was 
                  * reduced due to low resources last year. It can reproduce vegetatively 
                  * this year but couldn't last year. */
-                if (ndv->killed && RandUni() < ndv->prob_veggrow) {
-                    growth1 = s->relseedlingsize * RandUniRange(1, s->max_vegunits);
+                if (ndv->killed && RandUni(&resgroups_rng) < ndv->prob_veggrow) {
+                    growth1 = s->relseedlingsize * RandUniRange(1, s->max_vegunits, &resgroups_rng);
                     rate1 = growth1 / ndv->relsize;
                     ndv->killed = FALSE;
                     //printf("growth1 killed  = %f\n", growth1);

@@ -88,6 +88,7 @@
 #include "SW_VegProd.h"
 #include "SW_Model.h"
 #include "SW_Weather.h"
+#include "sw_src/pcg/pcg_basic.h"
 
 /***************** Structure Declarations ******************/
 /***********************************************************/
@@ -168,6 +169,7 @@ extern SW_SOILWAT SW_Soilwat;
 extern SW_SITE SW_Site;
 extern SW_VEGPROD SW_VegProd;
 extern SW_WEATHER SW_Weather;
+extern pcg32_random_t grid_rng; //this file's unique random number generator
 
 //This is Rgroup structure pointer that will read rgroup disturbance value, will be used in
 // grid disturbance
@@ -2656,7 +2658,7 @@ static void _do_seed_dispersal(void)
 				continue;
 
 			// germination probability
-			randomN = RandUni();
+			randomN = RandUni(&grid_rng);
 			germ = LE(randomN, Species[s]->seedling_estab_prob);
 
 			year = Globals.currYear - 1;
@@ -2732,7 +2734,7 @@ static void _do_seed_dispersal(void)
 					grid_Species[s][i].mature_biomass
 							* grid_Species[s][i].sd_Param1))
 			{
-				randomN = RandUni();
+				randomN = RandUni(&grid_rng);
 
 				LYPPT = grid_SD[s][i].lyppt;
 				float PPTdry = grid_Species[s][i].sd_PPTdry, PPTwet =
@@ -2773,7 +2775,7 @@ static void _do_seed_dispersal(void)
 				if (grid_SD[s][grid_SD[s][i].cells[j]].seeds_present)
 					receivedProb += grid_SD[s][i].prob[j];
 
-			randomN = RandUni();
+			randomN = RandUni(&grid_rng);
 			if (LE(randomN, receivedProb) && !ZRO(receivedProb))
 				grid_SD[s][i].seeds_received = 1;
 			else
@@ -2863,7 +2865,7 @@ static int _do_grid_disturbances(int row, int col)
 		{
 			if (LT(grid_Disturb[cell].killfrq, 1.0))
 			{
-				if (RandUni() <= grid_Disturb[cell].killfrq)
+				if (RandUni(&grid_rng) <= grid_Disturb[cell].killfrq)
 				{
 					grid_Disturb[cell].kill_yr = Globals.currYear;
 				}
@@ -2912,7 +2914,7 @@ static void _do_grid_proportion_Recovery(int row, int col)
 		{
 			if (LT(grid_Disturb[cell].killfrq, 1.0))
 			{
-				if (RandUni() <= grid_Disturb[cell].killfrq)
+				if (RandUni(&grid_rng) <= grid_Disturb[cell].killfrq)
 				{
 					grid_Disturb[cell].kill_yr = Globals.currYear;
 				}
@@ -2982,7 +2984,7 @@ static void _do_grid_grazing_EndOfYear(int row, int col)
 		{
 			if (LT(grid_Disturb[cell].grazing_frq, 1.0))
 			{
-				if (RandUni() <= grid_Disturb[cell].grazing_frq)
+				if (RandUni(&grid_rng) <= grid_Disturb[cell].grazing_frq)
 				{
 					grazingyr = Globals.currYear;
 				}

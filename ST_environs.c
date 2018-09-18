@@ -18,6 +18,7 @@
 #include <math.h>
 #include "ST_steppe.h"
 #include "ST_globals.h"
+#include "sw_src/pcg/pcg_basic.h"
 
 
 #include "rands.h"
@@ -42,6 +43,9 @@ static void _make_disturbance( void);
 
 /**************************************************************/
 /**************************************************************/
+
+extern
+  pcg32_random_t environs_rng;
 
 
 void Env_Generate( void) {
@@ -132,7 +136,7 @@ static void _make_ppt( void) {
   } else {
     // run as STEPPE without SOILWAT2:
     while ( r < Globals.ppt.min || r > Globals.ppt.max )
-      r = (IntS)(RandNorm( Globals.ppt.avg,  Globals.ppt.std) +.5);
+      r = (IntS)(RandNorm( Globals.ppt.avg,  Globals.ppt.std, &environs_rng) +.5);
     if (Env.ppt > 0) {
       Env.lyppt = Env.ppt;
       Env.ppt = r;
@@ -173,7 +177,7 @@ static void _make_temp( void) {
 
   if (!UseSoilwat) {
     while ( r < Globals.temp.min || r > Globals.temp.max )
-      r = RandNorm(Globals.temp.avg, Globals.temp.std);
+      r = RandNorm(Globals.temp.avg, Globals.temp.std, &environs_rng);
     Env.temp = r;
   }
 }
@@ -268,7 +272,7 @@ static void _make_disturbance( void) {
            } else {
              pc = Globals.pat.recol[Slope] * Plot.disturbed
                   + Globals.pat.recol[Intcpt];
-             if (RandUni() <= pc) {
+             if (RandUni(&environs_rng) <= pc) {
                Plot.pat_removed = TRUE;
                /* slight effects for one year*/
                Plot.disturbed = 1;
@@ -293,37 +297,38 @@ static void _make_disturbance( void) {
   if (Plot.disturbance == NoDisturb) {
 
     /* pick some type of disturbance (other than none)*/
-    event = (DisturbEvent) RandUniRange(1, LastDisturb -1);
+    event = (DisturbEvent) RandUniRange(1, LastDisturb -1, &environs_rng);
 
     /* make sure this is off unless needed  */
     Plot.pat_removed = FALSE;
     switch( event) {
       case FecalPat:
        if (!Globals.pat.use) {event=NoDisturb; break;}
-         event = (RandUni() <= Globals.pat.occur)
+         event = (RandUni(&environs_rng) <= Globals.pat.occur)
                ? event : NoDisturb;
          if (event == NoDisturb) break;
-         Plot.pat_removed = (RandUni() <= Globals.pat.removal)
+         Plot.pat_removed = (RandUni(&environs_rng) <= Globals.pat.removal)
                            ? TRUE : FALSE;
          Plot.disturbed = 0;
          break;
       case AntMound:
        if (!Globals.mound.use) {event=NoDisturb; break;}
-         event = (RandUni() <= Globals.mound.occur)
+         event = (RandUni(&environs_rng) <= Globals.mound.occur)
                ? event :NoDisturb;
          if (event == NoDisturb) break;
 
          Plot.disturbed = RandUniRange(Globals.mound.minyr,
-                                       Globals.mound.maxyr);
+                                       Globals.mound.maxyr,
+                                       &environs_rng);
          break;
       case Burrow:
        if (!Globals.burrow.use) {event=NoDisturb; break;}
-         event = (RandUni() <= Globals.burrow.occur)
+         event = (RandUni(&environs_rng) <= Globals.burrow.occur)
                ? event :NoDisturb;
          if (event == NoDisturb) break;
 
          Plot.disturbed = (Globals.burrow.minyr > 0)
-                        ? RandUniRange(1, Globals.burrow.minyr)
+                        ? RandUniRange(1, Globals.burrow.minyr, &environs_rng)
                         : 0;
          break;
      }

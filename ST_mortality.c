@@ -26,6 +26,7 @@
 #include "myMemory.h"
 #include "ST_steppe.h"
 #include "ST_globals.h"
+#include "sw_src/pcg/pcg_basic.h"
 
 /******** Modular External Function Declarations ***********/
 /* -- truly global functions are declared in functions.h --*/
@@ -69,6 +70,8 @@ void _kill_extra_growth(void);
 Bool _SomeKillage;
 /* flag: some plant was reduced and PR is affected. */
 /* 7/5/01  - currently flag is set but unused. */
+extern
+  pcg32_random_t mortality_rng; //declared in ST_main.c
 
 
 /***********************************************************/
@@ -164,7 +167,7 @@ void mort_Main( Bool *killed) {
       /* now deal with succulents problems*/
       if (g->succulent
           && Env.wet_dry == Ppt_Wet
-          && RandUni() <= Succulent.prob_death )
+          && RandUni(&mortality_rng) <= Succulent.prob_death )
         _succulents( sp );
 
       /* finally, implement disturbance mortality*/
@@ -218,7 +221,7 @@ void mort_EndOfYear(void) {
 
         if ((Globals.currYear >= g->killfreq_startyr) && GT(g->killfreq, 0.)) {
             if (LT(g->killfreq, 1.0)) {
-                if (RandUni() <= g->killfreq) {
+                if (RandUni(&mortality_rng) <= g->killfreq) {
                     g->killyr = Globals.currYear;
                 }
 
@@ -297,7 +300,7 @@ void grazing_EndOfYear( void){
 		{
 			if (LT(g->grazingfrq, 1.0))
 			{
-				if (RandUni() <= g->grazingfrq)
+				if (RandUni(&mortality_rng) <= g->grazingfrq)
 				{
 					grazingyr = Globals.currYear;
 				}
@@ -359,7 +362,7 @@ void proportion_Recovery(void) {
 
         if ((Globals.currYear >= g->killfreq_startyr) && GT(g->killfreq, 0.)) {
             if (LT(g->killfreq, 1.0)) {
-                if (RandUni() <= g->killfreq) {
+                if (RandUni(&mortality_rng) <= g->killfreq) {
                     g->killyr = Globals.currYear;
                 }
 
@@ -574,7 +577,7 @@ static void _slow_growth( const SppIndex sp) {
       ndv->slow_yrs++;
       /* add to kill list if pm met*/
       if ( ndv->slow_yrs >= Species[sp]->max_slow
-           && RandUni() <= pm)
+           && RandUni(&mortality_rng) <= pm)
          kills[++k] = ndv;
     } else
       ndv->slow_yrs = max( ndv->slow_yrs -1, 0);
@@ -625,7 +628,7 @@ static void _age_independent( const SppIndex sp) {
     pn = pow(SppMaxAge(sp), a -1)        /* EQN 14 */
          - (a * Species[sp]->cohort_surv);
     /* add to kill list if pn met*/
-    if (RandUni() <= pn)
+    if (RandUni(&mortality_rng) <= pn)
       kills[++k] = ndv;
   }
 
@@ -743,7 +746,7 @@ static void _stretched_clonal( GrpIndex rg, Int start, Int last,
     pm = .04 * y * y;  /* EQN 8*/
 
   /*-----------------------------------------*/
-    if (RandUni() <= pm ) {  /* kill on quota basis*/
+    if (RandUni(&mortality_rng) <= pm ) {  /* kill on quota basis*/
       /* must be more than 10 plants for any to survive ?*/
       /* if so, then use ceil(), otherwise, use floor()*/
       nk = (Int) floor(((RealF) (np+1) * 0.9)); /* EQN 9*/
