@@ -112,7 +112,8 @@ RealF _resource_cur[MAX_RGROUPS],  /* current resource utilization */
       _resource_cur_swa[MAX_RGROUPS],
       _resource_pr[MAX_RGROUPS],   /* resource convertable to PR */
       transp_running_average, /* used to determine if additional transpiration is necessary */
-      transp_ratio_running_average; /* used to calculate added transpiration if necessary */
+      transp_ratio_running_average, /* used to calculate added transpiration if necessary */
+      transp_ratio_sum_of_squares;
 
 pcg32_random_t resource_rng; //rng for swx_resource.c functions.
 

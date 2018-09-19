@@ -79,6 +79,7 @@ extern
 extern
   RealF transp_running_average;
   RealF transp_ratio_running_average;
+  RealF transp_ratio_sum_of_squares;
 
 
 extern 
@@ -240,7 +241,7 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
     RealD *transp;
     RealF sumUsedByGroup = 0., sumTranspTotal = 0., TranspRemaining = 0.;
     RealF transp_ratio, add_transp = 0;
-    RealF transp_ratio_sum_of_squares, transp_ratio_sd;
+    RealF transp_ratio_sd;
     RealF old_ratio_average = transp_ratio_running_average;
 
     ForEachGroup(g) //Steppe functional group
@@ -307,13 +308,14 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
         //printf("Transpiration ratio average: %f\t Transpiration average: %f\n",transp_ratio_running_average, transp_running_average);
         
         // Calculate the running standard deviation of the transp/PPT ratio
-        transp_ratio_sum_of_squares = get_running_sqr(old_ratio_average, transp_ratio_running_average,
-                transp_ratio);
+        transp_ratio_sum_of_squares = transp_ratio_sum_of_squares + get_running_sqr(old_ratio_average,
+                                                                    transp_ratio_running_average,transp_ratio);
         transp_ratio_sd = final_running_sd(Globals.currYear, transp_ratio_sum_of_squares);
 
         // If this year's transpiration is notably low (2 sd below the mean), add additional transpired water
-        if (transp_ratio < (transp_ratio_running_average - 2 * transp_ratio_sd)) {
-            //printf("Year %d: ratio below 2 sd. ratio = %f, average = %f, sd = %f\n",Globals.currYear, transp_ratio,transp_ratio_running_average, transp_ratio_sd);
+        if (transp_ratio < (transp_ratio_running_average - 1 * transp_ratio_sd)) {
+            //printf("Year %d: ratio below 2 sd. ratio = %f, mean = %f, sd = %f\n",Globals.currYear,
+                   transp_ratio,transp_ratio_running_average, transp_ratio_sd);
            
             // Variance must be less than (mean * (1 - mean)) to meet the assumptions of a beta distribution.
             if (pow(transp_ratio_sd, 2) < (transp_ratio_running_average * (1 - transp_ratio_running_average))) {
