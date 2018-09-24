@@ -108,8 +108,7 @@ RealD * _roots_max,     /* read from root distr. file */
 
 /* simple vectors hold the resource information for each group */
 /* curr/equ gives the available/required ratio */
-RealF _resource_cur[MAX_RGROUPS],  /* current resource utilization */
-      _resource_cur_swa[MAX_RGROUPS],
+RealF _resource_cur[MAX_RGROUPS],  /* current resource availability for each STEPPE functional type */
       _resource_pr[MAX_RGROUPS];   /* resource convertable to PR */
 
 // Window of transpiration used by _transp_contribution_by_group() in swx_resource.c
