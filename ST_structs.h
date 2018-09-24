@@ -287,6 +287,7 @@ struct globals_st {
       sppCount,     /* number of species defined*/
       grpMaxEstab,  /* max species groups that can successfully*/
                     /* establish in a year*/
+      transp_window, /* Number of years for which transpiration data is kept*/
       nCells;		/* number of cells to use in Grid, only applicable if grid function is being used */
   IntL randseed;     /* random seed from input file */
 

@@ -293,12 +293,12 @@ static void _env_init( void) {
 
       switch(++index) {
         case 1:
-            x=sscanf( inbuf, "%f %f %hu %hu %hu %hu %f",
+            x=sscanf( inbuf, "%f %f %hu %hu %hu %hu %f %hu",
                       &Globals.ppt.avg, &Globals.ppt.std,
                       &Globals.ppt.min, &Globals.ppt.max,
                       &Globals.ppt.dry, &Globals.ppt.wet,
-                      &Globals.gsppt_prop);
-            nitems = 7;
+                      &Globals.gsppt_prop, &Globals.transp_window);
+            nitems = 8;
             break;
         case 2:
             x=sscanf( inbuf, "%f %f %f %f",

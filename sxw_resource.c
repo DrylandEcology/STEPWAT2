@@ -406,7 +406,7 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
       transp_window.average = 0;
       transp_window.ratio_average = 0;
       transp_window.sum_of_sqrs = 0;
-      transp_window.size = MAX_WINDOW;
+      transp_window.size = Globals.transp_window;
       transp_window.add_here = 0;
     }
 
