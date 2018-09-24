@@ -110,10 +110,10 @@ RealD * _roots_max,     /* read from root distr. file */
 /* curr/equ gives the available/required ratio */
 RealF _resource_cur[MAX_RGROUPS],  /* current resource utilization */
       _resource_cur_swa[MAX_RGROUPS],
-      _resource_pr[MAX_RGROUPS],   /* resource convertable to PR */
-      transp_running_average, /* used to determine if additional transpiration is necessary */
-      transp_ratio_running_average, /* used to calculate added transpiration if necessary */
-      transp_ratio_sum_of_squares;
+      _resource_pr[MAX_RGROUPS];   /* resource convertable to PR */
+
+// Window of transpiration used by _transp_contribution_by_group() in swx_resource.c
+transp_t transp_window;
 
 pcg32_random_t resource_rng; //rng for swx_resource.c functions.
 

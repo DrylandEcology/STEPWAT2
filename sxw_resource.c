@@ -77,10 +77,7 @@ extern
 
 /* ------ Running Averages ------ */
 extern
-  RealF transp_running_average;
-  RealF transp_ratio_running_average;
-  RealF transp_ratio_sum_of_squares;
-
+  transp_t transp_window;
 
 extern 
   pcg32_random_t resource_rng;
@@ -242,7 +239,6 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
     RealF sumUsedByGroup = 0., sumTranspTotal = 0., TranspRemaining = 0.;
     RealF transp_ratio, add_transp = 0;
     RealF transp_ratio_sd;
-    RealF old_ratio_average = transp_ratio_running_average;
 
     ForEachGroup(g) //Steppe functional group
     {
@@ -301,29 +297,59 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
     // from the mean. If TRUE, add additional transpiration.
     if (Globals.currYear > 0) //no transpiration happens prior to year 1. This avoids a divide by 0.
     {
-        // Update the running averages of transpiration and transp/PPT ratio
-        transp_running_average = get_running_mean(Globals.currYear, transp_running_average, sumTranspTotal);
-        transp_ratio_running_average = get_running_mean(Globals.currYear, transp_ratio_running_average,
-                transp_ratio);
-        //printf("Transpiration ratio average: %f\t Transpiration average: %f\n",transp_ratio_running_average, transp_running_average);
-        
-        // Calculate the running standard deviation of the transp/PPT ratio
-        transp_ratio_sum_of_squares = transp_ratio_sum_of_squares + get_running_sqr(old_ratio_average,
-                                                                    transp_ratio_running_average,transp_ratio);
-        transp_ratio_sd = final_running_sd(Globals.currYear, transp_ratio_sum_of_squares);
+        if(transp_window.size >= Globals.currYear) //we need to do a running average
+        {
+          //add the raw value to the window
+          transp_window.window[transp_window.add_here] = transp_ratio;
+          //save the last mean. we will need it to calculate the sum of squares
+          transp_window.last_ratio = transp_window.ratio_average;
+          //calculate the running mean
+          transp_window.ratio_average = get_running_mean(Globals.currYear,transp_window.ratio_average,
+                                                         transp_ratio);
+          //calculate the running sum of squares
+          RealF ssqr = get_running_sqr(transp_window.last_ratio, transp_window.ratio_average, transp_ratio);
+          //add the calculated sum of squares to the running total
+          transp_window.sum_of_sqrs += ssqr;
+          //add the calculated sum of squares to the array
+          transp_window.SoS_array[transp_window.add_here] = ssqr;
+          //add_here++ accounting for the array bounds
+          transp_window.add_here = (transp_window.add_here + 1) % transp_window.size;
+          //calculate the standard deviation
+          transp_ratio_sd = final_running_sd(Globals.currYear, transp_window.sum_of_sqrs);
+        } else { //we need to do a moving window
+          //add the new value, subtract the old value from the average;
+          transp_window.ratio_average += (transp_ratio/transp_window.size) 
+                                         - (transp_window.window[transp_window.add_here]/transp_window.size);
+          //put the new ratio in the window
+          transp_window.window[transp_window.add_here] = transp_ratio;
+          // calculate the new sum of squares value
+          RealF ssqr = (transp_ratio - transp_window.ratio_average) * (transp_ratio - transp_window.ratio_average);
+          // add the new sum of squares, subtract the old.
+          transp_window.sum_of_sqrs += ssqr - transp_window.SoS_array[transp_window.add_here];
+          // update the sum of squares window.
+          transp_window.SoS_array[transp_window.add_here] =  ssqr;
+          //add_here++ accounting for the array bounds
+          transp_window.add_here = (transp_window.add_here + 1) % transp_window.size;
+          //calculate the standard deviation
+          transp_ratio_sd = final_running_sd(transp_window.size, transp_window.sum_of_sqrs);
+        }
 
-        // If this year's transpiration is notably low (2 sd below the mean), add additional transpired water
-        if (transp_ratio < (transp_ratio_running_average - 1 * transp_ratio_sd)) {
-            //printf("Year %d: ratio below 2 sd. ratio = %f, mean = %f, sd = %f\n",Globals.currYear,
-                   //transp_ratio,transp_ratio_running_average, transp_ratio_sd);
+        //printf("Year %d: ratio = %f, mean = %f, sos = %f sd = %f\n",Globals.currYear,
+        //           transp_ratio,transp_window.ratio_average, transp_window.sum_of_sqrs, transp_ratio_sd);
+
+        // If this year's transpiration is notably low (1 sd below the mean), add additional transpired water
+        if (transp_ratio < (transp_window.ratio_average - 1 * transp_ratio_sd)) {
+            //printf("Year %d below 1 sd: ratio = %f, average = %f, sd = %f\n", Globals.currYear,transp_ratio,
+                                                          //transp_window.ratio_average, transp_ration_sd);
            
             // Variance must be less than (mean * (1 - mean)) to meet the assumptions of a beta distribution.
-            if (pow(transp_ratio_sd, 2) < (transp_ratio_running_average * (1 - transp_ratio_running_average))) {
+            if (pow(transp_ratio_sd, 2) < (transp_window.ratio_average * (1 - transp_window.ratio_average))) {
                 // Shape parameters that are needed for calculation of a beta distribution
-                float alpha = ((pow(transp_ratio_running_average, 2) - pow(transp_ratio_running_average, 3)) /
-                        pow(transp_ratio_sd, 2)) - transp_ratio_running_average;
-                //printf("alpha: %f\tsd^2: %f\n", alpha,pow(transp_ratio_sd,2));
-                float beta = (alpha / transp_ratio_running_average) - alpha;
+                float alpha = ((pow(transp_window.ratio_average, 2) - pow(transp_window.ratio_average, 3)) /
+                        pow(transp_ratio_sd, 2)) - transp_window.ratio_average;
+              
+                float beta = (alpha / transp_window.ratio_average) - alpha;
+                //printf("alpha: %f\tbeta: %f\n", alpha, beta);                
 
                 if (alpha < 1.0) // alpha > 0 guaranteed by previous if statement.
                 {
@@ -339,13 +365,15 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
                 }
 
                 // This transpiration will be added 
-                add_transp = (1 - transp_ratio / RandBeta(alpha, beta, &resource_rng)) * transp_running_average;
+                add_transp = (1 - transp_ratio / RandBeta(alpha, beta, &resource_rng)) * transp_window.average 
+                             * ((Globals.currYear < transp_window.size) ? Globals.currYear : transp_window.size);
                 //printf("Year %d:\tTranspiration to add: %f\n",Globals.currYear,add_transp);
-
+                //printf("TranspRemaining: %f\tTranspRemaining+add_transp: %f\n",TranspRemaining,add_transp+TranspRemaining);
+                
                 /* Adds the additional transpiration to the remaining transpiration 
                  * so it can be distributed proportionally to the functional groups. */
                 TranspRemaining += add_transp;
-                //printf("TranspRemaining: %f\tTranspRemaining+add_transp: %f\n",TranspRemaining,add_transp+TranspRemaining);
+                
 
             } else { //If trying to create a beta distribution and assumptions are not met
                 LogError(logfp, LOGWARN,
@@ -353,6 +381,14 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
                         Globals.currYear);
             }
         }
+    } else { //curryear == 0
+      // initialize the struct's feilds
+      transp_window.average = 0;
+      transp_window.ratio_average = 0;
+      transp_window.sum_of_sqrs = 0;
+      transp_window.last_ratio = 0;
+      transp_window.size = MAX_WINDOW;
+      transp_window.add_here = 0;
     }
 
     /* ------------ End testing to see if additional transpiration is necessary ---------- */

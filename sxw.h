@@ -72,6 +72,29 @@ struct stepwat_st {
   char *debugfile; /* added in ST_Main(), read to get debug instructions */
 };
 
+// The number of transpiration values retained by transp_data
+#define MAX_WINDOW 30
+
+// transp_data stores information related to transpiration. It stores X years of transpiration data
+// where X is defined by the user. From the transpiration data is has, This struct also stores a 
+// running average, running standard deviation, and running sum of squares. 
+struct transp_data {
+  RealF  average, /* used to determine if additional transpiration is necessary */
+         ratio_average, /* used to calculate added transpiration if necessary */
+         sum_of_sqrs,
+         last_ratio; //ratio average not including the current year
+  
+  int size;
+  // This array will store the transpiration data for the last X years. It will be treated as a 
+  // circular queue to increase efficiency. add_here is the array index that should be overwriten
+  // with the curent year's data
+  int add_here;
+  RealF window[MAX_WINDOW]; //raw values
+  RealF SoS_array[MAX_WINDOW]; //sum of squares
+};
+
+typedef struct transp_data transp_t;
+
 #define SXW_NFILES 5
 
 typedef struct stepwat_st SXW_t;
