@@ -364,8 +364,19 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
                             Globals.currYear, beta);
                 }
 
+                RealF betasd = sqrt((alpha*beta)/((alpha+beta+1) * pow(alpha + beta,2))); //sd of a beta distribution
+                RealF betamean = 1 / (1 + (beta/alpha)); //mean of beta distribution
+                RealF randbeta = RandBeta(alpha, beta, &resource_rng);
+
+                //keep generating random beta values until it is within 1 sd
+                while(randbeta < (betamean - betasd) || randbeta > (betamean + betasd))
+                {
+                  printf("randbeta = %f, mean = %f, sd = %f\n",randbeta, betamean,betasd);
+                  randbeta = RandBeta(alpha, beta, &resource_rng);
+                }
+
                 // This transpiration will be added 
-                add_transp = (1 - transp_ratio / RandBeta(alpha, beta, &resource_rng)) * transp_window.average 
+                add_transp = (1 - transp_ratio / randbeta) * transp_window.average 
                              * ((Globals.currYear < transp_window.size) ? Globals.currYear : transp_window.size);
                 //printf("Year %d:\tTranspiration to add: %f\n",Globals.currYear,add_transp);
                 //printf("TranspRemaining: %f\tTranspRemaining+add_transp: %f\n",TranspRemaining,add_transp+TranspRemaining);
