@@ -299,15 +299,20 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
     {
         if(transp_window.size >= Globals.currYear) //we need to do a running average
         {
-          //add the raw value to the window
-          transp_window.window[transp_window.add_here] = transp_ratio;
+          // add transpiration to the window
+          transp_window.transp[transp_window.add_here] = sumTranspTotal;
+          //update the average
+          transp_window.average = get_running_mean(Globals.currYear,transp_window.average, sumTranspTotal);
+          //add the ratio value to the window
+          transp_window.ratios[transp_window.add_here] = transp_ratio;
           //save the last mean. we will need it to calculate the sum of squares
-          transp_window.last_ratio = transp_window.ratio_average;
+          RealF last_ratio = transp_window.ratio_average;
           //calculate the running mean
           transp_window.ratio_average = get_running_mean(Globals.currYear,transp_window.ratio_average,
                                                          transp_ratio);
+          
           //calculate the running sum of squares
-          RealF ssqr = get_running_sqr(transp_window.last_ratio, transp_window.ratio_average, transp_ratio);
+          RealF ssqr = get_running_sqr(last_ratio, transp_window.ratio_average, transp_ratio);
           //add the calculated sum of squares to the running total
           transp_window.sum_of_sqrs += ssqr;
           //add the calculated sum of squares to the array
@@ -318,10 +323,15 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
           transp_ratio_sd = final_running_sd(Globals.currYear, transp_window.sum_of_sqrs);
         } else { //we need to do a moving window
           //add the new value, subtract the old value from the average;
+          transp_window.average += sumTranspTotal/transp_window.size - 
+                                   transp_window.transp[transp_window.add_here]/transp_window.size;
+          //add the new value, subtract the old value from the ratio average;
           transp_window.ratio_average += (transp_ratio/transp_window.size) 
-                                         - (transp_window.window[transp_window.add_here]/transp_window.size);
+                                         - (transp_window.ratios[transp_window.add_here]/transp_window.size);
+          //put the new transpiration in the window
+          transp_window.transp[transp_window.add_here] = sumTranspTotal;
           //put the new ratio in the window
-          transp_window.window[transp_window.add_here] = transp_ratio;
+          transp_window.ratios[transp_window.add_here] = transp_ratio;
           // calculate the new sum of squares value
           RealF ssqr = (transp_ratio - transp_window.ratio_average) * (transp_ratio - transp_window.ratio_average);
           // add the new sum of squares, subtract the old.
@@ -371,14 +381,13 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
                 //keep generating random beta values until it is within 1 sd
                 while(randbeta < (betamean - betasd) || randbeta > (betamean + betasd))
                 {
-                  printf("randbeta = %f, mean = %f, sd = %f\n",randbeta, betamean,betasd);
+                  //printf("randbeta = %f, mean = %f, sd = %f\n",randbeta, betamean,betasd);
                   randbeta = RandBeta(alpha, beta, &resource_rng);
                 }
 
                 // This transpiration will be added 
-                add_transp = (1 - transp_ratio / randbeta) * transp_window.average 
-                             * ((Globals.currYear < transp_window.size) ? Globals.currYear : transp_window.size);
-                //printf("Year %d:\tTranspiration to add: %f\n",Globals.currYear,add_transp);
+                add_transp = (1 - transp_ratio / randbeta) * transp_window.average;
+                printf("Year %d:\tTranspiration to add: %f\n",Globals.currYear,add_transp);
                 //printf("TranspRemaining: %f\tTranspRemaining+add_transp: %f\n",TranspRemaining,add_transp+TranspRemaining);
                 
                 /* Adds the additional transpiration to the remaining transpiration 
@@ -393,11 +402,10 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
             }
         }
     } else { //curryear == 0
-      // initialize the struct's feilds
+      // initialize the struct's fields
       transp_window.average = 0;
       transp_window.ratio_average = 0;
       transp_window.sum_of_sqrs = 0;
-      transp_window.last_ratio = 0;
       transp_window.size = MAX_WINDOW;
       transp_window.add_here = 0;
     }

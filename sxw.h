@@ -75,22 +75,44 @@ struct stepwat_st {
 // The number of transpiration values retained by transp_data
 #define MAX_WINDOW 30
 
-// transp_data stores information related to transpiration. It stores X years of transpiration data
-// where X is defined by the user. From the transpiration data is has, This struct also stores a 
-// running average, running standard deviation, and running sum of squares. 
+// transp_data stores three arrays: ratios, transp, and sum of squares. These arrays form 
+// a moving window that stores "size" years worth of previous transpiration data.
+// average, ratio_average, and sum_of_sqrs all store summaries of their respective arrays
+// so that you do not have to iterate through the arrays every time to get information. 
+// size and add_here deal directly with manipulating the arrays.
 struct transp_data {
-  RealF  average, /* used to determine if additional transpiration is necessary */
-         ratio_average, /* used to calculate added transpiration if necessary */
-         sum_of_sqrs,
-         last_ratio; //ratio average not including the current year
+  // average of all transp/ppt values currently inside ratios[]. It should be updated every time
+  // a value is added to transp[].
+  RealF ratio_average;
+
+  // average of all transpiration currently inside transp[]. It should be updated every time a
+  // value is added to ratios[].
+  RealF average;
+
+  // sum of all (xi - mean)^2 values currently inside SoS_array[]. It should be updated every
+  // time a value is added to SoS_array[].
+  RealF sum_of_sqrs;
   
+  // The size off all arrays(see below) is MAX_WINDOW. How much of that window we use is determined
+  // by size. size should be set before using a transp_data struct, and must be between 1 and MAX_WINDOW
   int size;
-  // This array will store the transpiration data for the last X years. It will be treated as a 
-  // circular queue to increase efficiency. add_here is the array index that should be overwriten
-  // with the curent year's data
+
+  // add_here represents the oldest value in the array. It treats the array as a circle,
+  // meaning when add_here == MAX_WINDOW the next iteration should return it to 0. This 
+  // implementeation means that window[] is basically a First in First out queue. Every 
+  // time values are added to ratios, transp, and SoS_array, add_here must be incremented.
   int add_here;
-  RealF window[MAX_WINDOW]; //raw values
-  RealF SoS_array[MAX_WINDOW]; //sum of squares
+
+  // ratios[] stores (transpiration/precipitation values). It is used to keep track of
+  // what value needs to be removed from the moving average.
+  RealF ratios[MAX_WINDOW]; // transp/ppt
+  
+  // transp[] stores transpiration values. It is used to keep track of what value needs to be
+  // removed from the moving average.
+  RealF transp[MAX_WINDOW]; // transp
+
+  //SoS_array[] stores the sum of squares values (xi - mean)^2 for the previous (size) iterations.
+  RealF SoS_array[MAX_WINDOW]; //(xi - mean)^2
 };
 
 typedef struct transp_data transp_t;

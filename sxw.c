@@ -112,7 +112,8 @@ RealF _resource_cur[MAX_RGROUPS],  /* current resource utilization */
       _resource_cur_swa[MAX_RGROUPS],
       _resource_pr[MAX_RGROUPS];   /* resource convertable to PR */
 
-// Window of transpiration used by _transp_contribution_by_group() in swx_resource.c
+// Window of transpiration used by _transp_contribution_by_group() in sxw_resource.c
+// "Window" refers to the number of years over which transpiration data is averaged.
 transp_t transp_window;
 
 pcg32_random_t resource_rng; //rng for swx_resource.c functions.
