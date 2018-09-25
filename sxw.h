@@ -97,18 +97,20 @@ struct transp_data {
   // by size. size should be set before using a transp_data struct, and must be between 1 and MAX_WINDOW
   int size;
 
-  // add_here represents the oldest value in the array. It treats the array as a circle,
-  // meaning when add_here == MAX_WINDOW the next iteration should return it to 0. This 
-  // implementeation means that window[] is basically a First in First out queue. Every 
-  // time values are added to ratios, transp, and SoS_array, add_here must be incremented.
-  int add_here;
+  // oldest_index has different behavior when the arrays are full versus when the arrays are partially full.
+  // Partially full: oldest_index points to the next empty spot in the array. This means that oldest_index
+  // should start at 0 and increment every time values are added to the arrays.
+  // Full: oldest_index is the array index of the values that have been in the window the longest.
+  // every time a value is overwritten oldest_index should be incremented by one. This behavior turns
+  // the arrays into First in First out queues.
+  int oldest_index;
 
-  // ratios[] stores (transpiration/precipitation values). It is used to keep track of
+  // ratios[] stores (transpiration/precipitation) values. It is used to keep track of
   // what value needs to be removed from the moving average.
   RealF ratios[MAX_WINDOW]; // transp/ppt
   
   // transp[] stores transpiration values. It is used to keep track of what value needs to be
-  // removed from the moving average.
+  // removed from the moving ratio_average.
   RealF transp[MAX_WINDOW]; // transp
 
   //SoS_array[] stores the sum of squares values (xi - mean)^2 for the previous (size) iterations.

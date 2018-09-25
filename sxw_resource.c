@@ -295,16 +295,22 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
 
     // Determines if the current year transpiration/ppt is greater than 2 standard deviations away
     // from the mean. If TRUE, add additional transpiration.
-    if (Globals.currYear > 0) //no transpiration happens prior to year 1. This avoids a divide by 0.
-    {
+    if (Globals.currYear < 1){  // currYear == 0
+      // initialize the struct's fields
+      transp_window.average = 0;
+      transp_window.ratio_average = 0;
+      transp_window.sum_of_sqrs = 0;
+      transp_window.size = Globals.transp_window;
+      transp_window.oldest_index = 0;
+    } else { // currYear > 0
         if(transp_window.size >= Globals.currYear) //we need to do a running average
         {
           // add transpiration to the window
-          transp_window.transp[transp_window.add_here] = sumTranspTotal;
+          transp_window.transp[transp_window.oldest_index] = sumTranspTotal;
           //update the average
           transp_window.average = get_running_mean(Globals.currYear,transp_window.average, sumTranspTotal);
           //add the ratio value to the window
-          transp_window.ratios[transp_window.add_here] = transp_ratio;
+          transp_window.ratios[transp_window.oldest_index] = transp_ratio;
           //save the last mean. we will need it to calculate the sum of squares
           RealF last_ratio = transp_window.ratio_average;
           //calculate the running mean
@@ -316,30 +322,28 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
           //add the calculated sum of squares to the running total
           transp_window.sum_of_sqrs += ssqr;
           //add the calculated sum of squares to the array
-          transp_window.SoS_array[transp_window.add_here] = ssqr;
-          //add_here++ accounting for the array bounds
-          transp_window.add_here = (transp_window.add_here + 1) % transp_window.size;
+          transp_window.SoS_array[transp_window.oldest_index] = ssqr;
+          //oldest_index++ accounting for the array bounds
+          transp_window.oldest_index = (transp_window.oldest_index + 1) % transp_window.size;
           //calculate the standard deviation
           transp_ratio_sd = final_running_sd(Globals.currYear, transp_window.sum_of_sqrs);
         } else { //we need to do a moving window
           //add the new value, subtract the old value from the average;
-          transp_window.average += sumTranspTotal/transp_window.size - 
-                                   transp_window.transp[transp_window.add_here]/transp_window.size;
+          transp_window.average += (sumTranspTotal - transp_window.transp[transp_window.oldest_index])/transp_window.size;
           //add the new value, subtract the old value from the ratio average;
-          transp_window.ratio_average += (transp_ratio/transp_window.size) 
-                                         - (transp_window.ratios[transp_window.add_here]/transp_window.size);
+          transp_window.ratio_average += (transp_ratio - transp_window.ratios[transp_window.oldest_index])/transp_window.size;
           //put the new transpiration in the window
-          transp_window.transp[transp_window.add_here] = sumTranspTotal;
+          transp_window.transp[transp_window.oldest_index] = sumTranspTotal;
           //put the new ratio in the window
-          transp_window.ratios[transp_window.add_here] = transp_ratio;
+          transp_window.ratios[transp_window.oldest_index] = transp_ratio;
           // calculate the new sum of squares value
           RealF ssqr = (transp_ratio - transp_window.ratio_average) * (transp_ratio - transp_window.ratio_average);
           // add the new sum of squares, subtract the old.
-          transp_window.sum_of_sqrs += ssqr - transp_window.SoS_array[transp_window.add_here];
+          transp_window.sum_of_sqrs += ssqr - transp_window.SoS_array[transp_window.oldest_index];
           // update the sum of squares window.
-          transp_window.SoS_array[transp_window.add_here] =  ssqr;
-          //add_here++ accounting for the array bounds
-          transp_window.add_here = (transp_window.add_here + 1) % transp_window.size;
+          transp_window.SoS_array[transp_window.oldest_index] =  ssqr;
+          //oldest_index++ accounting for the array bounds
+          transp_window.oldest_index = (transp_window.oldest_index + 1) % transp_window.size;
           //calculate the standard deviation
           transp_ratio_sd = final_running_sd(transp_window.size, transp_window.sum_of_sqrs);
         }
@@ -349,8 +353,8 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
 
         // If this year's transpiration is notably low (1 sd below the mean), add additional transpired water
         if (transp_ratio < (transp_window.ratio_average - 1 * transp_ratio_sd)) {
-            //printf("Year %d below 1 sd: ratio = %f, average = %f, sd = %f\n", Globals.currYear,transp_ratio,
-                                                          //transp_window.ratio_average, transp_ration_sd);
+            printf("Year %d below 1 sd: ratio = %f, average = %f, sd = %f\n", Globals.currYear,transp_ratio,
+                                                          transp_window.ratio_average, transp_ratio_sd);
            
             // Variance must be less than (mean * (1 - mean)) to meet the assumptions of a beta distribution.
             if (pow(transp_ratio_sd, 2) < (transp_window.ratio_average * (1 - transp_window.ratio_average))) {
@@ -390,13 +394,6 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
                         Globals.currYear);
             }
         }
-    } else { //curryear == 0
-      // initialize the struct's fields
-      transp_window.average = 0;
-      transp_window.ratio_average = 0;
-      transp_window.sum_of_sqrs = 0;
-      transp_window.size = Globals.transp_window;
-      transp_window.add_here = 0;
     }
 
     /* ------------ End testing to see if additional transpiration is necessary ---------- */
