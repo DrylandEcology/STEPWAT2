@@ -653,7 +653,7 @@ void rgroup_Establish(void) {
             /* see similar logic in mort_EndOfYear() for perennials */
             /// if ( GT( g->killfreq, 0.) ) {
             ///   if ( LT(g->killfreq, 1.0) ) {
-            ///     if (RandUni() <= g->killfreq)
+            ///     if (RandUni(&resgroups_rng) <= g->killfreq)
             ///       g->regen_ok = FALSE;
             ///   } else if ( (Globals.currYear - g->startyr) % (IntU)g->killfreq == 0) {
             ///     g->regen_ok = FALSE;
