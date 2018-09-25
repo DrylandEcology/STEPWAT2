@@ -375,8 +375,7 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
                 }
 
                 // This transpiration will be added 
-                add_transp = (1 - transp_ratio / RandBeta(alpha, beta, &resource_rng)) * transp_window.average 
-                             * ((Globals.currYear < transp_window.size) ? Globals.currYear : transp_window.size);
+                add_transp = (1 - transp_ratio / RandBeta(alpha, beta, &resource_rng)) * transp_window.average;
                 //printf("Year %d:\tTranspiration to add: %f\n",Globals.currYear,add_transp);
                 //printf("TranspRemaining: %f\tTranspRemaining+add_transp: %f\n",TranspRemaining,add_transp+TranspRemaining);
                 
