@@ -347,7 +347,7 @@ void SXW_SW_Setup_Echo(void) {
 	strcat(name, _debugout);
 	FILE *f = OpenFile(strcat(name, ".input.out"), "a");
 	int i;
-	fprintf(f, "\n================== %d =============================\n", SW_Model.year);
+	fprintf(f, "\n================== %d ==============================\n", SW_Model.year);
 	fprintf(f,"Fractions Grass:%f Shrub:%f Tree:%f Forb:%f BareGround:%f\n", SW_VegProd.veg[3].cov.fCover, SW_VegProd.veg[1].cov.fCover, SW_VegProd.veg[0].cov.fCover, SW_VegProd.veg[2].cov.fCover, SW_VegProd.bare_cov.fCover);
 	fprintf(f,"Monthly Production Values\n");
 	fprintf(f,"Grass\n");
@@ -944,16 +944,16 @@ void _print_debuginfo(void) {
 	fprintf(f, "\n================== %d =============================\n", SW_Model.year);
 	fprintf(f, "MAP = %d(mm)\tMAT = %5.2f(C)\tAET = %5.4f(cm)\tAT = %5.4f(cm)\n\n", Env.ppt, Env.temp, SXW.aet, sum);
 
-	fprintf(f, "Group     \tRelsize\tPR\tResource_cur\n");
-	fprintf(f, "-----     \t-------\t-----\t-----\n");
+	fprintf(f, "Group     \tRelsize\tPR\tResource_cur\tResource_cur\n");
+	fprintf(f, "-----     \t-------\t-----\t-no scaling-\t-with scaling-\n");
 	ForEachGroup(r) {
 		sum1 += RGroup[r]->relsize;
 		sum2 += RGroup[r]->pr;
 		sum3 += _resource_cur[r];
-		fprintf(f, "%s\t%.4f\t%.4f\t%.4f\n", RGroup[r]->name, RGroup[r]->relsize, RGroup[r]->pr, _resource_cur[r]);
+		fprintf(f, "%s\t%.4f\t%.4f\t%.4f\t\t%.4f\n", RGroup[r]->name, RGroup[r]->relsize, RGroup[r]->pr, _resource_cur[r]/_bvt, _resource_cur[r]);
 	}
-	fprintf(f, "-----     \t-------\t-----\t-----\n");
-	fprintf(f, "%s\t%.4f\t%.4f\t%.4f\n", "Total", sum1, sum2, sum3);
+	fprintf(f, "-----     \t-------\t-----\t-----\t\t-----\n");
+	fprintf(f, "%s\t\t%.4f\t%.4f\t%.4f\t\t%.4f\n", "Total", sum1, sum2, sum3/_bvt, sum3);
 
 	fprintf(f, "\n------ Production Values Daily Summed Across Types Monthly Averaged -------\n");
 	fprintf(f, "Month\tBMass\tPctLive\tLAIlive\tVegCov\tTotAGB\n");
