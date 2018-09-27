@@ -70,7 +70,8 @@ extern
 
 extern
   RealF _resource_pr[MAX_RGROUPS],  /* resource convertable to pr */
-        _resource_cur[MAX_RGROUPS];
+        _resource_cur[MAX_RGROUPS]; /* resources currently availible by group*/
+        RealF added_transp; /* transpiration added for the current year */
 
 extern
   RealF _bvt;
@@ -237,7 +238,8 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
     int t;
     RealD *transp;
     RealF sumUsedByGroup = 0., sumTranspTotal = 0., TranspRemaining = 0.;
-    RealF transp_ratio, add_transp = 0;
+    RealF transp_ratio;
+    added_transp = 0;
     RealF transp_ratio_sd;
 
     ForEachGroup(g) //Steppe functional group
@@ -379,13 +381,13 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
                 }
 
                 // This transpiration will be added 
-                add_transp = (1 - transp_ratio / RandBeta(alpha, beta, &resource_rng)) * transp_window.average;
+                added_transp = (1 - transp_ratio / RandBeta(alpha, beta, &resource_rng)) * transp_window.average;
                 //printf("Year %d:\tTranspiration to add: %f\n",Globals.currYear,add_transp);
                 //printf("TranspRemaining: %f\tTranspRemaining+add_transp: %f\n",TranspRemaining,add_transp+TranspRemaining);
                 
                 /* Adds the additional transpiration to the remaining transpiration 
                  * so it can be distributed proportionally to the functional groups. */
-                TranspRemaining += add_transp;
+                TranspRemaining += added_transp;
                 
 
             } else { //If trying to create a beta distribution and assumptions are not met
