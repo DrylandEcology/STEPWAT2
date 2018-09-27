@@ -83,6 +83,11 @@ extern
 extern 
   pcg32_random_t resource_rng;
 
+// _transp_contribution_by_group() has different behavior for production years and setup years.
+// this variable keeps track of what year last year was, to make sure that the year actually
+// incremented. If it did NOT, then this is a setup year.
+int lastYear;
+
 //void _print_debuginfo(void);
 
 /*************** Local Function Declarations ***************/
@@ -242,6 +247,19 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
     added_transp = 0;
     RealF transp_ratio_sd;
 
+    // year 0 is a set up year. No need to calculate transpiration.
+    // if there are multiple iterations the last year will run twice;
+    // once for data and once for tear down. The second "last year" is
+    // equivalent to year 0.
+    if(Globals.currYear == 0 || Globals.currYear == lastYear) {
+      transp_window.average = 0;
+      transp_window.ratio_average = 0;
+      transp_window.sum_of_sqrs = 0;
+      transp_window.size = Globals.transp_window;
+      transp_window.oldest_index = 0;
+      return; //no point calculating anything since SOILWAT hasn't run
+    }
+
     ForEachGroup(g) //Steppe functional group
     {
         use_by_group[g] = 0.;
@@ -295,107 +313,106 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
 
     transp_ratio = sumTranspTotal / SXW.ppt;
 
-    // Determines if the current year transpiration/ppt is greater than 2 standard deviations away
+    // Determines if the current year transpiration/ppt is greater than 1 standard deviations away
     // from the mean. If TRUE, add additional transpiration.
-    if (Globals.currYear < 1){  // currYear == 0
-      // initialize the struct's fields
-      transp_window.average = 0;
-      transp_window.ratio_average = 0;
-      transp_window.sum_of_sqrs = 0;
-      transp_window.size = Globals.transp_window;
-      transp_window.oldest_index = 0;
-    } else { // currYear > 0
-        if(transp_window.size >= Globals.currYear) //we need to do a running average
-        {
-          // add transpiration to the window
-          transp_window.transp[transp_window.oldest_index] = sumTranspTotal;
-          //update the average
-          transp_window.average = get_running_mean(Globals.currYear,transp_window.average, sumTranspTotal);
-          //add the ratio value to the window
-          transp_window.ratios[transp_window.oldest_index] = transp_ratio;
-          //save the last mean. we will need it to calculate the sum of squares
-          RealF last_ratio = transp_window.ratio_average;
-          //calculate the running mean
-          transp_window.ratio_average = get_running_mean(Globals.currYear,transp_window.ratio_average,
+    if(transp_window.size >= Globals.currYear) //we need to do a running average
+    {
+        // add transpiration to the window
+        transp_window.transp[transp_window.oldest_index] = sumTranspTotal;
+        //update the average
+        transp_window.average = get_running_mean(Globals.currYear,transp_window.average, sumTranspTotal);
+        //add the ratio value to the window
+        transp_window.ratios[transp_window.oldest_index] = transp_ratio;
+        //save the last mean. we will need it to calculate the sum of squares
+        RealF last_ratio = transp_window.ratio_average;
+        //calculate the running mean
+        transp_window.ratio_average = get_running_mean(Globals.currYear,transp_window.ratio_average,
                                                          transp_ratio);
           
-          //calculate the running sum of squares
-          RealF ssqr = get_running_sqr(last_ratio, transp_window.ratio_average, transp_ratio);
-          //add the calculated sum of squares to the running total
-          transp_window.sum_of_sqrs += ssqr;
-          //add the calculated sum of squares to the array
-          transp_window.SoS_array[transp_window.oldest_index] = ssqr;
-          //oldest_index++ accounting for the array bounds
-          transp_window.oldest_index = (transp_window.oldest_index + 1) % transp_window.size;
-          //calculate the standard deviation
-          transp_ratio_sd = final_running_sd(Globals.currYear, transp_window.sum_of_sqrs);
-        } else { //we need to do a moving window
-          //add the new value, subtract the old value from the average;
-          transp_window.average += (sumTranspTotal - transp_window.transp[transp_window.oldest_index])/transp_window.size;
-          //add the new value, subtract the old value from the ratio average;
-          transp_window.ratio_average += (transp_ratio - transp_window.ratios[transp_window.oldest_index])/transp_window.size;
-          //put the new transpiration in the window
-          transp_window.transp[transp_window.oldest_index] = sumTranspTotal;
-          //put the new ratio in the window
-          transp_window.ratios[transp_window.oldest_index] = transp_ratio;
-          // calculate the new sum of squares value
-          RealF ssqr = (transp_ratio - transp_window.ratio_average) * (transp_ratio - transp_window.ratio_average);
-          // add the new sum of squares, subtract the old.
-          transp_window.sum_of_sqrs += ssqr - transp_window.SoS_array[transp_window.oldest_index];
-          // update the sum of squares window.
-          transp_window.SoS_array[transp_window.oldest_index] =  ssqr;
-          //oldest_index++ accounting for the array bounds
-          transp_window.oldest_index = (transp_window.oldest_index + 1) % transp_window.size;
-          //calculate the standard deviation
-          transp_ratio_sd = final_running_sd(transp_window.size, transp_window.sum_of_sqrs);
-        }
+        //calculate the running sum of squares
+        RealF ssqr = get_running_sqr(last_ratio, transp_window.ratio_average, transp_ratio);
+        //add the calculated sum of squares to the running total
+        transp_window.sum_of_sqrs += ssqr;
+        //add the calculated sum of squares to the array
+        transp_window.SoS_array[transp_window.oldest_index] = ssqr;
+        //oldest_index++ accounting for the array bounds
+        transp_window.oldest_index = (transp_window.oldest_index + 1) % transp_window.size;
+        //calculate the standard deviation
+        transp_ratio_sd = final_running_sd(Globals.currYear, transp_window.sum_of_sqrs);
 
-        //printf("Year %d: ratio = %f, mean = %f, sos = %f sd = %f\n",Globals.currYear,
-        //           transp_ratio,transp_window.ratio_average, transp_window.sum_of_sqrs, transp_ratio_sd);
+    } else { //we need to do a moving window
+        //add the new value, subtract the old value from the average;
+        transp_window.average += (sumTranspTotal - transp_window.transp[transp_window.oldest_index])/transp_window.size;
+        //add the new value, subtract the old value from the ratio average;
+        transp_window.ratio_average += (transp_ratio - transp_window.ratios[transp_window.oldest_index])/transp_window.size;
+        //put the new transpiration in the window
+        transp_window.transp[transp_window.oldest_index] = sumTranspTotal;
+        //put the new ratio in the window
+        transp_window.ratios[transp_window.oldest_index] = transp_ratio;
+        // calculate the new sum of squares value
+        RealF ssqr = (transp_ratio - transp_window.ratio_average) * (transp_ratio - transp_window.ratio_average);
+        // add the new sum of squares, subtract the old.
+        transp_window.sum_of_sqrs += ssqr - transp_window.SoS_array[transp_window.oldest_index];
+        // update the sum of squares window.
+        transp_window.SoS_array[transp_window.oldest_index] =  ssqr;
+        //oldest_index++ accounting for the array bounds
+        transp_window.oldest_index = (transp_window.oldest_index + 1) % transp_window.size;
+        //calculate the standard deviation
+        transp_ratio_sd = final_running_sd(transp_window.size, transp_window.sum_of_sqrs);
+    }
 
-        // If this year's transpiration is notably low (1 sd below the mean), add additional transpired water
-        if (transp_ratio < (transp_window.ratio_average - 1 * transp_ratio_sd)) {
-            printf("Year %d below 1 sd: ratio = %f, average = %f, sd = %f\n", Globals.currYear,transp_ratio,
-                                                          transp_window.ratio_average, transp_ratio_sd);
-           
-            // Variance must be less than (mean * (1 - mean)) to meet the assumptions of a beta distribution.
-            if (pow(transp_ratio_sd, 2) < (transp_window.ratio_average * (1 - transp_window.ratio_average))) {
-                // Shape parameters that are needed for calculation of a beta distribution
-                float alpha = ((pow(transp_window.ratio_average, 2) - pow(transp_window.ratio_average, 3)) /
-                        pow(transp_ratio_sd, 2)) - transp_window.ratio_average;
-              
-                float beta = (alpha / transp_window.ratio_average) - alpha;
-                //printf("alpha: %f\tbeta: %f\n", alpha, beta);                
+    //printf("Year %d: ratio = %f, mean = %f, sos = %f sd = %f\n",Globals.currYear,
+    //           transp_ratio,transp_window.ratio_average, transp_window.sum_of_sqrs, transp_ratio_sd);
 
-                if (alpha < 1.0) // alpha > 0 guaranteed by previous if statement.
-                {
-                    // 0 < alpha < 1 could be an issue, but would not crash the program
-                    LogError(logfp, LOGWARN, "Year %d, transpiration ratio alpha less than 1: %f\n",
-                            Globals.currYear, alpha);
-                }
-                if (beta < 1.0) // beta > 0 guaranteed by previous if statement.
-                {
-                    // 0 < beta < 1 could be an issue, but would not crash the program
-                    LogError(logfp, LOGWARN, "Year %d, transpiration ratio beta less than 1: %f\n",
-                            Globals.currYear, beta);
-                }
+    // If this year's transpiration is notably low (1 sd below the mean), add additional transpired water
+    if (transp_ratio < (transp_window.ratio_average - 1 * transp_ratio_sd)) {
+        //printf("Year %d below 1 sd: ratio = %f, average = %f, sd = %f\n", Globals.currYear,transp_ratio,
+                                                          //transp_window.ratio_average, transp_ratio_sd);
+        
+        /* THIS CODE REMOVED UNTIL A DECISION IS MADE ON UNIFORM VS BETA DISTRIBUTION
+        // Variance must be less than (mean * (1 - mean)) to meet the assumptions of a beta distribution.
+        if (pow(transp_ratio_sd, 2) < (transp_window.ratio_average * (1 - transp_window.ratio_average))) {
+            // Shape parameters that are needed for calculation of a beta distribution
+            float alpha = ((pow(transp_window.ratio_average, 2) - pow(transp_window.ratio_average, 3)) /
+                            pow(transp_ratio_sd, 2)) - transp_window.ratio_average;
+          
+            float beta = (alpha / transp_window.ratio_average) - alpha;
+            //printf("alpha: %f: beta: %f: ", alpha, beta);                
 
-                // This transpiration will be added 
-                added_transp = (1 - transp_ratio / RandBeta(alpha, beta, &resource_rng)) * transp_window.average;
-                //printf("Year %d:\tTranspiration to add: %f\n",Globals.currYear,add_transp);
-                //printf("TranspRemaining: %f\tTranspRemaining+add_transp: %f\n",TranspRemaining,add_transp+TranspRemaining);
-                
-                /* Adds the additional transpiration to the remaining transpiration 
-                 * so it can be distributed proportionally to the functional groups. */
-                TranspRemaining += added_transp;
-                
-
-            } else { //If trying to create a beta distribution and assumptions are not met
-                LogError(logfp, LOGWARN,
-                        "Year %d, transpiration ratio variance does not meet beta distribution assumption.\n",
-                        Globals.currYear);
+            if (alpha < 1.0) // alpha > 0 guaranteed by previous if statement.
+            {
+                // 0 < alpha < 1 could be an issue, but would not crash the program
+                LogError(logfp, LOGWARN, "Year %d, transpiration ratio alpha less than 1: %f\n",
+                         Globals.currYear, alpha);
             }
-        }
+            if (beta < 1.0) // beta > 0 guaranteed by previous if statement.
+            {
+                // 0 < beta < 1 could be an issue, but would not crash the program
+                LogError(logfp, LOGWARN, "Year %d, transpiration ratio beta less than 1: %f\n",
+                        Globals.currYear, beta);
+            }
+
+            // This transpiration will be added 
+            RealF randb = RandBeta(alpha, beta, &resource_rng);
+            added_transp = (1 - transp_ratio / randb) * transp_window.average;
+            printf("randBeta: %.4f\ttransp_ratio/randBeta: %.4f\t1-transp_ratio/randBeta %.4f", randb, transp_ratio/randb, (1 - transp_ratio / randb));
+            if(added_transp < 0){
+                printf("<<<<<<<<<<<");
+            }
+            //printf("Year %d:\tTranspiration to add: %f\n",Globals.currYear,add_transp);
+            //printf("TranspRemaining: %f\tTranspRemaining+add_transp: %f\n",TranspRemaining,add_transp+TranspRemaining);
+            */
+
+            /* Adds the additional transpiration to the remaining transpiration 
+             * so it can be distributed proportionally to the functional groups. */
+            TranspRemaining += added_transp;
+                
+
+        //} else { //If trying to create a beta distribution and assumptions are not met
+        //    LogError(logfp, LOGWARN,
+        //            "Year %d, transpiration ratio variance does not meet beta distribution assumption.\n",
+        //            Globals.currYear);
+        //}
     }
 
     /* ------------ End testing to see if additional transpiration is necessary ---------- */
@@ -413,4 +430,7 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
           RGroup[g]->name, SXW.transp_SWA[g]);
          */
     }
+    
+    //remember the last year. When setting up for a new iteration the same year will appear twice, and we want to skip it the second time
+    lastYear = Globals.currYear; 
 }
