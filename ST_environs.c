@@ -297,7 +297,7 @@ static void _make_disturbance( void) {
   if (Plot.disturbance == NoDisturb) {
 
     /* pick some type of disturbance (other than none)*/
-    event = (DisturbEvent) RandUniRange(1, LastDisturb -1, &environs_rng);
+    event = (DisturbEvent) RandUniIntRange(1, LastDisturb -1, &environs_rng);
 
     /* make sure this is off unless needed  */
     Plot.pat_removed = FALSE;
@@ -317,7 +317,7 @@ static void _make_disturbance( void) {
                ? event :NoDisturb;
          if (event == NoDisturb) break;
 
-         Plot.disturbed = RandUniRange(Globals.mound.minyr,
+         Plot.disturbed = RandUniIntRange(Globals.mound.minyr,
                                        Globals.mound.maxyr,
                                        &environs_rng);
          break;
@@ -328,7 +328,7 @@ static void _make_disturbance( void) {
          if (event == NoDisturb) break;
 
          Plot.disturbed = (Globals.burrow.minyr > 0)
-                        ? RandUniRange(1, Globals.burrow.minyr, &environs_rng)
+                        ? RandUniIntRange(1, Globals.burrow.minyr, &environs_rng)
                         : 0;
          break;
      }

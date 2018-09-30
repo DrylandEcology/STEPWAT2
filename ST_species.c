@@ -75,7 +75,7 @@ IntS Species_NumEstablish(SppIndex sp)
 			if (Species[sp]->max_seed_estab <= 1)
 				return 1;
 			else
-				return (IntS) RandUniRange(1, Species[sp]->max_seed_estab, &species_rng);
+				return (IntS) RandUniIntRange(1, Species[sp]->max_seed_estab, &species_rng);
 		}
 		else
 		{
@@ -90,7 +90,7 @@ IntS Species_NumEstablish(SppIndex sp)
 		if (Species[sp]->max_seed_estab <= 1)
 			return 1;
 		else
-			return (IntS) RandUniRange(1, Species[sp]->max_seed_estab, &species_rng);
+			return (IntS) RandUniIntRange(1, Species[sp]->max_seed_estab, &species_rng);
 		/*    return Species[sp]->max_seed_estab; */
 	}
 	else

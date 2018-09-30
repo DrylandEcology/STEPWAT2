@@ -369,50 +369,21 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
         //printf("Year %d below 1 sd: ratio = %f, average = %f, sd = %f\n", Globals.currYear,transp_ratio,
                                                           //transp_window.ratio_average, transp_ratio_sd);
         
-        /* THIS CODE REMOVED UNTIL A DECISION IS MADE ON UNIFORM VS BETA DISTRIBUTION
-        // Variance must be less than (mean * (1 - mean)) to meet the assumptions of a beta distribution.
-        if (pow(transp_ratio_sd, 2) < (transp_window.ratio_average * (1 - transp_window.ratio_average))) {
-            // Shape parameters that are needed for calculation of a beta distribution
-            float alpha = ((pow(transp_window.ratio_average, 2) - pow(transp_window.ratio_average, 3)) /
-                            pow(transp_ratio_sd, 2)) - transp_window.ratio_average;
-          
-            float beta = (alpha / transp_window.ratio_average) - alpha;
-            //printf("alpha: %f: beta: %f: ", alpha, beta);                
-
-            if (alpha < 1.0) // alpha > 0 guaranteed by previous if statement.
-            {
-                // 0 < alpha < 1 could be an issue, but would not crash the program
-                LogError(logfp, LOGWARN, "Year %d, transpiration ratio alpha less than 1: %f\n",
-                         Globals.currYear, alpha);
-            }
-            if (beta < 1.0) // beta > 0 guaranteed by previous if statement.
-            {
-                // 0 < beta < 1 could be an issue, but would not crash the program
-                LogError(logfp, LOGWARN, "Year %d, transpiration ratio beta less than 1: %f\n",
-                        Globals.currYear, beta);
-            }
+            RealF min = transp_window.ratio_average - transp_ratio_sd;
+            RealF max = transp_window.ratio_average + transp_ratio_sd;
 
             // This transpiration will be added 
-            RealF randb = RandBeta(alpha, beta, &resource_rng);
-            added_transp = (1 - transp_ratio / randb) * transp_window.average;
-            printf("randBeta: %.4f\ttransp_ratio/randBeta: %.4f\t1-transp_ratio/randBeta %.4f", randb, transp_ratio/randb, (1 - transp_ratio / randb));
+            added_transp = (1 - transp_ratio / RandUniFloatRange(min, max, &resource_rng)) * transp_window.average;
             if(added_transp < 0){
-                printf("<<<<<<<<<<<");
+                LogError(logfp, LOGNOTE, "sxw_resource: Added transpiration less than 0.\n");
             }
             //printf("Year %d:\tTranspiration to add: %f\n",Globals.currYear,add_transp);
             //printf("TranspRemaining: %f\tTranspRemaining+add_transp: %f\n",TranspRemaining,add_transp+TranspRemaining);
-            */
+            
 
             /* Adds the additional transpiration to the remaining transpiration 
              * so it can be distributed proportionally to the functional groups. */
             TranspRemaining += added_transp;
-                
-
-        //} else { //If trying to create a beta distribution and assumptions are not met
-        //    LogError(logfp, LOGWARN,
-        //            "Year %d, transpiration ratio variance does not meet beta distribution assumption.\n",
-        //            Globals.currYear);
-        //}
     }
 
     /* ------------ End testing to see if additional transpiration is necessary ---------- */

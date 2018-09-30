@@ -203,7 +203,7 @@ static void _add_annual_seedprod(SppIndex sp, RealF lastyear_relsize) {
      * of the number of seeds produced per unit biomass multiplied by species biomass
      * (maximum species biomass * last year's species relative size). */
     if (Globals.currYear == 1) {
-        s->seedprod[0] = RandUniRange(1, s->max_seed_estab, &resgroups_rng);
+        s->seedprod[0] = RandUniIntRange(1, s->max_seed_estab, &resgroups_rng);
         //printf("Species name=%s ,currYear =1 so new calculated value s->seedprod[%u]= %hu , s->max_seed_estab =%hu\n", s->name, i, s->seedprod[i], s->max_seed_estab);
 
     } else {
@@ -482,7 +482,7 @@ void rgroup_Grow(void) {
                  * reduced due to low resources last year. It can reproduce vegetatively 
                  * this year but couldn't last year. */
                 if (ndv->killed && RandUni(&resgroups_rng) < ndv->prob_veggrow) {
-                    growth1 = s->relseedlingsize * RandUniRange(1, s->max_vegunits, &resgroups_rng);
+                    growth1 = s->relseedlingsize * RandUniIntRange(1, s->max_vegunits, &resgroups_rng);
                     rate1 = growth1 / ndv->relsize;
                     ndv->killed = FALSE;
                     //printf("growth1 killed  = %f\n", growth1);
