@@ -449,7 +449,7 @@ void SXW_PrintDebug(Bool cleanup) {
 		insertInputVars();
 		insertInputProd();
 		insertInputSoils();
-		insertOutputVars(_resource_cur);
+		insertOutputVars(_resource_cur, added_transp);
 		insertRgroupInfo(_resource_cur);
 		insertOutputProd(&SW_VegProd);
 		insertRootsSum(_roots_active_sum);

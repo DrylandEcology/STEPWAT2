@@ -56,7 +56,7 @@ void insertSXWProd(void);
 void insertInputVars(void);
 void insertInputProd(void);
 void insertInputSoils(void);
-void insertOutputVars(RealF * _resource_cur);
+void insertOutputVars(RealF * _resource_cur, RealF added_transp);
 void insertRgroupInfo(RealF * _resource_cur);
 void insertOutputProd(SW_VEGPROD *v);
 void insertRootsSum(RealD * _roots_active_sum);

@@ -300,7 +300,7 @@ void insertInputSoils() {
 	endTransaction();
 }
 
-static void insertSXWoutputVarsRow(int year, int iter, int MAP_mm, double MAT_C, double AET_cm, double AT_cm, double TotalRelsize, double TotalPR, double TotalTransp) {
+static void insertSXWoutputVarsRow(int year, int iter, int MAP_mm, double MAT_C, double AET_cm, double T_cm, double ADT_cm, double AT_cm, double TotalRelsize, double TotalPR, double TotalTransp) {
 	/*int rc;
 	char *zErrMsg = 0;
 	sql[0] = 0;
@@ -314,17 +314,19 @@ static void insertSXWoutputVarsRow(int year, int iter, int MAP_mm, double MAT_C,
 	sqlite3_bind_int(stmt_OutVars, 3, MAP_mm);
 	sqlite3_bind_double(stmt_OutVars, 4, MAT_C);
 	sqlite3_bind_double(stmt_OutVars, 5, AET_cm);
-	sqlite3_bind_double(stmt_OutVars, 6, AT_cm);
-	sqlite3_bind_double(stmt_OutVars, 7, TotalRelsize);
-	sqlite3_bind_double(stmt_OutVars, 8, TotalPR);
-	sqlite3_bind_double(stmt_OutVars, 9, TotalTransp);
+	sqlite3_bind_double(stmt_OutVars, 6, T_cm);
+	sqlite3_bind_double(stmt_OutVars, 7, ADT_cm);
+	sqlite3_bind_double(stmt_OutVars, 8, AT_cm);
+	sqlite3_bind_double(stmt_OutVars, 9, TotalRelsize);
+	sqlite3_bind_double(stmt_OutVars, 10, TotalPR);
+	sqlite3_bind_double(stmt_OutVars, 11, TotalTransp);
 
 	sqlite3_step(stmt_OutVars);
 	sqlite3_clear_bindings(stmt_OutVars);
 	sqlite3_reset(stmt_OutVars);
 }
 
-void insertOutputVars(RealF * _resource_cur) {
+void insertOutputVars(RealF * _resource_cur, RealF added_transp) {
 	int Year = SW_Model.year;
 	int Iteration = Globals.currIter;
 	int p;
@@ -348,11 +350,11 @@ void insertOutputVars(RealF * _resource_cur) {
 			sum3 += _resource_cur[r];
 	}
 	beginTransaction();
-	insertSXWoutputVarsRow(Year, Iteration, Env.ppt, Env.temp, SXW.aet, sum, sum1,sum2,sum3);
+	insertSXWoutputVarsRow(Year, Iteration, Env.ppt, Env.temp, SXW.aet, sum, added_transp, sum+added_transp, sum1,sum2,sum3);
 	endTransaction();
 }
 
-static void insertSXWoutputRgroupRow(int year, int iter, int RGroupID, double Biomass, double Realsize, double PR, double Transpiration) {
+static void insertSXWoutputRgroupRow(int year, int iter, int RGroupID, double Biomass, double Realsize, double PR, double pre_bvt, double Transpiration) {
 	/*int rc;
 	char *zErrMsg = 0;
 	sql[0] = 0;
@@ -367,7 +369,8 @@ static void insertSXWoutputRgroupRow(int year, int iter, int RGroupID, double Bi
 	sqlite3_bind_double(stmt_OutRgroup, 4, Biomass);
 	sqlite3_bind_double(stmt_OutRgroup, 5, Realsize);
 	sqlite3_bind_double(stmt_OutRgroup, 6, PR);
-	sqlite3_bind_double(stmt_OutRgroup, 7, Transpiration);
+	sqlite3_bind_double(stmt_OutRgroup, 7, pre_bvt);
+	sqlite3_bind_double(stmt_OutRgroup, 8, Transpiration);
 
 	sqlite3_step(stmt_OutRgroup);
 	sqlite3_clear_bindings(stmt_OutRgroup);
@@ -381,7 +384,7 @@ void insertRgroupInfo(RealF * _resource_cur) {
 
 	beginTransaction();
 	ForEachGroup(r) {
-		insertSXWoutputRgroupRow(Year, Iteration, r+1, RGroup_GetBiomass(r),RGroup[r]->relsize, RGroup[r]->pr, _resource_cur[r]);
+		insertSXWoutputRgroupRow(Year, Iteration, r+1, RGroup_GetBiomass(r),RGroup[r]->relsize, RGroup[r]->pr, _resource_cur[r]/_bvt, _resource_cur[r]);
 	}
 	endTransaction();
 }
@@ -704,10 +707,10 @@ static void prepareStatements() {
 	sprintf(sql, "INSERT INTO sxwInputSoils (Year,Iteration,Layer,Tree_trco,Shrub_trco,Grass_trco,Forb_trco) VALUES (@Year,@Iteration,@Layer,@Tree_trco,@Shrub_trco,@Grass_trco,@Forb_trco);");
 	sqlite3_prepare_v2(db, sql, 1024, &stmt_InputSoils, NULL);
 
-	sprintf(sql, "INSERT INTO sxwOutputVars (Year,Iteration,MAP_mm,MAT_C,AET_cm,AT_cm,TotalRelsize,TotalPR,TotalTransp) VALUES (@Year,@Iteration,@MAP_mm,@MAT_C,@AET_cm,@AT_cm,@TotalRelsize,@TotalPR,@TotalTransp);");
+	sprintf(sql, "INSERT INTO sxwOutputVars (Year,Iteration,MAP_mm,MAT_C,AET_cm,T_cm,ADT_cm,AT_cm,TotalRelsize,TotalPR,TotalTransp) VALUES (@Year,@Iteration,@MAP_mm,@MAT_C,@AET_cm,@T_cm,@ADT_cm,@AT_cm,@TotalRelsize,@TotalPR,@TotalTransp);");
 	sqlite3_prepare_v2(db, sql, 1024, &stmt_OutVars, NULL);
 
-	sprintf(sql, "INSERT INTO sxwOutputRgroup (Year,Iteration,RGroupID,Biomass,Realsize,PR,Transpiration) VALUES (@Year,@Iteration,@RGroupID,@Biomass,@Realsize,@PR,@Transpiration);");
+	sprintf(sql, "INSERT INTO sxwOutputRgroup (Year,Iteration,RGroupID,Biomass,Realsize,PR,Transp_preBvt,Transpiration) VALUES (@Year,@Iteration,@RGroupID,@Biomass,@Realsize,@PR,@pre_bvt,@Transpiration);");
 	sqlite3_prepare_v2(db, sql, 1024, &stmt_OutRgroup, NULL);
 
 	sprintf(sql, "INSERT INTO sxwOutputProd (Year,Iteration,Month,BMass,PctLive,LAIlive,VegCov,TotAGB) VALUES (@Year,@Iteration,@Month,@BMass,@PctLive,@LAIlive,@VegCov,@TotAGB);");
@@ -760,9 +763,9 @@ void createTables() {
 	char *table_InputSoils =
 			"CREATE TABLE sxwInputSoils(Year INT NOT NULL, Iteration INT NOT NULL, Layer INT NOT NULL, Tree_trco REAL, Shrub_trco REAL, Grass_trco REAL, Forb_trco REAL, PRIMARY KEY(Year, Iteration, Layer));";
 	char *table_OutputVars =
-			"CREATE TABLE sxwOutputVars(Year INT NOT NULL, Iteration INT NOT NULL, MAP_mm INT, MAT_C REAL, AET_cm REAL, AT_cm REAL, TotalRelsize REAL, TotalPR REAL, TotalTransp REAL, PRIMARY KEY(Year, Iteration));";
+			"CREATE TABLE sxwOutputVars(Year INT NOT NULL, Iteration INT NOT NULL, MAP_mm INT, MAT_C REAL, AET_cm REAL, T_cm REAL, ADT_cm REAL, AT_cm REAL, TotalRelsize REAL, TotalPR REAL, TotalTransp REAL, PRIMARY KEY(Year, Iteration));";
 	char *table_OutputRgroup =
-			"CREATE TABLE sxwOutputRgroup(YEAR INT NOT NULL, Iteration INT NOT NULL, RGroupID INT NOT NULL, Biomass REAL, Realsize REAL, PR REAL, Transpiration REAL, PRIMARY KEY(Year, Iteration, RGroupID));";
+			"CREATE TABLE sxwOutputRgroup(YEAR INT NOT NULL, Iteration INT NOT NULL, RGroupID INT NOT NULL, Biomass REAL, Realsize REAL, PR REAL, Transp_preBvt Real,Transpiration REAL, PRIMARY KEY(Year, Iteration, RGroupID));";
 	char *table_OutputProd =
 			"CREATE TABLE sxwOutputProd(YEAR INT NOT NULL, Iteration INT NOT NULL, Month INT NOT NULL, BMass REAL, PctLive REAL, LAIlive REAL, VegCov REAL, TotAGB REAL, PRIMARY KEY(Year, Iteration, Month));";
 	char *table_OutputTransp =
