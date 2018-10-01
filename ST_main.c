@@ -151,7 +151,7 @@ pcg32_random_t mortality_rng;
 pcg32_random_t resgroups_rng;
 pcg32_random_t species_rng;
 pcg32_random_t grid_rng;
-pcg32_random_t markov_rng;
+extern pcg32_random_t markov_rng;
 
 /******************** Begin Model Code *********************/
 /***********************************************************/
