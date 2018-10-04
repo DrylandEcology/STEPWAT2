@@ -73,7 +73,7 @@ struct stepwat_st {
 };
 
 // The number of transpiration values retained by transp_data
-#define MAX_WINDOW 30
+#define MAX_WINDOW 100
 
 // transp_data stores three arrays: ratios, transp, and sum of squares. These arrays form 
 // a moving window that stores "size" years worth of previous transpiration data.
