@@ -330,17 +330,13 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
         //save the last mean. we will need it to calculate the sum of squares
         RealF last_ratio = transp_window.ratio_average;
         //calculate the running mean
-        transp_window.ratio_average = get_running_mean(Globals.currYear,transp_window.ratio_average,
-                                                         transp_ratio);
-          
+        transp_window.ratio_average = get_running_mean(Globals.currYear,transp_window.ratio_average,transp_ratio);
         //calculate the running sum of squares
         RealF ssqr = get_running_sqr(last_ratio, transp_window.ratio_average, transp_ratio);
         //add the calculated sum of squares to the running total
         transp_window.sum_of_sqrs += ssqr;
         //add the calculated sum of squares to the array
         transp_window.SoS_array[transp_window.oldest_index] = ssqr;
-        //oldest_index++ accounting for the array bounds
-        transp_window.oldest_index = (transp_window.oldest_index + 1) % transp_window.size;
         //calculate the standard deviation
         transp_ratio_sd = final_running_sd(Globals.currYear, transp_window.sum_of_sqrs);
 
@@ -359,20 +355,17 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
         transp_window.sum_of_sqrs += ssqr - transp_window.SoS_array[transp_window.oldest_index];
         // update the sum of squares window.
         transp_window.SoS_array[transp_window.oldest_index] =  ssqr;
-        //oldest_index++ accounting for the array bounds
-        transp_window.oldest_index = (transp_window.oldest_index + 1) % transp_window.size;
         //calculate the standard deviation
         transp_ratio_sd = final_running_sd(transp_window.size, transp_window.sum_of_sqrs);
     }
 
     //printf("Year %d: ratio = %f, mean = %f, sos = %f sd = %f\n",Globals.currYear,
-    //           transp_ratio,transp_window.ratio_average, transp_window.sum_of_sqrs, transp_ratio_sd);
+              // transp_ratio,transp_window.ratio_average, transp_window.sum_of_sqrs, transp_ratio_sd);
 
     // If this year's transpiration is notably low (1 sd below the mean), add additional transpired water
     if (transp_ratio < (transp_window.ratio_average - 1 * transp_ratio_sd)) {
         //printf("Year %d below 1 sd: ratio = %f, average = %f, sd = %f\n", Globals.currYear,transp_ratio,
                                                           //transp_window.ratio_average, transp_ratio_sd);
-        
             RealF min = transp_window.ratio_average - transp_ratio_sd;
             RealF max = transp_window.ratio_average + transp_ratio_sd;
 
@@ -383,12 +376,35 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
             }
             //printf("Year %d:\tTranspiration to add: %f\n",Globals.currYear,add_transp);
             //printf("TranspRemaining: %f\tTranspRemaining+add_transp: %f\n",TranspRemaining,add_transp+TranspRemaining);
-            
 
+            /* -------------------- Recalculate the window including added_transp in the current year -------------------- */
+            RealF added_transp_ratio = added_transp / SXW.ppt;
+            //add added_transp to the average. This is technically part of the current year, so no need to subtract anything.
+            transp_window.average += added_transp/transp_window.size;
+            //add added_transp ratio to the ratio average. This is technically part of the current year, so no need to subtract anything.
+            transp_window.ratio_average += (added_transp_ratio)/transp_window.size;
+            //put the new transpiration in the window. Note: oldest_index has not been incremented, so it points to what was just added
+            transp_window.transp[transp_window.oldest_index] += added_transp;
+            //put the new ratio in the window. Note: oldest_index has not been incremented, so it points to what was just added
+            transp_window.ratios[transp_window.oldest_index] += added_transp_ratio;
+            // calculate the new sum of squares value
+            RealF totalTranspRatio = (sumTranspTotal + added_transp)/SXW.ppt;
+            RealF ssqr = (totalTranspRatio - transp_window.ratio_average) * (totalTranspRatio - transp_window.ratio_average);
+            // Subtract the sum of squares calculated above, which was stored in the array. Replace it with what was just calculated.
+            transp_window.sum_of_sqrs += ssqr - transp_window.SoS_array[transp_window.oldest_index];
+            // replace the sum of squares with what we just calculated
+            transp_window.SoS_array[transp_window.oldest_index] =  ssqr;
+
+            //printf("Year %d: ratio = %f, mean = %f, sos = %f\n",Globals.currYear,
+               //transp_ratio+added_transp_ratio,transp_window.ratio_average, transp_window.sum_of_sqrs);
+            
             /* Adds the additional transpiration to the remaining transpiration 
              * so it can be distributed proportionally to the functional groups. */
             TranspRemaining += added_transp;
     }
+
+    //oldest_index++ accounting for the array bounds
+    transp_window.oldest_index = (transp_window.oldest_index + 1) % transp_window.size;
 
     /* ------------ End testing to see if additional transpiration is necessary ---------- */
 
