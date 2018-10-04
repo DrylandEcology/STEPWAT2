@@ -255,6 +255,10 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
       transp_window.average = 0;
       transp_window.ratio_average = 0;
       transp_window.sum_of_sqrs = 0;
+      if(Globals.transp_window > MAX_WINDOW){
+                LogError(logfp, LOGNOTE, "sxw_resource: Transp_window specified in inputs is greater than maximum window.\nInput: %d\nMaximum: %d\nSetting window to %d.\n",Globals.transp_window, MAX_WINDOW,MAX_WINDOW);
+                Globals.transp_window = MAX_WINDOW;
+      }
       transp_window.size = Globals.transp_window;
       transp_window.oldest_index = 0;
       return; //no point calculating anything since SOILWAT hasn't run
