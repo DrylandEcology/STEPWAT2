@@ -113,6 +113,16 @@ cd testing.sagebrush.master/Stepwat_Inputs/
 
 <br>
 
+## If switching to resource_partitioning_overhaul from another branch:
+
+* run 
+  ```
+  git submodule update --init --recursive
+  ```
+  To ensure all submodules are updated correctly.
+
+<br>
+
 ## Note: repository renamed from StepWat to STEPWAT2 on Feb 23, 2017
 
 All existing information should [automatically be redirected](https://help.github.com/articles/renaming-a-repository/) to the new name.
