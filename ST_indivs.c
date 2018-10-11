@@ -318,9 +318,9 @@ void indiv_proportion_Recovery(IndivType *ndv, int killType, RealF proportionRec
     /* This should never happen because proportion recovered should always be 
      * positive or zero */
     if (LT(ndv->relsize, 0.0)) {
-        // this should never happend because `increase` should always be positive
+        // this should never happen because `increase` should always be positive
         LogError(logfp, LOGWARN, "'indiv_proportion_Recovery': an individual of "\
-      "%s reached relsize < 0 and is removed (increase = %.3f): for " \
+      "%s reached relsize < 0 (increase = %.3f): for " \
       "killType = %d, proportionKilled = %.2f, proportionRecovery = %.2f",
                 Species[ndv->myspecies]->name, increase,
                 killType, proportionKilled, proportionRecovery);
