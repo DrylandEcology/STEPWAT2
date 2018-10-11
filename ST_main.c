@@ -70,8 +70,6 @@ SW_FILE_STATUS SW_File_Status;
   void stat_Output_AllMorts( void) ;
   void stat_Output_AllBmass(void) ;
 
-  void stat_Output_AllSoilwatVariables(void);
-
   void runGrid( void ); //for the grid... declared in ST_grid.c
 
   void _kill_annuals(void);
@@ -282,7 +280,6 @@ int main(int argc, char **argv) {
 
 		if (UseSoilwat)
 		{
-			//stat_Output_AllSoilwatVariables();
 			// dont need to restart if last iteration finished
 			// this keeps it from re-writing the output folder and overwriting output files
 			if (Globals.currIter != Globals.runModelIterations)

@@ -50,9 +50,6 @@
   void stat_Output_AllMorts( void) ;
   void stat_Output_AllBmass(void) ;
 
-  //adding below function for adding modified soilwat output at stepwat location
-  void stat_Output_AllSoilwatVariables(void);
-
   //Adding below two functions for creating grid cells avg values output file
   void stat_Output_AllBmassAvg(void);
   void stat_Output_AllCellAvgBmass(const char * filename);
