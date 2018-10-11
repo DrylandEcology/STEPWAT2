@@ -149,7 +149,7 @@ struct resourcegroup_st {
         mm_extra_res;   /* extra resource converted back to mm */
   RealF res_required, /* resource required for current size */
         res_avail,    /* resource available from environment X competition */
-        res_extra,    /* if requested, resource above 1.0 when PR < 1.0 */
+        res_extra,    /* resource applied to superficial growth */
         pr,           /* resources required / resources available */
         relsize,      /* size of all species' indivs' relsizes scaled to 1.0 */
         rgroupFractionOfVegTypeBiomass; /*proportional biomass of the STEPPE functional group out of the SOILWAT2 functional type biomass */
@@ -160,7 +160,7 @@ struct resourcegroup_st {
                        * you set the start year for the group this will flag all
                        * species within that group that establishment will start.
                        * EG start year = 96 I will have 5 flags for one annual species
-                       * for year 96,97,98,99,100. BUT exptirpate will not un-flag this*/
+                       * for year 96,97,98,99,100. BUT extirpate will not un-flag this*/
 
   /**** Quantities that DO NOT change during model runs *****/
 

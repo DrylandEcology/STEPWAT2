@@ -741,7 +741,6 @@ static void _make_arrays(void) {
 	_make_phen_arrays();
 	_make_prod_arrays();
 	_make_transp_arrays();
-//  _make_swa_array(); // required for function `_SWA_contribution_by_group` which uses `sum_dSWA_repartitioned`
 	_make_swc_array();
 }
 

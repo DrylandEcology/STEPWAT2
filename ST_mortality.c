@@ -142,9 +142,10 @@ void mort_Main( Bool *killed) {
   ForEachGroup(rg) {
     g = RGroup[rg];
     if (g->est_count == 0) continue;
-    if (g->max_age == 1) continue;  /* annuals get theirs in EndOfYear() */
+    /* annuals are not subject to these sources of mortality and instead die in _kill_annuals */
+    if (g->max_age == 1) continue;  
 
-    /* mortify plants if low resources for consecutive years */
+    /* kill plants if low resources for consecutive years */
     /* increment yrs_neg_pr if pr > 1, else zero it. */
     /* one good year cancels all previous bad years. */
     if ( GT(g->pr, 1.0) ) {
@@ -157,20 +158,23 @@ void mort_Main( Bool *killed) {
 
     ForEachEstSpp(sp,rg,j) {
 
-      /* Take care of mortality types 1 and 2*/
+      /* Implement mortality types 1 and 2: age independent mortality and slow-growth 
+      * mortality if rgroups are susceptible to those xres (use_mort) = 1 */
       if ( g->use_mort ) {
         _age_independent( sp );
 
         _slow_growth( sp );
 
       }
-      /* now deal with succulents problems*/
+      /* Now implement succulent mortality if this year is "wet" year */
       if (g->succulent
           && Env.wet_dry == Ppt_Wet
           && RandUni(&mortality_rng) <= Succulent.prob_death )
         _succulents( sp );
 
-      /* finally, implement disturbance mortality*/
+      /* Finally, implement mortality due to fecal pats, ant mounds, or animal burrows 
+      * (disturbances originally conceptualized for the shortgrass steppe that result in 
+      * plant mortality */
       switch (Plot.disturbance) {
         case FecalPat:
              _pat( sp);
@@ -181,16 +185,9 @@ void mort_Main( Bool *killed) {
         case Burrow:
              _burrow( sp);
              break;
-
       }
-      /*printf("'mort_Main': Species = %s, relsize = %f, est_count = %d\n",
-      Species[sp]->name, Species[sp]->relsize, Species[sp]->est_count); */
       
     } /* end for each species*/
-
-    /*printf("'mort_Main': Group = %s, relsize = %f, est_count = %d\n",
-      RGroup[rg]->name, RGroup[rg]->relsize, RGroup[rg]->est_count);
-    */
 
   } /* end ForEachGroup(rg) */
 
@@ -205,7 +202,6 @@ void mort_EndOfYear(void) {
      * that would result in mortality in single year (killyr) or
      * extirpation (extirp) where plants are killed and do not return. */
 
-    //printf("inside mort_EndOfYear() \n");
     GrpIndex rg;
     GroupType *g;
     SppIndex sp;
@@ -213,7 +209,7 @@ void mort_EndOfYear(void) {
 
     ForEachGroup(rg) {
         if (Globals.currYear < RGroup[rg]->startyr) {
-            /* don't start trying to kill or grow or do grazing until RGroup[rg]->startyr year */
+            /* Can't kill plants until the year each RGroup[rg] is turned on */
             continue;
         }
 
@@ -236,10 +232,6 @@ void mort_EndOfYear(void) {
         } else if (Globals.currYear == RGroup[rg]->killyr) {
             RGroup_Kill(rg);
         }
-
-        /*printf("'mort_EndOfYear': Group = %s, relsize = %f, est_count = %d\n",
-          RGroup[rg]->name, RGroup[rg]->relsize, RGroup[rg]->est_count);
-         */
 
         /* If the current year is a fire year, then remove extra_growth here
         instead of in _kill_extra_growth called in ST_main.c. Otherwise, 
@@ -268,18 +260,17 @@ void mort_EndOfYear(void) {
             }
         }
     }
-
 }
 
 void grazing_EndOfYear( void){
 
 	/*======================================================*/
     /* PURPOSE */
-    /* Perform the sorts of grazing one might expect at end of year, it is based on grazing frequency */
+    /* Implements grazing at the frequency and intensity that is specified in rgroup.in */
     /* HISTORY */
 	/* 1st Nov 2015 -AT  -Added Species grazing EndOfYear  */
 	/*======================================================*/
-
+	
 	GrpIndex rg;
 	GroupType *g;
 
@@ -292,7 +283,7 @@ void grazing_EndOfYear( void){
 
 		if (Globals.currYear < RGroup[rg]->startyr)
 		{
-			/* don't start trying to grow or do grazing until RGroup[rg]->startyr year */
+			/* Grazing cannot occur for an RGroup[rg] until the year that RGroup[rg] is turned on */
 			continue;
 		}
 
@@ -313,7 +304,7 @@ void grazing_EndOfYear( void){
 
 		}
 
-		//rgroup grazing
+		//Implement grazing if this year is a year where grazing should occur
 		if (Globals.currYear == grazingyr)
 		{
 			//printf( "currYear is equal to grazingYear so will iterate all the Species for doing grazing, RGroup[g]->est_count =%d \n",RGroup[rg]->est_count);
@@ -325,24 +316,20 @@ void grazing_EndOfYear( void){
 					continue;
 				}
 				//printf( "year=%d calling Species_Proportion_Grazing()  rgroupName=%s, est_count =%d,grazingfreq_startyr=%d, grazingfreq=%d, proportionGrazing=%f \n",Globals.currYear,g->name,RGroup[rg]->est_count,g->grazingfreq_startyr,g->grazingfrq,g->proportion_grazing);
+				
+				/* Remove plant biomass to implement grazing using the proportion_grazing specified in inputs */
 				Species_Proportion_Grazing(RGroup[rg]->est_spp[i],RGroup[rg]->proportion_grazing );
 			}
 		}
-
-    /*printf("'grazing_EndOfYear': Group = %s, relsize = %f, est_count = %d\n",
-      RGroup[rg]->name, RGroup[rg]->relsize, RGroup[rg]->est_count);
-    */
-
 	}
-
 }
 
 void proportion_Recovery(void) {
     /*======================================================*/
     /* PURPOSE */
-    /* Perform recovery of biomass that represents re-sprouting after a fire. This
+    /* Implements recovery of biomass that represents re-sprouting after a fire. This
      * is controlled by proportion_recovered, specified in inputs and can be turned
-     * on or off for each functional group, depending on their ability to resprout. */
+     * on or off for each functional group, depending on their capacity to resprout. */
     /* HISTORY */
     /* 1st Nov 2015 -AT -Added Species Proportion Recovery  */
     /*======================================================*/
@@ -354,7 +341,8 @@ void proportion_Recovery(void) {
     ForEachGroup(rg) {
 
         if (Globals.currYear < RGroup[rg]->startyr) {
-            /* don't start trying to grow  until RGroup[rg]->startyr year */
+            /* Recovery of biomass after fire cannot occur for an RGroup[rg] until the year 
+            * that RGroup[rg] is turned on */
             continue;
         }
 
@@ -372,7 +360,7 @@ void proportion_Recovery(void) {
 
         }
 
-        //rgroup proportion recovery
+        // Implement recovery of biomass after fire that represents re-sprouting
         if (Globals.currYear == RGroup[rg]->killyr) {
             Int i;
 
@@ -500,7 +488,6 @@ static void _burrow( const SppIndex sp) {
 }
 
 
-
 /***********************************************************/
 static void _succulents( const SppIndex sp) {
 /*======================================================*/
@@ -545,13 +532,13 @@ static void _slow_growth( const SppIndex sp) {
 /* Kill plants based on a probability if the growth rate
    is less than the "slow rate" which is defined by the
    user in the group-level parameters (max_slow) and in
-   the species-level parameters (max_rate).  the slow rate
+   the species-level parameters (max_rate). The slow rate
    is growthrate <= max_slow * max_rate.
 
    Increment the counter for number of years of slow growth.
    If the number of years of slow growth is greater than
-   max_slow (defined in species parms), get a random number
-   and test it against the probability of death.  C&L'90
+   max_slow (defined in species.in), draw a random number
+   and test it against the probability of mortality.  C&L'90
    defines this value as a constant, but it might be better
    to define it in the groups or species parameters.
 
@@ -594,17 +581,14 @@ static void _slow_growth( const SppIndex sp) {
 static void _age_independent( const SppIndex sp) {
 /*======================================================*/
 
-/* kills possibly all individuals in a species
-   by the age-independent function (eqn 14) in C&L'90
-   assuming that AGEMAX was defined.
-*/
+/* Kills individuals in a species by the age-independent function (eqn 14) in C&L'90
+   assuming that AGEMAX was defined. */
+
 /* HISTORY */
 /* Chris Bennett @ LTER-CSU 6/15/2000            */
-/* 5/22/01 (cwb) - don't kill annuals here or else they
-      die too early in the process and stats don't work, use
-      mort_EndOfYear() instead. also, skip species with
-      max_age==0 (longest lived). */
+/* 5/22/01 (cwb) - Annuals are not killed here. Slso, skip species with max_age==0 (longest lived). */
 /*------------------------------------------------------*/
+  
   Int n, k=-1;
 
   RealF pn, /* probability of mortality by year n (eqn 14)*/
@@ -646,22 +630,19 @@ static void _age_independent( const SppIndex sp) {
 static void _no_resources( GrpIndex rg) {
 /*======================================================*/
 /* use EQN 7, 8, 9 prior to growing
- * Lack of resources require a reduction in "plant-space"
- * (ie, individuals or portions thereof) such that
- * plant-space balances resource-space.  In reality, this
+ * Resource limitation results in plant mortality
+ * (ie, individuals or portions of individuals). In reality, this
  * would happen gradually over the season, but in this
  * yearly-time-step model it has to be done either before
  * or after the growth routine.  C&L 1990 (p241) note that
  * growth rates are also reduced--this is done in the main
  * growth loop by setting gmod = 1/PR.
 
- * Note that the group's PR MUST BE > 1.0 BY THIS TIME.
- * Normally this is tested for in mort_Main().
+ * Note to make it here, the rgroup's PR MUST BE > 1.0., which is checked in mort_Main().
 
  * This routine also calls _stretched_clonal() to kill
  * additional amounts of clonal plants (if any), which also
- * happens due to insufficient resources.
- */
+ * happens due to insufficient resources. */
 
 /* HISTORY */
 /* Chris Bennett @ LTER-CSU 6/15/2000
@@ -697,8 +678,7 @@ static void _no_resources( GrpIndex rg) {
    * previous loop by reusing i without resetting it to 0.
    * i comes out of the loop pointing to the next living plant.
    * If for some reason all plants were killed, _stretched_clonal
-   * bails before doing anything.
-   */
+   * exits before doing anything. */
   _stretched_clonal( rg, i, n-1, indv_list);
 
   Mem_Free( indv_list);
@@ -709,7 +689,7 @@ static void _no_resources( GrpIndex rg) {
 static void _stretched_clonal( GrpIndex rg, Int start, Int last,
                            IndivType *nlist[]) {
 /*======================================================*/
-
+/* Kill portions of clonal individuals when resources are limited */
 /* HISTORY */
 /* Chris Bennett @ LTER-CSU 6/15/2000            */
 /*------------------------------------------------------*/
@@ -720,38 +700,33 @@ static void _stretched_clonal( GrpIndex rg, Int start, Int last,
       nk; /* number of clonal plants to kill if pm met*/
   RealF pm; /* Probability of mortality (eqn 8)*/
 
-  /* these are used if reducing proportionally (pm not met)*/
+  /* These are used if reducing proportionally (pm not met)*/
   RealF total_size,
        indiv_size,
        total_reduction,
        indiv_reduction;
 
-  IndivType *clist[MAX_INDIVS_PER_SPP]; /* list of clonals*/
+  IndivType *clist[MAX_INDIVS_PER_SPP]; /* list of clonal individuals */
 
-  /*-----------------------------------------*/
-  /* get a list of remaining clonal plants ,*/
-  /* still in order of size*/
+  /* get a list of remaining clonal plants, still ranked by size */
   for( np=-1, i=start; i <= last; i++) {
     if (Species[nlist[i]->myspecies]->isclonal)
       clist[++np] = nlist[i];
   }
   if (np < 0)
-    return;  /* Bail if no clonals remain alive in this group */
+    return;  /* Exit if no clonals remain alive in this rgroup */
 
-  /*-----------------------------------------*/
   y = RGroup[rg]->yrs_neg_pr;
 
   if (y >= RGroup[rg]->max_stretch) {
+    pm = .04 * y * y;  /* EQN 8 from Coffin and Lauenroth (1990) */
 
-    pm = .04 * y * y;  /* EQN 8*/
+    if (RandUni(&mortality_rng) <= pm ) {  /* kill on quota basis */
+      /* must be more than 10 plants for any to survive ? */
+      /* if so, then use ceil(), otherwise, use floor() */
+      nk = (Int) floor(((RealF) (np+1) * 0.9)); /* EQN 9 from Coffin and Lauenroth (1990) */
 
-  /*-----------------------------------------*/
-    if (RandUni(&mortality_rng) <= pm ) {  /* kill on quota basis*/
-      /* must be more than 10 plants for any to survive ?*/
-      /* if so, then use ceil(), otherwise, use floor()*/
-      nk = (Int) floor(((RealF) (np+1) * 0.9)); /* EQN 9*/
-
-      /*  kill until we reach quota or number of plants*/
+      /* Kill until we reach quota or number of plants*/
       nk = min( nk, (np+1));
       for( i = 0; i < nk; i++) {
         indiv_Kill_Complete(clist[i], 11);
@@ -759,8 +734,7 @@ static void _stretched_clonal( GrpIndex rg, Int start, Int last,
 
       if (nk >= 0) _SomeKillage = TRUE;
 
-  /*-----------------------------------------*/
-    } else {  /* reduce inverse-proportionally*/
+    } else {  /* reduce inverse-proportionally */
 
       total_reduction = 1.0 / RGroup[rg]->pr;
 
@@ -783,6 +757,7 @@ static void _stretched_clonal( GrpIndex rg, Int start, Int last,
       for( i=0; i<= np; i++ ) {
         indiv_size = clist[i]->relsize / total_size;
         indiv_reduction = indiv_size * total_reduction;
+        
         /* always succeeds if magic number < 1.0 */
         indiv_Kill_Partial( NoResources,
                             clist[i],
@@ -793,14 +768,13 @@ static void _stretched_clonal( GrpIndex rg, Int start, Int last,
 
     } /* end if pm*/
   } /* end if y >= 1*/
-
 }
 
 /***********************************************************/
 void _kill_annuals( void) {
 /*======================================================*/
 /* PURPOSE */
-/* Loop through all species and kill the annuals.  This
+/* Loop through all species and kill the annual species.  This
    routine should be called at the end of the year after
    all growth happens and statistics are calculated and
    we don't need to know about the annuals any more.
@@ -808,18 +782,12 @@ void _kill_annuals( void) {
    The assumption, of course, is that all of the annual
    species that are established are indeed one year old.
    See the discussion at the top of this file and in
-   indiv_create() for more details.
-*/
+   indiv_create() for more details. */
 
 /* HISTORY */
-/* Chris Bennett @ LTER-CSU 3/14/2001            */
-/*
- *   7-Nov-03 (cwb) Note that annuals can't be mixed with
- *       perennials as I'd originally imagined they might.
- *       Still, the original code works, if not most
- *       efficiently.  Chances are I won't optimize it
- *       because I want to convert the whole thing to C++.
-*------------------------------------------------------*/
+/* Chris Bennett @ LTER-CSU 3/14/2001 */
+/* New function that kills all annual individuals (TEM 10-27-2015)) */
+/*------------------------------------------------------*/
 
   GrpIndex rg;
   SppIndex sp;
@@ -828,8 +796,7 @@ void _kill_annuals( void) {
   ForEachGroup(rg) {
     if (RGroup[rg]->max_age == 1) {
       for(i=RGroup[rg]->est_count, sp=RGroup[rg]->est_spp[i-1]; i>0; sp=RGroup[rg]->est_spp[(--i) - 1]){
-               Species_Annual_Kill(sp, 4);
-              //above calls new function and kill all annual individuals (TEM 10-27-2015))
+               Species_Annual_Kill(sp, 4);             
           }
       }
     }
@@ -864,7 +831,7 @@ void _kill_extra_growth(void) {
             if (!Species[sp]->use_me)
                 continue;
 
-            /* Annuals have already been killed and relsize for annuals  set to 
+            /* Annuals have already been killed and relsize for annuals set to 
              * 0.0 in _kill_annuals */
             if (Species[sp]->max_age == 1)
                 continue;
@@ -878,9 +845,9 @@ void _kill_extra_growth(void) {
 
             // Sets relsize to 0 then sums up all the the individuals' relsizes and adds them back.
             // This has two effects:
-            // 1: removes extragowth from relsize by recalculating without it.
+            // 1: removes extragrowth from relsize by recalculating without it.
             // 2: Removes any small differences between the sum of individual relsizes and the species
-            //    relsize. This ensures that Plot_Initialize in ST_main.c will alway set relsize to 0. 
+            //    relsize. This ensures that Plot_Initialize in ST_main.c will always set relsize to 0. 
             IndivType *p = Species[sp]->IndvHead;
             Species[sp]->relsize = 0;
             while(p)
@@ -888,9 +855,7 @@ void _kill_extra_growth(void) {
                 Species[sp]->relsize += p->relsize;
                 p = p->Next;
             }
-            RGroup_Update_Newsize(Species[sp]->res_grp); //need to call this to sync species and resgroup.
-
-                //Species_Update_Newsize(sp, -Species[sp]->extragrowth);
+            RGroup_Update_Newsize(Species[sp]->res_grp); //need to call this to sync species and rgroup.
 
                 //printf("s->relsize kill after  = %f\n", Species[sp]->relsize);
                 Species[sp]->extragrowth = 0.0;

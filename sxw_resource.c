@@ -66,11 +66,11 @@ extern
         * _roots_active_sum, /* active roots in each month and soil layer for STEPPE functional groups in the current year */
 
        /* rgroup by period */
-        * _phen;          /* phenologic activity for each month for STEPPE functional groups, read from input */
+        * _phen;          /* phenological activity for each month for STEPPE functional groups, read from input */
 
 extern
   RealF _resource_pr[MAX_RGROUPS],  /* resource convertable to pr */
-        _resource_cur[MAX_RGROUPS]; /* resources currently availible by group*/
+        _resource_cur[MAX_RGROUPS]; /* resources currently available by group*/
         RealF added_transp; /* transpiration added for the current year */
 
 extern
@@ -416,10 +416,6 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
             use_by_group[g] += (use_by_group[g] / sumUsedByGroup) * TranspRemaining;
             //printf("for groupName= %s, after sum use_by_group[g]= %f \n",RGroup[g]->name,use_by_group[g]);
         }
-
-        /*printf("'_transp_contribution_by_group': Group = %s, SXW.transp_SWA[g] = %f \n",
-          RGroup[g]->name, SXW.transp_SWA[g]);
-         */
     }
     
     //remember the last year. When setting up for a new iteration the same year will appear twice, and we want to skip it the second time

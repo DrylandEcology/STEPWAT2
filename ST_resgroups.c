@@ -453,10 +453,6 @@ void rgroup_Grow(void) {
         ForEachEstSpp(sp, rg, j) {
             s = Species[sp];
 
-            /* printf("%s:In rgroup_grow: relsize before = %.3f || %s: relsize after = %.3f\n",
-            Species[sp]->name, Species[sp]->relsize,
-            RGroup[rg]->name, RGroup[rg]->relsize); */
-
             sppgrowth = 0.0;
             if (!Species[sp]->allow_growth)
                 continue;
@@ -509,10 +505,6 @@ void rgroup_Grow(void) {
             } /*END ForEachIndiv */
 
             Species_Update_Newsize(sp, sppgrowth);
-
-            /*printf("%s:In rgroup_grow: relsize after = %.3f || %s: relsize after = %.3f\n",
-            Species[sp]->name, Species[sp]->relsize,
-            RGroup[rg]->name, RGroup[rg]->relsize); */
 
         } /* ENDFOR j (for each species)*/
         
@@ -582,21 +574,9 @@ static void _extra_growth(GrpIndex rg) {
             //printf("s->extragrowth  = %f\n, Species = %s \n", Species[sp]->name,s->extragrowth);
 
         } /*END ForEachIndiv */
-
-        /*printf("%s(%d): relsize before = %.3f, extragrowth = %.3f " \
-          "relsize + extra = %.3f || %s(%d): relsize before = %.3f\n",
-          Species[sp]->name, sp, Species[sp]->relsize, s->extragrowth,
-          Species[sp]->relsize + s->extragrowth,
-          RGroup[rg]->name, rg, RGroup[rg]->relsize);
-        */
         
         /* Update the species and rgroup relsizes based on extragrowth */
         Species_Update_Newsize(sp, Species[sp]->extragrowth);
-
-        /*printf("%s: relsize after = %.3f || %s: relsize after = %.3f\n",
-          Species[sp]->name, Species[sp]->relsize,
-          RGroup[rg]->name, RGroup[rg]->relsize);
-        */
 
     } /* ENDFOR j (for each species)*/
 }

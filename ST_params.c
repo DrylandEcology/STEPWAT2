@@ -678,8 +678,6 @@ static void _bmasshdr_init( void) {
     }
   }
 
-
-
   // Put header line in global variable
     for (i=0; i< fc-1; i++) {
       sprintf(inbuf,"%s%c", fields[i], BmassFlags.sep);
@@ -793,8 +791,6 @@ static void _mortflags_init( void) {
                 "Can't make output path for yearly biomass files: %s\n%s",
                 DirName(Parm_name(F_MortPre)), strerror(errno) );
    }
-
-
 
 }
 
