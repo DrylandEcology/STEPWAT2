@@ -81,6 +81,15 @@ cd testing.sagebrush.master/Stepwat_Inputs/
 ```
 
 
+* Run non-gridded version of STEPWAT using SOILWAT and output all variables passed between
+  Stepwat and SOILWAT:
+  
+```
+cd testing.sagebrush.master/Stepwat_Inputs/
+./stepwat -s -f files.in -ssxwdebug.in
+```
+
+
 * Run STEPPE (no SOILWAT2)
 
 ```
