@@ -1,5 +1,4 @@
 # Model time definition file
-# Location: P1
 
 1980	# starting year (but see weather and swc inputs)
 2020	# ending year

@@ -1,15 +1,14 @@
 /********************************************************/
 /********************************************************/
 /*  Source file: sxw_vars.h
-/*  Type: header
-/*  Purpose: Separates the definition of some global variables
+ *  Type: header
+ *  Purpose: Separates the definition of some global variables
  *           so they can be declared in stepp2wat.c and
  *           externed elsewhere.
-/*  Application: STEPWAT - plant community dynamics simulator
- *               coupled with the  SOILWAT model.
-/*  History:
-/*     (14-Apr-2002) -- INITIAL CODING - cwb
-/*
+ *  Application: STEPWAT - plant community dynamics simulator
+ *               coupled with the  SOILWAT model. */
+/*  History */
+/*     (14-Apr-2002) -- INITIAL CODING - cwb */
 /********************************************************/
 /********************************************************/
 
