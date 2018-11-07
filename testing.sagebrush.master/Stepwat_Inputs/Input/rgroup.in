@@ -6,6 +6,7 @@
 # however, the order of input is important
 
 ####################################################
+# All-group parameters:
 # NOTE: only 10 RGs can be established at a time. Below there are 11 RG possibilities. One always has
 # to be turned off. As a default, annual warm-season grasses are turned off.
 #=============================================================
