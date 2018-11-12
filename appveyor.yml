@@ -1,0 +1,17 @@
+platform:
+  - x86
+  - Any CPU
+
+matrix:
+  fast_finish: true
+
+install:
+  - git submodule update --init --recursive
+
+# to run your custom scripts instead of automatic MSBuild
+build_script:
+  - set PATH=%PATH%;c:\cygwin\bin
+  # check that we can cleanly compile STEPWAT2 and run the `default`, non-gridded example project
+  - make clean bint_testing_nongridded CPPFLAGS=-DSWDEBUG
+  # remove created files including (possibly) large output
+  - make cleanall

@@ -19,4 +19,5 @@
 #       it doesn't hurt to set it to 0 always.
 
 # niter nyrs  seed
- 50 300 0
+# 100 300 0 # recommended settings for production runs
+1 300 7 # settings for testing purposes

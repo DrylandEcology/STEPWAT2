@@ -1,14 +1,13 @@
 /********************************************************/
 /********************************************************/
 /*  Source file: ST_functions.h
-/*  Type: header
-/*  Application: STEPPE - plant community dynamics simulator
-/*  Purpose: Declares public functions used throughout the
+ *  Type: header
+ *  Application: STEPPE - plant community dynamics simulator
+ *  Purpose: Declares public functions used throughout the
  *           model, although some are only used in specific
- *           places.
-/*  History:
-/*     (6/15/2000) -- INITIAL CODING - cwb
-/*
+ *           places. */
+/*  History */
+/*     (6/15/2000) -- INITIAL CODING - cwb */
 /********************************************************/
 /********************************************************/
 
@@ -55,8 +54,6 @@ void Indiv_SortSize( const byte sorttype,
 int Indiv_CompSize_A( const void *key1, const void *key2);
 int Indiv_CompSize_D( const void *key1, const void *key2);
 
-float get_running_avg(float old_val, float val_to_add);
-float get_running_sqr(float old_val, float val_to_add, float run_avg);
 
 
 #ifdef DEBUG_MEM

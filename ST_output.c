@@ -1,14 +1,12 @@
 /********************************************************/
 /********************************************************/
 /*  Source file: output.c
-/*  Type: module
-/*  Application: STEPPE - plant community dynamics simulator
-/*  Purpose: All functions pertaining to producing output
- *           should go here.
-/*
-/*  History:
-/*     (6/15/2000) -- INITIAL CODING - cwb
-/*
+ *  Type: module
+ *  Application: STEPPE - plant community dynamics simulator
+ *  Purpose: All functions pertaining to producing output
+ *           should go here. */
+/*  History */
+/*     (6/15/2000) -- INITIAL CODING - cwb */
 /********************************************************/
 /********************************************************/
 
@@ -51,12 +49,65 @@ void output_Bmass_Yearly( Int year ) {
   char fields[MAX_OUTFIELDS][MAX_FIELDLEN+1];
   GrpIndex rg;
   SppIndex sp;
-  int i, fc=0;
+  int i, fc = 0;
   char s[MAX_FIELDLEN];
   char filename[FILENAME_MAX];
 
-
   if (!BmassFlags.yearly) return;
+
+  if(Globals.currYear == 1) // At year one we need a header.
+  {
+  /* --------- Begin setting up header ------- */
+
+    if (BmassFlags.yr)
+      strcpy(fields[fc++], "Year");
+    if (BmassFlags.dist)
+      strcpy(fields[fc++], "Disturbs");
+    if (BmassFlags.ppt) {
+      strcpy(fields[fc++], "PPT");
+    }
+    if (BmassFlags.pclass)
+      strcpy(fields[fc++], "PPTClass");
+    if (BmassFlags.tmp) {
+      strcpy(fields[fc++], "Temp");
+    }
+    if (BmassFlags.grpb) {
+      ForEachGroup(rg) 
+      {
+        strcpy(fields[fc++], RGroup[rg]->name);
+        if (BmassFlags.size) {
+          strcpy(fields[fc++], "_RSize");
+        }
+        if (BmassFlags.pr) {
+          strcpy(fields[fc++],"_PR");
+        }
+      }
+    }
+    if (BmassFlags.sppb) {
+      ForEachSpecies(sp) {
+        strcpy(fields[fc++], Species[sp]->name);
+        if (BmassFlags.indv) {
+          strcpy(fields[fc++], "_Indivs");
+        }
+      }
+    }
+    sprintf(filename, "%s%0*d.csv", Parm_name(F_BMassPre),
+                                 Globals.bmass.suffixwidth,
+                                 Globals.currIter);
+    Globals.bmass.fp_year = OpenFile(filename, "a");
+
+    /* Write data line to already opened file */
+    for (i=0; i< fc-1; i++) {
+      fprintf(Globals.bmass.fp_year,"%s%c", fields[i], BmassFlags.sep);
+    }
+
+    if (i) fprintf(Globals.bmass.fp_year,"%s\n", fields[i]);
+    fflush(Globals.bmass.fp_year);
+    CloseFile(&Globals.bmass.fp_year);
+
+    fc = 0; //reset fc for first line of data.
+  }
+  /* ---------- End setting up header ---------- */
 
   if (BmassFlags.yr) {
       if (UseSoilwat)

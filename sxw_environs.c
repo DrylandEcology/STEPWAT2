@@ -1,20 +1,14 @@
 /********************************************************/
 /********************************************************/
 /*  Source file: sxw_environs.c
- *
-/*  Type: module
- *
-/*  Purpose: Precip and temperature values come from SOILWAT
+ *  Type: module
+ *  Purpose: Precip and temperature values come from SOILWAT
  *           to be added to STEPPE.
- *
-/*  Dependency:  sxw.c
- *
-/*  Application: STEPWAT - plant community dynamics simulator
- *               coupled with the  SOILWAT model.
- *
+ *  Dependency:  sxw.c
+ *  Application: STEPWAT - plant community dynamics simulator
+ *               coupled with the  SOILWAT model. */
 /*  History:
-/*     (21-May-2002) -- INITIAL CODING - cwb
-/*
+ *     (21-May-2002) -- INITIAL CODING - cwb */
 /********************************************************/
 /********************************************************/
 

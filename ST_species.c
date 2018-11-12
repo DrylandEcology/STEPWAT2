@@ -1,14 +1,13 @@
 /********************************************************/
 /********************************************************/
 /*  Source file: species.c
- /*  Type: module
- /*  Application: STEPPE - plant community dynamics simulator
- /*  Purpose: Read / write and otherwise manage the
+ *  Type: module
+ *  Application: STEPPE - plant community dynamics simulator
+ *  Purpose: Read / write and otherwise manage the
  *           site specific information.  See also the
- *           Layer module.
+ *           Layer module. */
  /*  History:
- /*     (6/15/2000) -- INITIAL CODING - cwb
- /*
+  *     (6/15/2000) -- INITIAL CODING - cwb */
  /********************************************************/
 /********************************************************/
 
@@ -23,6 +22,10 @@
 #include "sw_src/filefuncs.h"
 #include "myMemory.h"
 #include "rands.h"
+#include "sw_src/pcg/pcg_basic.h"
+
+extern
+  pcg32_random_t species_rng;
 
 /******** Modular External Function Declarations ***********/
 /* -- truly global functions are declared in functions.h --*/
@@ -59,10 +62,8 @@ IntS Species_NumEstablish(SppIndex sp)
 	/*======================================================*/
 	/* PURPOSE */
 	/* return a number: 0 or more seedlings that establish */
-
 	/* HISTORY */
-	/* Chris Bennett @ LTER-CSU 6/15/2000            */
-
+	/* Chris Bennett @ LTER-CSU 6/15/2000 */
 	/*------------------------------------------------------*/
 
 	//special conditions if we're using the grid and seed dispersal options (as long as its not during the spinup, because we dont use seed dispersal during spinup)
@@ -72,20 +73,22 @@ IntS Species_NumEstablish(SppIndex sp)
 			if (Species[sp]->max_seed_estab <= 1)
 				return 1;
 			else
-				return (IntS) RandUniRange(1, Species[sp]->max_seed_estab);
+				return (IntS) RandUniIntRange(1, Species[sp]->max_seed_estab, &species_rng);
 		}
 		else
+		{
 			return 0;
+		}
 
 	//float biomass = Species[sp]->relsize * Species[sp]->mature_biomass; //This line does nothing!
 	if (RGroup[Species[sp]->res_grp]->est_annually
-			|| LE(RandUni(), Species[sp]->seedling_estab_prob)
+			|| LE(RandUni(&species_rng), Species[sp]->seedling_estab_prob)
 			|| (Species[sp]->sd_sgerm))
 	{
 		if (Species[sp]->max_seed_estab <= 1)
 			return 1;
 		else
-			return (IntS) RandUniRange(1, Species[sp]->max_seed_estab);
+			return (IntS) RandUniIntRange(1, Species[sp]->max_seed_estab, &species_rng);
 		/*    return Species[sp]->max_seed_estab; */
 	}
 	else
@@ -95,15 +98,16 @@ IntS Species_NumEstablish(SppIndex sp)
 }
 
 /**************************************************************/
-RealF Species_GetBiomass(SppIndex sp)
-{
+RealF Species_GetBiomass(SppIndex sp) {
 	/*======================================================*/
 	/* PURPOSE */
-
+    /* Retrieve species biomass */
 	/* HISTORY */
 	/* Chris Bennett @ LTER-CSU 6/15/2000            */
-
 	/*------------------------------------------------------*/
+	
+	if (Species[sp]->est_count == 0)
+        return 0.0;
 	return (Species[sp]->relsize * Species[sp]->mature_biomass);
 }
 
@@ -179,7 +183,6 @@ void species_Update_Kills(SppIndex sp, IntS age)
 		Species[sp]->kills[age]++;
 		RGroup[Species[sp]->res_grp]->kills[age]++;
 	}
-
 }
 
 /**************************************************************/
@@ -197,7 +200,6 @@ void species_Update_Estabs(SppIndex sp, IntS num)
 
 	Species[sp]->estabs += num;
 	RGroup[Species[sp]->res_grp]->estabs += num;
-
 }
 
 /**************************************************************/
@@ -220,9 +222,7 @@ void Species_Update_Newsize(SppIndex sp, RealF newsize)
 	 zero.  The ZRO() macro (defined in "generic.h") tests
 	 for a value near zero.  Likewise, tests for equality are
 	 subject to representational error, so there are macros for
-	 that as well.
-
-	 */
+	 that as well. */
 
 	/* HISTORY */
 	/* Chris Bennett @ LTER-CSU 6/15/2000
@@ -261,11 +261,9 @@ void Species_Update_Newsize(SppIndex sp, RealF newsize)
 	 *            indivs is unneeded, so we have to make sure it doens't
 	 *            get referenced when the species is an annual.  This also
 	 *            means that est_count has no meaning, since we're only
-	 *            fiddling with the relative size.
-
-	 */
-
+	 *            fiddling with the relative size. */
 	/*------------------------------------------------------*/
+
 #define xF_DELTA (20*F_DELTA)
 #define xD_DELTA (20*D_DELTA)
 #define ZERO(x) \
@@ -280,9 +278,10 @@ void Species_Update_Newsize(SppIndex sp, RealF newsize)
 	if (LT(Species[sp]->relsize, 0.0))
 	{
 		LogError(logfp, LOGWARN,
-				"Species_Update_Newsize: %s relsize < 0.0 (=%.1f)"
+				"Species_Update_Newsize: %s relsize < 0.0 (=%.6f)"
 						" year=%d, iter=%d", Species[sp]->name,
 				Species[sp]->relsize, Globals.currYear, Globals.currIter);
+                //printf("Species relsize <0: name=%s, Species[sp]->relsize=%.5f \n ",Species[sp]->name, Species[sp]->relsize);
 	}
 	if (GT(Species[sp]->relsize, 100.))
 	{
@@ -309,6 +308,7 @@ void Species_Update_Newsize(SppIndex sp, RealF newsize)
 	if (ZERO(Species[sp]->relsize))
 		Species[sp]->relsize = 0.0;
 
+
 #undef xF_DELTA
 #undef xD_DELTA
 #undef ZERO
@@ -328,7 +328,7 @@ SppIndex species_New(void)
 	 * but the list of individuals in the species is
 	 * maintained by a linked list which is of course
 	 * empty when the species is first created.  See the
-	 * Indiv module for details.
+	 * Indiv module for details. */
 
 	 /* HISTORY */
 	/* Chris Bennett @ LTER-CSU 6/15/2000            */
@@ -437,16 +437,15 @@ void Species_Proportion_Kill(const SppIndex sp, int killType,
 	 *
 	 * Note the special loop construct.  we have to save the
 	 * pointer to next prior to killing because the object
-	 * is deleted.
+	 * is deleted. */
 
 	 /* HISTORY */
 	/* Chris Bennett @ LTER-CSU 11/15/2000            */
 	/*   8/3/01 - cwb - added linked list processing.
 	 *   09/23/15 -AT  -Added proportionKilled for all even for annual
-	 *   now deletion of species and individual is hold till recovery function
-	 */
-
+	 *   now deletion of species and individual is hold till recovery function */
 	/*------------------------------------------------------*/
+
 #define xF_DELTA (20*F_DELTA)
 #define xD_DELTA (20*D_DELTA)
 #define ZERO(x) \
@@ -476,15 +475,13 @@ void Species_Proportion_Kill(const SppIndex sp, int killType,
 
 void Species_Proportion_Grazing(const SppIndex sp, RealF proportionGrazing)
 {
-
 	/*======================================================*/
 	/* PURPOSE */
-	/* Proportion Grazing all established individuals in a species at Grazing year.
-	 * Note the special loop construct.  we have to save the
-	 * pointer to next prior to killing because the object
-	 * is deleted.
+	/* Proportion Grazing on all individuals and on the extra growth that 
+         * resulted from extra resources this year,stored in Species->extragrowth. */
 	 /* HISTORY */
 	/* AT  1st Nov 2015 -Added Species Proportion Grazing for all even for annual */
+	/* 14 August 2018 -CH -Added functionality to graze the species' extra growth. */
 	/*------------------------------------------------------*/
 #define xF_DELTA (20*F_DELTA)
 #define xD_DELTA (20*D_DELTA)
@@ -492,14 +489,26 @@ void Species_Proportion_Grazing(const SppIndex sp, RealF proportionGrazing)
 		( (sizeof(x) == sizeof(float)) \
 				? ((x)>-xF_DELTA && (x)<xF_DELTA) \
 						: ((x)>-xD_DELTA && (x)<xD_DELTA) )
+	
+	//CH- extra growth is only stored at the species level. This will graze extra
+	//    growth for the whole species.
+	//    loss represents the proportion of extragrowth that is eaten by livestock
+	RealF loss = Species[sp]->extragrowth * proportionGrazing;
 
-	IndivType *p = Species[sp]->IndvHead, *t;
-	//do proportional Grazing adjustment for all the species individuals irrespective of being annual or perennial, both will have this effect
-	while (p)
+	//CH- To make sure that _kill_extra_growth() does not remove too much biomass
+	//    I subtracted loss from both extragrowth and Species relsize.
+	//    This way when the extra growth is removed it will have already lost the 
+	//    proportion due to grazing.
+	Species[sp]->extragrowth -= loss;	// remove the loss from extragrowth 
+	Species_Update_Newsize(sp, -loss);	// remove the loss from Species relsize
+
+	//Implement grazing on normal growth for all individuals in each species.
+	IndivType *t, *p = Species[sp]->IndvHead;
+	while (p) //while p points to an individual
 	{
-		t = p->Next;
+		t = p->Next; //must store Next since p might be deleted at any time.
 		indiv_proportion_Grazing(p, proportionGrazing);
-		p = t;
+		p = t; //move to the next plant.
 	}
 
 	if (ZERO(Species[sp]->relsize) || LT(Species[sp]->relsize, 0.0))
@@ -514,87 +523,61 @@ void Species_Proportion_Grazing(const SppIndex sp, RealF proportionGrazing)
 }
 
 void Species_Proportion_Recovery(const SppIndex sp, int killType,
-		RealF proportionRecovery, RealF proportionKilled)
-{
-	/*======================================================*/
-	/* PURPOSE */
-	/* Proportion Recovery all established individuals in a species after killing year.
-
-	 * Note the special loop construct.  we have to save the
-	 * pointer to next prior to killing because the object
-	 * is deleted.
-	 /* HISTORY */
-	/* AT  1st Nov 2015 -Added Species Proportion Recovery  */
-	/*------------------------------------------------------*/
-#define xF_DELTA (20*F_DELTA)
-#define xD_DELTA (20*D_DELTA)
-#define ZERO(x) \
-		( (sizeof(x) == sizeof(float)) \
-				? ((x)>-xF_DELTA && (x)<xF_DELTA) \
-						: ((x)>-xD_DELTA && (x)<xD_DELTA) )
-
-	IndivType *p = Species[sp]->IndvHead, *t;
-	//Recover all the species individuals  proportionally or adjust their real size irrespective of being annual or perennial, both will have this effect
-	while (p)
-	{
-		t = p->Next;
-		indiv_proportion_Recovery(p, killType, proportionRecovery,
-				proportionKilled);
-		p = t;
-	}
-
-	//Kill all the species individuals and free the assigned memory and finally drop the species as well if real size is zero
-	if (ZERO(Species[sp]->relsize) || LT(Species[sp]->relsize, 0.0))
-	{
-		IndivType *p1 = Species[sp]->IndvHead, *t1;
-		while (p1)
-		{
-			t1 = p1->Next;
-			_delete(p1);
-			p1 = t1;
-		}
-		rgroup_DropSpecies(sp);
-	}
-
-#undef xF_DELTA
-#undef xD_DELTA
-#undef ZERO
+        RealF proportionRecovery, RealF proportionKilled) {
+    /*======================================================*/
+    /* PURPOSE */
+    /* Proportion Recovery (representing re-sprouting after fire) for all 
+     * established individuals in a species. Note the special loop construct.  
+     * We have to save the pointer to next prior to killing because the object
+     * is deleted. */
+    /* HISTORY */
+    /* AT  1st Nov 2015 -Added Species Proportion Recovery  */
+    /*------------------------------------------------------*/
+    
+    IndivType *p = Species[sp]->IndvHead, *t;
+    //Recover biomass for each perennial species that is established
+    while (p) {
+        t = p->Next;
+        indiv_proportion_Recovery(p, killType, proportionRecovery,
+                proportionKilled);
+        p = t;
+    }
+    //printf("'within proportion_recovery after first killing': Species = %s, relsize = %f, est_count = %d\n",Species[sp]->name, Species[sp]->relsize, Species[sp]->est_count);
+   
 }
 
 /**************************************************************/
 void Species_Kill(const SppIndex sp, int killType)
 {
-	/*======================================================*/
-	/* PURPOSE */
-	/* Kill all established individuals in a species.
-	 *
-	 * Note the special loop construct.  we have to save the
-	 * pointer to next prior to killing because the object
-	 * is deleted.
-
-	 /* HISTORY */
-	/* Chris Bennett @ LTER-CSU 11/15/2000            */
-	/*   8/3/01 - cwb - added linked list processing.
-	 */
-
-	/*------------------------------------------------------*/
-	IndivType *p = Species[sp]->IndvHead, *t;
+    /*======================================================*/
+    /* PURPOSE */
+    /* Kill all established individuals in a species.
+     *
+     * Note the special loop construct.  we have to save the
+     * pointer to next prior to killing because the object
+     * is deleted. */
+     /* HISTORY */
+    /* Chris Bennett @ LTER-CSU 11/15/2000 */
+    /* 8/3/01 - cwb - added linked list processing. */
+    /*------------------------------------------------------*/
+    
+    IndivType *p = Species[sp]->IndvHead, *t;
 
 	if (Species[sp]->max_age == 1)
 	{
-		Species_Update_Newsize(sp, -Species[sp]->relsize);
+        Species_Update_Newsize(sp, -Species[sp]->relsize);
 	}
 	else
 	{
 		while (p)
 		{
-			t = p->Next;
-			indiv_Kill_Complete(p, killType);
-			p = t;
-		}
-	}
+            t = p->Next;
+            indiv_Kill_Complete(p, killType);
+            p = t;
+        }
+    }
 
-	rgroup_DropSpecies(sp);
+    rgroup_DropSpecies(sp);
 
 }
 void save_annual_species_relsize() {
