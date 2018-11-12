@@ -222,7 +222,7 @@ void mort_EndOfYear(void) {
     }
     
     /* Set a random number outside of the loop to make sure the kill probability for each functional group is the same */
-    Wildfire_controller = RandUni();
+    Wildfire_controller = RandUni(&mortality_rng);
     //printf("[Cheatgrass: %f\n",Bio_cheatgrass);
 
     /* If cheatgrass biomass is less than the biomass required for wildfire ignition, wildfire probability is very low*/
