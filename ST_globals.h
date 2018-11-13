@@ -10,7 +10,7 @@
  *           The main.c module actually declares these
  *           variables. */
 /*  History */
-/*     (6/15/2000) -- INITIAL CODING - cwb */
+/*    (6/15/2000) -- INITIAL CODING - cwb */
 /********************************************************/
 /********************************************************/
 
