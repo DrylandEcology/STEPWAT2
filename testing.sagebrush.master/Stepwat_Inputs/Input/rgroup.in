@@ -7,12 +7,6 @@
 
 ####################################################
 # All-group parameters:
-# NGrpEstab = maximum number of resource groups that can
-#        establish in a given year
-#
-# NGrpEstab
-     10
-[end]  # section end
 # NOTE: only 10 RGs can be established at a time. Below there are 11 RG possibilities. One always has
 # to be turned off. As a default, annual warm-season grasses are turned off.
 #=============================================================
