@@ -7,8 +7,8 @@
  *           all of the "objects" are defined as structures.
  *           You can think of this as the object dictionary
  *           insofar as you would want to have this file
- *           handy to refer to when perusing the code.
- *
+ *           handy to refer to when perusing the code. */
+/*  History */
  *  History:
  *     6/15/2000 -- INITIAL CODING - cwb
  *     4-Nov-03 (cwb) Added code to handle annuals.
@@ -32,8 +32,7 @@
  *        resource availability). Viability decreases with age
  *        (=1/age), so an array is kept with the last X year's seed
  *        production.  Maximum possible establishment is the sum of the
- *        past years' production, weighted by 1/(seed_age^xdecay).
- */
+          past years' production, weighted by 1/(seed_age^xdecay). */
 /********************************************************/
 /********************************************************/
 
@@ -54,13 +53,14 @@ struct indiv_st {
   MortalityType killedby;
   Bool killed;        /* only for clonal plants, means veggrow possible*/
   RealF relsize,      /* relative to full-sized individual -- 0-1.0) */
-       prv_yr_relsize, /*previous year real rize relative to full-sized individual, saving before killing, used for proportional recovery calculation) */
+       prv_yr_relsize, /*previous year relsize relative to full-sized individual, saving before killing, used for proportional recovery calculation) */
        grp_res_prop,  /* prop'l contribution this indiv makes to group relsize */
-       res_required, /* min_res_req * relsize */
-       res_avail,    /* resource * min_res_req */
+       res_required, /* resources required, biomass of the individual */
+       res_avail,    /* resource available */
        res_extra,    /* resource applied to superficial growth */
        pr,           /* ratio of resources required to amt available */
        growthrate,   /* actual growth rate*/
+       normal_growth, /* biomass the plant gained this year excluding superfluous biomass. Used for grazing.*/
        prob_veggrow; /* set when killed; 0 if not clonal*/
   struct indiv_st *Next, *Prev;  /* facility for linked list 8/3/01 */
 };
@@ -72,8 +72,8 @@ struct indiv_ann_st {
       myspecies;
   RealF relsize,      /* relative to full-sized individual -- 0-1.0) */
        grp_res_prop,  /* prop'l contribution this indiv makes to group relsize */
-       res_required, /* min_res_req * relsize */
-       res_avail,    /* resource * min_res_req */
+       res_required, /* resources required, biomass of the individual */
+       res_avail,    /* resource available */
        res_extra,    /* resource applied to superficial growth */
        pr,           /* ratio of resources required to amt available */
        growthrate;   /* actual growth rate*/
@@ -150,9 +150,10 @@ struct resourcegroup_st {
         mm_extra_res;   /* extra resource converted back to mm */
   RealF res_required, /* resource required for current size */
         res_avail,    /* resource available from environment X competition */
-        res_extra,    /* if requested, resource above 1.0 when PR < 1.0 */
+        res_extra,    /* resource applied to superficial growth */
         pr,           /* resources required / resources available */
-        relsize;      /* size of all species' indivs' relsizes scaled to 1.0 */
+        relsize,      /* size of all species' indivs' relsizes scaled to 1.0 */
+        rgroupFractionOfVegTypeBiomass; /*proportional biomass of the STEPPE functional group out of the SOILWAT2 functional type biomass */
   SppIndex est_count, /* number of species actually established in group*/
            est_spp[MAX_SPP_PER_GRP]; /*list of spp actually estab in grp*/
   Bool extirpated,    /* group extirpated, no more regen */
@@ -160,7 +161,7 @@ struct resourcegroup_st {
                        * you set the start year for the group this will flag all
                        * species within that group that establishment will start.
                        * EG start year = 96 I will have 5 flags for one annual species
-                       * for year 96,97,98,99,100. BUT exptirpate will not un-flag this*/
+                       * for year 96,97,98,99,100. BUT extirpate will not un-flag this*/
 
   /**** Quantities that DO NOT change during model runs *****/
 
@@ -285,8 +286,7 @@ struct globals_st {
       currIter,
       grpCount,     /* number of groups defined*/
       sppCount,     /* number of species defined*/
-      grpMaxEstab,  /* max species groups that can successfully*/
-                    /* establish in a year*/
+      transp_window, /* Number of years for which transpiration data is kept*/
       nCells;		/* number of cells to use in Grid, only applicable if grid function is being used */
   IntL randseed;     /* random seed from input file */
 

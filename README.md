@@ -1,3 +1,22 @@
+| Unix | Windows | Release | License | Coverage | Downloads |
+| :---- | :---- | :---- | :---- | :---- | :---- |
+[ ![Travis build status][1]][2] | [![Appveyor build status][3]][4] | [ ![github release][5]][6] | [![license][7]][8] | [![codecov status][9]][10] | [![github downloads][11]][12] |
+
+[1]: https://travis-ci.org/DrylandEcology/STEPWAT2.svg?branch=master
+[2]: https://travis-ci.org/DrylandEcology/STEPWAT2
+[3]: https://ci.appveyor.com/api/projects/status/qx2o3j4jpp0ej0on/branch/master?svg=true
+[4]: https://ci.appveyor.com/project/DrylandEcologyGit/stepwat2/branch/master
+[5]: https://img.shields.io/github/release/DrylandEcology/STEPWAT2.svg?label=current+release
+[6]: https://github.com/DrylandEcology/STEPWAT2/releases
+[7]: https://img.shields.io/github/license/DrylandEcology/STEPWAT2.svg
+[8]: https://www.gnu.org/licenses/gpl.html
+[9]: https://codecov.io/gh/DrylandEcology/STEPWAT2/branch/master/graph/badge.svg
+[10]: https://codecov.io/gh/DrylandEcology/STEPWAT2
+[11]: https://img.shields.io/github/downloads/DrylandEcology/STEPWAT2/total.svg
+[12]: https://github.com/DrylandEcology/STEPWAT2
+
+<br>
+
 # STEPWAT2
 
 <br>
@@ -62,6 +81,15 @@ cd testing.sagebrush.master/Stepwat_Inputs/
 ```
 
 
+* Run non-gridded version of STEPWAT using SOILWAT and output all variables passed between
+  Stepwat and SOILWAT:
+  
+```
+cd testing.sagebrush.master/Stepwat_Inputs/
+./stepwat -s -f files.in -ssxwdebug.in
+```
+
+
 * Run STEPPE (no SOILWAT2)
 
 ```
@@ -76,6 +104,31 @@ cd testing.sagebrush.master/Stepwat_Inputs/
 ./stepwat -f files.in -o -i -s
 ```
 
+* Alternatively, use `makefile` targets (compile, copy, and execute in one command)
+  - Non-gridded version, with SOILWAT2 water cycle, and with iteration and aggregated SOILWAT2-output:
+    ```
+    make bint_testing_nongridded
+    ```
+  - Gridded version with SOILWAT2 water cycle
+    ```
+    make bint_testing_gridded
+    ```
+  - If you need to clean up first, then run, e.g.,
+    ```
+    make cleanall bint_testing_nongridded
+    ```
+
+
+
+<br>
+
+## If switching to resource_partitioning_overhaul from another branch:
+
+* run 
+  ```
+  git submodule update --init --recursive
+  ```
+  To ensure all submodules are updated correctly.
 
 <br>
 

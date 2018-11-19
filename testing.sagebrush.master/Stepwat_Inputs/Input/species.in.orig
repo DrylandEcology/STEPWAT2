@@ -1,0 +1,222 @@
+# Species input definition file STEPPEWAT
+
+# Anything after the first pound sign is a comment
+# Blank lines, white space, and comments may be used freely,
+# however, the order of input is important
+
+# name = 4 char genus/species name; gusa = Gutierrezia sarothrae, oppo = Opuntia polyacantha
+# rg = number of resource group to which this species belongs,
+#      based on the order they were entered in the rgroups input file,
+#      which is read before this file.  Note that a group cannot
+#      contain a mix of annuals and perennials, although there can 
+#      be more than one group for annuals, for example, one for
+#      invasives and one for natives.
+# age = maximum age in years, 0 = no limit
+#       because a group can be only annuals or only perennials,
+#       a 1 here implies this species belongs to an annual group.
+# irate = intrinsic growth rate (column 8, Table 2, C&L 1990)
+#         for annuals, this is the proportion of maximum biomass
+#         attainable with average resource availability, that is
+#         reported biomass = maxbio * irate / PR
+# ratep = prop of intrisic growth rate to use as maximum growth rate
+# slow  = number of years of slow growth before mortality begins
+#         not used for annuals.
+# disturb  = disturbance class: (this is defined differently in Coffin & Lauenroth 1990
+#	than it is here.
+#         1 = very sensitive to fecal pats and ant mounds
+#         2 = sensitive to pats, very sensitive to mounds
+#         3 = insensitive to pats, sensitive to mounds
+#         4 = insensitive to pats and mounds
+# pestab = seedling establishment probability for a given year
+#          This is the probability that propagules
+#          will reach the plot in a given year.  Can be 1.0 or < 1.
+# eind  = maximum number of individuals that can establish in a year
+#         for annuals, max number of viable seeds that will grow to maturity
+#         on the plot. ie, fecundity.
+# minbio = biomass of an established seedling in grams
+# maxbio = biomass of a mature individual in grams
+#         for annuals, see also irate definition.
+# clonal = can reproduce vegetatively (yes/no)
+#         placeholder required but ignored for annuals.
+# vegindv = number of seedling-sized units to add if vegprop occurs
+# tclass = temperature class (1=C4, 2=C3, 0=not applicable)
+# cosurv = proportion of a cohort surviving to maturity (0.0-1.0)
+#         meaningless for annuals.
+# onoff = turn on/off this species from the model. 1=use, 0=don't use.
+#      see also the same flag in group parameters file.
+# dispersal = turn on/off seed dispersal for this species. 1=use, 0=don't use.
+# 	dispersal is only applicable when using gridded option.
+# var = the variance parameter of the beta distribution for annual establishment. This parameter, 
+#       along with the mean (pestab), is used to calculate the two shape parameters: alpha and beta. 
+#       Default value: 0.0001. NOTE: var must be < pestab * (1-pestab) or alpha and/or beta will be negative,
+#       we will no longer be meeting the assumptions of a beta distribution, and the code will fail.
+# pseed = the average number of seeds produced by annual species per 1g of biomass, per 1m^2 and per year.
+
+###PARAMETER SOURCES     
+#TM - eind values are density values taken from Adler datasets from Idaho. Species vuoc (1090), bogr, spcr, brar (2080), are from Karl et al 1999
+#     arfr, gusa, spp1, spp2, are TM's best guesses)
+#TM - irate is from Bradford and Launeroth 2006 Table A1.4.  If a species fell in those functional groups it was
+#	given the irate values. All forbs recieved the same values
+#TM - maxbio for sagebrush is mean biomass from site B (calculated using Cleary et al 2008)
+#TM - minbio & vegindv(used values from Bradford and Lauenroth 2006, Table A1.4)
+#TM - best guesses biomass phho, brar, pssp, koma
+#TM - acmi biomass Higgins and Mack 1987, spcr biomass luecro et al 2008, trdu biomass Reichman and Smith 1991 figure 2
+#TM - arfr and lipu from LTER ANPP mean value for all years in 0.25m2 plot
+#TM - set all vegindv to 3 (number used across the board in Bradford and Lauenroth 2006)
+#TM - set cosurv to 0.01 for perennials and 0.00 for annuals (arbitrary best guesses to start with)
+#TM - 4.18.15: changed grsp to lipu because of the disputed life history of grsq (annual, biennial, or short lived perennial)
+#TM - lipu, gusa, spcr max life span from Lauenroth and Adler 2008 - not sure I believe GUSA though...
+#TM - chvi lifespan from Peter Adler, unpublished data
+#TM - koma is a short lived perennial (guess max age 5yrs); pose long-lived perennial (age similar to BOGR?)
+#KP - age - acmi (10), phho (10), arfr (5), pssp (35), oppo (30) best guesses
+#TM - maxage for LIPU comes from Walsh, Roberta A. (1993) Liatris punctata. In: Fire Effects Information System, [Online]. U.S. Department of Agriculture, Forest Service, Rocky Mountain Research Station, Fire Sciences Laboratory (Producer). Retrieved 11-26-2011
+#TM - ARTR age from Ferguson 1964- Annual rings in big sagebrush book
+#TM - used SGSLTER parameters for all parameters for BOGR, CHVI(chna), gusa, vuoc, chen(chal)
+#TM - gusa and chvi rates from C&L 1990
+#TM 10.6.2015 - testing different irate for ARTR: found 0.02 or 0.03 works best for ARTR
+#		ALSO tested max biomass for ARTR - found 400 worked best but is flexible 200-500 with above irates
+#		ALSO tested max age for ARTR - found that model is not very sensitive to max age but literature shows 100-150 max age
+
+# name     rg  age  irate    ratep slow disturb pestab     eind minbio  maxbio  clonal vegindv tclass  cosurv  onoff  var    pseed
+<<<<<<< HEAD
+ artr       1   100 0.40000 0.900    4       3    0.30000   2   2.000  400.00      n       0       2  0.0100     1    0.0     0
+ trdu       2    1  0.94700 0.900    2       3    0.0300    5   0.035   4.700      n       0       2  0.0000     0    0.0     0
+ cryp       2    1  0.94700 0.900    2       3    0.2000    5   0.035   4.700      n       0       2  0.0000     1    0.0001   100
+ amre       3    1  0.94700 0.900    2       3    0.0300    5   0.035   4.429      n       0       2  0.0000     0    0.0       0
+ chen       3    1  0.94700 0.900    2       2    0.2000    8   0.035   4.429      n       0       1  0.0000     1    0.0001    100
+ acmi       4   10  0.42600 0.900    2       3    0.15000   6   0.035   5.000      n       0       2  0.0100     0    0.0       0
+ phho       4   10  0.42600 0.900    2       3    0.15000   10  0.035   5.000      n       0       2  0.0100     1    0.0       0
+ arfr       5    5  0.42600 0.900    2       3    0.10000   5   0.035   7.480      n       0       2  0.0100     1    0.0       0
+ lipu       5   35  0.42600 0.900    2       3    0.10000   4   0.035   7.480      n       0       2  0.0100     0    0.0       0
+ brte       6    1  0.94700 0.900    2       3    0.10000   20  0.020   5.000	   n       0       2  0.0000     1    0.0001   1000
+ vuoc       6    1  0.94700 0.900    2       1    0.0300    16  0.020   5.000      n       0       2  0.0000     0    0.0       0
+ pssp       7   35  0.47400 0.900    2       3    0.1500    10   0.500  15.096     y       3       2  0.0100     1    0.0       0
+ koma       7    5  0.47400 0.900    2       3    0.1500    2   0.500  15.096      y       3       2  0.0100     0    0.0       0
+ bogr       8   35  0.47400 0.900    2       2    0.0500    2   0.605  15.096      y       3       1  0.0100     0    0.0       0
+ spcr       8   29  0.47400 0.900    2       3    0.0500    3   0.605   6.000      y       0       1  0.0100     1    0.0       0
+ gusa       9   35  0.73700 0.900    2       3    0.1500    2   0.986  12.126      n       0       2  0.0100     0    0.0       0
+ chvi       9   17  0.47400 0.900    2 		2     0.1500    2   0.986  70.726      n       0       2  0.0100     1  0.0     0
+ oppo       10  30  0.28900 0.900    4       4    0.05000   1   2.250   15.00      y       3       1  0.0100     1    0.0	0
+=======
+  artr       1   100 0.10000 0.900    4      3    0.3000   2   2.000  400.00      n       0       2  0.0100     1	 0.0	 0
+ trdu       2    1  0.94700 0.900    2       3    0.0300   5   0.035   4.700      n       0       2  0.0000     0    0.0     0
+ cryp       2    1  0.94700 0.900    2       3    0.2000   10  0.035   4.700      n       0       2  0.0000     1    0.0001  100
+ amre       3    1  0.94700 0.900    2       3    0.0300   5   0.035   4.429      n       0       2  0.0000     0    0.0     0
+ chen       3    1  0.94700 0.900    2       2    0.2000   8   0.035   4.429      n       0       1  0.0000     1    0.0001  100
+ acmi       4   10  0.42600 0.900    2       3    0.1500   6   0.035   5.000      n       0       2  0.0100     0	 0.0	 0	
+ phho       4   10  0.42600 0.900    2       3    0.1500  15   0.035   5.000      n       0       2  0.0100     1	 0.0	 0
+ arfr       5    5  0.42600 0.900    2       3    0.1000   5   0.035   7.480      n       0       2  0.0100     1	 0.0	 0
+ lipu       5   35  0.42600 0.900    2       3    0.1000   4   0.035   7.480      n       0       2  0.0100     0	 0.0	 0
+ brte       6    1  0.94700 0.900    2       3    0.1500   20  0.020   5.000	  n       0       2  0.0000     1	 0.0001  1000
+ vuoc       6    1  0.94700 0.900    2       1    0.0300   16  0.020   5.000      n       0       2  0.0000     0    0.0     0
+ pssp       7   35  0.47400 0.900    2       3    0.1500   20  0.500  15.096      y       3       2  0.0100     1    0.0     0
+ koma       7    5  0.47400 0.900    2       3    0.1500   2   0.500  15.096      y       3       2  0.0100     0    0.0     0
+ bogr       8   35  0.47400 0.900    2       2    0.0500   2   0.605  15.096      y       3       1  0.0100     0    0.0     0
+ spcr       8   29  0.47400 0.900    2       3    0.0500   3   0.605   6.000      y       0       1  0.0100     1    0.0     0
+ gusa       9   35  0.73700 0.900    2       3    0.1500   2   0.986  12.126      n       0       2  0.0100     0    0.0     0
+ chvi       9   17  0.47400 0.900    2 		 2    0.1500   2   0.986  70.726      n       0       2  0.0100     1  	 0.0     0
+ oppo       10  30  0.28900 0.900    4       4    0.0500   1   2.250   15.00      y       3       1  0.0100     1	 0.0     0
+>>>>>>> master
+
+#spp1       7    1  0.94700 0.900    2       3    0.01500   2   0.020   0.429      n       0       2  0.0000     0
+#spp2       7    1  0.94700 0.900    2       3    0.01500   2   0.020   2.126      n       0       2  0.0000     0
+
+[end]  # this marks the end of the species-specific parameters above
+
+# ===============================================================================
+# Additional parameters for annuals-only establishment.
+#
+# name = name as found in previous table.  must be exactly the same.
+# viable = max years seed viability.  sets seedprod array size.
+# xdecay = decay exponent.  indivs established = SUM(1/seed_age^xdecay)
+#
+# name     viable xdecay 
+ vuoc        10    1.00
+ brte        3	   1.00
+ cryp        10    1.00
+ trdu        10    1.00
+ amre        10    1.00
+ chen        10    1.00
+ 
+#spp1       10    1.00
+#spp2       10    1.00
+
+[end]  # end of additional annuals-only parameters.
+
+# ===============================================================================
+# Species-specific probabilities of vegetative propagation for
+# various mortality types.  In C&L 1990, the probabilities were the same
+# for all clonal species, however, the program design makes it easy to provide
+# species-level control.  If the species is not clonal, the numbers are ignored,
+# which makes it easy to just cut and paste.
+
+# name = 4 char name exactly as above (although order is not important)
+# vprop1 = probability if insufficient resources
+# vprop2 = probability if slow growth
+# vprop3 = probability if intrinsic mortality
+# vprop4 = probability if disturbance
+#
+# name     vprop1 vprop2 vprop3 vprop4
+ artr     0.7500 0.9000 0.9000 0.9000
+ trdu     0.7500 0.9000 0.9000 0.9000
+ cryp     0.7500 0.9000 0.9000 0.9000
+ amre     0.7500 0.9000 0.9000 0.9000
+ chen     0.7500 0.9000 0.9000 0.9000
+ acmi     0.7500 0.9000 0.9000 0.9000
+ phho     0.7500 0.9000 0.9000 0.9000
+ arfr     0.7500 0.9000 0.9000 0.9000
+ lipu     0.7500 0.9000 0.9000 0.9000
+ brte     0.7500 0.9000 0.9000 0.9000
+ vuoc     0.7500 0.9000 0.9000 0.9000
+ pssp     0.7500 0.9000 0.9000 0.9000
+ koma     0.7500 0.9000 0.9000 0.9000
+ bogr     0.7500 0.9000 0.9000 0.9000
+ spcr     0.7500 0.9000 0.9000 0.9000
+ gusa     0.7500 0.9000 0.9000 0.9000
+ chvi     0.7500 0.9000 0.9000 0.9000
+ oppo     0.7500 0.9000 0.9000 0.9000
+
+ #spp1     0.7500 0.9000 0.9000 0.9000
+ #spp2     0.7500 0.9000 0.9000 0.9000
+[end]  # this marks the end of the veg-prop parameters
+
+# ===============================================================================
+# Species-specific input for seed dispersal.
+# Seed dispersal based on Coffin & Lauenroth 1989 paper
+# NOTE: Seed dispersal requires running with gridded option.
+#
+# name = 4 char name exactly as above (although order is not important)
+# dispersal = flag to turn seed dispersal on/off for this species(0 is off, 1 is on)
+# param1 = % of maximum biomass required for an individual to produce seeds
+# PPTdry = ppt of a dry year (in mm)
+# PPTwet = ppt of a wet year (in mm)
+# Pmin = probability of producing seeds in a dry year
+# Pmax = probability of producing seeds in a wet year
+# H = the average release height of the inflorescences (cm) 
+# VT = the average sinking velocity of the seeds (cm/sec)
+#
+# name 	dispersal	param1	PPTdry	PPTwet	Pmin	Pmax	H	VT
+ artr	1		0.5	105	520	0.01	0.55	30.0	100.0 
+ trdu 	1		0.5	105	520	0.01	0.55	30.0	100.0 
+ cryp 	1		0.5	105	520	0.01	0.55	30.0	100.0 
+ amre 	1		0.5	105	520	0.01	0.55	30.0	100.0 
+ chen 	1		0.5	105	520	0.01	0.55	30.0	100.0 
+ acmi 	1		0.5	105	520	0.01	0.55	30.0	100.0 
+ phho 	1		0.5	105	520	0.01	0.55	30.0	100.0 
+ arfr 	1		0.5	105	520	0.01	0.55	30.0	100.0 
+ lipu 	1		0.5	105	520	0.01	0.55	30.0	100.0 
+ brte 	1		0.5	105	520	0.01	0.55	30.0	100.0 
+ vuoc 	1		0.5	105	520	0.01	0.55	30.0	100.0 
+ pssp 	1		0.5	105	520	0.01	0.55	30.0	100.0 
+ koma 	1		0.5	105	520	0.01	0.55	30.0	100.0 
+ bogr 	1		0.5	105	520	0.01	0.55	30.0	100.0 
+ spcr 	1		0.5	105	520	0.01	0.55	30.0	100.0 
+ gusa 	1		0.5	105	520	0.01	0.55	30.0	100.0 
+ chvi 	1		0.5	105	520	0.01	0.55	30.0	100.0 
+ oppo 	1		0.5	105	520	0.01	0.55	30.0	100.0
+
+#spp1 	1		0.5	105	520	0.01	0.55	30.0	100.0 
+#spp2 	1		0.5	105	520	0.01	0.55	30.0	100.0 
+
+[end]	# this marks the end of the seed-dispersal parameters
+
