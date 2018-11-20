@@ -194,8 +194,9 @@ int main(int argc, char **argv) {
          * commented out until a flag requesting ST debugging info is implemented, 
          * do not delete */
 	//ST_connect("Output/stdebug");
-        
+printf("1\n");
 	incr = (IntS) ((float) Globals.runModelIterations / 10);
+	printf("1.5");
 	if (incr == 0)
 		incr = 1;
 
@@ -207,7 +208,7 @@ int main(int argc, char **argv) {
 		} else {
 			fprintf(progfp, "%d\n", iter);
 		}
-
+printf("2");
 		if (BmassFlags.yearly || MortFlags.yearly)
 			parm_Initialize(iter);
 
@@ -233,7 +234,7 @@ int main(int argc, char **argv) {
 		for (year = 1; year <= Globals.runModelYears; year++) {
 
       //printf("------------------------Repetition/year = %d / %d\n", iter, year);
-
+printf("3");
 			Globals.currYear = year;
 
 			rgroup_Establish();
@@ -270,13 +271,13 @@ int main(int argc, char **argv) {
 			proportion_Recovery();
 
 			_kill_extra_growth();
-			}
+
 			ForEachSpecies(sp) {
 				insertSpecieYearInfo(sp);
 				for ((ndv) = Species[sp]->IndvHead; (ndv) != NULL; (ndv) = (ndv)->Next) {
 					insertIndivYearInfo(ndv);
 				}
-			} */
+			}
 		} /* end model run for this year*/
 
 		if (MortFlags.summary) {
@@ -311,7 +312,7 @@ int main(int argc, char **argv) {
 	//ST_disconnect();
 
 #ifdef STEPWAT
-			if (!isnull(SXW.debugfile)){
+	  if (!isnull(SXW.debugfile)){
         printf("entering debugfile\n");
         SXW_PrintDebug(1);
       }

@@ -7,8 +7,8 @@
  *           all of the "objects" are defined as structures.
  *           You can think of this as the object dictionary
  *           insofar as you would want to have this file
- *           handy to refer to when perusing the code. */
-/*  History */
+ *           handy to refer to when perusing the code.
+ *  History
  *  History:
  *     6/15/2000 -- INITIAL CODING - cwb
  *     4-Nov-03 (cwb) Added code to handle annuals.
