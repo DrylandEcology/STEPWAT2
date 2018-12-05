@@ -78,7 +78,7 @@
 #		ALSO tested max age for ARTR - found that model is not very sensitive to max age but literature shows 100-150 max age
 
 # name     rg  age  irate    ratep slow disturb pestab     eind minbio  maxbio  clonal vegindv tclass  cosurv  onoff  var    pseed
-  artr       1   100 0.10000 0.900    4      3    0.3000   2   2.000  400.00      n       0       2  0.0100     1	 0.0	 0
+  artr       1   100 0.35000 0.900    4      3    0.1500   1   2.000  1000.00      n       0       2  0.0100     1	 0.0	 0
  trdu       2    1  0.94700 0.900    2       3    0.0300   5   0.035   4.700      n       0       2  0.0000     0    0.0     0
  cryp       2    1  0.94700 0.900    2       3    0.2000   10  0.035   4.700      n       0       2  0.0000     1    0.0001  100
  amre       3    1  0.94700 0.900    2       3    0.0300   5   0.035   4.429      n       0       2  0.0000     0    0.0     0

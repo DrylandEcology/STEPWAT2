@@ -243,9 +243,7 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
     int t;
     RealD *transp;
     RealF sumUsedByGroup = 0., sumTranspTotal = 0., TranspRemaining = 0.;
-    RealF transp_ratio;
-    added_transp = 0;
-    RealF transp_ratio_sd;
+    RealF transp_ratio, added_transp = 0, transp_ratio_sd;
 
     // year 0 is a set up year. No need to calculate transpiration.
     // if there are multiple iterations the last year will run twice;
@@ -271,16 +269,16 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
 
         switch (t) {
             case 0://Tree
-                transp = SXW.transpVeg[SW_TREES];
+                transp = SXW.transpTotal;
                 break;
             case 1://Shrub
-                transp = SXW.transpVeg[SW_SHRUB];
+                transp = SXW.transpTotal;
                 break;
             case 2://Grass
-                transp = SXW.transpVeg[SW_GRASS];
+                transp = SXW.transpTotal;
                 break;
             case 3://Forb
-                transp = SXW.transpVeg[SW_FORBS];
+                transp = SXW.transpTotal;
                 break;
             default:
                 transp = SXW.transpTotal;
@@ -293,7 +291,7 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
         ForEachTrPeriod(p) {
             int nLyrs = getNTranspLayers(RGroup[g]->veg_prod_type);
             for (l = 0; l < nLyrs; l++) {
-                use_by_group[g] += (RealF) (_roots_active_rel[Iglp(g, l, p)] * transp[Ilp(l, p)]);
+                use_by_group[g] += (RealF) (_roots_active_rel[Iglp(g, l, p)] * RGroup[g]->min_res_req * transp[Ilp(l, p)]);
             }
         }
         //printf("for groupName= %s, use_by_group[g] in transp= %f \n",RGroup[g]->name,use_by_group[g] );
