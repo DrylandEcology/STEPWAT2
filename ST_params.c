@@ -878,20 +878,6 @@ static void _rgroup_init( void) {
    f = OpenFile(MyFileName, "r");
 
    /* ------------------------------------------------------------*/
-   /* scan for the first line*/
-   if (!GetALine(f, inbuf)) {
-     LogError(logfp, LOGFATAL, "%s: No data found!\n", MyFileName);
-   } else {
-     sscanf( inbuf, "%hd", &Globals.grpMaxEstab);
-     if (Globals.grpMaxEstab < 1   ||
-         Globals.grpMaxEstab > MAX_RGROUPS ) {
-       LogError(logfp, LOGFATAL,"%s: Invalid parameters for RGroupMaxEstab",
-               MyFileName);
-     }
-     GetALine(f,inbuf); /* toss [end] keyword */
-   }
-
-   /* ------------------------------------------------------------*/
    /* Install all the defined groups, except for dry/wet/norm parms */
    groupsok = FALSE;
    while( GetALine(f,inbuf)) {
