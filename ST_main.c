@@ -194,9 +194,8 @@ int main(int argc, char **argv) {
          * commented out until a flag requesting ST debugging info is implemented, 
          * do not delete */
 	//ST_connect("Output/stdebug");
-printf("1\n");
+
 	incr = (IntS) ((float) Globals.runModelIterations / 10);
-	printf("1.5");
 	if (incr == 0)
 		incr = 1;
 
@@ -208,7 +207,6 @@ printf("1\n");
 		} else {
 			fprintf(progfp, "%d\n", iter);
 		}
-printf("2");
 		if (BmassFlags.yearly || MortFlags.yearly)
 			parm_Initialize(iter);
 
@@ -234,7 +232,7 @@ printf("2");
 		for (year = 1; year <= Globals.runModelYears; year++) {
 
       //printf("------------------------Repetition/year = %d / %d\n", iter, year);
-printf("3");
+
 			Globals.currYear = year;
 
 			rgroup_Establish();
