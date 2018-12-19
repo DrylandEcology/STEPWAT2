@@ -269,13 +269,13 @@ int main(int argc, char **argv) {
 			proportion_Recovery();
 
 			_kill_extra_growth();
-
+			/*
 			ForEachSpecies(sp) {
 				insertSpecieYearInfo(sp);
 				for ((ndv) = Species[sp]->IndvHead; (ndv) != NULL; (ndv) = (ndv)->Next) {
 					insertIndivYearInfo(ndv);
 				}
-			}
+			}*/
 		} /* end model run for this year*/
 
 		if (MortFlags.summary) {
