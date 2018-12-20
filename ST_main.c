@@ -143,6 +143,7 @@ Bool UseSeedDispersal;
 Bool DuringSpinup;
 Bool EchoInits;
 Bool UseProgressBar;
+Bool STdebug_requested;
 GrpIndex rg;
 SppIndex sp;
 IndivType *ndv; /* shorthand for the current indiv */
@@ -167,6 +168,7 @@ int main(int argc, char **argv) {
 
   prepare_IterationSummary = FALSE; // dont want to get soilwat output unless -o flag
   storeAllIterations = FALSE; // dont want to store all soilwat output iterations unless -i flag
+  STdebug_requested = FALSE;
 
 	init_args(argc, argv); // read input arguments and intialize proper flags
 
@@ -190,10 +192,11 @@ int main(int argc, char **argv) {
 			setGlobalSTEPWAT2_OutputVariables();
 		}
 	}
-        /*Connect to ST db and insert static data, NOTE: the function below is 
-         * commented out until a flag requesting ST debugging info is implemented, 
-         * do not delete */
-	//ST_connect("Output/stdebug");
+        
+	/* Connect to ST db and insert static data */
+	if(STdebug_requested){
+	    ST_connect("Output/stdebug");
+	}
 
 	incr = (IntS) ((float) Globals.runModelIterations / 10);
 	if (incr == 0)
@@ -269,13 +272,15 @@ int main(int argc, char **argv) {
 			proportion_Recovery();
 
 			_kill_extra_growth();
-			/*
-			ForEachSpecies(sp) {
-				insertSpecieYearInfo(sp);
-				for ((ndv) = Species[sp]->IndvHead; (ndv) != NULL; (ndv) = (ndv)->Next) {
-					insertIndivYearInfo(ndv);
+			
+			if(STdebug_requested){
+				ForEachSpecies(sp) {
+					insertSpecieYearInfo(sp);
+					for ((ndv) = Species[sp]->IndvHead; (ndv) != NULL; (ndv) = (ndv)->Next) {
+						insertIndivYearInfo(ndv);
+					}
 				}
-			}*/
+			}
 		} /* end model run for this year*/
 
 		if (MortFlags.summary) {
@@ -305,9 +310,10 @@ int main(int argc, char **argv) {
 	if (BmassFlags.summary)
 		stat_Output_AllBmass();
         
-        /*Disconnect from the database, NOTE: the function below is commented out 
-         * until a flag requesting ST debugging info is implemented, do not delete */
-	//ST_disconnect();
+    /* Disconnect from the database */
+	if(STdebug_requested){
+		ST_disconnect();
+	}
 
 #ifdef STEPWAT
 	  if (!isnull(SXW.debugfile)){
@@ -441,8 +447,8 @@ static void init_args(int argc, char **argv) {
    * 10/9/17 - BEB Added -i flag for writing SOILWAT output for every iteration
    */
   char str[1024],
-       *opts[]  = {"-d","-f","-q","-s","-e", "-p", "-g", "-o", "-i"};  /* valid options */
-  int valopts[] = {  1,   1,   0,  -1,   0,    0,    0,   0,   0};  /* indicates options with values */
+       *opts[]  = {"-d","-f","-q","-s","-e", "-p", "-g", "-o", "-i", "-STdebug"};  /* valid options */
+  int valopts[] = {  1,   1,   0,  -1,   0,    0,    0,   0,   0,   0};  /* indicates options with values */
                  /* 0=none, 1=required, -1=optional */
   int i, /* looper through all cmdline arguments */
       a, /* current valid argument-value position */
@@ -556,14 +562,21 @@ static void init_args(int argc, char **argv) {
 			break; /* -g */
 
 		case 7:
-      printf("storing SOILWAT output aggregated across-iterations (-o flag)\n");
-      prepare_IterationSummary = TRUE;
+      		printf("storing SOILWAT output aggregated across-iterations (-o flag)\n");
+      		prepare_IterationSummary = TRUE;
 			break; /* -o */
 
-    case 8: // -i
-      printf("storing SOILWAT output for each iteration (-i flag)\n");
-      storeAllIterations = TRUE;
-      break;
+		
+
+    	case 8: // -i
+      		printf("storing SOILWAT output for each iteration (-i flag)\n");
+      		storeAllIterations = TRUE;
+      		break;
+	  
+	  	case 9: // -STdebug
+			printf("Generating STdebug.sqlite database (-STdebug flag)\n");
+			STdebug_requested = TRUE;
+			break;
 
 		default:
 			LogError(logfp, LOGFATAL,
