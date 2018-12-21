@@ -53,15 +53,17 @@ Other tasks:
 ```
 
 ```
-> Usage: stepwat [-d startdir] [-f files.in] [-q] [-s] [-e] [-o] [-i] [-g]
->   -d : supply working directory (default=.)
->   -f : supply list of input files (default=files.in)
->   -q : quiet mode, don't print message to check logfile.
->   -s : use SOILWAT model for resource partitioning.
->   -e : echo initialization results to logfile
->   -o : write SOILWAT output to output files. Contains average over all iterations and standard deviation
->   -i : write soilwat output to output files for each iteration
->   -g : use gridded mode
+>   Usage : steppe [-d startdir] [-f files.in] [-q] [-s] [-e] [-o] [-g]
+>      -d : supply working directory (default=.)
+>      -f : supply list of input files (default=files.in)
+>      -q : quiet mode, don't print message to check logfile.
+>      -p : prints progress bar
+>      -s : use SOILWAT model for resource partitioning.
+>      -e : echo initialization results to logfile
+>      -o : print all the soilwat output
+>      -g : use gridded mode
+>      -i : print SOILWAT output for each iteration
+>-STdebug : generate sqlite database with STEPWAT information
 ```
 
 * Run the gridded version (-g) of STEPWAT2 using SOILWAT2 to drive the water cycle (-s):
