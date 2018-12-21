@@ -99,16 +99,17 @@ void Plot_Initialize( void);
 
 static void usage(void) {
   char *s ="STEPPE plant community dynamics (SGS-LTER Jan-04).\n"
-           "Usage: steppe [-d startdir] [-f files.in] [-q] [-s] [-e] [-o] [-g]\n"
-           "  -d : supply working directory (default=.)\n"
-           "  -f : supply list of input files (default=files.in)\n"
-           "  -q : quiet mode, don't print message to check logfile.\n"
-           "  -p : prints progress bar\n"
-           "  -s : use SOILWAT model for resource partitioning.\n"
-           "  -e : echo initialization results to logfile\n"
-           "  -o : print all the soilwat output\n"
-           "  -g : use gridded mode\n"
-           "  -i : print SOILWAT output for each iteration\n"; // dont need to set -o flag to use this flag
+           "   Usage : steppe [-d startdir] [-f files.in] [-q] [-s] [-e] [-o] [-g]\n"
+           "      -d : supply working directory (default=.)\n"
+           "      -f : supply list of input files (default=files.in)\n"
+           "      -q : quiet mode, don't print message to check logfile.\n"
+           "      -p : prints progress bar\n"
+           "      -s : use SOILWAT model for resource partitioning.\n"
+           "      -e : echo initialization results to logfile\n"
+           "      -o : print all the soilwat output\n"
+           "      -g : use gridded mode\n"
+           "      -i : print SOILWAT output for each iteration\n" // dont need to set -o flag to use this flag
+		   "-STdebug : generate sqlite database with STEPWAT information\n";
   fprintf(stderr,"%s", s);
   exit(0);
 }
@@ -447,7 +448,7 @@ static void init_args(int argc, char **argv) {
    * 10/9/17 - BEB Added -i flag for writing SOILWAT output for every iteration
    */
   char str[1024],
-       *opts[]  = {"-d","-f","-q","-s","-e", "-p", "-g", "-o", "-i", "-STdebug"};  /* valid options */
+       *opts[]  = {"-d","-f","-q","-s","-e", "-p", "-g", "-o", "-i", "-S"};  /* valid options */
   int valopts[] = {  1,   1,   0,  -1,   0,    0,    0,   0,   0,   0};  /* indicates options with values */
                  /* 0=none, 1=required, -1=optional */
   int i, /* looper through all cmdline arguments */
@@ -566,17 +567,20 @@ static void init_args(int argc, char **argv) {
       		prepare_IterationSummary = TRUE;
 			break; /* -o */
 
-		
-
     	case 8: // -i
       		printf("storing SOILWAT output for each iteration (-i flag)\n");
       		storeAllIterations = TRUE;
       		break;
 	  
-	  	case 9: // -STdebug
-			printf("Generating STdebug.sqlite database (-STdebug flag)\n");
-			STdebug_requested = TRUE;
-			break;
+	  	case 9: // -S
+		    if(!strncmp("-STdebug", argv[a], 8)){ //  -STdebug
+				printf("Generating STdebug.sqlite database (-STdebug flag)\n");
+				STdebug_requested = TRUE;
+				break;
+			} else {
+				printf("Invalid option. (Did you mean -STdebug?)\n");
+				usage();
+			}
 
 		default:
 			LogError(logfp, LOGFATAL,
