@@ -281,6 +281,9 @@ int main(int argc, char **argv) {
 						insertIndivYearInfo(ndv);
 					}
 				}
+				ForEachGroup(rg){
+					insertRGroupYearInfo(rg);
+				}
 			}
 		} /* end model run for this year*/
 
