@@ -274,13 +274,19 @@ int main(int argc, char **argv) {
 
 			_kill_extra_growth();
 			
+			// if the user requests the stdebug.sqlite3 file to be generated
+			// it is populated here.
 			if(STdebug_requested){
+				//species info
 				ForEachSpecies(sp) {
+					//individual info
 					insertSpecieYearInfo(sp);
 					for ((ndv) = Species[sp]->IndvHead; (ndv) != NULL; (ndv) = (ndv)->Next) {
 						insertIndivYearInfo(ndv);
+						insertIndiv(ndv);
 					}
 				}
+				//Rgroup info
 				ForEachGroup(rg){
 					insertRGroupYearInfo(rg);
 				}
