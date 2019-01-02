@@ -2246,7 +2246,7 @@ static void _init_soil_layers(int cell, int isSpinup)
 	// this function does generally the same things that the _read_layers() function in SW_Site.c does, except that it does it in a way that lets us use it in the grid...
 	int i, j;
 	i = cell;
-	char *errtype = '\0';
+	char* errtype;
 	Bool evap_ok = TRUE, transp_ok_forb = TRUE, transp_ok_tree = TRUE,
 			transp_ok_shrub = TRUE, transp_ok_grass = TRUE; /* mitigate gaps in layers */
 	Bool fail = FALSE;
@@ -2274,7 +2274,7 @@ static void _init_soil_layers(int cell, int isSpinup)
 			errtype = Str_Dup("bulk density");
 		}
 		else if (LT(grid_Soils[i].lyr[j].data[1],
-				0.) || GT(grid_Soils[i].lyr[j].data[1], 1))
+				0.) || GT(grid_Soils[i].lyr[j].data[1], 1.0))
 		{
 			fail = TRUE;
 			fval = grid_Soils[i].lyr[j].data[1];
@@ -2861,9 +2861,9 @@ static int _do_grid_disturbances(int row, int col)
 		int cell = col + ((row - 1) * grid_Cols) - 1;
 //		printf( "inside _do_grid_disturbances Globals.currYear =%d, cell=%d, grid_Disturb[cell].kill_yr =%d \n",
 //							Globals.currYear, cell, grid_Disturb[cell].kill_yr);
-		if ((Globals.currYear >=grid_Disturb[cell].killfreq_startyr) && GT(grid_Disturb[cell].killfrq, 0.))
+		if ((Globals.currYear >=grid_Disturb[cell].killfreq_startyr) && GT((float)grid_Disturb[cell].killfrq, 0.))
 		{
-			if (LT(grid_Disturb[cell].killfrq, 1.0))
+			if (LT((float)grid_Disturb[cell].killfrq, 1.0))
 			{
 				if (RandUni(&grid_rng) <= grid_Disturb[cell].killfrq)
 				{
@@ -2900,19 +2900,19 @@ static int _do_grid_disturbances(int row, int col)
 static void _do_grid_proportion_Recovery(int row, int col)
 {
 	/*======================================================*/
-	/* PURPOSE */
-	/* Perform the sorts of proportion_Recovery one might expect at next year after the killing year
-	 /* HISTORY */
-	/* Nov 22 2016 -AKT -Added Species Proportion Recovery for Grid Version */
+	/* PURPOSE
+       Perform the sorts of proportion_Recovery one might expect at next year after the killing year
+	   HISTORY
+	   Nov 22 2016 -AKT -Added Species Proportion Recovery for Grid Version */
 	/*======================================================*/
 	if (UseDisturbances)
 	{
 		int cell = col + ((row - 1) * grid_Cols) - 1;
 //		printf( "inside _do_grid_proportion_Recovery Globals.currYear =%d, cell=%d, grid_Disturb[cell].kill_yr =%d \n",
 //							Globals.currYear, cell, grid_Disturb[cell].kill_yr);
-		if ((Globals.currYear >= grid_Disturb[cell].killfreq_startyr) && GT(grid_Disturb[cell].killfrq, 0.))
+		if ((Globals.currYear >= grid_Disturb[cell].killfreq_startyr) && GT((float)grid_Disturb[cell].killfrq, 0.))
 		{
-			if (LT(grid_Disturb[cell].killfrq, 1.0))
+			if (LT((float)grid_Disturb[cell].killfrq, 1.0))
 			{
 				if (RandUni(&grid_rng) <= grid_Disturb[cell].killfrq)
 				{

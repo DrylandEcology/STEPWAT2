@@ -185,6 +185,12 @@ void mort_Main( Bool *killed) {
         case Burrow:
              _burrow( sp);
              break;
+        case NoDisturb: // Added this case to prevent a compiler warning.
+             break;
+        case LastDisturb:// Added this case to prevent a compiler warning.
+             break;
+        default:
+             break;
       }
       
     } /* end for each species*/
@@ -215,8 +221,7 @@ void mort_EndOfYear(void) {
 
         g = RGroup[rg];
 
-        if ((Globals.currYear >= g->killfreq_startyr) && GT(g->killfreq, 0.)) {
-            if (LT(g->killfreq, 1.0)) {
+        if ((Globals.currYear >= g->killfreq_startyr) && (g->killfreq > 0.)) {
                 if (RandUni(&mortality_rng) <= g->killfreq) {
                     g->killyr = Globals.currYear;
                 }
@@ -287,9 +292,9 @@ void grazing_EndOfYear( void){
 			continue;
 		}
 
-		if ((Globals.currYear >=g->grazingfreq_startyr) && GT(g->grazingfrq, 0.))
+		if ((Globals.currYear >=g->grazingfreq_startyr) && (g->grazingfrq > 0))
 		{
-			if (LT(g->grazingfrq, 1.0))
+			if (g->grazingfrq < 1.0)
 			{
 				if (RandUni(&mortality_rng) <= g->grazingfrq)
 				{
@@ -348,8 +353,8 @@ void proportion_Recovery(void) {
 
         g = RGroup[rg];
 
-        if ((Globals.currYear >= g->killfreq_startyr) && GT(g->killfreq, 0.)) {
-            if (LT(g->killfreq, 1.0)) {
+        if ((Globals.currYear >= g->killfreq_startyr) && (g->killfreq > 0.)) {
+            if (g->killfreq < 1.0) {
                 if (RandUni(&mortality_rng) <= g->killfreq) {
                     g->killyr = Globals.currYear;
                 }
