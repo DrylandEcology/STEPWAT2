@@ -222,10 +222,10 @@ void mort_EndOfYear(void) {
         g = RGroup[rg];
 
         if ((Globals.currYear >= g->killfreq_startyr) && (g->killfreq > 0.)) {
+            if(g->killfreq < 1.0){
                 if (RandUni(&mortality_rng) <= g->killfreq) {
                     g->killyr = Globals.currYear;
                 }
-
             } else if (((Globals.currYear - g->killfreq_startyr) % (IntU) g->killfreq) == 0) {
                 g->killyr = Globals.currYear;
             }
