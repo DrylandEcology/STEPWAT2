@@ -31,7 +31,27 @@
 #         into ephemeral (this year's) biomass by
 #         grams_extra_biomass = mm_extra_ppt * xgrow_factor
 # veg_prod_type = 1 for tree, 2 for shrub, 3 for grass & 4 for forb.  Refer to Soilwat2’s VegProd types in VegProd.h.
-
+# killyr = kill all members of this group at end of this year.
+#          0 == don't kill
+# killfreq_startyr = start year for killing due to fire, which will continue at the specified kill frequency
+# Prescribed_killfreq = frequency to kill. 
+#            if > 1 yearly interval, only prescribed fire occur after killfreq_startyr. Must be set to a floating point
+#			 number: xx.x, 10.0. 
+#            if 0 < Prescribed_killfrq < 1 yearly possibility, occur  with the wild fire whose parameters are below.
+#            if = 0 no prescribed fire. 
+#            Overrides killyr.
+# extirp = year at which all group members are extirpated
+#       (without recovery) from the plot. 0==don't use, >0 == year # 
+# mort =  switch to allow age-independent/slowgrowth mortality
+#         functions.0 = don't use; 1 = use.
+# proportion_killed = proportional killing that mimics fire at given kill year/killfreq. This is the proportion of biomass 
+# 	   removed by fire.
+# proportion_recovered = proportionally recovered all members of the group after kill year.
+# grazing_frq = frequency of grazing.  if < 1, yearly probability,
+#            if > 1 yearly interval, after grazingfreq_startyr. 
+#            Overrides grazingyear.
+# proportion_grazing = proportion of biomass removed due to grazing. 
+# grazingfreq_startyr = start year for grazing
 
 #TM - density values from Biondini et al 1998 - used density% in Table 2 for p.cool.forb (Achillea millefolium) and
 #	p.warm.forb (Grindelia squarrosa)
@@ -44,17 +64,17 @@
 # space parameter for shrubs was a guess (KP) 
 #TM 10.6.2015 - tested various stretch values for sagebrush and found stretch of 8 to be best paired with irate 0.02
 
-# name     space  density maxest slow stretch xres  estann  on  startyr xgrow  veg_prod_type
- sagebrush     0.320  1.0000   1  0.0500   8     1       0   1      1     0.00000   2  
- a.cool.forb   0.030  5.0000   1  0.0500   2     1       0   1      1     0.00000   4   
- a.warm.forb   0.020  3.0000   1  0.0500   2     1       0   1      1     0.00000   4   
- p.cool.forb   0.160  8.0000   1  0.0500   2     1       0   1      1     0.00000   4    
- p.warm.forb   0.040  3.0000   1  0.0500   2     1       0   1      1     0.00000   4    
- a.cool.grass  0.050  50.000   1  0.0500   2     1       0   1      1     0.00000   3    
- p.cool.grass  0.220  15.000   1  0.0500   2     1       0   1      1     0.00000   3    
- p.warm.grass  0.040   5.000   1  0.0500   2     1       0   1      1     0.00000   3    
- shrub         0.090  1.0000   1  0.0500   2     1       0   1      1     0.00000   2   
- succulents    0.030  0.3100   1  0.0500   8     1       0   1      1     0.00000   2    
+# name     space  density maxest slow stretch xres  estann  on  startyr xgrow  veg_prod_type  killyr killfreq_startyr Prescribed_killfreq   extirp  mort    proportion_killed proportion_recovered grazing_frq proportion_grazing  grazingfreq_startyr  ignition cheatgrass_coefficient wild_fire_slope 
+ sagebrush     0.320  1.0000   1  0.0500   8     1       0   1      1     0.00000   2  0      1       0    0     1    1.00  0.00 0  0.00  0 
+ a.cool.forb   0.030  5.0000   1  0.0500   2     1       0   1      1     0.00000   4  0      1       0    0     1    1.00  0.00 0  0.00  0  
+ a.warm.forb   0.020  3.0000   1  0.0500   2     1       0   1      1     0.00000   4  0      1       0    0     1    1.00  0.00 0  0.00  0  
+ p.cool.forb   0.160  8.0000   1  0.0500   2     1       0   1      1     0.00000   4  0      1       0    0     1    1.00  0.40 0  0.24  0  
+ p.warm.forb   0.040  3.0000   1  0.0500   2     1       0   1      1     0.00000   4  0      1       0    0     1    1.00  0.40 0  0.24  0   
+ a.cool.grass  0.050  50.000   1  0.0500   2     1       0   1      1     0.00000   3  0      1       0    0     1    1.00  0.00 0  0.24  0  
+ p.cool.grass  0.220  15.000   1  0.0500   2     1       0   1      1     0.00000   3  0      1       0    0     1    1.00  0.70 0  0.24  0  
+ p.warm.grass  0.040   5.000   1  0.0500   2     1       0   1      1     0.00000   3  0      1       0    0     1    1.00  0.70 0  0.24  0 
+ shrub         0.090  1.0000   1  0.0500   2     1       0   1      1     0.00000   2  0      1       0    0     1    1.00  0.00 0  0.24  0 
+ succulents    0.030  0.3100   1  0.0500   8     1       0   1      1     0.00000   2  0      1       0    0     1    1.00  0.00 0  0.24  0
 # a.warm.grass 0.000  5.0000   1  0.0500   2     1       0   0      1     0.00000   3   
 
 [end]  # section end
@@ -101,6 +121,28 @@ succulents        0.00093  0.70935  0.00093  0.70935  0.00400  0.70935
 
 # name            gslope  gint  mslope  gint 
 succulents		-0.0025 6.736 -0.0217 6.736
+
+[end]  # section end
+
+#=============================================================
+#                 Cheatgrass inputs
+# NOTE: 
+# ignition = cheatgrass biomass ignition in 1*1 m2 plot; When < 12.05 the wild fire will occur randomly; 
+            # when = 12.05 the fire yearly possibility will related with cheatgrass biomass; 
+            # When = 0 there will be no wild fire happen.  
+# cheatgrass_coefficient 
+# wild_fire_slope = slope of fire yearly possibility & cheatgrass biomass
+# name     ignition cheatgrass_coefficient wild_fire_slope  
+ sagebrush      12.05 -0.117  0.0093    
+ a.cool.forb    12.05 -0.117  0.0093   
+ a.warm.forb    12.05 -0.117  0.0093  
+ p.cool.forb    12.05 -0.117  0.0093  
+ p.warm.forb    12.05 -0.117  0.0093  
+ a.cool.grass   12.05 -0.117  0.0093  
+ p.cool.grass   12.05 -0.117  0.0093  
+ p.warm.grass   12.05 -0.117  0.0093   
+ shrub          12.05 -0.117  0.0093 
+ succulents     12.05 -0.117  0.0093   
 
 [end]  # section end
 

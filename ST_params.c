@@ -146,7 +146,7 @@ void parm_Initialize( Int iter) {
     _bmassflags_init();
     _mortflags_init();
     _rgroup_init();
-    _rgroup_disturbance();
+    //_rgroup_disturbance();
     _species_init();
     _check_species();
 
@@ -868,12 +868,16 @@ static void _rgroup_init( void) {
    char name[80]; /* plenty of space to read possibly long name*/
 
    /* input variables*/
-   Int estab, stretch, xres, turnon, extirp, estann,
+   Int estab, stretch, xres, turnon, estann,
        styr, veg_prod_type;
    RealF space, density, slow, 
-         nslope, nint, wslope, wint, dslope, dint,xgro;
+         nslope, nint, wslope, wint, dslope, dint, xgro;
+   /* input variables related to disturbances */
+   Int extirp, mort,
+       killyr, cheatgrass_index, killfreq_startyr, grazingfreq_startyr;
+   RealF  killfreq, ignition, cheatgrass_coefficient, wild_fire_slope,
+        prop_killed, prop_recovered,grazing_frq, prop_grazing ;
 
-   
    MyFileName = Parm_name(F_RGroup);
    f = OpenFile(MyFileName, "r");
 
@@ -885,18 +889,22 @@ static void _rgroup_init( void) {
         groupsok = TRUE;
         break;
      }
-     x=sscanf( inbuf, "%s %f %f %d %f %d %d %d %d %d %f %d  ",
+     x=sscanf( inbuf, "%s %f %f %d %f %d %d %d %d %d %f %d %d %d %f %d %d %f %f %f %f %d",
                name,
                &space, &density, &estab, &slow, &stretch,
-               &xres, &estann, &turnon, &styr, &xgro, &veg_prod_type);
-     if (x < 12) {
+               &xres, &estann, &turnon, &styr, &xgro, &veg_prod_type, &killyr, &killfreq_startyr, &killfreq,
+               &extirp, &mort, &prop_killed, &prop_recovered,&grazing_frq, &prop_grazing,&grazingfreq_startyr);
+     if (x < 22) {
        LogError(logfp, LOGFATAL, "%s: Too few columns in groups",
                MyFileName);
      }
 
-    _rgroup_add1( name, space, density, estab,
+     _rgroup_add1( name, space, density, estab,
                    slow, stretch, xres, estann,
                    turnon, styr, xgro, veg_prod_type);
+
+     _rgroup_add_disturbance(name, killyr, killfreq_startyr, killfreq,
+                   extirp, mort, prop_killed, prop_recovered,grazing_frq,prop_grazing,grazingfreq_startyr);
    }/* end while*/
 
    if (!groupsok) {
@@ -927,7 +935,6 @@ static void _rgroup_init( void) {
               MyFileName);
    }
 
-
    /* ------------------------------------------------------------*/
    /* Get succulent growth modifiers*/
    GetALine(f, inbuf);
@@ -939,6 +946,27 @@ static void _rgroup_init( void) {
            MyFileName);
    }
    _rgroup_addsucculent( name, wslope, wint, dslope, dint);
+
+   GetALine(f,inbuf);
+
+   groupsok = FALSE;
+   while( GetALine(f,inbuf)) {
+     if (!isnull(strstr(inbuf,"[end]"))) {
+        groupsok = TRUE;
+        
+        break;
+     }
+
+     x=sscanf( inbuf, "%s %f %f %f",
+               name,
+               &ignition, &cheatgrass_coefficient, &wild_fire_slope);
+     if (x != 4) {
+       LogError(logfp, LOGFATAL, "%s: Wrong number of columns in groups' wild fire",
+               MyFileName);
+     }
+ 
+     _rgroup_add_wildfire( name, ignition, cheatgrass_coefficient, wild_fire_slope);
+   }/* end while*/
 
    CloseFile(&f);
 }
