@@ -59,7 +59,6 @@ static void _env_init( void);
 static void _plot_init( void);
 static void _setNameLen(char *dest, char *src, Int len);
 static void _rgroup_init( void);
-static void _rgroup_disturbance( void);
 static void _species_init( void);
 static void _files_init( void );
 static void _check_species( void);
@@ -970,73 +969,6 @@ static void _rgroup_init( void) {
 
    CloseFile(&f);
 }
-
-
-/**************************************************************/
-static void _rgroup_disturbance( void) {
-/*======================================================*/
-/* Read disturbance parameters for resource group
-*/
-   FILE *f;
-   IntS x;
-   Bool groupsok;
-
-   /* temp vars to hold the group info*/
-   char name[80]; /* plenty of space to read possibly long name*/
-
-   /* input variables*/
-   Int extirp, mort,
-       killyr, cheatgrass_index, killfreq_startyr, grazingfreq_startyr;
-   RealF  killfreq, ignition, cheatgrass_coefficient, wild_fire_slope,
-        prop_killed, prop_recovered,grazing_frq, prop_grazing ;
-
-   MyFileName = Parm_name(F_Disturbance);
-   f = OpenFile(MyFileName, "r");
-
-   /* ------------------------------------------------------------*/
-   /* Install all the defined groups, except for dry/wet/norm parms */
-   groupsok = FALSE;
-   while( GetALine(f,inbuf)) {
-     if (!isnull(strstr(inbuf,"[end]"))) {
-        groupsok = TRUE;
-        break;
-     }
-     x=sscanf( inbuf, "%s %d %d %f %d %d %f %f %f %f %d",
-               name,
-               &killyr, &killfreq_startyr, &killfreq,
-               &extirp, &mort, &prop_killed, &prop_recovered,&grazing_frq, &prop_grazing,&grazingfreq_startyr );
-     if (x < 11) {
-       LogError(logfp, LOGFATAL, "%s: Too few columns in groups",
-               MyFileName);
-     }
-   
-    _rgroup_add_disturbance(name, killyr, killfreq_startyr, killfreq,
-                   extirp, mort, prop_killed, prop_recovered,grazing_frq,prop_grazing,grazingfreq_startyr);
-   }/* end while*/
-
-   if (!groupsok) {
-      LogError(logfp, LOGFATAL, "%s: Incomplete input in group definitions",
-              MyFileName);
-   }
-groupsok = FALSE;
-   while( GetALine(f,inbuf)) {
-     if (!isnull(strstr(inbuf,"[end]"))) {
-        groupsok = TRUE;
-        break;
-     }
-     x=sscanf( inbuf, "%s %f %f %f",
-               name,
-               &ignition, &cheatgrass_coefficient, &wild_fire_slope);
-     if (x != 4) {
-       LogError(logfp, LOGFATAL, "%s: Wrong number of columns in groups' wild fire",
-               MyFileName);
-     }
-     _rgroup_add_wildfire( name, ignition, cheatgrass_coefficient, wild_fire_slope);
-   }/* end while*/
-
-   CloseFile(&f);
-}
-
 
 /**************************************************************/
 static void _rgroup_add1( char name[], RealF space, RealF density,
