@@ -23,7 +23,7 @@
 
 ## Basic instructions for working with the code
 1) Clone (obtain code from online github repository):
-`git clone --single-branch --recursive https://github.com/Burke-Lauenroth-Lab/STEPWAT2.git`
+`git clone --recursive https://github.com/DrylandEcology/STEPWAT2.git`
 
 2) Change working directory to STEPWAT2 folder: `cd STEPWAT2`
 
