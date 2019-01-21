@@ -266,24 +266,7 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
     {
         use_by_group[g] = 0.;
         t = RGroup[g]->veg_prod_type - 1;
-
-        switch (t) {
-            case 0://Tree
-                transp = SXW.transpTotal;
-                break;
-            case 1://Shrub
-                transp = SXW.transpTotal;
-                break;
-            case 2://Grass
-                transp = SXW.transpTotal;
-                break;
-            case 3://Forb
-                transp = SXW.transpTotal;
-                break;
-            default:
-                transp = SXW.transpTotal;
-                break;
-        }
+        transp = SXW.transpTotal;
 
         //Loops through each month and calculates amount of transpiration for each STEPPE functional group
         //according to whether that group has active living roots in each soil layer for each month
