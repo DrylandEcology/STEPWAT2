@@ -124,13 +124,16 @@ cd testing.sagebrush.master/Stepwat_Inputs/
 
 <br>
 
-## If switching to resource_partitioning_overhaul from another branch:
+## When switching development branches:
 
-* run 
-  ```
-  git submodule update --init --recursive
-  ```
-  To ensure all submodules are updated correctly.
+* Checkout the new branch:
+```
+git checkout -b [branch name]
+```
+* To ensure all submodules are updated correctly:
+```
+git submodule update --init --recursive
+```
 
 <br>
 
