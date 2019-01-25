@@ -171,7 +171,6 @@ struct resourcegroup_st {
         max_spp,        /* number of species in the group*/
         max_age,        /* longest lifespan in group. used to malloc kills[] */
         startyr,        /* don't start trying to grow until this year */
-        cheatgrass_index,/* cheatgrass in put order*/
 	killfreq_startyr,/* start year for kill frequency*/
 
         extirp,         /* year in which group is extirpated (0==ignore) */

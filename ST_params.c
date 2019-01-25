@@ -873,7 +873,7 @@ static void _rgroup_init( void) {
          nslope, nint, wslope, wint, dslope, dint, xgro;
    /* input variables related to disturbances */
    Int extirp, mort,
-       killyr, cheatgrass_index, killfreq_startyr, grazingfreq_startyr;
+       killyr, killfreq_startyr, grazingfreq_startyr;
    RealF  killfreq, ignition, cheatgrass_coefficient, wild_fire_slope,
         prop_killed, prop_recovered,grazing_frq, prop_grazing ;
 
