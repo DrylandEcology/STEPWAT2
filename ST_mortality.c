@@ -217,6 +217,7 @@ void mort_EndOfYear(void) {
         if (strcmp(checkname, Species[i]->name) == 0) {
             Bio_cheatgrass = Species_GetBiomass(i); /* calculate biomass of cheatgrass*/
             //  printf("Cheatgrass: %s\n",Species[i]->name);
+            g = RGroup[Species[i]->res_grp];
             break;
         }
     }
