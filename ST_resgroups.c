@@ -607,6 +607,7 @@ void rgroup_Establish(void) {
     /*------------------------------------------------------*/
 
     IntS i, num_est; /* number of individuals of sp. that establish*/
+    RealF unused_space = 0; /* sums up all of the space that goes unused if a species does not establish */
     GrpIndex rg;
     SppIndex sp;
     GroupType *g;
@@ -625,6 +626,7 @@ void rgroup_Establish(void) {
             continue;
 
         g->regen_ok = TRUE; /* default */
+        g->min_res_req = g->baseline_min_res_req; /* reset min_res_req, if it was modified last year */
 
         if (Globals.currYear < RGroup[rg]->startyr) {
             g->regen_ok = FALSE;
@@ -673,7 +675,27 @@ void rgroup_Establish(void) {
 
             } /* end ForEachGroupSpp() */
         }
+
+        // if no species in this group established we need to redistribute min_res_req
+        if(g->est_count == 0){
+            unused_space += g->min_res_req;
+        }
     } /* end ForEachGroup() */
+
+    // If there is unused space we need to redistribute
+    if(unused_space > 0){
+        // printf("\nYear %d: unused_space = %f\n\n", Globals.currYear, unused_space);
+        ForEachGroup(rg){
+            g = RGroup[rg];
+            // If this group is established, give it some of the unused space.
+            if(g->est_count != 0){
+                // printf("%s before: %f\n", g->name, g->min_res_req);
+                /* This formula will proportionally redistribute the unused space to all groups that are established */
+                g->min_res_req = g->min_res_req / (1 - unused_space);
+                // printf("%s after: %f\n", g->name, g->min_res_req);
+            }
+        }
+    }
 }
 /***********************************************************/
 void rgroup_IncrAges(void)

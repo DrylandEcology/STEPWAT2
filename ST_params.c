@@ -950,6 +950,7 @@ static void _rgroup_add1( char name[], RealF space, RealF density,
   RGroup[rg]->max_density   = density;
   RGroup[rg]->max_per_sqm   = density / Globals.plotsize;
   RGroup[rg]->slowrate      = slow;
+  RGroup[rg]->baseline_min_res_req = space;
   RGroup[rg]->min_res_req   = space;
   RGroup[rg]->est_annually  = itob(estann);
   RGroup[rg]->startyr       = styr;
