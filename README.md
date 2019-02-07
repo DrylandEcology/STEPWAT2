@@ -60,9 +60,9 @@ Other tasks:
 >      -p : prints progress bar
 >      -s : use SOILWAT model for resource partitioning.
 >      -e : echo initialization results to logfile
->      -o : print all the soilwat output
+>      -o : write SOILWAT output to output files. Contains average over all iterations and standard deviation.
 >      -g : use gridded mode
->      -i : print SOILWAT output for each iteration
+>      -i : write SOILWAT output to output files for each iteration
 >-STdebug : generate sqlite database with STEPWAT information
 ```
 

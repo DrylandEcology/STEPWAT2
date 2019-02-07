@@ -106,9 +106,9 @@ static void usage(void) {
            "      -p : prints progress bar\n"
            "      -s : use SOILWAT model for resource partitioning.\n"
            "      -e : echo initialization results to logfile\n"
-           "      -o : print all the soilwat output\n"
+           "      -o : write SOILWAT output to output files. Contains average over all iterations and standard deviation.\n"
            "      -g : use gridded mode\n"
-           "      -i : print SOILWAT output for each iteration\n" // dont need to set -o flag to use this flag
+           "      -i : write SOILWAT output to output files for each iteration\n" // dont need to set -o flag to use this flag
 		   "-STdebug : generate sqlite database with STEPWAT information\n";
   fprintf(stderr,"%s", s);
   exit(0);
