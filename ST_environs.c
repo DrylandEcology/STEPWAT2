@@ -331,6 +331,12 @@ static void _make_disturbance( void) {
                         ? RandUniIntRange(1, Globals.burrow.minyr, &environs_rng)
                         : 0;
          break;
+      case NoDisturb:
+        break;
+      case LastDisturb:
+        break;
+      default:
+        break;
      }
      Plot.disturbance = event;
 

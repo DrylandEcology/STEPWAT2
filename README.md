@@ -23,7 +23,7 @@
 
 ## Basic instructions for working with the code
 1) Clone (obtain code from online github repository):
-`git clone --single-branch --recursive https://github.com/Burke-Lauenroth-Lab/STEPWAT2.git`
+`git clone --recursive https://github.com/DrylandEcology/STEPWAT2.git`
 
 2) Change working directory to STEPWAT2 folder: `cd STEPWAT2`
 
@@ -53,15 +53,17 @@ Other tasks:
 ```
 
 ```
-> Usage: stepwat [-d startdir] [-f files.in] [-q] [-s] [-e] [-o] [-i] [-g]
->   -d : supply working directory (default=.)
->   -f : supply list of input files (default=files.in)
->   -q : quiet mode, don't print message to check logfile.
->   -s : use SOILWAT model for resource partitioning.
->   -e : echo initialization results to logfile
->   -o : write SOILWAT output to output files. Contains average over all iterations and standard deviation
->   -i : write soilwat output to output files for each iteration
->   -g : use gridded mode
+>   Usage : steppe [-d startdir] [-f files.in] [-q] [-s] [-e] [-o] [-g]
+>      -d : supply working directory (default=.)
+>      -f : supply list of input files (default=files.in)
+>      -q : quiet mode, don't print message to check logfile.
+>      -p : prints progress bar
+>      -s : use SOILWAT model for resource partitioning.
+>      -e : echo initialization results to logfile
+>      -o : write SOILWAT output to output files. Contains average over all iterations and standard deviation.
+>      -g : use gridded mode
+>      -i : write SOILWAT output to output files for each iteration
+>-STdebug : generate sqlite database with STEPWAT information
 ```
 
 * Run the gridded version (-g) of STEPWAT2 using SOILWAT2 to drive the water cycle (-s):
@@ -122,13 +124,16 @@ cd testing.sagebrush.master/Stepwat_Inputs/
 
 <br>
 
-## If switching to resource_partitioning_overhaul from another branch:
+## When switching development branches:
 
-* run 
-  ```
-  git submodule update --init --recursive
-  ```
-  To ensure all submodules are updated correctly.
+* Checkout the new branch:
+```
+git checkout -b [branch name]
+```
+* To ensure all submodules are updated correctly:
+```
+git submodule update --init --recursive
+```
 
 <br>
 
