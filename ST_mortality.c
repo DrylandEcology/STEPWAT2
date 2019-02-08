@@ -185,6 +185,12 @@ void mort_Main( Bool *killed) {
         case Burrow:
              _burrow( sp);
              break;
+        case NoDisturb: // Added this case to prevent a compiler warning.
+             break;
+        case LastDisturb:// Added this case to prevent a compiler warning.
+             break;
+        default:
+             break;
       }
       
     } /* end for each species*/
@@ -271,7 +277,6 @@ void mort_EndOfYear(void) {
             }
                 /* then check prescribed fire*/
             else if (((Globals.currYear - g->killfreq_startyr) % (IntU) g->killfreq) == 0) {
-
                 g->killyr = Globals.currYear;
                 /* Calculate the prescribed fire counts */
                 g->prescribedfire = 1;
@@ -341,9 +346,9 @@ void grazing_EndOfYear( void){
 			continue;
 		}
 
-		if ((Globals.currYear >=g->grazingfreq_startyr) && GT(g->grazingfrq, 0.))
+		if ((Globals.currYear >=g->grazingfreq_startyr) && (g->grazingfrq > 0))
 		{
-			if (LT(g->grazingfrq, 1.0))
+			if (g->grazingfrq < 1.0)
 			{
 				if (RandUni(&mortality_rng) <= g->grazingfrq)
 				{

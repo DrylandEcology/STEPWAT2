@@ -67,32 +67,30 @@ IntS Species_NumEstablish(SppIndex sp)
 	/*------------------------------------------------------*/
 
 	//special conditions if we're using the grid and seed dispersal options (as long as its not during the spinup, because we dont use seed dispersal during spinup)
-	if (UseGrid && UseSeedDispersal && !DuringSpinup)
+	if (UseGrid && UseSeedDispersal && !DuringSpinup) {
 		if (Species[sp]->sd_sgerm)
 		{
-			if (Species[sp]->max_seed_estab <= 1)
+			if (Species[sp]->max_seed_estab <= 1) {
 				return 1;
-			else
+			} else {
 				return (IntS) RandUniIntRange(1, Species[sp]->max_seed_estab, &species_rng);
-		}
-		else
-		{
+			}
+		} else {
 			return 0;
 		}
+	}
 
 	//float biomass = Species[sp]->relsize * Species[sp]->mature_biomass; //This line does nothing!
 	if (RGroup[Species[sp]->res_grp]->est_annually
 			|| LE(RandUni(&species_rng), Species[sp]->seedling_estab_prob)
-			|| (Species[sp]->sd_sgerm))
-	{
-		if (Species[sp]->max_seed_estab <= 1)
+			|| (Species[sp]->sd_sgerm)) {
+		if (Species[sp]->max_seed_estab <= 1) {
 			return 1;
-		else
+		} else {
 			return (IntS) RandUniIntRange(1, Species[sp]->max_seed_estab, &species_rng);
-		/*    return Species[sp]->max_seed_estab; */
-	}
-	else
-	{
+		    //return Species[sp]->max_seed_estab;
+		}
+	} else {
 		return 0;
 	}
 }
@@ -106,8 +104,7 @@ RealF Species_GetBiomass(SppIndex sp) {
 	/* Chris Bennett @ LTER-CSU 6/15/2000            */
 	/*------------------------------------------------------*/
 	
-	if (Species[sp]->est_count == 0)
-        return 0.0;
+	if (Species[sp]->est_count == 0) return 0.0;
 	return (Species[sp]->relsize * Species[sp]->mature_biomass);
 }
 

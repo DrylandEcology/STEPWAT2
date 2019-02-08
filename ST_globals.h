@@ -8,9 +8,10 @@
  *           Except for main.c, all modules requiring
  *           access to a module will reference this file.
  *           The main.c module actually declares these
- *           variables. */
-/*  History */
-/*    (6/15/2000) -- INITIAL CODING - cwb */
+ *           variables.
+ *  History:
+ *     (6/15/2000) -- INITIAL CODING - cwb
+ */
 /********************************************************/
 /********************************************************/
 
