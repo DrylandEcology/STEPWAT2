@@ -7,30 +7,31 @@
  *           all of the "objects" are defined as structures.
  *           You can think of this as the object dictionary
  *           insofar as you would want to have this file
- *           handy to refer to when perusing the code. */
-/*  History */
-/*     6/15/2000 -- INITIAL CODING - cwb
+ *           handy to refer to when perusing the code.
+ *  History
+ *  History:
+ *     6/15/2000 -- INITIAL CODING - cwb
  *     4-Nov-03 (cwb) Added code to handle annuals.
-          Annuals are different because they complete all the
-          dynamics of their life cycle in a single time step. Thus the
-          mechanism for establishing and growing individuals and
-          associated variables must be different from perennials. For
-          example, there are no clonal annuals, no multi-year variables
-          (eg max_slow), annualized probability of mortality, etc.
-          Basically, the number of individuals is determined by the
-          available resources and a seedbank mechanism, and the growth
-          rate is simply the proportion of max size (1.0) each indiv
-          can achieve in the current year, computed by maxbio * irate /
-          PR. And of course they all die at the end of the time step.
-
-          The method of establishing annuals is based on the number of
-          viable seeds produced in the previous year and in all years
-          previous up to some limit of age-related viability (eg 10
-          years).  Production of viable seeds is related to this year's
-          resource availability for the group (recall PR is inverse of
-          resource availability). Viability decreases with age
-          (=1/age), so an array is kept with the last X year's seed
-          production.  Maximum possible establishment is the sum of the
+ *        Annuals are different because they complete all the
+ *        dynamics of their life cycle in a single time step. Thus the
+ *        mechanism for establishing and growing individuals and
+ *        associated variables must be different from perennials. For
+ *        example, there are no clonal annuals, no multi-year variables
+ *        (eg max_slow), annualized probability of mortality, etc.
+ *        Basically, the number of individuals is determined by the
+ *        available resources and a seedbank mechanism, and the growth
+ *        rate is simply the proportion of max size (1.0) each indiv
+ *        can achieve in the current year, computed by maxbio * irate /
+ *        PR. And of course they all die at the end of the time step.
+ *
+ *        The method of establishing annuals is based on the number of
+ *        viable seeds produced in the previous year and in all years
+ *        previous up to some limit of age-related viability (eg 10
+ *        years).  Production of viable seeds is related to this year's
+ *        resource availability for the group (recall PR is inverse of
+ *        resource availability). Viability decreases with age
+ *        (=1/age), so an array is kept with the last X year's seed
+ *        production.  Maximum possible establishment is the sum of the
           past years' production, weighted by 1/(seed_age^xdecay). */
 /********************************************************/
 /********************************************************/

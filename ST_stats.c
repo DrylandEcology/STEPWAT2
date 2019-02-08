@@ -64,7 +64,7 @@
 /************************ Local Structure Defs *************/
 /***********************************************************/
 struct accumulators_st {
-  double sum, sum_sq;
+  double ave, sum_dif_sqr, sd;
   unsigned long nobs;
 };
 
@@ -116,17 +116,20 @@ static void _make_header_with_std( char *buf);
  * note that the syntax checker is obviated, so make sure
  * you follow the this prototype:
  * static void _collect_add(struct accumulators_st *p, double v) */
-#define _collect_add(p, v) { \
-   (p)->sum += (v);              \
-   (p)->sum_sq += (v)*(v);       \
-   (p)->nobs++;                  \
+#define _collect_add(p, v) {					\
+  (p)->nobs++;							\
+  RealF old_ave = (p)->ave;					\
+  (p)->ave = get_running_mean((p)->nobs, (p)->ave, (v));	\
+  (p)->sum_dif_sqr += get_running_sqr(old_ave, (p)->ave, (v));	\
+  (p)->sd = final_running_sd((p)->nobs, (p)->sum_dif_sqr);	\
 }
 
 // quick macro to make life easier in the load/save accumulators functions... it just copies the data of p into v
 // static void _copy_over(struct accumulators_st *p, struct accumulators_st *v)
 #define _copy_over(p, v) { \
-	(p)->sum = (v)->sum; \
-	(p)->sum_sq = (v)->sum_sq; \
+	(p)->ave = (v)->ave; \
+	(p)->sum_dif_sqr = (v)->sum_dif_sqr; \
+	(p)->sd = (v)->sd;   \
 	(p)->nobs = (v)->nobs; \
 }
 
@@ -1243,41 +1246,16 @@ void stat_Output_Seed_Dispersal(const char * filename, const char sep, Bool make
 
 
 /***********************************************************/
-static RealF _get_avg( struct accumulators_st *p) {
-
-	if (p->nobs == 0) return 0.0;
-
-	return (RealF) (p->sum / (double) p->nobs);
-
+static RealF _get_avg( struct accumulators_st *p) 
+{
+	return p->ave;
 }
 
 
 /***********************************************************/
 static RealF _get_std(struct accumulators_st *p)
 {
-	double s;
-
-	/* Change: Jul 30 2016 (AKT)
-	 * Fixing bug at std_dev calculation, as this function was giving wrong result.
-	 * Whenever intermediate calcuation value of s coming negative result become NAN.
-	 * So added check for negative number and floating point calculation.
-	 * Also this std_dev calculation function is a derivation of actual mathematical std_dev calculation function,
-	 * however while dividing intermediate s value with ( p->nobs * (p->nobs -1)) was wrong,
-	 * it should be dividing by square of p->nobs (no of iteration).
-	 */
-
-	if (p->nobs <= 1)
-		return 0.0;
-
-	s = (p->nobs * p->sum_sq) - (p->sum * p->sum);
-
-	if ((int) s <= 0)
-		return 0.0;
-
-	s = s / (p->nobs * p->nobs);
-
-	return (RealF) sqrt(s);
-
+	return p->sd;
 }
 
 

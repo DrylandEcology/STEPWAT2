@@ -76,10 +76,12 @@ void output_Bmass_Yearly( Int year ) {
       {
         strcpy(fields[fc++], RGroup[rg]->name);
         if (BmassFlags.size) {
-          strcpy(fields[fc++], "_RSize");
+          strcpy(fields[fc], RGroup[rg]->name);
+          strcat(fields[fc++], "_RSize");
         }
         if (BmassFlags.pr) {
-          strcpy(fields[fc++],"_PR");
+          strcpy(fields[fc], RGroup[rg]->name);
+          strcat(fields[fc++],"_PR");
         }
       }
     }
@@ -87,7 +89,8 @@ void output_Bmass_Yearly( Int year ) {
       ForEachSpecies(sp) {
         strcpy(fields[fc++], Species[sp]->name);
         if (BmassFlags.indv) {
-          strcpy(fields[fc++], "_Indivs");
+          strcpy(fields[fc], Species[sp]->name);
+          strcat(fields[fc++], "_Indivs");
         }
       }
     }
@@ -107,7 +110,7 @@ void output_Bmass_Yearly( Int year ) {
 
     fc = 0; //reset fc for first line of data.
   }
-  /* ---------- End setting up header ---------- */
+  /* ------------- end setting up header -------------- */
 
   if (BmassFlags.yr) {
       if (UseSoilwat)

@@ -5,9 +5,10 @@
  *  Application: STEPPE - plant community dynamics simulator
  *  Purpose: Declares public functions used throughout the
  *           model, although some are only used in specific
- *           places. */
-/*  History */
-/*     (6/15/2000) -- INITIAL CODING - cwb */
+ *           places.
+ *  History:
+ *     (6/15/2000) -- INITIAL CODING - cwb
+ */
 /********************************************************/
 /********************************************************/
 
@@ -53,8 +54,6 @@ void Indiv_SortSize( const byte sorttype,
                      const size_t n, IndivType **list);
 int Indiv_CompSize_A( const void *key1, const void *key2);
 int Indiv_CompSize_D( const void *key1, const void *key2);
-
-
 
 #ifdef DEBUG_MEM
   void RGroup_SetMemoryRefs(void);
