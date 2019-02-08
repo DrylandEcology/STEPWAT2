@@ -99,16 +99,17 @@ void Plot_Initialize( void);
 
 static void usage(void) {
   char *s ="STEPPE plant community dynamics (SGS-LTER Jan-04).\n"
-           "Usage: steppe [-d startdir] [-f files.in] [-q] [-s] [-e] [-o] [-g]\n"
-           "  -d : supply working directory (default=.)\n"
-           "  -f : supply list of input files (default=files.in)\n"
-           "  -q : quiet mode, don't print message to check logfile.\n"
-           "  -p : prints progress bar\n"
-           "  -s : use SOILWAT model for resource partitioning.\n"
-           "  -e : echo initialization results to logfile\n"
-           "  -o : print all the soilwat output\n"
-           "  -g : use gridded mode\n"
-           "  -i : print SOILWAT output for each iteration\n"; // dont need to set -o flag to use this flag
+           "   Usage : steppe [-d startdir] [-f files.in] [-q] [-s] [-e] [-o] [-g]\n"
+           "      -d : supply working directory (default=.)\n"
+           "      -f : supply list of input files (default=files.in)\n"
+           "      -q : quiet mode, don't print message to check logfile.\n"
+           "      -p : prints progress bar\n"
+           "      -s : use SOILWAT model for resource partitioning.\n"
+           "      -e : echo initialization results to logfile\n"
+           "      -o : write SOILWAT output to output files. Contains average over all iterations and standard deviation.\n"
+           "      -g : use gridded mode\n"
+           "      -i : write SOILWAT output to output files for each iteration\n" // dont need to set -o flag to use this flag
+		   "-STdebug : generate sqlite database with STEPWAT information\n";
   fprintf(stderr,"%s", s);
   exit(0);
 }
@@ -143,6 +144,10 @@ Bool UseSeedDispersal;
 Bool DuringSpinup;
 Bool EchoInits;
 Bool UseProgressBar;
+Bool STdebug_requested;
+GrpIndex rg;
+SppIndex sp;
+IndivType *ndv; /* shorthand for the current indiv */
 
 pcg32_random_t environs_rng;
 pcg32_random_t mortality_rng;
@@ -164,6 +169,7 @@ int main(int argc, char **argv) {
 
   prepare_IterationSummary = FALSE; // dont want to get soilwat output unless -o flag
   storeAllIterations = FALSE; // dont want to store all soilwat output iterations unless -i flag
+  STdebug_requested = FALSE;
 
 	init_args(argc, argv); // read input arguments and intialize proper flags
 
@@ -187,6 +193,11 @@ int main(int argc, char **argv) {
 			setGlobalSTEPWAT2_OutputVariables();
 		}
 	}
+        
+	/* Connect to ST db and insert static data */
+	if(STdebug_requested){
+	    ST_connect("Output/stdebug");
+	}
 
 	incr = (IntS) ((float) Globals.runModelIterations / 10);
 	if (incr == 0)
@@ -200,7 +211,6 @@ int main(int argc, char **argv) {
 		} else {
 			fprintf(progfp, "%d\n", iter);
 		}
-
 		if (BmassFlags.yearly || MortFlags.yearly)
 			parm_Initialize(iter);
 
@@ -213,7 +223,7 @@ int main(int argc, char **argv) {
 		RandSeed(Globals.randseed, &markov_rng);
 
 		Globals.currIter = iter;
-
+                
 		if (UseSoilwat && storeAllIterations) {
 			SW_OUT_create_iteration_files(Globals.currIter);
 		}
@@ -263,11 +273,24 @@ int main(int argc, char **argv) {
 			proportion_Recovery();
 
 			_kill_extra_growth();
-
-			// Check that relsizes match up at end of year after extra growth is removed
-			// may want to wrap this in #ifdef DEBUG once problem is fixed
-			//check_sizes("'main' at end of year");
-
+			
+			// if the user requests the stdebug.sqlite3 file to be generated
+			// it is populated here.
+			if(STdebug_requested){
+				//species info
+				ForEachSpecies(sp) {
+					//individual info
+					insertSpecieYearInfo(sp);
+					for ((ndv) = Species[sp]->IndvHead; (ndv) != NULL; (ndv) = (ndv)->Next) {
+						insertIndivYearInfo(ndv);
+						insertIndiv(ndv);
+					}
+				}
+				//Rgroup info
+				ForEachGroup(rg){
+					insertRGroupYearInfo(rg);
+				}
+			}
 		} /* end model run for this year*/
 
 		if (MortFlags.summary) {
@@ -296,9 +319,14 @@ int main(int argc, char **argv) {
 		stat_Output_AllMorts();
 	if (BmassFlags.summary)
 		stat_Output_AllBmass();
+        
+    /* Disconnect from the database */
+	if(STdebug_requested){
+		ST_disconnect();
+	}
 
 #ifdef STEPWAT
-			if (!isnull(SXW.debugfile)){
+	  if (!isnull(SXW.debugfile)){
         printf("entering debugfile\n");
         SXW_PrintDebug(1);
       }
@@ -429,8 +457,8 @@ static void init_args(int argc, char **argv) {
    * 10/9/17 - BEB Added -i flag for writing SOILWAT output for every iteration
    */
   char str[1024],
-       *opts[]  = {"-d","-f","-q","-s","-e", "-p", "-g", "-o", "-i"};  /* valid options */
-  int valopts[] = {  1,   1,   0,  -1,   0,    0,    0,   0,   0};  /* indicates options with values */
+       *opts[]  = {"-d","-f","-q","-s","-e", "-p", "-g", "-o", "-i", "-S"};  /* valid options */
+  int valopts[] = {  1,   1,   0,  -1,   0,    0,    0,   0,   0,   0};  /* indicates options with values */
                  /* 0=none, 1=required, -1=optional */
   int i, /* looper through all cmdline arguments */
       a, /* current valid argument-value position */
@@ -544,14 +572,24 @@ static void init_args(int argc, char **argv) {
 			break; /* -g */
 
 		case 7:
-      printf("storing SOILWAT output aggregated across-iterations (-o flag)\n");
-      prepare_IterationSummary = TRUE;
+      		printf("storing SOILWAT output aggregated across-iterations (-o flag)\n");
+      		prepare_IterationSummary = TRUE;
 			break; /* -o */
 
-    case 8: // -i
-      printf("storing SOILWAT output for each iteration (-i flag)\n");
-      storeAllIterations = TRUE;
-      break;
+    	case 8: // -i
+      		printf("storing SOILWAT output for each iteration (-i flag)\n");
+      		storeAllIterations = TRUE;
+      		break;
+	  
+	  	case 9: // -S
+		    if(!strncmp("-STdebug", argv[a], 8)){ //  -STdebug
+				printf("Generating STdebug.sqlite database (-STdebug flag)\n");
+				STdebug_requested = TRUE;
+				break;
+			} else {
+				printf("Invalid option. (Did you mean -STdebug?)\n");
+				usage();
+			}
 
 		default:
 			LogError(logfp, LOGFATAL,
