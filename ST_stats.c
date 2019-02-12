@@ -1351,7 +1351,7 @@ static int _get_sum( struct accumulators_st *p) {
 
 	if (p->nobs == 0) return 0;
 
-	return (int) (p->sum);
+	return p->ave * p->nobs;
 
 }
 
@@ -1367,7 +1367,6 @@ static void copyStruct(RealF val,RealF std_val,struct accumulators_grid_cell_st 
 {
 	p->sum = p->sum + val;
 	p->sum_std = p->sum_std + std_val;
-
 }
 
 /***********************************************************/
