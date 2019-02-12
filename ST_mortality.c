@@ -213,15 +213,15 @@ void mort_EndOfYear(void) {
     GroupType *g;
     SppIndex sp;
     IntU j;
-    RealF fire_possibility, Wildfire_controller, Bio_cheatgrass;
-    char *checkname = "brte";
+    RealF fire_possibility, Wildfire_controller, biomass_cheatgrass;
+    char *cheatgrass_name = "brte";
     int i = 0;
     
     /* Check species index number from the beginning to all the species in
      *  species.in , if the species name == checkname then get the biomass and stop the loop*/
     for (i = 0; i < Globals.sppCount; i++) { /* if species name = checkname = brte then get the biomass of brte(cheatgrass)*/
-        if (strcmp(checkname, Species[i]->name) == 0) {
-            Bio_cheatgrass = Species_GetBiomass(i); /* calculate biomass of cheatgrass*/
+        if (strcmp(cheatgrass_name, Species[i]->name) == 0) {
+            biomass_cheatgrass = Species_GetBiomass(i); /* calculate biomass of cheatgrass*/
             //  printf("Cheatgrass: %s\n",Species[i]->name);
             g = RGroup[Species[i]->res_grp];
             break;
@@ -230,19 +230,19 @@ void mort_EndOfYear(void) {
     
     /* Set a random number outside of the loop to make sure the kill probability for each functional group is the same */
     Wildfire_controller = RandUni(&mortality_rng);
-    //printf("[Cheatgrass: %f\n",Bio_cheatgrass);
+    //printf("[Cheatgrass: %f\n",biomass_cheatgrass);
 
     /* If cheatgrass biomass is less than the biomass required for wildfire ignition, wildfire probability is very low*/
-    if (Bio_cheatgrass < g->ignition) {
+    if (biomass_cheatgrass < g->ignition) {
         fire_possibility = 1.0 / Globals.runModelYears;
     }
     
     /* Otherwise a wildfire probability is calculated, which increases with cheatgrass biomass*/
-    if (Bio_cheatgrass >= g->ignition) {
-        fire_possibility = g->cheatgrass_coefficient + g->wild_fire_slope * Bio_cheatgrass;
+    if (biomass_cheatgrass >= g->ignition) {
+        fire_possibility = g->cheatgrass_coefficient + g->wild_fire_slope * biomass_cheatgrass;
     }
 
-    /* If ignition =0, no wildfire occurs */
+    /* If ignition == 0, no wildfire occurs */
     if (g->ignition == 0) {
         fire_possibility = 0;
     }
@@ -256,7 +256,6 @@ void mort_EndOfYear(void) {
 
     ForEachGroup(rg) {
         if (Globals.currYear < RGroup[rg]->startyr) {
-
             continue;
         }
         g = RGroup[rg];
