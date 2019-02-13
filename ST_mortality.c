@@ -231,11 +231,8 @@ void mort_EndOfYear(void) {
     /* Set a random number outside of the loop to make sure the kill probability for each functional group is the same */
     Wildfire_controller = RandUni(&mortality_rng);
     //printf("[Cheatgrass: %f\n",biomass_cheatgrass);
-
-    if (g->killfreq > fire_possibility) {
-      /* if killfreq > fire_possibility we should use g->killfreq instead of fire_possibility. */
-      fire_possibility = g->killfreq;
-    } else if (g->ignition == 0) { 
+    
+    if (g->ignition == 0) { 
       /* If ignition == 0, no wildfire occurs */
       fire_possibility = 0;
     } else if (biomass_cheatgrass < g->ignition) {
@@ -246,6 +243,10 @@ void mort_EndOfYear(void) {
       fire_possibility = g->cheatgrass_coefficient + g->wild_fire_slope * biomass_cheatgrass;
     }
 
+    if (g->killfreq > fire_possibility) {
+      /* if killfreq > fire_possibility we should use g->killfreq instead of fire_possibility. */
+      fire_possibility = g->killfreq;
+    } 
     //printf("fire_possibility: %f\n",fire_possibility);   
 
     ForEachGroup(rg) {
