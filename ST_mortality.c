@@ -243,8 +243,9 @@ void mort_EndOfYear(void) {
       fire_possibility = g->cheatgrass_coefficient + g->wild_fire_slope * biomass_cheatgrass;
     }
 
-    if (g->killfreq > fire_possibility) {
-      /* if killfreq > fire_possibility we should use g->killfreq instead of fire_possibility. */
+    if (g->killfreq < 1 && g->killfreq > fire_possibility) {
+      /* if killfreq > fire_possibility we should use g->killfreq instead of fire_possibility. 
+         if killfreq >= 1 we do not want to used random fires at all, which is reflected in the loop below.*/
       fire_possibility = g->killfreq;
     } 
     //printf("fire_possibility: %f\n",fire_possibility);   
@@ -260,7 +261,8 @@ void mort_EndOfYear(void) {
         /* check wildfire first*/
         if ((Globals.currYear >= g->killfreq_startyr) && GT(fire_possibility, 0.)) {
 
-            if (LT(fire_possibility, 1.0)) {
+            // if we are using random fires
+            if (g->killfreq < 1) {
                 if (random_number <= fire_possibility) {
                     g->killyr = Globals.currYear;
 
