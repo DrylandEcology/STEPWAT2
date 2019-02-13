@@ -213,7 +213,7 @@ void mort_EndOfYear(void) {
     GroupType *g;
     SppIndex sp;
     IntU j;
-    RealF fire_possibility, Wildfire_controller, biomass_cheatgrass;
+    RealF fire_possibility, random_number, biomass_cheatgrass;
     char *cheatgrass_name = "brte";
     int i = 0;
     
@@ -229,7 +229,7 @@ void mort_EndOfYear(void) {
     }
     
     /* Set a random number outside of the loop to make sure the kill probability for each functional group is the same */
-    Wildfire_controller = RandUni(&mortality_rng);
+    random_number = RandUni(&mortality_rng);
     //printf("[Cheatgrass: %f\n",biomass_cheatgrass);
     
     if (g->ignition == 0) { 
@@ -261,7 +261,7 @@ void mort_EndOfYear(void) {
         if ((Globals.currYear >= g->killfreq_startyr) && GT(fire_possibility, 0.)) {
 
             if (LT(fire_possibility, 1.0)) {
-                if (Wildfire_controller <= fire_possibility) {
+                if (random_number <= fire_possibility) {
                     g->killyr = Globals.currYear;
 
                     /* Calculate the wild fire counts */
