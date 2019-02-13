@@ -232,26 +232,20 @@ void mort_EndOfYear(void) {
     Wildfire_controller = RandUni(&mortality_rng);
     //printf("[Cheatgrass: %f\n",biomass_cheatgrass);
 
-    /* If cheatgrass biomass is less than the biomass required for wildfire ignition, wildfire probability is very low*/
-    if (biomass_cheatgrass < g->ignition) {
-        fire_possibility = 1.0 / Globals.runModelYears;
-    }
-    
-    /* Otherwise a wildfire probability is calculated, which increases with cheatgrass biomass*/
-    if (biomass_cheatgrass >= g->ignition) {
-        fire_possibility = g->cheatgrass_coefficient + g->wild_fire_slope * biomass_cheatgrass;
+    if (g->killfreq > fire_possibility) {
+      /* if killfreq > fire_possibility we should use g->killfreq instead of fire_possibility. */
+      fire_possibility = g->killfreq;
+    } else if (g->ignition == 0) { 
+      /* If ignition == 0, no wildfire occurs */
+      fire_possibility = 0;
+    } else if (biomass_cheatgrass < g->ignition) {
+      /* If cheatgrass biomass is less than the biomass required for wildfire ignition, wildfire probability is very low*/
+      fire_possibility = 1.0 / Globals.runModelYears;
+    } else { 
+      /* Otherwise a wildfire probability is calculated, which increases with cheatgrass biomass*/
+      fire_possibility = g->cheatgrass_coefficient + g->wild_fire_slope * biomass_cheatgrass;
     }
 
-    /* If ignition == 0, no wildfire occurs */
-    if (g->ignition == 0) {
-        fire_possibility = 0;
-    }
-
-    /* If the input killfreq < 1; both wildfire and prescribed fire occur, 
-     * while if killfreq >1, only prescribed fire happens */
-    if GT(g->killfreq, fire_possibility) {
-        fire_possibility = g->killfreq;
-    }
     //printf("fire_possibility: %f\n",fire_possibility);   
 
     ForEachGroup(rg) {
