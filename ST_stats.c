@@ -1150,7 +1150,7 @@ void stat_Output_AllCellAvgBmass(const char * filename)
 				}
                                 if (BmassFlags.prescribedfire)
 				{
-					sprintf(tbuf, "%d%c", _get_gridcell_avg(&_Gsize_grid_cell[rg].s[yr - 1]), sep);
+					sprintf(tbuf, "%f%c", _get_gridcell_avg(&_Gsize_grid_cell[rg].s[yr - 1]), sep);
 					strcat(buf, tbuf);
 				}
 			}
