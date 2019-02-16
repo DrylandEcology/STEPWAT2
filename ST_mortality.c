@@ -237,7 +237,7 @@ void mort_EndOfYear(void) {
       fire_possibility = 0;
     } else if (biomass_cheatgrass < g->ignition) {
       /* If cheatgrass biomass is less than the biomass required for wildfire ignition, wildfire probability is very low*/
-      fire_possibility = 1.0 / Globals.runModelYears;
+      fire_possibility = .01;
     } else { 
       /* Otherwise a wildfire probability is calculated, which increases with cheatgrass biomass*/
       fire_possibility = g->cheatgrass_coefficient + g->wild_fire_slope * biomass_cheatgrass;
