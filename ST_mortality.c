@@ -232,7 +232,7 @@ void mort_EndOfYear(void) {
     random_number = RandUni(&mortality_rng);
     //printf("[Cheatgrass: %f\n",biomass_cheatgrass);
 
-    // in this for loop "g" refers to the RGroup of sagebrush. RGroup[rg] refers
+    // in this for loop "g" refers to the RGroup of cheatgrass. RGroup[rg] refers
     // to the current iteration's RGroup.
     ForEachGroup(rg) {
       if (Globals.currYear < RGroup[rg]->startyr) {
