@@ -714,7 +714,18 @@ void rgroup_IncrAges(void)
 			}
 		}
 	}
+}
 
+RealF getRGroupRelsize(GrpIndex rg){
+    Int n;
+	SppIndex sp;
+	double sum = 0.0;
+
+    ForEachEstSpp( sp, rg, n){
+		sum += getSpeciesRelsize(sp);
+    }
+
+    return (RealF) sum;
 }
 
 /***********************************************************/

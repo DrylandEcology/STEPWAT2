@@ -199,6 +199,19 @@ void species_Update_Estabs(SppIndex sp, IntS num)
 	RGroup[Species[sp]->res_grp]->estabs += num;
 }
 
+RealF getSpeciesRelsize(SppIndex sp){
+	IndivType *p = Species[sp]->IndvHead;
+    double sum = 0;
+
+    while(p)
+    {
+        sum += p->relsize;
+        p = p->Next;
+    }
+
+	return (RealF) sum;
+}
+
 /**************************************************************/
 void Species_Update_Newsize(SppIndex sp, RealF newsize)
 {
