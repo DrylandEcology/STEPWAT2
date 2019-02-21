@@ -195,9 +195,14 @@ void stat_Collect( Int year ) {
       if (BmassFlags.pr)
         _collect_add( &_Gpr[rg].s[year],
                           RGroup[rg]->pr);
-      if (BmassFlags.prescribedfire)
-        if(!BmassFlags.wildfire && year == 0) _Gwf->iterations++;
+      if (BmassFlags.prescribedfire){
+        Bool isIncremented = FALSE;
+        if(year == 0 && !BmassFlags.wildfire && !isIncremented) {
+          _Gwf->iterations++;
+          isIncremented = TRUE;
+        }
         _Gwf->prescribedFire[rg][year] = get_running_mean(_Gwf->iterations, _Gwf->prescribedFire[rg][year], (RGroup[rg]->prescribedfire) ? 1 : 0);
+      }
     }
   }
 
