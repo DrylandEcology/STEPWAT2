@@ -84,7 +84,7 @@ accumulators_grid_st *grid_Stat;
 
 struct fire_st {
   Bool *wildfire;
-  Bool **perscribedFire;
+  Bool **prescribedFire;
 } *_Gwf;
 
 
@@ -194,7 +194,7 @@ void stat_Collect( Int year ) {
         _Gwf->wildfire[year] = RGroup[rg]->wildfire;
       }
       if (BmassFlags.prescribedfire)
-        _Gwf->perscribedFire[rg][year] = RGroup[rg]->prescribedfire;
+        _Gwf->prescribedFire[rg][year] = RGroup[rg]->prescribedfire;
     }
   }
 
@@ -368,16 +368,16 @@ static void _init( void) {
                       sizeof(Bool) * Globals.runModelYears,
                       "_stat_init(Gwf->wildfire)");
       
-      _Gwf->perscribedFire = (Bool **)
+      _Gwf->prescribedFire = (Bool **)
           Mem_Calloc( 1,
                       sizeof(Bool **) * MAX_RGROUPS,
                       "_stat_init(Gwf->prescribedfire");
 
       ForEachGroup(rg){
-        _Gwf->perscribedFire[rg] = (Bool *)
+        _Gwf->prescribedFire[rg] = (Bool *)
           Mem_Calloc( Globals.runModelYears,
                       sizeof(Bool) * Globals.runModelYears,
-                      "_stat_init(Gwf->perscribedFire)");
+                      "_stat_init(Gwf->prescribedFire)");
       }
     }
   }
@@ -734,7 +734,7 @@ void stat_free_mem( void ) {
   			Mem_Free(_Grp[gp].s);
   			if (BmassFlags.size) Mem_Free(_Gsize[gp].s);
   			if (BmassFlags.pr) Mem_Free(_Gpr[gp].s);
-                        if (BmassFlags.prescribedfire) Mem_Free(_Gwf->perscribedFire[gp]);
+                        if (BmassFlags.prescribedfire) Mem_Free(_Gwf->prescribedFire[gp]);
   		}
   	if(BmassFlags.sppb)
   		ForEachSpecies(sp) {
@@ -1024,14 +1024,14 @@ void stat_Output_AllBmassAvg() {
 				}
         if (BmassFlags.wildfire)
 				{
-          printf("%d\n", _Gwf->wildfire[yr]);
+          printf("%d\n", _Gwf->wildfire[yr-1]);
 					int wfsum = _Gwf->wildfire[yr];
 					sprintf(tbuf, "%d%c", wfsum, sep);
 					strcat(buf, tbuf);
 				}
         if (BmassFlags.prescribedfire)
 				{
-					int pfsum = _Gwf->perscribedFire[rg][yr];
+					int pfsum = _Gwf->prescribedFire[rg][yr-1];
 					sprintf(tbuf, "%d%c", pfsum, sep);
 					strcat(buf, tbuf);
 				}
@@ -1236,7 +1236,7 @@ void stat_Output_AllBmass(void) {
     if (BmassFlags.grpb) {
       if (BmassFlags.wildfire) {
           sprintf(tbuf, "%d%c",
-                  _Gwf->wildfire[yr], sep);
+                  _Gwf->wildfire[yr-1], sep);
           strcat( buf, tbuf);
       }
       ForEachGroup(rg) {
@@ -1263,7 +1263,7 @@ void stat_Output_AllBmass(void) {
          ATTENTION: the other output index are the average values across all iterations*/
         if (BmassFlags.prescribedfire) {
           sprintf(tbuf, "%d%c",
-                  _Gwf->perscribedFire[rg][yr], sep);
+                  _Gwf->prescribedFire[rg][yr-1], sep);
           strcat( buf, tbuf);
         }
       }
