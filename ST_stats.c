@@ -83,9 +83,8 @@ typedef struct  {
 accumulators_grid_st *grid_Stat;
 
 struct fire_st {
-  double *wildfire;
-  double **prescribedFire;
-  int iterations;
+  int *wildfire;
+  int **prescribedFire;
 } *_Gwf;
 
 
@@ -177,8 +176,7 @@ void stat_Collect( Int year ) {
 
   if (BmassFlags.grpb) {
     if (BmassFlags.wildfire) {
-        if(year == 0) _Gwf->iterations++;
-        _Gwf->wildfire[year] = get_running_mean(_Gwf->iterations, _Gwf->wildfire[year], (RGroup[0]->wildfire) ? 1 : 0);
+        _Gwf->wildfire[year] += (RGroup[0]->wildfire) ? 1 : 0;
     }
     ForEachGroup(rg) {
       bmass = (double) RGroup_GetBiomass(rg);
@@ -196,12 +194,7 @@ void stat_Collect( Int year ) {
         _collect_add( &_Gpr[rg].s[year],
                           RGroup[rg]->pr);
       if (BmassFlags.prescribedfire){
-        Bool isIncremented = FALSE;
-        if(year == 0 && !BmassFlags.wildfire && !isIncremented) {
-          _Gwf->iterations++;
-          isIncremented = TRUE;
-        }
-        _Gwf->prescribedFire[rg][year] = get_running_mean(_Gwf->iterations, _Gwf->prescribedFire[rg][year], (RGroup[rg]->prescribedfire) ? 1 : 0);
+        _Gwf->prescribedFire[rg][year] += (RGroup[rg]->prescribedfire) ? 1 : 0;
       }
     }
   }
@@ -365,28 +358,27 @@ static void _init( void) {
                          sizeof(struct accumulators_st),
                         "_stat_init(Gpr[rg].s)");
     }
+
     if (BmassFlags.wildfire || BmassFlags.prescribedfire) {
       _Gwf = (struct fire_st *)
              Mem_Calloc( 1,
                          sizeof(struct fire_st),
                         "_stat_init(Gwf)");
 
-      _Gwf->wildfire = (double *)
+      _Gwf->wildfire = (int *)
           Mem_Calloc( 1,
-                      sizeof(double) * Globals.runModelYears,
+                      sizeof(int) * Globals.runModelYears,
                       "_stat_init(Gwf->wildfire)");
       
-      _Gwf->prescribedFire = (double **)
+      _Gwf->prescribedFire = (int **)
           Mem_Calloc( 1,
-                      sizeof(double **) * MAX_RGROUPS,
+                      sizeof(int **) * MAX_RGROUPS,
                       "_stat_init(Gwf->prescribedfire");
-      
-      _Gwf->iterations = 0;
 
       ForEachGroup(rg){
-        _Gwf->prescribedFire[rg] = (double *)
+        _Gwf->prescribedFire[rg] = (int *)
           Mem_Calloc( Globals.runModelYears,
-                      sizeof(double) * Globals.runModelYears,
+                      sizeof(int) * Globals.runModelYears,
                       "_stat_init(Gwf->prescribedFire)");
       }
     }
@@ -1250,7 +1242,7 @@ void stat_Output_AllBmass(void) {
 
     if (BmassFlags.grpb) {
       if (BmassFlags.wildfire) {
-          sprintf(tbuf, "%f%c",
+          sprintf(tbuf, "%d%c",
                   _Gwf->wildfire[yr-1], sep);
           strcat( buf, tbuf);
       }
@@ -1277,7 +1269,7 @@ void stat_Output_AllBmass(void) {
          * just modified the _get_sum to _get_avg on Line 1274 & 1279.
          ATTENTION: the other output index are the average values across all iterations*/
         if (BmassFlags.prescribedfire) {
-          sprintf(tbuf, "%f%c",
+          sprintf(tbuf, "%d%c",
                   _Gwf->prescribedFire[rg][yr-1], sep);
           strcat( buf, tbuf);
         }
