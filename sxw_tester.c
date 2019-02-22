@@ -92,7 +92,7 @@ static void _print_results(void) {
   LOG(fp,"Echoing relative sizes and transpiration values.\n\n");
 
   ForEachGroup(g) {
-    LOG(fp,"%s(%4.3f)\t", RGroup[g]->name, RGroup[g]->relsize);
+    LOG(fp,"%s(%4.3f)\t", RGroup[g]->name, getRGroupRelsize(g));
   }
   LOG_NL;
 
@@ -193,10 +193,6 @@ static void _read_test_data( void) {
   /* read the relative sizes */
   GetALine(fp, inbuf);
   p = strtok(inbuf," \t");
-  cnt = 1;
-  do {
-    RGroup[cnt++]->relsize = atof(p);
-  } while (p=strtok(NULL, " \t"));
 
   /* read the transpiration values */
   cnt=0;

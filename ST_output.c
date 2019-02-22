@@ -150,7 +150,7 @@ void output_Bmass_Yearly( Int year ) {
     ForEachGroup(rg) {
       sprintf(fields[fc++], "%f", RGroup_GetBiomass(rg));
       if (BmassFlags.size)
-        sprintf(fields[fc++],"%f", RGroup[rg]->relsize);
+        sprintf(fields[fc++],"%f", getRGroupRelsize(rg));
       if (BmassFlags.pr)
         sprintf(fields[fc++],"%f", RGroup[rg]->pr);
     }

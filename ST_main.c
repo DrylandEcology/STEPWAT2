@@ -376,11 +376,10 @@ void Plot_Initialize(void) {
 		Species_Kill(sp, 0);
 
 		/* programmer alert: INVESTIGATE WHY THIS OCCURS */
-		if (!ZRO(Species[sp]->relsize)) {
+		if (!ZRO(getSpeciesRelsize(sp))) {
 			LogError(logfp, LOGNOTE, "%s relsize (%f) forced "
 					"in Plot_Initialize", Species[sp]->name,
-					Species[sp]->relsize);
-			Species[sp]->relsize = 0.0;
+					getSpeciesRelsize(sp));
 		}
 		if (Species[sp]->est_count) {
 			LogError(logfp, LOGNOTE, "%s est_count (%d) forced "
@@ -401,13 +400,12 @@ void Plot_Initialize(void) {
 			Mem_Set(RGroup[rg]->kills, 0, sizeof(IntUS) * GrpMaxAge(rg));
 
                 /* programmer alert: INVESTIGATE WHY THIS OCCURS */
-		if (!ZRO(RGroup[rg]->relsize)) {
+		if (!ZRO(getRGroupRelsize(rg))) {
 			LogError(logfp, LOGNOTE, "%s relsize (%f) forced "
 					"in Plot_Initialize", RGroup[rg]->name,
-					RGroup[rg]->relsize);
+					getRGroupRelsize(rg));
                         /*printf("in plot_initialize before forcing, Rgroup = %s, relsize = %f, est_count= %d\n",
                         RGroup[rg]->name, RGroup[rg]->relsize, RGroup[rg]->est_count); */
-			RGroup[rg]->relsize = 0.0;
                         /*printf("in plot_initialize after forcing, Rgroup = %s, relsize = %f, est_count= %d\n",
                         RGroup[rg]->name, RGroup[rg]->relsize, RGroup[rg]->est_count); */
 		}
@@ -640,19 +638,19 @@ void check_sizes(const char *chkpt) {
             ForEachIndiv(ndv, Species[sp]) spsize += ndv->relsize;
             rgsize += spsize;
 
-            if (LT(diff, fabs(spsize - Species[sp]->relsize))) {
+            if (LT(diff, fabs(spsize - getSpeciesRelsize(sp)))) {
                 LogError(stdout, LOGWARN, "%s (%d:%d): SP: \"%s\" size error: "
                         "SP=%.7f, ndv=%.7f",
                         chkpt, Globals.currIter, Globals.currYear,
-                        Species[sp]->name, Species[sp]->relsize, spsize);
+                        Species[sp]->name, getSpeciesRelsize(sp), spsize);
             }
         }
 
-        if (LT(diff, fabs(rgsize - RGroup[rg]->relsize))) {
+        if (LT(diff, fabs(rgsize - getRGroupRelsize(rg)))) {
             LogError(stdout, LOGWARN, "%s (%d:%d): RG \"%s\" size error: "
                     "RG=%.7f, ndv=%.7f",
                     chkpt, Globals.currIter, Globals.currYear,
-                    RGroup[rg]->name, RGroup[rg]->relsize, rgsize);
+                    RGroup[rg]->name, getRGroupRelsize(rg), rgsize);
         }
     }
 

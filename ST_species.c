@@ -105,7 +105,7 @@ RealF Species_GetBiomass(SppIndex sp) {
 	/*------------------------------------------------------*/
 	
 	if (Species[sp]->est_count == 0) return 0.0;
-	return (Species[sp]->relsize * Species[sp]->mature_biomass);
+	return (getSpeciesRelsize(sp) * Species[sp]->mature_biomass);
 }
 
 /**************************************************************/
@@ -199,17 +199,21 @@ void species_Update_Estabs(SppIndex sp, IntS num)
 	RGroup[Species[sp]->res_grp]->estabs += num;
 }
 
-RealF getSpeciesRelsize(SppIndex sp){
+RealF getSpeciesRelsize(SppIndex sp)
+{
 	IndivType *p = Species[sp]->IndvHead;
     double sum = 0;
 
-    while(p)
-    {
-        sum += p->relsize;
-        p = p->Next;
-    }
+	if(p)
+	{
+    	while(p)
+    	{
+        	sum += p->relsize;
+			p = p->Next;
+    	}
+	}
 
-	return (RealF) sum;
+	return (RealF) (sum + Species[sp]->extragrowth);
 }
 
 /**************************************************************/
@@ -285,28 +289,22 @@ void Species_Update_Newsize(SppIndex sp, RealF newsize)
 
 	rg = Species[sp]->res_grp;
 
-	if (LT(Species[sp]->relsize, 0.0))
+	if (LT(getSpeciesRelsize(sp), 0.0))
 	{
 		LogError(logfp, LOGWARN,
 				"Species_Update_Newsize: %s relsize < 0.0 (=%.6f)"
 						" year=%d, iter=%d", Species[sp]->name,
-				Species[sp]->relsize, Globals.currYear, Globals.currIter);
+				getSpeciesRelsize(sp), Globals.currYear, Globals.currIter);
                 //printf("Species relsize <0: name=%s, Species[sp]->relsize=%.5f \n ",Species[sp]->name, Species[sp]->relsize);
 	}
-	if (GT(Species[sp]->relsize, 100.))
+	if (GT(getSpeciesRelsize(sp), 100.))
 	{
 		LogError(logfp, LOGNOTE,
 				"Species_Update_Newsize: %s relsize very large (=%.1f)"
 						" year=%d, iter=%d", Species[sp]->name,
-				Species[sp]->relsize, Globals.currYear, Globals.currIter);
+				getSpeciesRelsize(sp), Globals.currYear, Globals.currIter);
 	}
 
-//	printf("Inside Species_Update_Newsize() spIndex=%d, name =%s,Species[sp]->relsize=%.5f, newsize=%.5f \n ",sp, Species[sp]->name,Species[sp]->relsize, newsize);
-	/* if this cond. true, we're off a bit from zeroing. fix it */
-	if (Species[sp]->est_count == 1 && LT(newsize, -Species[sp]->relsize))
-		newsize = -Species[sp]->relsize;
-
-	Species[sp]->relsize += newsize;
 //	printf("After adding or sub relsize Species[sp]->relsize=%.5f \n ",Species[sp]->relsize);
 
 	RGroup_Update_Newsize(rg);
@@ -314,9 +312,6 @@ void Species_Update_Newsize(SppIndex sp, RealF newsize)
 	/* make sure zeros are actually zeroed */
 	if (Species[sp]->est_count < 0)
 		Species[sp]->est_count = 0;
-
-	if (ZERO(Species[sp]->relsize))
-		Species[sp]->relsize = 0.0;
 
 
 #undef xF_DELTA
@@ -416,21 +411,14 @@ void Species_Annual_Kill(const SppIndex sp, int killType)
 				? ((x)>-xF_DELTA && (x)<xF_DELTA) \
 						: ((x)>-xD_DELTA && (x)<xD_DELTA) )
 
-	//make species size to 0
-	Species_Update_Newsize(sp, -Species[sp]->relsize);
-
-	//kill all the species individuals free their memory and finally drop the species itself
-	if (ZERO(Species[sp]->relsize) || LT(Species[sp]->relsize, 0.0))
+	IndivType *p1 = Species[sp]->IndvHead, *t1;
+	while (p1)
 	{
-		IndivType *p1 = Species[sp]->IndvHead, *t1;
-		while (p1)
-		{
-			t1 = p1->Next;
-			_delete(p1);
-			p1 = t1;
-		}
-		rgroup_DropSpecies(sp);
+		t1 = p1->Next;
+		_delete(p1);
+		p1 = t1;
 	}
+	rgroup_DropSpecies(sp);
 
 #undef xF_DELTA
 #undef xD_DELTA
@@ -470,11 +458,6 @@ void Species_Proportion_Kill(const SppIndex sp, int killType,
 		t = p->Next;
 		indiv_proportion_Kill(p, killType, proportionKilled);
 		p = t;
-	}
-
-	if (ZERO(Species[sp]->relsize) || LT(Species[sp]->relsize, 0.0))
-	{
-		Species[sp]->relsize = 0.0;
 	}
 
 #undef xF_DELTA
@@ -519,11 +502,6 @@ void Species_Proportion_Grazing(const SppIndex sp, RealF proportionGrazing)
 		t = p->Next; //must store Next since p might be deleted at any time.
 		indiv_proportion_Grazing(p, proportionGrazing);
 		p = t; //move to the next plant.
-	}
-
-	if (ZERO(Species[sp]->relsize) || LT(Species[sp]->relsize, 0.0))
-	{
-		Species[sp]->relsize = 0.0;
 	}
 
 #undef xF_DELTA
@@ -573,11 +551,7 @@ void Species_Kill(const SppIndex sp, int killType)
     
     IndivType *p = Species[sp]->IndvHead, *t;
 
-	if (Species[sp]->max_age == 1)
-	{
-        Species_Update_Newsize(sp, -Species[sp]->relsize);
-	}
-	else
+	if (Species[sp]->max_age != 1)
 	{
 		while (p)
 		{
@@ -596,7 +570,7 @@ void save_annual_species_relsize() {
     ForEachSpecies(sp) {
         if (Species[sp]->max_age == 1) {
             //printf("Globals.currYear = %d, sp=%d , Species[sp]->relsize=%.5f ,old value lastyear_relsize : %.5f \n", Globals.currYear, sp, Species[sp]->relsize, Species[sp]->lastyear_relsize);
-            Species[sp]->lastyear_relsize = Species[sp]->relsize;
+            Species[sp]->lastyear_relsize = getSpeciesRelsize(sp);
             //Species[sp]->lastyear_relsize = 2;
             //printf("Globals.currYear = %d, sp=%d new updated value lastyear_relsize : %.5f \n", Globals.currYear, sp, Species[sp]->lastyear_relsize);
         }

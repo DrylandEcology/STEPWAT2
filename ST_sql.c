@@ -179,7 +179,7 @@ static void insertSpeciesYearInfoRow(int Year, int Iteration, int SpeciesID, int
 
 void insertSpecieYearInfo(SppIndex s) {
 	SpeciesType *sp = Species[s];
-	insertSpeciesYearInfoRow(Globals.currYear, Globals.currIter, s+1, sp->est_count, sp->estabs, sp->relsize, sp->extragrowth, sp->received_prob, sp->allow_growth, sp->sd_sgerm);
+	insertSpeciesYearInfoRow(Globals.currYear, Globals.currIter, s+1, sp->est_count, sp->estabs, getSpeciesRelsize(s), sp->extragrowth, sp->received_prob, sp->allow_growth, sp->sd_sgerm);
 }
 
 static void insertRGroupYearInfoRow(int Year, int Iteration, int RGroupID, int Estabs, int KillYr, int YrsNegPR, float mmExtraRes, float ResRequired, float ResAvail, float ResExtra, float PR, float RelSize, int EstSppCount, int Extirpated, int RegenOk) {
@@ -206,7 +206,7 @@ static void insertRGroupYearInfoRow(int Year, int Iteration, int RGroupID, int E
 
 void insertRGroupYearInfo(GrpIndex g) {
 	GroupType *rg = RGroup[g];
-	insertRGroupYearInfoRow(Globals.currYear, Globals.currIter, g+1, rg->estabs, rg->killyr, rg->yrs_neg_pr, rg->mm_extra_res, rg->res_required, rg->res_avail, rg->res_extra, rg->pr, rg->relsize, rg->est_count, rg->extirpated, rg->regen_ok);
+	insertRGroupYearInfoRow(Globals.currYear, Globals.currIter, g+1, rg->estabs, rg->killyr, rg->yrs_neg_pr, rg->mm_extra_res, rg->res_required, rg->res_avail, rg->res_extra, rg->pr, getRGroupRelsize(g), rg->est_count, rg->extirpated, rg->regen_ok);
 }
 
 static void insertRgroups(void) {

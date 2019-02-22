@@ -256,8 +256,6 @@ void mort_EndOfYear(void) {
                 //printf("s->relsize kill before = %f\n, Species = %s \n", Species[sp]->name, Species[sp]->relsize);
                 //printf("s->extragrowth kill before  = %f\n", Species[sp]->extragrowth);
 
-                Species[sp]->extragrowth = LE(Species[sp]->extragrowth, Species[sp]->relsize) ? Species[sp]->extragrowth : Species[sp]->relsize;
-
                 Species_Update_Newsize(sp, -Species[sp]->extragrowth);
 
                 //printf("s->relsize kill after  = %f\n", Species[sp]->relsize);
@@ -836,42 +834,19 @@ void _kill_extra_growth(void) {
             if (!Species[sp]->use_me)
                 continue;
 
-            /* Annuals have already been killed and relsize for annuals set to 
-             * 0.0 in _kill_annuals */
-            if (Species[sp]->max_age == 1)
-                continue;
             //printf("s->extragrowth kill before  = %f\n", Species[sp]->extragrowth);
 
             /* Check that extragrowth <= s->relsize, otherwise relsize will become 
              * negative. If not, then reset to s->relsize. If the current year 
              * is a fire year, return, as killing of extragrowth has already occurred in Mort_EndofYear */
-            if (!ZERO(Species[sp]->extragrowth) && Globals.currYear != RGroup[rg]->killyr) {
-                Species[sp]->extragrowth = LE(Species[sp]->extragrowth, Species[sp]->relsize) ? Species[sp]->extragrowth : Species[sp]->relsize;
-
-            // Sets relsize to 0 then sums up all the the individuals' relsizes and adds them back.
-            // This has two effects:
-            // 1: removes extragrowth from relsize by recalculating without it.
-            // 2: Removes any small differences between the sum of individual relsizes and the species
-            //    relsize. This ensures that Plot_Initialize in ST_main.c will always set relsize to 0. 
-            IndivType *p = Species[sp]->IndvHead;
-            Species[sp]->relsize = 0;
-            while(p)
-            {
-                Species[sp]->relsize += p->relsize;
-                p = p->Next;
-            }
+            Species[sp]->extragrowth = 0.0;
             RGroup_Update_Newsize(Species[sp]->res_grp); //need to call this to sync species and rgroup.
 
-                //printf("s->relsize kill after  = %f\n", Species[sp]->relsize);
-                Species[sp]->extragrowth = 0.0;
-            }
             
             /* Now FINALLY remove individuals that were killed because of fire or grazing and set 
              * relsizes to 0, and remove the Species if the following cases are true */
-            if (ZERO(Species[sp]->relsize) || LT(Species[sp]->relsize, 0.0)) {
+            if (getSpeciesRelsize(sp) <= 0.0) {
                 // printf("s->relsize in _kill_extra_growth check1 before = %f\n", Species[sp]->relsize);
-                Species[sp]->relsize = 0.0;
-                RGroup[rg]->relsize = 0.0;
                 // printf("s->relsize in _kill_extra_growth check1 after = %f\n", Species[sp]->relsize);
 
                 IndivType *p1 = Species[sp]->IndvHead, *t1;

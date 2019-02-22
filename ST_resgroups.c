@@ -106,7 +106,7 @@ void rgroup_PartResources(void) {
         //printf("g->pr = %f\n,Group = %s \n",RGroup[rg]->name,  g->pr);
 
         /* If relsize>0 and individuals are established, reset noplants from TRUE to FALSE */
-        if (GT(g->relsize, 0.))
+        if (GT(getRGroupRelsize(rg), 0.))
             noplants = FALSE;
 
     } /* End ForEachGroup(rg) */
@@ -228,7 +228,7 @@ static void _res_part_extra(RealF extra, RealF size[]) {
     /* Determine the summed size of functional groups that can use extra resources */
     ForEachGroup(rg) {
         g = RGroup[rg];
-        if (ZRO(g->relsize))
+        if (ZRO(getRGroupRelsize(rg)))
             continue;
         if (g->est_count == 0)
             continue;
@@ -244,7 +244,7 @@ static void _res_part_extra(RealF extra, RealF size[]) {
 
     ForEachGroup(rg) {
         g = RGroup[rg];
-        if (ZRO(g->relsize))
+        if (ZRO(getRGroupRelsize(rg)))
             continue;
         if (g->est_count == 0)
             continue;
@@ -724,8 +724,11 @@ RealF getRGroupRelsize(GrpIndex rg){
     ForEachEstSpp( sp, rg, n){
 		sum += getSpeciesRelsize(sp);
     }
-
-    return (RealF) sum;
+    if(RGroup[rg]->est_count > 0){
+        return (RealF) sum / (RealF) RGroup[rg]->est_count;
+    } else {
+        return 0;
+    }
 }
 
 /***********************************************************/
@@ -758,7 +761,6 @@ void RGroup_Update_Newsize(GrpIndex rg)
   : ((x)>-xD_DELTA && (x)<xD_DELTA) )
 
 	Int n;
-	SppIndex sp;
 	IndivType **indivs;
 	IntS numindvs;
 	RealF sumsize = 0.0;
@@ -766,21 +768,7 @@ void RGroup_Update_Newsize(GrpIndex rg)
 	/* first get group's relative size adjusted for num indivs */
 	/* ie, groupsize=1 when 1 indiv of each species is present */
 	/* ie each indiv is an equivalent contributor, not based on biomass */
-	ForEachEstSpp( sp, rg, n)
-		sumsize += Species[sp]->relsize;
-
-	if (RGroup[rg]->est_count < 0)
-		RGroup[rg]->est_count = 0;
-
-	if (RGroup[rg]->est_count == 0 || LT(sumsize, 0.0))
-	{
-		RGroup[rg]->relsize = 0.0;
-	}
-	else
-	{
-		//For calculating rgroup relSize, sumsize should be divide by no of current established species in rgroup rather than total no of species in rgroup.
-		RGroup[rg]->relsize = sumsize / (RealF) RGroup[rg]->est_count;
-	}
+	sumsize = getRGroupRelsize(rg);
 
     /*printf("'RGroup_Update_Newsize': Group = %s, sumsize = %f, est_count = %d, relsize = %f\n",
         RGroup[rg]->name, sumsize, RGroup[rg]->est_count, RGroup[rg]->relsize);
@@ -797,8 +785,6 @@ void RGroup_Update_Newsize(GrpIndex rg)
 	/* double check some assumptions */
 	if (RGroup[rg]->est_count < 0)
 		RGroup[rg]->est_count = 0;
-	if (ZERO(RGroup[rg]->relsize))
-		RGroup[rg]->relsize = 0.0;
 
 #undef xF_DELTA
 #undef xD_DELTA
@@ -833,7 +819,7 @@ RealF RGroup_GetBiomass(GrpIndex rg)
 		return 0.0;
 	ForEachEstSpp( sp, rg, j)
 	{
-		biomass += Species[sp]->relsize * Species[sp]->mature_biomass;
+		biomass += getSpeciesRelsize(sp) * Species[sp]->mature_biomass;
 	}
 
 	return biomass;

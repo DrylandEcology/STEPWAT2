@@ -77,7 +77,7 @@ struct indiv_ann_st {
        res_extra,    /* resource applied to superficial growth */
        pr,           /* ratio of resources required to amt available */
        growthrate;   /* actual growth rate*/
-  struct indiv_st *Next, *Prev;  /* facility for linked list 8/3/01 */
+  struct indiv_ann_st *Next, *Prev;  /* facility for linked list 8/3/01 */
 };
 
 /* structure for species with some annuals-only variables thrown in */
@@ -91,8 +91,7 @@ struct species_st {
         *seedprod,    /* annuals: array of previous years' seed production (size = viable_yrs)*/
          seedbank,
          pseed;
-  RealF relsize,       /* size of all indivs' relsize (>= 0) */
-  lastyear_relsize,    /* relsize from the previous year, used for annual establishment */
+  RealF lastyear_relsize,    /* relsize from the previous year, used for annual establishment */
         extragrowth,   /* amt of superfluous growth from extra resources */
 	received_prob,	//the chance that this species received seeds this year... only applicable if using seed dispersal and gridded option
         alpha,         /* species-specific alpha parameter used for random number draw from beta distribution in establishment of annual species */
@@ -152,7 +151,6 @@ struct resourcegroup_st {
         res_avail,    /* resource available from environment X competition */
         res_extra,    /* resource applied to superficial growth */
         pr,           /* resources required / resources available */
-        relsize,      /* size of all species' indivs' relsizes scaled to 1.0 */
         rgroupFractionOfVegTypeBiomass; /*proportional biomass of the STEPPE functional group out of the SOILWAT2 functional type biomass */
   SppIndex est_count, /* number of species actually established in group*/
            est_spp[MAX_SPP_PER_GRP]; /*list of spp actually estab in grp*/
