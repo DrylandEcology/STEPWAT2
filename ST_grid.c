@@ -2680,7 +2680,7 @@ static void _do_seed_dispersal(void)
 				sgerm = (grid_SD[s][i].seeds_present
 						|| grid_SD[s][i].seeds_received) && germ; //refers to whether the species has seeds available from the previous year and conditions are correct for germination this year
 				grid_Species[s][i].allow_growth = FALSE;
-				biomass = grid_Species[s][i].relsize
+				biomass = getSpeciesRelsize(s)
 						* grid_Species[s][i].mature_biomass;
 
 				if (UseDisturbances)
