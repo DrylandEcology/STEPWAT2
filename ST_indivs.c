@@ -189,7 +189,6 @@ Bool indiv_Kill_Partial( MortalityType code,
     ndv->killedby     = code;
     ndv->growthrate   = 0.0;
     ndv->prob_veggrow = Species[sp]->prob_veggrow[code];
-    Species_Update_Newsize(sp, -killamt);
   }
 
   return( result);
@@ -239,7 +238,6 @@ void indiv_proportion_Kill(IndivType *ndv, int killType, RealF proportKilled)
 
 	ndv->relsize = ndv->relsize + reduction;
 //	printf("inside indiv_proportion_Kill() new indiv rel_size=%f \n",ndv->relsize);
-	Species_Update_Newsize(ndv->myspecies, reduction);
 
 	if (ZERO(ndv->relsize) || LT(ndv->relsize, 0.0))
 	{
@@ -273,7 +271,6 @@ void indiv_proportion_Grazing( IndivType *ndv, RealF proportionGrazing)
     //	printf("inside indiv_proportion_Grazing() old indiv rel_size=%f, grazing_reduce=%f \n",ndv->relsize,grazing_reduce);
     ndv->relsize = ndv->relsize + grazing_reduce;
     //	printf("inside indiv_proportion_Grazing() new indiv rel_size=%f \n",ndv->relsize);
-    Species_Update_Newsize(ndv->myspecies, grazing_reduce);
 
 	if (ZERO(ndv->relsize) || LT(ndv->relsize, 0.0))
 	{
@@ -311,8 +308,6 @@ void indiv_proportion_Recovery(IndivType *ndv, int killType, RealF proportionRec
     //printf("increase = %f\n, Species = %s \n", increase, Species[ndv->myspecies]->name);
 
     ndv->relsize = ndv->relsize + increase;
-
-    Species_Update_Newsize(ndv->myspecies, increase);
     //printf("ndv->relsize after = %f\n,Species = %s \n", ndv->relsize, Species[ndv->myspecies]->name);
 
     /* This should never happen because proportion recovered should always be 
@@ -358,8 +353,6 @@ void indiv_Kill_Complete( IndivType *ndv, int killType) {
  // if(!UseGrid)
 //	  insertIndivKill(ndv->id,killType);
   species_Update_Kills(ndv->myspecies, ndv->age);
-
-  Species_Update_Newsize(ndv->myspecies, -ndv->relsize);
 
   _delete(ndv); // `_delete` updates the Species[ndv->myspecies]->est_count, i.e., removes one individual
 

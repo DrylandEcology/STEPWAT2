@@ -150,8 +150,6 @@ void Species_Add_Indiv(SppIndex sp, Int new_indivs)
 	rgroup_AddSpecies(rg, sp);
 
 	//printf("Inside Species_Add_Indiv() calculated total newsize=%.5f \n ",newsize);
-	/* accumulate sizes and resources used/available*/
-	Species_Update_Newsize(sp, newsize);
 }
 
 /**************************************************************/
@@ -214,109 +212,6 @@ RealF getSpeciesRelsize(SppIndex sp)
 	}
 
 	return (RealF) (sum + Species[sp]->extragrowth);
-}
-
-/**************************************************************/
-void Species_Update_Newsize(SppIndex sp, RealF newsize)
-{
-	/*======================================================*/
-	/* PURPOSE */
-	/* This is the point at which any changes in the individuals,
-	 whether by growth or mortality, is reflected in the overall
-	 relative size at the Species and RGroup levels.
-
-	 There is a gotcha with floating point math (at least in C;
-	 FORTRAN may hide this problem) in that rounding errors and
-	 slight inaccuracies in representing rational numbers in the
-	 least significant decimal places can cause values to be
-	 nonzero when they should be 0.0.  This is especially
-	 problematic when individuals grow and die partially, and
-	 then an individual is killed completely:  due to the
-	 internal representation, the value may never be exactly
-	 zero.  The ZRO() macro (defined in "generic.h") tests
-	 for a value near zero.  Likewise, tests for equality are
-	 subject to representational error, so there are macros for
-	 that as well. */
-
-	/* HISTORY */
-	/* Chris Bennett @ LTER-CSU 6/15/2000
-	 *
-	 *    2/26/03 - cwb - The numeric representation problem now
-	 *            appears to  be worse than it first seemed.  The
-	 *            ZRO macro uses the F_DELTA macro, defined in
-	 *            "generic.h".  Because F_DELTA is used in macros
-	 *            sprinkled everywhere, that value should be as
-	 *            small as practical.  However, the changes in
-	 *            RGroup and Species relative sizes occur only
-	 *            here and it turns out that the small F_DELTA is
-	 *            not enough to prevent rounding error from
-	 *            becoming a substantial problem over time.  Thus,
-	 *            the ZRO macro is redefined to be more inclusive.
-	 *    -- Also, (and more importantly) the line to correct a
-	 *            reduction of size more than current size was
-	 *            incorrect.  It was change from
-	 *                newsize = Species[sp]->relsize;
-	 *            to
-	 *                newsize = -Species[sp]->relsize;
-	 *
-	 *    3-Apr-03 - Big change.  Via some form of miscommunication,
-	 *            the group size was equal to the sum of of all the
-	 *            individuals' sizes, meaning that any one full-size individual
-	 *            used the group's full complement of space and resources.
-	 *            Now the assumption is the group's space and resources
-	 *            can support the equivalent of one full sized indiv
-	 *            of each species, eg, RGroup->relsize = 1.0 can contain
-	 *            the sum of the max biomass of the species in the group.
-	 *            See new function RGroup-Update_Newsize().
-	 *
-	 *
-	 *    7-Nov-03 (cwb) Adding new algorithms for annuals. Primarily
-	 *            this means that the mechanism for adding and deleting
-	 *            indivs is unneeded, so we have to make sure it doens't
-	 *            get referenced when the species is an annual.  This also
-	 *            means that est_count has no meaning, since we're only
-	 *            fiddling with the relative size. */
-	/*------------------------------------------------------*/
-
-#define xF_DELTA (20*F_DELTA)
-#define xD_DELTA (20*D_DELTA)
-#define ZERO(x) \
-( (sizeof(x) == sizeof(float)) \
-  ? ((x)>-xF_DELTA && (x)<xF_DELTA) \
-  : ((x)>-xD_DELTA && (x)<xD_DELTA) )
-
-	GrpIndex rg;
-
-	rg = Species[sp]->res_grp;
-
-	if (LT(getSpeciesRelsize(sp), 0.0))
-	{
-		LogError(logfp, LOGWARN,
-				"Species_Update_Newsize: %s relsize < 0.0 (=%.6f)"
-						" year=%d, iter=%d", Species[sp]->name,
-				getSpeciesRelsize(sp), Globals.currYear, Globals.currIter);
-                //printf("Species relsize <0: name=%s, Species[sp]->relsize=%.5f \n ",Species[sp]->name, Species[sp]->relsize);
-	}
-	if (GT(getSpeciesRelsize(sp), 100.))
-	{
-		LogError(logfp, LOGNOTE,
-				"Species_Update_Newsize: %s relsize very large (=%.1f)"
-						" year=%d, iter=%d", Species[sp]->name,
-				getSpeciesRelsize(sp), Globals.currYear, Globals.currIter);
-	}
-
-//	printf("After adding or sub relsize Species[sp]->relsize=%.5f \n ",Species[sp]->relsize);
-
-	RGroup_Update_Newsize(rg);
-
-	/* make sure zeros are actually zeroed */
-	if (Species[sp]->est_count < 0)
-		Species[sp]->est_count = 0;
-
-
-#undef xF_DELTA
-#undef xD_DELTA
-#undef ZERO
 }
 
 /**************************************************************/
@@ -492,8 +387,7 @@ void Species_Proportion_Grazing(const SppIndex sp, RealF proportionGrazing)
 	//    I subtracted loss from both extragrowth and Species relsize.
 	//    This way when the extra growth is removed it will have already lost the 
 	//    proportion due to grazing.
-	Species[sp]->extragrowth -= loss;	// remove the loss from extragrowth 
-	Species_Update_Newsize(sp, -loss);	// remove the loss from Species relsize
+	Species[sp]->extragrowth -= loss;	// remove the loss from extragrowth
 
 	//Implement grazing on normal growth for all individuals in each species.
 	IndivType *t, *p = Species[sp]->IndvHead;

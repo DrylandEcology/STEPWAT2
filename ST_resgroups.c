@@ -504,8 +504,6 @@ void rgroup_Grow(void) {
 
             } /*END ForEachIndiv */
 
-            Species_Update_Newsize(sp, sppgrowth);
-
         } /* ENDFOR j (for each species)*/
         
         /* Implement growth due to extra resources which will support superfluous 
@@ -555,6 +553,7 @@ static void _extra_growth(GrpIndex rg) {
             /* Clear extra for each individual*/
             extra_ndv = 0.0;
 
+            RGroup_Update_GrpResProp(rg);
             /* Calculate the extra resource available to each individual based on size */
             ndv->res_extra = ndv->grp_res_prop * g->res_extra;
             //printf("ndv->res_extra = %f\n,Species = %s \n", Species[sp]->name, ndv->res_extra);
@@ -574,9 +573,6 @@ static void _extra_growth(GrpIndex rg) {
             //printf("s->extragrowth  = %f\n, Species = %s \n", Species[sp]->name,s->extragrowth);
 
         } /*END ForEachIndiv */
-        
-        /* Update the species and rgroup relsizes based on extragrowth */
-        Species_Update_Newsize(sp, Species[sp]->extragrowth);
 
     } /* ENDFOR j (for each species)*/
 }
@@ -732,34 +728,9 @@ RealF getRGroupRelsize(GrpIndex rg){
 }
 
 /***********************************************************/
-void RGroup_Update_Newsize(GrpIndex rg)
+/* Update the grp_res_prop field of every individual in the RGroup. */
+void RGroup_Update_GrpResProp(GrpIndex rg)
 {
-	/*======================================================*/
-	/* PURPOSE */
-	/*   Relative size for a group is 1.0 if all the group's
-	 *   species are established and size 1.0;
-	 */
-
-	/* HISTORY */
-	/*   Chris Bennett @ LTER-CSU 5-Apr-2003            */
-	/*     Called from Species_Update_Newsize(), but safe to call
-	 *     from anywhere.
-	 *   7-Nov-03 (cwb) Added condition for annuals.  Annuals
-	 *     don't use the linked list of indiv objects because they
-	 *     come and go with each time step, so we just add their
-	 *     estimated size to the group size and move on.  See also
-	 *     Species_UpdateNewSize() and other calls with *annual*
-	 *     somewhere in them.
-	 */
-
-	/*------------------------------------------------------*/
-#define xF_DELTA (20*F_DELTA)
-#define xD_DELTA (20*D_DELTA)
-#define ZERO(x) \
-( (sizeof(x) == sizeof(float)) \
-  ? ((x)>-xF_DELTA && (x)<xF_DELTA) \
-  : ((x)>-xD_DELTA && (x)<xD_DELTA) )
-
 	Int n;
 	IndivType **indivs;
 	IntS numindvs;
@@ -770,7 +741,7 @@ void RGroup_Update_Newsize(GrpIndex rg)
 	/* ie each indiv is an equivalent contributor, not based on biomass */
 	sumsize = getRGroupRelsize(rg);
 
-    /*printf("'RGroup_Update_Newsize': Group = %s, sumsize = %f, est_count = %d, relsize = %f\n",
+    /*printf("Group = %s, sumsize = %f, est_count = %d, relsize = %f\n",
         RGroup[rg]->name, sumsize, RGroup[rg]->est_count, RGroup[rg]->relsize);
     */
 
@@ -785,10 +756,6 @@ void RGroup_Update_Newsize(GrpIndex rg)
 	/* double check some assumptions */
 	if (RGroup[rg]->est_count < 0)
 		RGroup[rg]->est_count = 0;
-
-#undef xF_DELTA
-#undef xD_DELTA
-#undef ZERO
 }
 
 /***********************************************************/

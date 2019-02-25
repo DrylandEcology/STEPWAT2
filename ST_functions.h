@@ -35,15 +35,14 @@ char *Parm_name(ST_FileIndex i);
 IndivType **RGroup_GetIndivs( GrpIndex rg, const char sort, IntS *num);
 GrpIndex RGroup_New( void);
 void RGroup_Kill( GrpIndex rg);
-GrpIndex RGroup_Name2Index (const char *name) ;
+GrpIndex RGroup_Name2Index (const char *name);
 RealF getRGroupRelsize(GrpIndex rg);
-void RGroup_Update_Newsize( GrpIndex rg);
+void RGroup_Update_GrpResProp( GrpIndex rg);
 RealF RGroup_GetBiomass( GrpIndex rg) ;
 
 RealF Species_GetBiomass (SppIndex sp);
 void Species_Add_Indiv( SppIndex sp, Int new_indivs);
 RealF getSpeciesRelsize(SppIndex sp);
-void Species_Update_Newsize( SppIndex sp, RealF newsize );
 SppIndex Species_Name2Index (const char *name);
 void Species_Kill (const SppIndex sp, int killType);
 void Species_Proportion_Kill (const SppIndex sp, int killType, RealF proportionKilled );

@@ -251,14 +251,6 @@ void mort_EndOfYear(void) {
                     continue;
 
                 //printf("s->extragrowth kill before  = %f\n", Species[sp]->extragrowth);
-
-                if (ZRO(Species[sp]->extragrowth)) continue;
-                //printf("s->relsize kill before = %f\n, Species = %s \n", Species[sp]->name, Species[sp]->relsize);
-                //printf("s->extragrowth kill before  = %f\n", Species[sp]->extragrowth);
-
-                Species_Update_Newsize(sp, -Species[sp]->extragrowth);
-
-                //printf("s->relsize kill after  = %f\n", Species[sp]->relsize);
                 Species[sp]->extragrowth = 0.0;
             }
         }
@@ -840,8 +832,6 @@ void _kill_extra_growth(void) {
              * negative. If not, then reset to s->relsize. If the current year 
              * is a fire year, return, as killing of extragrowth has already occurred in Mort_EndofYear */
             Species[sp]->extragrowth = 0.0;
-            RGroup_Update_Newsize(Species[sp]->res_grp); //need to call this to sync species and rgroup.
-
             
             /* Now FINALLY remove individuals that were killed because of fire or grazing and set 
              * relsizes to 0, and remove the Species if the following cases are true */
