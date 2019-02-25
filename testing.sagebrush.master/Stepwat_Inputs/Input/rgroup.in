@@ -132,17 +132,8 @@ succulents		-0.0025 6.736 -0.0217 6.736
             # When = 0 there will be no wild fire happen.  
 # cheatgrass_coefficient 
 # wild_fire_slope = slope of fire yearly possibility & cheatgrass biomass
-# name     ignition cheatgrass_coefficient wild_fire_slope  
- sagebrush      12.05 -0.117  0.0093    
- a.cool.forb    12.05 -0.117  0.0093   
- a.warm.forb    12.05 -0.117  0.0093  
- p.cool.forb    12.05 -0.117  0.0093  
- p.warm.forb    12.05 -0.117  0.0093  
- a.cool.grass   12.05 -0.117  0.0093  
- p.cool.grass   12.05 -0.117  0.0093  
- p.warm.grass   12.05 -0.117  0.0093   
- shrub          12.05 -0.117  0.0093 
- succulents     12.05 -0.117  0.0093   
+# ignition cheatgrass_coefficient wild_fire_slope  
+  12.05    -0.117                 0.0093    
 
 [end]  # section end
 
