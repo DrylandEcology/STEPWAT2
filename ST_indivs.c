@@ -172,11 +172,7 @@ Bool indiv_Kill_Partial( MortalityType code,
  *       to return TRUE if killamt < relsize (and relsize
  *       etc is updated) or FALSE otherwise which allows
  *       the caller to kill completely and handle the
- *       removal properly.
- *
- *   2/25/03 - Egad! Can't believe I never noticed there was
- *       no call to update the size in the higher echelons.
- *       Added call to Species_Update_Newsize(). */
+ *       removal properly. */
 /*------------------------------------------------------*/
   SppIndex sp;
   Bool result = FALSE;

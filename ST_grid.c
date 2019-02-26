@@ -2693,7 +2693,7 @@ static void _do_seed_dispersal(void)
 						//allow_growth flag to false as 	year = Globals.currYear - 1 , so for example if killing year= 6 and Globals.currYear=7 then here
 						// year variable will be 7-1 =6 that is equal to killing year 6, so this condition (year != grid_Disturb[i].kill_yr)
 						//will fail and allow_growth will not become TRUE, then when Globals.currYear=8 this allow_growth= FALSE will carry forward and there will no call
-						// to other functions like Species_Update_Newsize() so new size will not be updated and last year size will carry forward so in final output year 7 and year 8 will
+						// to other functions. Last year size will carry forward so in final output year 7 and year 8 will
 						// have same output that is not correct.
 						grid_Species[s][i].allow_growth = TRUE;
 					}
