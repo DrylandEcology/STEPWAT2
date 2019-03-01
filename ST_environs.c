@@ -35,7 +35,6 @@
 /***********************************************************/
 
 static void _make_ppt( void);
-static void _make_temp( void);
 static void _set_ppt_reduction( void);
 static void _set_temp_reduction( void);
 static void _make_disturbance( void);
@@ -72,7 +71,6 @@ void Env_Generate( void) {
   }
 
   _make_ppt();
-  _make_temp();
   _set_ppt_reduction();
   _set_temp_reduction();
   _make_disturbance();
@@ -153,33 +151,6 @@ static void _make_ppt( void) {
     Env.wet_dry = Ppt_Wet;
   else
     Env.wet_dry = Ppt_Norm;
-}
-
-/**************************************************************/
-static void _make_temp( void) {
-/*======================================================*/
-/* take a random number from normal distribution with*/
-/* mean, stddev, that is between min & max from */
-/* the Globals.temp structure.*/
-
-/* HISTORY */
-/* Chris Bennett @ LTER-CSU 6/15/2000            */
-/* cwb - 6-Dec-02 -- added interface to STEPWAT.  Temp is
- *       set in _sxw_set_environs(). */
-
-/*------------------------------------------------------*/
-
-  RealF r=0.;
-
-#ifdef DEBUG_ENVCONST
-  r=25.;
-#endif
-
-  if (!UseSoilwat) {
-    while ( r < Globals.temp.min || r > Globals.temp.max )
-      r = RandNorm(Globals.temp.avg, Globals.temp.std, &environs_rng);
-    Env.temp = r;
-  }
 }
 
 /**************************************************************/
