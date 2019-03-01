@@ -27,7 +27,6 @@
   #include "sxw_funcs.h"
   #include "sw_src/filefuncs.h"
   #include "sw_src/Times.h"
-  extern Bool UseSoilwat;
   extern SXW_t SXW;
 #endif
 
@@ -60,15 +59,7 @@ void Env_Generate( void) {
 
   Int rg;
 
-  switch (UseSoilwat) {
-    case FALSE:
-         /* clear last year's leftover resources */
-         ForEachGroup(rg) RGroup[rg]->res_avail = 0.0;
-         break;
-    case TRUE:
-         SXW_Run_SOILWAT();
-         break;
-  }
+  SXW_Run_SOILWAT();
 
   _make_ppt();
   _set_ppt_reduction();
@@ -106,44 +97,29 @@ static void _make_ppt( void) {
   r=320;
 #endif
 
-  if (UseSoilwat)
-  { // Run with SOILWAT2: we have monthly PPT and temperature to calculate
-    // growing season precipitation as sum of monthly precipitation of those
-    // months when mean air temperature exceeds a threshold `GROWING_BASE_TEMP`
-    Env.gsppt = 0; // gsppt is defined as IntS and units are millimeters
+  // Run with SOILWAT2: we have monthly PPT and temperature to calculate
+  // growing season precipitation as sum of monthly precipitation of those
+  // months when mean air temperature exceeds a threshold `GROWING_BASE_TEMP`
+  Env.gsppt = 0; // gsppt is defined as IntS and units are millimeters
 
-    for (i = 0; i < MAX_MONTHS; i++)
-    {
-      Env.gsppt += GE(SXW.temp_monthly[i], GROWING_BASE_TEMP) ?
-        (IntS) (SXW.ppt_monthly[i] * 10. + 0.5) : 0;
-    }
-
-    if (Env.gsppt <= 0)
-    {
-      LogError(logfp, LOGWARN, "Zero growing season precipitation in "\
-        "year = %d of iteration = %d", Globals.currYear, Globals.currIter);
-      Env.gsppt = 0;
-    }
-
-    /*
-    printf("_make_ppt (year = %d of iteration = %d): "\
-      "Env.gsppt(SOILWAT2) = %d would be gsppt(fixed proportion) = %.1f\n",
-      Globals.currYear, Globals.currIter, Env.gsppt, Globals.gsppt_prop * Env.ppt);
-    */
-
-  } else {
-    // run as STEPPE without SOILWAT2:
-    while ( r < Globals.ppt.min || r > Globals.ppt.max )
-      r = (IntS)(RandNorm( Globals.ppt.avg,  Globals.ppt.std, &environs_rng) +.5);
-    if (Env.ppt > 0) {
-      Env.lyppt = Env.ppt;
-      Env.ppt = r;
-    } else {
-      Env.lyppt = Env.ppt = r;
-    }
-
-    Env.gsppt = (IntS) (Globals.gsppt_prop * Env.ppt);
+  for (i = 0; i < MAX_MONTHS; i++)
+  {
+    Env.gsppt += GE(SXW.temp_monthly[i], GROWING_BASE_TEMP) ?
+      (IntS) (SXW.ppt_monthly[i] * 10. + 0.5) : 0;
   }
+
+  if (Env.gsppt <= 0)
+  {
+    LogError(logfp, LOGWARN, "Zero growing season precipitation in "\
+      "year = %d of iteration = %d", Globals.currYear, Globals.currIter);
+    Env.gsppt = 0;
+  }
+
+  /*
+  printf("_make_ppt (year = %d of iteration = %d): "\
+    "Env.gsppt(SOILWAT2) = %d would be gsppt(fixed proportion) = %.1f\n",
+    Globals.currYear, Globals.currIter, Env.gsppt, Globals.gsppt_prop * Env.ppt);
+  */
 
   if ( Env.ppt <= Globals.ppt.dry )
     Env.wet_dry = Ppt_Dry;
@@ -204,14 +180,12 @@ static void _set_temp_reduction( void) {
   }
 
 #ifdef STEPWAT
-  if (UseSoilwat) {
-    if (Env.temp < 9.5 ) {
-      Env.temp_reduction[CoolSeason] = .9;
-      Env.temp_reduction[WarmSeason] = .6;
-    } else {
-      Env.temp_reduction[CoolSeason] = .6;
-      Env.temp_reduction[WarmSeason] = .9;
-    }
+  if (Env.temp < 9.5 ) {
+    Env.temp_reduction[CoolSeason] = .9;
+    Env.temp_reduction[WarmSeason] = .6;
+  } else {
+    Env.temp_reduction[CoolSeason] = .6;
+    Env.temp_reduction[WarmSeason] = .9;
   }
 #endif
 

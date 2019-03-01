@@ -36,8 +36,6 @@
   #include "sxw_vars.h"
 #endif
 
-//extern Bool UseSoilwat;
-
 /******** Modular External Function Declarations ***********/
 /* -- truly global functions are declared in functions.h --*/
 /***********************************************************/
@@ -1261,8 +1259,7 @@ static void _species_init( void) {
 /*static void _recover_names(void) {
 	int i, last = NFILES - 1;
 
-	if (UseSoilwat)
-		last--; // have to save sxw.in for later //
+	last--; // have to save sxw.in for later //
 
 	for (i = 0; i <= last; i++) {
 		Mem_Free(_files[i]);

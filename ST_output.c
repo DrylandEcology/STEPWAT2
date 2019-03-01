@@ -27,7 +27,6 @@
 #ifdef STEPWAT
   #include "SW_Model.h"
   extern SW_MODEL SW_Model;
-  extern Bool UseSoilwat;
 #endif
 
 /*------------------------------------------------------*/
@@ -113,10 +112,7 @@ void output_Bmass_Yearly( Int year ) {
   /* ------------- end setting up header -------------- */
 
   if (BmassFlags.yr) {
-      if (UseSoilwat)
-        sprintf(fields[fc++], "%d", SW_Model.year);
-      else
-        sprintf(fields[fc++], "%d", year);
+    sprintf(fields[fc++], "%d", SW_Model.year);
   }
 
   if (BmassFlags.dist) {

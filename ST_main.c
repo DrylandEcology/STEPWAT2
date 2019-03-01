@@ -99,12 +99,11 @@ void Plot_Initialize( void);
 
 static void usage(void) {
   char *s ="STEPPE plant community dynamics (SGS-LTER Jan-04).\n"
-           "   Usage : steppe [-d startdir] [-f files.in] [-q] [-s] [-e] [-o] [-g]\n"
+           "   Usage : steppe [-d startdir] [-f files.in] [-q] [-e] [-o] [-g]\n"
            "      -d : supply working directory (default=.)\n"
            "      -f : supply list of input files (default=files.in)\n"
            "      -q : quiet mode, don't print message to check logfile.\n"
            "      -p : prints progress bar\n"
-           "      -s : use SOILWAT model for resource partitioning.\n"
            "      -e : echo initialization results to logfile\n"
            "      -o : write SOILWAT output to output files. Contains average over all iterations and standard deviation.\n"
            "      -g : use gridded mode\n"
@@ -138,7 +137,6 @@ ModelType      Globals;
 BmassFlagsType BmassFlags;
 MortFlagsType  MortFlags;
 
-Bool UseSoilwat; /* not used in every module */
 Bool UseGrid;
 Bool UseSeedDispersal;
 Bool DuringSpinup;
@@ -182,16 +180,13 @@ int main(int argc, char **argv) {
 
 	parm_Initialize(0);
 
-	if (UseSoilwat)
-	{
-		SXW_Init(TRUE, NULL); // allocate SOILWAT2-memory
-		SW_OUT_set_ncol(); // set number of output columns
-		SW_OUT_set_colnames(); // set column names for output files
-		if (prepare_IterationSummary) {
-			SW_OUT_create_summary_files();
-			// allocate `p_OUT` and `p_OUTsd` arrays to aggregate SOILWAT2 output across iterations
-			setGlobalSTEPWAT2_OutputVariables();
-		}
+	SXW_Init(TRUE, NULL); // allocate SOILWAT2-memory
+	SW_OUT_set_ncol(); // set number of output columns
+	SW_OUT_set_colnames(); // set column names for output files
+	if (prepare_IterationSummary) {
+		SW_OUT_create_summary_files();
+		// allocate `p_OUT` and `p_OUTsd` arrays to aggregate SOILWAT2 output across iterations
+		setGlobalSTEPWAT2_OutputVariables();
 	}
         
 	/* Connect to ST db and insert static data */
@@ -224,11 +219,11 @@ int main(int argc, char **argv) {
 
 		Globals.currIter = iter;
                 
-		if (UseSoilwat && storeAllIterations) {
+		if (storeAllIterations) {
 			SW_OUT_create_iteration_files(Globals.currIter);
 		}
 
-		if (UseSoilwat && prepare_IterationSummary) {
+		if (prepare_IterationSummary) {
 			print_IterationSummary = (Bool) (Globals.currIter == Globals.runModelIterations);
 		}
 
@@ -301,16 +296,13 @@ int main(int argc, char **argv) {
 		if (MortFlags.yearly)
 			output_Mort_Yearly(); // writes yearly file
 
-		if (UseSoilwat)
+		// dont need to restart if last iteration finished
+		// this keeps it from re-writing the output folder and overwriting output files
+		if (Globals.currIter != Globals.runModelIterations)
 		{
-			// dont need to restart if last iteration finished
-			// this keeps it from re-writing the output folder and overwriting output files
-			if (Globals.currIter != Globals.runModelIterations)
-			{
-				// don't reset in last iteration because we need to close files
-				// before clearing/de-allocated SOILWAT2-memory
-				SXW_Reset();
-			}
+			// don't reset in last iteration because we need to close files
+			// before clearing/de-allocated SOILWAT2-memory
+			SXW_Reset();
 		}
 	} /* end model run for this iteration*/
 
@@ -332,11 +324,8 @@ int main(int argc, char **argv) {
       }
 #endif
 
-  if (UseSoilwat)
-  {
-    SW_OUT_close_files();
-    SW_CTL_clear_model(TRUE); // de-allocate all memory
-  }
+  SW_OUT_close_files();
+  SW_CTL_clear_model(TRUE); // de-allocate all memory
   free_all_sxw_memory();
 
   printf("\nend program\n");
@@ -423,8 +412,7 @@ void Plot_Initialize(void) {
 		RGroup[rg]->extirpated = FALSE;
 	}
 
-	if (UseSoilwat)
-		SXW_InitPlot();
+	SXW_InitPlot();
 }
 
 
@@ -440,8 +428,6 @@ static void init_args(int argc, char **argv) {
    *                -d=chg to work dir <opt=dir_name>
    *                -f=chg deflt first file <opt=file.in>
    *                -q=quiet, noprint "Check logfile" at end of program
-   *                -s=soilwat model-derived resource
-   *                   optional parm debugfile for pgmr testing; see code.
    *                -e=echo init values to logfile.
    * 06/27/16 -AKT  -o= Print all the Soilwat output as well while running with STEPWAT
    *                  This option is required to have soilwat_input_files is next path after this
@@ -457,7 +443,7 @@ static void init_args(int argc, char **argv) {
    * 10/9/17 - BEB Added -i flag for writing SOILWAT output for every iteration
    */
   char str[1024],
-       *opts[]  = {"-d","-f","-q","-s","-e", "-p", "-g", "-o", "-i", "-S"};  /* valid options */
+       *opts[]  = {"-d","-f","-q","-e", "-p", "-g", "-o", "-i", "-S"};  /* valid options */
   int valopts[] = {  1,   1,   0,  -1,   0,    0,    0,   0,   0,   0};  /* indicates options with values */
                  /* 0=none, 1=required, -1=optional */
   int i, /* looper through all cmdline arguments */
@@ -468,7 +454,7 @@ static void init_args(int argc, char **argv) {
 
   /* Defaults */
   parm_SetFirstName( DFLT_FIRSTFILE);
-  UseSoilwat = QuietMode = EchoInits = UseSeedDispersal = FALSE;
+  QuietMode = EchoInits = UseSeedDispersal = FALSE;
   SXW.debugfile = NULL;
   progfp = stderr;
 
@@ -551,12 +537,6 @@ static void init_args(int argc, char **argv) {
 		case 2:
 			QuietMode = TRUE;
 			break; /* -q */
-
-		case 3:
-			UseSoilwat = TRUE; /* -s */
-			if (strlen(str) > 1)
-				SXW.debugfile = Str_Dup(str);
-			break;
 
 		case 4:
 			EchoInits = TRUE;
