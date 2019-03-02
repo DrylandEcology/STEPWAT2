@@ -538,30 +538,30 @@ static void init_args(int argc, char **argv) {
 			QuietMode = TRUE;
 			break; /* -q */
 
-		case 4:
+		case 3:
 			EchoInits = TRUE;
 			break; /* -e */
 
-		case 5:
+		case 4:
 			progfp = stdout; /* -p */
 			UseProgressBar = TRUE;
 			break;
 
-		case 6:
+		case 5:
 			UseGrid = TRUE;
 			break; /* -g */
 
-		case 7:
+		case 6:
       		printf("storing SOILWAT output aggregated across-iterations (-o flag)\n");
       		prepare_IterationSummary = TRUE;
 			break; /* -o */
 
-    	case 8: // -i
+    	case 7: // -i
       		printf("storing SOILWAT output for each iteration (-i flag)\n");
       		storeAllIterations = TRUE;
       		break;
 	  
-	  	case 9: // -S
+	  	case 8: // -S
 		    if(!strncmp("-STdebug", argv[a], 8)){ //  -STdebug
 				printf("Generating STdebug.sqlite database (-STdebug flag)\n");
 				STdebug_requested = TRUE;
