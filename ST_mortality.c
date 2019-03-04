@@ -255,6 +255,12 @@ void mort_EndOfYear(void) {
         } else { 
           /* Otherwise a wildfire probability is calculated, which increases with cheatgrass biomass*/
           fire_possibility = g->cheatgrass_coefficient + g->wild_fire_slope * biomass_cheatgrass;
+
+          // Cap fire_possibility at 1. This isn't needed from an algorithmic perspective,
+          // but a value greater than 1 does not make sense as a percentage.
+          if(fire_possibility > 1){
+            fire_possibility = 1;
+          }
         }
 
         // If a wildfire occurs this year
