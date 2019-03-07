@@ -293,9 +293,12 @@ void mort_EndOfYear(void) {
           /* --------------------- END PERIODIC PRESCRIBED FIRE ----------------- */
         }
       }
-
+      
+      /* Kill all individuals of the functional group and don't let them re-establish */
       if (Globals.currYear == RGroup[rg]->extirp) {
           rgroup_Extirpate(rg);
+          
+      /* If the current year is a kill year, implement mortality */    
       } else if (Globals.currYear == RGroup[rg]->killyr) {
           RGroup_Kill(rg);
           //printf("[Rui] Fire_happened_year: %d\n", RGroup[rg]->killyr);
