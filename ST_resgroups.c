@@ -733,7 +733,8 @@ RealF getRGroupRelsize(GrpIndex rg){
 }
 
 /***********************************************************/
-/* Update the grp_res_prop field of every individual in the RGroup. */
+/* Update the grp_res_prop field of every individual in the RGroup. 
+   param rg = RGroup index */
 void RGroup_Update_GrpResProp(GrpIndex rg)
 {
 	Int n;

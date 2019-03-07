@@ -197,6 +197,10 @@ void species_Update_Estabs(SppIndex sp, IntS num)
 	RGroup[Species[sp]->res_grp]->estabs += num;
 }
 
+/**************************************************************/
+/* Sums the relative sizes of all individuals in Species sp
+   Param sp = species index            
+   Return: species relsize */
 RealF getSpeciesRelsize(SppIndex sp)
 {
 	IndivType *p = Species[sp]->IndvHead;
