@@ -145,7 +145,6 @@ void parm_Initialize( Int iter) {
     _bmassflags_init();
     _mortflags_init();
     _rgroup_init();
-    //_rgroup_disturbance();
     _species_init();
     _check_species();
 
