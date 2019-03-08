@@ -443,7 +443,7 @@ static void init_args(int argc, char **argv) {
    * 10/9/17 - BEB Added -i flag for writing SOILWAT output for every iteration
    */
   char str[1024],
-       *opts[]  = {"-d","-f","-q","-e", "-p", "-g", "-o", "-i", "-S"};  /* valid options */
+       *opts[]  = {"-d","-f","-q","-e", "-p", "-g", "-o", "-i", "-S", "-s"};  /* valid options */
   int valopts[] = {  1,   1,   0,  -1,   0,    0,    0,   0,   0,   0};  /* indicates options with values */
                  /* 0=none, 1=required, -1=optional */
   int i, /* looper through all cmdline arguments */
@@ -570,6 +570,10 @@ static void init_args(int argc, char **argv) {
 				printf("Invalid option. (Did you mean -STdebug?)\n");
 				usage();
 			}
+
+			case 9: // -s (this option is obsolete. It is only present to allow users to get used to the change)
+			  printf("-s flag deprecated. STEPWAT2 now runs exclusively with SOILWAT2\n");
+				break;
 
 		default:
 			LogError(logfp, LOGFATAL,
