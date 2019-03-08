@@ -826,14 +826,6 @@ void _kill_extra_growth(void) {
             if (!Species[sp]->use_me)
                 continue;
 
-            /* Annuals have already been killed and relsize for annuals set to 
-             * 0.0 in _kill_annuals */
-            if (Species[sp]->max_age == 1){
-                continue;
-            }
-
-            //printf("s->extragrowth kill before  = %f\n", Species[sp]->extragrowth);
-
             /* Check that extragrowth <= s->relsize, otherwise relsize will become 
              * negative. If not, then reset to s->relsize. If the current year 
              * is a fire year, return, as killing of extragrowth has already occurred in Mort_EndofYear */
