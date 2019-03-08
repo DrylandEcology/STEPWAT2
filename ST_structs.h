@@ -185,9 +185,9 @@ struct resourcegroup_st {
         max_per_sqm,  /* convert density and plotsize to max plants/m^2 */
         max_bmass,    /* sum of mature biomass for all species in group */
         killfreq,       /* kill group at this frequency: <1=prob, >1=# years */
-        ignition,       /*cheatgrass biomass ignition in 1*1 square meter */
-        cheatgrass_coefficient,   /* cheatgrass biomass and fire frequency coeefficient */
-        wild_fire_slope,  /* slope of fire yearly possibility and cheatgrass biomass */	
+        ignition,       /* cheatgrass biomass (g/m2) that triggers potential ignition of a wildfire */
+        cheatgrass_coefficient,   /* intercept of the cheatgrass biomass-wildfire probability relationship */
+        wild_fire_slope,  /* slope of the cheatgrass biomass-wildfire probability relationship */	
         xgrow,        /* ephemeral growth = mm extra ppt * xgrow */
         slowrate,     /* user-defined growthrate that triggers mortality */
         ppt_slope[3], /* res. space eqn: slope for wet/dry/norm yrs*/

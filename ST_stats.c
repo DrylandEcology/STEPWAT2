@@ -109,7 +109,6 @@ struct stat_grid_cell_st {
 /***********************************************************/
 static void _init( void);
 static RealF _get_avg( struct accumulators_st *p);
-static int _get_sum( struct accumulators_st *p);
 static RealF _get_std( struct accumulators_st *p);
 //Adding below three functions for copying grid cell values,calculating avg and SD,these values will be used in grid cells avg output file
 static void copyStruct(RealF val,RealF std_val,struct accumulators_grid_cell_st *p );
@@ -1352,14 +1351,6 @@ void stat_Output_Seed_Dispersal(const char * filename, const char sep, Bool make
 static RealF _get_avg( struct accumulators_st *p) 
 {
 	return p->ave;
-}
-
-static int _get_sum( struct accumulators_st *p) {
-
-	if (p->nobs == 0) return 0;
-
-	return p->ave * p->nobs;
-
 }
 
 /***********************************************************/

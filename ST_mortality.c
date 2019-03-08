@@ -208,7 +208,6 @@ void mort_EndOfYear(void) {
      * that would result in mortality in single year (killyr) or
      * extirpation (extirp) where plants are killed and do not return. */
 
-    //printf("inside mort_EndOfYear() \n");
     GrpIndex rg;
     GroupType *g = NULL;
     SppIndex sp;
@@ -222,7 +221,6 @@ void mort_EndOfYear(void) {
     for (i = 0; i < Globals.sppCount; i++) { /* if species name = checkname = brte then get the biomass of brte(cheatgrass)*/
         if (strcmp(cheatgrass_name, Species[i]->name) == 0) {
             biomass_cheatgrass = Species_GetBiomass(i); /* calculate biomass of cheatgrass*/
-            //  printf("Cheatgrass: %s\n",Species[i]->name);
             g = RGroup[Species[i]->res_grp];
             break;
         }
@@ -230,7 +228,6 @@ void mort_EndOfYear(void) {
     
     /* Set a random number outside of the loop to make sure the kill probability for each functional group is the same */
     random_number = RandUni(&mortality_rng);
-    //printf("[Cheatgrass: %f\n",biomass_cheatgrass);
 
     // in this for loop "g" refers to the RGroup of cheatgrass. RGroup[rg] refers
     // to the current iteration's RGroup.
@@ -242,9 +239,9 @@ void mort_EndOfYear(void) {
       RGroup[rg]->prescribedfire = 0;
       RGroup[rg]->wildfire = 0;
 
-      // If these conditions are true we want to simulate wildfire
+      // If these conditions are true we want to simulate wildfire based on cheatgrass abundance
       if(g != NULL && g->killfreq == 0){
-        /* ------------------------- WILDFIRE SIMULATION ------------------------- */
+        /* ------------------------- WILDFIRE BASED ON CHEATGRASS BIOMASS------------------------- */
         // Calculate fire_possibility
         if (g->ignition == 0) { 
           /* If ignition == 0, no wildfire occurs */
@@ -408,7 +405,6 @@ void proportion_Recovery(void) {
     /*======================================================*/
 
     GrpIndex rg;
-    GroupType *g;
     SppIndex sp;
 
     ForEachGroup(rg) {
@@ -418,9 +414,6 @@ void proportion_Recovery(void) {
             * that RGroup[rg] is turned on */
             continue;
         }
-
-        g = RGroup[rg];
-
 		
         // Implement recovery of biomass after fire that represents re-sprouting
         if (Globals.currYear == RGroup[rg]->killyr) {

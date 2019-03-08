@@ -53,8 +53,8 @@
 #       is reported immediately to the right of the group biomass.
 #       summary: average for the given year. Can only be
 #       output if GrpBmass is specified.
-# Grpwf == wild fires count across all the iterations.
-# Grppf == prescribed fires count across all the iterations.
+# Grpwf == number of wildfires that occured across all iterations in each year
+# Grppf == number of prescribed fires that occured across all iterations in each year
 # GrpSize == relative size ("equivalent mature individuals")
 #         of the group. Each group's relative size is reported
 #         immediately to the right of the group biomass, unless
