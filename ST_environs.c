@@ -57,8 +57,6 @@ void Env_Generate( void) {
 /* Chris Bennett @ LTER-CSU 6/15/2000            */
 /*------------------------------------------------------*/
 
-  Int rg;
-
   SXW_Run_SOILWAT();
 
   _make_ppt();
@@ -91,10 +89,10 @@ static void _make_ppt( void) {
 
 /*------------------------------------------------------*/
 
-  IntS r=0, i;
+  IntS i;
 
 #ifdef DEBUG_ENVCONST
-  r=320;
+  IntS r=320;
 #endif
 
   // Run with SOILWAT2: we have monthly PPT and temperature to calculate
