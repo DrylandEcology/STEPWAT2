@@ -120,11 +120,6 @@ RealF added_transp;
 
 pcg32_random_t resource_rng; //rng for swx_resource.c functions.
 
-#ifdef SXW_BYMAXSIZE
-/* addition to meet changes specified at the top of the file */
-RealF _Grp_BMass[MAX_RGROUPS];
-#endif
-
 /* and one vector for the production constants */
 RealD _prod_litter[MAX_MONTHS];
 RealD * _prod_bmass;
@@ -184,15 +179,6 @@ void SXW_Init( Bool init_SW, char *f_roots ) {
 	char roots[MAX_FILENAMESIZE] = { '\0' };
 
 RandSeed(Globals.randseed, &resource_rng);
-
-#ifdef SXW_BYMAXSIZE
-   GrpIndex rg; SppIndex sp;
-   /* Sum each group's maximum biomass */
-   ForEachGroup(rg) _Grp_BMass[rg] = 0.0;
-   ForEachSpecies(sp)
-     _Grp_BMass[Species[sp]->res_grp] += Species[sp]->mature_biomass;
-   /* end code 2/14/03 */
-#endif
 
    _sxwfiles[0] = &SXW.f_roots;
    _sxwfiles[1] = &SXW.f_phen;
@@ -288,26 +274,9 @@ void SXW_InitPlot (void) {
 /* Call this from main::Plot_Init() after killing everything
  * so the sxw tables will be reset.
  */
-#ifdef SXW_BYMAXSIZE
-	GrpIndex g;
-	RealF sizes[MAX_RGROUPS];
-#endif
 
 	_sxw_sw_clear_transp();
 	_sxw_update_resource();
-
-#ifdef SXW_BYMAXSIZE
-	/* this stuff was taken from Run_Soilwat() but we're now trying
-	 * to minimize the dynamic effect, so resources are always based
-	 * on full-sized plants.  So we only need to do this at the
-	 * beginning of each steppe-model iteration.
-	 */
-	ForEachGroup(g) sizes[g] = 1.0;
-	_sxw_update_root_tables(sizes);
-	_sxw_sw_setup(sizes);
-#endif
-
-
 }
 
 
@@ -323,14 +292,12 @@ void SXW_Run_SOILWAT (void) {
  *             gets done once during init plot.
  */
 
-#ifndef SXW_BYMAXSIZE
 	GrpIndex g;
 	RealF sizes[MAX_RGROUPS];
 	/* compute production values for transp based on current plant sizes */
 	ForEachGroup(g)
 	sizes[g] = RGroup_GetBiomass(g);
 	_sxw_sw_setup(sizes);
-#endif
 
         // Initialize `SXW` values for current year's run:
 	SXW.aet = 0.; /* used to be in sw_setup() but it needs clearing each run */

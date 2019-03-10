@@ -136,18 +136,6 @@ void _sxw_update_resource(void) {
   RealF sizes[MAX_RGROUPS] = {0.};
   GrpIndex g;
 
-  #ifdef SXW_BYMAXSIZE
-    int i;
-    SppIndex sp;
-    ForEachGroup(g) {
-      sizes[g] = 0.;
-      if (RGroup[g]->regen_ok) {
-        ForEachGroupSpp(sp, g, i) {
-          sizes[g] += Species[sp]->mature_biomass;
-        }
-      }
-    }
-  #else
 	ForEachGroup(g)
 	{
 		//RGroup[g]->veg_prod_type
@@ -157,7 +145,6 @@ void _sxw_update_resource(void) {
 			continue;
 		sizes[g] = RGroup_GetBiomass(g);
 	}
-  #endif
         
         /* Update the active relative roots based on current biomass values */
 	_sxw_update_root_tables(sizes);

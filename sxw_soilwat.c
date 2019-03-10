@@ -68,10 +68,6 @@ extern RealD _prod_litter[MAX_MONTHS];
 extern RealD * _prod_bmass;
 extern RealD * _prod_pctlive;
 
-#ifdef SXW_BYMAXSIZE
-extern RealF _Grp_BMass[];  /* added 2/28/03 */
-#endif
-
 /*************** Local Function Declarations ***************/
 /***********************************************************/
 static void _update_transp_coeff(RealF relsize[]);
@@ -89,7 +85,6 @@ void _sxw_sw_setup (RealF sizes[]) {
         _update_productivity();
 	_update_transp_coeff(sizes);
 
-#ifndef SXW_BYMAXSIZE
   for (doy = 1; doy <= MAX_DAYS; doy++) {
     ForEachVegType(k) {
       v->veg[k].litter_daily[doy] = 0.;
@@ -100,8 +95,6 @@ void _sxw_sw_setup (RealF sizes[]) {
   }
 
 	SW_VPD_init();
-#endif
-
 }
 
 void _sxw_sw_run(void) {
@@ -220,11 +213,7 @@ static void _update_productivity(void) {
             bmassg[MAX_RGROUPS] = {0.},
     vegTypeBiomass[4] = {0.};
 
-#ifdef SXW_BYMAXSIZE
-#define Biomass(g)  _Grp_BMass[g]
-#else
 #define Biomass(g)  RGroup_GetBiomass(g)
-#endif
 
     /* get total biomass for the plot in sq.m */
     ForEachGroup(g) {
