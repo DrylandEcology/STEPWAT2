@@ -113,12 +113,6 @@ static void _make_ppt( void) {
     Env.gsppt = 0;
   }
 
-  /*
-  printf("_make_ppt (year = %d of iteration = %d): "\
-    "Env.gsppt(SOILWAT2) = %d would be gsppt(fixed proportion) = %.1f\n",
-    Globals.currYear, Globals.currIter, Env.gsppt, Globals.gsppt_prop * Env.ppt);
-  */
-
   if ( Env.ppt <= Globals.ppt.dry )
     Env.wet_dry = Ppt_Dry;
   else if (Env.ppt >= Globals.ppt.wet)
@@ -176,17 +170,6 @@ static void _set_temp_reduction( void) {
     Env.temp_reduction[i] = tp[2]*tp[0] + tp[3] * (tp[0]*tp[0]);
     Env.temp_reduction[i] = max(0., Env.temp_reduction[i]);
   }
-
-#ifdef STEPWAT
-  if (Env.temp < 9.5 ) {
-    Env.temp_reduction[CoolSeason] = .9;
-    Env.temp_reduction[WarmSeason] = .6;
-  } else {
-    Env.temp_reduction[CoolSeason] = .6;
-    Env.temp_reduction[WarmSeason] = .9;
-  }
-#endif
-
 }
 
 /**************************************************************/
