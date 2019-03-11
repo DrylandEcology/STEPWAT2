@@ -69,13 +69,13 @@ static void _model_init( void);
 static void _rgroup_add1( char name[], RealF space, RealF density,
                       Int estab, RealF slow, Int stretch,
                       Int xres, Int estann, Int turnon,
-                      Int styr,  RealF xgro, Int veg_prod_type);
+                      Int styr,  RealF xgro, Int veg_prod_type, Int mort);
 static void _rgroup_add2( char name[],
                       RealF nslope, RealF nint,
                       RealF wslope, RealF wint,
                       RealF dslope, RealF dint);
 static void _rgroup_add_disturbance( char name[],  Int killyr, Int killfreq_startyr,RealF killfreq,
-                      Int extirp, Int mort, RealF prop_killed, RealF prop_recovered,RealF grazing_frq,RealF prop_grazing,Int grazingfreq_startyr);
+                      Int extirp, RealF prop_killed, RealF prop_recovered,RealF grazing_frq,RealF prop_grazing,Int grazingfreq_startyr);
 static void _rgroup_add_wildfire( RealF ignition, RealF cheatgrass_coefficient, RealF wild_fire_slope);
 
 static void _rgroup_addsucculent( char name[],
@@ -867,12 +867,12 @@ static void _rgroup_init( void) {
 
    /* input variables*/
    Int estab, stretch, xres, turnon, estann,
-       styr, veg_prod_type;
+       styr, veg_prod_type, mort;
    RealF space, density, slow, 
          nslope, nint, wslope, wint, dslope, dint, xgro;
    /* input variables related to disturbances */
-   Int extirp, mort,
-       killyr, killfreq_startyr, grazingfreq_startyr;
+   Int extirp, killyr, killfreq_startyr, 
+       grazingfreq_startyr;
    RealF  killfreq, ignition, cheatgrass_coefficient, wild_fire_slope,
         prop_killed, prop_recovered,grazing_frq, prop_grazing ;
 
@@ -899,10 +899,10 @@ static void _rgroup_init( void) {
 
      _rgroup_add1( name, space, density, estab,
                    slow, stretch, xres, estann,
-                   turnon, styr, xgro, veg_prod_type);
+                   turnon, styr, xgro, veg_prod_type, mort);
 
      _rgroup_add_disturbance(name, killyr, killfreq_startyr, killfreq,
-                   extirp, mort, prop_killed, prop_recovered,grazing_frq,prop_grazing,grazingfreq_startyr);
+                   extirp, prop_killed, prop_recovered,grazing_frq,prop_grazing,grazingfreq_startyr);
    }/* end while*/
 
    if (!groupsok) {
@@ -974,7 +974,7 @@ static void _rgroup_init( void) {
 static void _rgroup_add1( char name[], RealF space, RealF density,
                       Int estab, RealF slow, Int stretch,
                       Int xres, Int estann, Int turnon,
-                      Int styr,  RealF xgro, Int veg_prod_type) {
+                      Int styr,  RealF xgro, Int veg_prod_type, Int mort) {
 /*======================================================*/
   GrpIndex rg;
 
@@ -986,6 +986,7 @@ static void _rgroup_add1( char name[], RealF space, RealF density,
   RGroup[rg]->max_spp_estab = (IntS) estab;
   RGroup[rg]->max_density   = density;
   RGroup[rg]->max_per_sqm   = density / Globals.plotsize;
+  RGroup[rg]->use_mort      = itob(mort);
   RGroup[rg]->slowrate      = slow;
   RGroup[rg]->min_res_req   = space;
   RGroup[rg]->est_annually  = itob(estann);
@@ -1026,7 +1027,7 @@ static void _rgroup_add2( char name[],
 
 
 static void _rgroup_add_disturbance( char name[], Int killyr, Int killfreq_startyr, RealF killfreq,
-                      Int extirp, Int mort, RealF prop_killed, RealF prop_recovered,RealF grazing_frq,RealF prop_grazing, Int grazingfreq_startyr) {
+                      Int extirp, RealF prop_killed, RealF prop_recovered,RealF grazing_frq,RealF prop_grazing, Int grazingfreq_startyr) {
 /*======================================================*/
   GrpIndex rg;
   
@@ -1043,7 +1044,6 @@ static void _rgroup_add_disturbance( char name[], Int killyr, Int killfreq_start
   RGroup[rg]->killfreq_startyr = killfreq_startyr;
   RGroup[rg]->killfreq      = killfreq;
   RGroup[rg]->extirp        = (IntS) extirp;
-  RGroup[rg]->use_mort      = itob(mort);
   RGroup[rg]->proportion_killed    = prop_killed;
   RGroup[rg]->proportion_recovered = prop_recovered;
   RGroup[rg]->grazingfrq           = grazing_frq;

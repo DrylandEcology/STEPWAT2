@@ -147,8 +147,8 @@ struct resourcegroup_st {
         estabs,         /* total indivs in group established during iter */
         killyr,         /* kill the group in this year; if 0, don't kill, but see killfreq */
         yrs_neg_pr,     /* counter for consecutive years low resources */
-       	wildfire, 		/*number of wildfires during all iterations*/
-       	prescribedfire, /*number of prescribed fires during all iterations*/
+        wildfire, 		/* number of wildfires during all iterations in this year */
+        prescribedfire, /* number of prescribed fires during all iterations in this year */
         mm_extra_res;   /* extra resource converted back to mm */
   RealF res_required, /* resource required for current size */
         res_avail,    /* resource available from environment X competition */

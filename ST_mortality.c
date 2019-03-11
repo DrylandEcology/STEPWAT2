@@ -254,7 +254,7 @@ void mort_EndOfYear(void) {
           fire_possibility = g->cheatgrass_coefficient + g->wild_fire_slope * biomass_cheatgrass;
 
           // Cap fire_possibility at 1. This isn't needed from an algorithmic perspective,
-          // but a value greater than 1 does not make sense as a percentage.
+          // but a value greater than 1 does not make sense as a probability.
           if(fire_possibility > 1){
             fire_possibility = 1;
           }
@@ -263,10 +263,10 @@ void mort_EndOfYear(void) {
         // If a wildfire occurs this year
         if (random_number <= fire_possibility) {
           RGroup[rg]->killyr = Globals.currYear;
-          /* Calculate the wild fire counts */
+          /* Increase the number of wildfires that have occurred across all iterations in this year by 1 */
           RGroup[rg]->wildfire = 1;
         }
-        /* ------------------------- END WILDFIRE SIMULATION --------------------- */
+        /* ------------------------- END WILDFIRE BASED ON CHEATGRASS BIOMASS ------------------------- */
 
       } else if(Globals.currYear >= RGroup[rg]->killfreq_startyr) { // Otherwise simulate prescribed fire
 
@@ -275,19 +275,17 @@ void mort_EndOfYear(void) {
           if(random_number <= RGroup[rg]->killfreq) {
             RGroup[rg]->killyr = Globals.currYear;
 
-            /* Calculate the wild fire counts */
+           /* Increase the number of prescribed fires that have occurred across all iterations in this year by 1 */
             RGroup[rg]->prescribedfire = 1;
-            //printf("Wildfire_count: %d\n",  g->wildfire);
           } 
           /* ------------------- END STOCHASTIC PRESCRIBED FIRE ----------------- */
 
         } else if (((Globals.currYear - RGroup[rg]->killfreq_startyr) % (IntU) RGroup[rg]->killfreq) == 0) {
-          /* ------------------------ PERIODIC PRESRIBED FIRE ------------------- */
+          /* ------------------------ PRESCRIBED FIRE AT A FIXED RETURN INTERVAL ----------------------- */
           RGroup[rg]->killyr = Globals.currYear;
           /* Calculate the prescribed fire counts */
           RGroup[rg]->prescribedfire = 1;
-          //printf("Prescribedfire_count: %d\n", g->prescribedfire);
-          /* --------------------- END PERIODIC PRESCRIBED FIRE ----------------- */
+          /* ------------------------ END PRESCRIBED FIRE AT A FIXED RETURN INTERVAL ------------------- */
         }
       }
       
@@ -298,7 +296,6 @@ void mort_EndOfYear(void) {
       /* If the current year is a kill year, implement mortality */    
       } else if (Globals.currYear == RGroup[rg]->killyr) {
           RGroup_Kill(rg);
-          //printf("[Rui] Fire_happened_year: %d\n", RGroup[rg]->killyr);
       }
 
       /* If the current year is a fire year, then remove extra_growth here
@@ -315,18 +312,11 @@ void mort_EndOfYear(void) {
             continue;
           }
 
-          //printf("s->extragrowth kill before  = %f\n", Species[sp]->extragrowth);
-
           if (ZRO(Species[sp]->extragrowth)) continue;
-            //printf("s->relsize kill before = %f\n, Species = %s \n", Species[sp]->name, Species[sp]->relsize);
-            //printf("s->extragrowth kill before  = %f\n", Species[sp]->extragrowth);
 
-            Species[sp]->extragrowth = LE(Species[sp]->extragrowth, Species[sp]->relsize) ? Species[sp]->extragrowth : Species[sp]->relsize;
-
-            Species_Update_Newsize(sp, -Species[sp]->extragrowth);
-
-            //printf("s->relsize kill after  = %f\n", Species[sp]->relsize);
-            Species[sp]->extragrowth = 0.0;
+          Species[sp]->extragrowth = LE(Species[sp]->extragrowth, Species[sp]->relsize) ? Species[sp]->extragrowth : Species[sp]->relsize;
+          Species_Update_Newsize(sp, -Species[sp]->extragrowth);
+          Species[sp]->extragrowth = 0.0;
         }
       }
     }  
