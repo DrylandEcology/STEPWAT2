@@ -69,8 +69,7 @@ extern
         * _phen;          /* phenological activity for each month for STEPPE functional groups, read from input */
 
 extern
-  RealF _resource_pr[MAX_RGROUPS],  /* resource convertable to pr */
-        _resource_cur[MAX_RGROUPS]; /* resources currently available by group*/
+  RealF _resource_cur[MAX_RGROUPS]; /* resources currently available by group*/
         RealF added_transp; /* transpiration added for the current year */
 
 extern

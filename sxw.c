@@ -108,8 +108,7 @@ RealD * _roots_max,     /* read from root distr. file */
 
 /* simple vectors hold the resource information for each group */
 /* curr/equ gives the available/required ratio */
-RealF _resource_cur[MAX_RGROUPS],  /* current resource availability for each STEPPE functional type */
-      _resource_pr[MAX_RGROUPS];   /* resource convertable to PR */
+RealF _resource_cur[MAX_RGROUPS];  /* current resource availability for each STEPPE functional type */
 
 // Window of transpiration used by _transp_contribution_by_group() in sxw_resource.c
 // "Window" refers to the number of years over which transpiration data is averaged.
@@ -369,18 +368,6 @@ void SXW_SW_Setup_Echo(void) {
 
 	fprintf(f, "\n");
 	CloseFile(&f);
-}
-
-RealF SXW_GetPR( GrpIndex rg) {
-/*======================================================*/
-/* see _sxw_update_resource() for _resource_cur[]
-This function is no longer utilized, SXW_GetResource has replaced it
-_resource_pr is no longer used as a parameter. We remain the code for the time being
-KAP 7/20/2016
-*/
-	RealF pr = ZRO(_resource_pr[rg]) ? 0.0 : 1. / _resource_pr[rg];
-	return pr;
-	//return pr > 10 ? 10 : pr;
 }
 
 RealF SXW_GetTranspiration( GrpIndex rg) {
