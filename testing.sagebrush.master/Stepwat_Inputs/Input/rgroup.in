@@ -135,9 +135,12 @@ succulents		-0.0025 6.736 -0.0217 6.736
 # frequencies on Idaho's Snake River Plains: ecological and management implications
 # when ignition = 12.05, the cheatgrass-wildfire positive feedback loop is utilized, such that
 # greater cheatgrass biomass results into a higher fire probability.
-# To turn off the cheatgrass-wildfire loop, set ignition = 0.0.  
+
+# Cheatgrass-wildfire loop is OFF by default. To turn it ON, set ignition > 0.
+# (We recomend ignition = 12.05 derived from Fig. 2 of Whisenant et al. 1990 Changing fire 
+# frequencies on Idaho's Snake River Plains: ecological and management implications)  
 # ignition cheatgrass_coefficient wild_fire_slope  
-  12.05    -0.117                 0.0093    
+  0        -0.117                 0.0093  
 
 [end]  # section end
 
