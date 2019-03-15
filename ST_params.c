@@ -64,7 +64,6 @@ static void _files_init( void );
 static void _check_species( void);
 static void _bmassflags_init( void);
 static void _mortflags_init( void);
-//static void _morthdr_create( void);
 static void _model_init( void);
 static void _rgroup_add1( char name[], RealF space, RealF density,
                       Int estab, RealF slow, Int stretch,
@@ -793,40 +792,6 @@ static void _mortflags_init( void) {
    }
 
 }
-
-/**************************************************************/
-/*======================================================*/
-/* Writes to Globals.header */
-/*
-static void _morthdr_create( void) {
-
-  char fields[MAX_OUTFIELDS][MAX_FIELDLEN];
-  Int rg, sp, i, fc=0;
-
-
-  if (!MortFlags.header) return;
-
-  // Set up headers
-  sprintf(fields[fc++],"Age");
-  if (MortFlags.group) {
-    ForEachGroup(rg)
-      sprintf(fields[fc++],"%s", RGroup[rg]->name);
-  }
-  if (MortFlags.species) {
-    ForEachSpecies(sp)
-      sprintf(fields[fc++],"%s",Species[sp]->name);
-  }
-
-  // Put header line in global variable
-    for (i=0; i< fc-1; i++) {
-      sprintf(inbuf,"%s%c", fields[i], MortFlags.sep);
-      strcat(Globals.mort.header_line, inbuf);
-    }
-    sprintf(inbuf,"%s\n", fields[i]);
-    strcat(Globals.mort.header_line, inbuf);
-
-}
-*/
 
 /**************************************************************/
 static void _setNameLen(char *dest, char *src, Int len) {
