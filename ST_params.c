@@ -631,63 +631,6 @@ static void _bmassflags_init( void) {
 }
 
 /**************************************************************/
-///*======================================================*/
-///* Writes to Globals.header */
-/*
-static void _bmasshdr_init( void) {
-  char fields[MAX_OUTFIELDS][MAX_FIELDLEN+1];
-  Int rg, sp, i, fc=0;
-
-
-  if (!BmassFlags.header) return;
-
-  // Set up headers
-  if (BmassFlags.yr)
-    strcpy(fields[fc++], "Year");
-  if (BmassFlags.dist)
-    strcpy(fields[fc++], "Disturb");
-  if (BmassFlags.ppt)
-    strcpy(fields[fc++], "PPT");
-  if (BmassFlags.pclass)
-    strcpy(fields[fc++], "PPTClass");
-  if (BmassFlags.tmp)
-    strcpy(fields[fc++], "Temp");
-
-  if (BmassFlags.grpb) {
-    ForEachGroup(rg) {
-      strcpy(fields[fc++], RGroup[rg]->name);
-      if (BmassFlags.size) {
-        strcpy(fields[fc], RGroup[rg]->name);
-        strcat(fields[fc++], "_RSize");
-      }
-      if (BmassFlags.pr) {
-        strcpy(fields[fc], RGroup[rg]->name);
-        strcat(fields[fc++], "_PR");
-      }
-    }
-  }
-
-  if (BmassFlags.sppb) {
-    ForEachSpecies(sp) {
-      strcpy(fields[fc++], Species[sp]->name);
-      if (BmassFlags.indv) {
-        strcpy(fields[fc], Species[sp]->name);
-        strcat(fields[fc++], "_Indv");
-      }
-    }
-  }
-
-  // Put header line in global variable
-    for (i=0; i< fc-1; i++) {
-      sprintf(inbuf,"%s%c", fields[i], BmassFlags.sep);
-      strcat(Globals.bmass.header_line, inbuf);
-    }
-    sprintf(inbuf,"%s\n", fields[i]);
-    strcat(Globals.bmass.header_line, inbuf);
-}
-*/
-
-/**************************************************************/
 static void _mortflags_init( void) {
 /*======================================================*/
 /* read in the flags to control the output quantities etc.
