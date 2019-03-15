@@ -264,9 +264,6 @@ struct outfiles_st {
   FILE *fp_year,  /* file handle for yearly so it can stay open*/
        *fp_sumry; /* file handle for averages output */
   IntUS suffixwidth; /* max width of outfile suffix if printing yearly */
-  char header_line[1024]; /* contains output header line, used to print */
-                          /* yearly values and statistics  */
-
 };
 
 struct globals_st {
