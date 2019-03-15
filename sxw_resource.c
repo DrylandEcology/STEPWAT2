@@ -216,7 +216,7 @@ void _sxw_update_root_tables( RealF sizes[] ) {
 			ForEachTrPeriod(p)
 			{
         RealD sum_all_veg_types = 0;
-        for(int t = 0; t < NVEGTYPES; ++t){
+        for(t = 0; t < NVEGTYPES; ++t){
           sum_all_veg_types += _roots_active_sum[Itlp(t,l,p)];
         }
 
@@ -243,6 +243,7 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
 
     GrpIndex g;
     TimeInt p;
+    int nLyrs, t;
     LyrIndex l;
     RealD *transp, proportion_total_resources, average_proportion;
     RealF sumUsedByGroup = 0., sumTranspTotal = 0., TranspRemaining = 0.;
@@ -273,7 +274,7 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
         //Loops through each month and calculates amount of transpiration for each STEPPE functional group
         //according to whether that group has active living roots in each soil layer for each month
         ForEachTrPeriod(p) {
-            int nLyrs = getNTranspLayers(RGroup[g]->veg_prod_type);
+            nLyrs = getNTranspLayers(RGroup[g]->veg_prod_type);
             for (l = 0; l < nLyrs; l++) {
                 use_by_group[g] += (RealF) (_roots_active_rel[Iglp(g, l, p)] * transp[Ilp(l, p)]);
             }
@@ -305,7 +306,7 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
     //Very small amounts of transpiration remain and not perfectly partitioned to functional groups.
     //This check makes sure any remaining transpiration is divided proportionately among groups.
     ForEachTrPeriod(p) {
-        for (int t = 0; t < SXW.NSoLyrs; t++)
+        for (t = 0; t < SXW.NSoLyrs; t++)
             sumTranspTotal += SXW.transpTotal[Ilp(t, p)];
     }
 
