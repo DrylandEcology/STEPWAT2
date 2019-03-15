@@ -679,6 +679,8 @@ void rgroup_Establish(void) {
         // if no species in this group established we need to redistribute min_res_req
         if(g->est_count == 0){
             unused_space += g->min_res_req;
+            // this group needs no resources because it is not established.
+            g->min_res_req = 0;
         }
     } /* end ForEachGroup() */
 

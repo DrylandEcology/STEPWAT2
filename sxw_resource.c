@@ -211,16 +211,20 @@ void _sxw_update_root_tables( RealF sizes[] ) {
          * STEPPE group's roots in a given layer in a given month */
 	ForEachGroup(g)
 	{
-		int t = RGroup[g]->veg_prod_type-1;
 		int nLyrs = getNTranspLayers(RGroup[g]->veg_prod_type);
 		for (l = 0; l < nLyrs; l++) {
 			ForEachTrPeriod(p)
 			{
+        RealD sum_all_veg_types = 0;
+        for(int t = 0; t < NVEGTYPES; ++t){
+          sum_all_veg_types += _roots_active_sum[Itlp(t,l,p)];
+        }
+
 				_roots_active_rel[Iglp(g, l, p)] =
-				ZRO(_roots_active_sum[Itlp(t,l,p)]) ?
+				ZRO(sum_all_veg_types) ?
 						0. :
 						_roots_active[Iglp(g, l, p)]
-								/ _roots_active_sum[Itlp(t,l, p)];
+								/ sum_all_veg_types;
 			}
 		}
 	}
@@ -240,8 +244,7 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
     GrpIndex g;
     TimeInt p;
     LyrIndex l;
-    int t;
-    RealD *transp;
+    RealD *transp, proportion_total_resources, average_proportion;
     RealF sumUsedByGroup = 0., sumTranspTotal = 0., TranspRemaining = 0.;
     RealF transp_ratio, added_transp = 0, transp_ratio_sd;
 
@@ -265,16 +268,14 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
     ForEachGroup(g) //Steppe functional group
     {
         use_by_group[g] = 0.;
-        t = RGroup[g]->veg_prod_type - 1;
         transp = SXW.transpTotal;
 
         //Loops through each month and calculates amount of transpiration for each STEPPE functional group
         //according to whether that group has active living roots in each soil layer for each month
-
         ForEachTrPeriod(p) {
             int nLyrs = getNTranspLayers(RGroup[g]->veg_prod_type);
             for (l = 0; l < nLyrs; l++) {
-                use_by_group[g] += (RealF) (_roots_active_rel[Iglp(g, l, p)] * RGroup[g]->min_res_req * transp[Ilp(l, p)]);
+                use_by_group[g] += (RealF) (_roots_active_rel[Iglp(g, l, p)] * transp[Ilp(l, p)]);
             }
         }
         //printf("for groupName= %s, use_by_group[g] in transp= %f \n",RGroup[g]->name,use_by_group[g] );
@@ -282,17 +283,34 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
         sumUsedByGroup += use_by_group[g];
         //printf(" sumUsedByGroup in transp=%f \n",sumUsedByGroup);
     }
+    
+    // Rescale transpiration based on space (min_res_req)
+    ForEachGroup(g){
+      if(use_by_group[g] != 0){ //Prevents NaN errors
+        //Proportion of total traspiration that this group would recieve without accounting for space
+        proportion_total_resources = use_by_group[g] / sumUsedByGroup;
+        //Average of the two proportions. This equally weights proportion_total_resources and min_res_req.
+        average_proportion = (proportion_total_resources + RGroup[g]->min_res_req) / 2;
+        //Recalculate this group's resources.
+        use_by_group[g] = sumUsedByGroup * average_proportion;
+      }
+    }
 
+    //sumUsedByGroup needs to be synced because of potention floating point errors
+    sumUsedByGroup = 0;
+    ForEachGroup(g){
+      sumUsedByGroup += use_by_group[g];
+    }
+    
     //Very small amounts of transpiration remain and not perfectly partitioned to functional groups.
     //This check makes sure any remaining transpiration is divided proportionately among groups.
-
     ForEachTrPeriod(p) {
-        for (t = 0; t < SXW.NSoLyrs; t++)
+        for (int t = 0; t < SXW.NSoLyrs; t++)
             sumTranspTotal += SXW.transpTotal[Ilp(t, p)];
     }
 
     TranspRemaining = sumTranspTotal - sumUsedByGroup;
-    //printf(" sumTranspTotal=%f, sumUsedByGroup=%f  TranspRemaining=%f"\n", sumTranspTotal, sumUsedByGroup, TranspRemaining);
+    //printf("Total = %f\tUsed = %f\tRemaining = %f\n", sumTranspTotal, sumUsedByGroup, TranspRemaining);
 
     /* ------------- Begin testing to see if additional transpiration is necessary ------------- */
 
