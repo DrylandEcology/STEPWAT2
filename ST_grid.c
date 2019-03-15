@@ -220,7 +220,7 @@ void mort_Main(Bool *killed);
 void mort_EndOfYear(void);
 
 //functions from ST_params.c
-void parm_Initialize(Int);
+void parm_Initialize(void);
 void parm_SetFirstName(char *s);
 void parm_SetName(char *s, int which);
 void parm_free_memory(void);
@@ -433,7 +433,7 @@ void runGrid(void)
 		sprintf(SW_Weather.name_prefix, "%s", aString); //updates the directory correctly for the weather files so soilwat can find them
 
 		if (BmassFlags.yearly || MortFlags.yearly)
-			parm_Initialize(iter);
+			parm_Initialize();
 
 		Plot_Initialize();
 		if (iter > 1)
@@ -622,7 +622,7 @@ static void _run_spinup(void)
 	{ //for each iteration... only 1 iteration allowed for now
 
 		if (BmassFlags.yearly || MortFlags.yearly)
-			parm_Initialize(iter);
+			parm_Initialize();
 
 		Plot_Initialize();
 
@@ -800,7 +800,7 @@ static void _init_stepwat_inputs(void)
 	ChDir(grid_directories[0]);	// changes to the folder that the stepwat input is in
 
 	parm_SetFirstName(grid_files[6]);// correctly sets the name of the stepwat files.in file
-	parm_Initialize(0);				// loads stepwat input files
+	parm_Initialize();				// loads stepwat input files
 
 	if (UseSoilwat)
 		_init_SXW_inputs(TRUE, NULL);

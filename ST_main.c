@@ -57,7 +57,7 @@ SW_FILE_STATUS SW_File_Status;
   void proportion_Recovery(void);
   void grazing_EndOfYear( void);
 
-  void parm_Initialize( Int);
+  void parm_Initialize(void);
   void parm_SetFirstName( char *s);
 
   void output_Bmass_Yearly( Int year );
@@ -180,7 +180,7 @@ int main(int argc, char **argv) {
 		return 0;
 	}
 
-	parm_Initialize(0);
+	parm_Initialize();
 
 	if (UseSoilwat)
 	{
@@ -212,7 +212,7 @@ int main(int argc, char **argv) {
 			fprintf(progfp, "%d\n", iter);
 		}
 		if (BmassFlags.yearly || MortFlags.yearly)
-			parm_Initialize(iter);
+			parm_Initialize();
 
 		Plot_Initialize();
 		RandSeed(Globals.randseed, &environs_rng);

@@ -47,7 +47,7 @@ SppIndex species_New(void);
 /* Modular functions only used on one or two specific   */
 /* places; that is, they are not generally useful       */
 /* (like C++ friend functions) but have to be declared. */
-  void parm_Initialize( Int);
+  void parm_Initialize(void);
   void parm_SetFirstName( char *s);
   void parm_SetName( char *s, int which);
   void parm_free_memory( void );
@@ -95,7 +95,7 @@ char *MyFileName;
 
 /**************************************************************/
 /**************************************************************/
-void parm_Initialize( Int iter) {
+void parm_Initialize() {
 /*======================================================*/
   static Bool beenhere = FALSE;
   //char filename[FILENAME_MAX];
