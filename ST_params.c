@@ -97,60 +97,16 @@ char *MyFileName;
 /**************************************************************/
 void parm_Initialize() {
 /*======================================================*/
-  static Bool beenhere = FALSE;
-  //char filename[FILENAME_MAX];
-
-  if (beenhere) {
-//    if (BmassFlags.yearly) {
-//      sprintf(filename, "%s%0*d.csv", Parm_name(F_BMassPre),
-//                                Globals.bmass.suffixwidth,
-//                                iter);
-//      printf("parm_Initialize: %s\n",filename, filename);
-//      if (Globals.bmass.fp_year != NULL) {
-//        LogError(logfp, LOGFATAL, "Programmer error: "
-//                        "Globals.bmass.fp_year not null"
-//                        " in parm_Initialize()");
-//      }
-//      Globals.bmass.fp_year = OpenFile(filename, "w");//moved to output function
-//      fprintf(Globals.bmass.fp_year, "%s", Globals.bmass.header_line);
-//      fflush(Globals.bmass.fp_year);
-//      CloseFile(&Globals.bmass.fp_year);
-//    }
-//
-//    if (MortFlags.yearly) {
-//      sprintf(filename, "%s%0*d.csv", Parm_name(F_MortPre),
-//                                Globals.mort.suffixwidth,
-//                                iter);
-//      if (Globals.mort.fp_year != NULL) {
-//        LogError(logfp, LOGFATAL, "Programmer error: "
-//                        "Globals.mort.fp_year not null"
-//                        " in parm_Initialize()");
-//      }
-//      Globals.mort.fp_year = OpenFile(filename, "w");
-//      fprintf(Globals.mort.fp_year, "%s", Globals.mort.header_line);
-//      fflush(Globals.mort.fp_year);
-//      CloseFile(&Globals.mort.fp_year);
-//    }
-
-  } else {
-    _globals_init();
-    _files_init();
-    _model_init();
-    _env_init();
-    _plot_init();
-    _bmassflags_init();
-    _mortflags_init();
-    _rgroup_init();
-    _species_init();
-    _check_species();
-
-//    _bmasshdr_init();
-//    _morthdr_create();
-
-	/*_recover_names();*/
-    beenhere = TRUE;
-  }
-
+  _globals_init();
+  _files_init();
+  _model_init();
+  _env_init();
+  _plot_init();
+  _bmassflags_init();
+  _mortflags_init();
+  _rgroup_init();
+  _species_init();
+  _check_species();
 }
 
 /**************************************************************/
