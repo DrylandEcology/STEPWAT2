@@ -240,7 +240,8 @@ struct temp_st {
   RealF avg,
         std,
         min,
-        max;
+        max,
+        gstemp;
 };
 struct fecalpats_st {
   Bool use;

@@ -256,10 +256,11 @@ static void _env_init( void) {
             nitems = 8;
             break;
         case 2:
-            x=sscanf( inbuf, "%f %f %f %f",
+            x=sscanf( inbuf, "%f %f %f %f %f",
                       &Globals.temp.avg, &Globals.temp.std,
-                      &Globals.temp.min, &Globals.temp.max);
-            nitems = 4;
+                      &Globals.temp.min, &Globals.temp.max,
+                      &Globals.temp.gstemp);
+            nitems = 5;
             break;
         case 3:
             x=sscanf( inbuf, "%d %f %f %f %f ", &use[0],
