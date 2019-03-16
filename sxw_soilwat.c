@@ -192,18 +192,7 @@ static void _update_transp_coeff(RealF relsize[]) {
 }
 
 static void _update_productivity(void) {
-    /*======================================================*/
-    /* must convert STEPPE's plot-level biomass to SOILWAT's
-     * sq.meter - based biomass.
-     *
-     * 2/28/03 - cwb - as per the notes at the top of this file,
-     *     RGroup_GetBiomass is being changed to
-     *     SUM(RGroup[g]->mature_biomass)
-     *
-     * 12-Apr-2004 - cwb - update biomass, %Live, and litter with
-     *     actual biomass if SXW_BYMAXSIZE defined or max biomass
-     *     otherwise.
-     */
+
     GrpIndex g;
     TimeInt m;
     IntUS k;
