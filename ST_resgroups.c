@@ -629,19 +629,7 @@ void rgroup_Establish(void) {
         if (Globals.currYear < RGroup[rg]->startyr) {
             g->regen_ok = FALSE;
 
-        } else ///if ( g->max_age == 1 ) {
-            /* see similar logic in mort_EndOfYear() for perennials */
-            /// if ( GT( g->killfreq, 0.) ) {
-            ///   if ( LT(g->killfreq, 1.0) ) {
-            ///     if (RandUni(&resgroups_rng) <= g->killfreq)
-            ///       g->regen_ok = FALSE;
-            ///   } else if ( (Globals.currYear - g->startyr) % (IntU)g->killfreq == 0) {
-            ///     g->regen_ok = FALSE;
-            ///   }
-            /// }
-            ///} else
-            //above removed allow annuals to establish with other species (TEM 10-27-2015)
-        {
+        } else {
 
             ForEachGroupSpp(sp, rg, i) {
 
