@@ -215,6 +215,7 @@ void mort_EndOfYear(void) {
     RealF fire_possibility, random_number, biomass_cheatgrass;
     char *cheatgrass_name = "brte";
     int i = 0;
+    Bool prescribed_fire_on = FALSE;
     
     /* Check species index number from the beginning to all the species in
      *  species.in , if the species name == checkname then get the biomass and stop the loop*/
@@ -229,6 +230,14 @@ void mort_EndOfYear(void) {
     /* Set a random number outside of the loop to make sure the kill probability for each functional group is the same */
     random_number = RandUni(&mortality_rng);
 
+    //determine if prescribed fire is on for any group. If TRUE, we do NOT want to simulate cheatgrass wildfire.
+    ForEachGroup(rg){
+      if(RGroup[rg]->killfreq > 0){
+        prescribed_fire_on = TRUE;
+        break;
+      }
+    }
+
     // in this for loop "g" refers to the RGroup of cheatgrass. RGroup[rg] refers
     // to the current iteration's RGroup.
     ForEachGroup(rg) {
@@ -240,7 +249,7 @@ void mort_EndOfYear(void) {
       RGroup[rg]->wildfire = 0;
 
       // If these conditions are true we want to simulate wildfire based on cheatgrass abundance
-      if(g != NULL && g->killfreq == 0){
+      if(!prescribed_fire_on && g != NULL){
         /* ------------------------- WILDFIRE BASED ON CHEATGRASS BIOMASS------------------------- */
         // Calculate fire_possibility
         if (g->ignition == 0) { 
