@@ -31,10 +31,7 @@
 /************ External Variable Declarations ***************/
 /***********************************************************/
 #include "ST_globals.h"
-
-#ifdef STEPWAT
-  #include "sxw_vars.h"
-#endif
+#include "sxw_vars.h"
 
 /******** Modular External Function Declarations ***********/
 /* -- truly global functions are declared in functions.h --*/
@@ -81,13 +78,7 @@ static void _rgroup_addsucculent( char name[],
 
 /************ Module Variable Declarations ******************/
 /***********************************************************/
-
-
-#ifndef STEPWAT
-  #define NFILES 13
-#else
-  #define NFILES 14
-#endif
+#define NFILES 14
 
 static char *_files[NFILES];
 char *MyFileName;
@@ -200,13 +191,7 @@ static void _files_init( void ) {
 
   FILE *f;
   ST_FileIndex i;
-
-#ifndef STEPWAT
-  ST_FileIndex last = F_MortAvg;
-#else
   ST_FileIndex last = F_SXW;
-#endif
-
 
   MyFileName = Parm_name(F_First);
 
@@ -1306,10 +1291,7 @@ void Parm_SetMemoryRefs( void) {
   ForEachSpecies(sp)
     NoteMemoryRef( Species[sp]->kills);
 
-  #ifdef STEPWAT
   NoteMemoryRef(_files[F_SXW]);
-  #endif
-
 }
 
 #endif

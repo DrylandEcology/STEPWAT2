@@ -27,16 +27,13 @@
 #include "SW_Control.h"
 #include "sw_src/pcg/pcg_basic.h"
 
-
-#ifdef STEPWAT
-  #include "sxw_funcs.h"
-  #include "sxw.h"
-  #include "sw_src/SW_Output.h"
-  #include "sw_src/SW_Output_outtext.h"
-  #include "sw_src/SW_Output_outarray.h"
-  #include "sw_src/rands.h"
-  extern SXW_t SXW;
-#endif
+#include "sxw_funcs.h"
+#include "sxw.h"
+#include "sw_src/SW_Output.h"
+#include "sw_src/SW_Output_outtext.h"
+#include "sw_src/SW_Output_outarray.h"
+#include "sw_src/rands.h"
+extern SXW_t SXW;
 
 extern Bool prepare_IterationSummary; // defined in `SOILWAT2/SW_Output.c`
 extern Bool print_IterationSummary; // defined in `SOILWAT2/SW_Output_outtext.c`
@@ -84,13 +81,6 @@ SW_FILE_STATUS SW_File_Status;
 #else
   #define chkmem_f
   #define chkmem_t
-#endif
-
-
-#ifndef STEPWAT
- void SXW_Init( Bool init_SW, char *f_roots ) {}
- void SXW_Run_SOILWAT(void) {}
- void SXW_InitPlot( void ) {}
 #endif
 
 /*************** Local Function Declarations ***************/
@@ -240,9 +230,7 @@ int main(int argc, char **argv) {
 
 			rgroup_PartResources();
 
-#ifdef STEPWAT
 			if (!isnull(SXW.debugfile) ) SXW_PrintDebug(0);
-#endif
 
 			rgroup_Grow();
 
@@ -317,12 +305,10 @@ int main(int argc, char **argv) {
 		ST_disconnect();
 	}
 
-#ifdef STEPWAT
-	  if (!isnull(SXW.debugfile)){
-        printf("entering debugfile\n");
-        SXW_PrintDebug(1);
-      }
-#endif
+  if (!isnull(SXW.debugfile)){
+    printf("entering debugfile\n");
+    SXW_PrintDebug(1);
+  }
 
   SW_OUT_close_files();
   SW_CTL_clear_model(TRUE); // de-allocate all memory
@@ -656,10 +642,7 @@ void CheckMemoryIntegrity(Bool flag) {
   Species_SetMemoryRefs();
   Parm_SetMemoryRefs();
 
-#ifdef STEPWAT
   SXW_SetMemoryRefs();
-#endif
-
   CheckMemoryRefs();
 
 }

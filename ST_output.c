@@ -24,10 +24,8 @@
 /******** Modular External Function Declarations ***********/
 /* -- truly global functions are declared in functions.h --*/
 /***********************************************************/
-#ifdef STEPWAT
-  #include "SW_Model.h"
-  extern SW_MODEL SW_Model;
-#endif
+#include "SW_Model.h"
+extern SW_MODEL SW_Model;
 
 /*------------------------------------------------------*/
 /* Modular functions only used on one or two specific   */
