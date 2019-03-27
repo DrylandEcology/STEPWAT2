@@ -73,7 +73,7 @@ cd testing.sagebrush.master/
 ```
 
 
-* Run the non-gridded version of STEPWAT2 from the Stepwat_Inputs/ folder:
+* Run the non-gridded version of STEPWAT2 from the Stepwat_Inputs/ folder using SOILWAT2 to drive the water cycle:
 
 ```
 cd testing.sagebrush.master/Stepwat_Inputs/
@@ -81,8 +81,7 @@ cd testing.sagebrush.master/Stepwat_Inputs/
 ```
 
 
-* Run non-gridded version of STEPWAT and output all variables passed between
-  Stepwat and SOILWAT:
+* Run non-gridded version of STEPWAT using SOILWAT and output all variables passed between Stepwat and SOILWAT:
   
 ```
 cd testing.sagebrush.master/Stepwat_Inputs/

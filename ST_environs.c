@@ -165,6 +165,14 @@ static void _set_temp_reduction( void) {
     Env.temp_reduction[i] = tp[2]*tp[0] + tp[3] * (tp[0]*tp[0]);
     Env.temp_reduction[i] = max(0., Env.temp_reduction[i]);
   }
+
+  if (Env.temp < 9.5 ) {
+    Env.temp_reduction[CoolSeason] = .9;
+    Env.temp_reduction[WarmSeason] = .6;
+  } else {
+    Env.temp_reduction[CoolSeason] = .6;
+    Env.temp_reduction[WarmSeason] = .9;
+  }
 }
 
 /**************************************************************/
