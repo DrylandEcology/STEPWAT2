@@ -19,6 +19,7 @@
 #include "ST_steppe.h"
 #include "ST_globals.h"
 #include "filefuncs.h"
+#include "myMemory.h"
 
 
 /******** Modular External Function Declarations ***********/
@@ -46,15 +47,22 @@ void output_Bmass_Yearly( Int year ) {
 /* note that year is only printed, not used as index, so
  * we don't need to decrement to make base0
  */
-  char fields[MAX_OUTFIELDS][MAX_FIELDLEN+1];
+  char **fields;
   GrpIndex rg;
   SppIndex sp;
   int i, fc = 0;
-  char s[MAX_FIELDLEN];
+  char *s;
   char filename[FILENAME_MAX];
-
+  
   if (!BmassFlags.yearly) return;
 
+  fields = (char **)Mem_Calloc(MAX_OUTFIELDS, sizeof(char *), "output_Bmass_Yearly");
+  s = (char *)Mem_Calloc(1, MAX_FIELDLEN, "output_Bmass_Yearly");
+  
+  for (i = 0; i < MAX_OUTFIELDS; i++) {
+      fields[i] = (char *)Mem_Calloc(1, MAX_FIELDLEN, "output_Bmass_Yearly");
+  }
+  
   if(Globals.currYear == 1) // At year one we need a header.
   {
   /* --------- Begin setting up header ------- */
@@ -176,6 +184,13 @@ void output_Bmass_Yearly( Int year ) {
   if (i) fprintf(Globals.bmass.fp_year,"%s\n", fields[i]);
   fflush(Globals.bmass.fp_year);
   CloseFile(&Globals.bmass.fp_year);
+  
+  for (i = 0; i < MAX_OUTFIELDS; i++) {
+      Mem_Free(fields[i]);
+  }
+  
+  Mem_Free(s);
+  Mem_Free(fields);
 }
 
 

@@ -47,8 +47,8 @@ char errstr[1024];
 char inbuf[1024];
 FILE *logfp;
 int logged;  /* indicator that err file was written to */
-SpeciesType   *Species[MAX_SPECIES];
-GroupType     *RGroup [MAX_RGROUPS];
+SpeciesType  **Species;
+GroupType    **RGroup;
 SucculentType  Succulent;
 EnvType        Env;
 PlotType       Plot;

@@ -1,3 +1,5 @@
+#if 0
+
 /********************************************************/
 //  Source file: ST_grid.c
 //  Type: module
@@ -3099,3 +3101,5 @@ static void _read_init_species(void)
 
 	CloseFile(&f);
 }
+
+#endif

@@ -199,9 +199,11 @@ static void _update_productivity(void) {
 
     SW_VEGPROD *v = &SW_VegProd;
     RealF totbmass = 0.0,
-            bmassg[MAX_RGROUPS] = {0.},
+            *bmassg,
     vegTypeBiomass[4] = {0.};
-
+    
+    bmassg = (RealF *)Mem_Calloc(Globals.max_rgroups, sizeof(RealF), "_update_productivity");
+    
 #define Biomass(g)  RGroup_GetBiomass(g)
 
     /* get total biomass for the plot in sq.m */
@@ -278,4 +280,6 @@ static void _update_productivity(void) {
         v->bare_cov.fCover = 1;
     }
 #undef Biomass
+    
+    Mem_Free(bmassg);
 }

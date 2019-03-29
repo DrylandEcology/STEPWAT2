@@ -26,17 +26,10 @@
 /***************************************************
  * Basic definitions
  ***************************************************/
-#define MAX_YEARS            1000
-#define MAX_INDIVS_PER_SPP   100
-#define MAX_SPP_PER_GRP      10
-#define MAX_RGROUPS          10
-#define MAX_SPECIES (MAX_SPP_PER_GRP * MAX_RGROUPS)
-#define MAX_INDIVS (MAX_INDIVS_PER_SPP * MAX_SPP_PER_GRP * MAX_RGROUPS)
-#define MAX_INDIVS_PER_GRP (MAX_INDIVS_PER_SPP * MAX_SPP_PER_GRP)
-#define MAX_GROUPNAMELEN     15
-#define MAX_SPECIESNAMELEN   4
-#define MAX_OUTFIELDS (MAX_SPECIES + (MAX_RGROUPS *2) + 5 +1 )
-#define MAX_FIELDLEN MAX_GROUPNAMELEN + 6  /* +6 for xtra chars like _RSize, etc */
+#define MAX_SPECIES (Globals.max_spp_per_grp * Globals.max_rgroups)
+#define MAX_SPECIESNAMELEN   4 /* keep around for SOILWAT for now */
+#define MAX_OUTFIELDS (MAX_SPECIES + (Globals.max_rgroups *2) + 5 +1 )
+#define MAX_FIELDLEN (Globals.max_groupnamelen + 6)  /* +6 for xtra chars like _RSize, etc */
 #define MAX_CELLS 10000 // defines the maximum number of cells in the grid option
 
 /* Constants for flagging whether a sort is

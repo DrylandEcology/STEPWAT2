@@ -717,7 +717,7 @@ static void _rgroup_init( void) {
    Bool groupsok;
 
    /* temp vars to hold the group info*/
-   char name[80]; /* plenty of space to read possibly long name*/
+   char *name;
 
    /* input variables*/
    Int estab, stretch, xres, turnon, extirp, mort, estann,
@@ -727,6 +727,28 @@ static void _rgroup_init( void) {
 
    MyFileName = Parm_name(F_RGroup);
    f = OpenFile(MyFileName, "r");
+   
+   /* These values determine the memory allocated for resource groups and resource group names. */
+   /* If these limits are exceeded, memory leaks will result. */
+   
+   if (!GetALine(f, inbuf)) {
+       LogError(logfp, LOGFATAL, "%s: Could not read maximum resource groups allowed.", MyFileName);
+   }
+   
+   if (sscanf(inbuf, "%zu", &Globals.max_rgroups) != 1) {
+       LogError(logfp, LOGFATAL, "%s: Could not read maximum resource groups allowed.", MyFileName);
+   }
+   
+   if (!GetALine(f, inbuf)) {
+       LogError(logfp, LOGFATAL, "%s: Could not read maximum resource group name length.", MyFileName);
+   }
+   
+   if (sscanf(inbuf, "%zu", &Globals.max_groupnamelen) != 1) {
+       LogError(logfp, LOGFATAL, "%s: Could not read maximum resource group name length.", MyFileName);
+   }
+   
+   name = (char *)Mem_Calloc(1, Globals.max_groupnamelen + 1, "_rgroup_init");
+   RGroup = (GroupType **)Mem_Calloc(Globals.max_rgroups, sizeof(GroupType *), "_rgroup_init");
 
    /* ------------------------------------------------------------*/
    /* Install all the defined groups, except for dry/wet/norm parms */
@@ -792,6 +814,8 @@ static void _rgroup_init( void) {
            MyFileName);
    }
    _rgroup_addsucculent( name, wslope, wint, dslope, dint);
+   
+   Mem_Free(name);
 
    CloseFile(&f);
 }
@@ -805,10 +829,14 @@ static void _rgroup_add1( char name[], RealF space, RealF density,
                       Int extirp, Int mort, RealF xgro, Int veg_prod_type, RealF prop_killed, RealF prop_recovered,RealF grazing_frq,RealF prop_grazing, Int grazingfreq_startyr) {
 /*======================================================*/
   GrpIndex rg;
+  size_t len;
 
-
+  
   rg = RGroup_New();
-  _setNameLen(RGroup[rg]->name, name, MAX_GROUPNAMELEN);
+  
+  len = strlen(name);
+  
+  _setNameLen(RGroup[rg]->name, name, len);
   RGroup[rg]->grp_num       = rg;
   RGroup[rg]->max_stretch   = (IntS) stretch;
   RGroup[rg]->max_spp_estab = (IntS) estab;
@@ -845,15 +873,20 @@ static void _rgroup_add2( char name[],
 
 /*======================================================*/
   GrpIndex rg;
-  char name2[80];
-
-   _setNameLen(name2, name, MAX_GROUPNAMELEN);
-   rg = RGroup_Name2Index( name2);
-   if (rg <0) {
-     LogError(logfp, LOGFATAL, "%s: Mismatched name (%s) for succulents",
+  char *name2;
+  size_t len;
+  
+  name2 = Mem_Calloc(1, Globals.max_groupnamelen, "_rgroup_add2");
+  
+  len = strlen(name);
+  
+  _setNameLen(name2, name, len);
+  rg = RGroup_Name2Index( name2);
+  if (rg <0) {
+    LogError(logfp, LOGFATAL, "%s: Mismatched name (%s) for succulents",
              MyFileName, name2);
-   }
-
+  }
+  
 
   RGroup[rg]->ppt_slope[Ppt_Norm] = nslope;
   RGroup[rg]->ppt_intcpt[Ppt_Norm]= nint;
@@ -862,6 +895,8 @@ static void _rgroup_add2( char name[],
   RGroup[rg]->ppt_slope[Ppt_Dry]  = dslope;
   RGroup[rg]->ppt_intcpt[Ppt_Dry] = dint;
 
+  
+  Mem_Free(name2);
 }
 
 
@@ -875,9 +910,14 @@ static void _rgroup_addsucculent( char name[],
 /* than one succulent species to which they pertain.*/
 
    GrpIndex rg;
-   char name2[80];
-
-   _setNameLen(name2, name, MAX_GROUPNAMELEN);
+   char *name2;
+   size_t len;
+   
+   name2 = Mem_Calloc(1, Globals.max_groupnamelen, "_rgroup_addsucculent");
+   
+   len = strlen(name);
+   
+   _setNameLen(name2, name, len);
    rg = RGroup_Name2Index( name2);
    if (rg <0) {
      LogError(logfp, LOGFATAL, "%s: Mismatched name (%s) for succulents",
@@ -906,8 +946,8 @@ static void _species_init( void) {
    Bool readspp = TRUE, sppok = TRUE;
 
    /* temp vars to hold the group info*/
-   char name[80], /* plenty of space to read possibly long name*/
-        name2[80]; /* another one*/
+   char *name, *name2;
+   size_t len;
    Int x;      /* temp val */
    GrpIndex rg;
    SppIndex sp;
@@ -929,6 +969,37 @@ static void _species_init( void) {
    MyFileName = Parm_name( F_Species);
    f = OpenFile(MyFileName, "r");
 
+   /* Read values that determine the memory allocated for species, individuals, and species names */
+   /* If these limits are exceeded, memory leaks will result. */
+   
+   if (!GetALine(f, inbuf)) {
+       LogError(logfp, LOGFATAL, "%s: Could not read maximum species allowed per resource group.", MyFileName);
+   }
+   
+   if (sscanf(inbuf, "%zu", &Globals.max_spp_per_grp) != 1) {
+       LogError(logfp, LOGFATAL, "%s: Could not read maximum species allowed per resource group.", MyFileName);
+   }
+   
+   if (!GetALine(f, inbuf)) {
+       LogError(logfp, LOGFATAL, "%s: Could not read maximum individuals allowed per species.", MyFileName);
+   }
+   
+   if (sscanf(inbuf, "%zu", &Globals.max_indivs_per_spp) != 1) {
+       LogError(logfp, LOGFATAL, "%s: Could not read maximum individuals allowed per species.", MyFileName);
+   }
+   
+   if (!GetALine(f, inbuf)) {
+       LogError(logfp, LOGFATAL, "%s: Could not read maximum species name length.", MyFileName);
+   }
+   
+   if (sscanf(inbuf, "%zu", &Globals.max_speciesnamelen) != 1) {
+       LogError(logfp, LOGFATAL, "%s: Could not read maximum species name length.", MyFileName);
+   }
+
+   name = (char *)Mem_Calloc(1, Globals.max_speciesnamelen + 1, "_species_init");
+   name2 = (char *)Mem_Calloc(1, Globals.max_speciesnamelen + 1, "_species_init");
+   Species = (SpeciesType **)Mem_Calloc(MAX_SPECIES, sizeof(SpeciesType *), "_species_init");
+
    while( readspp) {
       if( ! GetALine(f, inbuf )) {sppok=FALSE;break;}
       if ( ! isnull( strstr(inbuf,"[end]")) ) {
@@ -946,8 +1017,10 @@ static void _species_init( void) {
       }
 
       sp = species_New();
-
-      _setNameLen(Species[sp]->name, name, MAX_SPECIESNAMELEN);
+      
+      len = strlen(name);
+      
+      _setNameLen(Species[sp]->name, name, len);
       Species[sp]->sp_num  = (SppIndex) sp;
       Species[sp]->res_grp = (GrpIndex) rg-1; /* file gives natural # */
       Species[sp]->max_age = (IntS) age;
@@ -1031,7 +1104,9 @@ static void _species_init( void) {
                MyFileName);
      }
 
-     _setNameLen(name2, name, MAX_SPECIESNAMELEN);
+     len = strlen(name);
+     
+     _setNameLen(name2, name, len);
      sp = Species_Name2Index(name2);
      if (sp <0) {
        LogError(logfp, LOGFATAL, "%s: Mismatched name (%s) for annual estab parms",
@@ -1067,7 +1142,9 @@ static void _species_init( void) {
                 MyFileName);
       }
 
-      _setNameLen(name2, name, MAX_SPECIESNAMELEN);
+      len = strlen(name);
+      
+      _setNameLen(name2, name, len);
       sp = Species_Name2Index(name2);
       if (sp <0) {
         LogError(logfp, LOGFATAL, "%s: Mismatched name (%s) for species probs",
@@ -1099,7 +1176,9 @@ static void _species_init( void) {
 	if(x < 9)
 		LogError(logfp, LOGFATAL, "%s: Too few columns in species seed dispersal inputs", MyFileName);
 
-	_setNameLen(name2, name, MAX_SPECIESNAMELEN);
+        len = strlen(name);
+        
+	_setNameLen(name2, name, len);
 	sp = Species_Name2Index(name2);
 	if( sp < 0)
 		LogError(logfp, LOGFATAL, "%s: Mismatched name (%s) for species seed dispersal inputs", MyFileName, name2);
@@ -1118,6 +1197,9 @@ static void _species_init( void) {
    }
    if(!sppok)
 	  LogError(logfp, LOGFATAL, "%s: Incorrect/incomplete input in species seed dispersal input", MyFileName);
+   
+   Mem_Free(name);
+   Mem_Free(name2);
 
    CloseFile(&f);
 }

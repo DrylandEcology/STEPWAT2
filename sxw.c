@@ -108,7 +108,7 @@ RealD * _roots_max,     /* read from root distr. file */
 
 /* simple vectors hold the resource information for each group */
 /* curr/equ gives the available/required ratio */
-RealF _resource_cur[MAX_RGROUPS];  /* current resource availability for each STEPPE functional type */
+RealF *_resource_cur; /*[MAX_RGROUPS];*/  /* current resource availability for each STEPPE functional type */
 
 // Window of transpiration used by _transp_contribution_by_group() in sxw_resource.c
 // "Window" refers to the number of years over which transpiration data is averaged.
@@ -176,6 +176,8 @@ void SXW_Init( Bool init_SW, char *f_roots ) {
    * 	match sxwroots.in
    */
 	char roots[MAX_FILENAMESIZE] = { '\0' };
+        
+        _resource_cur = (RealF *)Mem_Calloc(Globals.max_rgroups, sizeof(RealF), "SXW_Init");
 
 RandSeed(Globals.randseed, &resource_rng);
 
@@ -292,7 +294,10 @@ void SXW_Run_SOILWAT (void) {
  */
 
 	GrpIndex g;
-	RealF sizes[MAX_RGROUPS];
+	RealF *sizes;
+        
+        sizes = (RealF *)Mem_Calloc(Globals.max_rgroups, sizeof(RealF), "SXW_Run_SOILWAT");
+        
 	/* compute production values for transp based on current plant sizes */
 	ForEachGroup(g)
 	sizes[g] = RGroup_GetBiomass(g);
@@ -309,6 +314,8 @@ void SXW_Run_SOILWAT (void) {
 
 	/* Set annual precipitation and annual temperature */
 	_sxw_set_environs();
+        
+        Mem_Free(sizes);
 }
 
 void SXW_SW_Setup_Echo(void) {
@@ -444,8 +451,10 @@ static void  _read_roots_max(void) {
 	GrpIndex g;
 	int cnt = 0, lyr;
 	char *p;
-	char name[MAX_GROUPNAMELEN];
+	char *name;
 	FILE *fp;
+        
+        name = (char *)Mem_Calloc(1, Globals.max_groupnamelen, "_read_roots_max");
 
 	MyFileName = SXW.f_roots;
 	fp = OpenFile(MyFileName, "r");
@@ -477,6 +486,8 @@ static void  _read_roots_max(void) {
 	}
 
 	CloseFile(&fp);
+        
+        Mem_Free(name);
 }
 
 static void _read_phen(void) {
