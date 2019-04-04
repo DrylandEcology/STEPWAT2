@@ -2341,7 +2341,6 @@ static void _init_soil_layers(int cell, int isSpinup)
 
 	init_site_info(); //in SW_Site.c, called to initialize layer data...
 
-	free_all_sxw_memory();
 	_init_SXW_inputs(FALSE, grid_Soils[i].rootsFile); //we call this so that SXW can set the correct sizes/values up for the memory dynamically allocated in sxw.c
 
 	if (!isSpinup)
