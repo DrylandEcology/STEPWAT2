@@ -57,8 +57,6 @@ ModelType      Globals;
 BmassFlagsType BmassFlags;
 MortFlagsType  MortFlags;
 
-Bool UseSoilwat; /* not used in every module */
-
 
 /******************** Begin Code ***************************/
 /***********************************************************/

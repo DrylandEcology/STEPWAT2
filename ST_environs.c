@@ -19,23 +19,16 @@
 #include "ST_steppe.h"
 #include "ST_globals.h"
 #include "sw_src/pcg/pcg_basic.h"
-
-
 #include "rands.h"
-
-#ifdef STEPWAT
-  #include "sxw_funcs.h"
-  #include "sw_src/filefuncs.h"
-  #include "sw_src/Times.h"
-  extern Bool UseSoilwat;
-  extern SXW_t SXW;
-#endif
+#include "sxw_funcs.h"
+#include "sw_src/filefuncs.h"
+#include "sw_src/Times.h"
+extern SXW_t SXW;
 
 /*********** Locally Used Function Declarations ************/
 /***********************************************************/
 
 static void _make_ppt( void);
-static void _make_temp( void);
 static void _set_ppt_reduction( void);
 static void _set_temp_reduction( void);
 static void _make_disturbance( void);
@@ -59,20 +52,9 @@ void Env_Generate( void) {
 /* Chris Bennett @ LTER-CSU 6/15/2000            */
 /*------------------------------------------------------*/
 
-  Int rg;
-
-  switch (UseSoilwat) {
-    case FALSE:
-         /* clear last year's leftover resources */
-         ForEachGroup(rg) RGroup[rg]->res_avail = 0.0;
-         break;
-    case TRUE:
-         SXW_Run_SOILWAT();
-         break;
-  }
+  SXW_Run_SOILWAT();
 
   _make_ppt();
-  _make_temp();
   _set_ppt_reduction();
   _set_temp_reduction();
   _make_disturbance();
@@ -102,49 +84,28 @@ static void _make_ppt( void) {
 
 /*------------------------------------------------------*/
 
-  IntS r=0, i;
+  IntS i;
 
 #ifdef DEBUG_ENVCONST
-  r=320;
+  IntS r=320;
 #endif
 
-  if (UseSoilwat)
-  { // Run with SOILWAT2: we have monthly PPT and temperature to calculate
-    // growing season precipitation as sum of monthly precipitation of those
-    // months when mean air temperature exceeds a threshold `GROWING_BASE_TEMP`
-    Env.gsppt = 0; // gsppt is defined as IntS and units are millimeters
+  // Run with SOILWAT2: we have monthly PPT and temperature to calculate
+  // growing season precipitation as sum of monthly precipitation of those
+  // months when mean air temperature exceeds a threshold `GROWING_BASE_TEMP`
+  Env.gsppt = 0; // gsppt is defined as IntS and units are millimeters
 
-    for (i = 0; i < MAX_MONTHS; i++)
-    {
-      Env.gsppt += GE(SXW.temp_monthly[i], GROWING_BASE_TEMP) ?
-        (IntS) (SXW.ppt_monthly[i] * 10. + 0.5) : 0;
-    }
+  for (i = 0; i < MAX_MONTHS; i++)
+  {
+    Env.gsppt += GE(SXW.temp_monthly[i], GROWING_BASE_TEMP) ?
+      (IntS) (SXW.ppt_monthly[i] * 10. + 0.5) : 0;
+  }
 
-    if (Env.gsppt <= 0)
-    {
-      LogError(logfp, LOGWARN, "Zero growing season precipitation in "\
-        "year = %d of iteration = %d", Globals.currYear, Globals.currIter);
-      Env.gsppt = 0;
-    }
-
-    /*
-    printf("_make_ppt (year = %d of iteration = %d): "\
-      "Env.gsppt(SOILWAT2) = %d would be gsppt(fixed proportion) = %.1f\n",
-      Globals.currYear, Globals.currIter, Env.gsppt, Globals.gsppt_prop * Env.ppt);
-    */
-
-  } else {
-    // run as STEPPE without SOILWAT2:
-    while ( r < Globals.ppt.min || r > Globals.ppt.max )
-      r = (IntS)(RandNorm( Globals.ppt.avg,  Globals.ppt.std, &environs_rng) +.5);
-    if (Env.ppt > 0) {
-      Env.lyppt = Env.ppt;
-      Env.ppt = r;
-    } else {
-      Env.lyppt = Env.ppt = r;
-    }
-
-    Env.gsppt = (IntS) (Globals.gsppt_prop * Env.ppt);
+  if (Env.gsppt <= 0)
+  {
+    LogError(logfp, LOGWARN, "Zero growing season precipitation in "\
+      "year = %d of iteration = %d", Globals.currYear, Globals.currIter);
+    Env.gsppt = 0;
   }
 
   if ( Env.ppt <= Globals.ppt.dry )
@@ -153,33 +114,6 @@ static void _make_ppt( void) {
     Env.wet_dry = Ppt_Wet;
   else
     Env.wet_dry = Ppt_Norm;
-}
-
-/**************************************************************/
-static void _make_temp( void) {
-/*======================================================*/
-/* take a random number from normal distribution with*/
-/* mean, stddev, that is between min & max from */
-/* the Globals.temp structure.*/
-
-/* HISTORY */
-/* Chris Bennett @ LTER-CSU 6/15/2000            */
-/* cwb - 6-Dec-02 -- added interface to STEPWAT.  Temp is
- *       set in _sxw_set_environs(). */
-
-/*------------------------------------------------------*/
-
-  RealF r=0.;
-
-#ifdef DEBUG_ENVCONST
-  r=25.;
-#endif
-
-  if (!UseSoilwat) {
-    while ( r < Globals.temp.min || r > Globals.temp.max )
-      r = RandNorm(Globals.temp.avg, Globals.temp.std, &environs_rng);
-    Env.temp = r;
-  }
 }
 
 /**************************************************************/
@@ -232,18 +166,13 @@ static void _set_temp_reduction( void) {
     Env.temp_reduction[i] = max(0., Env.temp_reduction[i]);
   }
 
-#ifdef STEPWAT
-  if (UseSoilwat) {
-    if (Env.temp < 9.5 ) {
-      Env.temp_reduction[CoolSeason] = .9;
-      Env.temp_reduction[WarmSeason] = .6;
-    } else {
-      Env.temp_reduction[CoolSeason] = .6;
-      Env.temp_reduction[WarmSeason] = .9;
-    }
+  if (Env.temp < 9.5 ) {
+    Env.temp_reduction[CoolSeason] = .9;
+    Env.temp_reduction[WarmSeason] = .6;
+  } else {
+    Env.temp_reduction[CoolSeason] = .6;
+    Env.temp_reduction[WarmSeason] = .9;
   }
-#endif
-
 }
 
 /**************************************************************/

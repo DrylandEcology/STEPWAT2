@@ -53,12 +53,11 @@ Other tasks:
 ```
 
 ```
->   Usage : steppe [-d startdir] [-f files.in] [-q] [-s] [-e] [-o] [-g]
+>   Usage : steppe [-d startdir] [-f files.in] [-q] [-e] [-o] [-g]
 >      -d : supply working directory (default=.)
 >      -f : supply list of input files (default=files.in)
 >      -q : quiet mode, don't print message to check logfile.
 >      -p : prints progress bar
->      -s : use SOILWAT model for resource partitioning.
 >      -e : echo initialization results to logfile
 >      -o : write SOILWAT output to output files. Contains average over all iterations and standard deviation.
 >      -g : use gridded mode
@@ -66,33 +65,31 @@ Other tasks:
 >-STdebug : generate sqlite database with STEPWAT information
 ```
 
-* Run the gridded version (-g) of STEPWAT2 using SOILWAT2 to drive the water cycle (-s):
+* Run the gridded version (-g) of STEPWAT2:
 
 ```
 cd testing.sagebrush.master/
-./stepwat -f files.in -g -s
+./stepwat -f files.in -g
 ```
 
 
-* Run the non-gridded version of STEPWAT2 from the Stepwat_Inputs/ folder using SOILWAT2
-  to drive the water cycle (-s):
+* Run the non-gridded version of STEPWAT2 from the Stepwat_Inputs/ folder using SOILWAT2 to drive the water cycle:
 
 ```
 cd testing.sagebrush.master/Stepwat_Inputs/
-./stepwat -f files.in -s
+./stepwat -f files.in
 ```
 
 
-* Run non-gridded version of STEPWAT using SOILWAT and output all variables passed between
-  Stepwat and SOILWAT:
+* Run non-gridded version of STEPWAT using SOILWAT and output all variables passed between Stepwat and SOILWAT:
   
 ```
 cd testing.sagebrush.master/Stepwat_Inputs/
-./stepwat -s -f files.in -ssxwdebug.in
+./stepwat -f files.in -ssxwdebug.in
 ```
 
 
-* Run STEPPE (no SOILWAT2)
+* Run STEPWAT2:
 
 ```
 cd testing.sagebrush.master/Stepwat_Inputs/
@@ -103,7 +100,7 @@ cd testing.sagebrush.master/Stepwat_Inputs/
 
 ```
 cd testing.sagebrush.master/Stepwat_Inputs/
-./stepwat -f files.in -o -i -s
+./stepwat -f files.in -o -i
 ```
 
 * Alternatively, use `makefile` targets (compile, copy, and execute in one command)

@@ -8,8 +8,8 @@
 ####################################################
 #
 #
-# Sumry Yearly Header Sep YrNum Disturb PPT PClass Temp GrpBmass GrpPR GrpSize SppBmass Indivs
-     y      n	   y   ,     y      n   y     n     y       y     y       y       y      y
+# Sumry Yearly Header Sep YrNum Disturb PPT PClass Temp GrpBmass GrpPR GrpSize GrpWf GrpPf SppBmass Indivs
+     y      n	   y   ,     y      n   y     n     y       y     y      y     y      y       y      y
 #===================================================
 # The input line is a set of yes/no flags that define
 # whether that parameter will be output, except for
@@ -53,6 +53,8 @@
 #       is reported immediately to the right of the group biomass.
 #       summary: average for the given year. Can only be
 #       output if GrpBmass is specified.
+# Grpwf == number of wildfires that occured across all iterations in each year
+# Grppf == number of prescribed fires that occured across all iterations in each year
 # GrpSize == relative size ("equivalent mature individuals")
 #         of the group. Each group's relative size is reported
 #         immediately to the right of the group biomass, unless
