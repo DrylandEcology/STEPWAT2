@@ -163,6 +163,13 @@ int main(int argc, char **argv) {
 
 	printf("STEPWAT  init_args() executed successfully \n");
 
+	RandSeed(Globals.randseed, &environs_rng);
+	RandSeed(Globals.randseed, &mortality_rng);
+	RandSeed(Globals.randseed, &resgroups_rng);
+	RandSeed(Globals.randseed, &species_rng);
+	RandSeed(Globals.randseed, &grid_rng);
+	RandSeed(Globals.randseed, &markov_rng);
+
 	if (UseGrid == TRUE) {
 		runGrid();
 		return 0;
@@ -200,12 +207,6 @@ int main(int argc, char **argv) {
 			parm_Initialize(iter);
 
 		Plot_Initialize();
-		RandSeed(Globals.randseed, &environs_rng);
-		RandSeed(Globals.randseed, &mortality_rng);
-		RandSeed(Globals.randseed, &resgroups_rng);
-		RandSeed(Globals.randseed, &species_rng);
-		RandSeed(Globals.randseed, &grid_rng);
-		RandSeed(Globals.randseed, &markov_rng);
 
 		Globals.currIter = iter;
                 
