@@ -23,7 +23,6 @@
 #include "sw_src/filefuncs.h"
 #include "ST_functions.h"
 #include "sxw_funcs.h"
-extern Bool UseSoilwat;
 
 extern
   pcg32_random_t resgroups_rng;
