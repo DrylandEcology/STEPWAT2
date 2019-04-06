@@ -166,7 +166,7 @@ void mort_Main( Bool *killed) {
         _slow_growth( sp );
 
       }
-      /* Now implement succulent mortality if this year is "wet" year */
+      /* Implement mortality of succulents if this year's PPT is above the PPT threshold that triggers succulent mortality */
       if (g->succulent
           && Env.wet_dry == Ppt_Wet
           && RandUni(&mortality_rng) <= Succulent.prob_death )

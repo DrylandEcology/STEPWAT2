@@ -451,7 +451,7 @@ void rgroup_Grow(void) {
         if (g->est_count == 0)
             continue;
 
-        /* Succulents can't grow if it is a wet year, so skip */
+        /* Succulents don't grow if conditions are wet */
         if (g->succulent && Env.wet_dry == Ppt_Wet)
             continue;
 
