@@ -63,6 +63,7 @@ static void _stretched_clonal( GrpIndex rg, Int start, Int last,
 //Nov 4th 15 -AT - Made below two function non-static as they also getting call from main.c
 void _kill_annuals(void);
 void _kill_extra_growth(void);
+void _kill_old_plants(void);
 
 
 /************ File-Level Variable Declarations *************/
@@ -903,4 +904,26 @@ void _kill_extra_growth(void) {
 #undef xF_DELTA
 #undef xD_DELTA
 #undef ZERO    
+}
+
+/******************************************************************************/
+void _kill_old_plants(void) {
+/******************************************************************************/
+/* PURPOSE:
+ * Kill old plants once they reach maximum age.
+ *
+ * HISTORY:
+ * Created by Frederick Pierson on 4/6/2019.
+/******************************************************************************/
+    
+    SppIndex s;
+    IndivType *i;
+    
+    ForEachSpecies(s) {
+        ForEachIndiv(i, Species[s]) {
+            if (i->age > Species[s]->max_age) {
+                indiv_Kill_Complete(i, 12);
+            }
+        }
+    }
 }

@@ -379,6 +379,9 @@ static void insertKillTypes(void) {
 	sprintf(sql, "INSERT INTO KillTypes (KillTypeID, Name) VALUES (11, '_stretched_clonal');");
 	rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
 	sqlcheck(rc, zErrMsg);
+        sprintf(sql, "INSERT INTO KillTypes (KillTypeID, Name) VALUES (12, '_kill_old_plants');");
+        rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+        sqlcheck(rc, zErrMsg);
 	endTransaction();
 }
 
