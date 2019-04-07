@@ -26,6 +26,7 @@
 #include "myMemory.h"
 #include "sw_src/SW_Site.h"
 #include "ST_structs.h"
+#include "ST_stats.h"
 #include "sxw.h"
   extern SXW_t SXW;
   extern SW_SITE SW_Site;
@@ -63,47 +64,17 @@
 
 /************************ Local Structure Defs *************/
 /***********************************************************/
-struct accumulators_st {
-  double ave, sum_dif_sqr, sd;
-  unsigned long nobs;
-};
-
-struct stat_st {
-  char *name; /* array of ptrs to names in RGroup & Species */
-  struct accumulators_st *s;
-} _Dist, _Ppt, _Temp,
+StatType _Dist, _Ppt, _Temp,
   *_Grp, *_Gsize, *_Gpr, *_Gmort, *_Gestab,
   *_Spp, *_Indv, *_Smort, *_Sestab, *_Sreceived;
 
-typedef struct  {
-  struct accumulators_st *dist, *temp, *ppt, **grp1, **gsize, **gpr2,  **gwf2,  **gpf2, 
-  							**gmort, **gestab, **spp, **indv, **smort, **sestab, **sreceived;
-} accumulators_grid_st;
-
 accumulators_grid_st *grid_Stat;
 
-struct fire_st {
-  int *wildfire;
-  int **prescribedFire;
-} *_Gwf;
+FireStatsType *_Gwf;
 
-
-// Local Structure for holding sum values of all the grid cells
-
-struct accumulators_grid_cell_st {
-  double sum, sum_std;
-  unsigned long nobs;
-};
-
-struct stat_grid_cell_st {
-  char *name; /* array of ptrs to names in RGroup & Species */
-  struct accumulators_grid_cell_st *s;    /* array of holding all the years values */
-} _Dist_grid_cell, _Ppt_grid_cell, _Temp_grid_cell,
+GridStatsType _Dist_grid_cell, _Ppt_grid_cell, _Temp_grid_cell,
   *_Grp_grid_cell, *_Gsize_grid_cell, *_Gpr_grid_cell,*_Gwf_grid_cell,*_Gpf_grid_cell, *_Gmort_grid_cell, *_Gestab_grid_cell,
   *_Spp_grid_cell, *_Indv_grid_cell, *_Smort_grid_cell, *_Sestab_grid_cell, *_Sreceived_grid_cell;
-
-
-
 
 /*************** Local Function Declarations ***************/
 /***********************************************************/

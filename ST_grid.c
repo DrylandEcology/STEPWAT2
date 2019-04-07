@@ -77,6 +77,7 @@
 #include "filefuncs.h"
 #include "myMemory.h"
 #include "ST_globals.h"
+#include "ST_stats.h"
 #include "rands.h"
 
 #include "sxw_funcs.h"
@@ -139,6 +140,26 @@ struct _grid_init_species_st
 	int use_SpinUp;
 	int *species_seed_avail;
 }typedef Grid_Init_Species_St;
+
+/* Struct to hold all plot-specific parameters */
+struct grid_cell_st
+{
+	GroupType myGroup;
+	SpeciesType mySpecies;
+	SucculentType mySucculent;
+	EnvType myEnvironment;
+	PlotType myPlot;
+	ModelType myGlobals;
+	Bool useSeedDispersal;
+	Bool duringSpinup;
+	
+	/* ---------------- accumulators -------------------- */
+	StatType _Dist, _Ppt, _Temp,
+  		*_Grp, *_Gsize, *_Gpr, *_Gmort, *_Gestab,
+  		*_Spp, *_Indv, *_Smort, *_Sestab, *_Sreceived;
+	FireStatsType *_Gwf;
+	/* -------------- end accumulators ------------------ */
+} typedef CellType;
 
 /************ Module Variable Declarations ***************/
 /***********************************************************/
