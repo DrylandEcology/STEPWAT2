@@ -910,7 +910,7 @@ void _kill_extra_growth(void) {
 void _kill_old_plants(void) {
 /******************************************************************************/
 /* PURPOSE:
- * Kill old plants once they reach maximum age.
+ * Kill plants once they reach their maximum age.
  *
  * HISTORY:
  * Created by Frederick Pierson on 4/6/2019.
