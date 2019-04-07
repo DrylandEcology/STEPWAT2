@@ -74,7 +74,7 @@ SW_FILE_STATUS SW_File_Status;
 
   void _kill_annuals(void);
   void _kill_extra_growth(void);
-  void _kill_old_plants(void);
+  void _kill_maxage(void);
   void save_annual_species_relsize(void);
 
 #ifdef DEBUG_MEM
@@ -273,7 +273,7 @@ int main(int argc, char **argv) {
        // Moved kill annual and kill extra growth after we export biomass, and recovery of biomass after fire before the next year
 			_kill_annuals();
                         
-                        _kill_old_plants();
+                        _kill_maxage();
 
 			proportion_Recovery();
 

@@ -63,7 +63,7 @@ static void _stretched_clonal( GrpIndex rg, Int start, Int last,
 //Nov 4th 15 -AT - Made below two function non-static as they also getting call from main.c
 void _kill_annuals(void);
 void _kill_extra_growth(void);
-void _kill_old_plants(void);
+void _kill_maxage(void);
 
 
 /************ File-Level Variable Declarations *************/
@@ -907,7 +907,7 @@ void _kill_extra_growth(void) {
 }
 
 /******************************************************************************/
-void _kill_old_plants(void) {
+void _kill_maxage(void) {
 /******************************************************************************/
 /* PURPOSE:
  * Kill plants once they reach their maximum age.
