@@ -913,7 +913,7 @@ void _kill_maxage(void) {
  * Kill plants once they reach their maximum age.
  *
  * HISTORY:
- * Created by Frederick Pierson on 4/6/2019.
+ * Created by Frederick Pierson on 4/6/2019. */
 /******************************************************************************/
     
     SppIndex s;
