@@ -191,6 +191,12 @@ extern SW_SITE SW_Site;
 extern SW_VEGPROD SW_VegProd;
 extern SW_WEATHER SW_Weather;
 extern pcg32_random_t grid_rng; //this file's unique random number generator
+extern pcg32_random_t environs_rng;
+extern pcg32_random_t mortality_rng;
+extern pcg32_random_t resgroups_rng;
+extern pcg32_random_t species_rng;
+extern pcg32_random_t grid_rng;
+extern pcg32_random_t markov_rng;
 
 //This is Rgroup structure pointer that will read rgroup disturbance value, will be used in
 // grid disturbance
@@ -455,6 +461,14 @@ void runGrid(void)
 			parm_Initialize(iter);
 
 		Plot_Initialize();
+
+		RandSeed(Globals.randseed, &environs_rng);
+	RandSeed(Globals.randseed, &mortality_rng);
+	RandSeed(Globals.randseed, &resgroups_rng);
+	RandSeed(Globals.randseed, &species_rng);
+	RandSeed(Globals.randseed, &grid_rng);
+	RandSeed(Globals.randseed, &markov_rng);
+
 		if (iter > 1)
 			_free_grid_globals(); //frees the memory from when we called _load_grid_globals() last time... (doesn't need to be called on the first iteration because the memory hasn't been allocated yet)
 
