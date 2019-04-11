@@ -144,13 +144,22 @@ struct _grid_init_species_st
 /* Struct to hold all plot-specific parameters */
 struct grid_cell_st
 {
+	/* RGroup coresponding to this cell */
 	GroupType myGroup;
+	/* Species corresponding to this cell */
 	SpeciesType mySpecies;
+	/* Succulents corresponding to this cell */
 	SucculentType mySucculent;
+	/* This cell's environment. We expect each cell to
+	 * have slightly different weather each year */
 	EnvType myEnvironment;
+	/* Cell's plot data */
 	PlotType myPlot;
+	/* Global variables corresponding to this cell */ 
 	ModelType myGlobals;
+	/* If TRUE this cell should use seed dispersal */
 	Bool useSeedDispersal;
+	/* TRUE if this cell is in spinup mode */
 	Bool duringSpinup;
 	
 	/* ---------------- accumulators -------------------- */
@@ -159,6 +168,12 @@ struct grid_cell_st
   		*_Spp, *_Indv, *_Smort, *_Sestab, *_Sreceived;
 	FireStatsType *_Gwf;
 	/* -------------- end accumulators ------------------ */
+
+	/* -------------------- SXW ------------------------- */
+	transp_t myTranspWindow;
+	SXW_t mySXW;
+	TempType mySXWTemp;
+	/* ------------------ End SXW ----------------------- */
 } typedef CellType;
 
 /************ Module Variable Declarations ***************/
