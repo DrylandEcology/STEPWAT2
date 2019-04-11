@@ -47,34 +47,7 @@
 //extern SW_SOILWAT SW_Soilwat;
 //extern SW_VEGPROD SW_VegProd;
 
-
-/*************** Local Variable Declarations ***************/
-/***********************************************************/
-/* malloc'ed and maybe read in sxw.c but used here */
-/* ----- 3d arrays ------- */
-extern
-  RealD * _rootsXphen, /* relative roots X phen by layer & group */
-        * _roots_active, /*relative to the total roots_phen_lyr_group */
-        * _roots_active_rel;
-
-
-/* ----- 2D arrays ------- */
-
-extern
-       /* rgroup by layer */
-  RealD * _roots_max,     /* root distribution with depth for STEPPE functional groups, read from input */
-        * _roots_active_sum, /* active roots in each month and soil layer for STEPPE functional groups in the current year */
-
-       /* rgroup by period */
-        * _phen;          /* phenological activity for each month for STEPPE functional groups, read from input */
-
-extern
-  RealF _resource_pr[MAX_RGROUPS],  /* resource convertable to pr */
-        _resource_cur[MAX_RGROUPS]; /* resources currently available by group*/
-        RealF added_transp; /* transpiration added for the current year */
-
-extern
-  RealF _bvt;
+extern TempType SXWTemp;
 
 /* ------ Running Averages ------ */
 extern
@@ -82,11 +55,6 @@ extern
 
 extern 
   pcg32_random_t resource_rng;
-
-// _transp_contribution_by_group() has different behavior for production years and setup years.
-// this variable keeps track of what year last year was, to make sure that the year actually
-// incremented. If it did NOT, then this is a setup year.
-int lastYear;
 
 //void _print_debuginfo(void);
 
@@ -110,14 +78,14 @@ void _sxw_root_phen(void) {
 	TimeInt p;
 
 	for (y = 0; y < (Globals.grpCount * SXW.NPds * SXW.NTrLyrs); y++)
-		_rootsXphen[y] = 0;
+		SXWTemp._rootsXphen[y] = 0;
 
 	ForEachGroup(g)
 	{
 		int nLyrs = getNTranspLayers(RGroup[g]->veg_prod_type);
 		for (y = 0; y < nLyrs; y++) {
 			ForEachTrPeriod(p) {
-				_rootsXphen[Iglp(g, y, p)] = _roots_max[Ilg(y, g)] * _phen[Igp(g, p)];
+				SXWTemp._rootsXphen[Iglp(g, y, p)] = SXWTemp._roots_max[Ilg(y, g)] * SXWTemp._phen[Igp(g, p)];
 			}
 		}
 	}
@@ -163,14 +131,14 @@ void _sxw_update_resource(void) {
 	_sxw_update_root_tables(sizes);
         
 	/* Assign transpiration (resource availability) to each STEPPE functional group */
-	_transp_contribution_by_group(_resource_cur);
+	_transp_contribution_by_group(SXWTemp._resource_cur);
         
         /* Scale transpiration resources by a constant, bvt, to convert resources 
          * (cm) to biomass that can be supported by those resources (g/cm) */
 	ForEachGroup(g)
 	{
 //printf("for groupName= %smresource_cur prior to multiplication: %f\n",RGroup[g]->name, _resource_cur[g]);
-		_resource_cur[g] = _resource_cur[g] * _bvt;
+		SXWTemp._resource_cur[g] = SXWTemp._resource_cur[g] * SXWTemp._bvt;
 //printf("for groupName= %s, resource_cur post multiplication: %f\n\n",Rgroup[g]->name, _resource_cur[g]);
 	}
 /* _print_debuginfo(); */
@@ -189,7 +157,7 @@ void _sxw_update_root_tables( RealF sizes[] ) {
 	int t,nLyrs;
 
 	/* Set some things to zero where 4 refers to Tree, Shrub, Grass, Forb */
-	Mem_Set(_roots_active_sum, 0, 4 * SXW.NPds * SXW.NTrLyrs * sizeof(RealD));
+	Mem_Set(SXWTemp._roots_active_sum, 0, 4 * SXW.NPds * SXW.NTrLyrs * sizeof(RealD));
         
         /* Calculate the active roots in each month and soil layer for each STEPPE
          * functional group based on the functional group biomass this year */
@@ -200,9 +168,9 @@ void _sxw_update_root_tables( RealF sizes[] ) {
 		for (l = 0; l < nLyrs; l++) {
 			ForEachTrPeriod(p)
 			{
-				x = _rootsXphen[Iglp(g, l, p)] * sizes[g];
-				_roots_active[Iglp(g, l, p)] = x;
-				_roots_active_sum[Itlp(t, l, p)] += x;
+				x = SXWTemp._rootsXphen[Iglp(g, l, p)] * sizes[g];
+				SXWTemp._roots_active[Iglp(g, l, p)] = x;
+				SXWTemp._roots_active_sum[Itlp(t, l, p)] += x;
 			}
 		}
 	}
@@ -216,11 +184,11 @@ void _sxw_update_root_tables( RealF sizes[] ) {
 		for (l = 0; l < nLyrs; l++) {
 			ForEachTrPeriod(p)
 			{
-				_roots_active_rel[Iglp(g, l, p)] =
-				ZRO(_roots_active_sum[Itlp(t,l,p)]) ?
+				SXWTemp._roots_active_rel[Iglp(g, l, p)] =
+				ZRO(SXWTemp._roots_active_sum[Itlp(t,l,p)]) ?
 						0. :
-						_roots_active[Iglp(g, l, p)]
-								/ _roots_active_sum[Itlp(t,l, p)];
+						SXWTemp._roots_active[Iglp(g, l, p)]
+								/ SXWTemp._roots_active_sum[Itlp(t,l, p)];
 			}
 		}
 	}
@@ -244,14 +212,14 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
     RealD *transp;
     RealF sumUsedByGroup = 0., sumTranspTotal = 0., TranspRemaining = 0.;
     RealF transp_ratio;
-    added_transp = 0;
+    transp_window.added_transp = 0;
     RealF transp_ratio_sd;
 
     // year 0 is a set up year. No need to calculate transpiration.
     // if there are multiple iterations the last year will run twice;
     // once for data and once for tear down. The second "last year" is
     // equivalent to year 0.
-    if(Globals.currYear == 0 || Globals.currYear == lastYear) {
+    if(Globals.currYear == 0 || Globals.currYear == transp_window.lastYear) {
       transp_window.average = 0;
       transp_window.ratio_average = 0;
       transp_window.sum_of_sqrs = 0;
@@ -293,7 +261,7 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
         ForEachTrPeriod(p) {
             int nLyrs = getNTranspLayers(RGroup[g]->veg_prod_type);
             for (l = 0; l < nLyrs; l++) {
-                use_by_group[g] += (RealF) (_roots_active_rel[Iglp(g, l, p)] * transp[Ilp(l, p)]);
+                use_by_group[g] += (RealF) (SXWTemp._roots_active_rel[Iglp(g, l, p)] * transp[Ilp(l, p)]);
             }
         }
         //printf("for groupName= %s, use_by_group[g] in transp= %f \n",RGroup[g]->name,use_by_group[g] );
@@ -370,25 +338,25 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
             RealF max = transp_window.ratio_average + transp_ratio_sd;
 
             // This transpiration will be added 
-            added_transp = (1 - transp_ratio / RandUniFloatRange(min, max, &resource_rng)) * transp_window.average;
-            if(added_transp < 0){
+            transp_window.added_transp = (1 - transp_ratio / RandUniFloatRange(min, max, &resource_rng)) * transp_window.average;
+            if(transp_window.added_transp < 0){
                 LogError(logfp, LOGNOTE, "sxw_resource: Added transpiration less than 0.\n");
             }
             //printf("Year %d:\tTranspiration to add: %f\n",Globals.currYear,add_transp);
             //printf("TranspRemaining: %f\tTranspRemaining+add_transp: %f\n",TranspRemaining,add_transp+TranspRemaining);
 
             /* -------------------- Recalculate the window including added_transp in the current year -------------------- */
-            RealF added_transp_ratio = added_transp / SXW.ppt;
+            RealF added_transp_ratio = transp_window.added_transp / SXW.ppt;
             //add added_transp to the average. This is technically part of the current year, so no need to subtract anything.
-            transp_window.average += added_transp/transp_window.size;
+            transp_window.average += transp_window.added_transp/transp_window.size;
             //add added_transp ratio to the ratio average. This is technically part of the current year, so no need to subtract anything.
             transp_window.ratio_average += (added_transp_ratio)/transp_window.size;
             //put the new transpiration in the window. Note: oldest_index has not been incremented, so it points to what was just added
-            transp_window.transp[transp_window.oldest_index] += added_transp;
+            transp_window.transp[transp_window.oldest_index] += transp_window.added_transp;
             //put the new ratio in the window. Note: oldest_index has not been incremented, so it points to what was just added
             transp_window.ratios[transp_window.oldest_index] += added_transp_ratio;
             // calculate the new sum of squares value
-            RealF totalTranspRatio = (sumTranspTotal + added_transp)/SXW.ppt;
+            RealF totalTranspRatio = (sumTranspTotal + transp_window.added_transp)/SXW.ppt;
             RealF ssqr = (totalTranspRatio - transp_window.ratio_average) * (totalTranspRatio - transp_window.ratio_average);
             // Subtract the sum of squares calculated above, which was stored in the array. Replace it with what was just calculated.
             transp_window.sum_of_sqrs += ssqr - transp_window.SoS_array[transp_window.oldest_index];
@@ -400,7 +368,7 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
             
             /* Adds the additional transpiration to the remaining transpiration 
              * so it can be distributed proportionally to the functional groups. */
-            TranspRemaining += added_transp;
+            TranspRemaining += transp_window.added_transp;
     }
 
     //oldest_index++ accounting for the array bounds
@@ -419,5 +387,5 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
     }
     
     //remember the last year. When setting up for a new iteration the same year will appear twice, and we want to skip it the second time
-    lastYear = Globals.currYear; 
+    transp_window.lastYear = Globals.currYear; 
 }

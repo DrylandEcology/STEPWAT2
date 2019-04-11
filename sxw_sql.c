@@ -18,11 +18,7 @@ extern SW_MODEL SW_Model;
 extern SXW_t SXW;
 extern SW_SITE SW_Site;
 extern SW_VEGPROD SW_VegProd;
-extern RealD *_phen;
-extern RealD _prod_litter[MAX_MONTHS];
-extern RealD * _prod_bmass;
-extern RealD * _prod_pctlive;
-extern RealF _bvt;
+extern TempType SXWTemp;
 
 static sqlite3 *db;
 static char sql[1024];
@@ -123,7 +119,7 @@ void insertSXWPhen(void) {
 	{
 		for(m=0;m<12;m++) {
 			sql[0] = 0;
-			sprintf(sql, "INSERT INTO sxwphen (RGroupID, Month, GrowthPCT) VALUES (%d, %d, %f);", g+1, m+1,_phen[Igp(g,m)]);
+			sprintf(sql, "INSERT INTO sxwphen (RGroupID, Month, GrowthPCT) VALUES (%d, %d, %f);", g+1, m+1,SXWTemp._phen[Igp(g,m)]);
 			rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
 			sqlcheck(rc, zErrMsg);
 		}
@@ -142,7 +138,8 @@ void insertSXWProd(void) {
 	{
 	for(m=0;m<12;m++) {
 		sql[0] = 0;
-		sprintf(sql, "INSERT INTO sxwprod (RGroupID, Month, BMASS, LITTER, PCTLIVE) VALUES (%d, %d, %f, %f, %f);", g+1, m+1, _prod_bmass[Igp(g,m)], _prod_litter[m], _prod_pctlive[Igp(g,m)]);
+		sprintf(sql, "INSERT INTO sxwprod (RGroupID, Month, BMASS, LITTER, PCTLIVE) VALUES (%d, %d, %f, %f, %f);", 
+					  g+1, m+1, SXWTemp._prod_bmass[Igp(g,m)], SXWTemp._prod_litter[m], SXWTemp._prod_pctlive[Igp(g,m)]);
 		rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
 		sqlcheck(rc, zErrMsg);
 	}
@@ -156,7 +153,8 @@ void insertInfo() {
 	sql[0] = 0;
 
 	beginTransaction();
-	sprintf(sql, "INSERT INTO info (StartYear, Years, Iterations, RGroups, TranspirationLayers, SoilLayers, PlotSize, BVT) VALUES (%d, %d, %d, %d, %d, %d, %f, %f);", SW_Model.startyr, Globals.runModelYears, Globals.runModelIterations, Globals.grpCount, SXW.NTrLyrs, SXW.NSoLyrs, Globals.plotsize, _bvt);
+	sprintf(sql, "INSERT INTO info (StartYear, Years, Iterations, RGroups, TranspirationLayers, SoilLayers, PlotSize, BVT) VALUES (%d, %d, %d, %d, %d, %d, %f, %f);", 
+				  SW_Model.startyr, Globals.runModelYears, Globals.runModelIterations, Globals.grpCount, SXW.NTrLyrs, SXW.NSoLyrs, Globals.plotsize, SXWTemp._bvt);
 	rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
 	sqlcheck(rc, zErrMsg);
 	endTransaction();
@@ -384,7 +382,7 @@ void insertRgroupInfo(RealF * _resource_cur) {
 
 	beginTransaction();
 	ForEachGroup(r) {
-		insertSXWoutputRgroupRow(Year, Iteration, r+1, RGroup_GetBiomass(r),RGroup[r]->relsize, RGroup[r]->pr, _resource_cur[r]/_bvt, _resource_cur[r]);
+		insertSXWoutputRgroupRow(Year, Iteration, r+1, RGroup_GetBiomass(r),RGroup[r]->relsize, RGroup[r]->pr, _resource_cur[r]/SXWTemp._bvt, _resource_cur[r]);
 	}
 	endTransaction();
 }

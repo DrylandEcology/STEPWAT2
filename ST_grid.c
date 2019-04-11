@@ -191,11 +191,12 @@ extern SW_SITE SW_Site;
 extern SW_VEGPROD SW_VegProd;
 extern SW_WEATHER SW_Weather;
 extern pcg32_random_t grid_rng; //this file's unique random number generator
+
+/* We need to seed these RNGs when using the gridded mode but do not use them in this file. */
 extern pcg32_random_t environs_rng;
 extern pcg32_random_t mortality_rng;
 extern pcg32_random_t resgroups_rng;
 extern pcg32_random_t species_rng;
-extern pcg32_random_t grid_rng;
 extern pcg32_random_t markov_rng;
 
 //This is Rgroup structure pointer that will read rgroup disturbance value, will be used in

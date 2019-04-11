@@ -24,7 +24,9 @@
 // A base of 4.4 C as described in Sims et al. 1978 Journal of Ecology
 // Additional testing required here and GROWING_BASE_TEMP should eventually be moved to env.in
 #define GROWING_BASE_TEMP 4.4 // base-temperature in degree Celsius
-
+#define SXW_NFILES 5
+// The number of transpiration values retained by transp_data
+#define MAX_WINDOW 100
 
 #include "generic.h"
 #include "SW_Times.h"
@@ -70,10 +72,7 @@ struct stepwat_st {
 
   // ------ DEBUG stuff:
   char *debugfile; /* added in ST_Main(), read to get debug instructions */
-};
-
-// The number of transpiration values retained by transp_data
-#define MAX_WINDOW 100
+} typedef SXW_t;
 
 // transp_data stores three arrays: ratios, transp, and sum of squares. These arrays form 
 // a moving window that stores "size" years worth of previous transpiration data.
@@ -115,16 +114,46 @@ struct transp_data {
 
   //SoS_array[] stores the sum of squares values (xi - mean)^2 for the previous (size) iterations.
   RealF SoS_array[MAX_WINDOW]; //(xi - mean)^2
-};
 
-typedef struct transp_data transp_t;
+  // Amount of additional transpiration added for the current year
+  RealF added_transp;
 
-#define SXW_NFILES 5
+  // _transp_contribution_by_group() has different behavior for production years and setup years.
+  // this variable keeps track of what year last year was, to make sure that the year actually
+  // incremented. If it did NOT, then this is a setup year.
+  int lastYear;
+  
+} typedef transp_t;
 
-typedef struct stepwat_st SXW_t;
+struct temp_SXW_st{
+  /* ----- 3d arrays ------- */
+  RealD * _rootsXphen, /* relative roots X phen in each lyr,grp,pd */
+        * _roots_active, /* "active" in terms of size and phenology */
+        * _roots_active_rel;
+
+
+  /* ----- 2D arrays ------- */
+  /* rgroup by layer, ie, group-level values */
+  RealD * _roots_max,     /* read from root distr. file */
+        * _roots_active_sum, /* used in sxw_resource */
+        /* rgroup by period */
+        * _phen;          /* phenology read from file */
+
+  /* simple vectors hold the resource information for each group */
+  /* curr/equ gives the available/required ratio */
+  RealF _resource_cur[MAX_RGROUPS],  /* current resource availability for each STEPPE functional type */
+        _resource_pr[MAX_RGROUPS];   /* resource convertable to PR */
+
+  /* one vector for the production constants */
+  RealD _prod_litter[MAX_MONTHS];
+  RealD * _prod_bmass;
+  RealD * _prod_pctlive;
+
+  RealF _bvt;  /* ratio of biomass/m2 / transp/m2 */
+
+} typedef TempType;
 
 #define ForEachTrPeriod(i) for((i)=0; (i)< SXW.NPds; (i)++)
-
 
 /* convert 3-d index to actual array index for
    group/layer/phenology 3d table */
@@ -134,7 +163,6 @@ typedef struct stepwat_st SXW_t;
  * veg-prod-type/layer/phenology
  */
 #define Itlp(t,l,p) (((t)*SXW.NTrLyrs*SXW.NPds) + ((l)*SXW.NPds) + (p))
-
 
 // veg type, layer, timeperiod
 #define Ivlp(v,l,p) (((v)*NVEGTYPES * SXW.NTrLyrs * SXW.NPds) + ((l)*SXW.NTrLyrs * SXW.NPds) + ((p)*SXW.NPds))
