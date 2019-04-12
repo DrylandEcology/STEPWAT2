@@ -151,7 +151,7 @@ struct temp_SXW_st{
 
   RealF _bvt;  /* ratio of biomass/m2 / transp/m2 */
 
-} typedef TempType;
+} typedef SXW_resourceType;
 
 #define ForEachTrPeriod(i) for((i)=0; (i)< SXW.NPds; (i)++)
 

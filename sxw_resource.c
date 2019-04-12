@@ -47,7 +47,7 @@
 //extern SW_SOILWAT SW_Soilwat;
 //extern SW_VEGPROD SW_VegProd;
 
-extern TempType SXWTemp;
+extern SXW_resourceType SXWResources;
 
 /* ------ Running Averages ------ */
 extern
@@ -78,14 +78,14 @@ void _sxw_root_phen(void) {
 	TimeInt p;
 
 	for (y = 0; y < (Globals.grpCount * SXW.NPds * SXW.NTrLyrs); y++)
-		SXWTemp._rootsXphen[y] = 0;
+		SXWResources._rootsXphen[y] = 0;
 
 	ForEachGroup(g)
 	{
 		int nLyrs = getNTranspLayers(RGroup[g]->veg_prod_type);
 		for (y = 0; y < nLyrs; y++) {
 			ForEachTrPeriod(p) {
-				SXWTemp._rootsXphen[Iglp(g, y, p)] = SXWTemp._roots_max[Ilg(y, g)] * SXWTemp._phen[Igp(g, p)];
+				SXWResources._rootsXphen[Iglp(g, y, p)] = SXWResources._roots_max[Ilg(y, g)] * SXWResources._phen[Igp(g, p)];
 			}
 		}
 	}
@@ -131,14 +131,14 @@ void _sxw_update_resource(void) {
 	_sxw_update_root_tables(sizes);
         
 	/* Assign transpiration (resource availability) to each STEPPE functional group */
-	_transp_contribution_by_group(SXWTemp._resource_cur);
+	_transp_contribution_by_group(SXWResources._resource_cur);
         
         /* Scale transpiration resources by a constant, bvt, to convert resources 
          * (cm) to biomass that can be supported by those resources (g/cm) */
 	ForEachGroup(g)
 	{
 //printf("for groupName= %smresource_cur prior to multiplication: %f\n",RGroup[g]->name, _resource_cur[g]);
-		SXWTemp._resource_cur[g] = SXWTemp._resource_cur[g] * SXWTemp._bvt;
+		SXWResources._resource_cur[g] = SXWResources._resource_cur[g] * SXWResources._bvt;
 //printf("for groupName= %s, resource_cur post multiplication: %f\n\n",Rgroup[g]->name, _resource_cur[g]);
 	}
 /* _print_debuginfo(); */
@@ -157,7 +157,7 @@ void _sxw_update_root_tables( RealF sizes[] ) {
 	int t,nLyrs;
 
 	/* Set some things to zero where 4 refers to Tree, Shrub, Grass, Forb */
-	Mem_Set(SXWTemp._roots_active_sum, 0, 4 * SXW.NPds * SXW.NTrLyrs * sizeof(RealD));
+	Mem_Set(SXWResources._roots_active_sum, 0, 4 * SXW.NPds * SXW.NTrLyrs * sizeof(RealD));
         
         /* Calculate the active roots in each month and soil layer for each STEPPE
          * functional group based on the functional group biomass this year */
@@ -168,9 +168,9 @@ void _sxw_update_root_tables( RealF sizes[] ) {
 		for (l = 0; l < nLyrs; l++) {
 			ForEachTrPeriod(p)
 			{
-				x = SXWTemp._rootsXphen[Iglp(g, l, p)] * sizes[g];
-				SXWTemp._roots_active[Iglp(g, l, p)] = x;
-				SXWTemp._roots_active_sum[Itlp(t, l, p)] += x;
+				x = SXWResources._rootsXphen[Iglp(g, l, p)] * sizes[g];
+				SXWResources._roots_active[Iglp(g, l, p)] = x;
+				SXWResources._roots_active_sum[Itlp(t, l, p)] += x;
 			}
 		}
 	}
@@ -184,11 +184,11 @@ void _sxw_update_root_tables( RealF sizes[] ) {
 		for (l = 0; l < nLyrs; l++) {
 			ForEachTrPeriod(p)
 			{
-				SXWTemp._roots_active_rel[Iglp(g, l, p)] =
-				ZRO(SXWTemp._roots_active_sum[Itlp(t,l,p)]) ?
+				SXWResources._roots_active_rel[Iglp(g, l, p)] =
+				ZRO(SXWResources._roots_active_sum[Itlp(t,l,p)]) ?
 						0. :
-						SXWTemp._roots_active[Iglp(g, l, p)]
-								/ SXWTemp._roots_active_sum[Itlp(t,l, p)];
+						SXWResources._roots_active[Iglp(g, l, p)]
+								/ SXWResources._roots_active_sum[Itlp(t,l, p)];
 			}
 		}
 	}
@@ -261,7 +261,7 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
         ForEachTrPeriod(p) {
             int nLyrs = getNTranspLayers(RGroup[g]->veg_prod_type);
             for (l = 0; l < nLyrs; l++) {
-                use_by_group[g] += (RealF) (SXWTemp._roots_active_rel[Iglp(g, l, p)] * transp[Ilp(l, p)]);
+                use_by_group[g] += (RealF) (SXWResources._roots_active_rel[Iglp(g, l, p)] * transp[Ilp(l, p)]);
             }
         }
         //printf("for groupName= %s, use_by_group[g] in transp= %f \n",RGroup[g]->name,use_by_group[g] );

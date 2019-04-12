@@ -18,7 +18,7 @@ extern SW_MODEL SW_Model;
 extern SXW_t SXW;
 extern SW_SITE SW_Site;
 extern SW_VEGPROD SW_VegProd;
-extern TempType SXWTemp;
+extern SXW_resourceType SXWResources;
 
 static sqlite3 *db;
 static char sql[1024];
@@ -119,7 +119,7 @@ void insertSXWPhen(void) {
 	{
 		for(m=0;m<12;m++) {
 			sql[0] = 0;
-			sprintf(sql, "INSERT INTO sxwphen (RGroupID, Month, GrowthPCT) VALUES (%d, %d, %f);", g+1, m+1,SXWTemp._phen[Igp(g,m)]);
+			sprintf(sql, "INSERT INTO sxwphen (RGroupID, Month, GrowthPCT) VALUES (%d, %d, %f);", g+1, m+1,SXWResources._phen[Igp(g,m)]);
 			rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
 			sqlcheck(rc, zErrMsg);
 		}
@@ -139,7 +139,7 @@ void insertSXWProd(void) {
 	for(m=0;m<12;m++) {
 		sql[0] = 0;
 		sprintf(sql, "INSERT INTO sxwprod (RGroupID, Month, BMASS, LITTER, PCTLIVE) VALUES (%d, %d, %f, %f, %f);", 
-					  g+1, m+1, SXWTemp._prod_bmass[Igp(g,m)], SXWTemp._prod_litter[m], SXWTemp._prod_pctlive[Igp(g,m)]);
+					  g+1, m+1, SXWResources._prod_bmass[Igp(g,m)], SXWResources._prod_litter[m], SXWResources._prod_pctlive[Igp(g,m)]);
 		rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
 		sqlcheck(rc, zErrMsg);
 	}
@@ -154,7 +154,7 @@ void insertInfo() {
 
 	beginTransaction();
 	sprintf(sql, "INSERT INTO info (StartYear, Years, Iterations, RGroups, TranspirationLayers, SoilLayers, PlotSize, BVT) VALUES (%d, %d, %d, %d, %d, %d, %f, %f);", 
-				  SW_Model.startyr, Globals.runModelYears, Globals.runModelIterations, Globals.grpCount, SXW.NTrLyrs, SXW.NSoLyrs, Globals.plotsize, SXWTemp._bvt);
+				  SW_Model.startyr, Globals.runModelYears, Globals.runModelIterations, Globals.grpCount, SXW.NTrLyrs, SXW.NSoLyrs, Globals.plotsize, SXWResources._bvt);
 	rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
 	sqlcheck(rc, zErrMsg);
 	endTransaction();
@@ -382,7 +382,7 @@ void insertRgroupInfo(RealF * _resource_cur) {
 
 	beginTransaction();
 	ForEachGroup(r) {
-		insertSXWoutputRgroupRow(Year, Iteration, r+1, RGroup_GetBiomass(r),RGroup[r]->relsize, RGroup[r]->pr, _resource_cur[r]/SXWTemp._bvt, _resource_cur[r]);
+		insertSXWoutputRgroupRow(Year, Iteration, r+1, RGroup_GetBiomass(r),RGroup[r]->relsize, RGroup[r]->pr, _resource_cur[r]/SXWResources._bvt, _resource_cur[r]);
 	}
 	endTransaction();
 }

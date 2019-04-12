@@ -172,7 +172,7 @@ struct grid_cell_st
 	/* -------------------- SXW ------------------------- */
 	transp_t myTranspWindow;
 	SXW_t mySXW;
-	TempType mySXWTemp;
+	SXW_resourceType mySXWResources;
 	/* ------------------ End SXW ----------------------- */
 } typedef CellType;
 

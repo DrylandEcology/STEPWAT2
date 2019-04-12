@@ -91,7 +91,7 @@ extern Bool storeAllIterations;
 // "Window" refers to the number of years over which transpiration data is averaged.
 transp_t transp_window;
 pcg32_random_t resource_rng; //rng for swx_resource.c functions.
-TempType SXWTemp;
+SXW_resourceType SXWResources;
 
 #ifdef SXW_BYMAXSIZE
 /* addition to meet changes specified at the top of the file */
@@ -377,7 +377,7 @@ This function is no longer utilized, SXW_GetResource has replaced it
 _resource_pr is no longer used as a parameter. We remain the code for the time being
 KAP 7/20/2016
 */
-	RealF pr = ZRO(SXWTemp._resource_pr[rg]) ? 0.0 : 1. / SXWTemp._resource_pr[rg];
+	RealF pr = ZRO(SXWResources._resource_pr[rg]) ? 0.0 : 1. / SXWResources._resource_pr[rg];
 	return pr;
 	//return pr > 10 ? 10 : pr;
 }
@@ -387,7 +387,7 @@ RealF SXW_GetTranspiration( GrpIndex rg) {
 /* see _sxw_update_resource() for _resource_cur[]
 */
 	//printf("SXW_GetTranspiration _resource_cur[%d] = %.5f \n", rg, _resource_cur[rg]);
-	return SXWTemp._resource_cur[rg];
+	return SXWResources._resource_cur[rg];
 }
 
 void SXW_PrintDebug(Bool cleanup) {
@@ -410,16 +410,16 @@ void SXW_PrintDebug(Bool cleanup) {
 			insertInfo();
 			insertSXWPhen();
 			insertSXWProd();
-			insertRootsXphen(SXWTemp._rootsXphen);
+			insertRootsXphen(SXWResources._rootsXphen);
 		}
 		insertInputVars();
 		insertInputProd();
 		insertInputSoils();
-		insertOutputVars(SXWTemp._resource_cur, transp_window.added_transp);
-		insertRgroupInfo(SXWTemp._resource_cur);
+		insertOutputVars(SXWResources._resource_cur, transp_window.added_transp);
+		insertRgroupInfo(SXWResources._resource_cur);
 		insertOutputProd(&SW_VegProd);
-		insertRootsSum(SXWTemp._roots_active_sum);
-		insertRootsRelative(SXWTemp._roots_active_rel);
+		insertRootsSum(SXWResources._roots_active_sum);
+		insertRootsRelative(SXWResources._roots_active_rel);
 		insertTranspiration();
 		insertSWCBulk();
 	}
@@ -473,7 +473,7 @@ static void  _read_roots_max(void) {
 		cnt++;
 		lyr = 0;
 		while ((p = strtok(NULL, " \t"))) {
-			SXWTemp._roots_max[Ilg(lyr, g)] = atof(p);
+			SXWResources._roots_max[Ilg(lyr, g)] = atof(p);
 			lyr++;
 		}
 		if (lyr != SXW.NTrLyrs) {
@@ -518,7 +518,7 @@ static void _read_phen(void) {
         LogError(logfp, LOGFATAL,
                  "%s: More than 12 months of data found.", MyFileName);
       }
-      SXWTemp._phen[Igp(g,m)] = atof(p);
+      SXWResources._phen[Igp(g,m)] = atof(p);
       m++;
     }
 
@@ -556,7 +556,7 @@ static void _read_bvt(void) {
 
   CloseFile(&fp);
 
-  SXWTemp._bvt = bmass / transp;
+  SXWResources._bvt = bmass / transp;
 
 }
 
@@ -574,7 +574,7 @@ static void _read_prod(void) {
 	fp = OpenFile(MyFileName, "r");
 
 	while (GetALine(fp, inbuf)) {
-		x = sscanf(inbuf, "%lf", &SXWTemp._prod_litter[mon]);
+		x = sscanf(inbuf, "%lf", &SXWResources._prod_litter[mon]);
 		if (x < 1) {
 			LogError(logfp, LOGFATAL, "%s: invalid record for litter %d.", MyFileName,
 					mon + 1);
@@ -609,7 +609,7 @@ static void _read_prod(void) {
 				LogError(logfp, LOGFATAL,
 						"%s: More than 12 months of data found.", MyFileName);
 			}
-			SXWTemp._prod_bmass[Igp(g, mon)] = atof(p);
+			SXWResources._prod_bmass[Igp(g, mon)] = atof(p);
 			mon++;
 		}
 		cnt++;
@@ -644,7 +644,7 @@ static void _read_prod(void) {
 				LogError(logfp, LOGFATAL,
 						"%s: More than 12 months of data found.", MyFileName);
 			}
-			SXWTemp._prod_pctlive[Igp(g, mon)] = atof(p);
+			SXWResources._prod_pctlive[Igp(g, mon)] = atof(p);
 			mon++;
 		}
 		cnt++;
@@ -716,16 +716,16 @@ static void _make_roots_arrays(void) {
   char *fstr = "_make_roots_array()";
 
   size  = SXW.NGrps * SXW.NTrLyrs;
-  SXWTemp._roots_max     = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
+  SXWResources._roots_max     = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
 
   size = SXW.NGrps * SXW.NPds * SXW.NTrLyrs;
-  SXWTemp._rootsXphen       = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
-  SXWTemp._roots_active     = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
-  SXWTemp._roots_active_rel = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
+  SXWResources._rootsXphen       = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
+  SXWResources._roots_active     = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
+  SXWResources._roots_active_rel = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
 
   //4 - Grass,Frob,Tree,Shrub
   size = NVEGTYPES * SXW.NPds * SXW.NTrLyrs;
-  SXWTemp._roots_active_sum = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
+  SXWResources._roots_active_sum = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
 }
 
 static void _make_phen_arrays(void) {
@@ -734,7 +734,7 @@ static void _make_phen_arrays(void) {
   char *fstr = "_make_phen_arrays()";
 
   size = SXW.NGrps * MAX_MONTHS;
-  SXWTemp._phen = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
+  SXWResources._phen = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
 
 }
 
@@ -743,8 +743,8 @@ static void _make_prod_arrays(void) {
 	char *fstr = "_make_phen_arrays()";
 
 	size = SXW.NGrps * MAX_MONTHS;
-	SXWTemp._prod_bmass = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
-	SXWTemp._prod_pctlive = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
+	SXWResources._prod_bmass = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
+	SXWResources._prod_pctlive = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
 }
 
 static void _make_transp_arrays(void) {
@@ -894,7 +894,7 @@ void _print_debuginfo(void) {
 				//ForEachTranspLayer(t) {
 				fprintf(f, "%d", t + 1);
 				ForEachTrPeriod(p)
-					fprintf(f, "\t%.4f", SXWTemp._rootsXphen[Iglp(r, t, p)]);
+					fprintf(f, "\t%.4f", SXWResources._rootsXphen[Iglp(r, t, p)]);
 				fprintf(f, "\n");
 			}
 		}
@@ -917,11 +917,11 @@ void _print_debuginfo(void) {
 	ForEachGroup(r) {
 		sum1 += RGroup[r]->relsize;
 		sum2 += RGroup[r]->pr;
-		sum3 += SXWTemp._resource_cur[r];
-		fprintf(f, "%s\t%.4f\t%.4f\t%.4f\t\t%.4f\n", RGroup[r]->name, RGroup[r]->relsize, RGroup[r]->pr, SXWTemp._resource_cur[r]/SXWTemp._bvt, SXWTemp._resource_cur[r]);
+		sum3 += SXWResources._resource_cur[r];
+		fprintf(f, "%s\t%.4f\t%.4f\t%.4f\t\t%.4f\n", RGroup[r]->name, RGroup[r]->relsize, RGroup[r]->pr, SXWResources._resource_cur[r]/SXWResources._bvt, SXWResources._resource_cur[r]);
 	}
 	fprintf(f, "-----     \t-------\t-----\t-----\t\t-----\n");
-	fprintf(f, "%s\t\t%.4f\t%.4f\t%.4f\t\t%.4f\n", "Total", sum1, sum2, sum3/SXWTemp._bvt, sum3);
+	fprintf(f, "%s\t\t%.4f\t%.4f\t%.4f\t\t%.4f\n", "Total", sum1, sum2, sum3/SXWResources._bvt, sum3);
 
 	fprintf(f, "\n------ Production Values Daily Summed Across Types Monthly Averaged -------\n");
 	fprintf(f, "Month\tBMass\tPctLive\tLAIlive\tVegCov\tTotAGB\n");
@@ -986,7 +986,7 @@ void _print_debuginfo(void) {
 		for (l = 0; l < SXW.NTrLyrs; l++) {
 			fprintf(f, "%d", t + 1);
 			ForEachTrPeriod(p)
-				fprintf(f, "\t%.4f", SXWTemp._roots_active_sum[Itlp(t, l, p)]);
+				fprintf(f, "\t%.4f", SXWResources._roots_active_sum[Itlp(t, l, p)]);
 			fprintf(f, "\n");
 		}
 	}
@@ -1005,7 +1005,7 @@ void _print_debuginfo(void) {
 			//ForEachTranspLayer(t) {
 			fprintf(f, "%d", t + 1);
 			ForEachTrPeriod(p)
-				fprintf(f, "\t%.4f", SXWTemp._roots_active_rel[Iglp(r, t, p)]);
+				fprintf(f, "\t%.4f", SXWResources._roots_active_rel[Iglp(r, t, p)]);
 			fprintf(f, "\n");
 		}
 	}
@@ -1113,48 +1113,48 @@ void free_all_sxw_memory( void ) {
 
 /***********************************************************/
 void free_sxw_memory( void ) {
-	Mem_Free(SXWTemp._roots_max);
-	Mem_Free(SXWTemp._rootsXphen);
-	Mem_Free(SXWTemp._roots_active);
-	Mem_Free(SXWTemp._roots_active_rel);
-	Mem_Free(SXWTemp._roots_active_sum);
-	Mem_Free(SXWTemp._phen);
-	Mem_Free(SXWTemp._prod_bmass);
-	Mem_Free(SXWTemp._prod_pctlive);
+	Mem_Free(SXWResources._roots_max);
+	Mem_Free(SXWResources._rootsXphen);
+	Mem_Free(SXWResources._roots_active);
+	Mem_Free(SXWResources._roots_active_rel);
+	Mem_Free(SXWResources._roots_active_sum);
+	Mem_Free(SXWResources._phen);
+	Mem_Free(SXWResources._prod_bmass);
+	Mem_Free(SXWResources._prod_pctlive);
 }
 
 /***********************************************************/
 void load_sxw_memory( RealD* grid_roots_max, RealD* grid_rootsXphen, RealD* grid_roots_active, RealD* grid_roots_active_rel, RealD* grid_roots_active_sum, RealD* grid_phen, RealD* grid_prod_bmass, RealD* grid_prod_pctlive ) {
 	//load memory from the grid
 	free_sxw_memory();
-	SXWTemp._roots_max = Mem_Calloc(SXW.NGrps * SXW.NTrLyrs, sizeof(RealD), "load_sxw_memory()");
-	SXWTemp._rootsXphen = Mem_Calloc(SXW.NGrps * SXW.NPds * SXW.NTrLyrs, sizeof(RealD), "load_sxw_memory()");
-	SXWTemp._roots_active = Mem_Calloc(SXW.NGrps * SXW.NPds * SXW.NTrLyrs, sizeof(RealD), "load_sxw_memory()");
-	SXWTemp._roots_active_rel = Mem_Calloc(SXW.NGrps * SXW.NPds * SXW.NTrLyrs, sizeof(RealD), "load_sxw_memory()");
-	SXWTemp._roots_active_sum = Mem_Calloc(4 * SXW.NPds * SXW.NTrLyrs, sizeof(RealD), "load_sxw_memory()");
-	SXWTemp._phen = Mem_Calloc(SXW.NGrps * MAX_MONTHS, sizeof(RealD), "load_sxw_memory()");
-	SXWTemp._prod_bmass = Mem_Calloc(SXW.NGrps * MAX_MONTHS, sizeof(RealD), "load_sxw_memory()");
-	SXWTemp._prod_pctlive = Mem_Calloc(SXW.NGrps * MAX_MONTHS, sizeof(RealD), "load_sxw_memory()");
+	SXWResources._roots_max = Mem_Calloc(SXW.NGrps * SXW.NTrLyrs, sizeof(RealD), "load_sxw_memory()");
+	SXWResources._rootsXphen = Mem_Calloc(SXW.NGrps * SXW.NPds * SXW.NTrLyrs, sizeof(RealD), "load_sxw_memory()");
+	SXWResources._roots_active = Mem_Calloc(SXW.NGrps * SXW.NPds * SXW.NTrLyrs, sizeof(RealD), "load_sxw_memory()");
+	SXWResources._roots_active_rel = Mem_Calloc(SXW.NGrps * SXW.NPds * SXW.NTrLyrs, sizeof(RealD), "load_sxw_memory()");
+	SXWResources._roots_active_sum = Mem_Calloc(4 * SXW.NPds * SXW.NTrLyrs, sizeof(RealD), "load_sxw_memory()");
+	SXWResources._phen = Mem_Calloc(SXW.NGrps * MAX_MONTHS, sizeof(RealD), "load_sxw_memory()");
+	SXWResources._prod_bmass = Mem_Calloc(SXW.NGrps * MAX_MONTHS, sizeof(RealD), "load_sxw_memory()");
+	SXWResources._prod_pctlive = Mem_Calloc(SXW.NGrps * MAX_MONTHS, sizeof(RealD), "load_sxw_memory()");
 
-	memcpy(SXWTemp._roots_max, grid_roots_max, SXW.NGrps * SXW.NTrLyrs * sizeof(RealD));
-	memcpy(SXWTemp._rootsXphen, grid_rootsXphen, SXW.NGrps * SXW.NPds * SXW.NTrLyrs * sizeof(RealD));
-	memcpy(SXWTemp._roots_active, grid_roots_active, SXW.NGrps * SXW.NPds * SXW.NTrLyrs * sizeof(RealD));
-	memcpy(SXWTemp._roots_active_rel, grid_roots_active_rel, SXW.NGrps * SXW.NPds * SXW.NTrLyrs * sizeof(RealD));
-	memcpy(SXWTemp._roots_active_sum, grid_roots_active_sum, 4 * SXW.NPds * SXW.NTrLyrs * sizeof(RealD));
-	memcpy(SXWTemp._phen, grid_phen, SXW.NGrps * MAX_MONTHS * sizeof(RealD));
-	memcpy(SXWTemp._prod_bmass, grid_prod_bmass, SXW.NGrps * MAX_MONTHS * sizeof(RealD));
-	memcpy(SXWTemp._prod_pctlive, grid_prod_pctlive, SXW.NGrps * MAX_MONTHS * sizeof(RealD));
+	memcpy(SXWResources._roots_max, grid_roots_max, SXW.NGrps * SXW.NTrLyrs * sizeof(RealD));
+	memcpy(SXWResources._rootsXphen, grid_rootsXphen, SXW.NGrps * SXW.NPds * SXW.NTrLyrs * sizeof(RealD));
+	memcpy(SXWResources._roots_active, grid_roots_active, SXW.NGrps * SXW.NPds * SXW.NTrLyrs * sizeof(RealD));
+	memcpy(SXWResources._roots_active_rel, grid_roots_active_rel, SXW.NGrps * SXW.NPds * SXW.NTrLyrs * sizeof(RealD));
+	memcpy(SXWResources._roots_active_sum, grid_roots_active_sum, 4 * SXW.NPds * SXW.NTrLyrs * sizeof(RealD));
+	memcpy(SXWResources._phen, grid_phen, SXW.NGrps * MAX_MONTHS * sizeof(RealD));
+	memcpy(SXWResources._prod_bmass, grid_prod_bmass, SXW.NGrps * MAX_MONTHS * sizeof(RealD));
+	memcpy(SXWResources._prod_pctlive, grid_prod_pctlive, SXW.NGrps * MAX_MONTHS * sizeof(RealD));
 }
 
 /***********************************************************/
 void save_sxw_memory( RealD * grid_roots_max, RealD* grid_rootsXphen, RealD* grid_roots_active, RealD* grid_roots_active_rel, RealD* grid_roots_active_sum, RealD* grid_phen, RealD* grid_prod_bmass, RealD* grid_prod_pctlive ) {
 	//save memory to the grid
-	memcpy(grid_roots_max, SXWTemp._roots_max, SXW.NGrps * SXW.NTrLyrs * sizeof(RealD));
-	memcpy(grid_rootsXphen, SXWTemp._rootsXphen, SXW.NGrps * SXW.NPds * SXW.NTrLyrs * sizeof(RealD));
-	memcpy(grid_roots_active, SXWTemp._roots_active, SXW.NGrps * SXW.NPds * SXW.NTrLyrs * sizeof(RealD));
-	memcpy(grid_roots_active_rel, SXWTemp._roots_active_rel, SXW.NGrps * SXW.NPds * SXW.NTrLyrs * sizeof(RealD));
-	memcpy(grid_roots_active_sum, SXWTemp._roots_active_sum, 4 * SXW.NPds * SXW.NTrLyrs * sizeof(RealD));
-	memcpy(grid_phen, SXWTemp._phen, SXW.NGrps * MAX_MONTHS * sizeof(RealD));
-	memcpy(grid_prod_bmass, SXWTemp._prod_bmass, SXW.NGrps * MAX_MONTHS * sizeof(RealD));
-	memcpy(grid_prod_pctlive, SXWTemp._prod_pctlive, SXW.NGrps * MAX_MONTHS * sizeof(RealD));
+	memcpy(grid_roots_max, SXWResources._roots_max, SXW.NGrps * SXW.NTrLyrs * sizeof(RealD));
+	memcpy(grid_rootsXphen, SXWResources._rootsXphen, SXW.NGrps * SXW.NPds * SXW.NTrLyrs * sizeof(RealD));
+	memcpy(grid_roots_active, SXWResources._roots_active, SXW.NGrps * SXW.NPds * SXW.NTrLyrs * sizeof(RealD));
+	memcpy(grid_roots_active_rel, SXWResources._roots_active_rel, SXW.NGrps * SXW.NPds * SXW.NTrLyrs * sizeof(RealD));
+	memcpy(grid_roots_active_sum, SXWResources._roots_active_sum, 4 * SXW.NPds * SXW.NTrLyrs * sizeof(RealD));
+	memcpy(grid_phen, SXWResources._phen, SXW.NGrps * MAX_MONTHS * sizeof(RealD));
+	memcpy(grid_prod_bmass, SXWResources._prod_bmass, SXW.NGrps * MAX_MONTHS * sizeof(RealD));
+	memcpy(grid_prod_pctlive, SXWResources._prod_pctlive, SXW.NGrps * MAX_MONTHS * sizeof(RealD));
 }
