@@ -116,12 +116,12 @@ typedef enum {F_First, F_Log, F_Model, F_Env, F_Plot, F_RGroup, F_Species,
  * preferably as GrpIndex, but note that it gets changed, so it
  * can only be an lvalue.  */
 /* void ForEachGroup(GrpIndex) */
-#define ForEachGroup(c)    for((c)=0; (c)< Globals.grpCount; (c)++)
+#define ForEachGroup(c)    for((c)=0; (c)< Globals->grpCount; (c)++)
 
 /* Generate an SppIndex to access Species[] to loop over each
  * defined species, irrespective of group.   */
 /* void ForEachSpecies(SppIndex) */
-#define ForEachSpecies(s)    for((s)=0; (s)< Globals.sppCount; (s)++)
+#define ForEachSpecies(s)    for((s)=0; (s)< Globals->sppCount; (s)++)
 
 /* Same for individuals within a species. Traverses a species'
  * linked list of IndivType objects.  i is a pointer to

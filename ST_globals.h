@@ -21,10 +21,10 @@
 
 extern SpeciesType    *Species[MAX_SPECIES];
 extern GroupType      *RGroup [MAX_RGROUPS];
-extern SucculentType  Succulent;
-extern EnvType        Env;
-extern PlotType       Plot;
-extern ModelType      Globals;
+extern SucculentType  *Succulent;
+extern EnvType        *Env;
+extern PlotType       *Plot;
+extern ModelType      *Globals;
 extern BmassFlagsType BmassFlags;
 extern MortFlagsType  MortFlags;
 

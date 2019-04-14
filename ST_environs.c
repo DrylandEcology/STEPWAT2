@@ -65,7 +65,7 @@ static void _make_ppt( void) {
 /*======================================================*/
 /* If not running SOILWAT,take a random number from normal distribution with*/
 /* mean, stddev that is between min & max from */
-/* the Globals.ppt structure.*/
+/* the Globals->ppt structure.*/
 /* Also set the growing season precip. */
 
 /* HISTORY */
@@ -74,7 +74,7 @@ static void _make_ppt( void) {
  *       The ppt and gsppt are set in _sxw_set_environs()
  *       but we still pass through this code to set the
  *       Dry/Wet/Normal state.
- * KAP 1/26/2017 The above note by CB is not correct. Env.ppt
+ * KAP 1/26/2017 The above note by CB is not correct. Env->ppt
  *      is set in _sxw_set_environs, but gsppt is not, it is
  *      set below. When using SOILWAT or not, the gsspt, ppt.dry,
  *      and ppt.wet is currently fixed each year and read from env.in
@@ -93,27 +93,27 @@ static void _make_ppt( void) {
   // Run with SOILWAT2: we have monthly PPT and temperature to calculate
   // growing season precipitation as sum of monthly precipitation of those
   // months when mean air temperature exceeds a threshold `GROWING_BASE_TEMP`
-  Env.gsppt = 0; // gsppt is defined as IntS and units are millimeters
+  Env->gsppt = 0; // gsppt is defined as IntS and units are millimeters
 
   for (i = 0; i < MAX_MONTHS; i++)
   {
-    Env.gsppt += GE(SXW.temp_monthly[i], GROWING_BASE_TEMP) ?
+    Env->gsppt += GE(SXW.temp_monthly[i], GROWING_BASE_TEMP) ?
       (IntS) (SXW.ppt_monthly[i] * 10. + 0.5) : 0;
   }
 
-  if (Env.gsppt <= 0)
+  if (Env->gsppt <= 0)
   {
     LogError(logfp, LOGWARN, "Zero growing season precipitation in "\
-      "year = %d of iteration = %d", Globals.currYear, Globals.currIter);
-    Env.gsppt = 0;
+      "year = %d of iteration = %d", Globals->currYear, Globals->currIter);
+    Env->gsppt = 0;
   }
 
-  if ( Env.ppt <= Globals.ppt.dry )
-    Env.wet_dry = Ppt_Dry;
-  else if (Env.ppt >= Globals.ppt.wet)
-    Env.wet_dry = Ppt_Wet;
+  if ( Env->ppt <= Globals->ppt.dry )
+    Env->wet_dry = Ppt_Dry;
+  else if (Env->ppt >= Globals->ppt.wet)
+    Env->wet_dry = Ppt_Wet;
   else
-    Env.wet_dry = Ppt_Norm;
+    Env->wet_dry = Ppt_Norm;
 }
 
 /**************************************************************/
@@ -127,12 +127,12 @@ static void _set_ppt_reduction( void) {
 /*------------------------------------------------------*/
 
 /* EQN 10*/
-  Succulent.reduction = fabs(Succulent.growth[Slope]
-                           * Env.gsppt
-                           + Succulent.growth[Intcpt]);
+  Succulent->reduction = fabs(Succulent->growth[Slope]
+                           * Env->gsppt
+                           + Succulent->growth[Intcpt]);
 /* EQN 16*/
-  Succulent.prob_death = (Succulent.mort[Slope] * Env.gsppt
-                          + Succulent.mort[Intcpt]) / 100.0;
+  Succulent->prob_death = (Succulent->mort[Slope] * Env->gsppt
+                          + Succulent->mort[Intcpt]) / 100.0;
 }
 
 /**************************************************************/
@@ -158,20 +158,20 @@ static void _set_temp_reduction( void) {
   RealF tp[4]; /* parms for temp growth modifier eqn.*/
 
   for ( i=CoolSeason; i <= WarmSeason; i ++ ){
-    tp[1] = Globals.tempparm[i][0];
-    tp[2] = Globals.tempparm[i][1];
-    tp[3] = Globals.tempparm[i][2];
-    tp[0] = Env.temp + tp[1];
-    Env.temp_reduction[i] = tp[2]*tp[0] + tp[3] * (tp[0]*tp[0]);
-    Env.temp_reduction[i] = max(0., Env.temp_reduction[i]);
+    tp[1] = Globals->tempparm[i][0];
+    tp[2] = Globals->tempparm[i][1];
+    tp[3] = Globals->tempparm[i][2];
+    tp[0] = Env->temp + tp[1];
+    Env->temp_reduction[i] = tp[2]*tp[0] + tp[3] * (tp[0]*tp[0]);
+    Env->temp_reduction[i] = max(0., Env->temp_reduction[i]);
   }
 
-  if (Env.temp < 9.5 ) {
-    Env.temp_reduction[CoolSeason] = .9;
-    Env.temp_reduction[WarmSeason] = .6;
+  if (Env->temp < 9.5 ) {
+    Env->temp_reduction[CoolSeason] = .9;
+    Env->temp_reduction[WarmSeason] = .6;
   } else {
-    Env.temp_reduction[CoolSeason] = .6;
-    Env.temp_reduction[WarmSeason] = .9;
+    Env->temp_reduction[CoolSeason] = .6;
+    Env->temp_reduction[WarmSeason] = .9;
   }
 }
 
@@ -191,73 +191,73 @@ static void _make_disturbance( void) {
 
 /*------------------------------------------------------*/
   /* Can't have simultaneous disturbances*/
-  if (Plot.disturbance != NoDisturb) {
-    switch( Plot.disturbance) {
+  if (Plot->disturbance != NoDisturb) {
+    switch( Plot->disturbance) {
       case FecalPat:
-           if (Plot.pat_removed) {
-             Plot.disturbed = 0;
-             Plot.pat_removed = FALSE;
-             Plot.disturbance = NoDisturb;
+           if (Plot->pat_removed) {
+             Plot->disturbed = 0;
+             Plot->pat_removed = FALSE;
+             Plot->disturbance = NoDisturb;
            } else {
-             pc = Globals.pat.recol[Slope] * Plot.disturbed
-                  + Globals.pat.recol[Intcpt];
+             pc = Globals->pat.recol[Slope] * Plot->disturbed
+                  + Globals->pat.recol[Intcpt];
              if (RandUni(&environs_rng) <= pc) {
-               Plot.pat_removed = TRUE;
+               Plot->pat_removed = TRUE;
                /* slight effects for one year*/
-               Plot.disturbed = 1;
+               Plot->disturbed = 1;
              } else {
-               Plot.pat_removed = FALSE;
-               Plot.disturbed++;
+               Plot->pat_removed = FALSE;
+               Plot->disturbed++;
              }
            }
            break;
       case NoDisturb: // Does nothing but prevent a compiler warning
       case LastDisturb:
       default:
-           Plot.disturbed = (Plot.disturbed) ? Plot.disturbed -1 : 0;
+           Plot->disturbed = (Plot->disturbed) ? Plot->disturbed -1 : 0;
     }
-    if (Plot.disturbed == 0)
-      Plot.disturbance = NoDisturb;
+    if (Plot->disturbed == 0)
+      Plot->disturbance = NoDisturb;
 
   }
 
   /* if the disturbance was expired above, */
   /* we can generate a new one immediately */
-  if (Plot.disturbance == NoDisturb) {
+  if (Plot->disturbance == NoDisturb) {
 
     /* pick some type of disturbance (other than none)*/
     event = (DisturbEvent) RandUniIntRange(1, LastDisturb -1, &environs_rng);
 
     /* make sure this is off unless needed  */
-    Plot.pat_removed = FALSE;
+    Plot->pat_removed = FALSE;
     switch( event) {
       case FecalPat:
-       if (!Globals.pat.use) {event=NoDisturb; break;}
-         event = (RandUni(&environs_rng) <= Globals.pat.occur)
+       if (!Globals->pat.use) {event=NoDisturb; break;}
+         event = (RandUni(&environs_rng) <= Globals->pat.occur)
                ? event : NoDisturb;
          if (event == NoDisturb) break;
-         Plot.pat_removed = (RandUni(&environs_rng) <= Globals.pat.removal)
+         Plot->pat_removed = (RandUni(&environs_rng) <= Globals->pat.removal)
                            ? TRUE : FALSE;
-         Plot.disturbed = 0;
+         Plot->disturbed = 0;
          break;
       case AntMound:
-       if (!Globals.mound.use) {event=NoDisturb; break;}
-         event = (RandUni(&environs_rng) <= Globals.mound.occur)
+       if (!Globals->mound.use) {event=NoDisturb; break;}
+         event = (RandUni(&environs_rng) <= Globals->mound.occur)
                ? event :NoDisturb;
          if (event == NoDisturb) break;
 
-         Plot.disturbed = RandUniIntRange(Globals.mound.minyr,
-                                       Globals.mound.maxyr,
+         Plot->disturbed = RandUniIntRange(Globals->mound.minyr,
+                                       Globals->mound.maxyr,
                                        &environs_rng);
          break;
       case Burrow:
-       if (!Globals.burrow.use) {event=NoDisturb; break;}
-         event = (RandUni(&environs_rng) <= Globals.burrow.occur)
+       if (!Globals->burrow.use) {event=NoDisturb; break;}
+         event = (RandUni(&environs_rng) <= Globals->burrow.occur)
                ? event :NoDisturb;
          if (event == NoDisturb) break;
 
-         Plot.disturbed = (Globals.burrow.minyr > 0)
-                        ? RandUniIntRange(1, Globals.burrow.minyr, &environs_rng)
+         Plot->disturbed = (Globals->burrow.minyr > 0)
+                        ? RandUniIntRange(1, Globals->burrow.minyr, &environs_rng)
                         : 0;
          break;
       case NoDisturb:
@@ -267,7 +267,7 @@ static void _make_disturbance( void) {
       default:
         break;
      }
-     Plot.disturbance = event;
+     Plot->disturbance = event;
 
    }
 

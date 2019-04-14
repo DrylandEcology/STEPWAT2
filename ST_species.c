@@ -277,7 +277,7 @@ void Species_Update_Newsize(SppIndex sp, RealF newsize)
 		LogError(logfp, LOGWARN,
 				"Species_Update_Newsize: %s relsize < 0.0 (=%.6f)"
 						" year=%d, iter=%d", Species[sp]->name,
-				Species[sp]->relsize, Globals.currYear, Globals.currIter);
+				Species[sp]->relsize, Globals->currYear, Globals->currIter);
                 //printf("Species relsize <0: name=%s, Species[sp]->relsize=%.5f \n ",Species[sp]->name, Species[sp]->relsize);
 	}
 	if (GT(Species[sp]->relsize, 100.))
@@ -285,7 +285,7 @@ void Species_Update_Newsize(SppIndex sp, RealF newsize)
 		LogError(logfp, LOGNOTE,
 				"Species_Update_Newsize: %s relsize very large (=%.1f)"
 						" year=%d, iter=%d", Species[sp]->name,
-				Species[sp]->relsize, Globals.currYear, Globals.currIter);
+				Species[sp]->relsize, Globals->currYear, Globals->currIter);
 	}
 
 //	printf("Inside Species_Update_Newsize() spIndex=%d, name =%s,Species[sp]->relsize=%.5f, newsize=%.5f \n ",sp, Species[sp]->name,Species[sp]->relsize, newsize);
@@ -331,9 +331,9 @@ SppIndex species_New(void)
 	/* Chris Bennett @ LTER-CSU 6/15/2000            */
 
 	/*------------------------------------------------------*/
-	SppIndex i = (SppIndex) Globals.sppCount;
+	SppIndex i = (SppIndex) Globals->sppCount;
 
-	if (++Globals.sppCount > MAX_SPECIES)
+	if (++Globals->sppCount > MAX_SPECIES)
 	{
 		LogError(logfp, LOGFATAL, "Too many species specified (>%d)!\n"
 				"You must adjust MAX_SPECIES and recompile!\n",
@@ -582,10 +582,10 @@ void save_annual_species_relsize() {
 
     ForEachSpecies(sp) {
         if (Species[sp]->max_age == 1) {
-            //printf("Globals.currYear = %d, sp=%d , Species[sp]->relsize=%.5f ,old value lastyear_relsize : %.5f \n", Globals.currYear, sp, Species[sp]->relsize, Species[sp]->lastyear_relsize);
+            //printf("Globals->currYear = %d, sp=%d , Species[sp]->relsize=%.5f ,old value lastyear_relsize : %.5f \n", Globals->currYear, sp, Species[sp]->relsize, Species[sp]->lastyear_relsize);
             Species[sp]->lastyear_relsize = Species[sp]->relsize;
             //Species[sp]->lastyear_relsize = 2;
-            //printf("Globals.currYear = %d, sp=%d new updated value lastyear_relsize : %.5f \n", Globals.currYear, sp, Species[sp]->lastyear_relsize);
+            //printf("Globals->currYear = %d, sp=%d new updated value lastyear_relsize : %.5f \n", Globals->currYear, sp, Species[sp]->lastyear_relsize);
         }
     }
 }

@@ -100,7 +100,7 @@ void _sxw_sw_setup (RealF sizes[]) {
 
 void _sxw_sw_run(void) {
 /*======================================================*/
-	SW_Model.year = SW_Model.startyr + Globals.currYear-1;
+	SW_Model.year = SW_Model.startyr + Globals->currYear-1;
 	SW_CTL_run_current_year();
 }
 
@@ -223,7 +223,7 @@ static void _update_productivity(void) {
     /* get total biomass for the plot in sq.m */
     ForEachGroup(g) {
         RGroup[g]->rgroupFractionOfVegTypeBiomass = 0.0;
-        bmassg[g] = Biomass(g) / Globals.plotsize;
+        bmassg[g] = Biomass(g) / Globals->plotsize;
         totbmass += bmassg[g];
         if (1 == RGroup[g]->veg_prod_type) { //tree
             vegTypeBiomass[0] += bmassg[g];

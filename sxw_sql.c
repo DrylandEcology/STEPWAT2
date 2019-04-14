@@ -154,7 +154,7 @@ void insertInfo() {
 
 	beginTransaction();
 	sprintf(sql, "INSERT INTO info (StartYear, Years, Iterations, RGroups, TranspirationLayers, SoilLayers, PlotSize, BVT) VALUES (%d, %d, %d, %d, %d, %d, %f, %f);", 
-				  SW_Model.startyr, Globals.runModelYears, Globals.runModelIterations, Globals.grpCount, SXW.NTrLyrs, SXW.NSoLyrs, Globals.plotsize, SXWResources._bvt);
+				  SW_Model.startyr, Globals->runModelYears, Globals->runModelIterations, Globals->grpCount, SXW.NTrLyrs, SXW.NSoLyrs, Globals->plotsize, SXWResources._bvt);
 	rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
 	sqlcheck(rc, zErrMsg);
 	endTransaction();
@@ -215,7 +215,7 @@ static void insertSXWinputVarsRow(int year, int iter, double fracGrass, double f
 
 void insertInputVars() {
 	int Year = SW_Model.year;
-	int Iteration = Globals.currIter;
+	int Iteration = Globals->currIter;
 	SW_VEGPROD *v = &SW_VegProd;
 
 	beginTransaction();
@@ -248,7 +248,7 @@ static void insertSXWinputProdRow(int year, int iter, int VegProdType, int Month
 
 void insertInputProd() {
 	int Year = SW_Model.year;
-	int Iteration = Globals.currIter;
+	int Iteration = Globals->currIter;
 	int p;
 	SW_VEGPROD *v = &SW_VegProd;
 
@@ -286,7 +286,7 @@ static void insertSXWinputSoilsRow(int year, int iter, int Layer, double Tree_tr
 
 void insertInputSoils() {
 	int Year = SW_Model.year;
-	int Iteration = Globals.currIter;
+	int Iteration = Globals->currIter;
 	int l;
 	SW_SITE *s = &SW_Site;
 
@@ -326,7 +326,7 @@ static void insertSXWoutputVarsRow(int year, int iter, int MAP_mm, double MAT_C,
 
 void insertOutputVars(RealF * _resource_cur, RealF added_transp) {
 	int Year = SW_Model.year;
-	int Iteration = Globals.currIter;
+	int Iteration = Globals->currIter;
 	int p;
 	int t;
 	int r;
@@ -348,7 +348,7 @@ void insertOutputVars(RealF * _resource_cur, RealF added_transp) {
 			sum3 += _resource_cur[r];
 	}
 	beginTransaction();
-	insertSXWoutputVarsRow(Year, Iteration, Env.ppt, Env.temp, SXW.aet, sum, added_transp, sum+added_transp, sum1,sum2,sum3);
+	insertSXWoutputVarsRow(Year, Iteration, Env->ppt, Env->temp, SXW.aet, sum, added_transp, sum+added_transp, sum1,sum2,sum3);
 	endTransaction();
 }
 
@@ -377,7 +377,7 @@ static void insertSXWoutputRgroupRow(int year, int iter, int RGroupID, double Bi
 
 void insertRgroupInfo(RealF * _resource_cur) {
 	int Year = SW_Model.year;
-	int Iteration = Globals.currIter;
+	int Iteration = Globals->currIter;
 	int r;
 
 	beginTransaction();
@@ -400,7 +400,7 @@ static void insertSXWoutputProdRow(int year, int iter, int Month, double BMass, 
 void insertOutputProd(SW_VEGPROD *v) {
 	int p;
 	int Year = SW_Model.year;
-	int Iteration = Globals.currIter;
+	int Iteration = Globals->currIter;
 
 	beginTransaction();
 	int doy = 1;
@@ -491,7 +491,7 @@ void insertRootsSum(RealD * _roots_active_sum) {
 	int i;
 	double m[12];
 	int Year = SW_Model.year;
-	int Iteration = Globals.currIter;
+	int Iteration = Globals->currIter;
 
 	beginTransaction();
 	for(i=1; i<=4; i++) {
@@ -545,7 +545,7 @@ void insertRootsRelative(RealD * _roots_active_rel) {
 	int nLyrs;
 	double m[12];
 	int Year = SW_Model.year;
-	int Iteration = Globals.currIter;
+	int Iteration = Globals->currIter;
 
 	beginTransaction();
 	ForEachGroup(g)
@@ -599,7 +599,7 @@ void insertTranspiration() {
 	int p;
 	double m[12];
 	int Year = SW_Model.year;
-	int Iteration = Globals.currIter;
+	int Iteration = Globals->currIter;
 
 	beginTransaction();
 	//Total - 0
@@ -681,7 +681,7 @@ void insertSWCBulk() {
 	int p;
 	double m[12];
 	int Year = SW_Model.year;
-	int Iteration = Globals.currIter;
+	int Iteration = Globals->currIter;
 
 	beginTransaction();
 	for (l = 0; l < SXW.NSoLyrs; l++) {

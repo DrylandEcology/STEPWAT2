@@ -49,7 +49,6 @@ SppIndex species_New(void);
 
 /*********** Locally Used Function Declarations ************/
 /***********************************************************/
-static void _globals_init( void);
 static void _env_init( void);
 static void _plot_init( void);
 static void _setNameLen(char *dest, char *src, Int len);
@@ -96,40 +95,40 @@ void parm_Initialize( Int iter) {
   if (beenhere) {
 //    if (BmassFlags.yearly) {
 //      sprintf(filename, "%s%0*d.csv", Parm_name(F_BMassPre),
-//                                Globals.bmass.suffixwidth,
+//                                Globals->bmass.suffixwidth,
 //                                iter);
 //      printf("parm_Initialize: %s\n",filename, filename);
-//      if (Globals.bmass.fp_year != NULL) {
+//      if (Globals->bmass.fp_year != NULL) {
 //        LogError(logfp, LOGFATAL, "Programmer error: "
-//                        "Globals.bmass.fp_year not null"
+//                        "Globals->bmass.fp_year not null"
 //                        " in parm_Initialize()");
 //      }
-//      Globals.bmass.fp_year = OpenFile(filename, "w");//moved to output function
-//      fprintf(Globals.bmass.fp_year, "%s", Globals.bmass.header_line);
-//      fflush(Globals.bmass.fp_year);
-//      CloseFile(&Globals.bmass.fp_year);
+//      Globals->bmass.fp_year = OpenFile(filename, "w");//moved to output function
+//      fprintf(Globals->bmass.fp_year, "%s", Globals->bmass.header_line);
+//      fflush(Globals->bmass.fp_year);
+//      CloseFile(&Globals->bmass.fp_year);
 //    }
 //
 //    if (MortFlags.yearly) {
 //      sprintf(filename, "%s%0*d.csv", Parm_name(F_MortPre),
-//                                Globals.mort.suffixwidth,
+//                                Globals->mort.suffixwidth,
 //                                iter);
-//      if (Globals.mort.fp_year != NULL) {
+//      if (Globals->mort.fp_year != NULL) {
 //        LogError(logfp, LOGFATAL, "Programmer error: "
-//                        "Globals.mort.fp_year not null"
+//                        "Globals->mort.fp_year not null"
 //                        " in parm_Initialize()");
 //      }
-//      Globals.mort.fp_year = OpenFile(filename, "w");
-//      fprintf(Globals.mort.fp_year, "%s", Globals.mort.header_line);
-//      fflush(Globals.mort.fp_year);
-//      CloseFile(&Globals.mort.fp_year);
+//      Globals->mort.fp_year = OpenFile(filename, "w");
+//      fprintf(Globals->mort.fp_year, "%s", Globals->mort.header_line);
+//      fflush(Globals->mort.fp_year);
+//      CloseFile(&Globals->mort.fp_year);
 //    }
 
   } else {
-    _globals_init();
     _files_init();
     _model_init();
     _env_init();
+    
     _plot_init();
     _bmassflags_init();
     _mortflags_init();
@@ -174,19 +173,6 @@ void parm_SetName( char *s, int which) {
 
 }
 
-
-/**************************************************************/
-static void _globals_init( void) {
-/*======================================================*/
-/* this memset() goes against the mymemory model, but I'm not
- * sure of the best approach to take for static vars */
-  memset ( &Globals, 0, sizeof(struct globals_st));
-  /*Globals.outf = NULL; */
-
-
-
-}
-
 /**************************************************************/
 static void _files_init( void ) {
 /*======================================================*/
@@ -225,34 +211,33 @@ static void _files_init( void ) {
 /**************************************************************/
 static void _model_init( void) {
 /*======================================================*/
-
    FILE *f;
-   int seed;
+   int seed, years;
    char tmp[80];
 
    MyFileName = Parm_name(F_Model);
    f = OpenFile(MyFileName, "r");
-
    /* ----------------------------------------------------*/
    /* scan for the first line*/
    if (!GetALine(f, inbuf)) {
      LogError(logfp, LOGFATAL, "%s: No data found!\n", MyFileName);
    } else {
-     sscanf( inbuf, "%s %hu %d",
+     sscanf( inbuf, "%s %d %d",
              tmp,
-             &Globals.runModelYears,
+             &years,
              &seed);
 
-     Globals.Max_Age = Globals.runModelYears;
-     Globals.runModelIterations = atoi(tmp);
-     if (Globals.runModelIterations < 1 ||
-         Globals.runModelYears < 1 ) {
+     Globals->runModelYears = years;
+     Globals->Max_Age = Globals->runModelYears;
+     Globals->runModelIterations = atoi(tmp);
+     if (Globals->runModelIterations < 1 ||
+         Globals->runModelYears < 1 ) {
        LogError(logfp, LOGFATAL,"Invalid parameters for RunModelIterations "
                "or RunModelYears (%s)",
                MyFileName);
      }
-     Globals.bmass.suffixwidth = Globals.mort.suffixwidth = strlen(tmp);
-     Globals.randseed = (IntL) ((seed) ? -abs(seed) : 0);
+     Globals->bmass.suffixwidth = Globals->mort.suffixwidth = strlen(tmp);
+     Globals->randseed = (IntL) ((seed) ? -abs(seed) : 0);
    }
 
    CloseFile(&f);
@@ -280,46 +265,46 @@ static void _env_init( void) {
       switch(++index) {
         case 1:
             x=sscanf( inbuf, "%f %f %hu %hu %hu %hu %f %hu",
-                      &Globals.ppt.avg, &Globals.ppt.std,
-                      &Globals.ppt.min, &Globals.ppt.max,
-                      &Globals.ppt.dry, &Globals.ppt.wet,
-                      &Globals.gsppt_prop, &Globals.transp_window);
+                      &Globals->ppt.avg, &Globals->ppt.std,
+                      &Globals->ppt.min, &Globals->ppt.max,
+                      &Globals->ppt.dry, &Globals->ppt.wet,
+                      &Globals->gsppt_prop, &Globals->transp_window);
             nitems = 8;
             break;
         case 2:
             x=sscanf( inbuf, "%f %f %f %f",
-                      &Globals.temp.avg, &Globals.temp.std,
-                      &Globals.temp.min, &Globals.temp.max);
+                      &Globals->temp.avg, &Globals->temp.std,
+                      &Globals->temp.min, &Globals->temp.max);
             nitems = 4;
             break;
         case 3:
             x=sscanf( inbuf, "%d %f %f %f %f ", &use[0],
-                      &Globals.pat.occur, &Globals.pat.removal,
-                      &Globals.pat.recol[Slope],
-                      &Globals.pat.recol[Intcpt]);
+                      &Globals->pat.occur, &Globals->pat.removal,
+                      &Globals->pat.recol[Slope],
+                      &Globals->pat.recol[Intcpt]);
             nitems = 4;
             break;
         case 4:
             x=sscanf( inbuf, "%d %f %hu %hu", &use[1],
-                      &Globals.mound.occur,
-                      &Globals.mound.minyr,
-                      &Globals.mound.maxyr);
+                      &Globals->mound.occur,
+                      &Globals->mound.minyr,
+                      &Globals->mound.maxyr);
             nitems = 3;
             break;
         case 5:
             x=sscanf( inbuf, "%d %f %hu", &use[2],
-                      &Globals.burrow.occur,
-                      &Globals.burrow.minyr);
+                      &Globals->burrow.occur,
+                      &Globals->burrow.minyr);
             nitems = 2;
             break;
         case 6:
             x=sscanf( inbuf, "%f %f %f %f %f %f",
-                      &Globals.tempparm[CoolSeason][0],
-                      &Globals.tempparm[CoolSeason][1],
-                      &Globals.tempparm[CoolSeason][2],
-                      &Globals.tempparm[WarmSeason][0],
-                      &Globals.tempparm[WarmSeason][1],
-                      &Globals.tempparm[WarmSeason][2]);
+                      &Globals->tempparm[CoolSeason][0],
+                      &Globals->tempparm[CoolSeason][1],
+                      &Globals->tempparm[CoolSeason][2],
+                      &Globals->tempparm[WarmSeason][0],
+                      &Globals->tempparm[WarmSeason][1],
+                      &Globals->tempparm[WarmSeason][2]);
             nitems = 6;
             break;
       }
@@ -330,9 +315,9 @@ static void _env_init( void) {
 
    } /* end while*/
 
-   Globals.pat.use    = itob(use[0]);
-   Globals.mound.use  = itob(use[1]);
-   Globals.burrow.use = itob(use[2]);
+   Globals->pat.use    = itob(use[0]);
+   Globals->mound.use  = itob(use[1]);
+   Globals->burrow.use = itob(use[2]);
 
    CloseFile(&f);
 }
@@ -354,7 +339,7 @@ static void _plot_init( void) {
      LogError(logfp, LOGFATAL, "%s: No data found!\n", MyFileName);
    }
 
-   x = sscanf( inbuf, " %f", &Globals.plotsize);
+   x = sscanf( inbuf, " %f", &Globals->plotsize);
    if (x < nitems) {
      LogError(logfp, LOGFATAL, "%s: Incorrect number of fields",
                      MyFileName);
@@ -380,7 +365,7 @@ static void _check_species( void) {
    */
   IntS i, cnt,
        maxage, minage, /* placeholders */
-       runyrs = Globals.runModelYears;  /* shorthand */
+       runyrs = Globals->runModelYears;  /* shorthand */
   SppIndex sp;
   GrpIndex rg;
   Bool tripped = FALSE;
@@ -464,7 +449,7 @@ static void _check_species( void) {
           RGroup[rg]->max_age = (Species[sp]->max_age)
                                 ? max(Species[sp]->max_age,
                                       RGroup[rg]->max_age)
-                                : Globals.Max_Age;
+                                : Globals->Max_Age;
         }
         RGroup[rg]->kills = (IntUS *) Mem_Calloc(GrpMaxAge(rg),
                                                 sizeof(IntUS),
@@ -627,7 +612,7 @@ static void _bmassflags_init( void) {
 
 /**************************************************************/
 ///*======================================================*/
-///* Writes to Globals.header */
+///* Writes to Globals->header */
 /*
 static void _bmasshdr_init( void) {
   char fields[MAX_OUTFIELDS][MAX_FIELDLEN+1];
@@ -675,10 +660,10 @@ static void _bmasshdr_init( void) {
   // Put header line in global variable
     for (i=0; i< fc-1; i++) {
       sprintf(inbuf,"%s%c", fields[i], BmassFlags.sep);
-      strcat(Globals.bmass.header_line, inbuf);
+      strcat(Globals->bmass.header_line, inbuf);
     }
     sprintf(inbuf,"%s\n", fields[i]);
-    strcat(Globals.bmass.header_line, inbuf);
+    strcat(Globals->bmass.header_line, inbuf);
 }
 */
 
@@ -790,7 +775,7 @@ static void _mortflags_init( void) {
 
 /**************************************************************/
 /*======================================================*/
-/* Writes to Globals.header */
+/* Writes to Globals->header */
 /*
 static void _morthdr_create( void) {
 
@@ -814,10 +799,10 @@ static void _morthdr_create( void) {
   // Put header line in global variable
     for (i=0; i< fc-1; i++) {
       sprintf(inbuf,"%s%c", fields[i], MortFlags.sep);
-      strcat(Globals.mort.header_line, inbuf);
+      strcat(Globals->mort.header_line, inbuf);
     }
     sprintf(inbuf,"%s\n", fields[i]);
-    strcat(Globals.mort.header_line, inbuf);
+    strcat(Globals->mort.header_line, inbuf);
 
 }
 */
@@ -968,7 +953,7 @@ static void _rgroup_add1( char name[], RealF space, RealF density,
   RGroup[rg]->max_stretch   = (IntS) stretch;
   RGroup[rg]->max_spp_estab = (IntS) estab;
   RGroup[rg]->max_density   = density;
-  RGroup[rg]->max_per_sqm   = density / Globals.plotsize;
+  RGroup[rg]->max_per_sqm   = density / Globals->plotsize;
   RGroup[rg]->use_mort      = itob(mort);
   RGroup[rg]->slowrate      = slow;
   RGroup[rg]->min_res_req   = space;
@@ -1067,10 +1052,10 @@ static void _rgroup_addsucculent( char name[],
              MyFileName, name2);
    }
    RGroup[rg]->succulent = TRUE;
-   Succulent.growth[Slope]  = wslope;
-   Succulent.growth[Intcpt] = wint;
-   Succulent.mort[Slope]  = dslope;
-   Succulent.mort[Intcpt] = dint;
+   Succulent->growth[Slope]  = wslope;
+   Succulent->growth[Intcpt] = wint;
+   Succulent->mort[Slope]  = dslope;
+   Succulent->mort[Intcpt] = dint;
 }
 
 /**************************************************************/
@@ -1168,7 +1153,7 @@ static void _species_init( void) {
       Species[sp]->received_prob = 0;
       Species[sp]->cohort_surv = cohort;
       Species[sp]->var = var;
-      Species[sp]->pseed = pseed / Globals.plotsize;
+      Species[sp]->pseed = pseed / Globals->plotsize;
 /*      Species[sp]->ann_mort_prob = (age > 0)
                                          ? -log(cohort)/age
                                          : 0.0;

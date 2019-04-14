@@ -149,7 +149,7 @@ void SXW_Init( Bool init_SW, char *f_roots ) {
    */
 	char roots[MAX_FILENAMESIZE] = { '\0' };
 
-RandSeed(Globals.randseed, &resource_rng);
+RandSeed(Globals->randseed, &resource_rng);
 
 #ifdef SXW_BYMAXSIZE
    GrpIndex rg; SppIndex sp;
@@ -166,7 +166,7 @@ RandSeed(Globals.randseed, &resource_rng);
    _sxwfiles[3] = &SXW.f_prod;
    _sxwfiles[4] = &SXW.f_watin;
 
-  SXW.NGrps = Globals.grpCount;
+  SXW.NGrps = Globals->grpCount;
 
   _read_files();
   if(f_roots != NULL) {
@@ -200,8 +200,8 @@ RandSeed(Globals.randseed, &resource_rng);
   SXW.NSoLyrs = SW_Site.n_layers;
 
   printf("Number of layers: %d\n", SW_Site.n_layers);
-  printf("Number of iterations: %d\n", Globals.runModelIterations);
-  printf("Number of years: %d\n", Globals.runModelYears);
+  printf("Number of iterations: %d\n", Globals->runModelIterations);
+  printf("Number of years: %d\n", Globals->runModelYears);
 
   _make_arrays();
 
@@ -483,7 +483,7 @@ static void  _read_roots_max(void) {
 		}
 	}
 
-	if (cnt < Globals.grpCount) {
+	if (cnt < Globals->grpCount) {
 		LogError(logfp, LOGFATAL, "%s: Not enough valid groups found.",
 				MyFileName);
 	}
@@ -524,7 +524,7 @@ static void _read_phen(void) {
 
   }
 
-  if (cnt < Globals.grpCount) {
+  if (cnt < Globals->grpCount) {
     LogError(logfp, LOGFATAL,
              "%s: Not enough valid groups found.", MyFileName);
   }
@@ -617,7 +617,7 @@ static void _read_prod(void) {
 			break;
 	}
 
-	if (cnt < Globals.grpCount) {
+	if (cnt < Globals->grpCount) {
 		LogError(logfp, LOGFATAL, "%s: Not enough valid groups found.",
 				MyFileName);
 	}
@@ -652,7 +652,7 @@ static void _read_prod(void) {
 			break;
 	}
 
-	if (cnt < Globals.grpCount) {
+	if (cnt < Globals->grpCount) {
 		LogError(logfp, LOGFATAL, "%s: Not enough valid groups found.",
 				MyFileName);
 	}
@@ -910,7 +910,7 @@ void _print_debuginfo(void) {
 	}
 
 	fprintf(f, "\n================== %d =============================\n", SW_Model.year);
-	fprintf(f, "MAP = %d(mm)\tMAT = %5.2f(C)\tAET = %5.4f(cm)\tT = %5.4f(cm)\tTADDED = %5.4f(cm)\tAT = %5.4f(cm)\n\n", Env.ppt, Env.temp, SXW.aet, sum, transp_window.added_transp, sum + transp_window.added_transp);
+	fprintf(f, "MAP = %d(mm)\tMAT = %5.2f(C)\tAET = %5.4f(cm)\tT = %5.4f(cm)\tTADDED = %5.4f(cm)\tAT = %5.4f(cm)\n\n", Env->ppt, Env->temp, SXW.aet, sum, transp_window.added_transp, sum + transp_window.added_transp);
 
 	fprintf(f, "Group     \tRelsize\tPR\tResource_cur\tResource_cur\n");
 	fprintf(f, "-----     \t-------\t-----\t-no scaling-\t-with scaling-\n");

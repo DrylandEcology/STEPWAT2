@@ -201,13 +201,13 @@ static void _add_annual_seedprod(SppIndex sp, RealF lastyear_relsize) {
      * that can establish. Otherwise, this year's seed production is a function
      * of the number of seeds produced per unit biomass multiplied by species biomass
      * (maximum species biomass * last year's species relative size). */
-    if (Globals.currYear == 1) {
+    if (Globals->currYear == 1) {
         s->seedprod[0] = RandUniIntRange(1, s->max_seed_estab, &resgroups_rng);
         //printf("Species name=%s ,currYear =1 so new calculated value s->seedprod[%u]= %hu , s->max_seed_estab =%hu\n", s->name, i, s->seedprod[i], s->max_seed_estab);
 
     } else {
         s->seedprod[0] = (IntU) (s->pseed * s->mature_biomass * lastyear_relsize);
-        //printf("Species name=%s ,currYear=%hu  so new calculated value s->seedprod[%u]= %hu , s->max_seed_estab =%hu, lastyear_relsize=%.5f\n", s->name, Globals.currYear, i, s->seedprod[i], s->max_seed_estab, lastyear_relsize);
+        //printf("Species name=%s ,currYear=%hu  so new calculated value s->seedprod[%u]= %hu , s->max_seed_estab =%hu, lastyear_relsize=%.5f\n", s->name, Globals->currYear, i, s->seedprod[i], s->max_seed_estab, lastyear_relsize);
     }
 }
 
@@ -445,7 +445,7 @@ void rgroup_Grow(void) {
             continue;
 
         /* Succulents can't grow if it is a wet year, so skip */
-        if (g->succulent && Env.wet_dry == Ppt_Wet)
+        if (g->succulent && Env->wet_dry == Ppt_Wet)
             continue;
 
         /* Increment size of each individual in response to normal resources */
@@ -458,7 +458,7 @@ void rgroup_Grow(void) {
 
             /* Modify growth rate by temperature calculated in Env_Generate() */
             if (s->tempclass != NoSeason)
-                tgmod = Env.temp_reduction[s->tempclass];
+                tgmod = Env->temp_reduction[s->tempclass];
 
             /* Now increase size of the individual plants of current species */
             ForEachIndiv(ndv, s) {
@@ -611,7 +611,7 @@ void rgroup_Establish(void) {
     GroupType *g;
 
     /* Cannot establish if plot is still in disturbed state*/
-    if (Plot.disturbed > 0) {
+    if (Plot->disturbed > 0) {
         ForEachGroup(rg)
         RGroup[rg]->regen_ok = FALSE;
         return; /* skip regen for all */
@@ -625,7 +625,7 @@ void rgroup_Establish(void) {
 
         g->regen_ok = TRUE; /* default */
 
-        if (Globals.currYear < RGroup[rg]->startyr) {
+        if (Globals->currYear < RGroup[rg]->startyr) {
             g->regen_ok = FALSE;
 
         } else ///if ( g->max_age == 1 ) {
@@ -634,7 +634,7 @@ void rgroup_Establish(void) {
             ///   if ( LT(g->killfreq, 1.0) ) {
             ///     if (RandUni(&resgroups_rng) <= g->killfreq)
             ///       g->regen_ok = FALSE;
-            ///   } else if ( (Globals.currYear - g->startyr) % (IntU)g->killfreq == 0) {
+            ///   } else if ( (Globals->currYear - g->startyr) % (IntU)g->killfreq == 0) {
             ///     g->regen_ok = FALSE;
             ///   }
             /// }
@@ -652,7 +652,7 @@ void rgroup_Establish(void) {
 
                 /* Establishment for species that belong to annual functional groups*/
                 if (Species[sp]->max_age == 1) {
-                    //printf("Globals.currYear = %hu, call to _add_annuals sp=%d Species[sp]->lastyear_relsize : %.5f \n", Globals.currYear, sp, Species[sp]->lastyear_relsize);
+                    //printf("Globals->currYear = %hu, call to _add_annuals sp=%d Species[sp]->lastyear_relsize : %.5f \n", Globals->currYear, sp, Species[sp]->lastyear_relsize);
                     num_est = _add_annuals(rg, sp, Species[sp]->lastyear_relsize);
                     //  printf("g->seedbank annuals=%d \n",g->seedbank);
                 }
@@ -664,7 +664,7 @@ void rgroup_Establish(void) {
 
                 if (num_est) {
                     /* printf("%d %d %d %d\n",
-                     Globals.currIter, Globals.currYear, sp, num_est); */
+                     Globals->currIter, Globals->currYear, sp, num_est); */
 
                     Species_Add_Indiv(sp, num_est);
                     species_Update_Estabs(sp, num_est);
@@ -707,8 +707,8 @@ void rgroup_IncrAges(void)
 					LogError(logfp, LOGWARN,
 							"%s grown older than max_age (%d > %d). Iter=%d, Year=%d\n",
 							Species[ndv->myspecies]->name, ndv->age,
-							Species[ndv->myspecies]->max_age, Globals.currIter,
-							Globals.currYear);
+							Species[ndv->myspecies]->max_age, Globals->currIter,
+							Globals->currYear);
 				}
 			}
 		}
@@ -889,9 +889,9 @@ GrpIndex RGroup_New(void)
 	/* Chris Bennett @ LTER-CSU 6/15/2000            */
 
 	/*------------------------------------------------------*/
-	GrpIndex i = (GrpIndex) Globals.grpCount;
+	GrpIndex i = (GrpIndex) Globals->grpCount;
 
-	if (++Globals.grpCount > MAX_RGROUPS)
+	if (++Globals->grpCount > MAX_RGROUPS)
 	{
 		LogError(logfp, LOGFATAL, "Too many groups specified (>%d)!\n"
 				"You must adjust MAX_RGROUPS and recompile!",

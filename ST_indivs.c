@@ -223,7 +223,7 @@ void indiv_proportion_Kill(IndivType *ndv, int killType, RealF proportKilled)
 	     LogError(logfp, LOGWARN, "%s dies older than max_age (%d > %d). Iter=%d, Year=%d\n",
 			                    Species[ndv->myspecies]->name,
 			                    ndv->age, Species[ndv->myspecies]->max_age,
-			                    Globals.currIter, Globals.currYear);
+			                    Globals->currIter, Globals->currYear);
 	}
 
 	//if (!UseGrid)
@@ -353,7 +353,7 @@ void indiv_Kill_Complete( IndivType *ndv, int killType) {
     LogError(logfp, LOGWARN, "%s dies older than max_age (%d > %d). Iter=%d, Year=%d\n",
                     Species[ndv->myspecies]->name,
                     ndv->age, Species[ndv->myspecies]->max_age,
-                    Globals.currIter, Globals.currYear);
+                    Globals->currIter, Globals->currYear);
   }
  // if(!UseGrid)
 //	  insertIndivKill(ndv->id,killType);

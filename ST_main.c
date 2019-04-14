@@ -86,6 +86,7 @@ SW_FILE_STATUS SW_File_Status;
 /*************** Local Function Declarations ***************/
 /***********************************************************/
 void Plot_Initialize( void);
+void allocate_Globals(void);
 
 static void usage(void) {
   char *s ="STEPPE plant community dynamics (SGS-LTER Jan-04).\n"
@@ -120,10 +121,10 @@ FILE *logfp,   /* used everywhere by LogError */
 int logged;  /* indicator that err file was written to */
 SpeciesType   *Species[MAX_SPECIES];
 GroupType     *RGroup [MAX_RGROUPS];
-SucculentType  Succulent;
-EnvType        Env;
-PlotType       Plot;
-ModelType      Globals;
+SucculentType  *Succulent;
+EnvType        *Env;
+PlotType       *Plot;
+ModelType      *Globals;
 BmassFlagsType BmassFlags;
 MortFlagsType  MortFlags;
 
@@ -159,6 +160,7 @@ int main(int argc, char **argv) {
   storeAllIterations = FALSE; // dont want to store all soilwat output iterations unless -i flag
   STdebug_requested = FALSE;
 
+	allocate_Globals();
 	init_args(argc, argv); // read input arguments and intialize proper flags
 
 	printf("STEPWAT  init_args() executed successfully \n");
@@ -184,12 +186,12 @@ int main(int argc, char **argv) {
 	    ST_connect("Output/stdebug");
 	}
 
-	incr = (IntS) ((float) Globals.runModelIterations / 10);
+	incr = (IntS) ((float) Globals->runModelIterations / 10);
 	if (incr == 0)
 		incr = 1;
 
 	/* --- Begin a new iteration ------ */
-	for (iter = 1; iter <= Globals.runModelIterations; iter++) {
+	for (iter = 1; iter <= Globals->runModelIterations; iter++) {
 		if (progfp == stderr) {
 			if (iter % incr == 0)
 				fprintf(progfp, ".");
@@ -201,29 +203,29 @@ int main(int argc, char **argv) {
 
 		Plot_Initialize();
 
-		RandSeed(Globals.randseed, &environs_rng);
-		RandSeed(Globals.randseed, &mortality_rng);
-		RandSeed(Globals.randseed, &resgroups_rng);
-		RandSeed(Globals.randseed, &species_rng);
-		RandSeed(Globals.randseed, &grid_rng);
-		RandSeed(Globals.randseed, &markov_rng);
+		RandSeed(Globals->randseed, &environs_rng);
+		RandSeed(Globals->randseed, &mortality_rng);
+		RandSeed(Globals->randseed, &resgroups_rng);
+		RandSeed(Globals->randseed, &species_rng);
+		RandSeed(Globals->randseed, &grid_rng);
+		RandSeed(Globals->randseed, &markov_rng);
 
-		Globals.currIter = iter;
+		Globals->currIter = iter;
                 
 		if (storeAllIterations) {
-			SW_OUT_create_iteration_files(Globals.currIter);
+			SW_OUT_create_iteration_files(Globals->currIter);
 		}
 
 		if (prepare_IterationSummary) {
-			print_IterationSummary = (Bool) (Globals.currIter == Globals.runModelIterations);
+			print_IterationSummary = (Bool) (Globals->currIter == Globals->runModelIterations);
 		}
 
 		/* ------  Begin running the model ------ */
-		for (year = 1; year <= Globals.runModelYears; year++) {
+		for (year = 1; year <= Globals->runModelYears; year++) {
 
       //printf("------------------------Repetition/year = %d / %d\n", iter, year);
 
-			Globals.currYear = year;
+			Globals->currYear = year;
 
 			rgroup_Establish();
 
@@ -287,7 +289,7 @@ int main(int argc, char **argv) {
 
 		// dont need to restart if last iteration finished
 		// this keeps it from re-writing the output folder and overwriting output files
-		if (Globals.currIter != Globals.runModelIterations)
+		if (Globals->currIter != Globals->runModelIterations)
 		{
 			// don't reset in last iteration because we need to close files
 			// before clearing/de-allocated SOILWAT2-memory
@@ -400,6 +402,14 @@ void Plot_Initialize(void) {
 	}
 
 	SXW_InitPlot();
+}
+
+/* Allocates memory for any global variables defined as pointers */
+void allocate_Globals(void){
+	Env = (EnvType*) Mem_Calloc(1, sizeof(EnvType), "allocate_Globals: Env");
+	Succulent = (SucculentType*) Mem_Calloc(1, sizeof(SucculentType), "allocate_Globals: Succulent");
+	Globals = (ModelType*) Mem_Calloc(1, sizeof(ModelType), "allocate_Globals: Globals");
+	Plot = (PlotType*) Mem_Calloc(1, sizeof(PlotType), "allocate_Globals: Plot");
 }
 
 
@@ -610,7 +620,7 @@ void check_sizes(const char *chkpt) {
             if (LT(diff, fabs(spsize - Species[sp]->relsize))) {
                 LogError(stdout, LOGWARN, "%s (%d:%d): SP: \"%s\" size error: "
                         "SP=%.7f, ndv=%.7f",
-                        chkpt, Globals.currIter, Globals.currYear,
+                        chkpt, Globals->currIter, Globals->currYear,
                         Species[sp]->name, Species[sp]->relsize, spsize);
             }
         }
@@ -618,7 +628,7 @@ void check_sizes(const char *chkpt) {
         if (LT(diff, fabs(rgsize - RGroup[rg]->relsize))) {
             LogError(stdout, LOGWARN, "%s (%d:%d): RG \"%s\" size error: "
                     "RG=%.7f, ndv=%.7f",
-                    chkpt, Globals.currIter, Globals.currYear,
+                    chkpt, Globals->currIter, Globals->currYear,
                     RGroup[rg]->name, RGroup[rg]->relsize, rgsize);
         }
     }

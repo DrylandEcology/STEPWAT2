@@ -216,7 +216,7 @@ extern pcg32_random_t markov_rng;
 
 //This is Rgroup structure pointer that will read rgroup disturbance value, will be used in
 // grid disturbance
-//extern GroupType     *RGroup [MAX_RGROUPS]; // don't need to extern here, because this is done in ST_globals.h
+//extern GroupType     *RGroup [MAX_RGROUPS]; // don't need to extern here, because this is done in ST_Globals->h
 
 // these are grids to store the SOILWAT variables... also dynamically allocated/freed
 SW_SOILWAT *grid_SW_Soilwat, *spinup_SW_Soilwat;
@@ -455,8 +455,8 @@ void runGrid(void)
 	if (UseProgressBar)
 	{
 		prog_Incr = (((double) 1)
-				/ ((double) ((Globals.runModelYears * grid_Cells)
-						* Globals.runModelIterations))); //gets how much progress we'll make in one year towards our goal of iter*years*cells
+				/ ((double) ((Globals->runModelYears * grid_Cells)
+						* Globals->runModelIterations))); //gets how much progress we'll make in one year towards our goal of iter*years*cells
 		prog_Time = clock();  //used for timing
 		sprintf(prog_Prefix, "simulations: ");
 	}
@@ -464,7 +464,7 @@ void runGrid(void)
 	char aString[2048];
 	sprintf(aString, "%s/%s", grid_directories[0], SW_Weather.name_prefix);
 
-	for (iter = 1; iter <= Globals.runModelIterations; iter++)
+	for (iter = 1; iter <= Globals->runModelIterations; iter++)
 	{ //for each iteration
 
 		/*
@@ -478,20 +478,20 @@ void runGrid(void)
 
 		Plot_Initialize();
 
-		RandSeed(Globals.randseed, &environs_rng);
-	RandSeed(Globals.randseed, &mortality_rng);
-	RandSeed(Globals.randseed, &resgroups_rng);
-	RandSeed(Globals.randseed, &species_rng);
-	RandSeed(Globals.randseed, &grid_rng);
-	RandSeed(Globals.randseed, &markov_rng);
+		RandSeed(Globals->randseed, &environs_rng);
+	RandSeed(Globals->randseed, &mortality_rng);
+	RandSeed(Globals->randseed, &resgroups_rng);
+	RandSeed(Globals->randseed, &species_rng);
+	RandSeed(Globals->randseed, &grid_rng);
+	RandSeed(Globals->randseed, &markov_rng);
 
 		if (iter > 1)
 			_free_grid_globals(); //frees the memory from when we called _load_grid_globals() last time... (doesn't need to be called on the first iteration because the memory hasn't been allocated yet)
 
-		Globals.currIter = iter;
+		Globals->currIter = iter;
 		_load_grid_globals(); //allocates/initializes grid variables (specifically the ones that are going to change every iter)
 
-		for (year = 1; year <= Globals.runModelYears; year++)
+		for (year = 1; year <= Globals->runModelYears; year++)
 		{ //for each year
 			for (i = 1; i <= grid_Rows; i++)
 				for (j = 1; j <= grid_Cols; j++)
@@ -512,7 +512,7 @@ void runGrid(void)
 							_load_spinup_cell(spinup_cell); // loads the spinup cell into the global variables
 					}
 
-					Globals.currYear = year;
+					Globals->currYear = year;
 
 					if (year > 1 && UseSeedDispersal)
 						_set_sd_lyppt(i, j);
@@ -564,10 +564,10 @@ void runGrid(void)
 			for (i = 1; i <= grid_Rows; i++)
 				for (j = 1; j <= grid_Cols; j++)
 				{
-					_load_cell(i, j, Globals.runModelYears, TRUE);
+					_load_cell(i, j, Globals->runModelYears, TRUE);
 					stat_Collect_GMort();
 					stat_Collect_SMort();
-					_save_cell(i, j, Globals.runModelYears, TRUE);
+					_save_cell(i, j, Globals->runModelYears, TRUE);
 				}
 		//reset soilwat to initial condition
 		ChDir(grid_directories[0]);
@@ -597,7 +597,7 @@ void runGrid(void)
 
 			int cell = j + ((i - 1) * grid_Cols) - 1;
 			_load_cell(i, j, 1, TRUE);
-			for (year = 2; year <= Globals.runModelYears; year++) // _load_cell gets the first years accumulators loaded, so we start at 2...
+			for (year = 2; year <= Globals->runModelYears; year++) // _load_cell gets the first years accumulators loaded, so we start at 2...
 				stat_Load_Accumulators(cell, year);
 
 			char fileMort[1024], fileBMass[1024], fileReceivedProb[1024];
@@ -672,10 +672,10 @@ static void _run_spinup(void)
 
 		Plot_Initialize();
 
-		Globals.currIter = iter;
+		Globals->currIter = iter;
 		//_load_grid_globals(); //allocates/initializes grid variables (specifically the ones that are going to change every iter)
 
-		for (year = 1; year <= Globals.runModelYears; year++)
+		for (year = 1; year <= Globals->runModelYears; year++)
 		{ //for each year
 			for (spinup_Cell = 0; spinup_Cell < nSoilTypes; spinup_Cell++)
 			{ // for each different soil type
@@ -685,7 +685,7 @@ static void _run_spinup(void)
 				//int i = ((cell + 1 - j) / grid_Cols) + 1; // this is the row of the first cell of this soiltype
 
 				_load_spinup_cell(spinup_Cell);
-				Globals.currYear = year;
+				Globals->currYear = year;
 
 			//	_do_grid_disturbances(i, j);
 
@@ -788,7 +788,7 @@ static void _init_grid_inputs(void)
 		LogError(logfp, LOGFATAL,
 				"Number of cells in grid exceeds MAX_CELLS defined in ST_defines.h");
 
-	Globals.nCells = (grid_Cols * grid_Rows);
+	Globals->nCells = (grid_Cols * grid_Rows);
 
 	GetALine(f, buf);
 	i = sscanf(buf, "%d", &UseDisturbances);
@@ -987,7 +987,7 @@ static void _init_grid_globals(void)
 				"_init_grid_globals()");
 		for (i = 0; i < grid_Cells; i++)
 			grid_initSpecies[i].species_seed_avail = Mem_Calloc(
-					Globals.sppCount, sizeof(int), "_init_grid_globals()");
+					Globals->sppCount, sizeof(int), "_init_grid_globals()");
 	}
 
 	//if(sd_Option2a || sd_Option2b) {
@@ -1092,10 +1092,10 @@ static void _load_grid_globals(void)
 			}
 		}
 
-		grid_Succulent[i] = Succulent;
-		grid_Env[i] = Env;
-		grid_Plot[i] = Plot;
-		grid_Globals[i] = Globals;
+		grid_Succulent[i] = *Succulent;
+		grid_Env[i] = *Env;
+		grid_Plot[i] = *Plot;
+		grid_Globals[i] = *Globals;
 
 		if (UseDisturbances)
 		{
@@ -1205,10 +1205,10 @@ static void _load_spinup_globals(void)
 			}
 		}
 
-		spinup_Succulent[i] = Succulent;
-		spinup_Env[i] = Env;
-		spinup_Plot[i] = Plot;
-		spinup_Globals[i] = Globals;
+		spinup_Succulent[i] = *Succulent;
+		spinup_Env[i] = *Env;
+		spinup_Plot[i] = *Plot;
+		spinup_Globals[i] = *Globals;
 
 		if (UseDisturbances)
 		{
@@ -1553,10 +1553,10 @@ static void _load_cell(int row, int col, int year, Bool useAccumulators)
 				grid_RGroup[c][cell].max_age * sizeof(IntUS));
 	}
 
-	Succulent = grid_Succulent[cell];
-	Env = grid_Env[cell];
-	Plot = grid_Plot[cell];
-	Globals = grid_Globals[cell];
+	*Succulent = grid_Succulent[cell];
+	*Env = grid_Env[cell];
+	*Plot = grid_Plot[cell];
+	*Globals = grid_Globals[cell];
 
 	Mem_Free(SXW.f_roots);
 	Mem_Free(SXW.f_phen);
@@ -1672,10 +1672,10 @@ static void _load_spinup_cell(int cell)
 				spinup_RGroup[c][cell].max_age * sizeof(IntUS));
 	}
 
-	Succulent = spinup_Succulent[cell];
-	Env = spinup_Env[cell];
-	Plot = spinup_Plot[cell];
-	Globals = spinup_Globals[cell];
+	*Succulent = spinup_Succulent[cell];
+	*Env = spinup_Env[cell];
+	*Plot = spinup_Plot[cell];
+	*Globals = spinup_Globals[cell];
 
 	Mem_Free(SXW.f_roots);
 	Mem_Free(SXW.f_phen);
@@ -1795,10 +1795,10 @@ static void _save_cell(int row, int col, int year, Bool useAccumulators)
 				RGroup[c]->max_age * sizeof(IntUS));
 	}
 
-	grid_Succulent[cell] = Succulent;
-	grid_Env[cell] = Env;
-	grid_Plot[cell] = Plot;
-	grid_Globals[cell] = Globals;
+	grid_Succulent[cell] = *Succulent;
+	grid_Env[cell] = *Env;
+	grid_Plot[cell] = *Plot;
+	grid_Globals[cell] = *Globals;
 
 	Mem_Free(grid_SXW[cell].f_roots);
 	Mem_Free(grid_SXW[cell].f_phen);
@@ -1911,10 +1911,10 @@ static void _save_spinup_cell(int cell)
 				RGroup[c]->max_age * sizeof(IntUS));
 	}
 
-	spinup_Succulent[cell] = Succulent;
-	spinup_Env[cell] = Env;
-	spinup_Plot[cell] = Plot;
-	spinup_Globals[cell] = Globals;
+	spinup_Succulent[cell] = *Succulent;
+	spinup_Env[cell] = *Env;
+	spinup_Plot[cell] = *Plot;
+	spinup_Globals[cell] = *Globals;
 
 	Mem_Free(spinup_SXW[cell].f_roots);
 	Mem_Free(spinup_SXW[cell].f_phen);
@@ -2571,7 +2571,7 @@ static void _read_seed_dispersal_in(void)
 		MAXD = ((H * VW) / VT) / 100.0; // divide by 100.0 because we want it in meters, not centimeters
 		sd_Rate = -(log(0.05) / MAXD); //sd_Rate is the seed dispersal rate... 0.05 = exp(-RATE*MAXD) => RATE = -(ln(0.05)/MAXD) See Coffin et al. 1993
 
-		plotLength = sqrt(Globals.plotsize);
+		plotLength = sqrt(Globals->plotsize);
 		MAXDP = (int) ceil(MAXD / plotLength); //MAXD in terms of plots... rounds up to the nearest integer
 		maxCells = (int) pow((MAXDP * 2) + 1.0, 2.0); //gets the maximum number of cells that a grid cell can possibly disperse seeds to... it ends up being more then the maximum actually...
 		if (grid_Cells < maxCells)
@@ -2635,7 +2635,7 @@ static void _do_seed_dispersal(void)
 	int i, j, germ, sgerm, year;
 	SppIndex s;
 
-	if (Globals.currYear == 1 && !sd_Option1a && !sd_Option1b)
+	if (Globals->currYear == 1 && !sd_Option1a && !sd_Option1b)
 	{ //since we have no previous data to go off of, use the current years...
 		for (i = 0; i < grid_Cells; i++)
 			ForEachSpecies(s)
@@ -2663,17 +2663,17 @@ static void _do_seed_dispersal(void)
 			randomN = RandUni(&grid_rng);
 			germ = LE(randomN, Species[s]->seedling_estab_prob);
 
-			year = Globals.currYear - 1;
+			year = Globals->currYear - 1;
 
 			for (i = 0; i < grid_Cells; i++)
 			{
 
-				if (sd_Option1a && Globals.currYear <= sd_NYearsSeedsAvailable)
+				if (sd_Option1a && Globals->currYear <= sd_NYearsSeedsAvailable)
 				{
 					grid_SD[s][i].seeds_present = 1;
 				}
 				else if (sd_Option1b
-						&& Globals.currYear <= sd_NYearsSeedsAvailable
+						&& Globals->currYear <= sd_NYearsSeedsAvailable
 						&& grid_initSpecies[i].species_seed_avail[s])
 				{
 					grid_SD[s][i].seeds_present = 1;
@@ -2692,9 +2692,9 @@ static void _do_seed_dispersal(void)
 					/*&& (year != grid_Disturb[i].kill_yr)*/)
 					{
 						//commented above one condition as it was causing a bug there, next year of killing year will make
-						//allow_growth flag to false as 	year = Globals.currYear - 1 , so for example if killing year= 6 and Globals.currYear=7 then here
+						//allow_growth flag to false as 	year = Globals->currYear - 1 , so for example if killing year= 6 and Globals->currYear=7 then here
 						// year variable will be 7-1 =6 that is equal to killing year 6, so this condition (year != grid_Disturb[i].kill_yr)
-						//will fail and allow_growth will not become TRUE, then when Globals.currYear=8 this allow_growth= FALSE will carry forward and there will no call
+						//will fail and allow_growth will not become TRUE, then when Globals->currYear=8 this allow_growth= FALSE will carry forward and there will no call
 						// to other functions like Species_Update_Newsize() so new size will not be updated and last year size will carry forward so in final output year 7 and year 8 will
 						// have same output that is not correct.
 						grid_Species[s][i].allow_growth = TRUE;
@@ -2704,8 +2704,8 @@ static void _do_seed_dispersal(void)
 				else if (sgerm || GT(biomass, 0.0))
 					grid_Species[s][i].allow_growth = TRUE;
 				grid_Species[s][i].sd_sgerm = sgerm; //based upon whether we have received/produced seeds that germinated
-				//if(grid_Species[s][i].allow_growth == TRUE &&  i == 52 && s == 0 && Globals.currIter == 1)
-				//	printf("%s allow_growth:%d year:%d sgerm:%d iter:%d\n", grid_Species[s][i].name, grid_Species[s][i].allow_growth, year, sgerm, Globals.currIter);
+				//if(grid_Species[s][i].allow_growth == TRUE &&  i == 52 && s == 0 && Globals->currIter == 1)
+				//	printf("%s allow_growth:%d year:%d sgerm:%d iter:%d\n", grid_Species[s][i].name, grid_Species[s][i].allow_growth, year, sgerm, Globals->currIter);
 			}
 		}
 
@@ -2827,7 +2827,7 @@ static void _kill_groups_and_species(void)
 	GrpIndex rg;
 	ForEachGroup(rg)
 	{
-		if (Globals.currYear < RGroup[rg]->startyr)
+		if (Globals->currYear < RGroup[rg]->startyr)
 		{
 			/* don't start trying to kill until RGroup[rg]->startyr year as nothing grow till now */
 			continue;
@@ -2861,34 +2861,34 @@ static int _do_grid_disturbances(int row, int col)
 	if(UseDisturbances)
 	{
 		int cell = col + ((row - 1) * grid_Cols) - 1;
-//		printf( "inside _do_grid_disturbances Globals.currYear =%d, cell=%d, grid_Disturb[cell].kill_yr =%d \n",
-//							Globals.currYear, cell, grid_Disturb[cell].kill_yr);
-		if ((Globals.currYear >=grid_Disturb[cell].killfreq_startyr) && GT((float)grid_Disturb[cell].killfrq, 0.))
+//		printf( "inside _do_grid_disturbances Globals->currYear =%d, cell=%d, grid_Disturb[cell].kill_yr =%d \n",
+//							Globals->currYear, cell, grid_Disturb[cell].kill_yr);
+		if ((Globals->currYear >=grid_Disturb[cell].killfreq_startyr) && GT((float)grid_Disturb[cell].killfrq, 0.))
 		{
 			if (LT((float)grid_Disturb[cell].killfrq, 1.0))
 			{
 				if (RandUni(&grid_rng) <= grid_Disturb[cell].killfrq)
 				{
-					grid_Disturb[cell].kill_yr = Globals.currYear;
+					grid_Disturb[cell].kill_yr = Globals->currYear;
 				}
 
 			}
-			else if (((Globals.currYear - grid_Disturb[cell].killfreq_startyr) % (IntU) grid_Disturb[cell].killfrq) == 0)
+			else if (((Globals->currYear - grid_Disturb[cell].killfreq_startyr) % (IntU) grid_Disturb[cell].killfrq) == 0)
 			{
-				grid_Disturb[cell].kill_yr = Globals.currYear;
+				grid_Disturb[cell].kill_yr = Globals->currYear;
 			}
 
 		}
 
-		if (Globals.currYear == grid_Disturb[cell].extirp)
+		if (Globals->currYear == grid_Disturb[cell].extirp)
 		{
 			_do_groups_and_species_extirpate();
 			return 1;
 		}
-		else if (Globals.currYear == grid_Disturb[cell].kill_yr)
+		else if (Globals->currYear == grid_Disturb[cell].kill_yr)
 		{
-//			printf( "current year matched with cell kill_year so calling  _kill_groups_and_species() Globals.currYear =%d, cell=%d, grid_Disturb[cell].kill_yr =%d \n",
-//							Globals.currYear, cell, grid_Disturb[cell].kill_yr);
+//			printf( "current year matched with cell kill_year so calling  _kill_groups_and_species() Globals->currYear =%d, cell=%d, grid_Disturb[cell].kill_yr =%d \n",
+//							Globals->currYear, cell, grid_Disturb[cell].kill_yr);
 			_kill_groups_and_species();
 			return 1;
 		}
@@ -2910,32 +2910,32 @@ static void _do_grid_proportion_Recovery(int row, int col)
 	if (UseDisturbances)
 	{
 		int cell = col + ((row - 1) * grid_Cols) - 1;
-//		printf( "inside _do_grid_proportion_Recovery Globals.currYear =%d, cell=%d, grid_Disturb[cell].kill_yr =%d \n",
-//							Globals.currYear, cell, grid_Disturb[cell].kill_yr);
-		if ((Globals.currYear >= grid_Disturb[cell].killfreq_startyr) && GT((float)grid_Disturb[cell].killfrq, 0.))
+//		printf( "inside _do_grid_proportion_Recovery Globals->currYear =%d, cell=%d, grid_Disturb[cell].kill_yr =%d \n",
+//							Globals->currYear, cell, grid_Disturb[cell].kill_yr);
+		if ((Globals->currYear >= grid_Disturb[cell].killfreq_startyr) && GT((float)grid_Disturb[cell].killfrq, 0.))
 		{
 			if (LT((float)grid_Disturb[cell].killfrq, 1.0))
 			{
 				if (RandUni(&grid_rng) <= grid_Disturb[cell].killfrq)
 				{
-					grid_Disturb[cell].kill_yr = Globals.currYear;
+					grid_Disturb[cell].kill_yr = Globals->currYear;
 				}
 
 			}
-			else if (((Globals.currYear - grid_Disturb[cell].killfreq_startyr) % (IntU) grid_Disturb[cell].killfrq) == 0)
+			else if (((Globals->currYear - grid_Disturb[cell].killfreq_startyr) % (IntU) grid_Disturb[cell].killfrq) == 0)
 			{
-				grid_Disturb[cell].kill_yr = Globals.currYear;
+				grid_Disturb[cell].kill_yr = Globals->currYear;
 			}
 
 		}
 
 		//rgroup proportion recovery
-		if (Globals.currYear == grid_Disturb[cell].kill_yr)
+		if (Globals->currYear == grid_Disturb[cell].kill_yr)
 		{
 			GrpIndex rg;
 			ForEachGroup(rg)
 			{
-				if (Globals.currYear < RGroup[rg]->startyr)
+				if (Globals->currYear < RGroup[rg]->startyr)
 				{
 					/* don't start trying to grow until RGroup[rg]->startyr year */
 					continue;
@@ -2983,30 +2983,30 @@ static void _do_grid_grazing_EndOfYear(int row, int col)
 		IntU grazingyr = 0;
 		int cell = col + ((row - 1) * grid_Cols) - 1;
 
-		if ((Globals.currYear >=grid_Disturb[cell].grazingfreq_startyr) && grid_Disturb[cell].grazing_frq > 0.)
+		if ((Globals->currYear >=grid_Disturb[cell].grazingfreq_startyr) && grid_Disturb[cell].grazing_frq > 0.)
 		{
 			if (grid_Disturb[cell].grazing_frq < 1.0)
 			{
 				if (RandUni(&grid_rng) <= grid_Disturb[cell].grazing_frq)
 				{
-					grazingyr = Globals.currYear;
+					grazingyr = Globals->currYear;
 				}
 
 			}
-			else if (((Globals.currYear - grid_Disturb[cell].grazingfreq_startyr) % (IntU) grid_Disturb[cell].grazing_frq) == 0)
+			else if (((Globals->currYear - grid_Disturb[cell].grazingfreq_startyr) % (IntU) grid_Disturb[cell].grazing_frq) == 0)
 			{
-				grazingyr = Globals.currYear;
+				grazingyr = Globals->currYear;
 			}
 
 		}
 
 		//rgroup proportion grazing
-		if (Globals.currYear == grazingyr)
+		if (Globals->currYear == grazingyr)
 		{
 			GrpIndex rg;
 			ForEachGroup(rg)
 			{
-				if (Globals.currYear < RGroup[rg]->startyr)
+				if (Globals->currYear < RGroup[rg]->startyr)
 				{
 					/* don't start trying to grow or do grazing until RGroup[rg]->startyr year */
 					continue;
@@ -3022,7 +3022,7 @@ static void _do_grid_grazing_EndOfYear(int row, int col)
 					}
 					else
 					{
-						// printf( "year = %d, calling Species_Proportion_Grazing() with rgroup name= %s , RGroup[%d]->proportion_grazing =%f for Species[%d]->name= %s \n", Globals.currYear,RGroup[rg]->name, rg,RGroup[rg]->proportion_grazing, i, Species[RGroup[rg]->est_spp[i]]->name);
+						// printf( "year = %d, calling Species_Proportion_Grazing() with rgroup name= %s , RGroup[%d]->proportion_grazing =%f for Species[%d]->name= %s \n", Globals->currYear,RGroup[rg]->name, rg,RGroup[rg]->proportion_grazing, i, Species[RGroup[rg]->est_spp[i]]->name);
 			     		Species_Proportion_Grazing(RGroup[rg]->est_spp[i], RGroup[rg]->proportion_grazing);
 					}
 
@@ -3068,7 +3068,7 @@ static void _read_init_species(void)
 		if (do_copy == 1 && copy_cell > -1 && copy_cell < grid_Cells
 				&& cell != 0 && copy_cell < cell)
 		{ //copy this cells values from a previous cell's
-			for (j = 0; j < Globals.sppCount; j++)
+			for (j = 0; j < Globals->sppCount; j++)
 				grid_initSpecies[i].species_seed_avail[j] =
 						grid_initSpecies[copy_cell].species_seed_avail[j];
 			grid_initSpecies[i].use_SpinUp =
