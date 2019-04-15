@@ -87,6 +87,7 @@ SW_FILE_STATUS SW_File_Status;
 /***********************************************************/
 void Plot_Initialize( void);
 void allocate_Globals(void);
+void deallocate_Globals(void);
 
 static void usage(void) {
   char *s ="STEPPE plant community dynamics (SGS-LTER Jan-04).\n"
@@ -317,6 +318,8 @@ int main(int argc, char **argv) {
   SW_CTL_clear_model(TRUE); // de-allocate all memory
   free_all_sxw_memory();
 
+	deallocate_Globals();
+
   printf("\nend program\n");
 	fprintf(progfp, "\n");
 
@@ -412,6 +415,12 @@ void allocate_Globals(void){
 	Plot = (PlotType*) Mem_Calloc(1, sizeof(PlotType), "allocate_Globals: Plot");
 }
 
+void deallocate_Globals(void){
+	Mem_Free(Env);
+	Mem_Free(Succulent);
+	Mem_Free(Globals);
+	Mem_Free(Plot);
+}
 
 /**************************************************************/
 static void init_args(int argc, char **argv) {
