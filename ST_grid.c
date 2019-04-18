@@ -196,6 +196,8 @@ EnvType *grid_Env, *spinup_Env;
 PlotType *grid_Plot, *spinup_Plot;
 ModelType *grid_Globals, *spinup_Globals;
 
+CellType** gridCells;
+
 // these two variables are for storing SXW variables... also dynamically allocated/freed
 SXW_t *grid_SXW, *spinup_SXW;
 Grid_SXW_St *grid_SXW_ptrs, *spinup_SXW_ptrs;
@@ -311,6 +313,7 @@ static void _init_SXW_inputs(Bool init_SW, char *f_roots);
 static void _init_stepwat_inputs(void);
 static void _init_grid_globals(void);
 static void _init_spinup_globals(void);
+static void allocate_gridCells(int rows, int cols);
 static void _load_grid_globals(void);
 static void _load_spinup_globals(void);
 static void _free_grid_memory(void);
@@ -318,6 +321,7 @@ static void _free_spinup_memory(void);
 static void _free_grid_globals(void);
 static void _free_spinup_globals(void);
 static void _load_cell(int row, int col, int year, Bool useAccumulators);
+static void load_cell(int row, int col);
 static void _load_spinup_cell(int cell);
 static void _save_cell(int row, int col, int year, Bool useAccumulators);
 static void _save_spinup_cell(int cell);
@@ -442,6 +446,7 @@ void runGrid(void)
 	Mem_Free(SW_Soilwat.hist.file_prefix);
 	SW_Soilwat.hist.file_prefix = NULL;
 	_init_grid_inputs();// reads the grid inputs in & initializes the global grid variables
+	allocate_gridCells(grid_Rows, grid_Cols);
 
 	if (sd_Option2a || sd_Option2b)
 		_run_spinup();				// does the initial spinup
@@ -848,6 +853,15 @@ static void _init_stepwat_inputs(void)
 	_init_SXW_inputs(TRUE, NULL);
 
 	ChDir("..");					// goes back to the folder that we were in
+}
+
+/* Allocates memory for the grid cells. This only needs to be called once. */
+static void allocate_gridCells(int rows, int cols){
+	int i;
+	gridCells = (CellType**) Mem_Calloc(rows, sizeof(CellType*), "allocate_gridCells: rows");
+	for(i = 0; i < rows; ++i){
+		gridCells[i] = (CellType*) Mem_Calloc(cols, sizeof(CellType), "allocate_gridCells: columns");
+	}
 }
 
 /***********************************************************/
@@ -1623,6 +1637,34 @@ static void _load_cell(int row, int col, int year, Bool useAccumulators)
 				grid_SXW_ptrs[cell].roots_active_sum,
 				grid_SXW_ptrs[cell].phen, grid_SXW_ptrs[cell].prod_bmass,
 				grid_SXW_ptrs[cell].prod_pctlive);
+}
+
+/* load gridCells[row][col] into the globals variables */
+static void load_cell(int row, int col){
+	/* These are commented out until the clean_code_lowpriority
+	 * branch is merged into this branch 
+	RGroup = &gridCells[row][col].myGroup;
+	Species = &gridCells[row][col].mySpecies;
+	 */
+
+	/* Succulents corresponding to this cell */
+	Succulent = &gridCells[row][col].mySucculent;
+
+	/* This cell's environment. We expect each cell to
+	 * have slightly different weather each year */
+	Env = &gridCells[row][col].myEnvironment;
+
+	/* Cell's plot data */
+	Plot = &gridCells[row][col].myPlot;
+
+	/* Global variables corresponding to this cell */ 
+	Globals = &gridCells[row][col].myGlobals;
+
+	/* If TRUE this cell should use seed dispersal */
+	UseSeedDispersal = gridCells[row][col].useSeedDispersal;
+
+	/* TRUE if this cell is in spinup mode */
+	DuringSpinup = gridCells[row][col].duringSpinup;
 }
 
 /***********************************************************/
