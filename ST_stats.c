@@ -64,7 +64,7 @@
 
 /************************ Local Structure Defs *************/
 /***********************************************************/
-StatType _Dist, _Ppt, _Temp,
+StatType *_Dist, *_Ppt, *_Temp,
   *_Grp, *_Gsize, *_Gpr, *_Gmort, *_Gestab,
   *_Spp, *_Indv, *_Smort, *_Sestab, *_Sreceived;
 
@@ -136,13 +136,13 @@ void stat_Collect( Int year ) {
 
   year--;
   if (BmassFlags.dist && Plot->disturbed)
-    _Dist.s[year].nobs++;
+    _Dist->s[year].nobs++;
 
   if (BmassFlags.ppt)
-    _collect_add( &_Ppt.s[year], Env->ppt);
+    _collect_add( &_Ppt->s[year], Env->ppt);
 
   if (BmassFlags.tmp)
-    _collect_add( &_Temp.s[year], Env->temp);
+    _collect_add( &_Temp->s[year], Env->temp);
 
   if (BmassFlags.grpb) {
     if (BmassFlags.wildfire) {
@@ -280,21 +280,27 @@ static void _init( void) {
 
   }
 
-  if (BmassFlags.dist)
-    _Dist.s = (struct accumulators_st *)
+  if (BmassFlags.dist) {
+    _Dist = (StatType*) Mem_Calloc(1, sizeof(StatType), "_stat_init(Dist)");
+    _Dist->s = (struct accumulators_st *)
                Mem_Calloc( Globals->runModelYears,
                            sizeof(struct accumulators_st),
                           "_stat_init(Dist)");
-  if (BmassFlags.ppt)
-    _Ppt.s  = (struct accumulators_st *)
+  }
+  if (BmassFlags.ppt) {
+    _Ppt = (StatType*) Mem_Calloc(1, sizeof(StatType), "_stat_init(PPT");
+    _Ppt->s  = (struct accumulators_st *)
                Mem_Calloc( Globals->runModelYears,
                            sizeof(struct accumulators_st),
                           "_stat_init(PPT)");
-  if (BmassFlags.tmp)
-    _Temp.s = (struct accumulators_st *)
+  }
+  if (BmassFlags.tmp) {
+    _Temp = (StatType*) Mem_Calloc(1, sizeof(StatType), "_stat_init(Temp)");
+    _Temp->s = (struct accumulators_st *)
                Mem_Calloc( Globals->runModelYears,
                            sizeof(struct accumulators_st),
                           "_stat_init(Temp)");
+  }
   if (BmassFlags.grpb) {
     _Grp = (struct stat_st *)
            Mem_Calloc( Globals->grpCount,
@@ -544,9 +550,9 @@ void stat_Load_Accumulators(int cell, int year) {
     	}
   	}
 
-	if (BmassFlags.tmp) _copy_over(&_Temp.s[yr], &grid_Stat[cell].temp[yr]);
-	if (BmassFlags.ppt) _copy_over(&_Ppt.s[yr], &grid_Stat[cell].ppt[yr]);
-	if (BmassFlags.dist) _copy_over(&_Dist.s[yr], &grid_Stat[cell].dist[yr]);
+	if (BmassFlags.tmp) _copy_over(&_Temp->s[yr], &grid_Stat[cell].temp[yr]);
+	if (BmassFlags.ppt) _copy_over(&_Ppt->s[yr], &grid_Stat[cell].ppt[yr]);
+	if (BmassFlags.dist) _copy_over(&_Dist->s[yr], &grid_Stat[cell].dist[yr]);
 
 	if(BmassFlags.grpb) {
 		GrpIndex c;
@@ -605,9 +611,9 @@ void stat_Save_Accumulators(int cell, int year) {
 		}
 	}
 
-	if (BmassFlags.tmp) _copy_over(&grid_Stat[cell].temp[yr], &_Temp.s[yr]);
-	if (BmassFlags.ppt) _copy_over(&grid_Stat[cell].ppt[yr], &_Ppt.s[yr]);
-	if (BmassFlags.dist) _copy_over(&grid_Stat[cell].dist[yr], &_Dist.s[yr]);
+	if (BmassFlags.tmp) _copy_over(&grid_Stat[cell].temp[yr], &_Temp->s[yr]);
+	if (BmassFlags.ppt) _copy_over(&grid_Stat[cell].ppt[yr], &_Ppt->s[yr]);
+	if (BmassFlags.dist) _copy_over(&grid_Stat[cell].dist[yr], &_Dist->s[yr]);
 
 	if(BmassFlags.grpb) {
 		GrpIndex c;
@@ -720,9 +726,18 @@ void stat_free_mem( void ) {
       Mem_Free(_Gwf->prescribedFire);
     }
 
-  	if (BmassFlags.dist) Mem_Free(_Dist.s);
-  	if (BmassFlags.ppt) Mem_Free(_Ppt.s);
-  	if (BmassFlags.tmp) Mem_Free(_Temp.s);
+  	if (BmassFlags.dist) {
+      Mem_Free(_Dist->s);
+      Mem_Free(_Dist);
+    }
+  	if (BmassFlags.ppt) {
+      Mem_Free(_Ppt->s);
+      Mem_Free(_Ppt);
+    }
+  	if (BmassFlags.tmp) {
+      Mem_Free(_Temp->s);
+      Mem_Free(_Temp);
+    }
 
   	if(BmassFlags.grpb) {
   		Mem_Free(_Grp);
@@ -946,15 +961,15 @@ void stat_Output_AllBmassAvg() {
 	      sprintf(buf, "%d%c", yr, sep);
 
 	    if (BmassFlags.dist) {
-	      sprintf(tbuf, "%ld%c", _Dist.s[yr-1].nobs, sep);
-	      _Dist_grid_cell.s[yr-1].nobs = _Dist.s[yr-1].nobs;
+	      sprintf(tbuf, "%ld%c", _Dist->s[yr-1].nobs, sep);
+	      _Dist_grid_cell.s[yr-1].nobs = _Dist->s[yr-1].nobs;
 	      strcat(buf, tbuf);
 	    }
 
 		if (BmassFlags.ppt)
 		{
-			RealF avg = _get_avg(&_Ppt.s[yr - 1]);
-			RealF std = _get_std(&_Ppt.s[yr - 1]);
+			RealF avg = _get_avg(&_Ppt->s[yr - 1]);
+			RealF std = _get_std(&_Ppt->s[yr - 1]);
 			sprintf(tbuf, "%f%c%f%c", avg, sep, std, sep);
 			copyStruct(avg, std, &_Ppt_grid_cell.s[yr - 1]);
 			strcat(buf, tbuf);
@@ -968,8 +983,8 @@ void stat_Output_AllBmassAvg() {
 
 		if (BmassFlags.tmp)
 		{
-			RealF avg = _get_avg(&_Temp.s[yr - 1]);
-			RealF std = _get_std(&_Temp.s[yr - 1]);
+			RealF avg = _get_avg(&_Temp->s[yr - 1]);
+			RealF std = _get_std(&_Temp->s[yr - 1]);
 			sprintf(tbuf, "%f%c%f%c", avg, sep, std, sep);
 			copyStruct(avg,std, &_Temp_grid_cell.s[yr - 1]);
 			strcat(buf, tbuf);
@@ -1186,15 +1201,15 @@ void stat_Output_AllBmass(void) {
       sprintf(buf, "%d%c", yr, sep);
 
     if (BmassFlags.dist) {
-      sprintf(tbuf, "%ld%c", _Dist.s[yr-1].nobs,
+      sprintf(tbuf, "%ld%c", _Dist->s[yr-1].nobs,
               sep);
       strcat(buf, tbuf);
     }
 
     if (BmassFlags.ppt) {
       sprintf(tbuf, "%f%c%f%c",
-              _get_avg(&_Ppt.s[yr-1]), sep,
-              _get_std(&_Ppt.s[yr-1]), sep);
+              _get_avg(&_Ppt->s[yr-1]), sep,
+              _get_std(&_Ppt->s[yr-1]), sep);
       strcat( buf, tbuf);
     }
 
@@ -1205,8 +1220,8 @@ void stat_Output_AllBmass(void) {
 
     if (BmassFlags.tmp) {
       sprintf(tbuf, "%f%c%f%c",
-              _get_avg(&_Temp.s[yr-1]), sep,
-              _get_std(&_Temp.s[yr-1]), sep);
+              _get_avg(&_Temp->s[yr-1]), sep,
+              _get_std(&_Temp->s[yr-1]), sep);
       strcat( buf, tbuf);
     }
 
