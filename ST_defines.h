@@ -75,7 +75,7 @@ typedef enum {DepthNonComp, DepthShallow, DepthMedium, DepthDeep, DepthLast}
 typedef enum {F_First, F_Log, F_Model, F_Env, F_Plot, F_RGroup, F_Species,
               F_BMassFlag, F_BMassPre, F_BMassAvg,
               F_MortFlag,  F_MortPre,  F_MortAvg,
-              F_SXW, F_EXE}
+              F_SXW, F_MaxRGroupSpecies, F_EXE}
   ST_FileIndex;
 
 /**************************************************************/

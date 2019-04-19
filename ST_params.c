@@ -58,6 +58,7 @@ static void _globals_init( void);
 static void _env_init( void);
 static void _plot_init( void);
 static void _setNameLen(char *dest, char *src, Int len);
+static void _maxrgroupspecies_init( void);
 static void _rgroup_init( void);
 static void _species_init( void);
 static void _files_init( void );
@@ -85,9 +86,10 @@ static void _rgroup_addsucculent( char name[],
 
 
 #ifndef STEPWAT
+  /* fdpierson: added maxrgroupspecies.in. what do we do about this? */
   #define NFILES 13
 #else
-  #define NFILES 14
+  #define NFILES 15
 #endif
 
 static char *_files[NFILES];
@@ -104,6 +106,7 @@ void parm_Initialize() {
   _plot_init();
   _bmassflags_init();
   _mortflags_init();
+  _maxrgroupspecies_init();
   _rgroup_init();
   _species_init();
   _check_species();
@@ -159,9 +162,10 @@ static void _files_init( void ) {
   ST_FileIndex i;
 
 #ifndef STEPWAT
+  /* fdpierson: After adding maxrgroupspecies.in, what do we do about this? */
   ST_FileIndex last = F_MortAvg;
 #else
-  ST_FileIndex last = F_SXW;
+  ST_FileIndex last = F_MaxRGroupSpecies;
 #endif
 
 
@@ -224,53 +228,6 @@ static void _model_init( void) {
      Globals.randseed = (IntL) ((seed) ? -abs(seed) : 0);
    }
    
-   /* These values determine the memory allocated for resource groups and resource group names. */
-   /* If these limits are exceeded, memory leaks will result. */
-   
-   /* Resource group limits */
-   
-   if (!GetALine(f, inbuf)) {
-       LogError(logfp, LOGFATAL, "%s: Could not read maximum resource groups allowed.", MyFileName);
-   }
-   
-   if (sscanf(inbuf, "%zu", &Globals.max_rgroups) != 1) {
-       LogError(logfp, LOGFATAL, "%s: Could not read maximum resource groups allowed.", MyFileName);
-   }
-   
-   if (!GetALine(f, inbuf)) {
-       LogError(logfp, LOGFATAL, "%s: Could not read maximum resource group name length.", MyFileName);
-   }
-   
-   if (sscanf(inbuf, "%zu", &Globals.max_groupnamelen) != 1) {
-       LogError(logfp, LOGFATAL, "%s: Could not read maximum resource group name length.", MyFileName);
-   }
-   
-   /* Species limits */
-   
-   if (!GetALine(f, inbuf)) {
-       LogError(logfp, LOGFATAL, "%s: Could not read maximum species allowed per resource group.", MyFileName);
-   }
-   
-   if (sscanf(inbuf, "%zu", &Globals.max_spp_per_grp) != 1) {
-       LogError(logfp, LOGFATAL, "%s: Could not read maximum species allowed per resource group.", MyFileName);
-   }
-   
-   if (!GetALine(f, inbuf)) {
-       LogError(logfp, LOGFATAL, "%s: Could not read maximum individuals allowed per species.", MyFileName);
-   }
-   
-   if (sscanf(inbuf, "%zu", &Globals.max_indivs_per_spp) != 1) {
-       LogError(logfp, LOGFATAL, "%s: Could not read maximum individuals allowed per species.", MyFileName);
-   }
-   
-   if (!GetALine(f, inbuf)) {
-       LogError(logfp, LOGFATAL, "%s: Could not read maximum species name length.", MyFileName);
-   }
-   
-   if (sscanf(inbuf, "%zu", &Globals.max_speciesnamelen) != 1) {
-       LogError(logfp, LOGFATAL, "%s: Could not read maximum species name length.", MyFileName);
-   }
-
    CloseFile(&f);
 }
 
@@ -745,6 +702,64 @@ static void _setNameLen(char *dest, char *src, Int len) {
 /*======================================================*/
   strncpy(dest, src, len);
   dest[len] = '\0';
+}
+
+/**************************************************************/
+static void _maxrgroupspecies_init( void) {
+/*======================================================*/
+    FILE *f;
+    
+    MyFileName = Parm_name(F_MaxRGroupSpecies);
+    f = OpenFile(MyFileName, "r");
+    
+    /* These values determine the memory allocated for resource groups, species, and their names. */
+    /* If these limits are exceeded, memory leaks will result. */
+
+    /* Resource group limits */
+
+    if (!GetALine(f, inbuf)) {
+       LogError(logfp, LOGFATAL, "%s: Could not read maximum resource groups allowed.", MyFileName);
+    }
+
+    if (sscanf(inbuf, "%zu", &Globals.max_rgroups) != 1) {
+       LogError(logfp, LOGFATAL, "%s: Could not read maximum resource groups allowed.", MyFileName);
+    }
+
+    if (!GetALine(f, inbuf)) {
+       LogError(logfp, LOGFATAL, "%s: Could not read maximum resource group name length.", MyFileName);
+    }
+
+    if (sscanf(inbuf, "%zu", &Globals.max_groupnamelen) != 1) {
+       LogError(logfp, LOGFATAL, "%s: Could not read maximum resource group name length.", MyFileName);
+    }
+
+    /* Species limits */
+
+    if (!GetALine(f, inbuf)) {
+       LogError(logfp, LOGFATAL, "%s: Could not read maximum species allowed per resource group.", MyFileName);
+    }
+
+    if (sscanf(inbuf, "%zu", &Globals.max_spp_per_grp) != 1) {
+       LogError(logfp, LOGFATAL, "%s: Could not read maximum species allowed per resource group.", MyFileName);
+    }
+
+    if (!GetALine(f, inbuf)) {
+       LogError(logfp, LOGFATAL, "%s: Could not read maximum individuals allowed per species.", MyFileName);
+    }
+
+    if (sscanf(inbuf, "%zu", &Globals.max_indivs_per_spp) != 1) {
+       LogError(logfp, LOGFATAL, "%s: Could not read maximum individuals allowed per species.", MyFileName);
+    }
+
+    if (!GetALine(f, inbuf)) {
+       LogError(logfp, LOGFATAL, "%s: Could not read maximum species name length.", MyFileName);
+    }
+
+    if (sscanf(inbuf, "%zu", &Globals.max_speciesnamelen) != 1) {
+       LogError(logfp, LOGFATAL, "%s: Could not read maximum species name length.", MyFileName);
+    }
+    
+    CloseFile(&f);
 }
 
 

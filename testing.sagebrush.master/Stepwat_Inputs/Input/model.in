@@ -21,13 +21,3 @@
 # niter nyrs  seed
 # 100 300 0 # recommended settings for production runs
 1 300 7 # settings for testing purposes
-
-####################################################
-# These values determine the memory allocated for resource groups and resource group names.
-# If these limits are exceeded, memory leaks will result.
-
-10  # Maximum resource groups allowed.
-15  # Maximum resource group name length.
-10  # Maximum species allowed per resource group.
-100 # Maximum individuals allowed per species.
-4   # Maximum species name length.
