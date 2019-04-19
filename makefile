@@ -14,7 +14,7 @@ incDirs	=	-Isw_src -Isqlite-amalgamation
 
 LIBS	=	-lm
 C_FLAGS	=	-g -O0 -Wstrict-prototypes -Wmissing-prototypes -Wimplicit -Wunused -Wformat -Wredundant-decls -Wcast-align\
-	-DSTEPWAT
+	-DSTEPWAT -DSQLITE_WITHOUT_ZONEMALLOC
 
 SRCS	=\
 	$(Src)/sqlite-amalgamation/sqlite3.c\
