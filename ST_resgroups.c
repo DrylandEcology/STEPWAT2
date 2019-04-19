@@ -863,7 +863,7 @@ static GroupType *_create(void)
 	GroupType *p;
 
 	p = (GroupType *) Mem_Calloc(1, sizeof(GroupType), "_create");
-        p->name = (char *) Mem_Calloc(1, Globals.max_groupnamelen, "_create");
+        p->name = (char *) Mem_Calloc(Globals.max_groupnamelen + 1, sizeof(char), "_create");
         p->est_spp = (SppIndex *) Mem_Calloc(Globals.max_spp_per_grp, sizeof(SppIndex), "_create");
         p->species = (SppIndex *) Mem_Calloc(Globals.max_spp_per_grp, sizeof(SppIndex), "_create");
         

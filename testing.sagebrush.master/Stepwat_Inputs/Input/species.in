@@ -4,13 +4,6 @@
 # Blank lines, white space, and comments may be used freely,
 # however, the order of input is important
 
-# These values determine the memory allocated for species, individuals, and species names.
-# If these limits are exceeded, memory leaks will result.
-
-10  # Maximum species allowed per resource group.
-100 # Maximum individuals allowed per species.
-4   # Maximum species name length.
-
 # name = 4 char genus/species name; gusa = Gutierrezia sarothrae, oppo = Opuntia polyacantha
 # rg = number of resource group to which this species belongs,
 #      based on the order they were entered in the rgroups input file,

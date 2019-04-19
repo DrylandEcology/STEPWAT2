@@ -57,10 +57,10 @@ void output_Bmass_Yearly( Int year ) {
   if (!BmassFlags.yearly) return;
 
   fields = (char **)Mem_Calloc(MAX_OUTFIELDS, sizeof(char *), "output_Bmass_Yearly");
-  s = (char *)Mem_Calloc(1, MAX_FIELDLEN, "output_Bmass_Yearly");
+  s = (char *)Mem_Calloc(MAX_FIELDLEN + 1, sizeof(char), "output_Bmass_Yearly");
   
   for (i = 0; i < MAX_OUTFIELDS; i++) {
-      fields[i] = (char *)Mem_Calloc(1, MAX_FIELDLEN, "output_Bmass_Yearly");
+      fields[i] = (char *)Mem_Calloc(MAX_FIELDLEN + 1, sizeof(char), "output_Bmass_Yearly");
   }
   
   if(Globals.currYear == 1) // At year one we need a header.

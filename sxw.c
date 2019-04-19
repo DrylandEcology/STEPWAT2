@@ -454,7 +454,7 @@ static void  _read_roots_max(void) {
 	char *name;
 	FILE *fp;
         
-        name = (char *)Mem_Calloc(1, Globals.max_groupnamelen, "_read_roots_max");
+        name = (char *)Mem_Calloc(Globals.max_groupnamelen + 1, sizeof(char), "_read_roots_max");
 
 	MyFileName = SXW.f_roots;
 	fp = OpenFile(MyFileName, "r");

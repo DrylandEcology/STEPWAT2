@@ -1300,7 +1300,7 @@ static void _make_header_with_std( char *buf) {
   fields = (char **)Mem_Calloc(MAX_OUTFIELDS * 2, sizeof(char *), "_make_header_with_std");
   
   for (i = 0; i < MAX_OUTFIELDS * 2; i++) {
-      fields[i] = (char *)Mem_Calloc(1, MAX_FIELDLEN + 1, "_make_header_with_std");
+      fields[i] = (char *)Mem_Calloc(MAX_FIELDLEN + 1, sizeof(char), "_make_header_with_std");
   }
 
   /* Set up headers */
@@ -1374,10 +1374,10 @@ static void _make_header( char *buf) {
   SppIndex sp;
   Int i, fc=0;
 
-  fields = (char **)Mem_Calloc(MAX_OUTFIELDS * 2, sizeof(char *), "_make_header_with_std");
+  fields = (char **)Mem_Calloc(MAX_OUTFIELDS * 2, sizeof(char *), "_make_header");
   
   for (i = 0; i < MAX_OUTFIELDS * 2; i++) {
-      fields[i] = (char *)Mem_Calloc(1, MAX_FIELDLEN + 1, "_make_header_with_std");
+      fields[i] = (char *)Mem_Calloc(MAX_FIELDLEN + 1, sizeof(char), "_make_header");
   }
   
   /* Set up headers */
