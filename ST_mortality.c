@@ -783,8 +783,11 @@ static void _stretched_clonal( GrpIndex rg, Int start, Int last,
       clist[++np] = nlist[i];
   }
   if (np < 0)
+  {
+    Mem_Free(clist);
     return;  /* Exit if no clonals remain alive in this rgroup */
-
+  }
+    
   y = RGroup[rg]->yrs_neg_pr;
 
   if (y >= RGroup[rg]->max_stretch) {
