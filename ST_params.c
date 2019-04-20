@@ -855,8 +855,6 @@ static void _rgroup_init( void) {
            MyFileName);
    }
    _rgroup_addsucculent( name, wslope, wint, dslope, dint);
-   
-   Mem_Free(name);
 
    GetALine(f,inbuf);
 
@@ -878,6 +876,8 @@ static void _rgroup_init( void) {
      _rgroup_add_wildfire( ignition, cheatgrass_coefficient, wild_fire_slope);
    }/* end while*/
 
+   Mem_Free(name);
+   
    CloseFile(&f);
 }
 
@@ -953,9 +953,14 @@ static void _rgroup_add_disturbance( char name[], Int killyr, Int killfreq_start
 /*======================================================*/
   GrpIndex rg;
   
-   char name2[80];
+   char *name2;
+   size_t len;
+   
+   name2 = Mem_Calloc(Globals.max_groupnamelen + 1, sizeof(char), "_rgroup_add_disturbance");
+   
+   len = strlen(name);
 
-   _setNameLen(name2, name, MAX_GROUPNAMELEN);
+   _setNameLen(name2, name, len);
    rg = RGroup_Name2Index( name2);
    if (rg <0) {
      LogError(logfp, LOGFATAL, "%s: Mismatched name (%s) for disturbance",
@@ -973,6 +978,8 @@ static void _rgroup_add_disturbance( char name[], Int killyr, Int killfreq_start
   RGroup[rg]->grazingfreq_startyr  = grazingfreq_startyr;
 
   RGroup[rg]->extirpated    = FALSE;
+  
+  Mem_Free(name2);
 }
 
 static void _rgroup_add_wildfire( RealF ignition, RealF cheatgrass_coefficient, RealF wild_fire_slope) {
