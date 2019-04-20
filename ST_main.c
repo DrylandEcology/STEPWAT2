@@ -199,8 +199,6 @@ int main(int argc, char **argv) {
 		} else {
 			fprintf(progfp, "%d\n", iter);
 		}
-		if (BmassFlags.yearly || MortFlags.yearly)
-			parm_Initialize();
 
 		Plot_Initialize();
 		RandSeed(Globals.randseed, &environs_rng);

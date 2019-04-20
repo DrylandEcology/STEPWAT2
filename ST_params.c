@@ -87,6 +87,9 @@ static char *_files[NFILES];
 char *MyFileName;
 
 /**************************************************************/
+/* fdpierson: This function should only be called once, otherwise
+ * memory leaks involving resource groups, species, and potentially
+ * other variables will occur. */
 /**************************************************************/
 void parm_Initialize() {
 /*======================================================*/
