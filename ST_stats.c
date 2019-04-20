@@ -76,11 +76,16 @@ struct stat_st {
   *_Spp, *_Indv, *_Smort, *_Sestab, *_Sreceived;
 
 typedef struct  {
-  struct accumulators_st *dist, *temp, *ppt, **grp1, **gsize, **gpr2,
+  struct accumulators_st *dist, *temp, *ppt, **grp1, **gsize, **gpr2,  **gwf2,  **gpf2, 
   							**gmort, **gestab, **spp, **indv, **smort, **sestab, **sreceived;
 } accumulators_grid_st;
 
 accumulators_grid_st *grid_Stat;
+
+struct fire_st {
+  int *wildfire;
+  int **prescribedFire;
+} *_Gwf;
 
 
 // Local Structure for holding sum values of all the grid cells
@@ -94,7 +99,7 @@ struct stat_grid_cell_st {
   char *name; /* array of ptrs to names in RGroup & Species */
   struct accumulators_grid_cell_st *s;    /* array of holding all the years values */
 } _Dist_grid_cell, _Ppt_grid_cell, _Temp_grid_cell,
-  *_Grp_grid_cell, *_Gsize_grid_cell, *_Gpr_grid_cell, *_Gmort_grid_cell, *_Gestab_grid_cell,
+  *_Grp_grid_cell, *_Gsize_grid_cell, *_Gpr_grid_cell,*_Gwf_grid_cell,*_Gpf_grid_cell, *_Gmort_grid_cell, *_Gestab_grid_cell,
   *_Spp_grid_cell, *_Indv_grid_cell, *_Smort_grid_cell, *_Sestab_grid_cell, *_Sreceived_grid_cell;
 
 
@@ -108,6 +113,7 @@ static RealF _get_std( struct accumulators_st *p);
 //Adding below three functions for copying grid cell values,calculating avg and SD,these values will be used in grid cells avg output file
 static void copyStruct(RealF val,RealF std_val,struct accumulators_grid_cell_st *p );
 static RealF _get_gridcell_avg( struct accumulators_grid_cell_st *p);
+static int _get_gridcell_sum( struct accumulators_grid_cell_st *p);
 static RealF _get_gridcell_std( struct accumulators_grid_cell_st *p);
 static void _make_header( char *buf);
 static void _make_header_with_std( char *buf);
@@ -168,6 +174,9 @@ void stat_Collect( Int year ) {
     _collect_add( &_Temp.s[year], Env.temp);
 
   if (BmassFlags.grpb) {
+    if (BmassFlags.wildfire) {
+        _Gwf->wildfire[year] += (RGroup[0]->wildfire) ? 1 : 0;
+    }
     ForEachGroup(rg) {
       bmass = (double) RGroup_GetBiomass(rg);
       if ( LT(bmass, 0.0) ) {
@@ -183,6 +192,9 @@ void stat_Collect( Int year ) {
       if (BmassFlags.pr)
         _collect_add( &_Gpr[rg].s[year],
                           RGroup[rg]->pr);
+      if (BmassFlags.prescribedfire){
+        _Gwf->prescribedFire[rg][year] += (RGroup[rg]->prescribedfire) ? 1 : 0;
+      }
     }
   }
 
@@ -259,6 +271,22 @@ static void _init( void) {
 					_Gpr_grid_cell[rg].s = (struct accumulators_grid_cell_st *)
 					    Mem_Calloc( Globals.runModelYears, sizeof(struct accumulators_grid_cell_st), "_stat_init(Gpr[rg].s)");
 			}
+                        if (BmassFlags.wildfire)
+			{
+				_Gpr_grid_cell = (struct stat_grid_cell_st *)
+						Mem_Calloc( Globals.grpCount, sizeof(struct stat_grid_cell_st), "_stat_init(Gwf)");
+				ForEachGroup(rg)
+					_Gpr_grid_cell[rg].s = (struct accumulators_grid_cell_st *)
+					    Mem_Calloc( Globals.runModelYears, sizeof(struct accumulators_grid_cell_st), "_stat_init(Gwf[rg].s)");
+			}
+                        if (BmassFlags.prescribedfire)
+			{
+				_Gpr_grid_cell = (struct stat_grid_cell_st *)
+						Mem_Calloc( Globals.grpCount, sizeof(struct stat_grid_cell_st), "_stat_init(Gpf)");
+				ForEachGroup(rg)
+					_Gpr_grid_cell[rg].s = (struct accumulators_grid_cell_st *)
+					    Mem_Calloc( Globals.runModelYears, sizeof(struct accumulators_grid_cell_st), "_stat_init(Gpf[rg].s)");
+			}
 		}
 
 		 if (BmassFlags.sppb)
@@ -328,6 +356,30 @@ static void _init( void) {
              Mem_Calloc( Globals.runModelYears,
                          sizeof(struct accumulators_st),
                         "_stat_init(Gpr[rg].s)");
+    }
+
+    if (BmassFlags.wildfire || BmassFlags.prescribedfire) {
+      _Gwf = (struct fire_st *)
+             Mem_Calloc( 1,
+                         sizeof(struct fire_st),
+                        "_stat_init(Gwf)");
+
+      _Gwf->wildfire = (int *)
+          Mem_Calloc( 1,
+                      sizeof(int) * Globals.runModelYears,
+                      "_stat_init(Gwf->wildfire)");
+      
+      _Gwf->prescribedFire = (int **)
+          Mem_Calloc( 1,
+                      sizeof(int **) * MAX_RGROUPS,
+                      "_stat_init(Gwf->prescribedfire");
+
+      ForEachGroup(rg){
+        _Gwf->prescribedFire[rg] = (int *)
+          Mem_Calloc( Globals.runModelYears,
+                      sizeof(int) * Globals.runModelYears,
+                      "_stat_init(Gwf->prescribedFire)");
+      }
     }
   }
 
@@ -439,6 +491,8 @@ void stat_Init_Accumulators( void ) {
   			grid_Stat[i].grp1 = Mem_Calloc(Globals.runModelYears, sizeof(struct accumulators_st*), "stat_Init_Accumulators()"); // gave grp and gpr numbers attached to them so I wouldn't mix them up lol... bad (confusing) variable names on part of the original creator.
   			if (BmassFlags.size) grid_Stat[i].gsize = Mem_Calloc(Globals.runModelYears, sizeof(struct accumulators_st), "stat_Init_Accumulators()");
   			if (BmassFlags.pr) grid_Stat[i].gpr2 = Mem_Calloc(Globals.runModelYears, sizeof(struct accumulators_st*), "stat_Init_Accumulators()");
+                        if (BmassFlags.wildfire) grid_Stat[i].gwf2 = Mem_Calloc(Globals.runModelYears, sizeof(struct accumulators_st*), "stat_Init_Accumulators()");
+                        if (BmassFlags.prescribedfire) grid_Stat[i].gpf2 = Mem_Calloc(Globals.runModelYears, sizeof(struct accumulators_st*), "stat_Init_Accumulators()");
   		}
   		if (MortFlags.group) {
   			grid_Stat[i].gmort = Mem_Calloc(Globals.grpCount, sizeof(struct accumulators_st*), "stat_Init_Accumulators()");
@@ -472,6 +526,8 @@ void stat_Init_Accumulators( void ) {
   				grid_Stat[i].grp1[j] = Mem_Calloc(Globals.grpCount, sizeof(struct accumulators_st), "stat_Init_Accumulators()");
   				if (BmassFlags.size) grid_Stat[i].gsize[j] = Mem_Calloc(Globals.grpCount, sizeof(struct accumulators_st), "stat_Init_Accumulators()");
   				if (BmassFlags.pr) grid_Stat[i].gpr2[j] = Mem_Calloc(Globals.grpCount, sizeof(struct accumulators_st), "stat_Init_Accumulators()");
+                                if (BmassFlags.wildfire) grid_Stat[i].gwf2[j] = Mem_Calloc(Globals.grpCount, sizeof(struct accumulators_st), "stat_Init_Accumulators()");
+                                if (BmassFlags.prescribedfire) grid_Stat[i].gpf2[j] = Mem_Calloc(Globals.grpCount, sizeof(struct accumulators_st), "stat_Init_Accumulators()");
   			}
   			if(BmassFlags.sppb) {
   				grid_Stat[i].spp[j] = Mem_Calloc(Globals.sppCount, sizeof(struct accumulators_st), "stat_Init_Accumulators()");
@@ -618,6 +674,8 @@ void stat_Free_Accumulators( void ) {
   				Mem_Free(grid_Stat[i].grp1[j]);
   				if (BmassFlags.size) Mem_Free(grid_Stat[i].gsize[j]);
   				if (BmassFlags.pr) Mem_Free(grid_Stat[i].gpr2[j]);
+                                if (BmassFlags.wildfire) Mem_Free(grid_Stat[i].gwf2[j]);
+                                if (BmassFlags.prescribedfire) Mem_Free(grid_Stat[i].gpf2[j]);
   			}
   			if(BmassFlags.sppb) {
   				Mem_Free(grid_Stat[i].spp[j]);
@@ -682,6 +740,14 @@ void stat_free_mem( void ) {
   			Mem_Free(_Spp[sp].s);
   			if(BmassFlags.indv) Mem_Free(_Indv[sp].s);
   		}
+
+    if (BmassFlags.wildfire || BmassFlags.prescribedfire){
+      Mem_Free(_Gwf->wildfire);
+      ForEachGroup(gp) {
+        Mem_Free(_Gwf->prescribedFire[gp]);
+  		}
+      Mem_Free(_Gwf->prescribedFire);
+    }
 
   	if (BmassFlags.dist) Mem_Free(_Dist.s);
   	if (BmassFlags.ppt) Mem_Free(_Ppt.s);
@@ -963,6 +1029,18 @@ void stat_Output_AllBmassAvg() {
 					copyStruct(prAvg,std,&_Gpr_grid_cell[rg].s[yr - 1]);
 					strcat(buf, tbuf);
 				}
+        if (BmassFlags.wildfire)
+				{
+					double wfsum = _Gwf->wildfire[yr-1];
+					sprintf(tbuf, "%f%c", wfsum, sep);
+					strcat(buf, tbuf);
+				}
+        if (BmassFlags.prescribedfire)
+				{
+					double pfsum = _Gwf->prescribedFire[rg][yr-1];
+					sprintf(tbuf, "%f%c", pfsum, sep);
+					strcat(buf, tbuf);
+				}
 			}
 		}
 
@@ -1071,6 +1149,16 @@ void stat_Output_AllCellAvgBmass(const char * filename)
 							_get_gridcell_std(&_Gpr_grid_cell[rg].s[yr - 1]), sep);
 					strcat(buf, tbuf);
 				}
+                                if (BmassFlags.wildfire)
+				{
+					sprintf(tbuf, "%d%c", _get_gridcell_sum(&_Gsize_grid_cell[rg].s[yr - 1]), sep);
+					strcat(buf, tbuf);
+				}
+                                if (BmassFlags.prescribedfire)
+				{
+					sprintf(tbuf, "%f%c", _get_gridcell_avg(&_Gsize_grid_cell[rg].s[yr - 1]), sep);
+					strcat(buf, tbuf);
+				}
 			}
 		}
 
@@ -1152,6 +1240,11 @@ void stat_Output_AllBmass(void) {
     }
 
     if (BmassFlags.grpb) {
+      if (BmassFlags.wildfire) {
+          sprintf(tbuf, "%d%c",
+                  _Gwf->wildfire[yr-1], sep);
+          strcat( buf, tbuf);
+      }
       ForEachGroup(rg) {
         sprintf(tbuf, "%f%c%f%c",
                 _get_avg(&_Grp[rg].s[yr-1]), sep,
@@ -1168,6 +1261,13 @@ void stat_Output_AllBmass(void) {
           sprintf(tbuf, "%f%c%f%c",
                   _get_avg( &_Gpr[rg].s[yr-1]), sep,
                   _get_std( &_Gpr[rg].s[yr-1]), sep);
+          strcat( buf, tbuf);
+        }
+        /* Output the sum of all the wild and prescribed fire numbers across all iterations;
+         ATTENTION: the other output index are the average values across all iterations*/
+        if (BmassFlags.prescribedfire) {
+          sprintf(tbuf, "%d%c",
+                  _Gwf->prescribedFire[rg][yr-1], sep);
           strcat( buf, tbuf);
         }
       }
@@ -1251,7 +1351,6 @@ static RealF _get_avg( struct accumulators_st *p)
 	return p->ave;
 }
 
-
 /***********************************************************/
 static RealF _get_std(struct accumulators_st *p)
 {
@@ -1264,7 +1363,6 @@ static void copyStruct(RealF val,RealF std_val,struct accumulators_grid_cell_st 
 {
 	p->sum = p->sum + val;
 	p->sum_std = p->sum_std + std_val;
-
 }
 
 /***********************************************************/
@@ -1275,6 +1373,14 @@ static RealF _get_gridcell_avg(struct accumulators_grid_cell_st *p)
 		return 0.0;
 	RealF avg = (RealF) (p->sum / (double) Globals.nCells);
 	return avg;
+}
+static int _get_gridcell_sum(struct accumulators_grid_cell_st *p)
+{
+
+	if (Globals.nCells == 0)
+		return 0;
+	int sum = (RealF) (p->sum);
+	return sum;
 }
 
 
@@ -1319,6 +1425,10 @@ static void _make_header_with_std( char *buf) {
     strcpy(fields[fc++], "StdDev");
   }
   if (BmassFlags.grpb) {
+    if (BmassFlags.wildfire) {
+        strcpy(fields[fc++], "WildFire");
+    }
+
     ForEachGroup(rg) {
       strcpy(fields[fc++], RGroup[rg]->name);
 
@@ -1334,6 +1444,10 @@ static void _make_header_with_std( char *buf) {
         strcat(fields[fc++],"_PR");
         strcpy(fields[fc], RGroup[rg]->name);
         strcat(fields[fc++], "_PRstd");
+      }
+      if (BmassFlags.prescribedfire) {
+        strcpy(fields[fc], RGroup[rg]->name);
+        strcat(fields[fc++], "_PFire");
       }
     }
   }
@@ -1396,6 +1510,10 @@ static void _make_header( char *buf) {
     strcpy(fields[fc++], "StdDev");
   }
   if (BmassFlags.grpb) {
+    if (BmassFlags.wildfire) {
+        strcpy(fields[fc], RGroup[rg]->name);
+        strcat(fields[fc++], "WildFire");
+    }
     ForEachGroup(rg) {
       strcpy(fields[fc++], RGroup[rg]->name);
       if (BmassFlags.size) {
@@ -1407,6 +1525,10 @@ static void _make_header( char *buf) {
         strcat(fields[fc++],"_PR");
         strcpy(fields[fc], RGroup[rg]->name);
         strcat(fields[fc++], "_PRstd");
+      }
+      if (BmassFlags.prescribedfire) {
+        strcpy(fields[fc], RGroup[rg]->name);
+        strcat(fields[fc++], "_PrescribedFire");
       }
     }
   }

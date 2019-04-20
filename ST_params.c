@@ -31,12 +31,7 @@
 /************ External Variable Declarations ***************/
 /***********************************************************/
 #include "ST_globals.h"
-
-#ifdef STEPWAT
-  #include "sxw_vars.h"
-#endif
-
-//extern Bool UseSoilwat;
+#include "sxw_vars.h"
 
 /******** Modular External Function Declarations ***********/
 /* -- truly global functions are declared in functions.h --*/
@@ -69,12 +64,15 @@ static void _model_init( void);
 static void _rgroup_add1( char name[], RealF space, RealF density,
                       Int estab, RealF slow, Int stretch,
                       Int xres, Int estann, Int turnon,
-                      Int styr, Int killyr, Int killfreq_startyr,RealF killfreq,
-                      Int extirp, Int mort, RealF xgro, Int veg_prod_type, RealF prop_killed, RealF prop_recovered,RealF grazing_frq,RealF prop_grazing,Int grazingfreq_startyr);
+                      Int styr,  RealF xgro, Int veg_prod_type, Int mort);
 static void _rgroup_add2( char name[],
                       RealF nslope, RealF nint,
                       RealF wslope, RealF wint,
                       RealF dslope, RealF dint);
+static void _rgroup_add_disturbance( char name[],  Int killyr, Int killfreq_startyr,RealF killfreq,
+                      Int extirp, RealF prop_killed, RealF prop_recovered,RealF grazing_frq,RealF prop_grazing,Int grazingfreq_startyr);
+static void _rgroup_add_wildfire( RealF ignition, RealF cheatgrass_coefficient, RealF wild_fire_slope);
+
 static void _rgroup_addsucculent( char name[],
                                RealF wslope, RealF wint,
                                RealF dslope, RealF dint);
@@ -83,14 +81,7 @@ static void _rgroup_addsucculent( char name[],
 
 /************ Module Variable Declarations ******************/
 /***********************************************************/
-
-
-#ifndef STEPWAT
-  /* fdpierson: added maxrgroupspecies.in. what do we do about this? */
-  #define NFILES 13
-#else
   #define NFILES 15
-#endif
 
 static char *_files[NFILES];
 char *MyFileName;
@@ -160,14 +151,7 @@ static void _files_init( void ) {
 
   FILE *f;
   ST_FileIndex i;
-
-#ifndef STEPWAT
-  /* fdpierson: After adding maxrgroupspecies.in, what do we do about this? */
-  ST_FileIndex last = F_MortAvg;
-#else
   ST_FileIndex last = F_MaxRGroupSpecies;
-#endif
-
 
   MyFileName = Parm_name(F_First);
 
@@ -466,7 +450,7 @@ static void _bmassflags_init( void) {
 
    FILE *fin;
    Int x, i,
-       nitems=14; /* number of items expected in first input line */
+       nitems=16; /* number of items expected in first input line */
 
    /*   code      controls: */
    char u[5],  /* summary? if 'n' don't init and don't print */
@@ -481,6 +465,8 @@ static void _bmassflags_init( void) {
         g[5],  /* biomass for the groups */
         q[5],  /* groups PR quotient (see C&L1990, p240) */
         r[5],  /* relative size for each group */
+        w[5],  /* wildfire count */
+        m[5],  /* prescribed fire count */
         s[5],  /* biomass for each species */
         n[5];  /* number of individuals for each species */
    char z;
@@ -492,8 +478,8 @@ static void _bmassflags_init( void) {
      LogError(logfp, LOGFATAL, "%s: No data found!\n", MyFileName);
    }
 
-   x = sscanf( inbuf, "%s %s %s %s %s %s %s %s %s %s %s %s %s %s",
-                      u, a, h, f, y, d, p, c, t, g, q, r, s, n );
+   x = sscanf( inbuf, "%s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s",
+                      u, a, h, f, y, d, p, c, t, g, q, r, w, m, s, n );
 
    /* don't bother initializing the rest if first flag is 'n' */
    BmassFlags.summary  = (Bool)(*u=='y'||*u=='Y');
@@ -547,12 +533,18 @@ static void _bmassflags_init( void) {
             BmassFlags.size   = (Bool)(*r=='y'||*r=='Y');
             break;
        case 11:
-            BmassFlags.sppb   = (Bool)(*s=='y'||*s=='Y');
+            BmassFlags.wildfire     = (Bool)(*w=='y'||*w=='Y');
             break;
        case 12:
-            BmassFlags.indv   = (Bool)(*n=='y'||*n=='Y');
+            BmassFlags.prescribedfire     = (Bool)(*m=='y'||*m=='Y');
             break;
        case 13:
+            BmassFlags.sppb   = (Bool)(*s=='y'||*s=='Y');
+            break;
+       case 14:
+            BmassFlags.indv   = (Bool)(*n=='y'||*n=='Y');
+            break;
+       case 15:
             break;
      }
 
@@ -782,10 +774,15 @@ static void _rgroup_init( void) {
    char *name;
 
    /* input variables*/
-   Int estab, stretch, xres, turnon, extirp, mort, estann,
-       styr, killyr, killfreq_startyr,veg_prod_type, grazingfreq_startyr;
-   RealF space, density, slow, killfreq, xgro,
-         nslope, nint, wslope, wint, dslope, dint,prop_killed, prop_recovered,grazing_frq, prop_grazing ;
+   Int estab, stretch, xres, turnon, estann,
+       styr, veg_prod_type, mort;
+   RealF space, density, slow, 
+         nslope, nint, wslope, wint, dslope, dint, xgro;
+   /* input variables related to disturbances */
+   Int extirp, killyr, killfreq_startyr, 
+       grazingfreq_startyr;
+   RealF  killfreq, ignition, cheatgrass_coefficient, wild_fire_slope,
+        prop_killed, prop_recovered,grazing_frq, prop_grazing ;
 
    MyFileName = Parm_name(F_RGroup);
    f = OpenFile(MyFileName, "r");
@@ -801,20 +798,22 @@ static void _rgroup_init( void) {
         groupsok = TRUE;
         break;
      }
-     x=sscanf( inbuf, "%s %f %f %d %f %d %d %d %d %d %d %d %f %d %d %f %d %f %f %f %f %d",
+     x=sscanf( inbuf, "%s %f %f %d %f %d %d %d %d %d %f %d %d %d %f %d %d %f %f %f %f %d",
                name,
                &space, &density, &estab, &slow, &stretch,
-               &xres, &estann, &turnon, &styr, &killyr,&killfreq_startyr, &killfreq,
-               &extirp, &mort, &xgro, &veg_prod_type, &prop_killed, &prop_recovered,&grazing_frq, &prop_grazing,&grazingfreq_startyr );
+               &xres, &estann, &turnon, &styr, &xgro, &veg_prod_type, &killyr, &killfreq_startyr, &killfreq,
+               &extirp, &mort, &prop_killed, &prop_recovered,&grazing_frq, &prop_grazing,&grazingfreq_startyr);
      if (x < 22) {
        LogError(logfp, LOGFATAL, "%s: Too few columns in groups",
                MyFileName);
      }
 
-    _rgroup_add1( name, space, density, estab,
+     _rgroup_add1( name, space, density, estab,
                    slow, stretch, xres, estann,
-                   turnon, styr, killyr,killfreq_startyr, killfreq,
-                   extirp, mort, xgro, veg_prod_type,prop_killed, prop_recovered,grazing_frq,prop_grazing,grazingfreq_startyr);
+                   turnon, styr, xgro, veg_prod_type, mort);
+
+     _rgroup_add_disturbance(name, killyr, killfreq_startyr, killfreq,
+                   extirp, prop_killed, prop_recovered,grazing_frq,prop_grazing,grazingfreq_startyr);
    }/* end while*/
 
    if (!groupsok) {
@@ -845,7 +844,6 @@ static void _rgroup_init( void) {
               MyFileName);
    }
 
-
    /* ------------------------------------------------------------*/
    /* Get succulent growth modifiers*/
    GetALine(f, inbuf);
@@ -860,16 +858,34 @@ static void _rgroup_init( void) {
    
    Mem_Free(name);
 
+   GetALine(f,inbuf);
+
+   groupsok = FALSE;
+   while(GetALine(f,inbuf)) {
+     if (!isnull(strstr(inbuf,"[end]"))) {
+        groupsok = TRUE;
+        
+        break;
+     }
+
+     x=sscanf( inbuf, "%f %f %f",
+               &ignition, &cheatgrass_coefficient, &wild_fire_slope);
+     if (x != 3) {
+       LogError(logfp, LOGFATAL, "%s: Wrong number of columns in wild fire inputs.",
+               MyFileName);
+     }
+ 
+     _rgroup_add_wildfire( ignition, cheatgrass_coefficient, wild_fire_slope);
+   }/* end while*/
+
    CloseFile(&f);
 }
-
 
 /**************************************************************/
 static void _rgroup_add1( char name[], RealF space, RealF density,
                       Int estab, RealF slow, Int stretch,
                       Int xres, Int estann, Int turnon,
-                      Int styr, Int killyr, Int killfreq_startyr, RealF killfreq,
-                      Int extirp, Int mort, RealF xgro, Int veg_prod_type, RealF prop_killed, RealF prop_recovered,RealF grazing_frq,RealF prop_grazing, Int grazingfreq_startyr) {
+                      Int styr,  RealF xgro, Int veg_prod_type, Int mort) {
 /*======================================================*/
   GrpIndex rg;
   size_t len;
@@ -885,26 +901,15 @@ static void _rgroup_add1( char name[], RealF space, RealF density,
   RGroup[rg]->max_spp_estab = (IntS) estab;
   RGroup[rg]->max_density   = density;
   RGroup[rg]->max_per_sqm   = density / Globals.plotsize;
+  RGroup[rg]->use_mort      = itob(mort);
   RGroup[rg]->slowrate      = slow;
   RGroup[rg]->min_res_req   = space;
   RGroup[rg]->est_annually  = itob(estann);
   RGroup[rg]->startyr       = styr;
-  RGroup[rg]->killyr        = killyr;
-  RGroup[rg]->killfreq_startyr = killfreq_startyr;
-  RGroup[rg]->killfreq      = killfreq;
-  RGroup[rg]->use_extra_res = itob(xres);
-  RGroup[rg]->extirp        = (IntS) extirp;
   RGroup[rg]->xgrow         = xgro;
   RGroup[rg]->use_me        = itob(turnon);
-  RGroup[rg]->use_mort      = itob(mort);
   RGroup[rg]->veg_prod_type = veg_prod_type;
-  RGroup[rg]->proportion_killed    = prop_killed;
-  RGroup[rg]->proportion_recovered = prop_recovered;
-  RGroup[rg]->grazingfrq           = grazing_frq;
-  RGroup[rg]->proportion_grazing   = prop_grazing;
-  RGroup[rg]->grazingfreq_startyr  = grazingfreq_startyr;
-
-  RGroup[rg]->extirpated    = FALSE;
+  
 }
 
 
@@ -942,6 +947,45 @@ static void _rgroup_add2( char name[],
   Mem_Free(name2);
 }
 
+
+static void _rgroup_add_disturbance( char name[], Int killyr, Int killfreq_startyr, RealF killfreq,
+                      Int extirp, RealF prop_killed, RealF prop_recovered,RealF grazing_frq,RealF prop_grazing, Int grazingfreq_startyr) {
+/*======================================================*/
+  GrpIndex rg;
+  
+   char name2[80];
+
+   _setNameLen(name2, name, MAX_GROUPNAMELEN);
+   rg = RGroup_Name2Index( name2);
+   if (rg <0) {
+     LogError(logfp, LOGFATAL, "%s: Mismatched name (%s) for disturbance",
+             MyFileName, name2);
+   }
+
+  RGroup[rg]->killyr        = killyr;
+  RGroup[rg]->killfreq_startyr = killfreq_startyr;
+  RGroup[rg]->killfreq      = killfreq;
+  RGroup[rg]->extirp        = (IntS) extirp;
+  RGroup[rg]->proportion_killed    = prop_killed;
+  RGroup[rg]->proportion_recovered = prop_recovered;
+  RGroup[rg]->grazingfrq           = grazing_frq;
+  RGroup[rg]->proportion_grazing   = prop_grazing;
+  RGroup[rg]->grazingfreq_startyr  = grazingfreq_startyr;
+
+  RGroup[rg]->extirpated    = FALSE;
+}
+
+static void _rgroup_add_wildfire( RealF ignition, RealF cheatgrass_coefficient, RealF wild_fire_slope) {
+/*======================================================*/
+  GrpIndex rg;
+
+  ForEachGroup(rg){
+    RGroup[rg]->ignition = ignition;
+    RGroup[rg]->cheatgrass_coefficient = cheatgrass_coefficient;
+    RGroup[rg]->wild_fire_slope = wild_fire_slope;
+  }
+  
+}
 
 /**************************************************************/
 static void _rgroup_addsucculent( char name[],
@@ -1226,8 +1270,7 @@ static void _species_init( void) {
 /*static void _recover_names(void) {
 	int i, last = NFILES - 1;
 
-	if (UseSoilwat)
-		last--; // have to save sxw.in for later //
+	last--; // have to save sxw.in for later //
 
 	for (i = 0; i <= last; i++) {
 		Mem_Free(_files[i]);
@@ -1274,10 +1317,7 @@ void Parm_SetMemoryRefs( void) {
   ForEachSpecies(sp)
     NoteMemoryRef( Species[sp]->kills);
 
-  #ifdef STEPWAT
   NoteMemoryRef(_files[F_SXW]);
-  #endif
-
 }
 
 #endif

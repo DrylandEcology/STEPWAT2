@@ -205,67 +205,131 @@ void mort_Main( Bool *killed) {
 void mort_EndOfYear(void) {
     /*======================================================*/
     /* PURPOSE */
-    /* Implements killing of plants through fire or another event
+    /* Implements killing of plants through wildfire, prescribed fire, or another event
      * that would result in mortality in single year (killyr) or
      * extirpation (extirp) where plants are killed and do not return. */
 
     GrpIndex rg;
-    GroupType *g;
+    GroupType *g = NULL;
     SppIndex sp;
     IntU j;
-
-    ForEachGroup(rg) {
-        if (Globals.currYear < RGroup[rg]->startyr) {
-            /* Can't kill plants until the year each RGroup[rg] is turned on */
-            continue;
-        }
-
-        g = RGroup[rg];
-
-        if ((Globals.currYear >= g->killfreq_startyr) && (g->killfreq > 0.)) {
-            if(g->killfreq < 1.0){
-                if (RandUni(&mortality_rng) <= g->killfreq) {
-                    g->killyr = Globals.currYear;
-                }
-            } else if (((Globals.currYear - g->killfreq_startyr) % (IntU) g->killfreq) == 0) {
-                g->killyr = Globals.currYear;
-            }
-
-        }
-
-        if (Globals.currYear == RGroup[rg]->extirp) {
-            rgroup_Extirpate(rg);
-        } else if (Globals.currYear == RGroup[rg]->killyr) {
-            RGroup_Kill(rg);
-        }
-
-        /* If the current year is a fire year, then remove extra_growth here
-        instead of in _kill_extra_growth called in ST_main.c. Otherwise, 
-        biomass will be non-zero in a fire year with complete killing */
-        if (Globals.currYear == RGroup[rg]->killyr) {
-            if (!RGroup[rg]->use_extra_res)
-                continue;
-
-            ForEachGroupSpp(sp, rg, j) {
-                /* If the species is turned off, continue */
-                if (!Species[sp]->use_me)
-                    continue;
-
-                //printf("s->extragrowth kill before  = %f\n", Species[sp]->extragrowth);
-
-                if (ZRO(Species[sp]->extragrowth)) continue;
-                //printf("s->relsize kill before = %f\n, Species = %s \n", Species[sp]->name, Species[sp]->relsize);
-                //printf("s->extragrowth kill before  = %f\n", Species[sp]->extragrowth);
-
-                Species[sp]->extragrowth = LE(Species[sp]->extragrowth, Species[sp]->relsize) ? Species[sp]->extragrowth : Species[sp]->relsize;
-
-                Species_Update_Newsize(sp, -Species[sp]->extragrowth);
-
-                //printf("s->relsize kill after  = %f\n", Species[sp]->relsize);
-                Species[sp]->extragrowth = 0.0;
-            }
+    RealF fire_possibility, random_number, biomass_cheatgrass;
+    char *cheatgrass_name = "brte";
+    int i = 0;
+    Bool prescribed_fire_on = FALSE;
+    
+    /* Check species index number from the beginning to all the species in
+     *  species.in , if the species name == checkname then get the biomass and stop the loop*/
+    for (i = 0; i < Globals.sppCount; i++) { /* if species name = checkname = brte then get the biomass of brte(cheatgrass)*/
+        if (strcmp(cheatgrass_name, Species[i]->name) == 0) {
+            biomass_cheatgrass = Species_GetBiomass(i); /* calculate biomass of cheatgrass*/
+            g = RGroup[Species[i]->res_grp];
+            break;
         }
     }
+    
+    /* Set a random number outside of the loop to make sure the kill probability for each functional group is the same */
+    random_number = RandUni(&mortality_rng);
+
+    //determine if prescribed fire is on for any group. If TRUE, we do NOT want to simulate cheatgrass wildfire.
+    ForEachGroup(rg){
+      if(RGroup[rg]->killfreq > 0){
+        prescribed_fire_on = TRUE;
+        break;
+      }
+    }
+
+    // in this for loop "g" refers to the RGroup of cheatgrass. RGroup[rg] refers
+    // to the current iteration's RGroup.
+    ForEachGroup(rg) {
+      if (Globals.currYear < RGroup[rg]->startyr) {
+        continue;
+      }
+
+      RGroup[rg]->prescribedfire = 0;
+      RGroup[rg]->wildfire = 0;
+
+      // If these conditions are true we want to simulate wildfire based on cheatgrass abundance
+      if(!prescribed_fire_on && g != NULL){
+        /* ------------------------- WILDFIRE BASED ON CHEATGRASS BIOMASS------------------------- */
+        // Calculate fire_possibility
+        if (g->ignition == 0) { 
+          /* If ignition == 0, no wildfire occurs */
+          fire_possibility = 0;
+        } else if (biomass_cheatgrass < g->ignition) {
+          /* If cheatgrass biomass is less than the biomass required for wildfire ignition, wildfire probability is very low*/
+          fire_possibility = .01;
+        } else { 
+          /* Otherwise a wildfire probability is calculated, which increases with cheatgrass biomass*/
+          fire_possibility = g->cheatgrass_coefficient + g->wild_fire_slope * biomass_cheatgrass;
+
+          // Cap fire_possibility at 1. This isn't needed from an algorithmic perspective,
+          // but a value greater than 1 does not make sense as a probability.
+          if(fire_possibility > 1){
+            fire_possibility = 1;
+          }
+        }
+
+        // If a wildfire occurs this year
+        if (random_number <= fire_possibility) {
+          RGroup[rg]->killyr = Globals.currYear;
+          /* Increase the number of wildfires that have occurred across all iterations in this year by 1 */
+          RGroup[rg]->wildfire = 1;
+        }
+        /* ------------------------- END WILDFIRE BASED ON CHEATGRASS BIOMASS ------------------------- */
+
+      } else if(Globals.currYear >= RGroup[rg]->killfreq_startyr) { // Otherwise simulate prescribed fire
+
+        if(RGroup[rg]->killfreq < 1){
+          /* --------------------- STOCHASTIC PRESCRIBED FIRE -------------------- */
+          if(random_number <= RGroup[rg]->killfreq) {
+            RGroup[rg]->killyr = Globals.currYear;
+
+           /* Increase the number of prescribed fires that have occurred across all iterations in this year by 1 */
+            RGroup[rg]->prescribedfire = 1;
+          } 
+          /* ------------------- END STOCHASTIC PRESCRIBED FIRE ----------------- */
+
+        } else if (((Globals.currYear - RGroup[rg]->killfreq_startyr) % (IntU) RGroup[rg]->killfreq) == 0) {
+          /* ------------------------ PRESCRIBED FIRE AT A FIXED RETURN INTERVAL ----------------------- */
+          RGroup[rg]->killyr = Globals.currYear;
+          /* Calculate the prescribed fire counts */
+          RGroup[rg]->prescribedfire = 1;
+          /* ------------------------ END PRESCRIBED FIRE AT A FIXED RETURN INTERVAL ------------------- */
+        }
+      }
+      
+      /* Kill all individuals of the functional group and don't let them re-establish */
+      if (Globals.currYear == RGroup[rg]->extirp) {
+          rgroup_Extirpate(rg);
+          
+      /* If the current year is a kill year, implement mortality */    
+      } else if (Globals.currYear == RGroup[rg]->killyr) {
+          RGroup_Kill(rg);
+      }
+
+      /* If the current year is a fire year, then remove extra_growth here
+      instead of in _kill_extra_growth called in ST_main.c. Otherwise, 
+      biomass will be non-zero in a fire year with complete killing */
+      if (Globals.currYear == RGroup[rg]->killyr) {
+        if (!RGroup[rg]->use_extra_res){
+          continue;
+        }
+
+        ForEachGroupSpp(sp, rg, j) {
+          /* If the species is turned off, continue */
+          if (!Species[sp]->use_me){
+            continue;
+          }
+
+          if (ZRO(Species[sp]->extragrowth)) continue;
+
+          Species[sp]->extragrowth = LE(Species[sp]->extragrowth, Species[sp]->relsize) ? Species[sp]->extragrowth : Species[sp]->relsize;
+          Species_Update_Newsize(sp, -Species[sp]->extragrowth);
+          Species[sp]->extragrowth = 0.0;
+        }
+      }
+    }  
 }
 
 void grazing_EndOfYear( void){
@@ -341,7 +405,6 @@ void proportion_Recovery(void) {
     /*======================================================*/
 
     GrpIndex rg;
-    GroupType *g;
     SppIndex sp;
 
     ForEachGroup(rg) {
@@ -351,21 +414,7 @@ void proportion_Recovery(void) {
             * that RGroup[rg] is turned on */
             continue;
         }
-
-        g = RGroup[rg];
-
-        if ((Globals.currYear >= g->killfreq_startyr) && (g->killfreq > 0.)) {
-            if (g->killfreq < 1.0) {
-                if (RandUni(&mortality_rng) <= g->killfreq) {
-                    g->killyr = Globals.currYear;
-                }
-
-            } else if (((Globals.currYear - g->killfreq_startyr) % (IntU) g->killfreq) == 0) {
-                g->killyr = Globals.currYear;
-            }
-
-        }
-
+		
         // Implement recovery of biomass after fire that represents re-sprouting
         if (Globals.currYear == RGroup[rg]->killyr) {
             Int i;

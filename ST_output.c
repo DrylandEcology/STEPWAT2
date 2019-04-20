@@ -25,11 +25,8 @@
 /******** Modular External Function Declarations ***********/
 /* -- truly global functions are declared in functions.h --*/
 /***********************************************************/
-#ifdef STEPWAT
-  #include "SW_Model.h"
-  extern SW_MODEL SW_Model;
-  extern Bool UseSoilwat;
-#endif
+#include "SW_Model.h"
+extern SW_MODEL SW_Model;
 
 /*------------------------------------------------------*/
 /* Modular functions only used on one or two specific   */
@@ -121,10 +118,7 @@ void output_Bmass_Yearly( Int year ) {
   /* ------------- end setting up header -------------- */
 
   if (BmassFlags.yr) {
-      if (UseSoilwat)
-        sprintf(fields[fc++], "%d", SW_Model.year);
-      else
-        sprintf(fields[fc++], "%d", year);
+    sprintf(fields[fc++], "%d", SW_Model.year);
   }
 
   if (BmassFlags.dist) {
@@ -161,6 +155,10 @@ void output_Bmass_Yearly( Int year ) {
         sprintf(fields[fc++],"%f", RGroup[rg]->relsize);
       if (BmassFlags.pr)
         sprintf(fields[fc++],"%f", RGroup[rg]->pr);
+      if (BmassFlags.wildfire)
+        sprintf(fields[fc++],"%d", RGroup[rg]->wildfire);
+      if (BmassFlags.prescribedfire)
+        sprintf(fields[fc++],"%d", RGroup[rg]->prescribedfire);
     }
   }
 

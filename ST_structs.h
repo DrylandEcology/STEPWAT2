@@ -147,6 +147,8 @@ struct resourcegroup_st {
         estabs,         /* total indivs in group established during iter */
         killyr,         /* kill the group in this year; if 0, don't kill, but see killfreq */
         yrs_neg_pr,     /* counter for consecutive years low resources */
+        wildfire, 	/* number of wildfires during all iterations in this year */
+        prescribedfire, /* number of prescribed fires during all iterations in this year */
         mm_extra_res;   /* extra resource converted back to mm */
   RealF res_required, /* resource required for current size */
         res_avail,    /* resource available from environment X competition */
@@ -170,8 +172,8 @@ struct resourcegroup_st {
         max_spp,        /* number of species in the group*/
         max_age,        /* longest lifespan in group. used to malloc kills[] */
         startyr,        /* don't start trying to grow until this year */
-		killfreq_startyr,/* start year for kill frequency*/
-        killfreq,       /* kill group at this frequency: <1=prob, >1=# years */
+	killfreq_startyr,/* start year for kill frequency*/
+
         extirp,         /* year in which group is extirpated (0==ignore) */
         grp_num,        /* index number of this group */
         veg_prod_type,  /* type of VegProd.  1 for tree, 2 for shrub, 3 for grass, 4 for forb */
@@ -182,6 +184,10 @@ struct resourcegroup_st {
         max_density,  /* number of mature plants per plot allowed */
         max_per_sqm,  /* convert density and plotsize to max plants/m^2 */
         max_bmass,    /* sum of mature biomass for all species in group */
+        killfreq,       /* kill group at this frequency: <1=prob, >1=# years */
+        ignition,       /* cheatgrass biomass (g/m2) that triggers potential ignition of a wildfire */
+        cheatgrass_coefficient,   /* intercept of the cheatgrass biomass-wildfire probability relationship */
+        wild_fire_slope,  /* slope of the cheatgrass biomass-wildfire probability relationship */	
         xgrow,        /* ephemeral growth = mm extra ppt * xgrow */
         slowrate,     /* user-defined growthrate that triggers mortality */
         ppt_slope[3], /* res. space eqn: slope for wet/dry/norm yrs*/
@@ -309,6 +315,8 @@ struct bmassflags_st {
        pr,
        size,
        sppb,
+       wildfire,/* print wild fires count during all the iterations */
+       prescribedfire,/* print prescribed fires count during all the iterations */
        indv;
   char sep;
 };
