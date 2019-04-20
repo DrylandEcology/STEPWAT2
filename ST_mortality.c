@@ -881,9 +881,8 @@ void _kill_extra_growth(void) {
             if (!Species[sp]->use_me)
                 continue;
 
-            /* Check that extragrowth <= s->relsize, otherwise relsize will become 
-             * negative. If not, then reset to s->relsize. If the current year 
-             * is a fire year, return, as killing of extragrowth has already occurred in Mort_EndofYear */
+            /* Extra growth might have been set to zero in Mort_EndofYear if it is a fire year.
+             * However, setting it to zero again is just as fast as checking. */
             Species[sp]->extragrowth = 0.0;
             
             /* Now FINALLY remove individuals that were killed because of fire or grazing and set 
