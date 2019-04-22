@@ -62,6 +62,10 @@
   void stat_Free_Accumulators( void );
   void stat_Init_Accumulators( void );
 
+  void stat_Copy_Accumulators(StatType* newDist, StatType* newPpt, StatType* newTemp, StatType* newGrp, StatType* newGsize, 
+                              StatType* newGpr, StatType* newGmort, StatType* newGestab, StatType* newSpp, StatType* newIndv,
+                              StatType* newSmort, StatType* newSestab, StatType* newSrecieved, FireStatsType* newGwf, Bool firstTime);
+
 /************************ Local Structure Defs *************/
 /***********************************************************/
 StatType *_Dist, *_Ppt, *_Temp,
@@ -698,6 +702,30 @@ void stat_Free_Accumulators( void ) {
   	}
   	Mem_Free(grid_Stat);
   	stat_free_mem();
+}
+
+/* Shallow copies StatType and FireStatsType pointers to the local pointers.
+   This is intended to be used with gridded mode to load in a given cell */
+void stat_Copy_Accumulators(StatType* newDist, StatType* newPpt, StatType* newTemp, StatType* newGrp, StatType* newGsize, 
+                            StatType* newGpr, StatType* newGmort, StatType* newGestab, StatType* newSpp, StatType* newIndv,
+                            StatType* newSmort, StatType* newSestab, StatType* newSrecieved, FireStatsType* newGwf, Bool firstTime){
+
+  /* Move the local pointers to the location of the given pointers */
+  _Dist = newDist;
+  _Ppt = newPpt;
+  _Temp = newTemp;
+  _Grp = newGrp;
+  _Gsize = newGsize;
+  _Gpr = newGpr;
+  _Gmort = newGmort;
+  _Gestab = newGestab;
+  _Spp = newSpp;
+  _Indv = newIndv;
+  _Smort = newSmort;
+  _Sestab = newSestab;
+  _Sreceived = newSrecieved;
+  _Gwf = newGwf;
+  firsttime = firstTime;
 }
 
 /***********************************************************/
