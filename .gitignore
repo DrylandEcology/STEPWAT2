@@ -74,3 +74,7 @@ nbproject/private/Default.properties
 nbproject/private/launcher.properties
 nbproject/private/private.xml
 nbproject/project.xml
+
+# VScode project files
+######################
+.vscode
