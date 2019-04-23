@@ -60,7 +60,7 @@
 extern SW_SITE SW_Site;
 extern SW_MODEL SW_Model;
 extern SW_VEGPROD SW_VegProd;
-extern SXW_resourceType SXWResources;
+extern SXW_resourceType* SXWResources;
 
 #ifdef SXW_BYMAXSIZE
 extern RealF _Grp_BMass[];  /* added 2/28/03 */
@@ -108,9 +108,9 @@ void _sxw_sw_clear_transp(void) {
 /*======================================================*/
 	int k;
 
-	Mem_Set(SXW.transpTotal, 0, SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
+	Mem_Set(SXW->transpTotal, 0, SXW->NPds * SXW->NSoLyrs * sizeof(RealD));
 	ForEachVegType(k) {
-		Mem_Set(SXW.transpVeg[k], 0, SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
+		Mem_Set(SXW->transpVeg[k], 0, SXW->NPds * SXW->NSoLyrs * sizeof(RealD));
 	}
 }
 
@@ -133,7 +133,7 @@ static void _update_transp_coeff(RealF relsize[]) {
         ForEachGroup(g)
         if (RGroup[g]->veg_prod_type == 1)
             if (getNTranspLayers(RGroup[g]->veg_prod_type))
-                y->transp_coeff[SW_TREES] += (RealF) SXWResources._roots_max[Ilg(t, g)] * RGroup[g]->rgroupFractionOfVegTypeBiomass;
+                y->transp_coeff[SW_TREES] += (RealF) SXWResources->_roots_max[Ilg(t, g)] * RGroup[g]->rgroupFractionOfVegTypeBiomass;
         sum[SW_TREES] += y->transp_coeff[SW_TREES];
     }
 
@@ -143,7 +143,7 @@ static void _update_transp_coeff(RealF relsize[]) {
         ForEachGroup(g)
         if (RGroup[g]->veg_prod_type == 2) {
             if (getNTranspLayers(RGroup[g]->veg_prod_type))
-                y->transp_coeff[SW_SHRUB] += (RealF) SXWResources._roots_max[Ilg(t, g)] * RGroup[g]->rgroupFractionOfVegTypeBiomass;
+                y->transp_coeff[SW_SHRUB] += (RealF) SXWResources->_roots_max[Ilg(t, g)] * RGroup[g]->rgroupFractionOfVegTypeBiomass;
 
             /*printf("* lyr=%d, group=%s(%d), type=%d, tl=%d, rootmax=%f, relsize1=%f, relsize2=%f, trco=%f\n",
               t, RGroup[g]->name, g, RGroup[g]->veg_prod_type, getNTranspLayers(RGroup[g]->veg_prod_type),
@@ -159,7 +159,7 @@ static void _update_transp_coeff(RealF relsize[]) {
         ForEachGroup(g)
         if (RGroup[g]->veg_prod_type == 3)
             if (getNTranspLayers(RGroup[g]->veg_prod_type))
-                y->transp_coeff[SW_GRASS] += (RealF) SXWResources._roots_max[Ilg(t, g)] * RGroup[g]->rgroupFractionOfVegTypeBiomass;
+                y->transp_coeff[SW_GRASS] += (RealF) SXWResources->_roots_max[Ilg(t, g)] * RGroup[g]->rgroupFractionOfVegTypeBiomass;
         sum[SW_GRASS] += y->transp_coeff[SW_GRASS];
     }
 
@@ -169,7 +169,7 @@ static void _update_transp_coeff(RealF relsize[]) {
         ForEachGroup(g)
         if (RGroup[g]->veg_prod_type == 4)
             if (getNTranspLayers(RGroup[g]->veg_prod_type))
-                y->transp_coeff[SW_FORBS] += (RealF) SXWResources._roots_max[Ilg(t, g)] * RGroup[g]->rgroupFractionOfVegTypeBiomass;
+                y->transp_coeff[SW_FORBS] += (RealF) SXWResources->_roots_max[Ilg(t, g)] * RGroup[g]->rgroupFractionOfVegTypeBiomass;
         sum[SW_FORBS] += y->transp_coeff[SW_FORBS];
     }
 
@@ -256,24 +256,24 @@ static void _update_productivity(void) {
 
             ForEachGroup(g) {
                 if (1 == RGroup[g]->veg_prod_type) { //tree
-                    v->veg[SW_TREES].pct_live[m] += SXWResources._prod_pctlive[Igp(g, m)] * RGroup[g]->rgroupFractionOfVegTypeBiomass;
-                    v->veg[SW_TREES].biomass[m] += SXWResources._prod_bmass[Igp(g, m)] * bmassg[g];
+                    v->veg[SW_TREES].pct_live[m] += SXWResources->_prod_pctlive[Igp(g, m)] * RGroup[g]->rgroupFractionOfVegTypeBiomass;
+                    v->veg[SW_TREES].biomass[m] += SXWResources->_prod_bmass[Igp(g, m)] * bmassg[g];
                 } else if (2 == RGroup[g]->veg_prod_type) { //shrub
-                    v->veg[SW_SHRUB].pct_live[m] += SXWResources._prod_pctlive[Igp(g, m)] * RGroup[g]->rgroupFractionOfVegTypeBiomass;
-                    v->veg[SW_SHRUB].biomass[m] += SXWResources._prod_bmass[Igp(g, m)] * bmassg[g];
+                    v->veg[SW_SHRUB].pct_live[m] += SXWResources->_prod_pctlive[Igp(g, m)] * RGroup[g]->rgroupFractionOfVegTypeBiomass;
+                    v->veg[SW_SHRUB].biomass[m] += SXWResources->_prod_bmass[Igp(g, m)] * bmassg[g];
                 } else if (3 == RGroup[g]->veg_prod_type) { //grass
-                    v->veg[SW_GRASS].pct_live[m] += SXWResources._prod_pctlive[Igp(g, m)] * RGroup[g]->rgroupFractionOfVegTypeBiomass;
-                    v->veg[SW_GRASS].biomass[m] += SXWResources._prod_bmass[Igp(g, m)] * bmassg[g];
+                    v->veg[SW_GRASS].pct_live[m] += SXWResources->_prod_pctlive[Igp(g, m)] * RGroup[g]->rgroupFractionOfVegTypeBiomass;
+                    v->veg[SW_GRASS].biomass[m] += SXWResources->_prod_bmass[Igp(g, m)] * bmassg[g];
                 } else if (4 == RGroup[g]->veg_prod_type) { //forb
-                    v->veg[SW_FORBS].pct_live[m] += SXWResources._prod_pctlive[Igp(g, m)] * RGroup[g]->rgroupFractionOfVegTypeBiomass;
-                    v->veg[SW_FORBS].biomass[m] += SXWResources._prod_bmass[Igp(g, m)] * bmassg[g];
+                    v->veg[SW_FORBS].pct_live[m] += SXWResources->_prod_pctlive[Igp(g, m)] * RGroup[g]->rgroupFractionOfVegTypeBiomass;
+                    v->veg[SW_FORBS].biomass[m] += SXWResources->_prod_bmass[Igp(g, m)] * bmassg[g];
                 }
             }
 
-            v->veg[SW_TREES].litter[m] = (vegTypeBiomass[0] * SXWResources._prod_litter[m]);
-            v->veg[SW_SHRUB].litter[m] = (vegTypeBiomass[1] * SXWResources._prod_litter[m]);
-            v->veg[SW_GRASS].litter[m] = (vegTypeBiomass[2] * SXWResources._prod_litter[m]);
-            v->veg[SW_FORBS].litter[m] = (vegTypeBiomass[3] * SXWResources._prod_litter[m]);
+            v->veg[SW_TREES].litter[m] = (vegTypeBiomass[0] * SXWResources->_prod_litter[m]);
+            v->veg[SW_SHRUB].litter[m] = (vegTypeBiomass[1] * SXWResources->_prod_litter[m]);
+            v->veg[SW_GRASS].litter[m] = (vegTypeBiomass[2] * SXWResources->_prod_litter[m]);
+            v->veg[SW_FORBS].litter[m] = (vegTypeBiomass[3] * SXWResources->_prod_litter[m]);
         }
     }
 

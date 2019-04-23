@@ -153,30 +153,30 @@ struct temp_SXW_st{
 
 } typedef SXW_resourceType;
 
-#define ForEachTrPeriod(i) for((i)=0; (i)< SXW.NPds; (i)++)
+#define ForEachTrPeriod(i) for((i)=0; (i)< SXW->NPds; (i)++)
 
 /* convert 3-d index to actual array index for
    group/layer/phenology 3d table */
-#define Iglp(g,l,p) (((g)*SXW.NTrLyrs*SXW.NPds) + ((l)*SXW.NPds) + (p))
+#define Iglp(g,l,p) (((g)*SXW->NTrLyrs*SXW->NPds) + ((l)*SXW->NPds) + (p))
 
 /* convert 3-d index to actual array index for
  * veg-prod-type/layer/phenology
  */
-#define Itlp(t,l,p) (((t)*SXW.NTrLyrs*SXW.NPds) + ((l)*SXW.NPds) + (p))
+#define Itlp(t,l,p) (((t)*SXW->NTrLyrs*SXW->NPds) + ((l)*SXW->NPds) + (p))
 
 // veg type, layer, timeperiod
-#define Ivlp(v,l,p) (((v)*NVEGTYPES * SXW.NTrLyrs * SXW.NPds) + ((l)*SXW.NTrLyrs * SXW.NPds) + ((p)*SXW.NPds))
+#define Ivlp(v,l,p) (((v)*NVEGTYPES * SXW->NTrLyrs * SXW.NPds) + ((l)*SXW->NTrLyrs * SXW->NPds) + ((p)*SXW->NPds))
 
 /* convert 2d layer by period indices to
   layer/phenology 1D index */
-#define Ilp(l,p) ((l)*SXW.NPds + (p))
+#define Ilp(l,p) ((l)*SXW->NPds + (p))
 
 /* convert 2d group by period indices to
    group/phenology 1D index */
-#define Igp(g,p) ((g)*SXW.NPds + (p))
+#define Igp(g,p) ((g)*SXW->NPds + (p))
 
 /* convert 2d group by layer indices to
    layer/period 1D index */
-#define Ilg(l,g) ((l)*SXW.NGrps + (g))
+#define Ilg(l,g) ((l)*SXW->NGrps + (g))
 
 #endif

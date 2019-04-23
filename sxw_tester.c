@@ -99,7 +99,7 @@ static void _print_results(void) {
   ForEachTrPeriod(pd) {
     LOG(fp,"%d", pd);
     ForEachTreeTranspLayer(lyr)
-      LOG(fp,"\t%5.4f", SXW.transpTotal[Ilp(lyr,pd)]);
+      LOG(fp,"\t%5.4f", SXW->transpTotal[Ilp(lyr,pd)]);
     LOG_NL;
   }
 
@@ -165,7 +165,7 @@ static void _print_results(void) {
       sum = 0.;
       ForEachTreeTranspLayer(lyr) {
         sum += _roots_active[Iglp(g,lyr,pd)]
-            *  SXW.transpTotal[Ilp(lyr,pd)];
+            *  SXW->transpTotal[Ilp(lyr,pd)];
       }
       LOG(fp,"\t%5.4f", sum);
     }
@@ -179,7 +179,7 @@ static void _read_test_data( void) {
 /*======================================================*/
 /* Read a set of arbitrary (non-baseline) group sizes and
  * transpiration values and populates the RGroup[g].relsizes
- * and the SXW.transp array. This simulates retrieval from
+ * and the SXW->transp array. This simulates retrieval from
  * soilwat.
  */
   LyrIndex lyr, cnt;
@@ -202,7 +202,7 @@ static void _read_test_data( void) {
   cnt=0;
   while( GetALine(fp, inbuf) ) {
     p = strtok(inbuf,", \t"); /* g'teed to work via GetALine() */
-    if (++cnt > SXW.NPds) break;
+    if (++cnt > SXW->NPds) break;
 
     pd = atoi(p) -1;
     lyr = 0;
@@ -212,20 +212,20 @@ static void _read_test_data( void) {
                         "Compare with soil layer definitions for SOILWAT.",
                         fname);
       }
-      SXW.transpTotal[Ilp(lyr,pd)] = atof(p);
+      SXW->transpTotal[Ilp(lyr,pd)] = atof(p);
       lyr++;
     }
 
   }
 
-  if (cnt > SXW.NPds) {
+  if (cnt > SXW->NPds) {
     LogError(logfp, LOGFATAL, "Too many time periods found in %s.  Expected %d.",
-            fname, SXW.NPds);
+            fname, SXW->NPds);
   }
 
-  if (cnt < SXW.NPds) {
+  if (cnt < SXW->NPds) {
     LogError(logfp, LOGFATAL, "Not enough time periods found in %s.  Expected %d.",
-            fname, SXW.NPds);
+            fname, SXW->NPds);
   }
 
   CloseFile(&fp);

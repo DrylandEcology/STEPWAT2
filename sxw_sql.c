@@ -15,10 +15,10 @@
 #include "sxw.h"
 
 extern SW_MODEL SW_Model;
-extern SXW_t SXW;
+extern SXW_t* SXW;
 extern SW_SITE SW_Site;
 extern SW_VEGPROD SW_VegProd;
-extern SXW_resourceType SXWResources;
+extern SXW_resourceType* SXWResources;
 
 static sqlite3 *db;
 static char sql[1024];
@@ -119,7 +119,7 @@ void insertSXWPhen(void) {
 	{
 		for(m=0;m<12;m++) {
 			sql[0] = 0;
-			sprintf(sql, "INSERT INTO sxwphen (RGroupID, Month, GrowthPCT) VALUES (%d, %d, %f);", g+1, m+1,SXWResources._phen[Igp(g,m)]);
+			sprintf(sql, "INSERT INTO sxwphen (RGroupID, Month, GrowthPCT) VALUES (%d, %d, %f);", g+1, m+1,SXWResources->_phen[Igp(g,m)]);
 			rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
 			sqlcheck(rc, zErrMsg);
 		}
@@ -139,7 +139,7 @@ void insertSXWProd(void) {
 	for(m=0;m<12;m++) {
 		sql[0] = 0;
 		sprintf(sql, "INSERT INTO sxwprod (RGroupID, Month, BMASS, LITTER, PCTLIVE) VALUES (%d, %d, %f, %f, %f);", 
-					  g+1, m+1, SXWResources._prod_bmass[Igp(g,m)], SXWResources._prod_litter[m], SXWResources._prod_pctlive[Igp(g,m)]);
+					  g+1, m+1, SXWResources->_prod_bmass[Igp(g,m)], SXWResources->_prod_litter[m], SXWResources->_prod_pctlive[Igp(g,m)]);
 		rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
 		sqlcheck(rc, zErrMsg);
 	}
@@ -154,7 +154,7 @@ void insertInfo() {
 
 	beginTransaction();
 	sprintf(sql, "INSERT INTO info (StartYear, Years, Iterations, RGroups, TranspirationLayers, SoilLayers, PlotSize, BVT) VALUES (%d, %d, %d, %d, %d, %d, %f, %f);", 
-				  SW_Model.startyr, Globals->runModelYears, Globals->runModelIterations, Globals->grpCount, SXW.NTrLyrs, SXW.NSoLyrs, Globals->plotsize, SXWResources._bvt);
+				  SW_Model.startyr, Globals->runModelYears, Globals->runModelIterations, Globals->grpCount, SXW->NTrLyrs, SXW->NSoLyrs, Globals->plotsize, SXWResources->_bvt);
 	rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
 	sqlcheck(rc, zErrMsg);
 	endTransaction();
@@ -337,9 +337,9 @@ void insertOutputVars(RealF * _resource_cur, RealF added_transp) {
 
 	ForEachTrPeriod(p)
 	{
-		//ForEachTranspLayer(t) sum += SXW.transp[Ilp(t,p)];
-		for (t = 0; t < SXW.NSoLyrs; t++)
-			sum += SXW.transpTotal[Ilp(t, p)];
+		//ForEachTranspLayer(t) sum += SXW->transp[Ilp(t,p)];
+		for (t = 0; t < SXW->NSoLyrs; t++)
+			sum += SXW->transpTotal[Ilp(t, p)];
 	}
 
 	ForEachGroup(r) {
@@ -348,7 +348,7 @@ void insertOutputVars(RealF * _resource_cur, RealF added_transp) {
 			sum3 += _resource_cur[r];
 	}
 	beginTransaction();
-	insertSXWoutputVarsRow(Year, Iteration, Env->ppt, Env->temp, SXW.aet, sum, added_transp, sum+added_transp, sum1,sum2,sum3);
+	insertSXWoutputVarsRow(Year, Iteration, Env->ppt, Env->temp, SXW->aet, sum, added_transp, sum+added_transp, sum1,sum2,sum3);
 	endTransaction();
 }
 
@@ -382,7 +382,7 @@ void insertRgroupInfo(RealF * _resource_cur) {
 
 	beginTransaction();
 	ForEachGroup(r) {
-		insertSXWoutputRgroupRow(Year, Iteration, r+1, RGroup_GetBiomass(r),RGroup[r]->relsize, RGroup[r]->pr, _resource_cur[r]/SXWResources._bvt, _resource_cur[r]);
+		insertSXWoutputRgroupRow(Year, Iteration, r+1, RGroup_GetBiomass(r),RGroup[r]->relsize, RGroup[r]->pr, _resource_cur[r]/SXWResources->_bvt, _resource_cur[r]);
 	}
 	endTransaction();
 }
@@ -495,7 +495,7 @@ void insertRootsSum(RealD * _roots_active_sum) {
 
 	beginTransaction();
 	for(i=1; i<=4; i++) {
-		for (l = 0; l < SXW.NTrLyrs; l++) {
+		for (l = 0; l < SXW->NTrLyrs; l++) {
 			for (p = 0; p < 12; p++) {
 				m[p] = _roots_active_sum[Itlp(i-1,l, p)];
 			}
@@ -603,42 +603,42 @@ void insertTranspiration() {
 
 	beginTransaction();
 	//Total - 0
-	for (l = 0; l < SXW.NSoLyrs; l++) {
+	for (l = 0; l < SXW->NSoLyrs; l++) {
 		for(p=0;p<12;p++) {
-			m[p] = SXW.transpTotal[Ilp(l, p)];
+			m[p] = SXW->transpTotal[Ilp(l, p)];
 		}
 		insertSXWoutputTranspirationRow(Year,Iteration,l+1,0,m[0],m[1],m[2],m[3],m[4],m[5],m[6],m[7],m[8],m[9],m[10],m[11]);
 	}
 
 	//Tree - 1
-	for (l = 0; l < SXW.NSoLyrs; l++) {
+	for (l = 0; l < SXW->NSoLyrs; l++) {
 		for(p=0;p<12;p++) {
-			m[p] = SXW.transpVeg[SW_TREES][Ilp(l, p)];
+			m[p] = SXW->transpVeg[SW_TREES][Ilp(l, p)];
 		}
 		insertSXWoutputTranspirationRow(Year,Iteration,l+1,1,m[0],m[1],m[2],m[3],m[4],m[5],m[6],m[7],m[8],m[9],m[10],m[11]);
 	}
 
 	//Shrub - 2
-	for (l = 0; l < SXW.NSoLyrs; l++) {
+	for (l = 0; l < SXW->NSoLyrs; l++) {
 		for(p=0;p<12;p++) {
-			m[p] = SXW.transpVeg[SW_SHRUB][Ilp(l, p)];
+			m[p] = SXW->transpVeg[SW_SHRUB][Ilp(l, p)];
 		}
 		insertSXWoutputTranspirationRow(Year,Iteration,l+1,2,m[0],m[1],m[2],m[3],m[4],m[5],m[6],m[7],m[8],m[9],m[10],m[11]);
 	}
 
 	//Grass - 3
-	for (l = 0; l < SXW.NSoLyrs; l++) {
+	for (l = 0; l < SXW->NSoLyrs; l++) {
 		for (p = 0; p < 12; p++) {
-			m[p] = SXW.transpVeg[SW_GRASS][Ilp(l, p)];
+			m[p] = SXW->transpVeg[SW_GRASS][Ilp(l, p)];
 		}
 		insertSXWoutputTranspirationRow(Year, Iteration, l+1, 3, m[0], m[1], m[2],
 				m[3], m[4], m[5], m[6], m[7], m[8], m[9], m[10], m[11]);
 	}
 
 	//Forb - 4
-	for (l = 0; l < SXW.NSoLyrs; l++) {
+	for (l = 0; l < SXW->NSoLyrs; l++) {
 		for (p = 0; p < 12; p++) {
-			m[p] = SXW.transpVeg[SW_FORBS][Ilp(l, p)];
+			m[p] = SXW->transpVeg[SW_FORBS][Ilp(l, p)];
 		}
 		insertSXWoutputTranspirationRow(Year, Iteration, l+1, 4, m[0], m[1], m[2],
 				m[3], m[4], m[5], m[6], m[7], m[8], m[9], m[10], m[11]);
@@ -684,9 +684,9 @@ void insertSWCBulk() {
 	int Iteration = Globals->currIter;
 
 	beginTransaction();
-	for (l = 0; l < SXW.NSoLyrs; l++) {
+	for (l = 0; l < SXW->NSoLyrs; l++) {
 		for(p=0;p<12;p++) {
-			m[p] = SXW.swc[Ilp(l, p)];
+			m[p] = SXW->swc[Ilp(l, p)];
 		}
 		insertSXWoutputSWCBulkRow(Year,Iteration,l+1,m[0],m[1],m[2],m[3],m[4],m[5],m[6],m[7],m[8],m[9],m[10],m[11]);
 	}

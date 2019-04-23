@@ -30,7 +30,7 @@
 
 /*************** Global Variable Declarations ***************/
 /***********************************************************/
-extern SXW_t SXW;
+extern SXW_t* SXW;
 
 extern SW_SITE SW_Site;
 extern SW_MODEL SW_Model;
@@ -55,8 +55,8 @@ void _sxw_set_environs(void) {
    * need to convert ppt from cm to mm
   */
 	//Integer conversion always does floor so .5 is added
-	Env->ppt   = (IntS) (SXW.ppt * 10 + .5);
-	Env->temp  = SXW.temp;
+	Env->ppt   = (IntS) (SXW->ppt * 10 + .5);
+	Env->temp  = SXW->temp;
 }
 
 

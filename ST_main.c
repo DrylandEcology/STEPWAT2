@@ -33,7 +33,7 @@
 #include "sw_src/SW_Output_outtext.h"
 #include "sw_src/SW_Output_outarray.h"
 #include "sw_src/rands.h"
-extern SXW_t SXW;
+extern SXW_t* SXW;
 
 extern Bool prepare_IterationSummary; // defined in `SOILWAT2/SW_Output.c`
 extern Bool print_IterationSummary; // defined in `SOILWAT2/SW_Output_outtext.c`
@@ -234,7 +234,7 @@ int main(int argc, char **argv) {
 
 			rgroup_PartResources();
 
-			if (!isnull(SXW.debugfile) ) SXW_PrintDebug(0);
+			if (!isnull(SXW->debugfile) ) SXW_PrintDebug(0);
 
 			rgroup_Grow();
 
@@ -309,7 +309,7 @@ int main(int argc, char **argv) {
 		ST_disconnect();
 	}
 
-  if (!isnull(SXW.debugfile)){
+  if (!isnull(SXW->debugfile)){
     printf("entering debugfile\n");
     SXW_PrintDebug(1);
   }
@@ -461,7 +461,6 @@ static void init_args(int argc, char **argv) {
   /* Defaults */
   parm_SetFirstName( DFLT_FIRSTFILE);
   QuietMode = EchoInits = UseSeedDispersal = FALSE;
-  SXW.debugfile = NULL;
   progfp = stderr;
 
 

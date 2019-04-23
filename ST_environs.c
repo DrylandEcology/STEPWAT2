@@ -23,7 +23,7 @@
 #include "sxw_funcs.h"
 #include "sw_src/filefuncs.h"
 #include "sw_src/Times.h"
-extern SXW_t SXW;
+extern SXW_t* SXW;
 
 /*********** Locally Used Function Declarations ************/
 /***********************************************************/
@@ -97,8 +97,8 @@ static void _make_ppt( void) {
 
   for (i = 0; i < MAX_MONTHS; i++)
   {
-    Env->gsppt += GE(SXW.temp_monthly[i], GROWING_BASE_TEMP) ?
-      (IntS) (SXW.ppt_monthly[i] * 10. + 0.5) : 0;
+    Env->gsppt += GE(SXW->temp_monthly[i], GROWING_BASE_TEMP) ?
+      (IntS) (SXW->ppt_monthly[i] * 10. + 0.5) : 0;
   }
 
   if (Env->gsppt <= 0)
