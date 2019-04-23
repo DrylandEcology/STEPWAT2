@@ -106,14 +106,14 @@ struct transp_data {
 
   // ratios[] stores (transpiration/precipitation) values. It is used to keep track of
   // what value needs to be removed from the moving average.
-  RealF ratios[MAX_WINDOW]; // transp/ppt
+  RealF* ratios; // transp/ppt
   
   // transp[] stores transpiration values. It is used to keep track of what value needs to be
   // removed from the moving ratio_average.
-  RealF transp[MAX_WINDOW]; // transp
+  RealF* transp; // transp
 
   //SoS_array[] stores the sum of squares values (xi - mean)^2 for the previous (size) iterations.
-  RealF SoS_array[MAX_WINDOW]; //(xi - mean)^2
+  RealF* SoS_array; //(xi - mean)^2
 
   // Amount of additional transpiration added for the current year
   RealF added_transp;

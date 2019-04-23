@@ -89,7 +89,7 @@ extern Bool storeAllIterations;
  */
 // Window of transpiration used by _transp_contribution_by_group() in sxw_resource.c
 // "Window" refers to the number of years over which transpiration data is averaged.
-transp_t transp_window;
+transp_t* transp_window;
 pcg32_random_t resource_rng; //rng for swx_resource.c functions.
 SXW_resourceType SXWResources;
 
@@ -110,6 +110,7 @@ static TimeInt _debugyrs[100], _debugyrs_cnt;
 /*************** Local Function Declarations ***************/
 /***********************************************************/
 
+static void _allocate_memory(void);
 static void _read_files( void );
 static void _read_roots_max(void);
 static void _read_phen(void);
@@ -150,6 +151,9 @@ void SXW_Init( Bool init_SW, char *f_roots ) {
 	char roots[MAX_FILENAMESIZE] = { '\0' };
 
 RandSeed(Globals->randseed, &resource_rng);
+
+/* Allocate memory for all local pointers */
+_allocate_memory();
 
 #ifdef SXW_BYMAXSIZE
    GrpIndex rg; SppIndex sp;
@@ -415,7 +419,7 @@ void SXW_PrintDebug(Bool cleanup) {
 		insertInputVars();
 		insertInputProd();
 		insertInputSoils();
-		insertOutputVars(SXWResources._resource_cur, transp_window.added_transp);
+		insertOutputVars(SXWResources._resource_cur, transp_window->added_transp);
 		insertRgroupInfo(SXWResources._resource_cur);
 		insertOutputProd(&SW_VegProd);
 		insertRootsSum(SXWResources._roots_active_sum);
@@ -425,6 +429,23 @@ void SXW_PrintDebug(Bool cleanup) {
 	}
 }
 
+/* Allocate memory for sxw local variables. This should only be called once per simulation. */
+static void _allocate_memory(void){
+	transp_window = (transp_t*) Mem_Calloc(1, sizeof(transp_t), "_allocate_memory: transp_window");
+
+	/* Set the size of our transpiration window. */
+	if(Globals->transp_window > MAX_WINDOW){
+		LogError(logfp, LOGWARN, "Requested transp_window (%d) > %d. Setting transp_window to %d.", 
+		         Globals->transp_window, MAX_WINDOW, MAX_WINDOW);
+		transp_window->size = MAX_WINDOW;
+	} else {
+		transp_window->size = Globals->transp_window;
+	}
+
+	transp_window->ratios = (RealF*) Mem_Calloc(transp_window->size, sizeof(RealF), "_allocate_memory: transp_window->ratios");
+	transp_window->transp = (RealF*) Mem_Calloc(transp_window->size, sizeof(RealF), "_allocate_memory: transp_window->transp");
+	transp_window->SoS_array = (RealF*) Mem_Calloc(transp_window->size, sizeof(RealF), "_allocate_memory: transp_window->SoS_array");
+}
 
 static void  _read_files( void ) {
 /*======================================================*/
@@ -910,7 +931,7 @@ void _print_debuginfo(void) {
 	}
 
 	fprintf(f, "\n================== %d =============================\n", SW_Model.year);
-	fprintf(f, "MAP = %d(mm)\tMAT = %5.2f(C)\tAET = %5.4f(cm)\tT = %5.4f(cm)\tTADDED = %5.4f(cm)\tAT = %5.4f(cm)\n\n", Env->ppt, Env->temp, SXW.aet, sum, transp_window.added_transp, sum + transp_window.added_transp);
+	fprintf(f, "MAP = %d(mm)\tMAT = %5.2f(C)\tAET = %5.4f(cm)\tT = %5.4f(cm)\tTADDED = %5.4f(cm)\tAT = %5.4f(cm)\n\n", Env->ppt, Env->temp, SXW.aet, sum, transp_window->added_transp, sum + transp_window->added_transp);
 
 	fprintf(f, "Group     \tRelsize\tPR\tResource_cur\tResource_cur\n");
 	fprintf(f, "-----     \t-------\t-----\t-no scaling-\t-with scaling-\n");
