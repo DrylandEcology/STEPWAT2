@@ -298,6 +298,7 @@ void save_sxw_memory(RealD * grid_roots_max, RealD* grid_rootsXphen,
 		RealD* grid_roots_active, RealD* grid_roots_active_rel,
 		RealD* grid_roots_active_sum, RealD* grid_phen, RealD* grid_prod_bmass,
 		RealD* grid_prod_pctlive);
+void _deallocate_memory(void);
 //void SXW_init( Bool init_SW );
 
 
@@ -643,6 +644,7 @@ void runGrid(void)
 		printf("\routputting files took approximately %.2f seconds\n",
 				((double) (clock() - prog_Time) / CLOCKS_PER_SEC));
 	_free_grid_memory(); // free our allocated memory since we do not need it anymore
+	_deallocate_memory(); // sxw memory.
 	/*if(UseProgressBar)*/printf("!\n");
 }
 

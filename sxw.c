@@ -133,6 +133,7 @@ static void SXW_Reinit(void);
 void load_sxw_memory( RealD * grid_roots_max, RealD* grid_rootsXphen, RealD* grid_roots_active, RealD* grid_roots_active_rel, RealD* grid_roots_active_sum, RealD* grid_phen, RealD* grid_prod_bmass, RealD* grid_prod_pctlive );
 void save_sxw_memory( RealD * grid_roots_max, RealD* grid_rootsXphen, RealD* grid_roots_active, RealD* grid_roots_active_rel, RealD* grid_roots_active_sum, RealD* grid_phen, RealD* grid_prod_bmass, RealD* grid_prod_pctlive );
 void free_sxw_memory( void );
+void _deallocate_memory(void);
 
 /****************** Begin Function Code ********************/
 /***********************************************************/
@@ -445,6 +446,15 @@ static void _allocate_memory(void){
 	transp_window->ratios = (RealF*) Mem_Calloc(transp_window->size, sizeof(RealF), "_allocate_memory: transp_window->ratios");
 	transp_window->transp = (RealF*) Mem_Calloc(transp_window->size, sizeof(RealF), "_allocate_memory: transp_window->transp");
 	transp_window->SoS_array = (RealF*) Mem_Calloc(transp_window->size, sizeof(RealF), "_allocate_memory: transp_window->SoS_array");
+}
+
+/* Deallocate any sxw local pointers. When running the non-gridded mode
+ * there is no need to call this since we only have one transp_window variable */
+void _deallocate_memory(void){
+	Mem_Free(transp_window->ratios);
+	Mem_Free(transp_window->transp);
+	Mem_Free(transp_window->SoS_array);
+	Mem_Free(transp_window);
 }
 
 static void  _read_files( void ) {
