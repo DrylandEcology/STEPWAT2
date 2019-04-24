@@ -305,7 +305,7 @@ void save_sxw_memory(RealD * grid_roots_max, RealD* grid_rootsXphen,
 void _deallocate_memory(void);
 //void SXW_init( Bool init_SW );
 
-void copy_sxw(SXW_t* newSXW, SXW_resourceType* newSXWResources, transp_t* newTransp_window);
+void copy_sxw_variables(SXW_t* newSXW, SXW_resourceType* newSXWResources, transp_t* newTransp_window);
 
 
 /*********** Locally Used Function Declarations ************/
@@ -1682,7 +1682,7 @@ static void load_cell(int row, int col){
 						   gridCells[row][col]._Sreceived, gridCells[row][col]._Gwf, gridCells[row][col].stats_init);
 
 	/* Copy this cell's SXW variables into the loacl variables in sxw.c */
-	copy_sxw(&gridCells[row][col].mySXW, &gridCells[row][col].mySXWResources, &gridCells[row][col].myTranspWindow);
+	copy_sxw_variables(&gridCells[row][col].mySXW, &gridCells[row][col].mySXWResources, &gridCells[row][col].myTranspWindow);
 }
 
 /***********************************************************/
