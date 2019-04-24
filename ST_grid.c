@@ -163,10 +163,11 @@ struct grid_cell_st
 	Bool duringSpinup;
 	
 	/* ---------------- accumulators -------------------- */
-	StatType _Dist, _Ppt, _Temp,
+	StatType *_Dist, *_Ppt, *_Temp,
   		*_Grp, *_Gsize, *_Gpr, *_Gmort, *_Gestab,
   		*_Spp, *_Indv, *_Smort, *_Sestab, *_Sreceived;
 	FireStatsType *_Gwf;
+	Bool stats_init;
 	/* -------------- end accumulators ------------------ */
 
 	/* -------------------- SXW ------------------------- */
@@ -286,6 +287,9 @@ void stat_Load_Accumulators(int cell, int year);
 void stat_Save_Accumulators(int cell, int year);
 void stat_Free_Accumulators(void);
 void stat_Init_Accumulators(void);
+void stat_Copy_Accumulators(StatType* newDist, StatType* newPpt, StatType* newTemp, StatType* newGrp, StatType* newGsize, 
+                            StatType* newGpr, StatType* newGmort, StatType* newGestab, StatType* newSpp, StatType* newIndv,
+                            StatType* newSmort, StatType* newSestab, StatType* newSrecieved, FireStatsType* newGwf, Bool firstTime);
 
 //functions from sxw.c
 //void free_sxw_memory( void );
@@ -1667,6 +1671,13 @@ static void load_cell(int row, int col){
 
 	/* TRUE if this cell is in spinup mode */
 	DuringSpinup = gridCells[row][col].duringSpinup;
+
+	/* Copy this cell's accumulators into the local accumulators in ST_stats.c */
+	stat_Copy_Accumulators(gridCells[row][col]._Dist, gridCells[row][col]._Ppt, gridCells[row][col]._Temp,
+	                       gridCells[row][col]._Grp, gridCells[row][col]._Gsize, gridCells[row][col]._Gpr,
+						   gridCells[row][col]._Gmort, gridCells[row][col]._Gestab, gridCells[row][col]._Spp,
+						   gridCells[row][col]._Indv, gridCells[row][col]._Smort, gridCells[row][col]._Sestab,
+						   gridCells[row][col]._Sreceived, gridCells[row][col]._Gwf, gridCells[row][col].stats_init);
 }
 
 /***********************************************************/
