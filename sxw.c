@@ -135,6 +135,8 @@ void save_sxw_memory( RealD * grid_roots_max, RealD* grid_rootsXphen, RealD* gri
 void free_sxw_memory( void );
 void _deallocate_memory(void);
 
+void copy_sxw_variables(SXW_t* newSXW, SXW_resourceType* newSXWResources, transp_t* newTransp_window);
+
 /****************** Begin Function Code ********************/
 /***********************************************************/
 void SXW_Init( Bool init_SW, char *f_roots ) {
@@ -462,6 +464,13 @@ void _deallocate_memory(void){
 
 	Mem_Free(SXW);
 	Mem_Free(SXWResources);
+}
+
+/* Shallow copy variables into the local sxw variables. */
+void copy_sxw_variables(SXW_t* newSXW, SXW_resourceType* newSXWResources, transp_t* newTransp_window){
+	SXW = newSXW;
+	SXWResources = newSXWResources;
+	transp_window = newTransp_window;
 }
 
 static void  _read_files( void ) {
