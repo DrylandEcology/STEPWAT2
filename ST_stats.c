@@ -28,7 +28,6 @@
 #include "ST_structs.h"
 #include "ST_stats.h"
 #include "sxw.h"
-  extern SXW_t SXW;
   extern SW_SITE SW_Site;
 
 /************ External Variable Declarations ***************/
