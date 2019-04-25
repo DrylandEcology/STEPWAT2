@@ -422,6 +422,7 @@ void deallocate_Globals(void){
 	Mem_Free(Succulent);
 	Mem_Free(Globals);
 	Mem_Free(Plot);
+	Mem_Free(_SomeKillage);
 }
 
 /**************************************************************/
