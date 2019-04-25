@@ -67,7 +67,7 @@ void _kill_extra_growth(void);
 
 /************ File-Level Variable Declarations *************/
 /***********************************************************/
-Bool _SomeKillage;
+Bool *_SomeKillage;
 /* flag: some plant was reduced and PR is affected. */
 /* 7/5/01  - currently flag is set but unused. */
 extern
@@ -137,7 +137,7 @@ void mort_Main( Bool *killed) {
   SppIndex sp;
   GroupType *g;
 
-  _SomeKillage = FALSE;
+  *_SomeKillage = FALSE;
 
   ForEachGroup(rg) {
     g = RGroup[rg];
@@ -197,7 +197,7 @@ void mort_Main( Bool *killed) {
 
   } /* end ForEachGroup(rg) */
 
-  *killed = _SomeKillage;
+  killed = _SomeKillage;
 }
 
 /***********************************************************/
@@ -481,7 +481,7 @@ static void _pat( const SppIndex sp) {
       }
     }
 
-    if (k >= 0) _SomeKillage = TRUE;
+    if (k >= 0) *_SomeKillage = TRUE;
 }
 
 
@@ -512,7 +512,7 @@ static void _mound( const SppIndex sp) {
     }
 
 
-    if (k) _SomeKillage = TRUE;
+    if (k) *_SomeKillage = TRUE;
 }
 
 
@@ -538,7 +538,7 @@ static void _burrow( const SppIndex sp) {
            k = TRUE;
     }
 
-    if (k ) _SomeKillage = TRUE;
+    if (k ) *_SomeKillage = TRUE;
 }
 
 
@@ -576,7 +576,7 @@ static void _succulents( const SppIndex sp) {
     indiv_Kill_Complete(kills[i], 7);
 
 
-  if (Species[sp]->est_count) _SomeKillage = TRUE;
+  if (Species[sp]->est_count) *_SomeKillage = TRUE;
 }
 
 
@@ -628,7 +628,7 @@ static void _slow_growth( const SppIndex sp) {
   for( n=0; n <= k; n++ )
     indiv_Kill_Complete(kills[n], 8);
 
-  if (k >= 0) _SomeKillage = TRUE;
+  if (k >= 0) *_SomeKillage = TRUE;
 }
 
 /***********************************************************/
@@ -674,7 +674,7 @@ static void _age_independent( const SppIndex sp) {
     indiv_Kill_Complete(kills[n], 9);
   }
 
-  if (k >= 0) _SomeKillage = TRUE;
+  if (k >= 0) *_SomeKillage = TRUE;
 
   Mem_Free(kills);
 
@@ -723,7 +723,7 @@ static void _no_resources( GrpIndex rg) {
   for( i=0; i < nk; i++)
     indiv_Kill_Complete(indv_list[i], 10);
 
-  if (nk) _SomeKillage = TRUE;
+  if (nk) *_SomeKillage = TRUE;
 
   /* Check to see if this group's resources have been stretched,
    * and commit mortality of clonal plants which get additional
@@ -786,7 +786,7 @@ static void _stretched_clonal( GrpIndex rg, Int start, Int last,
         indiv_Kill_Complete(clist[i], 11);
       }
 
-      if (nk >= 0) _SomeKillage = TRUE;
+      if (nk >= 0) *_SomeKillage = TRUE;
 
     } else {  /* reduce inverse-proportionally */
 
@@ -818,7 +818,7 @@ static void _stretched_clonal( GrpIndex rg, Int start, Int last,
                             indiv_reduction);
 
       }
-      if (np >= 0) _SomeKillage = TRUE;
+      if (np >= 0) *_SomeKillage = TRUE;
 
     } /* end if pm*/
   } /* end if y >= 1*/

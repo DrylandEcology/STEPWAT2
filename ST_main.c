@@ -40,6 +40,7 @@ extern Bool print_IterationSummary; // defined in `SOILWAT2/SW_Output_outtext.c`
 extern Bool storeAllIterations; // defined in `SOILWAT2/SW_Output.c`
 extern SW_VEGPROD SW_VegProd;
 SW_FILE_STATUS SW_File_Status;
+extern Bool* _SomeKillage;
 
 /************* External Function Declarations **************/
 /***********************************************************/
@@ -413,6 +414,7 @@ void allocate_Globals(void){
 	Succulent = (SucculentType*) Mem_Calloc(1, sizeof(SucculentType), "allocate_Globals: Succulent");
 	Globals = (ModelType*) Mem_Calloc(1, sizeof(ModelType), "allocate_Globals: Globals");
 	Plot = (PlotType*) Mem_Calloc(1, sizeof(PlotType), "allocate_Globals: Plot");
+	_SomeKillage = (Bool*) Mem_Calloc(1, sizeof(Bool), "allocate_Globals: _SomeKillage");
 }
 
 void deallocate_Globals(void){
