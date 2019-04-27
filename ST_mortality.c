@@ -973,7 +973,7 @@ void _kill_maxage(void) {
     
     ForEachSpecies(s) {
         ForEachIndiv(i, Species[s]) {
-            if (i->age > Species[s]->max_age) {
+            if (i->age == Species[s]->max_age) {
                 indiv_Kill_Complete(i, 12);
             }
         }
