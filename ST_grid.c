@@ -453,7 +453,6 @@ void runGrid(void)
 	Mem_Free(SW_Soilwat.hist.file_prefix);
 	SW_Soilwat.hist.file_prefix = NULL;
 	_init_grid_inputs();// reads the grid inputs in & initializes the global grid variables
-	allocate_gridCells(grid_Rows, grid_Cols);
 
 	if (sd_Option2a || sd_Option2b)
 		_run_spinup();				// does the initial spinup
@@ -802,6 +801,8 @@ static void _init_grid_inputs(void)
 				"Number of cells in grid exceeds MAX_CELLS defined in ST_defines.h");
 
 	Globals->nCells = (grid_Cols * grid_Rows);
+	/* Allocate the 2d array of cells now that we know how many we need */
+	allocate_gridCells(grid_Rows, grid_Cols);
 
 	GetALine(f, buf);
 	i = sscanf(buf, "%d", &UseDisturbances);
