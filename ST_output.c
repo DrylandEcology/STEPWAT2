@@ -77,6 +77,9 @@ void output_Bmass_Yearly( Int year ) {
       strcpy(fields[fc++], "Temp");
     }
     if (BmassFlags.grpb) {
+      if(BmassFlags.wildfire){
+        strcpy(fields[fc++], "Wildfire");
+      }
       ForEachGroup(rg) 
       {
         strcpy(fields[fc++], RGroup[rg]->name);
@@ -87,6 +90,10 @@ void output_Bmass_Yearly( Int year ) {
         if (BmassFlags.pr) {
           strcpy(fields[fc], RGroup[rg]->name);
           strcat(fields[fc++],"_PR");
+        }
+        if(BmassFlags.prescribedfire){
+          strcpy(fields[fc], RGroup[rg]->name);
+          strcat(fields[fc++],"_PFire");
         }
       }
     }
@@ -149,14 +156,14 @@ void output_Bmass_Yearly( Int year ) {
     sprintf(fields[fc++], "%0.1f", Env.temp);
 
   if (BmassFlags.grpb) {
+    if (BmassFlags.wildfire)
+        sprintf(fields[fc++],"%d", RGroup[0]->wildfire);
     ForEachGroup(rg) {
       sprintf(fields[fc++], "%f", RGroup_GetBiomass(rg));
       if (BmassFlags.size)
         sprintf(fields[fc++],"%f", RGroup[rg]->relsize);
       if (BmassFlags.pr)
         sprintf(fields[fc++],"%f", RGroup[rg]->pr);
-      if (BmassFlags.wildfire)
-        sprintf(fields[fc++],"%d", RGroup[rg]->wildfire);
       if (BmassFlags.prescribedfire)
         sprintf(fields[fc++],"%d", RGroup[rg]->prescribedfire);
     }
