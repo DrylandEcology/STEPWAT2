@@ -448,11 +448,11 @@ void runGrid(void)
 	// this function sets up & runs the grid
 
 	_init_grid_files();				// reads in files.in file
-	_init_stepwat_inputs();				// reads the stepwat inputs in
+	_init_grid_inputs();			// reads the grid inputs in & initializes the global grid variables
+	_init_stepwat_inputs();			// reads the stepwat inputs in
 	//SWC hist file prefix needs to be cleared
 	Mem_Free(SW_Soilwat.hist.file_prefix);
 	SW_Soilwat.hist.file_prefix = NULL;
-	_init_grid_inputs();// reads the grid inputs in & initializes the global grid variables
 
 	if (sd_Option2a || sd_Option2b)
 		_run_spinup();				// does the initial spinup
