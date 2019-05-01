@@ -442,10 +442,15 @@ static int _load_bar(char* prefix, clock_t start, int x, int n, int r, int w)
 	return result;
 }
 
-/***********************************************************/
+/* Runs the gridded version of the code */
 void runGrid(void)
 {
-	// this function sets up & runs the grid
+	int i, j;
+	Bool killedany;
+	IntS year, iter;
+	double prog_Percent = 0.0, prog_Incr, prog_Acc = 0.0;
+	char prog_Prefix[32];
+	clock_t prog_Time;
 
 	_init_grid_files();				// reads in files.in file
 	_init_grid_inputs();			// reads the grid inputs in & initializes the global grid variables
@@ -457,12 +462,6 @@ void runGrid(void)
 	if (sd_Option2a || sd_Option2b)
 		_run_spinup();				// does the initial spinup
 
-	double prog_Percent = 0.0, prog_Incr, prog_Acc = 0.0;
-	char prog_Prefix[32];
-	clock_t prog_Time;
-	int i, j;
-	Bool killedany;
-	IntS year, iter;
 	if (UseProgressBar)
 	{
 		prog_Incr = (((double) 1)
