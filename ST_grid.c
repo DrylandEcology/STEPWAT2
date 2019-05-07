@@ -93,19 +93,26 @@
 
 /***************** Structure Declarations ******************/
 /***********************************************************/
-
+// represents a single soil layer
 struct _grid_soil_lyr_st
-{ // represents a single soil layer
+{ 
+	// Data for this soil layer
 	float data[11];
+	// Vertical width of this layer
 	int width;
 }typedef Grid_Soil_Lyr;
 
-struct _grid_soil_st
-{ //represents the input data for all the soil layers of a cell
+//represents the input data for all the soil layers of a cell
+struct Soil_st
+{
+	// Number of soil layers (size of lyr array)
 	int num_layers;
+	// Name of the roots file belonging to this cell
 	char rootsFile[20];
+	// Specific layer's information
 	Grid_Soil_Lyr* lyr;
-}typedef Grid_Soil_St;
+}typedef SoilType;
+
 
 struct _grid_disturb_st
 {
@@ -175,6 +182,11 @@ struct grid_cell_st
 	SXW_t mySXW;
 	SXW_resourceType mySXWResources;
 	/* ------------------ End SXW ----------------------- */
+
+	/* ------------------- Soils ------------------------ */
+	// Soil layer information for this cell.
+	SoilType mySoils;
+	/* ------------------ End Soils --------------------- */
 } typedef CellType;
 
 /************ Module Variable Declarations ***************/
@@ -228,7 +240,7 @@ SW_VEGPROD *grid_SW_VegProd, *spinup_SW_VegProd;
 SW_MODEL *grid_SW_Model, *spinup_SW_Model;
 
 // these two variables are used to store the soil/distubance inputs for each grid cell... also dynamically allocated/freed
-Grid_Soil_St *grid_Soils;
+SoilType *grid_Soils;
 Grid_Disturb_St *grid_Disturb;
 Grid_Init_Species_St *grid_initSpecies;
 
@@ -987,7 +999,7 @@ static void _init_grid_globals(void)
 			"_init_grid_globals()");
 	if (UseSoils)
 	{
-		grid_Soils = Mem_Calloc(grid_Cells, sizeof(Grid_Soil_St),
+		grid_Soils = Mem_Calloc(grid_Cells, sizeof(SoilType),
 				"_init_grid_globals()");
 		for (i = 0; i < grid_Cells; i++)
 			grid_Soils[i].num_layers = 0;
