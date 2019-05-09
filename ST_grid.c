@@ -144,7 +144,10 @@ struct _grid_sxw_st
 
 struct _grid_init_species_st
 {
+	/* TRUE is this cell should use spinup */
 	int use_SpinUp;
+	/* Array of Boolean values. TRUE if given species
+	   should be included in spinup */
 	int *species_seed_avail;
 }typedef Grid_Init_Species_St;
 
@@ -168,6 +171,8 @@ struct grid_cell_st
 	Bool useSeedDispersal;
 	/* TRUE if this cell is in spinup mode */
 	Bool duringSpinup;
+	/* species spinup information */
+	Grid_Init_Species_St mySpeciesInit;
 	
 	/* ---------------- accumulators -------------------- */
 	StatType *_Dist, *_Ppt, *_Temp,
@@ -877,10 +882,24 @@ static void _init_stepwat_inputs(void)
 
 /* Allocates memory for the grid cells. This only needs to be called once. */
 static void allocate_gridCells(int rows, int cols){
-	int i;
+	int i, j;
 	gridCells = (CellType**) Mem_Calloc(rows, sizeof(CellType*), "allocate_gridCells: rows");
 	for(i = 0; i < rows; ++i){
 		gridCells[i] = (CellType*) Mem_Calloc(cols, sizeof(CellType), "allocate_gridCells: columns");
+	}
+
+	/* Allocate all fields specific to gridded mode. This is not necessary for fields like mySpecies 
+	   since they are allocated elsewhere in the code.*/
+	for(i = 0; i < grid_Rows; ++i){
+		for(j = 0; j < grid_Cols; ++j){
+			// lyr is a dynamically allocated array
+			gridCells[i][j].mySoils.lyr = (Grid_Soil_Lyr*) 
+				Mem_Calloc(MAX_LAYERS, sizeof(Grid_Soil_Lyr), "allocate_gridCells: mySoils");
+			
+			// species_seed_avail is a dynamically allocated array
+			gridCells[i][j].mySpeciesInit.species_seed_avail = (int*)
+				Mem_Calloc(MAX_SPECIES, sizeof(int), "allocate_gridCells: mySpeciesInit");
+		}
 	}
 }
 
