@@ -272,6 +272,32 @@ void Species_Update_Newsize(SppIndex sp, RealF newsize)
 
 	rg = Species[sp]->res_grp;
 
+	/* If relsize is less than 0, species and individual relsizes are no longer
+	   in sync. We can correct this by summing us all individual relsizes. */
+	if(Species[sp]->relsize < 0){
+		IndivType *p = Species[sp]->IndvHead;
+		// reset relsize to 0.
+	    Species[sp]->relsize = 0;
+		//loop through all individuals and sum them.
+    	while(p)
+	    {
+    	    Species[sp]->relsize += p->relsize;
+        	p = p->Next;
+    	}
+
+		// If relsize is still less than 0 there are individuals with a negative relsize.
+		if(Species[sp]->relsize < 0){
+			LogError(logfp, LOGWARN,
+				"Species_Update_Newsize: sum of %s individuals' relsizes = %f at year %d, iteration %d.", Species[sp]->name,
+				Species[sp]->relsize, Globals.currYear, Globals.currIter);
+			Species[sp]->relsize = 0.0;
+		}
+
+		// Species[sp]-relsize now matches the sum of individual relsizes.
+		// no need to run the rest of this function.
+		return;
+	}
+
 	if (LT(Species[sp]->relsize, 0.0))
 	{
 		LogError(logfp, LOGWARN,
