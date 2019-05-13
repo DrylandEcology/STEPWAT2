@@ -923,14 +923,14 @@ void _print_debuginfo(void) {
 	fprintf(f, "%s\t\t%.4f\t%.4f\t%.4f\t\t%.4f\n", "Total", sum1, sum2, sum3/_bvt, sum3);
 
 	fprintf(f, "\n------ Production Values Daily Summed Across Types Monthly Averaged -------\n");
-	fprintf(f, "Month\tBMass\tPctLive\tLAIlive\tVegCov\tTotAGB\n");
+	fprintf(f, "Month\tBMass\tPctLive\tLAIlive\tLAItotal\tTotAGB\n");
 	fprintf(f, "-----\t-----\t-------\t-------\t------\t------\n");
 
 	int doy = 1;
 	ForEachMonth(p)
 	{
 		int days = 31, i;
-		double pct_live = 0, lai_live = 0, vegcov = 0, total_agb = 0, biomass = 0;
+		double pct_live = 0, lai_live = 0, bLAI_total = 0, total_agb = 0, biomass = 0;
 
 		if (p == Apr || p == Jun || p == Sep || p == Nov) //all these months have 30 days
 			days = 30;
@@ -945,8 +945,8 @@ void _print_debuginfo(void) {
 					+ (v->veg[1].lai_live_daily[i])
 					+ (v->veg[3].lai_live_daily[i])
 					+ (v->veg[2].lai_live_daily[i]);
-			vegcov += (v->veg[0].vegcov_daily[i]) + (v->veg[1].vegcov_daily[i])
-					+ (v->veg[3].vegcov_daily[i]) + (v->veg[2].vegcov_daily[i]);
+			bLAI_total += (v->veg[0].bLAI_total_daily[i]) + (v->veg[1].bLAI_total_daily[i])
+					+ (v->veg[3].bLAI_total_daily[i]) + (v->veg[2].bLAI_total_daily[i]);
 			total_agb += (v->veg[0].total_agb_daily[i])
 					+ (v->veg[1].total_agb_daily[i])
 					+ (v->veg[3].total_agb_daily[i])
@@ -969,11 +969,11 @@ void _print_debuginfo(void) {
 		pct_live /= days;
 		biomass /= days;
 		lai_live /= days; //getting the monthly averages...
-		vegcov /= days;
+		bLAI_total /= days;
 		total_agb /= days;
 
 		fprintf(f, "%4d\t%.2f\t%.3f\t%.3f\t%.2f\t%.2f\n", p + 1, biomass,
-				pct_live, lai_live, vegcov, total_agb);
+				pct_live, lai_live, bLAI_total, total_agb);
 	}
 
 	for (t = 0; t < 4; t++) {
