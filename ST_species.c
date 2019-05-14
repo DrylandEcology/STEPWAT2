@@ -289,7 +289,7 @@ void Species_Update_Newsize(SppIndex sp, RealF newsize)
 		if(Species[sp]->relsize < 0){
 			LogError(logfp, LOGWARN,
 				"Species_Update_Newsize: sum of %s individuals' relsizes = %f at year %d, iteration %d.", Species[sp]->name,
-				Species[sp]->relsize, Globals.currYear, Globals.currIter);
+				Species[sp]->relsize, Globals->currYear, Globals->currIter);
 			Species[sp]->relsize = 0.0;
 		}
 
