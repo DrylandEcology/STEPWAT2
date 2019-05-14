@@ -503,29 +503,30 @@ void runGrid(void)
 		if (BmassFlags.yearly || MortFlags.yearly)
 			parm_Initialize(iter);
 
-		Plot_Initialize();
+		// Initialize the plot for each grid cell
+		for (i = 0; i < grid_Rows; i++){
+			for (j = 0; j < grid_Cols; j++){
+				load_cell(i, j);
+				Plot_Initialize();
+				Globals->currIter = iter;
+			}
+		}
 
 		RandSeed(Globals->randseed, &environs_rng);
-	RandSeed(Globals->randseed, &mortality_rng);
-	RandSeed(Globals->randseed, &resgroups_rng);
-	RandSeed(Globals->randseed, &species_rng);
-	RandSeed(Globals->randseed, &grid_rng);
-	RandSeed(Globals->randseed, &markov_rng);
-
-		if (iter > 1)
-			_free_grid_globals(); //frees the memory from when we called _load_grid_globals() last time... (doesn't need to be called on the first iteration because the memory hasn't been allocated yet)
-
-		Globals->currIter = iter;
-		_load_grid_globals(); //allocates/initializes grid variables (specifically the ones that are going to change every iter)
+		RandSeed(Globals->randseed, &mortality_rng);
+		RandSeed(Globals->randseed, &resgroups_rng);
+		RandSeed(Globals->randseed, &species_rng);
+		RandSeed(Globals->randseed, &grid_rng);
+		RandSeed(Globals->randseed, &markov_rng);
 
 		for (year = 1; year <= Globals->runModelYears; year++)
 		{ //for each year
-			for (i = 1; i <= grid_Rows; i++)
-				for (j = 1; j <= grid_Cols; j++)
+			for (i = 0; i < grid_Rows; i++){
+				for (j = 0; j < grid_Cols; j++)
 				{ //for each cell
 
 					//fprintf(stderr, "year: %d", year);
-					_load_cell(i, j, year, TRUE);
+					load_cell(i, j);
 
 					if (year == 1 && (sd_Option2a || sd_Option2b))
 					{
@@ -543,8 +544,6 @@ void runGrid(void)
 
 					if (year > 1 && UseSeedDispersal)
 						_set_sd_lyppt(i, j);
-
-
 
 					rgroup_Establish(); /* excludes annuals */
 
@@ -581,6 +580,7 @@ void runGrid(void)
 						}
 					}
 				} /* end model run for this cell*/
+			} /* end model run for this row */
 
 			if (UseSeedDispersal)
 				_do_seed_dispersal();
@@ -618,15 +618,11 @@ void runGrid(void)
 	}
 
 	// outputs all of the mort and BMass files for each cell...
-	for (i = 1; i <= grid_Rows; i++)
-		for (j = 1; j <= grid_Cols; j++)
+	for (i = 0; i < grid_Rows; i++)
+		for (j = 0; j < grid_Cols; j++)
 		{
-
 			int cell = j + ((i - 1) * grid_Cols) - 1;
-			_load_cell(i, j, 1, TRUE);
-			for (year = 2; year <= Globals->runModelYears; year++) // _load_cell gets the first years accumulators loaded, so we start at 2...
-				stat_Load_Accumulators(cell, year);
-
+			load_cell(i, j);
 			char fileMort[1024], fileBMass[1024], fileReceivedProb[1024];
 
 			sprintf(fileReceivedProb, "%s%d.csv", grid_files[9], cell);
