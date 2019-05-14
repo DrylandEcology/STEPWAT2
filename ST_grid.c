@@ -269,6 +269,11 @@ void rgroup_Extirpate(GrpIndex rg);
 /************* External Function Declarations **************/
 /***********************************************************/
 
+//from ST_species.c
+void proportion_Recovery(void);
+void save_annual_species_relsize(void);
+
+
 //from ST_resgroups.c
 void rgroup_Grow(void);
 void rgroup_Establish(void);
@@ -279,6 +284,7 @@ void rgroup_PartResources(void);
 //from ST_mortality.c
 void mort_Main(Bool *killed);
 void mort_EndOfYear(void);
+void grazing_EndOfYear(void);
 
 //functions from ST_params.c
 void parm_Initialize(Int);
@@ -364,6 +370,7 @@ static void _read_init_species(void);
 static void _do_groups_and_species_extirpate(void);
 static void _do_grid_proportion_Recovery(int row, int col);
 static void _do_grid_grazing_EndOfYear(int row, int col);
+
 
 //static void _copy_species(SpeciesType* to, SpeciesType* from, Bool deep);
 
@@ -479,15 +486,6 @@ void runGrid(void)
 	if (sd_Option2a || sd_Option2b)
 		_run_spinup();				// does the initial spinup
 
-	if (UseProgressBar)
-	{
-		prog_Incr = (((double) 1)
-				/ ((double) ((Globals->runModelYears * grid_Cells)
-						* Globals->runModelIterations))); //gets how much progress we'll make in one year towards our goal of iter*years*cells
-		prog_Time = clock();  //used for timing
-		sprintf(prog_Prefix, "simulations: ");
-	}
-
 	char aString[2048];
 	sprintf(aString, "%s/%s", grid_directories[0], SW_Weather.name_prefix);
 
@@ -545,40 +543,31 @@ void runGrid(void)
 					if (year > 1 && UseSeedDispersal)
 						_set_sd_lyppt(i, j);
 
-					rgroup_Establish(); /* excludes annuals */
+					/* The following functions mimic ST_main.c. load_cell(i, j) ensures that all global variables reference the specific cell */
 
-					Env_Generate(); //calls : SXW_Run_SOILWAT() which calls : _sxw_sw_run() which calls : SW_CTL_run_current_year()
+					rgroup_Establish(); 		// Establish individuals. Excludes annuals.
 
-					rgroup_PartResources();
-					rgroup_Grow();
+					Env_Generate();				// Generated the SOILWAT environment
 
-					mort_Main(&killedany);
+					rgroup_PartResources();		// Distribute resources
+					rgroup_Grow(); 				// Grow
 
-					rgroup_IncrAges();
+					mort_Main(&killedany); 		// Mortality that occurs during the growing season
 
-					// Added functions for Grazing and mort_end_year as proportional killing effect before exporting biomass end of the year
-					_do_grid_grazing_EndOfYear(i, j);
-					_do_grid_disturbances(i, j);
+					rgroup_IncrAges(); 			// Increment ages of all plants
 
-					stat_Collect(year);
+					grazing_EndOfYear(); 		// Livestock grazing
+					
+					save_annual_species_relsize(); // Save annuals before we kill them
 
-					_save_cell(i, j, year, TRUE);
+					mort_EndOfYear(); 			// End of year mortality, for example age.
 
-		            // Moved kill annual and kill extra growth after we export biomass, we also doing recoverly after killing year
-				    _kill_annuals();
-					_do_grid_proportion_Recovery(i, j);
-					_kill_extra_growth();
+					stat_Collect(year); 		// Update the accumulators
 
-					if (UseProgressBar)
-					{
-						prog_Percent += prog_Incr; //updating our percent done
-						if (prog_Percent > prog_Acc)
-						{ //only update if 1% progress or more has been made since the last time we updated (this check is so it doesn't waste processing time that could be spent running the simulations by updating all of the time)
-							prog_Acc += 0.01;
-							_load_bar(prog_Prefix, prog_Time,
-									(int) (100 * prog_Percent), 100, 100, 10); //display our bar to the console
-						}
-					}
+				    _kill_annuals(); 			// Kill annuals
+					proportion_Recovery(); 		// Recover from any disturbances
+					_kill_extra_growth(); 		// Kill superfluous growth
+
 				} /* end model run for this cell*/
 			} /* end model run for this row */
 
@@ -605,18 +594,6 @@ void runGrid(void)
 
 	} /*end iterations */
 
-	if (UseProgressBar)
-		printf("\rsimulations took approximately: %.2f seconds\n",
-				((double) (clock() - prog_Time) / CLOCKS_PER_SEC));
-
-	if (UseProgressBar)
-	{
-		prog_Percent = prog_Acc = 0.0;
-		prog_Incr = ((double) 1) / ((double) grid_Cells);
-		prog_Time = clock();
-		sprintf(prog_Prefix, "outputting: ");
-	}
-
 	// outputs all of the mort and BMass files for each cell...
 	for (i = 0; i < grid_Rows; i++)
 		for (j = 0; j < grid_Cols; j++)
@@ -639,17 +616,6 @@ void runGrid(void)
 				stat_Output_Seed_Dispersal(fileReceivedProb, sd_Sep,
 						sd_MakeHeader);
 
-			if (UseProgressBar)
-			{
-				prog_Percent += prog_Incr;
-				if (prog_Percent > prog_Acc)
-				{
-					prog_Acc += 0.01;
-					_load_bar(prog_Prefix, prog_Time, 100 * prog_Percent, 100,
-							100, 10);
-				}
-			}
-
 		}
 	//Here creating grid cells avg values output file
 	char fileBMassCellAvg[1024];
@@ -657,12 +623,8 @@ void runGrid(void)
 	if (BmassFlags.summary)
 		stat_Output_AllCellAvgBmass(fileBMassCellAvg);
 
-	if (UseProgressBar)
-		printf("\routputting files took approximately %.2f seconds\n",
-				((double) (clock() - prog_Time) / CLOCKS_PER_SEC));
 	_free_grid_memory(); // free our allocated memory since we do not need it anymore
 	_deallocate_memory(); // sxw memory.
-	/*if(UseProgressBar)*/printf("!\n");
 }
 
 /***********************************************************/
