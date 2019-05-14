@@ -389,12 +389,12 @@ void insertRgroupInfo(RealF * _resource_cur) {
 	endTransaction();
 }
 
-static void insertSXWoutputProdRow(int year, int iter, int Month, double BMass, double PctLive, double LAIlive, double VegCov, double TotAGB) {
+static void insertSXWoutputProdRow(int year, int iter, int Month, double BMass, double PctLive, double LAIlive, double LAItotal, double TotAGB) {
 	int rc;
 	char *zErrMsg = 0;
 	sql[0] = 0;
 
-	sprintf(sql, "INSERT INTO sxwOutputProd (Year,Iteration,Month,BMass,PctLive,LAIlive,VegCov,TotAGB) VALUES (%d, %d, %d, %.3f, %.3f, %.3f, %.3f, %.3f);", year, iter,Month,BMass,PctLive,LAIlive,VegCov,TotAGB);
+	sprintf(sql, "INSERT INTO sxwOutputProd (Year,Iteration,Month,BMass,PctLive,LAIlive,LAItotal,TotAGB) VALUES (%d, %d, %d, %.3f, %.3f, %.3f, %.3f, %.3f);", year, iter,Month,BMass,PctLive,LAIlive,LAItotal,TotAGB);
 	rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
 	sqlcheck(rc, zErrMsg);
 }
@@ -409,7 +409,7 @@ void insertOutputProd(SW_VEGPROD *v) {
 	ForEachMonth(p)
 	{
 		int days = 31, i;
-		double pct_live = 0, lai_live = 0, vegcov = 0, total_agb = 0, biomass = 0;
+		double pct_live = 0, lai_live = 0, bLAI_total = 0, total_agb = 0, biomass = 0;
 
 		if (p == Apr || p == Jun || p == Sep || p == Nov) //all these months have 30 days
 			days = 30;
@@ -424,8 +424,8 @@ void insertOutputProd(SW_VEGPROD *v) {
 					+ (v->veg[1].lai_live_daily[i])
 					+ (v->veg[3].lai_live_daily[i])
 					+ (v->veg[2].lai_live_daily[i]);
-			vegcov += (v->veg[0].vegcov_daily[i]) + (v->veg[1].vegcov_daily[i])
-					+ (v->veg[3].vegcov_daily[i]) + (v->veg[2].vegcov_daily[i]);
+			bLAI_total += (v->veg[0].bLAI_total_daily[i]) + (v->veg[1].bLAI_total_daily[i])
+					+ (v->veg[3].bLAI_total_daily[i]) + (v->veg[2].bLAI_total_daily[i]);
 			total_agb += (v->veg[0].total_agb_daily[i])
 					+ (v->veg[1].total_agb_daily[i])
 					+ (v->veg[3].total_agb_daily[i])
@@ -444,14 +444,10 @@ void insertOutputProd(SW_VEGPROD *v) {
 		pct_live /= days;
 		biomass /= days;
 		lai_live /= days; //getting the monthly averages...
-		vegcov /= days;
+		bLAI_total /= days;
 		total_agb /= days;
 
-		// had to update this commented out code because the VegProds are now daily values instead of monthly ones...
-		//fprintf(f,"%4d\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n",
-		//      p+1,v->biomass[p], v->pct_live[p],v->lai_live[p],
-		//    v->vegcov[p], v->total_agb[p]);
-		insertSXWoutputProdRow(Year,Iteration,p+1,biomass,pct_live, lai_live, vegcov, total_agb);
+		insertSXWoutputProdRow(Year,Iteration,p+1,biomass,pct_live, lai_live, bLAI_total, total_agb);
 	}
 	endTransaction();
 }
@@ -713,7 +709,7 @@ static void prepareStatements() {
 	sprintf(sql, "INSERT INTO sxwOutputRgroup (Year,Iteration,RGroupID,Biomass,Realsize,PR,resource_cur_preBvt,resource_cur) VALUES (@Year,@Iteration,@RGroupID,@Biomass,@Realsize,@PR,@pre_bvt,@resource_cur);");
 	sqlite3_prepare_v2(db, sql, 1024, &stmt_OutRgroup, NULL);
 
-	sprintf(sql, "INSERT INTO sxwOutputProd (Year,Iteration,Month,BMass,PctLive,LAIlive,VegCov,TotAGB) VALUES (@Year,@Iteration,@Month,@BMass,@PctLive,@LAIlive,@VegCov,@TotAGB);");
+	sprintf(sql, "INSERT INTO sxwOutputProd (Year,Iteration,Month,BMass,PctLive,LAIlive,LAItotal,TotAGB) VALUES (@Year,@Iteration,@Month,@BMass,@PctLive,@LAIlive,@LAItotal,@TotAGB);");
 	sqlite3_prepare_v2(db, sql, 1024, &stmt_OutProd, NULL);
 
 	sprintf(sql, "INSERT INTO sxwRootsSum (Year,Iteration,Layer,VegProdType,January,February,March,April,May,June,July,August,September,October,November,December) VALUES (@Year,@Iteration,@Layer,@VegProdType,@January,@February,@March,@April,@May,@June,@July,@August,@September,@October,@November,@December);");
@@ -767,7 +763,7 @@ void createTables() {
 	char *table_OutputRgroup =
 			"CREATE TABLE sxwOutputRgroup(YEAR INT NOT NULL, Iteration INT NOT NULL, RGroupID INT NOT NULL, Biomass REAL, Realsize REAL, PR REAL, resource_cur_preBvt Real,resource_cur REAL, PRIMARY KEY(Year, Iteration, RGroupID));";
 	char *table_OutputProd =
-			"CREATE TABLE sxwOutputProd(YEAR INT NOT NULL, Iteration INT NOT NULL, Month INT NOT NULL, BMass REAL, PctLive REAL, LAIlive REAL, VegCov REAL, TotAGB REAL, PRIMARY KEY(Year, Iteration, Month));";
+			"CREATE TABLE sxwOutputProd(YEAR INT NOT NULL, Iteration INT NOT NULL, Month INT NOT NULL, BMass REAL, PctLive REAL, LAIlive REAL, LAItotal REAL, TotAGB REAL, PRIMARY KEY(Year, Iteration, Month));";
 	char *table_OutputTransp =
 			"CREATE TABLE sxwOutputTranspiration(YEAR INT NOT NULL, Iteration INT NOT NULL, Layer INT NOT NULL, VegProdType INT NOT NULL, January REAL, February REAL, March REAL, April REAL, May REAL, June REAL, July REAL, August REAL, September REAL, October REAL, November REAL, December REAL, PRIMARY KEY(Year, Iteration, Layer, VegProdType));";
 	char *table_OutputSWCBulk =
