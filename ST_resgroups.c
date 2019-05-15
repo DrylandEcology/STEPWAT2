@@ -151,7 +151,7 @@ static RealF _add_annuals(const GrpIndex rg, const SppIndex sp, const RealF last
      * from the random draw is larger than max_seed_estab, max_seed_estab is used instead*/
     if (g->extirpated)
     {
-        num_est = min(viable_seeds * var, s->max_seed_estab);
+        num_est = 0;
     }
     else
     {
