@@ -213,7 +213,18 @@ void output_Mort_Yearly( void ) {
 	if (!MortFlags.yearly)
 		return;
 
-	/* Note: Header line already printed */
+    /* Print header line */
+	fprintf(f, "Age");
+
+	if (MortFlags.group) {
+        ForEachGroup(rg) fprintf(f, "%c%s", MortFlags.sep, RGroup[rg]->name);
+	}
+
+	if (MortFlags.species) {
+        ForEachSpecies(sp) fprintf(f, "%c%s", MortFlags.sep, Species[sp]->name);
+	}
+
+	fprintf(f, "\n");
 
 	/* Print a line of establishments */
 	fprintf(f, "(Estabs)");
