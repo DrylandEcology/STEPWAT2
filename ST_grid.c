@@ -486,8 +486,10 @@ void runGrid(void)
 	if (sd_Option2a || sd_Option2b)
 		_run_spinup();				// does the initial spinup
 
-	char aString[2048];
-	sprintf(aString, "%s/%s", grid_directories[0], SW_Weather.name_prefix);
+	// SOILWAT resets SW_Weather.name_prefix every iteration. This is not the behavior we want 
+	// so the name is stored here.
+	char SW_prefix_permanent[2048];
+	sprintf(SW_prefix_permanent, "%s/%s", grid_directories[0], SW_Weather.name_prefix);
 
 	for (iter = 1; iter <= Globals->runModelIterations; iter++)
 	{ //for each iteration
@@ -496,7 +498,7 @@ void runGrid(void)
 		 * 06/15/2016 (akt) Added resetting correct historical weather file path,
 		 * as it was resetting to original path value (that was not correct for grid version)from input file after every iteration
 		 */
-		sprintf(SW_Weather.name_prefix, "%s", aString); //updates the directory correctly for the weather files so soilwat can find them
+		sprintf(SW_Weather.name_prefix, "%s", SW_prefix_permanent); //updates the directory correctly for the weather files so soilwat can find them
 
 		if (BmassFlags.yearly || MortFlags.yearly)
 			parm_Initialize(iter);
@@ -525,18 +527,6 @@ void runGrid(void)
 
 					//fprintf(stderr, "year: %d", year);
 					load_cell(i, j);
-
-					if (year == 1 && (sd_Option2a || sd_Option2b))
-					{
-						//TODO: DM finish this...
-
-						int cell = j + ((i - 1) * grid_Cols) - 1; // converts the row/col into an array index
-						int spinup_cell = grid_SoilTypes[cell]; // gets us the actual cell we want to load up from the spinup
-
-						if ((sd_Option2b && grid_initSpecies[cell].use_SpinUp)
-								|| sd_Option2a)
-							_load_spinup_cell(spinup_cell); // loads the spinup cell into the global variables
-					}
 
 					Globals->currYear = year;
 

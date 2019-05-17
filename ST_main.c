@@ -162,7 +162,6 @@ int main(int argc, char **argv) {
   storeAllIterations = FALSE; // dont want to store all soilwat output iterations unless -i flag
   STdebug_requested = FALSE;
 
-	allocate_Globals();
 	init_args(argc, argv); // read input arguments and intialize proper flags
 
 	printf("STEPWAT  init_args() executed successfully \n");
@@ -171,6 +170,8 @@ int main(int argc, char **argv) {
 		runGrid();
 		return 0;
 	}
+
+	allocate_Globals();
 
 	parm_Initialize(0);
 
