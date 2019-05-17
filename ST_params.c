@@ -962,6 +962,7 @@ static void _rgroup_add1( char name[], RealF space, RealF density,
   RGroup[rg]->xgrow         = xgro;
   RGroup[rg]->use_me        = itob(turnon);
   RGroup[rg]->veg_prod_type = veg_prod_type;
+  RGroup[rg]->use_extra_res = itob(xres);
   
 }
 
