@@ -620,10 +620,12 @@ void runGrid(void)
 /***********************************************************/
 static void _run_spinup(void)
 {
-
+	StatType *dummy_Dist, *dummy_Ppt, *dummy_Temp,
+  		*dummy_Grp, *dummy_Gsize, *dummy_Gpr, *dummy_Gmort, *dummy_Gestab,
+  		*dummy_Spp, *dummy_Indv, *dummy_Smort, *dummy_Sestab, *dummy_Sreceived;
+	FireStatsType *dummy_Gwf;
 	//does the spinup, it's pretty much like running the grid, except some differences like no seed dispersal and no need to deal with output accumulators
-
-	int i, spinup_Cell;
+	int i, j;
 	Bool killedany;
 	IntS year, iter;
 
@@ -637,11 +639,16 @@ static void _run_spinup(void)
 			grid_SoilTypes[i] = 0;
 	}
 
-	_init_spinup_globals();
-	_load_spinup_globals();
-
 	for (iter = 1; iter <= 1; iter++)
 	{ //for each iteration... only 1 iteration allowed for now
+
+		/* Since this is technically an iteration so we need to seed the RNGs. */
+		RandSeed(Globals->randseed, &environs_rng);
+		RandSeed(Globals->randseed, &mortality_rng);
+		RandSeed(Globals->randseed, &resgroups_rng);
+		RandSeed(Globals->randseed, &species_rng);
+		RandSeed(Globals->randseed, &grid_rng);
+		RandSeed(Globals->randseed, &markov_rng);
 
 		if (BmassFlags.yearly || MortFlags.yearly)
 			parm_Initialize(iter);
@@ -653,39 +660,53 @@ static void _run_spinup(void)
 
 		for (year = 1; year <= Globals->runModelYears; year++)
 		{ //for each year
-			for (spinup_Cell = 0; spinup_Cell < nSoilTypes; spinup_Cell++)
-			{ // for each different soil type
+			for (i = 0; i < grid_Rows; ++i)
+			{ // for each row
+				for(j = 0; j < grid_Cols; ++j)
+				{ // for each column
+					// If we should run spinup on this cell
+					if(gridCells[i][j].mySpeciesInit.use_SpinUp){
+						// Load up a cell
+						load_cell(i, j);
+					} else {
+						continue; // No spinup requested. Move on to next cell.
+					}
 
-				//int cell = soilTypes_Array[spinup_Cell]; // this is the first cell of this soiltypes actual cell number
-				//int j = cell % grid_Cols + 1; // this is the column of the first cell of this soiltype
-				//int i = ((cell + 1 - j) / grid_Cols) + 1; // this is the row of the first cell of this soiltype
+					/* This step is important. load_cell loaded in the actual accumulators, but we do not want
+					   to accumulate stats while in spinup. We need to load in dummy accumulators to ensure
+					   we ignore everything that happens in spinup. */
+					stat_Copy_Accumulators(dummy_Dist, dummy_Ppt, dummy_Temp, dummy_Grp, dummy_Gsize, dummy_Gpr, dummy_Gmort, dummy_Gestab,
+										   dummy_Spp, dummy_Indv, dummy_Smort, dummy_Sestab, dummy_Sreceived, dummy_Gwf, TRUE);
 
-				_load_spinup_cell(spinup_Cell);
-				Globals->currYear = year;
+					Globals->currYear = year;
 
-			//	_do_grid_disturbances(i, j);
+					rgroup_Establish(); 		// Establish individuals. Excludes annuals.
 
-				rgroup_Establish(); /* excludes annuals */
+					Env_Generate();				// Generated the SOILWAT environment
 
-				Env_Generate(); //calls : SXW_Run_SOILWAT() which calls : _sxw_sw_run() which calls : SW_CTL_run_current_year()
+					rgroup_PartResources();		// Distribute resources
+					rgroup_Grow(); 				// Grow
 
-				rgroup_PartResources();
-				rgroup_Grow();
+					mort_Main(&killedany); 		// Mortality that occurs during the growing season
 
-				mort_Main(&killedany);
+					rgroup_IncrAges(); 			// Increment ages of all plants
 
-				rgroup_IncrAges();
+					grazing_EndOfYear(); 		// Livestock grazing
+					
+					//save_annual_species_relsize(); // See stat_Collect below for why this is commented out.
 
-				stat_Collect(year);
-				//mort_EndOfYear();
-				_save_spinup_cell(spinup_Cell);
+					mort_EndOfYear(); 			// End of year mortality, for example age.
 
-				_kill_annuals();
-				_kill_extra_growth();
+					/* stat_Collect was called in spinup, but I have no idea why. We definitely
+					   do not want to use the accumulator values, so why collect them? -Chandler */
+					//stat_Collect(year);
 
-			} /* end model run for this cell*/
-
-		}/* end model run for this year*/
+				    _kill_annuals(); 			// Kill annuals
+					proportion_Recovery(); 		// Recover from any disturbances
+					_kill_extra_growth(); 		// Kill superfluous growth			
+				} /* end column */
+			} /* end row */
+		} /* end model run for this year*/
 
 		ChDir(grid_directories[0]);
 		SXW_Reset();
