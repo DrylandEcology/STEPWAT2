@@ -899,7 +899,7 @@ GrpIndex RGroup_New(void)
 	if (++Globals.grpCount > Globals.max_rgroups)
 	{
 		LogError(logfp, LOGFATAL, "Too many groups specified (>%d)!\n"
-				"You must adjust MAX_RGROUPS in rgroup.in!",
+				"You must adjust MAX_RGROUPS in maxrgroupspecies.in!",
 		Globals.max_rgroups);
 	}
 
