@@ -224,7 +224,7 @@ void output_Mort_Yearly( void ) {
         ForEachSpecies(sp) fprintf(f, "%c%s", MortFlags.sep, Species[sp]->name);
 	}
 
-	/* Column header is now complete */
+	/* Header line is now complete */
 	fprintf(f, "\n");
 
 	/* Print a line of establishments */
