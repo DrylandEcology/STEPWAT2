@@ -785,7 +785,6 @@ static void _init_grid_inputs(void)
 		LogError(logfp, LOGFATAL,
 				"Number of cells in grid exceeds MAX_CELLS defined in ST_defines.h");
 
-	Globals->nCells = (grid_Cols * grid_Rows);
 	/* Allocate the 2d array of cells now that we know how many we need */
 	allocate_gridCells(grid_Rows, grid_Cols);
 
