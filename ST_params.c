@@ -859,6 +859,8 @@ static void _rgroup_init( void) {
    }
    _rgroup_addsucculent( name, wslope, wint, dslope, dint);
 
+   /* ------------------------------------------------------------ */
+   /* Get wildfire parameters */
    GetALine(f,inbuf);
 
    groupsok = FALSE;
