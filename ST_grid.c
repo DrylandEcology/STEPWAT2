@@ -550,7 +550,7 @@ void runGrid(void)
 					
 					save_annual_species_relsize(); // Save annuals before we kill them
 
-					mort_EndOfYear(); 			// End of year mortality, for example age.
+					mort_EndOfYear(); 			// End of year mortality.
 
 					stat_Collect(year); 		// Update the accumulators
 
@@ -695,7 +695,7 @@ static void _run_spinup(void)
 					
 					//save_annual_species_relsize(); // See stat_Collect below for why this is commented out.
 
-					mort_EndOfYear(); 			// End of year mortality, for example age.
+					mort_EndOfYear(); 			// End of year mortality.
 
 					/* stat_Collect was called in spinup, but I have no idea why. We definitely
 					   do not want to use the accumulator values, so why collect them? -Chandler */
