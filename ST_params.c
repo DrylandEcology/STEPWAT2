@@ -927,20 +927,12 @@ static void _rgroup_add2( char name[],
 
 /*======================================================*/
   GrpIndex rg;
-  char *name2;
-  size_t len;
-  
-  name2 = Mem_Calloc(Globals.max_groupnamelen + 1, sizeof(char), "_rgroup_add2");
-  
-  len = strlen(name);
-  
-  _setNameLen(name2, name, len);
-  rg = RGroup_Name2Index( name2);
-  if (rg <0) {
+
+  rg = RGroup_Name2Index(name);
+  if (rg < 0) {
     LogError(logfp, LOGFATAL, "%s: Mismatched name (%s) for succulents",
-             MyFileName, name2);
+             MyFileName, name);
   }
-  
 
   RGroup[rg]->ppt_slope[Ppt_Norm] = nslope;
   RGroup[rg]->ppt_intcpt[Ppt_Norm]= nint;
@@ -948,29 +940,18 @@ static void _rgroup_add2( char name[],
   RGroup[rg]->ppt_intcpt[Ppt_Wet] = wint;
   RGroup[rg]->ppt_slope[Ppt_Dry]  = dslope;
   RGroup[rg]->ppt_intcpt[Ppt_Dry] = dint;
-
-  
-  Mem_Free(name2);
 }
 
 
 static void _rgroup_add_disturbance( char name[], Int killyr, Int killfreq_startyr, RealF killfreq,
                       Int extirp, RealF prop_killed, RealF prop_recovered,RealF grazing_frq,RealF prop_grazing, Int grazingfreq_startyr) {
 /*======================================================*/
-  GrpIndex rg;
-  
-   char *name2;
-   size_t len;
-   
-   name2 = Mem_Calloc(Globals.max_groupnamelen + 1, sizeof(char), "_rgroup_add_disturbance");
-   
-   len = strlen(name);
+   GrpIndex rg;
 
-   _setNameLen(name2, name, len);
-   rg = RGroup_Name2Index( name2);
-   if (rg <0) {
+   rg = RGroup_Name2Index(name);
+   if (rg < 0) {
      LogError(logfp, LOGFATAL, "%s: Mismatched name (%s) for disturbance",
-             MyFileName, name2);
+             MyFileName, name);
    }
 
   RGroup[rg]->killyr        = killyr;
@@ -984,8 +965,6 @@ static void _rgroup_add_disturbance( char name[], Int killyr, Int killfreq_start
   RGroup[rg]->grazingfreq_startyr  = grazingfreq_startyr;
 
   RGroup[rg]->extirpated    = FALSE;
-  
-  Mem_Free(name2);
 }
 
 static void _rgroup_add_wildfire( RealF ignition, RealF cheatgrass_coefficient, RealF wild_fire_slope) {
@@ -1010,26 +989,17 @@ static void _rgroup_addsucculent( char name[],
 /* than one succulent species to which they pertain.*/
 
    GrpIndex rg;
-   char *name2;
-   size_t len;
-   
-   name2 = Mem_Calloc(Globals.max_groupnamelen + 1, sizeof(char), "_rgroup_addsucculent");
-   
-   len = strlen(name);
-   
-   _setNameLen(name2, name, len);
-   rg = RGroup_Name2Index( name2);
-   if (rg <0) {
+
+   rg = RGroup_Name2Index(name);
+   if (rg < 0) {
      LogError(logfp, LOGFATAL, "%s: Mismatched name (%s) for succulents",
-             MyFileName, name2);
+             MyFileName, name);
    }
    RGroup[rg]->succulent = TRUE;
    Succulent.growth[Slope]  = wslope;
    Succulent.growth[Intcpt] = wint;
    Succulent.mort[Slope]  = dslope;
    Succulent.mort[Intcpt] = dint;
-   
-   Mem_Free(name2);
 }
 
 /**************************************************************/
@@ -1048,7 +1018,7 @@ static void _species_init( void) {
    Bool readspp = TRUE, sppok = TRUE;
 
    /* temp vars to hold the group info*/
-   char *name, *name2;
+   char *name;
    size_t len;
    Int x;      /* temp val */
    GrpIndex rg;
@@ -1072,7 +1042,6 @@ static void _species_init( void) {
    f = OpenFile(MyFileName, "r");
 
    name = (char *)Mem_Calloc(Globals.max_speciesnamelen + 1, sizeof(char), "_species_init");
-   name2 = (char *)Mem_Calloc(Globals.max_speciesnamelen + 1, sizeof(char), "_species_init");
    Species = (SpeciesType **)Mem_Calloc(MAX_SPECIES, sizeof(SpeciesType *), "_species_init");
 
    while( readspp) {
@@ -1179,13 +1148,10 @@ static void _species_init( void) {
                MyFileName);
      }
 
-     len = strlen(name);
-     
-     _setNameLen(name2, name, len);
-     sp = Species_Name2Index(name2);
-     if (sp <0) {
+     sp = Species_Name2Index(name);
+     if (sp < 0) {
        LogError(logfp, LOGFATAL, "%s: Mismatched name (%s) for annual estab parms",
-               MyFileName, name2);
+               MyFileName, name);
      }
 
      Species[sp]->viable_yrs = viable;
@@ -1217,13 +1183,10 @@ static void _species_init( void) {
                 MyFileName);
       }
 
-      len = strlen(name);
-      
-      _setNameLen(name2, name, len);
-      sp = Species_Name2Index(name2);
-      if (sp <0) {
+      sp = Species_Name2Index(name);
+      if (sp < 0) {
         LogError(logfp, LOGFATAL, "%s: Mismatched name (%s) for species probs",
-                MyFileName, name2);
+                MyFileName, name);
       }
 
       Species[sp]->prob_veggrow[NoResources] = p1;
@@ -1251,12 +1214,9 @@ static void _species_init( void) {
 	if(x < 9)
 		LogError(logfp, LOGFATAL, "%s: Too few columns in species seed dispersal inputs", MyFileName);
 
-        len = strlen(name);
-        
-	_setNameLen(name2, name, len);
-	sp = Species_Name2Index(name2);
-	if( sp < 0)
-		LogError(logfp, LOGFATAL, "%s: Mismatched name (%s) for species seed dispersal inputs", MyFileName, name2);
+	sp = Species_Name2Index(name);
+	if(sp < 0)
+		LogError(logfp, LOGFATAL, "%s: Mismatched name (%s) for species seed dispersal inputs", MyFileName, name);
 
         Species[sp]->use_dispersal = itob(turnondispersal);
         Species[sp]->allow_growth = TRUE;
@@ -1274,7 +1234,6 @@ static void _species_init( void) {
 	  LogError(logfp, LOGFATAL, "%s: Incorrect/incomplete input in species seed dispersal input", MyFileName);
    
    Mem_Free(name);
-   Mem_Free(name2);
 
    CloseFile(&f);
 }
