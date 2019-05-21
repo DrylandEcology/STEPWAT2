@@ -42,7 +42,7 @@ SppIndex species_New(void);
 /* Modular functions only used on one or two specific   */
 /* places; that is, they are not generally useful       */
 /* (like C++ friend functions) but have to be declared. */
-  void parm_Initialize( Int);
+  void parm_Initialize(void);
   void parm_SetFirstName( char *s);
   void parm_SetName( char *s, int which);
   void parm_free_memory( void );
@@ -53,13 +53,13 @@ static void _globals_init( void);
 static void _env_init( void);
 static void _plot_init( void);
 static void _setNameLen(char *dest, char *src, Int len);
+static void _maxrgroupspecies_init( void);
 static void _rgroup_init( void);
 static void _species_init( void);
 static void _files_init( void );
 static void _check_species( void);
 static void _bmassflags_init( void);
 static void _mortflags_init( void);
-//static void _morthdr_create( void);
 static void _model_init( void);
 static void _rgroup_add1( char name[], RealF space, RealF density,
                       Int estab, RealF slow, Int stretch,
@@ -81,69 +81,29 @@ static void _rgroup_addsucculent( char name[],
 
 /************ Module Variable Declarations ******************/
 /***********************************************************/
-#define NFILES 14
+  #define NFILES 15
 
 static char *_files[NFILES];
 char *MyFileName;
 
 /**************************************************************/
+/* fdpierson: This function should only be called once, otherwise
+ * memory leaks involving resource groups, species, and potentially
+ * other variables will occur. */
 /**************************************************************/
-void parm_Initialize( Int iter) {
+void parm_Initialize() {
 /*======================================================*/
-  static Bool beenhere = FALSE;
-  //char filename[FILENAME_MAX];
-
-  if (beenhere) {
-//    if (BmassFlags.yearly) {
-//      sprintf(filename, "%s%0*d.csv", Parm_name(F_BMassPre),
-//                                Globals.bmass.suffixwidth,
-//                                iter);
-//      printf("parm_Initialize: %s\n",filename, filename);
-//      if (Globals.bmass.fp_year != NULL) {
-//        LogError(logfp, LOGFATAL, "Programmer error: "
-//                        "Globals.bmass.fp_year not null"
-//                        " in parm_Initialize()");
-//      }
-//      Globals.bmass.fp_year = OpenFile(filename, "w");//moved to output function
-//      fprintf(Globals.bmass.fp_year, "%s", Globals.bmass.header_line);
-//      fflush(Globals.bmass.fp_year);
-//      CloseFile(&Globals.bmass.fp_year);
-//    }
-//
-//    if (MortFlags.yearly) {
-//      sprintf(filename, "%s%0*d.csv", Parm_name(F_MortPre),
-//                                Globals.mort.suffixwidth,
-//                                iter);
-//      if (Globals.mort.fp_year != NULL) {
-//        LogError(logfp, LOGFATAL, "Programmer error: "
-//                        "Globals.mort.fp_year not null"
-//                        " in parm_Initialize()");
-//      }
-//      Globals.mort.fp_year = OpenFile(filename, "w");
-//      fprintf(Globals.mort.fp_year, "%s", Globals.mort.header_line);
-//      fflush(Globals.mort.fp_year);
-//      CloseFile(&Globals.mort.fp_year);
-//    }
-
-  } else {
-    _globals_init();
-    _files_init();
-    _model_init();
-    _env_init();
-    _plot_init();
-    _bmassflags_init();
-    _mortflags_init();
-    _rgroup_init();
-    _species_init();
-    _check_species();
-
-//    _bmasshdr_init();
-//    _morthdr_create();
-
-	/*_recover_names();*/
-    beenhere = TRUE;
-  }
-
+  _globals_init();
+  _files_init();
+  _model_init();
+  _env_init();
+  _plot_init();
+  _bmassflags_init();
+  _mortflags_init();
+  _maxrgroupspecies_init();
+  _rgroup_init();
+  _species_init();
+  _check_species();
 }
 
 /**************************************************************/
@@ -194,7 +154,7 @@ static void _files_init( void ) {
 
   FILE *f;
   ST_FileIndex i;
-  ST_FileIndex last = F_SXW;
+  ST_FileIndex last = F_MaxRGroupSpecies;
 
   MyFileName = Parm_name(F_First);
 
@@ -254,7 +214,7 @@ static void _model_init( void) {
      Globals.bmass.suffixwidth = Globals.mort.suffixwidth = strlen(tmp);
      Globals.randseed = (IntL) ((seed) ? -abs(seed) : 0);
    }
-
+   
    CloseFile(&f);
 }
 
@@ -287,10 +247,11 @@ static void _env_init( void) {
             nitems = 8;
             break;
         case 2:
-            x=sscanf( inbuf, "%f %f %f %f",
+            x=sscanf( inbuf, "%f %f %f %f %f",
                       &Globals.temp.avg, &Globals.temp.std,
-                      &Globals.temp.min, &Globals.temp.max);
-            nitems = 4;
+                      &Globals.temp.min, &Globals.temp.max,
+                      &Globals.temp.gstemp);
+            nitems = 5;
             break;
         case 3:
             x=sscanf( inbuf, "%d %f %f %f %f ", &use[0],
@@ -626,63 +587,6 @@ static void _bmassflags_init( void) {
 }
 
 /**************************************************************/
-///*======================================================*/
-///* Writes to Globals.header */
-/*
-static void _bmasshdr_init( void) {
-  char fields[MAX_OUTFIELDS][MAX_FIELDLEN+1];
-  Int rg, sp, i, fc=0;
-
-
-  if (!BmassFlags.header) return;
-
-  // Set up headers
-  if (BmassFlags.yr)
-    strcpy(fields[fc++], "Year");
-  if (BmassFlags.dist)
-    strcpy(fields[fc++], "Disturb");
-  if (BmassFlags.ppt)
-    strcpy(fields[fc++], "PPT");
-  if (BmassFlags.pclass)
-    strcpy(fields[fc++], "PPTClass");
-  if (BmassFlags.tmp)
-    strcpy(fields[fc++], "Temp");
-
-  if (BmassFlags.grpb) {
-    ForEachGroup(rg) {
-      strcpy(fields[fc++], RGroup[rg]->name);
-      if (BmassFlags.size) {
-        strcpy(fields[fc], RGroup[rg]->name);
-        strcat(fields[fc++], "_RSize");
-      }
-      if (BmassFlags.pr) {
-        strcpy(fields[fc], RGroup[rg]->name);
-        strcat(fields[fc++], "_PR");
-      }
-    }
-  }
-
-  if (BmassFlags.sppb) {
-    ForEachSpecies(sp) {
-      strcpy(fields[fc++], Species[sp]->name);
-      if (BmassFlags.indv) {
-        strcpy(fields[fc], Species[sp]->name);
-        strcat(fields[fc++], "_Indv");
-      }
-    }
-  }
-
-  // Put header line in global variable
-    for (i=0; i< fc-1; i++) {
-      sprintf(inbuf,"%s%c", fields[i], BmassFlags.sep);
-      strcat(Globals.bmass.header_line, inbuf);
-    }
-    sprintf(inbuf,"%s\n", fields[i]);
-    strcat(Globals.bmass.header_line, inbuf);
-}
-*/
-
-/**************************************************************/
 static void _mortflags_init( void) {
 /*======================================================*/
 /* read in the flags to control the output quantities etc.
@@ -789,44 +693,68 @@ static void _mortflags_init( void) {
 }
 
 /**************************************************************/
-/*======================================================*/
-/* Writes to Globals.header */
-/*
-static void _morthdr_create( void) {
-
-  char fields[MAX_OUTFIELDS][MAX_FIELDLEN];
-  Int rg, sp, i, fc=0;
-
-
-  if (!MortFlags.header) return;
-
-  // Set up headers
-  sprintf(fields[fc++],"Age");
-  if (MortFlags.group) {
-    ForEachGroup(rg)
-      sprintf(fields[fc++],"%s", RGroup[rg]->name);
-  }
-  if (MortFlags.species) {
-    ForEachSpecies(sp)
-      sprintf(fields[fc++],"%s",Species[sp]->name);
-  }
-
-  // Put header line in global variable
-    for (i=0; i< fc-1; i++) {
-      sprintf(inbuf,"%s%c", fields[i], MortFlags.sep);
-      strcat(Globals.mort.header_line, inbuf);
-    }
-    sprintf(inbuf,"%s\n", fields[i]);
-    strcat(Globals.mort.header_line, inbuf);
-
-}
-*/
-
-/**************************************************************/
 static void _setNameLen(char *dest, char *src, Int len) {
 /*======================================================*/
   strncpy(dest, src, len);
   dest[len] = '\0';
+}
+
+/**************************************************************/
+static void _maxrgroupspecies_init( void) {
+/*======================================================*/
+    FILE *f;
+    
+    MyFileName = Parm_name(F_MaxRGroupSpecies);
+    f = OpenFile(MyFileName, "r");
+    
+    /* These values determine the memory allocated for resource groups, species, and their names. */
+    /* If these limits are exceeded, memory leaks will result. */
+
+    /* Resource group limits */
+
+    if (!GetALine(f, inbuf)) {
+       LogError(logfp, LOGFATAL, "%s: Could not read maximum resource groups allowed.", MyFileName);
+    }
+
+    if (sscanf(inbuf, "%zu", &Globals.max_rgroups) != 1) {
+       LogError(logfp, LOGFATAL, "%s: Could not read maximum resource groups allowed.", MyFileName);
+    }
+
+    if (!GetALine(f, inbuf)) {
+       LogError(logfp, LOGFATAL, "%s: Could not read maximum resource group name length.", MyFileName);
+    }
+
+    if (sscanf(inbuf, "%zu", &Globals.max_groupnamelen) != 1) {
+       LogError(logfp, LOGFATAL, "%s: Could not read maximum resource group name length.", MyFileName);
+    }
+
+    /* Species limits */
+
+    if (!GetALine(f, inbuf)) {
+       LogError(logfp, LOGFATAL, "%s: Could not read maximum species allowed per resource group.", MyFileName);
+    }
+
+    if (sscanf(inbuf, "%zu", &Globals.max_spp_per_grp) != 1) {
+       LogError(logfp, LOGFATAL, "%s: Could not read maximum species allowed per resource group.", MyFileName);
+    }
+
+    if (!GetALine(f, inbuf)) {
+       LogError(logfp, LOGFATAL, "%s: Could not read maximum individuals allowed per species.", MyFileName);
+    }
+
+    if (sscanf(inbuf, "%zu", &Globals.max_indivs_per_spp) != 1) {
+       LogError(logfp, LOGFATAL, "%s: Could not read maximum individuals allowed per species.", MyFileName);
+    }
+
+    if (!GetALine(f, inbuf)) {
+       LogError(logfp, LOGFATAL, "%s: Could not read maximum species name length.", MyFileName);
+    }
+
+    if (sscanf(inbuf, "%zu", &Globals.max_speciesnamelen) != 1) {
+       LogError(logfp, LOGFATAL, "%s: Could not read maximum species name length.", MyFileName);
+    }
+    
+    CloseFile(&f);
 }
 
 
@@ -846,7 +774,7 @@ static void _rgroup_init( void) {
    Bool groupsok;
 
    /* temp vars to hold the group info*/
-   char name[80]; /* plenty of space to read possibly long name*/
+   char *name;
 
    /* input variables*/
    Int estab, stretch, xres, turnon, estann,
@@ -861,6 +789,9 @@ static void _rgroup_init( void) {
 
    MyFileName = Parm_name(F_RGroup);
    f = OpenFile(MyFileName, "r");
+   
+   name = (char *)Mem_Calloc(Globals.max_groupnamelen + 1, sizeof(char), "_rgroup_init");
+   RGroup = (GroupType **)Mem_Calloc(Globals.max_rgroups, sizeof(GroupType *), "_rgroup_init");
 
    /* ------------------------------------------------------------*/
    /* Install all the defined groups, except for dry/wet/norm parms */
@@ -950,6 +881,8 @@ static void _rgroup_init( void) {
      _rgroup_add_wildfire( ignition, cheatgrass_coefficient, wild_fire_slope);
    }/* end while*/
 
+   Mem_Free(name);
+   
    CloseFile(&f);
 }
 
@@ -960,10 +893,14 @@ static void _rgroup_add1( char name[], RealF space, RealF density,
                       Int styr,  RealF xgro, Int veg_prod_type, Int mort) {
 /*======================================================*/
   GrpIndex rg;
+  size_t len;
 
-
+  
   rg = RGroup_New();
-  _setNameLen(RGroup[rg]->name, name, MAX_GROUPNAMELEN);
+  
+  len = strlen(name);
+  
+  _setNameLen(RGroup[rg]->name, name, len);
   RGroup[rg]->grp_num       = rg;
   RGroup[rg]->max_stretch   = (IntS) stretch;
   RGroup[rg]->max_spp_estab = (IntS) estab;
@@ -990,15 +927,12 @@ static void _rgroup_add2( char name[],
 
 /*======================================================*/
   GrpIndex rg;
-  char name2[80];
 
-   _setNameLen(name2, name, MAX_GROUPNAMELEN);
-   rg = RGroup_Name2Index( name2);
-   if (rg <0) {
-     LogError(logfp, LOGFATAL, "%s: Mismatched name (%s) for succulents",
-             MyFileName, name2);
-   }
-
+  rg = RGroup_Name2Index(name);
+  if (rg < 0) {
+    LogError(logfp, LOGFATAL, "%s: Mismatched name (%s) for succulents",
+             MyFileName, name);
+  }
 
   RGroup[rg]->ppt_slope[Ppt_Norm] = nslope;
   RGroup[rg]->ppt_intcpt[Ppt_Norm]= nint;
@@ -1006,22 +940,18 @@ static void _rgroup_add2( char name[],
   RGroup[rg]->ppt_intcpt[Ppt_Wet] = wint;
   RGroup[rg]->ppt_slope[Ppt_Dry]  = dslope;
   RGroup[rg]->ppt_intcpt[Ppt_Dry] = dint;
-
 }
 
 
 static void _rgroup_add_disturbance( char name[], Int killyr, Int killfreq_startyr, RealF killfreq,
                       Int extirp, RealF prop_killed, RealF prop_recovered,RealF grazing_frq,RealF prop_grazing, Int grazingfreq_startyr) {
 /*======================================================*/
-  GrpIndex rg;
-  
-   char name2[80];
+   GrpIndex rg;
 
-   _setNameLen(name2, name, MAX_GROUPNAMELEN);
-   rg = RGroup_Name2Index( name2);
-   if (rg <0) {
+   rg = RGroup_Name2Index(name);
+   if (rg < 0) {
      LogError(logfp, LOGFATAL, "%s: Mismatched name (%s) for disturbance",
-             MyFileName, name2);
+             MyFileName, name);
    }
 
   RGroup[rg]->killyr        = killyr;
@@ -1059,13 +989,11 @@ static void _rgroup_addsucculent( char name[],
 /* than one succulent species to which they pertain.*/
 
    GrpIndex rg;
-   char name2[80];
 
-   _setNameLen(name2, name, MAX_GROUPNAMELEN);
-   rg = RGroup_Name2Index( name2);
-   if (rg <0) {
+   rg = RGroup_Name2Index(name);
+   if (rg < 0) {
      LogError(logfp, LOGFATAL, "%s: Mismatched name (%s) for succulents",
-             MyFileName, name2);
+             MyFileName, name);
    }
    RGroup[rg]->succulent = TRUE;
    Succulent.growth[Slope]  = wslope;
@@ -1090,8 +1018,8 @@ static void _species_init( void) {
    Bool readspp = TRUE, sppok = TRUE;
 
    /* temp vars to hold the group info*/
-   char name[80], /* plenty of space to read possibly long name*/
-        name2[80]; /* another one*/
+   char *name;
+   size_t len;
    Int x;      /* temp val */
    GrpIndex rg;
    SppIndex sp;
@@ -1113,6 +1041,9 @@ static void _species_init( void) {
    MyFileName = Parm_name( F_Species);
    f = OpenFile(MyFileName, "r");
 
+   name = (char *)Mem_Calloc(Globals.max_speciesnamelen + 1, sizeof(char), "_species_init");
+   Species = (SpeciesType **)Mem_Calloc(MAX_SPECIES, sizeof(SpeciesType *), "_species_init");
+
    while( readspp) {
       if( ! GetALine(f, inbuf )) {sppok=FALSE;break;}
       if ( ! isnull( strstr(inbuf,"[end]")) ) {
@@ -1130,8 +1061,10 @@ static void _species_init( void) {
       }
 
       sp = species_New();
-
-      _setNameLen(Species[sp]->name, name, MAX_SPECIESNAMELEN);
+      
+      len = strlen(name);
+      
+      _setNameLen(Species[sp]->name, name, len);
       Species[sp]->sp_num  = (SppIndex) sp;
       Species[sp]->res_grp = (GrpIndex) rg-1; /* file gives natural # */
       Species[sp]->max_age = (IntS) age;
@@ -1215,11 +1148,10 @@ static void _species_init( void) {
                MyFileName);
      }
 
-     _setNameLen(name2, name, MAX_SPECIESNAMELEN);
-     sp = Species_Name2Index(name2);
-     if (sp <0) {
+     sp = Species_Name2Index(name);
+     if (sp < 0) {
        LogError(logfp, LOGFATAL, "%s: Mismatched name (%s) for annual estab parms",
-               MyFileName, name2);
+               MyFileName, name);
      }
 
      Species[sp]->viable_yrs = viable;
@@ -1251,11 +1183,10 @@ static void _species_init( void) {
                 MyFileName);
       }
 
-      _setNameLen(name2, name, MAX_SPECIESNAMELEN);
-      sp = Species_Name2Index(name2);
-      if (sp <0) {
+      sp = Species_Name2Index(name);
+      if (sp < 0) {
         LogError(logfp, LOGFATAL, "%s: Mismatched name (%s) for species probs",
-                MyFileName, name2);
+                MyFileName, name);
       }
 
       Species[sp]->prob_veggrow[NoResources] = p1;
@@ -1283,10 +1214,9 @@ static void _species_init( void) {
 	if(x < 9)
 		LogError(logfp, LOGFATAL, "%s: Too few columns in species seed dispersal inputs", MyFileName);
 
-	_setNameLen(name2, name, MAX_SPECIESNAMELEN);
-	sp = Species_Name2Index(name2);
-	if( sp < 0)
-		LogError(logfp, LOGFATAL, "%s: Mismatched name (%s) for species seed dispersal inputs", MyFileName, name2);
+	sp = Species_Name2Index(name);
+	if(sp < 0)
+		LogError(logfp, LOGFATAL, "%s: Mismatched name (%s) for species seed dispersal inputs", MyFileName, name);
 
         Species[sp]->use_dispersal = itob(turnondispersal);
         Species[sp]->allow_growth = TRUE;
@@ -1302,6 +1232,8 @@ static void _species_init( void) {
    }
    if(!sppok)
 	  LogError(logfp, LOGFATAL, "%s: Incorrect/incomplete input in species seed dispersal input", MyFileName);
+   
+   Mem_Free(name);
 
    CloseFile(&f);
 }

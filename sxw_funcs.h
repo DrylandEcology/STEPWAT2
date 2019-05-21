@@ -16,11 +16,8 @@
 
 #include "sxw.h"
 
-RealF SXW_GetPR( GrpIndex rg) ;
 RealF SXW_GetTranspiration( GrpIndex rg);
 
-
-RealF SXW_ResourceAvailable (void);
 void SXW_Init( Bool init_SW, char *f_roots );
 void SXW_Reset(void);
 void SXW_Run_SOILWAT (void);
