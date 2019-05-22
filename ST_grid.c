@@ -155,9 +155,9 @@ struct _grid_init_species_st
 struct grid_cell_st
 {
 	/* RGroup coresponding to this cell */
-	GroupType myGroup;
+	GroupType *myGroup[MAX_RGROUPS];
 	/* Species corresponding to this cell */
-	SpeciesType mySpecies;
+	SpeciesType *mySpecies[MAX_SPECIES];
 	/* Succulents corresponding to this cell */
 	SucculentType mySucculent;
 	/* This cell's environment. We expect each cell to
@@ -834,18 +834,25 @@ static void _init_SXW_inputs(Bool init_SW, char *f_roots)
 	}
 }
 
-/***********************************************************/
+/* Read in the STEPWAT2 files and populate the grid. This only needs to be called once. 
+   DEPENDENCYS: allocate_gridCells() must be called first. */
 static void _init_stepwat_inputs(void)
 {
-	// reads in the stepwat inputs
-	ChDir(grid_directories[0]);	// changes to the folder that the stepwat input is in
+	int i, j; 							// Used as indices in gridCells
 
-	parm_SetFirstName(grid_files[6]);// correctly sets the name of the stepwat files.in file
-	parm_Initialize(0);				// loads stepwat input files
+	ChDir(grid_directories[0]);			// Change to folder with STEPWAT files
+	parm_SetFirstName(grid_files[6]);	// Set the name of the STEPWAT "files.in" file
 
-	_init_SXW_inputs(TRUE, NULL);
+	/* Loop through all gridCells. */
+	for(i = 0; i < grid_Rows; ++i){
+		for(j = 0; j < grid_Cols; ++j){
+			load_cell(i, j); 				// Load this cell into the global variables
+			parm_Initialize(0);				// Initialize the STEPWAT variables
+			_init_SXW_inputs(TRUE, NULL);	// Initialize the SXW and SOILWAT variables
+		} /* End for each column */
+	} /* End for each row */
 
-	ChDir("..");					// goes back to the folder that we were in
+	ChDir("..");						// go back to the folder we started in
 }
 
 /* Allocates memory for the grid cells. This only needs to be called once. */
@@ -1648,11 +1655,10 @@ static void _load_cell(int row, int col, int year, Bool useAccumulators)
 
 /* load gridCells[row][col] into the globals variables */
 static void load_cell(int row, int col){
-	/* These are commented out until the clean_code_lowpriority
-	 * branch is merged into this branch 
+	/* Commenting this out until clean_code_lowpriority is merged into this branch
 	RGroup = &gridCells[row][col].myGroup;
 	Species = &gridCells[row][col].mySpecies;
-	 */
+	*/
 
 	/* Succulents corresponding to this cell */
 	Succulent = &gridCells[row][col].mySucculent;

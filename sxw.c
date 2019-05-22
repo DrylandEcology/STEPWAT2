@@ -153,10 +153,13 @@ void SXW_Init( Bool init_SW, char *f_roots ) {
    */
 	char roots[MAX_FILENAMESIZE] = { '\0' };
 
-RandSeed(Globals->randseed, &resource_rng);
+	RandSeed(Globals->randseed, &resource_rng);
 
-/* Allocate memory for all local pointers */
-_allocate_memory();
+	/* If we are running gridded mode we do not need to allocate any memory
+	   because allocate_gridCells() in ST_grid did it for us. */
+	if(!UseGrid){
+		_allocate_memory(); //Allocate memory for all local pointers
+	}
 
 #ifdef SXW_BYMAXSIZE
    GrpIndex rg; SppIndex sp;
