@@ -159,8 +159,6 @@ void SXW_Init( Bool init_SW, char *f_roots ) {
    * 	match sxwroots.in
    */
 	char roots[MAX_FILENAMESIZE] = { '\0' };
-        
-        SXWResources->_resource_cur = (RealF *)Mem_Calloc(Globals->max_rgroups, sizeof(RealF), "SXW_Init");
 
 	RandSeed(Globals->randseed, &resource_rng);
 
@@ -169,6 +167,8 @@ void SXW_Init( Bool init_SW, char *f_roots ) {
 	if(!UseGrid){
 		_allocate_memory(); //Allocate memory for all local pointers
 	}
+
+	SXWResources->_resource_cur = (RealF *)Mem_Calloc(Globals->max_rgroups, sizeof(RealF), "SXW_Init");
 
    _sxwfiles[0] = &SXW->f_roots;
    _sxwfiles[1] = &SXW->f_phen;
