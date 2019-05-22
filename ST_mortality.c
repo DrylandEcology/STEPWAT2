@@ -455,7 +455,7 @@ static void _pat( const SppIndex sp) {
     Int i, k=-1;
     IndivType *p, **kills;
     
-    kills = (IndivType **)Mem_Calloc(Globals.max_indivs_per_spp, sizeof(IndivType *), "_pat");
+    kills = (IndivType **)Mem_Calloc(Globals->max_indivs_per_spp, sizeof(IndivType *), "_pat");
 
     /* ---------------------------------------------*/
     /* Generate kill list, depending on sensitivity */
@@ -570,7 +570,7 @@ static void _succulents( const SppIndex sp) {
   RealF killamt = Succulent->reduction;
   int i, k=0;
   
-  kills = (IndivType **)Mem_Calloc(Globals.max_indivs_per_spp, sizeof(IndivType *), "_succulents");
+  kills = (IndivType **)Mem_Calloc(Globals->max_indivs_per_spp, sizeof(IndivType *), "_succulents");
 
   ForEachIndiv (p, Species[sp]) {
     if ( GT(p->relsize, killamt) )
@@ -618,7 +618,7 @@ static void _slow_growth( const SppIndex sp) {
   IndivType *ndv,
             **kills;
   
-  kills = (IndivType **)Mem_Calloc(Globals.max_indivs_per_spp, sizeof(IndivType *), "_slow_growth");
+  kills = (IndivType **)Mem_Calloc(Globals->max_indivs_per_spp, sizeof(IndivType *), "_slow_growth");
 
   slowrate = RGroup[Species[sp]->res_grp]->slowrate
            * Species[sp]->max_rate;
@@ -775,7 +775,7 @@ static void _stretched_clonal( GrpIndex rg, Int start, Int last,
 
   IndivType **clist; /* list of clonal individuals */
 
-  clist = (IndivType **)Mem_Calloc(Globals.max_indivs_per_spp, sizeof(IndivType *), "_stretched_clonal");
+  clist = (IndivType **)Mem_Calloc(Globals->max_indivs_per_spp, sizeof(IndivType *), "_stretched_clonal");
   
   /* get a list of remaining clonal plants, still ranked by size */
   for( np=-1, i=start; i <= last; i++) {

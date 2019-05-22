@@ -26,15 +26,15 @@
 /***************************************************
  * Basic definitions
  ***************************************************/
-#define MAX_SPECIES (Globals.max_spp_per_grp * Globals.max_rgroups)
+#define MAX_SPECIES (Globals->max_spp_per_grp * Globals->max_rgroups)
 #define MAX_SPECIESNAMELEN   4 /* keep around for SOILWAT for now */
 
 /* output_Bmass_Yearly of ST_output.c and _make_header and _make_header_with_std
  * of ST_stats.c output different numbers of fields. Set MAX_OUTFIELDS to the
  * maximum number of fields these three functions are capable of outputting. */
-#define MAX_OUTFIELDS ((MAX_SPECIES * 2) + (Globals.max_rgroups * 6) + 8)
+#define MAX_OUTFIELDS ((MAX_SPECIES * 2) + (Globals->max_rgroups * 6) + 8)
 
-#define MAX_FIELDLEN (Globals.max_groupnamelen + 6)  /* +6 for xtra chars like _RSize, etc */
+#define MAX_FIELDLEN (Globals->max_groupnamelen + 6)  /* +6 for xtra chars like _RSize, etc */
 #define MAX_CELLS 10000 // defines the maximum number of cells in the grid option
 
 /* Constants for flagging whether a sort is

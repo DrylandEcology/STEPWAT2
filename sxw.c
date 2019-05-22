@@ -160,7 +160,7 @@ void SXW_Init( Bool init_SW, char *f_roots ) {
    */
 	char roots[MAX_FILENAMESIZE] = { '\0' };
         
-        _resource_cur = (RealF *)Mem_Calloc(Globals.max_rgroups, sizeof(RealF), "SXW_Init");
+        SXWResources->_resource_cur = (RealF *)Mem_Calloc(Globals->max_rgroups, sizeof(RealF), "SXW_Init");
 
 	RandSeed(Globals->randseed, &resource_rng);
 
@@ -286,7 +286,7 @@ void SXW_Run_SOILWAT (void) {
 	GrpIndex g;
 	RealF *sizes;
         
-        sizes = (RealF *)Mem_Calloc(Globals.max_rgroups, sizeof(RealF), "SXW_Run_SOILWAT");
+        sizes = (RealF *)Mem_Calloc(Globals->max_rgroups, sizeof(RealF), "SXW_Run_SOILWAT");
         
 	/* compute production values for transp based on current plant sizes */
 	ForEachGroup(g)
@@ -483,7 +483,7 @@ static void  _read_roots_max(void) {
 	char *name;
 	FILE *fp;
         
-        name = (char *)Mem_Calloc(Globals.max_groupnamelen + 1, sizeof(char), "_read_roots_max");
+        name = (char *)Mem_Calloc(Globals->max_groupnamelen + 1, sizeof(char), "_read_roots_max");
 
 	MyFileName = SXW->f_roots;
 	fp = OpenFile(MyFileName, "r");

@@ -132,8 +132,8 @@ struct temp_SXW_st{
 
   /* simple vectors hold the resource information for each group */
   /* curr/equ gives the available/required ratio */
-  RealF _resource_cur[MAX_RGROUPS],  /* current resource availability for each STEPPE functional type */
-        _resource_pr[MAX_RGROUPS];   /* resource convertable to PR */
+  RealF *_resource_cur,  /* current resource availability for each STEPPE functional type */
+        *_resource_pr;   /* resource convertable to PR */
 
   /* one vector for the production constants */
   RealD _prod_litter[MAX_MONTHS];

@@ -701,7 +701,7 @@ static void _maxrgroupspecies_init( void) {
        LogError(logfp, LOGFATAL, "%s: Could not read maximum resource groups allowed.", MyFileName);
     }
 
-    if (sscanf(inbuf, "%zu", &Globals.max_rgroups) != 1) {
+    if (sscanf(inbuf, "%zu", &Globals->max_rgroups) != 1) {
        LogError(logfp, LOGFATAL, "%s: Could not read maximum resource groups allowed.", MyFileName);
     }
 
@@ -709,7 +709,7 @@ static void _maxrgroupspecies_init( void) {
        LogError(logfp, LOGFATAL, "%s: Could not read maximum resource group name length.", MyFileName);
     }
 
-    if (sscanf(inbuf, "%zu", &Globals.max_groupnamelen) != 1) {
+    if (sscanf(inbuf, "%zu", &Globals->max_groupnamelen) != 1) {
        LogError(logfp, LOGFATAL, "%s: Could not read maximum resource group name length.", MyFileName);
     }
 
@@ -719,7 +719,7 @@ static void _maxrgroupspecies_init( void) {
        LogError(logfp, LOGFATAL, "%s: Could not read maximum species allowed per resource group.", MyFileName);
     }
 
-    if (sscanf(inbuf, "%zu", &Globals.max_spp_per_grp) != 1) {
+    if (sscanf(inbuf, "%zu", &Globals->max_spp_per_grp) != 1) {
        LogError(logfp, LOGFATAL, "%s: Could not read maximum species allowed per resource group.", MyFileName);
     }
 
@@ -727,7 +727,7 @@ static void _maxrgroupspecies_init( void) {
        LogError(logfp, LOGFATAL, "%s: Could not read maximum individuals allowed per species.", MyFileName);
     }
 
-    if (sscanf(inbuf, "%zu", &Globals.max_indivs_per_spp) != 1) {
+    if (sscanf(inbuf, "%zu", &Globals->max_indivs_per_spp) != 1) {
        LogError(logfp, LOGFATAL, "%s: Could not read maximum individuals allowed per species.", MyFileName);
     }
 
@@ -735,7 +735,7 @@ static void _maxrgroupspecies_init( void) {
        LogError(logfp, LOGFATAL, "%s: Could not read maximum species name length.", MyFileName);
     }
 
-    if (sscanf(inbuf, "%zu", &Globals.max_speciesnamelen) != 1) {
+    if (sscanf(inbuf, "%zu", &Globals->max_speciesnamelen) != 1) {
        LogError(logfp, LOGFATAL, "%s: Could not read maximum species name length.", MyFileName);
     }
     
@@ -775,8 +775,8 @@ static void _rgroup_init( void) {
    MyFileName = Parm_name(F_RGroup);
    f = OpenFile(MyFileName, "r");
    
-   name = (char *)Mem_Calloc(Globals.max_groupnamelen + 1, sizeof(char), "_rgroup_init");
-   RGroup = (GroupType **)Mem_Calloc(Globals.max_rgroups, sizeof(GroupType *), "_rgroup_init");
+   name = (char *)Mem_Calloc(Globals->max_groupnamelen + 1, sizeof(char), "_rgroup_init");
+   RGroup = (GroupType **)Mem_Calloc(Globals->max_rgroups, sizeof(GroupType *), "_rgroup_init");
 
    /* ------------------------------------------------------------*/
    /* Install all the defined groups, except for dry/wet/norm parms */
@@ -1026,7 +1026,7 @@ static void _species_init( void) {
    MyFileName = Parm_name( F_Species);
    f = OpenFile(MyFileName, "r");
 
-   name = (char *)Mem_Calloc(Globals.max_speciesnamelen + 1, sizeof(char), "_species_init");
+   name = (char *)Mem_Calloc(Globals->max_speciesnamelen + 1, sizeof(char), "_species_init");
    Species = (SpeciesType **)Mem_Calloc(MAX_SPECIES, sizeof(SpeciesType *), "_species_init");
 
    while( readspp) {

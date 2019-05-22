@@ -155,9 +155,9 @@ struct _grid_init_species_st
 struct grid_cell_st
 {
 	/* RGroup coresponding to this cell */
-	GroupType *myGroup[MAX_RGROUPS];
+	GroupType **myGroup;
 	/* Species corresponding to this cell */
-	SpeciesType *mySpecies[MAX_SPECIES];
+	SpeciesType **mySpecies;
 	/* Succulents corresponding to this cell */
 	SucculentType mySucculent;
 	/* This cell's environment. We expect each cell to
@@ -207,8 +207,8 @@ int UseDisturbances, UseSoils, sd_DoOutput, sd_MakeHeader, sd_Option1a,
 		sd_Option1b, sd_Option2a, sd_Option2b; //these are treated like booleans
 
 // these variables are for storing the globals in STEPPE... they are dynamically allocated/freed
-SpeciesType *grid_Species[MAX_SPECIES], *spinup_Species[MAX_SPECIES];
-GroupType *grid_RGroup[MAX_RGROUPS], *spinup_RGroup[MAX_RGROUPS];
+SpeciesType **grid_Species, **spinup_Species;
+GroupType **grid_RGroup, **spinup_RGroup;
 SucculentType *grid_Succulent, *spinup_Succulent;
 EnvType *grid_Env, *spinup_Env;
 PlotType *grid_Plot, *spinup_Plot;
@@ -249,7 +249,7 @@ SoilType *grid_Soils;
 Grid_Disturb_St *grid_Disturb;
 Grid_Init_Species_St *grid_initSpecies;
 
-Grid_SD_St *grid_SD[MAX_SPECIES]; //for seed dispersal
+Grid_SD_St **grid_SD; //for seed dispersal
 
 // these variables are used for the soil types in the spinup options
 int nSoilTypes, *soilTypes_Array, *grid_SoilTypes;
@@ -847,7 +847,7 @@ static void _init_stepwat_inputs(void)
 	for(i = 0; i < grid_Rows; ++i){
 		for(j = 0; j < grid_Cols; ++j){
 			load_cell(i, j); 				// Load this cell into the global variables
-			parm_Initialize(0);				// Initialize the STEPWAT variables
+			parm_Initialize();				// Initialize the STEPWAT variables
 			_init_SXW_inputs(TRUE, NULL);	// Initialize the SXW and SOILWAT variables
 		} /* End for each column */
 	} /* End for each row */
