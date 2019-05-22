@@ -68,7 +68,7 @@ extern Bool* _SomeKillage;
   void stat_Output_AllMorts( void) ;
   void stat_Output_AllBmass(void) ;
 
-  /* void runGrid( void ); //for the grid... declared in ST_grid.c */
+  void runGrid( void ); //for the grid... declared in ST_grid.c */
 
   void _kill_annuals(void);
   void _kill_extra_growth(void);
@@ -167,12 +167,10 @@ int main(int argc, char **argv) {
 
 	printf("STEPWAT  init_args() executed successfully \n");
 
-        /*
 	if (UseGrid == TRUE) {
 		runGrid();
 		return 0;
 	}
-        */
 
 	allocate_Globals();
 
