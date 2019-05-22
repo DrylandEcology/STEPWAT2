@@ -149,8 +149,16 @@ static RealF _add_annuals(const GrpIndex rg, const SppIndex sp, const RealF last
 
     /*Determine number of seedlings to add. If the number of seeds calculated
      * from the random draw is larger than max_seed_estab, max_seed_estab is used instead*/
-     num_est = min(viable_seeds * var, s->max_seed_estab);
-     	//printf("Species name=%s , num_est   =%u \n",s->name,  num_est);
+    if (g->extirpated)
+    {
+        num_est = 0;
+    }
+    else
+    {
+        num_est = min(viable_seeds * var, s->max_seed_estab);
+        //printf("Species name=%s , num_est   =%u \n",s->name,  num_est);
+    }
+
 
     /*Multiple the proportion of seeds in each viable year array by the total
     number of seeds that germinated as seedlings and subtract those seeds from
@@ -290,9 +298,12 @@ void rgroup_ResPartIndiv(void) {
     IntS numindvs, n;
     RealF base_rem = 0., /* remainder of resource after allocating to an indiv */
             xtra_obase = 0., /* summed extra resources across all groups */
-            size_base[MAX_RGROUPS] = {0}, /* biomass of the functional group */
-    		size_obase[MAX_RGROUPS] = {0}; /* biomass of functional groups that can use extra resources */
+            *size_base, /* biomass of the functional group */
+    		*size_obase; /* biomass of functional groups that can use extra resources */
 
+    size_base = (RealF *)Mem_Calloc(Globals.max_rgroups, sizeof(RealF), "rgroup_ResPartIndiv");
+    size_obase = (RealF *)Mem_Calloc(Globals.max_rgroups, sizeof(RealF), "rgroup_ResPartIndiv");
+    
     /* Divide each group's normal resources to individuals */
     ForEachGroup(rg) {
         g = RGroup[rg];
@@ -407,6 +418,9 @@ void rgroup_ResPartIndiv(void) {
         Mem_Free(indivs);
 
     } /* end ForEachGroup() */
+    
+    Mem_Free(size_obase);
+    Mem_Free(size_base);
 }
 
 /***********************************************************/
@@ -444,7 +458,7 @@ void rgroup_Grow(void) {
         if (g->est_count == 0)
             continue;
 
-        /* Succulents can't grow if it is a wet year, so skip */
+        /* Succulents don't grow if conditions are wet */
         if (g->succulent && Env.wet_dry == Ppt_Wet)
             continue;
 
@@ -630,19 +644,7 @@ void rgroup_Establish(void) {
         if (Globals.currYear < RGroup[rg]->startyr) {
             g->regen_ok = FALSE;
 
-        } else ///if ( g->max_age == 1 ) {
-            /* see similar logic in mort_EndOfYear() for perennials */
-            /// if ( GT( g->killfreq, 0.) ) {
-            ///   if ( LT(g->killfreq, 1.0) ) {
-            ///     if (RandUni(&resgroups_rng) <= g->killfreq)
-            ///       g->regen_ok = FALSE;
-            ///   } else if ( (Globals.currYear - g->startyr) % (IntU)g->killfreq == 0) {
-            ///     g->regen_ok = FALSE;
-            ///   }
-            /// }
-            ///} else
-            //above removed allow annuals to establish with other species (TEM 10-27-2015)
-        {
+        } else {
 
             ForEachGroupSpp(sp, rg, i) {
 
@@ -891,8 +893,11 @@ static GroupType *_create(void)
 	/*------------------------------------------------------*/
 	GroupType *p;
 
-	p = (GroupType *) Mem_Calloc(1, sizeof(GroupType), "__Create");
-
+	p = (GroupType *) Mem_Calloc(1, sizeof(GroupType), "_create");
+        p->name = (char *) Mem_Calloc(Globals.max_groupnamelen + 1, sizeof(char), "_create");
+        p->est_spp = (SppIndex *) Mem_Calloc(Globals.max_spp_per_grp, sizeof(SppIndex), "_create");
+        p->species = (SppIndex *) Mem_Calloc(Globals.max_spp_per_grp, sizeof(SppIndex), "_create");
+        
 	return (p);
 
 }
@@ -915,11 +920,11 @@ GrpIndex RGroup_New(void)
 	/*------------------------------------------------------*/
 	GrpIndex i = (GrpIndex) Globals.grpCount;
 
-	if (++Globals.grpCount > MAX_RGROUPS)
+	if (++Globals.grpCount > Globals.max_rgroups)
 	{
 		LogError(logfp, LOGFATAL, "Too many groups specified (>%d)!\n"
-				"You must adjust MAX_RGROUPS and recompile!",
-		MAX_RGROUPS);
+				"You must adjust MAX_RGROUPS in maxrgroupspecies.in!",
+		Globals.max_rgroups);
 	}
 
 	RGroup[i] = _create();
@@ -1019,20 +1024,6 @@ void rgroup_Extirpate(GrpIndex rg)
 	{
 		Species_Kill(sp, 5);
 		Species[sp]->seedling_estab_prob = 0.0;
-		/*TMartyn 5.26.2015 - added the following section because annual biomass
-		 values were not being updated to 0 even if seedling establishment
-		 probability was chaged to 0. The following code says if the max age of
-		 * a species is 1 it will change the seed establishment to 0 and will
-		 * vastly increase the exp_decay value so that the seeds in the
-		 * seed bank will decay within 1 year.  This is a work around and we
-		 * should look more into this to make biomass values absolutely 0 at the
-		 * year of expiration implementation. */
-		if (Species[sp]->max_age == 1)
-		{
-			Species[sp]->max_seed_estab = 0.0;
-			Species[sp]->exp_decay = 1000000;
-
-		}
 	}
 
 	RGroup[rg]->extirpated = TRUE;

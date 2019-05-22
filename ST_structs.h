@@ -105,7 +105,7 @@ struct species_st {
   /**** Quantities that DO NOT change during model runs *****/
 
     /* 4-letter code (plus \0) for genus and species*/
-  char name[MAX_SPECIESNAMELEN+1];
+  char* name;
   IntUS max_age,         /* max age of mature plant, also flag for annual */
         viable_yrs,      /* annuals: max years of viability of seeds */
         max_seed_estab,  /* max seedlings that can estab in 1 yr*/
@@ -157,7 +157,7 @@ struct resourcegroup_st {
         relsize,      /* size of all species' indivs' relsizes scaled to 1.0 */
         rgroupFractionOfVegTypeBiomass; /*proportional biomass of the STEPPE functional group out of the SOILWAT2 functional type biomass */
   SppIndex est_count, /* number of species actually established in group*/
-           est_spp[MAX_SPP_PER_GRP]; /*list of spp actually estab in grp*/
+           *est_spp; /*list of spp actually estab in grp*/
   Bool extirpated,    /* group extirpated, no more regen */
        regen_ok;      /* annuals: startyr; TM this is a flag for annuals.  When
                        * you set the start year for the group this will flag all
@@ -179,7 +179,7 @@ struct resourcegroup_st {
         veg_prod_type,  /* type of VegProd.  1 for tree, 2 for shrub, 3 for grass, 4 for forb */
 		grazingfrq,     /* grazing effect on group at this frequency: <1=prob, >1=# years */
         grazingfreq_startyr;/* start year for grazing frequency*/
-  SppIndex species[MAX_SPP_PER_GRP]; /*list of spp belonging to this grp*/
+  SppIndex *species; /*list of spp belonging to this grp*/
   RealF baseline_min_res_req,  /* input from table */
         min_res_req,  /* input from table, rescaled if an rgroup is not established */
         max_density,  /* number of mature plants per plot allowed */
@@ -203,7 +203,7 @@ struct resourcegroup_st {
        use_mort,      /* use age-independent+slowgrowth mortality?  */
        est_annually;  /* establish this group every year if true  */
   DepthClass depth;  /* rooting depth class */
-  char name[MAX_GROUPNAMELEN +1];
+  char *name;
 };
 
 struct succulent_st {
@@ -247,7 +247,8 @@ struct temp_st {
   RealF avg,
         std,
         min,
-        max;
+        max,
+        gstemp;
 };
 struct fecalpats_st {
   Bool use;
@@ -271,9 +272,6 @@ struct outfiles_st {
   FILE *fp_year,  /* file handle for yearly so it can stay open*/
        *fp_sumry; /* file handle for averages output */
   IntUS suffixwidth; /* max width of outfile suffix if printing yearly */
-  char header_line[1024]; /* contains output header line, used to print */
-                          /* yearly values and statistics  */
-
 };
 
 struct globals_st {
@@ -296,6 +294,11 @@ struct globals_st {
       transp_window, /* Number of years for which transpiration data is kept*/
       nCells;		/* number of cells to use in Grid, only applicable if grid function is being used */
   IntL randseed;     /* random seed from input file */
+  size_t max_rgroups, /* Maximum resource groups allowed. */
+         max_groupnamelen, /* Maximum resource group name length. */
+         max_spp_per_grp, /* Maximum species allowed per resource group. */
+         max_indivs_per_spp, /* Maximum individuals allowed per species. */
+         max_speciesnamelen; /* Maximum species name length. */
 
   struct outfiles_st bmass, mort;
 };

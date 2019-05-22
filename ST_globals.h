@@ -19,8 +19,8 @@
 #include "ST_defines.h"
 #include "ST_functions.h"
 
-extern SpeciesType    *Species[MAX_SPECIES];
-extern GroupType      *RGroup [MAX_RGROUPS];
+extern SpeciesType  **Species;
+extern GroupType    **RGroup;
 extern SucculentType  Succulent;
 extern EnvType        Env;
 extern PlotType       Plot;
