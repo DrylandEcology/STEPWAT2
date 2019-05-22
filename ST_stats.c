@@ -351,7 +351,7 @@ static void _init( void) {
       
       _Gwf->prescribedFire = (int **)
           Mem_Calloc( 1,
-                      sizeof(int **) * MAX_RGROUPS,
+                      sizeof(int **) * Globals.max_rgroups,
                       "_stat_init(Gwf->prescribedfire");
 
       ForEachGroup(rg){
@@ -1410,12 +1410,17 @@ static RealF _get_gridcell_std(struct accumulators_grid_cell_st *p)
 /***********************************************************/
 static void _make_header_with_std( char *buf) {
 
-  char fields[MAX_OUTFIELDS*2][MAX_FIELDLEN+1];
+  char **fields;
   char tbuf[80];
   GrpIndex rg;
   SppIndex sp;
   Int i, fc=0;
-
+  
+  fields = (char **)Mem_Calloc(MAX_OUTFIELDS * 2, sizeof(char *), "_make_header_with_std");
+  
+  for (i = 0; i < MAX_OUTFIELDS * 2; i++) {
+      fields[i] = (char *)Mem_Calloc(MAX_FIELDLEN + 1, sizeof(char), "_make_header_with_std");
+  }
 
   /* Set up headers */
   if (BmassFlags.yr)
@@ -1480,19 +1485,28 @@ static void _make_header_with_std( char *buf) {
     sprintf(tbuf,"%s\n", fields[i]);
     strcat(buf, tbuf);
 
-
+    for (i = 0; i < MAX_OUTFIELDS * 2; i++) {
+        Mem_Free(fields[i]);
+    }
+    
+    Mem_Free(fields);
 }
 
 /***********************************************************/
 static void _make_header( char *buf) {
 
-  char fields[MAX_OUTFIELDS*2][MAX_FIELDLEN+1];
+  char **fields;
   char tbuf[80];
   GrpIndex rg;
   SppIndex sp;
   Int i, fc=0;
 
-
+  fields = (char **)Mem_Calloc(MAX_OUTFIELDS * 2, sizeof(char *), "_make_header");
+  
+  for (i = 0; i < MAX_OUTFIELDS * 2; i++) {
+      fields[i] = (char *)Mem_Calloc(MAX_FIELDLEN + 1, sizeof(char), "_make_header");
+  }
+  
   /* Set up headers */
   if (BmassFlags.yr)
     strcpy(fields[fc++], "Year");
@@ -1550,7 +1564,11 @@ static void _make_header( char *buf) {
     sprintf(tbuf,"%s\n", fields[i]);
     strcat(buf, tbuf);
 
-
+    for (i = 0; i < MAX_OUTFIELDS * 2; i++) {
+        Mem_Free(fields[i]);
+    }
+    
+    Mem_Free(fields);
 }
 
 #ifdef DEBUG_MEM

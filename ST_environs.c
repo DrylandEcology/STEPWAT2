@@ -92,12 +92,12 @@ static void _make_ppt( void) {
 
   // Run with SOILWAT2: we have monthly PPT and temperature to calculate
   // growing season precipitation as sum of monthly precipitation of those
-  // months when mean air temperature exceeds a threshold `GROWING_BASE_TEMP`
+  // months when mean air temperature exceeds a threshold that allows for plant growth 'Globals.temp.gstemp'
   Env->gsppt = 0; // gsppt is defined as IntS and units are millimeters
 
   for (i = 0; i < MAX_MONTHS; i++)
   {
-    Env->gsppt += GE(SXW->temp_monthly[i], GROWING_BASE_TEMP) ?
+    Env->gsppt += GE(SXW->temp_monthly[i], Globals->temp.gstemp) ?
       (IntS) (SXW->ppt_monthly[i] * 10. + 0.5) : 0;
   }
 

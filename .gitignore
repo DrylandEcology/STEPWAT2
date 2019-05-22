@@ -78,3 +78,8 @@ nbproject/project.xml
 # VScode project files
 ######################
 .vscode
+
+# CLion project files
+cmake-build-debug/*
+.idea/*
+CMakeLists.txt

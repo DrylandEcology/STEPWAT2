@@ -26,17 +26,15 @@
 /***************************************************
  * Basic definitions
  ***************************************************/
-#define MAX_YEARS            1000
-#define MAX_INDIVS_PER_SPP   100
-#define MAX_SPP_PER_GRP      10
-#define MAX_RGROUPS          10
-#define MAX_SPECIES (MAX_SPP_PER_GRP * MAX_RGROUPS)
-#define MAX_INDIVS (MAX_INDIVS_PER_SPP * MAX_SPP_PER_GRP * MAX_RGROUPS)
-#define MAX_INDIVS_PER_GRP (MAX_INDIVS_PER_SPP * MAX_SPP_PER_GRP)
-#define MAX_GROUPNAMELEN     15
-#define MAX_SPECIESNAMELEN   4
-#define MAX_OUTFIELDS (MAX_SPECIES + (MAX_RGROUPS *2) + 5 +1 )
-#define MAX_FIELDLEN MAX_GROUPNAMELEN + 6  /* +6 for xtra chars like _RSize, etc */
+#define MAX_SPECIES (Globals.max_spp_per_grp * Globals.max_rgroups)
+#define MAX_SPECIESNAMELEN   4 /* keep around for SOILWAT for now */
+
+/* output_Bmass_Yearly of ST_output.c and _make_header and _make_header_with_std
+ * of ST_stats.c output different numbers of fields. Set MAX_OUTFIELDS to the
+ * maximum number of fields these three functions are capable of outputting. */
+#define MAX_OUTFIELDS ((MAX_SPECIES * 2) + (Globals.max_rgroups * 6) + 8)
+
+#define MAX_FIELDLEN (Globals.max_groupnamelen + 6)  /* +6 for xtra chars like _RSize, etc */
 #define MAX_CELLS 10000 // defines the maximum number of cells in the grid option
 
 /* Constants for flagging whether a sort is
@@ -82,7 +80,7 @@ typedef enum {DepthNonComp, DepthShallow, DepthMedium, DepthDeep, DepthLast}
 typedef enum {F_First, F_Log, F_Model, F_Env, F_Plot, F_RGroup, F_Species,
               F_BMassFlag, F_BMassPre, F_BMassAvg,
               F_MortFlag,  F_MortPre,  F_MortAvg,
-              F_SXW, F_EXE}
+              F_SXW, F_MaxRGroupSpecies, F_EXE}
   ST_FileIndex;
 
 /**************************************************************/

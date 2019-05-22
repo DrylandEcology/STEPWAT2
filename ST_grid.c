@@ -1,3 +1,5 @@
+#if 0
+
 /********************************************************/
 //  Source file: ST_grid.c
 //  Type: module
@@ -287,7 +289,7 @@ void mort_EndOfYear(void);
 void grazing_EndOfYear(void);
 
 //functions from ST_params.c
-void parm_Initialize(Int);
+void parm_Initialize(void);
 void parm_SetFirstName(char *s);
 void parm_SetName(char *s, int which);
 void parm_free_memory(void);
@@ -501,7 +503,7 @@ void runGrid(void)
 		sprintf(SW_Weather.name_prefix, "%s", SW_prefix_permanent); //updates the directory correctly for the weather files so soilwat can find them
 
 		if (BmassFlags.yearly || MortFlags.yearly)
-			parm_Initialize(iter);
+			parm_Initialize();
 
 		// Initialize the plot for each grid cell
 		for (i = 0; i < grid_Rows; i++){
@@ -651,7 +653,7 @@ static void _run_spinup(void)
 		RandSeed(Globals->randseed, &markov_rng);
 
 		if (BmassFlags.yearly || MortFlags.yearly)
-			parm_Initialize(iter);
+			parm_Initialize();
 
 		Plot_Initialize();
 
@@ -3166,3 +3168,5 @@ static void _read_init_species(void)
 
 	CloseFile(&f);
 }
+
+#endif

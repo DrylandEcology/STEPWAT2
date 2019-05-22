@@ -55,7 +55,7 @@ extern Bool* _SomeKillage;
   void proportion_Recovery(void);
   void grazing_EndOfYear( void);
 
-  void parm_Initialize( Int);
+  void parm_Initialize(void);
   void parm_SetFirstName( char *s);
 
   void output_Bmass_Yearly( Int year );
@@ -68,10 +68,11 @@ extern Bool* _SomeKillage;
   void stat_Output_AllMorts( void) ;
   void stat_Output_AllBmass(void) ;
 
-  void runGrid( void ); //for the grid... declared in ST_grid.c
+  /* void runGrid( void ); //for the grid... declared in ST_grid.c */
 
   void _kill_annuals(void);
   void _kill_extra_growth(void);
+  void _kill_maxage(void);
   void save_annual_species_relsize(void);
 
 #ifdef DEBUG_MEM
@@ -121,8 +122,8 @@ char inbuf[1024];
 FILE *logfp,   /* used everywhere by LogError */
      *progfp;  /* optional place to put progress info */
 int logged;  /* indicator that err file was written to */
-SpeciesType   *Species[MAX_SPECIES];
-GroupType     *RGroup [MAX_RGROUPS];
+SpeciesType  **Species;
+GroupType    **RGroup;
 SucculentType  *Succulent;
 EnvType        *Env;
 PlotType       *Plot;
@@ -166,15 +167,17 @@ int main(int argc, char **argv) {
 
 	printf("STEPWAT  init_args() executed successfully \n");
 
+        /*
 	if (UseGrid == TRUE) {
 		runGrid();
 		return 0;
 	}
+        */
 
 	allocate_Globals();
 
-	parm_Initialize(0);
-
+	parm_Initialize();
+        
 	SXW_Init(TRUE, NULL); // allocate SOILWAT2-memory
 	SW_OUT_set_ncol(); // set number of output columns
 	SW_OUT_set_colnames(); // set column names for output files
@@ -201,8 +204,6 @@ int main(int argc, char **argv) {
 		} else {
 			fprintf(progfp, "%d\n", iter);
 		}
-		if (BmassFlags.yearly || MortFlags.yearly)
-			parm_Initialize(iter);
 
 		Plot_Initialize();
 
@@ -258,6 +259,8 @@ int main(int argc, char **argv) {
 
        // Moved kill annual and kill extra growth after we export biomass, and recovery of biomass after fire before the next year
 			_kill_annuals();
+                        
+                        _kill_maxage();
 
 			proportion_Recovery();
 
