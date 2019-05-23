@@ -1802,8 +1802,6 @@ static void unload_cell(){
 	Env = NULL;
 	Plot = NULL;
 	Globals = NULL;
-	UseSeedDispersal = NULL;
-	DuringSpinup = NULL;
 	// Nullify the accumulators
 	stat_Copy_Accumulators(NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,FALSE);
 	// Nullify sxw
