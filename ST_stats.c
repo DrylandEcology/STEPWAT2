@@ -351,7 +351,7 @@ static void _init( void) {
       
       _Gwf->prescribedFire = (int **)
           Mem_Calloc( 1,
-                      sizeof(int **) * Globals->max_rgroups,
+                      sizeof(int **) * SuperGlobals.max_rgroups,
                       "_stat_init(Gwf->prescribedfire");
 
       ForEachGroup(rg){

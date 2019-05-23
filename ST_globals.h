@@ -27,6 +27,7 @@ extern PlotType       *Plot;
 extern ModelType      *Globals;
 extern BmassFlagsType BmassFlags;
 extern MortFlagsType  MortFlags;
+extern GlobalType     SuperGlobals;
 
 extern Bool UseSeedDispersal;
 extern Bool UseGrid;

@@ -385,7 +385,7 @@ static SpeciesType *_create(void)
 	SpeciesType *p;
 
 	p = (SpeciesType *) Mem_Calloc(1, sizeof(SpeciesType), "Species_Create");
-        p->name = Mem_Calloc(Globals->max_speciesnamelen + 1, sizeof(char), "Species_Create");
+        p->name = Mem_Calloc(SuperGlobals.max_speciesnamelen + 1, sizeof(char), "Species_Create");
 
 	return (p);
 

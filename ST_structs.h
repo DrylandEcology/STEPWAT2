@@ -293,11 +293,6 @@ struct globals_st {
       transp_window, /* Number of years for which transpiration data is kept*/
       nCells;		/* number of cells to use in Grid, only applicable if grid function is being used */
   IntL randseed;     /* random seed from input file */
-  size_t max_rgroups, /* Maximum resource groups allowed. */
-         max_groupnamelen, /* Maximum resource group name length. */
-         max_spp_per_grp, /* Maximum species allowed per resource group. */
-         max_indivs_per_spp, /* Maximum individuals allowed per species. */
-         max_speciesnamelen; /* Maximum species name length. */
 
   struct outfiles_st bmass, mort;
 };
@@ -330,7 +325,12 @@ struct mortflags_st {
   char sep;
 };
 
-
-
+struct superglobals_st {
+    size_t max_rgroups, /* Maximum resource groups allowed. */
+           max_groupnamelen, /* Maximum resource group name length. */
+           max_spp_per_grp, /* Maximum species allowed per resource group. */
+           max_indivs_per_spp, /* Maximum individuals allowed per species. */
+           max_speciesnamelen; /* Maximum species name length. */
+};
 
 #endif

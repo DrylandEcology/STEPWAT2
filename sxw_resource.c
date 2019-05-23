@@ -104,7 +104,7 @@ void _sxw_update_resource(void) {
   RealF *sizes;
   GrpIndex g;
   
-  sizes = (RealF *)Mem_Calloc(Globals->max_rgroups, sizeof(RealF), "_sxw_update_resource");
+  sizes = (RealF *)Mem_Calloc(SuperGlobals.max_rgroups, sizeof(RealF), "_sxw_update_resource");
 
 	ForEachGroup(g)
 	{

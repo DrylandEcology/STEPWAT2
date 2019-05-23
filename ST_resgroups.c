@@ -301,8 +301,8 @@ void rgroup_ResPartIndiv(void) {
             *size_base, /* biomass of the functional group */
     		*size_obase; /* biomass of functional groups that can use extra resources */
 
-    size_base = (RealF *)Mem_Calloc(Globals->max_rgroups, sizeof(RealF), "rgroup_ResPartIndiv");
-    size_obase = (RealF *)Mem_Calloc(Globals->max_rgroups, sizeof(RealF), "rgroup_ResPartIndiv");
+    size_base = (RealF *)Mem_Calloc(SuperGlobals.max_rgroups, sizeof(RealF), "rgroup_ResPartIndiv");
+    size_obase = (RealF *)Mem_Calloc(SuperGlobals.max_rgroups, sizeof(RealF), "rgroup_ResPartIndiv");
     
     /* Divide each group's normal resources to individuals */
     ForEachGroup(rg) {
@@ -870,9 +870,9 @@ static GroupType *_create(void)
 	GroupType *p;
 
 	p = (GroupType *) Mem_Calloc(1, sizeof(GroupType), "_create");
-        p->name = (char *) Mem_Calloc(Globals->max_groupnamelen + 1, sizeof(char), "_create");
-        p->est_spp = (SppIndex *) Mem_Calloc(Globals->max_spp_per_grp, sizeof(SppIndex), "_create");
-        p->species = (SppIndex *) Mem_Calloc(Globals->max_spp_per_grp, sizeof(SppIndex), "_create");
+        p->name = (char *) Mem_Calloc(SuperGlobals.max_groupnamelen + 1, sizeof(char), "_create");
+        p->est_spp = (SppIndex *) Mem_Calloc(SuperGlobals.max_spp_per_grp, sizeof(SppIndex), "_create");
+        p->species = (SppIndex *) Mem_Calloc(SuperGlobals.max_spp_per_grp, sizeof(SppIndex), "_create");
         
 	return (p);
 
@@ -896,11 +896,11 @@ GrpIndex RGroup_New(void)
 	/*------------------------------------------------------*/
 	GrpIndex i = (GrpIndex) Globals->grpCount;
 
-	if (++Globals->grpCount > Globals->max_rgroups)
+	if (++Globals->grpCount > SuperGlobals.max_rgroups)
 	{
 		LogError(logfp, LOGFATAL, "Too many groups specified (>%d)!\n"
 				"You must adjust MAX_RGROUPS in maxrgroupspecies.in!",
-		Globals->max_rgroups);
+		SuperGlobals.max_rgroups);
 	}
 
 	RGroup[i] = _create();

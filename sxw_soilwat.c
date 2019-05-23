@@ -196,7 +196,7 @@ static void _update_productivity(void) {
             *bmassg,
     vegTypeBiomass[4] = {0.};
     
-    bmassg = (RealF *)Mem_Calloc(Globals->max_rgroups, sizeof(RealF), "_update_productivity");
+    bmassg = (RealF *)Mem_Calloc(SuperGlobals.max_rgroups, sizeof(RealF), "_update_productivity");
     
 #define Biomass(g)  RGroup_GetBiomass(g)
 

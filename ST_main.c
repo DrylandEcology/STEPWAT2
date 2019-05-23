@@ -130,6 +130,7 @@ SucculentType  *Succulent;
 EnvType        *Env;
 PlotType       *Plot;
 ModelType      *Globals;
+GlobalType     SuperGlobals;
 BmassFlagsType BmassFlags;
 MortFlagsType  MortFlags;
 
