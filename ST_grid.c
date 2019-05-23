@@ -1750,10 +1750,11 @@ static void _load_cell(int row, int col, int year, Bool useAccumulators)
 /* Load gridCells[row][col] into the globals variables.
    Any call to this function should have an accompanying call to unload_cell(). */
 static void load_cell(int row, int col){
-    /* Commenting this out until clean_code_lowpriority is merged into this branch
-	RGroup = &gridCells[row][col].myGroup;
-	Species = &gridCells[row][col].mySpecies;
-	*/
+    /* RGroup for this cell */
+	RGroup = gridCells[row][col].myGroup;
+
+	/*Species for this cell */
+	Species = gridCells[row][col].mySpecies;
 
 	/* Succulents corresponding to this cell */
 	Succulent = &gridCells[row][col].mySucculent;
