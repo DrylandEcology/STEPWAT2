@@ -75,6 +75,7 @@ extern Bool* _SomeKillage;
   void _kill_maxage(void);
   void save_annual_species_relsize(void);
 
+  void files_init(void);
   void maxrgroupspecies_init(void);
 
 #ifdef DEBUG_MEM
@@ -170,13 +171,14 @@ int main(int argc, char **argv) {
 
 	printf("STEPWAT  init_args() executed successfully \n");
 
-	/* Read maxrgroupspecies.in before everything else, regardless of gridded or non-gridded mode. */
-	maxrgroupspecies_init();
-
 	if (UseGrid == TRUE) {
 		runGrid();
 		return 0;
 	}
+
+    /* Read files.in and maxrgroupspecies.in before everything else */
+    files_init();
+    maxrgroupspecies_init();
 
 	allocate_Globals();
 

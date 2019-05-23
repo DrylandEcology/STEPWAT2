@@ -216,6 +216,7 @@ enum
     GRID_FILE_SEED_DISPERSAL,
     GRID_FILE_INIT_SPECIES,
     GRID_FILE_FILES,
+    GRID_FILE_MAXRGROUPSPECIES,
 
     GRID_FILE_PREFIX_BMASSAVG,
     GRID_FILE_PREFIX_MORTAVG,
@@ -356,6 +357,7 @@ void _deallocate_memory(void);
 
 void copy_sxw_variables(SXW_t* newSXW, SXW_resourceType* newSXWResources, transp_t* newTransp_window);
 
+void maxrgroupspecies_init(void);
 
 /*********** Locally Used Function Declarations ************/
 /***********************************************************/
@@ -863,6 +865,12 @@ static void _init_grid_inputs(void)
 	FILE *f;
 	char buf[1024];
 	int i, j;
+
+	/* Read maxrgroupspecies.in */
+    ChDir(grid_directories[GRID_DIRECTORY_STEPWAT_INPUTS]);
+    parm_SetName(grid_files[GRID_FILE_MAXRGROUPSPECIES], F_MaxRGroupSpecies);
+    maxrgroupspecies_init();
+    ChDir("..");
 
 	f = OpenFile(grid_files[GRID_FILE_SETUP], "r");
 

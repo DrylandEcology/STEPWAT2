@@ -46,16 +46,16 @@ SppIndex species_New(void);
   void parm_SetFirstName( char *s);
   void parm_SetName( char *s, int which);
   void parm_free_memory( void );
+  void maxrgroupspecies_init(void);
+  void files_init(void);
 
 /*********** Locally Used Function Declarations ************/
 /***********************************************************/
 static void _env_init( void);
 static void _plot_init( void);
 static void _setNameLen(char *dest, char *src, Int len);
-static void _maxrgroupspecies_init( void);
 static void _rgroup_init( void);
 static void _species_init( void);
-static void _files_init( void );
 static void _check_species( void);
 static void _bmassflags_init( void);
 static void _mortflags_init( void);
@@ -92,7 +92,6 @@ char *MyFileName;
 /**************************************************************/
 void parm_Initialize() {
 /*======================================================*/
-  _files_init();
   _model_init();
   _env_init();
   _plot_init();
@@ -132,7 +131,7 @@ void parm_SetName( char *s, int which) {
 }
 
 /**************************************************************/
-static void _files_init( void ) {
+void files_init( void ) {
 /*======================================================*/
   /* 7-May-02 (cwb) added code to interface with SOILWAT */
 
