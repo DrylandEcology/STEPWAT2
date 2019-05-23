@@ -643,17 +643,33 @@ void runGrid(void)
 	_deallocate_memory(); // sxw memory.
 }
 
-/***********************************************************/
+/* "Spinup" the model by running for Globals->runModelYears without seed dispersal or statistics outputs. */
 static void _run_spinup(void)
 {
+	/* Dummy accumulators to ensure we do not collect statistics */
 	StatType *dummy_Dist, *dummy_Ppt, *dummy_Temp,
   		*dummy_Grp, *dummy_Gsize, *dummy_Gpr, *dummy_Gmort, *dummy_Gestab,
   		*dummy_Spp, *dummy_Indv, *dummy_Smort, *dummy_Sestab, *dummy_Sreceived;
 	FireStatsType *dummy_Gwf;
-	//does the spinup, it's pretty much like running the grid, except some differences like no seed dispersal and no need to deal with output accumulators
+
+	/* ints used for iterating over gridCells */
 	int i, j;
-	Bool killedany;
+
+	/* ints used for iterating over years and iterations */
 	IntS year, iter;
+
+	/* For iterating over RGroup and Species */
+	GrpIndex rg;
+	SppIndex sp;
+	IntS k;
+
+	/* 'Globals' is not allocated in gridded mode. Therefore we need to implicitely remember years
+	   and iterations. gridCells[0][0] is guaranteed to exist because it is populated first. */
+	int iterations = gridCells[0][0].myGlobals.runModelIterations;
+	int total_years = gridCells[0][0].myGlobals.runModelYears;
+
+	/* killedany for mortality functions, temporary_storage for swapping variables */
+	Bool killedany, temporary_storage;
 
 	DuringSpinup = TRUE;
 
@@ -681,10 +697,32 @@ static void _run_spinup(void)
 
 		Plot_Initialize();
 
-		Globals->currIter = iter;
-		//_load_grid_globals(); //allocates/initializes grid variables (specifically the ones that are going to change every iter)
+		/* Before we start iterating we need to swap Species[sp]->use_me and mySpeciesInit.species_seed_avail[sp].
+		   species_seed_avail is an array of booleans that represent whether the given species should be used 
+		   in spinup. use_me is a boolean that represents whether the given species should be used in production.
+		   By swaping them we save space, but we have to remember to swap them back before the production run. */
+		for(i = 0; i < grid_Rows; ++i){
+			for(j = 0; j < grid_Cols; ++j){
+				load_cell(i, j);	/* We could do this without loading the cell, but there would be no guarantee
+									   that ForEachGroup would iterate correctly */
 
-		for (year = 1; year <= Globals->runModelYears; year++)
+				Globals->currIter = iter; // We need to do this before the "years" loop.
+
+				/* Begin swaping variables */
+				ForEachGroup(rg){
+					ForEachGroupSpp(sp, rg, k){
+						// Temporarily store use_me
+						temporary_storage = Species[sp]->use_me;
+						// Swap use_me
+						Species[sp]->use_me = gridCells[i][j].mySpeciesInit.species_seed_avail[sp]; 
+						// Swap species_seed_avail[sp]
+						gridCells[i][j].mySpeciesInit.species_seed_avail[sp] = temporary_storage;
+					} /* End for each species */
+				} /* End for each group */
+			} /* End for each column */
+		} /* End for each row */
+
+		for (year = 1; year <= total_years; year++)
 		{ //for each year
 			for (i = 0; i < grid_Rows; ++i)
 			{ // for each row
@@ -741,7 +779,27 @@ static void _run_spinup(void)
 		SW_Soilwat.hist.file_prefix = NULL;
 		ChDir("..");
 		//_free_grid_globals(); //free's the grid variables that change every iter
-	} /*end iterations */
+	} /* End iterations */
+
+	/* Swap back Species[sp]->use_me and species_seed_avail[sp]. */
+	for(i = 0; i < grid_Rows; ++i){
+		for(j = 0; j < grid_Cols; ++j){
+			load_cell(i, j);	/* We could do this without loading the cell, but there would be no guarantee
+								   that ForEachGroup would iterate correctly */
+
+			/* Begin swaping variables */
+			ForEachGroup(rg){
+				ForEachGroupSpp(sp, rg, k){
+					// Temporarily store use_me
+					temporary_storage = Species[sp]->use_me;
+					// Swap use_me
+					Species[sp]->use_me = gridCells[i][j].mySpeciesInit.species_seed_avail[sp]; 
+					// Swap species_seed_avail[sp]
+					gridCells[i][j].mySpeciesInit.species_seed_avail[sp] = temporary_storage;
+				} /* End for each species */
+			} /* End for each group */
+		} /* End for each column */
+	} /* End for each row */
 
 	DuringSpinup = FALSE;
 }
