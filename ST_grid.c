@@ -538,6 +538,7 @@ void runGrid(void)
 				Globals->currIter = iter;
 			}
 		}
+		unload_cell(); // Reset the global variables
 
 		RandSeed(Globals->randseed, &environs_rng);
 		RandSeed(Globals->randseed, &mortality_rng);
@@ -587,9 +588,10 @@ void runGrid(void)
 
 				} /* end model run for this cell*/
 			} /* end model run for this row */
-
 			if (UseSeedDispersal)
 				_do_seed_dispersal();
+			
+			unload_cell(); // Reset the global variables
 		}/* end model run for this year*/
 
 		// collects the data appropriately for the mort output... (ie. fills the accumulators in ST_stats.c with the values that they need)
@@ -612,7 +614,7 @@ void runGrid(void)
 	} /*end iterations */
 
 	// outputs all of the mort and BMass files for each cell...
-	for (i = 0; i < grid_Rows; i++)
+	for (i = 0; i < grid_Rows; i++){
 		for (j = 0; j < grid_Cols; j++)
 		{
 			int cell = j + ((i - 1) * grid_Cols) - 1;
@@ -632,8 +634,10 @@ void runGrid(void)
 			if (UseSeedDispersal && sd_DoOutput)
 				stat_Output_Seed_Dispersal(fileReceivedProb, sd_Sep,
 						sd_MakeHeader);
-
 		}
+	}
+	unload_cell(); // Reset the global variables
+
 	//Here creating grid cells avg values output file
 	char fileBMassCellAvg[1024];
 	sprintf(fileBMassCellAvg, "%s.csv", grid_files[GRID_FILE_PREFIX_BMASSCELLAVG]);
@@ -722,6 +726,7 @@ static void _run_spinup(void)
 				} /* End for each group */
 			} /* End for each column */
 		} /* End for each row */
+		unload_cell(); // Reset the global variables
 
 		for (year = 1; year <= total_years; year++)
 		{ //for each year
@@ -771,6 +776,8 @@ static void _run_spinup(void)
 					_kill_extra_growth(); 		// Kill superfluous growth			
 				} /* end column */
 			} /* end row */
+
+			unload_cell(); // Reset the global variables
 		} /* end model run for this year*/
 
 		ChDir(grid_directories[GRID_DIRECTORY_STEPWAT_INPUTS]);
@@ -801,6 +808,7 @@ static void _run_spinup(void)
 			} /* End for each group */
 		} /* End for each column */
 	} /* End for each row */
+	unload_cell(); // Reset the global variables
 
 	DuringSpinup = FALSE;
 }
@@ -936,6 +944,7 @@ static void _init_stepwat_inputs(void)
 			_init_SXW_inputs(TRUE, NULL);	// Initialize the SXW and SOILWAT variables
 		} /* End for each column */
 	} /* End for each row */
+	unload_cell(); // Reset the global variables
 
 	ChDir("..");						// go back to the folder we started in
 }
