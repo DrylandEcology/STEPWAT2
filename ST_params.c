@@ -98,7 +98,6 @@ void parm_Initialize() {
   _plot_init();
   _bmassflags_init();
   _mortflags_init();
-  _maxrgroupspecies_init();
   _rgroup_init();
   _species_init();
   _check_species();
@@ -685,7 +684,7 @@ static void _setNameLen(char *dest, char *src, Int len) {
 }
 
 /**************************************************************/
-static void _maxrgroupspecies_init( void) {
+void maxrgroupspecies_init( void) {
 /*======================================================*/
     FILE *f;
     

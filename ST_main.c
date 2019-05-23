@@ -75,6 +75,8 @@ extern Bool* _SomeKillage;
   void _kill_maxage(void);
   void save_annual_species_relsize(void);
 
+  void maxrgroupspecies_init(void);
+
 #ifdef DEBUG_MEM
   #define chkmem_f CheckMemoryIntegrity(FALSE);
   #define chkmem_t CheckMemoryIntegrity(TRUE);
@@ -166,6 +168,9 @@ int main(int argc, char **argv) {
 	init_args(argc, argv); // read input arguments and intialize proper flags
 
 	printf("STEPWAT  init_args() executed successfully \n");
+
+	/* Read maxrgroupspecies.in before everything else, regardless of gridded or non-gridded mode. */
+	maxrgroupspecies_init();
 
 	if (UseGrid == TRUE) {
 		runGrid();
