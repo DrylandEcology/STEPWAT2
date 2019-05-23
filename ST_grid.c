@@ -378,6 +378,7 @@ static void _free_grid_globals(void);
 static void _free_spinup_globals(void);
 static void _load_cell(int row, int col, int year, Bool useAccumulators);
 static void load_cell(int row, int col);
+static void unload_cell(void);
 static void _load_spinup_cell(int cell);
 static void _save_cell(int row, int col, int year, Bool useAccumulators);
 static void _save_spinup_cell(int cell);
@@ -1737,7 +1738,8 @@ static void _load_cell(int row, int col, int year, Bool useAccumulators)
 				grid_SXW_ptrs[cell].prod_pctlive);
 }
 
-/* load gridCells[row][col] into the globals variables */
+/* Load gridCells[row][col] into the globals variables.
+   Any call to this function should have an accompanying call to unload_cell(). */
 static void load_cell(int row, int col){
     /* Commenting this out until clean_code_lowpriority is merged into this branch
 	RGroup = &gridCells[row][col].myGroup;
@@ -1772,6 +1774,31 @@ static void load_cell(int row, int col){
 
 	/* Copy this cell's SXW variables into the loacl variables in sxw.c */
 	copy_sxw_variables(&gridCells[row][col].mySXW, &gridCells[row][col].mySXWResources, &gridCells[row][col].myTranspWindow);
+}
+
+/* Nullify all global variables. This function should appear after every call to load_cell to prevent
+   accidental modification of a grid cell.
+   Example usage:
+   for i in rows{
+       for j in columns{
+	       load_cell(i, j)
+		   //additional functions
+	   }
+   }
+   unload_cell() */
+static void unload_cell(){
+	Species = NULL;
+	RGroup = NULL;
+	Succulent = NULL;
+	Env = NULL;
+	Plot = NULL;
+	Globals = NULL;
+	UseSeedDispersal = NULL;
+	DuringSpinup = NULL;
+	// Nullify the accumulators
+	stat_Copy_Accumulators(NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,FALSE);
+	// Nullify sxw
+	copy_sxw_variables(NULL,NULL,NULL);
 }
 
 /***********************************************************/
