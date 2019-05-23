@@ -197,8 +197,34 @@ struct grid_cell_st
 /************ Module Variable Declarations ***************/
 /***********************************************************/
 
-#define N_GRID_FILES 11
-#define N_GRID_DIRECTORIES 1
+/* Indices for grid_directories go here */
+enum
+{
+    GRID_DIRECTORY_STEPWAT_INPUTS,
+
+    /* Automatically generate number of directories since enums start at 0 */
+    N_GRID_DIRECTORIES
+};
+
+/* Indices for grid_files go here */
+enum
+{
+    GRID_FILE_LOGFILE,
+    GRID_FILE_SETUP,
+    GRID_FILE_DISTURBANCES,
+    GRID_FILE_SOILS,
+    GRID_FILE_SEED_DISPERSAL,
+    GRID_FILE_INIT_SPECIES,
+    GRID_FILE_FILES,
+
+    GRID_FILE_PREFIX_BMASSAVG,
+    GRID_FILE_PREFIX_MORTAVG,
+    GRID_FILE_PREFIX_RECEIVEDPROB,
+    GRID_FILE_PREFIX_BMASSCELLAVG,
+
+    /* Automatically generate number of files since enums start at 0 */
+    N_GRID_FILES
+};
 
 char *grid_files[N_GRID_FILES], *grid_directories[N_GRID_DIRECTORIES], sd_Sep;
 
@@ -489,7 +515,7 @@ void runGrid(void)
 	// SOILWAT resets SW_Weather.name_prefix every iteration. This is not the behavior we want 
 	// so the name is stored here.
 	char SW_prefix_permanent[2048];
-	sprintf(SW_prefix_permanent, "%s/%s", grid_directories[0], SW_Weather.name_prefix);
+	sprintf(SW_prefix_permanent, "%s/%s", grid_directories[GRID_DIRECTORY_STEPWAT_INPUTS], SW_Weather.name_prefix);
 
 	for (iter = 1; iter <= Globals->runModelIterations; iter++)
 	{ //for each iteration
@@ -576,7 +602,7 @@ void runGrid(void)
 					_save_cell(i, j, Globals->runModelYears, TRUE);
 				}
 		//reset soilwat to initial condition
-		ChDir(grid_directories[0]);
+		ChDir(grid_directories[GRID_DIRECTORY_STEPWAT_INPUTS]);
 		SXW_Reset();
 		Mem_Free(SW_Soilwat.hist.file_prefix);
 		SW_Soilwat.hist.file_prefix = NULL;
@@ -592,9 +618,9 @@ void runGrid(void)
 			load_cell(i, j);
 			char fileMort[1024], fileBMass[1024], fileReceivedProb[1024];
 
-			sprintf(fileReceivedProb, "%s%d.csv", grid_files[9], cell);
-			sprintf(fileMort, "%s%d.csv", grid_files[8], cell);
-			sprintf(fileBMass, "%s%d.csv", grid_files[7], cell);
+			sprintf(fileReceivedProb, "%s%d.csv", grid_files[GRID_FILE_PREFIX_RECEIVEDPROB], cell);
+			sprintf(fileMort, "%s%d.csv", grid_files[GRID_FILE_PREFIX_MORTAVG], cell);
+			sprintf(fileBMass, "%s%d.csv", grid_files[GRID_FILE_PREFIX_BMASSAVG], cell);
 			parm_SetName(fileMort, F_MortAvg);
 			parm_SetName(fileBMass, F_BMassAvg);
 
@@ -609,7 +635,7 @@ void runGrid(void)
 		}
 	//Here creating grid cells avg values output file
 	char fileBMassCellAvg[1024];
-	sprintf(fileBMassCellAvg, "%s.csv", grid_files[10]);
+	sprintf(fileBMassCellAvg, "%s.csv", grid_files[GRID_FILE_PREFIX_BMASSCELLAVG]);
 	if (BmassFlags.summary)
 		stat_Output_AllCellAvgBmass(fileBMassCellAvg);
 
@@ -708,7 +734,7 @@ static void _run_spinup(void)
 			} /* end row */
 		} /* end model run for this year*/
 
-		ChDir(grid_directories[0]);
+		ChDir(grid_directories[GRID_DIRECTORY_STEPWAT_INPUTS]);
 		SXW_Reset();
 		//TODO: This is a shortcut. swc history is not used and shouldn't be until this is fixed.
 		Mem_Free(SW_Soilwat.hist.file_prefix);
@@ -750,12 +776,12 @@ static void _init_grid_files(void)
 		LogError(stderr, LOGFATAL, "Invalid files.in");
 
 	// opens the log file...
-	if (!strcmp("stdout", grid_files[0]))
+	if (!strcmp("stdout", grid_files[GRID_FILE_LOGFILE]))
 		logfp = stdout;
 	else
-		logfp = OpenFile(grid_files[0], "w"); //grid_files[0] is the logfile to use
+		logfp = OpenFile(grid_files[GRID_FILE_LOGFILE], "w");
 
-	/*printf("stepwat dir: %s\n", grid_directories[0]);
+	/*printf("stepwat dir: %s\n", grid_directories[GRID_DIRECTORY_STEPWAT_INPUTS]);
 	 for(i = 0; i < N_GRID_FILES; i++)
 	 printf("%d : %s\n", i, grid_files[i]);*/
 
@@ -771,7 +797,7 @@ static void _init_grid_inputs(void)
 	char buf[1024];
 	int i, j;
 
-	f = OpenFile(grid_files[1], "r"); //grid_files[1] is the grid inputs file
+	f = OpenFile(grid_files[GRID_FILE_SETUP], "r");
 
 	GetALine(f, buf);
 	i = sscanf(buf, "%d %d", &grid_Rows, &grid_Cols);
@@ -829,7 +855,7 @@ static void _init_SXW_inputs(Bool init_SW, char *f_roots)
 	if (init_SW == TRUE)
 	{
 		char aString[2048];
-		sprintf(aString, "%s/%s", grid_directories[0], SW_Weather.name_prefix);
+		sprintf(aString, "%s/%s", grid_directories[GRID_DIRECTORY_STEPWAT_INPUTS], SW_Weather.name_prefix);
 		sprintf(SW_Weather.name_prefix, "%s", aString); //updates the directory correctly for the weather files so soilwat can find them
 	}
 }
@@ -840,8 +866,8 @@ static void _init_stepwat_inputs(void)
 {
 	int i, j; 							// Used as indices in gridCells
 
-	ChDir(grid_directories[0]);			// Change to folder with STEPWAT files
-	parm_SetFirstName(grid_files[6]);	// Set the name of the STEPWAT "files.in" file
+	ChDir(grid_directories[GRID_DIRECTORY_STEPWAT_INPUTS]);			// Change to folder with STEPWAT files
+	parm_SetFirstName(grid_files[GRID_FILE_FILES]);	// Set the name of the STEPWAT "files.in" file
 
 	/* Loop through all gridCells. */
 	for(i = 0; i < grid_Rows; ++i){
@@ -1079,7 +1105,7 @@ static void _load_grid_globals(void)
 	SppIndex s;
 
 	if (UseSoils)
-		ChDir(grid_directories[0]); //change the directory for _init_soil_layers()
+		ChDir(grid_directories[GRID_DIRECTORY_STEPWAT_INPUTS]); //change the directory for _init_soil_layers()
 	for (i = 0; i < grid_Cells; i++)
 	{
 
@@ -1190,7 +1216,7 @@ static void _load_spinup_globals(void)
 	SppIndex s;
 
 	if (UseSoils)
-		ChDir(grid_directories[0]); //change the directory for _init_soil_layers()
+		ChDir(grid_directories[GRID_DIRECTORY_STEPWAT_INPUTS]); //change the directory for _init_soil_layers()
 	for (i = 0; i < nSoilTypes; i++)
 	{
 
@@ -1655,7 +1681,7 @@ static void _load_cell(int row, int col, int year, Bool useAccumulators)
 
 /* load gridCells[row][col] into the globals variables */
 static void load_cell(int row, int col){
-	/* Commenting this out until clean_code_lowpriority is merged into this branch
+    /* Commenting this out until clean_code_lowpriority is merged into this branch
 	RGroup = &gridCells[row][col].myGroup;
 	Species = &gridCells[row][col].mySpecies;
 	*/
@@ -2097,7 +2123,7 @@ static void _read_disturbances_in(void)
 	char buf[1024];
 	int i, cell, num;
 
-	f = OpenFile(grid_files[2], "r");
+	f = OpenFile(grid_files[GRID_FILE_DISTURBANCES], "r");
 
 	GetALine2(f, buf, 1024); // gets rid of the first line (since it just defines the columns)
 	for (i = 0; i < grid_Cells; i++)
@@ -2122,11 +2148,11 @@ static void _read_disturbances_in(void)
 
 		if (num != 12)
 			LogError(logfp, LOGFATAL, "Invalid %s file line %d wrong",
-					grid_files[2], i + 2);
+					grid_files[GRID_FILE_DISTURBANCES], i + 2);
 	}
 	if (i != grid_Cells)
 		LogError(logfp, LOGFATAL, "Invalid %s file wrong number of cells",
-				grid_files[2]);
+				grid_files[GRID_FILE_DISTURBANCES]);
 
 	CloseFile(&f);
 }
@@ -2182,7 +2208,7 @@ static void _read_soils_in(void)
 	if (sd_Option2a || sd_Option2b)
 		nSoilTypes = 0; //initialize our soil types counter
 
-	f = OpenFile(grid_files[3], "r");
+	f = OpenFile(grid_files[GRID_FILE_SOILS], "r");
 
 	GetALine2(f, buf, 4096); // gets rid of the first line (since it just defines the columns)... it's only there for user readability
 	for (i = 0; i < grid_Cells; i++)
@@ -2222,14 +2248,14 @@ static void _read_soils_in(void)
 
 		if (num < 5)
 			if (!do_copy)
-				LogError(logfp, LOGFATAL, "Invalid %s file", grid_files[3]);
+				LogError(logfp, LOGFATAL, "Invalid %s file", grid_files[GRID_FILE_SOILS]);
 		if (!do_copy)
 			stringIndex = _get_value_index2(buf, 5); //gets us the index of the string that is right after what we just parsed in
 
 		if (num_layers > MAX_LAYERS)
 			LogError(logfp, LOGFATAL,
 					"Invalid %s file line %d num_layers (%d) exceeds MAX_LAYERS (%d)",
-					grid_files[3], i + 2, num_layers, MAX_LAYERS);
+					grid_files[GRID_FILE_SOILS], i + 2, num_layers, MAX_LAYERS);
 
 		if (do_copy == 1 && copy_cell > -1 && copy_cell < grid_Cells
 				&& cell != 0 && copy_cell < cell)
@@ -2250,7 +2276,7 @@ static void _read_soils_in(void)
 		else if (do_copy == 1)
 			LogError(logfp, LOGFATAL,
 					"Invalid %s file line %d invalid copy_cell attempt",
-					grid_files[3], i + 2);
+					grid_files[GRID_FILE_SOILS], i + 2);
 
 		if (sd_Option2a || sd_Option2b)
 		{
@@ -2274,14 +2300,14 @@ static void _read_soils_in(void)
 			if (num != 12)
 				LogError(logfp, LOGFATAL,
 						"Invalid '%s' file line %d invalid soil layer input",
-						grid_files[3], i + 2);
+						grid_files[GRID_FILE_SOILS], i + 2);
 
 			k = stringIndex;
 			stringIndex += _get_value_index(&buf[stringIndex], ',', 12); //updates the index of the string that we are at
 			if (k == stringIndex)
 				LogError(logfp, LOGFATAL,
 						"Invalid %s file line %d not enough soil layers",
-						grid_files[3], i + 2);
+						grid_files[GRID_FILE_SOILS], i + 2);
 
 			for (k = 0; k < 11; k++)
 				grid_Soils[i].lyr[j].data[k] = d[k];
@@ -2292,7 +2318,7 @@ static void _read_soils_in(void)
 
 	if (i != grid_Cells)
 		LogError(logfp, LOGFATAL, "Invalid %s file, not enough cells",
-				grid_files[3]);
+				grid_files[GRID_FILE_SOILS]);
 
 	/*for(i = 0; i < grid_Cells; i++) {
 	 printf("cell %d:\n", i);
@@ -2570,26 +2596,26 @@ static void _read_seed_dispersal_in(void)
 	SppIndex s;
 
 	// read in the seed dispersal input file to get the constants that we need
-	f = OpenFile(grid_files[4], "r");
+	f = OpenFile(grid_files[GRID_FILE_SEED_DISPERSAL], "r");
 
-	VW = _read_a_float(f, buf, grid_files[4], "VW line");
+	VW = _read_a_float(f, buf, grid_files[GRID_FILE_SEED_DISPERSAL], "VW line");
 
 	GetALine(f, buf);
 	if (sscanf(buf, "%d", &sd_DoOutput) != 1)
 		LogError(logfp, LOGFATAL,
-				"Invalid %s file: seed dispersal output line\n", grid_files[4]);
+				"Invalid %s file: seed dispersal output line\n", grid_files[GRID_FILE_SEED_DISPERSAL]);
 
 	GetALine(f, buf);
 	if (sscanf(buf, "%d", &sd_MakeHeader) != 1)
 		LogError(logfp, LOGFATAL,
 				"Invalid %s file: seed dispersal make header line\n",
-				grid_files[4]);
+				grid_files[GRID_FILE_SEED_DISPERSAL]);
 
 	GetALine(f, buf);
 	if (sscanf(buf, "%c", &sd_Sep) != 1)
 		LogError(logfp, LOGFATAL,
 				"Invalid %s file: seed dispersal seperator line\n",
-				grid_files[4]);
+				grid_files[GRID_FILE_SEED_DISPERSAL]);
 
 	if (sd_Sep == 't') //dealing with tab and space special cases...
 		sd_Sep = '\t';
@@ -2599,32 +2625,32 @@ static void _read_seed_dispersal_in(void)
 	GetALine(f, buf);
 	if (sscanf(buf, "%d", &sd_NYearsSeedsAvailable) != 1)
 		LogError(logfp, LOGFATAL, "Invalid %s file: option 1 line\n",
-				grid_files[4]);
+				grid_files[GRID_FILE_SEED_DISPERSAL]);
 
 	GetALine(f, buf);
 	if (sscanf(buf, "%d", &sd_Option1a) != 1)
 		LogError(logfp, LOGFATAL, "Invalid %s file: option 1a line\n",
-				grid_files[4]);
+				grid_files[GRID_FILE_SEED_DISPERSAL]);
 
 	GetALine(f, buf);
 	if (sscanf(buf, "%d", &sd_Option1b) != 1)
 		LogError(logfp, LOGFATAL, "Invalid %s file: option 1b line\n",
-				grid_files[4]);
+				grid_files[GRID_FILE_SEED_DISPERSAL]);
 
 	GetALine(f, buf);
 	if (sscanf(buf, "%d", &sd_Option2a) != 1)
 		LogError(logfp, LOGFATAL, "Invalid %s file: option 2a line\n",
-				grid_files[4]);
+				grid_files[GRID_FILE_SEED_DISPERSAL]);
 
 	GetALine(f, buf);
 	if (sscanf(buf, "%d", &sd_Option2b) != 1)
 		LogError(logfp, LOGFATAL, "Invalid %s file: option 2b line\n",
-				grid_files[4]);
+				grid_files[GRID_FILE_SEED_DISPERSAL]);
 
 	if ((sd_Option1a && (sd_Option1b || sd_Option2a || sd_Option2b))
 			|| (sd_Option2a && (sd_Option1a || sd_Option1b || sd_Option2b)))
 		LogError(logfp, LOGFATAL,
-				"Invalid %s file: conflicting options chosen\n", grid_files[4]);
+				"Invalid %s file: conflicting options chosen\n", grid_files[GRID_FILE_SEED_DISPERSAL]);
 
 	CloseFile(&f);
 
@@ -3113,7 +3139,7 @@ static void _read_init_species(void)
 	char buf[4096];
 
 	//open the file/do the reading
-	f = OpenFile(grid_files[5], "r"); //grid_files[5] is the grid_initSpecies.csv file
+	f = OpenFile(grid_files[GRID_FILE_INIT_SPECIES], "r");
 
 	GetALine2(f, buf, 4096); // gets rid of the first line (since it just defines the columns)... it's only there for user readability
 	for (i = 0; i < grid_Cells; i++)
@@ -3124,7 +3150,7 @@ static void _read_init_species(void)
 		num = sscanf(buf, "%d,%d,%d,%d", &cell, &do_copy, &copy_cell,
 				&use_SpinUp);
 		if (num != 4)
-			LogError(logfp, LOGFATAL, "Invalid %s file", grid_files[5]);
+			LogError(logfp, LOGFATAL, "Invalid %s file", grid_files[GRID_FILE_INIT_SPECIES]);
 
 		grid_initSpecies[i].use_SpinUp = use_SpinUp;
 
@@ -3143,7 +3169,7 @@ static void _read_init_species(void)
 		else if (do_copy == 1)
 			LogError(logfp, LOGFATAL,
 					"Invalid %s file line %d invalid copy_cell attempt",
-					grid_files[5], i + 2);
+					grid_files[GRID_FILE_INIT_SPECIES], i + 2);
 
 		//going through each species
 		SppIndex s;
@@ -3153,7 +3179,7 @@ static void _read_init_species(void)
 			if (num != 1)
 				LogError(logfp, LOGFATAL,
 						"Invalid %s file line %d invalid species input",
-						grid_files[5], i + 2);
+						grid_files[GRID_FILE_INIT_SPECIES], i + 2);
 
 			grid_initSpecies[i].species_seed_avail[s] = seeds_Avail;
 			stringIndex += _get_value_index(&buf[stringIndex], ',', 1);
@@ -3162,7 +3188,7 @@ static void _read_init_species(void)
 
 	if (i != grid_Cells)
 		LogError(logfp, LOGFATAL, "Invalid %s file, not enough cells",
-				grid_files[5]);
+				grid_files[GRID_FILE_INIT_SPECIES]);
 
 	CloseFile(&f);
 }
