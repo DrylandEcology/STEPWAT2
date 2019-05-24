@@ -400,9 +400,6 @@ static void _do_groups_and_species_extirpate(void);
 static void _do_grid_proportion_Recovery(int row, int col);
 static void _do_grid_grazing_EndOfYear(int row, int col);
 
-
-//static void _copy_species(SpeciesType* to, SpeciesType* from, Bool deep);
-
 static IndivType* _create_empty_indv(void); //these 5 functions are used for copying/freeing the linked list of individuals correctly...
 static void _free_individuals(IndivType *head);
 static void _free_head(IndivType *head);
@@ -1033,32 +1030,6 @@ static IndivType* _copy_head(IndivType *head)
 	return _copy_individuals(head);
 }
 
-/**********************************************************/
-/*
- static void _copy_species(SpeciesType* to, SpeciesType* from, Bool deep) {
- if(deep) {
- Mem_Free(to->kills);
- Mem_Free(to->seedprod);
- _free_head(to->IndvHead); //free_head() frees the memory allocated by the head and the memory allocated by each part of the linked list
- }
-
- *to = *from;
- to->est_count = from->est_count;
- to->estabs = from->estabs;
- to->relsize = from->relsize;
- to->extragrowth = from->extragrowth;
- to->allow_growth = from->allow_growth;
-
- if(deep) {
- to->kills = Mem_Calloc(from->max_age, sizeof(IntUS), "_load_cell(Species[s]->kills)");
- to->seedprod = Mem_Calloc(from->viable_yrs, sizeof(RealF), "_load_cell(Species[s]->seedprod)");
-
- memcpy(to->kills, from->kills, from->max_age * sizeof(IntUS));
- memcpy(to->seedprod, from->seedprod, from->viable_yrs * sizeof(RealF));
- to->IndvHead = _copy_head(from->IndvHead); //copy_head() deep copies the linked list structure (allocating memory when needed)... it will even allocate memory for the head of the list
- }
- }
- */
 /***********************************************************/
 static void _init_grid_globals(void)
 {
