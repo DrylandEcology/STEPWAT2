@@ -173,6 +173,8 @@ struct grid_cell_st
 	Bool duringSpinup;
 	/* species spinup information */
 	Grid_Init_Species_St mySpeciesInit;
+	/* Disturbance information */
+	Grid_Disturb_St myDisturb;
 	
 	/* ---------------- accumulators -------------------- */
 	StatType *_Dist, *_Ppt, *_Temp,
@@ -2177,54 +2179,36 @@ static void _read_disturbances_in(void)
 	// there should be no spaces in between, just commas separating the values
 	// kill_yr will overwrite the kill year for each RGroup in the cell (0 means don't use, a # > 0 means kill everything at this year)
 
-	/*
-	//printf("inside _read_disturbances_in ()\n");
-
-	GrpIndex rg;
-	GroupType *g;
-
-	ForEachGroup(rg)
-	{
-		g = RGroup[rg];
-	//	printf(" rgroup name= %s , killYear:%d, proportion_killed=%f,proportion_recovered=%f ,proportion_grazing=%f \n",
-	//			g->name, g->killyr, g->proportion_killed, g->proportion_recovered, g->proportion_grazing);
-	}
-	*/
-
 	FILE *f;
 	char buf[1024];
-	int i, cell, num;
+	int i, j, cell, num;
+	Grid_Disturb_St *disturb;
 
 	f = OpenFile(grid_files[GRID_FILE_DISTURBANCES], "r");
 
 	GetALine2(f, buf, 1024); // gets rid of the first line (since it just defines the columns)
-	for (i = 0; i < grid_Cells; i++)
-	{
-		if (!GetALine2(f, buf, 1024))
-			break;
 
-		num = sscanf(buf, "%d,%d,%d,%d,%d,%d,%d,%d,%f,%d,%d,%d", &cell,
-				&grid_Disturb[i].choices[0], &grid_Disturb[i].choices[1],
-				&grid_Disturb[i].choices[2], &grid_Disturb[i].kill_yr,
-				&grid_Disturb[i].killfrq, &grid_Disturb[i].extirp,
-				&grid_Disturb[i].killfreq_startyr,&grid_Disturb[i].xgrow,&grid_Disturb[i].veg_prod_type,
-				&grid_Disturb[i].grazing_frq,&grid_Disturb[i].grazingfreq_startyr);
+	for (i = 0; i < grid_Rows; i++) {
+	    for (j = 0; j < grid_Cols; j++) {
+	        disturb = &gridCells[i][j].myDisturb;
 
-//		printf("values :  cell=%d ,choices[0]=%d ,choices[1]=%d ,choices[2]=%d ,kill_yr=%d ,killfrq=%d ,extirp=%d ,killfreq_startyr=%d ,xgrow=%f ,veg_prod_type=%d ,grazing_frq=%d ,grazingfrd_start_year=%d \n", cell,
-//						grid_Disturb[i].choices[0], grid_Disturb[i].choices[1],
-//						grid_Disturb[i].choices[2], grid_Disturb[i].kill_yr,
-//						grid_Disturb[i].killfrq, grid_Disturb[i].extirp,
-//						grid_Disturb[i].killfreq_startyr,grid_Disturb[i].xgrow,grid_Disturb[i].veg_prod_type,
-//						grid_Disturb[i].grazing_frq,grid_Disturb[i].grazingfreq_startyr);
+            if (!GetALine2(f, buf, 1024))
+                LogError(logfp, LOGFATAL, "Invalid %s file wrong number of cells",
+                         grid_files[GRID_FILE_DISTURBANCES]);
 
+            // cell is a useless field, although we still read it in for now.
+            num = sscanf(buf, "%d,%d,%d,%d,%d,%d,%d,%d,%f,%d,%d,%d", &cell,
+                         &disturb->choices[0], &disturb->choices[1],
+                         &disturb->choices[2], &disturb->kill_yr,
+                         &disturb->killfrq, &disturb->extirp,
+                         &disturb->killfreq_startyr, &disturb->xgrow, &disturb->veg_prod_type,
+                         &disturb->grazing_frq, &disturb->grazingfreq_startyr);
 
-		if (num != 12)
-			LogError(logfp, LOGFATAL, "Invalid %s file line %d wrong",
-					grid_files[GRID_FILE_DISTURBANCES], i + 2);
+            if (num != 12)
+                LogError(logfp, LOGFATAL, "Invalid %s file line %d wrong",
+                         grid_files[GRID_FILE_DISTURBANCES], i + 2);
+	    }
 	}
-	if (i != grid_Cells)
-		LogError(logfp, LOGFATAL, "Invalid %s file wrong number of cells",
-				grid_files[GRID_FILE_DISTURBANCES]);
 
 	CloseFile(&f);
 }
