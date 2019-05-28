@@ -1765,7 +1765,7 @@ static void load_cell(int row, int col){
 						   gridCells[row][col]._Indv, gridCells[row][col]._Smort, gridCells[row][col]._Sestab,
 						   gridCells[row][col]._Sreceived, gridCells[row][col]._Gwf, gridCells[row][col].stats_init);
 
-	/* Copy this cell's SXW variables into the loacl variables in sxw.c */
+	/* Copy this cell's SXW variables into the local variables in sxw.c */
 	copy_sxw_variables(&gridCells[row][col].mySXW, &gridCells[row][col].mySXWResources, &gridCells[row][col].myTranspWindow);
 }
 
