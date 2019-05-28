@@ -944,9 +944,13 @@ static void _init_stepwat_inputs(void)
 	/* Loop through all gridCells. */
 	for(i = 0; i < grid_Rows; ++i){
 		for(j = 0; j < grid_Cols; ++j){
-			load_cell(i, j); 				// Load this cell into the global variables
-			parm_Initialize();				// Initialize the STEPWAT variables
-			_init_SXW_inputs(TRUE, NULL);	// Initialize the SXW and SOILWAT variables
+			load_cell(i, j); 				     // Load this cell into the global variables
+			parm_Initialize();				     // Initialize the STEPWAT variables
+			gridCells[i][j].myGroup = RGroup;    // This is necessary because load_cell only points RGroup to our cell-specific
+			                                     // resource group array, not to the variable that points to that array.
+			gridCells[i][j].mySpecies = Species; // This is necessary because load_cell only points Species to our cell-specific
+			                                     // species array, not to the variable that points to that array.
+			_init_SXW_inputs(TRUE, NULL);	     // Initialize the SXW and SOILWAT variables
 		} /* End for each column */
 	} /* End for each row */
 	unload_cell(); // Reset the global variables
