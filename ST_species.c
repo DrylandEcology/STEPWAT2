@@ -300,15 +300,7 @@ void Species_Annual_Kill(const SppIndex sp, int killType)
 	/* To kill all the annual species and their individuals */
 	/* HISTORY */
 	/* Added - Nov 4th 2015 -AT */
-
 	/*------------------------------------------------------*/
-
-#define xF_DELTA (20*F_DELTA)
-#define xD_DELTA (20*D_DELTA)
-#define ZERO(x) \
-		( (sizeof(x) == sizeof(float)) \
-				? ((x)>-xF_DELTA && (x)<xF_DELTA) \
-						: ((x)>-xD_DELTA && (x)<xD_DELTA) )
 
 	IndivType *p1 = Species[sp]->IndvHead, *t1;
 	while (p1)
@@ -318,11 +310,6 @@ void Species_Annual_Kill(const SppIndex sp, int killType)
 		p1 = t1;
 	}
 	rgroup_DropSpecies(sp);
-
-#undef xF_DELTA
-#undef xD_DELTA
-#undef ZERO
-
 }
 
 void Species_Proportion_Kill(const SppIndex sp, int killType,
@@ -343,13 +330,6 @@ void Species_Proportion_Kill(const SppIndex sp, int killType,
 	 *   now deletion of species and individual is hold till recovery function */
 	/*------------------------------------------------------*/
 
-#define xF_DELTA (20*F_DELTA)
-#define xD_DELTA (20*D_DELTA)
-#define ZERO(x) \
-		( (sizeof(x) == sizeof(float)) \
-				? ((x)>-xF_DELTA && (x)<xF_DELTA) \
-						: ((x)>-xD_DELTA && (x)<xD_DELTA) )
-
 	IndivType *p = Species[sp]->IndvHead, *t;
 	//kill  all the species individuals  proportionally or adjust their real size irrespective of being annual or perennial, both will have this effect
 	while (p)
@@ -358,11 +338,6 @@ void Species_Proportion_Kill(const SppIndex sp, int killType,
 		indiv_proportion_Kill(p, killType, proportionKilled);
 		p = t;
 	}
-
-#undef xF_DELTA
-#undef xD_DELTA
-#undef ZERO
-
 }
 
 void Species_Proportion_Grazing(const SppIndex sp, RealF proportionGrazing)
@@ -375,22 +350,13 @@ void Species_Proportion_Grazing(const SppIndex sp, RealF proportionGrazing)
 	/* AT  1st Nov 2015 -Added Species Proportion Grazing for all even for annual */
 	/* 14 August 2018 -CH -Added functionality to graze the species' extra growth. */
 	/*------------------------------------------------------*/
-#define xF_DELTA (20*F_DELTA)
-#define xD_DELTA (20*D_DELTA)
-#define ZERO(x) \
-		( (sizeof(x) == sizeof(float)) \
-				? ((x)>-xF_DELTA && (x)<xF_DELTA) \
-						: ((x)>-xD_DELTA && (x)<xD_DELTA) )
-	
+
 	//CH- extra growth is only stored at the species level. This will graze extra
 	//    growth for the whole species.
 	//    loss represents the proportion of extragrowth that is eaten by livestock
 	RealF loss = Species[sp]->extragrowth * proportionGrazing;
 
-	//CH- To make sure that _kill_extra_growth() does not remove too much biomass
-	//    I subtracted loss from both extragrowth and Species relsize.
-	//    This way when the extra growth is removed it will have already lost the 
-	//    proportion due to grazing.
+	//CH- Remove the loss from Species extra growth.
 	Species[sp]->extragrowth -= loss;	// remove the loss from extragrowth
 
 	//Implement grazing on normal growth for all individuals in each species.
@@ -401,11 +367,6 @@ void Species_Proportion_Grazing(const SppIndex sp, RealF proportionGrazing)
 		indiv_proportion_Grazing(p, proportionGrazing);
 		p = t; //move to the next plant.
 	}
-
-#undef xF_DELTA
-#undef xD_DELTA
-#undef ZERO
-
 }
 
 void Species_Proportion_Recovery(const SppIndex sp, int killType,
