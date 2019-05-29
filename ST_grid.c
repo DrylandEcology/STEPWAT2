@@ -358,6 +358,7 @@ void _deallocate_memory(void);
 void copy_sxw_variables(SXW_t* newSXW, SXW_resourceType* newSXWResources, transp_t* newTransp_window);
 
 void maxrgroupspecies_init(void);
+void files_init(void);
 
 /*********** Locally Used Function Declarations ************/
 /***********************************************************/
@@ -405,6 +406,10 @@ static void _free_individuals(IndivType *head);
 static void _free_head(IndivType *head);
 static IndivType* _copy_individuals(IndivType *head);
 static IndivType* _copy_head(IndivType *head);
+
+static void _read_maxrgroupspecies(void);
+static void _read_grid_setup(void);
+static void _read_files(void);
 
 /******************** Begin Model Code *********************/
 /***********************************************************/
@@ -503,8 +508,11 @@ void runGrid(void)
 	clock_t prog_Time;
 
 	_init_grid_files();				// reads in files.in file
+	_read_maxrgroupspecies();       // reads in maxrgroupspecies.in file
+	_read_grid_setup();             // reads in grid_setup.in file
+    _read_files();                  // reads in Stepwat_Inputs/files.in file
+    _init_stepwat_inputs();			// reads the stepwat inputs in
 	_init_grid_inputs();			// reads the grid inputs in & initializes the global grid variables
-	_init_stepwat_inputs();			// reads the stepwat inputs in
 	//SWC hist file prefix needs to be cleared
 	Mem_Free(SW_Soilwat.hist.file_prefix);
 	SW_Soilwat.hist.file_prefix = NULL;
@@ -857,55 +865,6 @@ static void _init_grid_files(void)
 /***********************************************************/
 static void _init_grid_inputs(void)
 {
-	// reads in the grid input file
-
-	FILE *f;
-	char buf[1024];
-	int i, j;
-
-	/* Read maxrgroupspecies.in */
-    ChDir(grid_directories[GRID_DIRECTORY_STEPWAT_INPUTS]);
-    parm_SetName(grid_files[GRID_FILE_MAXRGROUPSPECIES], F_MaxRGroupSpecies);
-    maxrgroupspecies_init();
-    ChDir("..");
-
-	f = OpenFile(grid_files[GRID_FILE_SETUP], "r");
-
-	GetALine(f, buf);
-	i = sscanf(buf, "%d %d", &grid_Rows, &grid_Cols);
-	if (i != 2)
-		LogError(logfp, LOGFATAL,
-				"Invalid grid setup file (rows/cols line wrong)");
-
-	grid_Cells = grid_Cols * grid_Rows;
-
-	if (grid_Cells > MAX_CELLS)
-		LogError(logfp, LOGFATAL,
-				"Number of cells in grid exceeds MAX_CELLS defined in ST_defines.h");
-
-	/* Allocate the 2d array of cells now that we know how many we need */
-	allocate_gridCells(grid_Rows, grid_Cols);
-
-	GetALine(f, buf);
-	i = sscanf(buf, "%d", &UseDisturbances);
-	if (i != 1)
-		LogError(logfp, LOGFATAL,
-				"Invalid grid setup file (disturbances line wrong)");
-
-	GetALine(f, buf);
-	i = sscanf(buf, "%d", &UseSoils);
-	if (i != 1)
-		LogError(logfp, LOGFATAL, "Invalid grid setup file (soils line wrong)");
-
-	GetALine(f, buf);
-	i = sscanf(buf, "%d", &j);
-	if (i != 1)
-		LogError(logfp, LOGFATAL,
-				"Invalid grid setup file (seed dispersal line wrong)");
-	UseSeedDispersal = itob(j);
-
-	CloseFile(&f);
-
 	_init_grid_globals(); // initializes the global grid variables
 	if (UseDisturbances)
 		_read_disturbances_in();
@@ -3267,4 +3226,66 @@ static void _read_init_species(void)
 				grid_files[GRID_FILE_INIT_SPECIES]);
 
 	CloseFile(&f);
+}
+
+/***********************************************************/
+static void _read_maxrgroupspecies(void)
+{
+    ChDir(grid_directories[GRID_DIRECTORY_STEPWAT_INPUTS]);
+    parm_SetName(grid_files[GRID_FILE_MAXRGROUPSPECIES], F_MaxRGroupSpecies);
+    maxrgroupspecies_init();
+    ChDir("..");
+}
+
+/***********************************************************/
+static void _read_files(void)
+{
+    ChDir(grid_directories[GRID_DIRECTORY_STEPWAT_INPUTS]);
+    files_init();
+    ChDir("..");
+}
+
+/***********************************************************/
+static void _read_grid_setup(void)
+{
+    FILE *f;
+    char buf[1024];
+    int i, j;
+
+    f = OpenFile(grid_files[GRID_FILE_SETUP], "r");
+
+    GetALine(f, buf);
+    i = sscanf(buf, "%d %d", &grid_Rows, &grid_Cols);
+    if (i != 2)
+        LogError(logfp, LOGFATAL,
+                 "Invalid grid setup file (rows/cols line wrong)");
+
+    grid_Cells = grid_Cols * grid_Rows;
+
+    if (grid_Cells > MAX_CELLS)
+        LogError(logfp, LOGFATAL,
+                 "Number of cells in grid exceeds MAX_CELLS defined in ST_defines.h");
+
+    /* Allocate the 2d array of cells now that we know how many we need */
+    allocate_gridCells(grid_Rows, grid_Cols);
+
+    GetALine(f, buf);
+    i = sscanf(buf, "%d", &UseDisturbances);
+    if (i != 1)
+        LogError(logfp, LOGFATAL,
+                 "Invalid grid setup file (disturbances line wrong)");
+
+    GetALine(f, buf);
+    i = sscanf(buf, "%d", &UseSoils);
+    if (i != 1)
+        LogError(logfp, LOGFATAL, "Invalid grid setup file (soils line wrong)");
+
+    GetALine(f, buf);
+    i = sscanf(buf, "%d", &j);
+    if (i != 1)
+        LogError(logfp, LOGFATAL,
+                 "Invalid grid setup file (seed dispersal line wrong)");
+    UseSeedDispersal = itob(j);
+
+    CloseFile(&f);
 }
