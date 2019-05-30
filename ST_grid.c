@@ -2147,48 +2147,42 @@ static void _read_disturbances_in(void)
 	// there should be no spaces in between, just commas separating the values
 	// kill_yr will overwrite the kill year for each RGroup in the cell (0 means don't use, a # > 0 means kill everything at this year)
 
-	/*
-	//printf("inside _read_disturbances_in ()\n");
-
-	GrpIndex rg;
-	GroupType *g;
-
-	ForEachGroup(rg)
-	{
-		g = RGroup[rg];
-	//	printf(" rgroup name= %s , killYear:%d, proportion_killed=%f,proportion_recovered=%f ,proportion_grazing=%f \n",
-	//			g->name, g->killyr, g->proportion_killed, g->proportion_recovered, g->proportion_grazing);
-	}
-	*/
-
 	FILE *f;
 	char buf[1024];
-	int i, cell, num;
+	int i, row, col, cell, num = 0, choices[3];
+    GrpIndex rg;
 
 	f = OpenFile(grid_files[GRID_FILE_DISTURBANCES], "r");
 
 	GetALine2(f, buf, 1024); // gets rid of the first line (since it just defines the columns)
 	for (i = 0; i < grid_Cells; i++)
 	{
+	    row = i / grid_Cols;
+	    col = i % grid_Cols;
+
+	    load_cell(row, col);
+
 		if (!GetALine2(f, buf, 1024))
 			break;
 
-		num = sscanf(buf, "%d,%d,%d,%d,%d,%d,%d,%d,%f,%d,%d,%d", &cell,
-				&grid_Disturb[i].choices[0], &grid_Disturb[i].choices[1],
-				&grid_Disturb[i].choices[2], &grid_Disturb[i].kill_yr,
-				&grid_Disturb[i].killfrq, &grid_Disturb[i].extirp,
-				&grid_Disturb[i].killfreq_startyr,&grid_Disturb[i].xgrow,&grid_Disturb[i].veg_prod_type,
-				&grid_Disturb[i].grazing_frq,&grid_Disturb[i].grazingfreq_startyr);
+        // xgrow and veg_prod_type not found in grid_disturbances.csv
+        ForEachGroup(rg)
+            num = sscanf(buf, "%d,%d,%d,%d,%hd,%f,%hd,%hd,%hu,%hd", &cell,
+                &choices[0], &choices[1],
+                &choices[2], &RGroup[rg]->killyr,
+                &RGroup[rg]->killfreq, &RGroup[rg]->extirp,
+                &RGroup[rg]->killfreq_startyr,
+                &RGroup[rg]->grazingfrq, &RGroup[rg]->grazingfreq_startyr);
 
-//		printf("values :  cell=%d ,choices[0]=%d ,choices[1]=%d ,choices[2]=%d ,kill_yr=%d ,killfrq=%d ,extirp=%d ,killfreq_startyr=%d ,xgrow=%f ,veg_prod_type=%d ,grazing_frq=%d ,grazingfrd_start_year=%d \n", cell,
-//						grid_Disturb[i].choices[0], grid_Disturb[i].choices[1],
-//						grid_Disturb[i].choices[2], grid_Disturb[i].kill_yr,
-//						grid_Disturb[i].killfrq, grid_Disturb[i].extirp,
-//						grid_Disturb[i].killfreq_startyr,grid_Disturb[i].xgrow,grid_Disturb[i].veg_prod_type,
-//						grid_Disturb[i].grazing_frq,grid_Disturb[i].grazingfreq_startyr);
+        // Comes from _load_grid_globals
+        if (UseDisturbances) {
+            Globals->pat.use = choices[0];
+            Globals->mound.use = choices[1];
+            Globals->burrow.use = choices[2];
+        }
 
-
-		if (num != 12)
+        // xgrow and veg_prod_type not found in grid_disturbances.csv
+		if (num != 10)
 			LogError(logfp, LOGFATAL, "Invalid %s file line %d wrong",
 					grid_files[GRID_FILE_DISTURBANCES], i + 2);
 	}
@@ -2196,6 +2190,7 @@ static void _read_disturbances_in(void)
 		LogError(logfp, LOGFATAL, "Invalid %s file wrong number of cells",
 				grid_files[GRID_FILE_DISTURBANCES]);
 
+    unload_cell();
 	CloseFile(&f);
 }
 
