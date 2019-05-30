@@ -3172,7 +3172,8 @@ static void _read_init_species(void)
 	// there should be no spaces in between, just commas separating the values (ie it should be a .csv file, but does not account for all of the possibilities that a .csv file could be)
 
 	FILE *f;
-	int i, j, num, cell, do_copy, copy_cell, use_SpinUp, seeds_Avail;
+	int i, j, num, cell, do_copy, copy_cell, use_SpinUp, seeds_Avail,
+	    row, col, copy_cell_row, copy_cell_col;
 	char buf[4096];
 
 	//open the file/do the reading
@@ -3181,15 +3182,24 @@ static void _read_init_species(void)
 	GetALine2(f, buf, 4096); // gets rid of the first line (since it just defines the columns)... it's only there for user readability
 	for (i = 0; i < grid_Cells; i++)
 	{
+	    row = i / grid_Cols;
+	    col = i % grid_Cols;
+
+	    load_cell(row, col);
+
 		if (!GetALine2(f, buf, 4096))
 			break;
 
 		num = sscanf(buf, "%d,%d,%d,%d", &cell, &do_copy, &copy_cell,
 				&use_SpinUp);
+
+		copy_cell_row = copy_cell / grid_Cols;
+		copy_cell_col = copy_cell % grid_Cols;
+
 		if (num != 4)
 			LogError(logfp, LOGFATAL, "Invalid %s file", grid_files[GRID_FILE_INIT_SPECIES]);
 
-		grid_initSpecies[i].use_SpinUp = use_SpinUp;
+		gridCells[row][col].mySpeciesInit.use_SpinUp = use_SpinUp;
 
 		int stringIndex = _get_value_index(buf, ',', 4); //gets us the index of the string that is right after what we just parsed in
 
@@ -3197,10 +3207,10 @@ static void _read_init_species(void)
 				&& cell != 0 && copy_cell < cell)
 		{ //copy this cells values from a previous cell's
 			for (j = 0; j < Globals->sppCount; j++)
-				grid_initSpecies[i].species_seed_avail[j] =
-						grid_initSpecies[copy_cell].species_seed_avail[j];
-			grid_initSpecies[i].use_SpinUp =
-					grid_initSpecies[copy_cell].use_SpinUp;
+				gridCells[row][col].mySpeciesInit.species_seed_avail[j] =
+				    gridCells[copy_cell_row][copy_cell_col].mySpeciesInit.species_seed_avail[j];
+			gridCells[row][col].mySpeciesInit.use_SpinUp =
+			    gridCells[copy_cell_row][copy_cell_col].mySpeciesInit.use_SpinUp;
 			continue;
 		}
 		else if (do_copy == 1)
@@ -3218,7 +3228,7 @@ static void _read_init_species(void)
 						"Invalid %s file line %d invalid species input",
 						grid_files[GRID_FILE_INIT_SPECIES], i + 2);
 
-			grid_initSpecies[i].species_seed_avail[s] = seeds_Avail;
+			gridCells[row][col].mySpeciesInit.species_seed_avail[s] = seeds_Avail;
 			stringIndex += _get_value_index(&buf[stringIndex], ',', 1);
 		}
 	}
@@ -3227,6 +3237,7 @@ static void _read_init_species(void)
 		LogError(logfp, LOGFATAL, "Invalid %s file, not enough cells",
 				grid_files[GRID_FILE_INIT_SPECIES]);
 
+    unload_cell();
 	CloseFile(&f);
 }
 
