@@ -865,7 +865,8 @@ static void _init_grid_files(void)
 /***********************************************************/
 static void _init_grid_inputs(void)
 {
-	_init_grid_globals(); // initializes the global grid variables
+    int i, j;
+
 	if (UseDisturbances)
 		_read_disturbances_in();
 	if (UseSeedDispersal)
@@ -876,9 +877,15 @@ static void _init_grid_inputs(void)
 	if (UseSoils)
 		_read_soils_in();
 
-	DuringSpinup = FALSE;
-}
+    for(i = 0; i < grid_Rows; ++i) {
+        for(j = 0; j < grid_Cols; ++j) {
+            load_cell(i, j);
+            gridCells[i][j].duringSpinup = FALSE;
+        }
+    }
 
+    unload_cell();
+}
 /***********************************************************/
 static void _init_SXW_inputs(Bool init_SW, char *f_roots)
 {
