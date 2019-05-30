@@ -2239,7 +2239,7 @@ static void _read_soils_in(void)
 	char seps[] = ",";
 	char *token;
 	int i, j, k, cell, num, do_copy, copy_cell, num_layers, depth, depthMin,
-			stringIndex;
+			stringIndex, row, col, copy_cell_row, copy_cell_col;
 	float d[11];
 
 	if (sd_Option2a || sd_Option2b)
@@ -2250,10 +2250,14 @@ static void _read_soils_in(void)
 	GetALine2(f, buf, 4096); // gets rid of the first line (since it just defines the columns)... it's only there for user readability
 	for (i = 0; i < grid_Cells; i++)
 	{
+	    row = i / grid_Cols;
+	    col = i % grid_Cols;
+
+	    load_cell(row, col);
+
 		if (!GetALine2(f, buf, 4096))
 			break;
-
-		grid_Soils[i].rootsFile[0] = '\0';
+		gridCells[row][col].mySoils.rootsFile[0] = '\0';
 		rootsin[0] = '\0';
 
 		num = 0;
@@ -2270,6 +2274,8 @@ static void _read_soils_in(void)
 				break;
 			case 2:
 				copy_cell = atoi(token);
+				copy_cell_row = copy_cell / grid_Cols;
+				copy_cell_col = copy_cell % grid_Cols;
 				break;
 			case 3:
 				num_layers = atoi(token);
@@ -2297,16 +2303,17 @@ static void _read_soils_in(void)
 		if (do_copy == 1 && copy_cell > -1 && copy_cell < grid_Cells
 				&& cell != 0 && copy_cell < cell)
 		{ //copy this cells values from a previous cell's
-			grid_Soils[i].lyr = Mem_Calloc(grid_Soils[copy_cell].num_layers,
+			gridCells[row][col].mySoils.lyr = Mem_Calloc(gridCells[copy_cell_row][copy_cell_col].mySoils.num_layers,
 					sizeof(Grid_Soil_Lyr), "_read_soils_in()");
-			for (j = 0; j < grid_Soils[copy_cell].num_layers; j++)
-				grid_Soils[i].lyr[j] = grid_Soils[copy_cell].lyr[j];
-			grid_Soils[i].num_layers = grid_Soils[copy_cell].num_layers;
+			for (j = 0; j < gridCells[copy_cell_row][copy_cell_col].mySoils.num_layers; j++)
+				gridCells[row][col].mySoils.lyr[j] = gridCells[copy_cell_row][copy_cell_col].mySoils.lyr[j];
+			gridCells[row][col].mySoils.num_layers = gridCells[copy_cell_row][copy_cell_col].mySoils.num_layers;
 
+            // TODO: figure out how to change this code for our new struct
 			if (sd_Option2a || sd_Option2b)
-				grid_SoilTypes[cell] = grid_SoilTypes[copy_cell];
+			    grid_SoilTypes[cell] = grid_SoilTypes[copy_cell];
 
-			strcpy(grid_Soils[i].rootsFile, grid_Soils[copy_cell].rootsFile);
+			strcpy(gridCells[row][col].mySoils.rootsFile, gridCells[copy_cell_row][copy_cell_col].mySoils.rootsFile);
 
 			continue;
 		}
@@ -2315,6 +2322,7 @@ static void _read_soils_in(void)
 					"Invalid %s file line %d invalid copy_cell attempt",
 					grid_files[GRID_FILE_SOILS], i + 2);
 
+        // TODO: figure out how to change this code for our new struct
 		if (sd_Option2a || sd_Option2b)
 		{
 			grid_SoilTypes[cell] = nSoilTypes;
@@ -2323,9 +2331,9 @@ static void _read_soils_in(void)
 		}
 
 		depthMin = 0;
-		grid_Soils[i].num_layers = num_layers;
-		strcpy(grid_Soils[i].rootsFile, rootsin);
-		grid_Soils[i].lyr = Mem_Calloc(num_layers, sizeof(Grid_Soil_Lyr),
+		gridCells[row][col].mySoils.num_layers = num_layers;
+		strcpy(gridCells[row][col].mySoils.rootsFile, rootsin);
+		gridCells[row][col].mySoils.lyr = Mem_Calloc(num_layers, sizeof(Grid_Soil_Lyr),
 				"_read_soils_in()");
 		for (j = 0; j < num_layers; j++)
 		{
@@ -2347,8 +2355,8 @@ static void _read_soils_in(void)
 						grid_files[GRID_FILE_SOILS], i + 2);
 
 			for (k = 0; k < 11; k++)
-				grid_Soils[i].lyr[j].data[k] = d[k];
-			grid_Soils[i].lyr[j].width = depth - depthMin;
+				gridCells[row][col].mySoils.lyr[j].data[k] = d[k];
+			gridCells[row][col].mySoils.lyr[j].width = depth - depthMin;
 			depthMin = depth;
 		}
 	}
@@ -2357,15 +2365,7 @@ static void _read_soils_in(void)
 		LogError(logfp, LOGFATAL, "Invalid %s file, not enough cells",
 				grid_files[GRID_FILE_SOILS]);
 
-	/*for(i = 0; i < grid_Cells; i++) {
-	 printf("cell %d:\n", i);
-	 for(j = 0; j < grid_Soils[i].num_layers; j++) {
-	 printf("layer %d : %d", j, grid_Soils[i].lyr[j].width);
-	 for(k = 0; k < 11; k++) printf(" %f", grid_Soils[i].lyr[j].data[k]);
-	 printf("\n");
-	 }
-	 }*/
-
+    unload_cell();
 	CloseFile(&f);
 }
 
