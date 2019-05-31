@@ -869,6 +869,8 @@ static void _init_grid_inputs(void)
 {
     int i, j;
 
+    _init_grid_globals();
+
 	if (UseDisturbances)
 		_read_disturbances_in();
 	if (UseSeedDispersal)
@@ -1007,70 +1009,11 @@ static void _init_grid_globals(void)
 {
 	//initializes grid variables, allocating the memory necessary for them (this step is only needed to be done once)
 
-	GrpIndex c;
-	SppIndex s;
-	int i;
-
-	grid_Succulent = Mem_Calloc(grid_Cells, sizeof(SucculentType),
-			"_init_grid_globals()");
-	grid_Env = Mem_Calloc(grid_Cells, sizeof(EnvType), "_init_grid_globals()");
-	grid_Plot = Mem_Calloc(grid_Cells, sizeof(PlotType),
-			"_init_grid_globals()");
-	grid_Globals = Mem_Calloc(grid_Cells, sizeof(ModelType),
-			"_init_grid_globals()");
-
-	ForEachSpecies(s)
-		if (Species[s]->use_me)
-			grid_Species[s] = Mem_Calloc(grid_Cells, sizeof(SpeciesType),
-					"_init_grid_globals()");
-	ForEachGroup(c)
-		if (RGroup[c]->use_me)
-			grid_RGroup[c] = Mem_Calloc(grid_Cells, sizeof(GroupType),
-					"_init_grid_globals()");
-
-	grid_SXW = Mem_Calloc(grid_Cells, sizeof(SXW_t),
-			"_init_grid_globals()");
-	grid_SW_Soilwat = Mem_Calloc(grid_Cells, sizeof(SW_SOILWAT),
-			"_init_grid_globals()");
-	grid_SW_Site = Mem_Calloc(grid_Cells, sizeof(SW_SITE),
-			"_init_grid_globals()");
-	grid_SW_VegProd = Mem_Calloc(grid_Cells, sizeof(SW_VEGPROD),
-			"_init_grid_globals()");
-	if (UseSoils)
-	{
-		grid_Soils = Mem_Calloc(grid_Cells, sizeof(SoilType),
-				"_init_grid_globals()");
-		for (i = 0; i < grid_Cells; i++)
-			grid_Soils[i].num_layers = 0;
-		grid_SXW_ptrs = Mem_Calloc(grid_Cells, sizeof(Grid_SXW_St),
-			"_init_grid_globals()");
-	}
-
-	if (UseDisturbances)
-		grid_Disturb = Mem_Calloc(grid_Cells, sizeof(Grid_Disturb_St),
-				"_init_grid_globals()");
-	if (UseSeedDispersal)
-	{
-		ForEachSpecies(s)
-			if (Species[s]->use_me && Species[s]->use_dispersal)
-				grid_SD[s] = Mem_Calloc(grid_Cells, sizeof(Grid_SD_St),
-						"_init_grid_globals()");
-
-		grid_initSpecies = Mem_Calloc(grid_Cells, sizeof(Grid_Init_Species_St),
-				"_init_grid_globals()");
-		for (i = 0; i < grid_Cells; i++)
-			grid_initSpecies[i].species_seed_avail = Mem_Calloc(
-					Globals->sppCount, sizeof(int), "_init_grid_globals()");
-	}
-
-	//if(sd_Option2a || sd_Option2b) {
+    // Keep these until I know if the CellType struct accounts for these variables.
 	soilTypes_Array = Mem_Calloc(grid_Cells, sizeof(int*),
 			"_init_grid_globals()");
 	grid_SoilTypes = Mem_Calloc(grid_Cells, sizeof(int*),
 			"_init_grid_globals()");
-	//}
-
-	stat_Init_Accumulators();
 }
 
 /***********************************************************/
