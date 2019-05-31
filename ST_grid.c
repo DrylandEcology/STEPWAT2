@@ -173,6 +173,8 @@ struct grid_cell_st
 	Bool duringSpinup;
 	/* species spinup information */
 	Grid_Init_Species_St mySpeciesInit;
+	/* seed dispersal information corresponding to this cell */
+	Grid_SD_St *mySeedDispersal;
 	
 	/* ---------------- accumulators -------------------- */
 	StatType *_Dist, *_Ppt, *_Temp,
@@ -2691,6 +2693,21 @@ static void _read_seed_dispersal_in(void)
 
 	CloseFile(&f);
 
+	/*
+	 * The following variables should be global (not cell-specific):
+	 *     Globals->sppCount
+	 *     Species[s]->sd_H
+	 *     Species[s]->sd_VT
+	 *     Globals->plotsize
+	 *     Species[s]->use_me
+	 *     Species[s]->use_dispersal
+	 *
+	 * Since the values of these variables do not change between cells, we can call load_cell(0, 0)
+	 * to load their values so that ForEachSpecies and other lines of code do not segfault.
+	 */
+	load_cell(0, 0);
+
+	// Begin reading cell-specific fields
 	ForEachSpecies(s)
 	{
 		// set up grid_SD with the seed dispersal probabilities needed later on...
@@ -2709,11 +2726,14 @@ static void _read_seed_dispersal_in(void)
 
 		for (i = 0; i < grid_Cells; i++)
 		{
-			grid_SD[s][i].cells = Mem_Calloc(maxCells, sizeof(int),
+		    row = i / grid_Cols;
+		    col = i % grid_Cols;
+
+			gridCells[row][col].mySeedDispersal[s].cells = Mem_Calloc(maxCells, sizeof(int),
 					"_read_seed_dispersal_in()"); //the cell number
-			grid_SD[s][i].prob = Mem_Calloc(maxCells, sizeof(float),
+			gridCells[row][col].mySeedDispersal[s].prob = Mem_Calloc(maxCells, sizeof(float),
 					"_read_seed_dispersal_in()"); //the probability that the cell will disperse seeds to this distance
-			grid_SD[s][i].size = 0; //refers to the number of cells reachable...
+			gridCells[row][col].mySeedDispersal[s].size = 0; //refers to the number of cells reachable...
 		}
 
 		for (row = 1; row <= grid_Rows; row++)
@@ -2734,26 +2754,30 @@ static void _read_seed_dispersal_in(void)
 
 						if (!ZRO(pd))
 						{
-							grid_SD[s][cell].cells[k] = i
+							gridCells[row][col].mySeedDispersal[s].cells[k] = i
 									+ ((j - 1) * grid_Cols) - 1;
-							grid_SD[s][cell].prob[k] = pd;
-							grid_SD[s][cell].size++;
+							gridCells[row][col].mySeedDispersal[s].prob[k] = pd;
+							gridCells[row][col].mySeedDispersal[s].size++;
 							k++;
-							//fprintf(stderr, "cell: %d; i: %d; j: %d; dist: %f; pd: %f %d %d\n", i + ( (j-1) * grid_Cols) - 1, i, j, d, pd, row, col);
 						}
 					}
-				//fprintf(stderr, "size %d index %d maxsize %d\n", grid_SD[cell].size, cell, maxCells);
 			}
 
-		for (i = 0; i < grid_Cells; i++)
-			if (grid_SD[s][i].size > 0)
+		for (i = 0; i < grid_Cells; i++) {
+		    row = i / grid_Cols;
+		    col = i % grid_Cols;
+
+			if (gridCells[row][col].mySeedDispersal[s].size > 0)
 			{
-				grid_SD[s][i].cells = Mem_ReAlloc(grid_SD[s][i].cells,
-						grid_SD[s][i].size * sizeof(int));
-				grid_SD[s][i].prob = Mem_ReAlloc(grid_SD[s][i].prob,
-						grid_SD[s][i].size * sizeof(float));
+                gridCells[row][col].mySeedDispersal[s].cells = Mem_ReAlloc(gridCells[row][col].mySeedDispersal[s].cells,
+                        gridCells[row][col].mySeedDispersal[s].size * sizeof(int));
+                gridCells[row][col].mySeedDispersal[s].prob = Mem_ReAlloc(gridCells[row][col].mySeedDispersal[s].prob,
+                        gridCells[row][col].mySeedDispersal[s].size * sizeof(float));
 			}
+		}
 	}
+
+	unload_cell();
 }
 
 /***********************************************************/
