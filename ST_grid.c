@@ -2636,6 +2636,13 @@ static void _read_seed_dispersal_in(void)
 
 	CloseFile(&f);
 
+    for (i = 0; i < grid_Cells; i++) {
+        row = i / grid_Cols;
+        col = i % grid_Cols;
+
+        gridCells[row][col].mySeedDispersal = Mem_Calloc(MAX_SPECIES, sizeof(Grid_SD_St), "_read_seed_dispersal_in");
+    }
+
 	/*
 	 * The following variables should be global (not cell-specific):
 	 *     Globals->sppCount
@@ -2697,10 +2704,10 @@ static void _read_seed_dispersal_in(void)
 
 						if (!ZRO(pd))
 						{
-							gridCells[row][col].mySeedDispersal[s].cells[k] = i
+							gridCells[row - 1][col - 1].mySeedDispersal[s].cells[k] = i
 									+ ((j - 1) * grid_Cols) - 1;
-							gridCells[row][col].mySeedDispersal[s].prob[k] = pd;
-							gridCells[row][col].mySeedDispersal[s].size++;
+							gridCells[row - 1][col - 1].mySeedDispersal[s].prob[k] = pd;
+							gridCells[row - 1][col - 1].mySeedDispersal[s].size++;
 							k++;
 						}
 					}
