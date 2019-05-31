@@ -867,12 +867,6 @@ void _kill_extra_growth(void) {
     IntU j;
     GrpIndex rg;
     SppIndex sp;
-#define xF_DELTA (20*F_DELTA)
-#define xD_DELTA (20*D_DELTA)
-#define ZERO(x) \
-                ( (sizeof(x) == sizeof(float)) \
-                                ? ((x)>-xF_DELTA && (x)<xF_DELTA) \
-                                                : ((x)>-xD_DELTA && (x)<xD_DELTA) )
 
     ForEachGroup(rg) {
 
@@ -901,7 +895,4 @@ void _kill_extra_growth(void) {
             }
         }
     }
-#undef xF_DELTA
-#undef xD_DELTA
-#undef ZERO    
 }
