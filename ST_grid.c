@@ -175,6 +175,8 @@ struct grid_cell_st
 	Grid_Init_Species_St mySpeciesInit;
 	/* seed dispersal information corresponding to this cell */
 	Grid_SD_St *mySeedDispersal;
+
+	Bool* someKillage;
 	
 	/* ---------------- accumulators -------------------- */
 	StatType *_Dist, *_Ppt, *_Temp,
@@ -284,6 +286,7 @@ Grid_SD_St **grid_SD; //for seed dispersal
 int nSoilTypes, *soilTypes_Array, *grid_SoilTypes;
 
 extern Bool UseProgressBar;
+extern Bool* _SomeKillage;
 
 /******** Modular External Function Declarations ***********/
 /* -- truly global functions are declared in functions.h --*/
@@ -958,6 +961,8 @@ static void allocate_gridCells(int rows, int cols){
 			// species_seed_avail is a dynamically allocated array
 			gridCells[i][j].mySpeciesInit.species_seed_avail = (int*)
 				Mem_Calloc(MAX_SPECIES, sizeof(int), "allocate_gridCells: mySpeciesInit");
+
+			gridCells[i][j].someKillage = (Bool*) Mem_Calloc(1, sizeof(Bool), "allocate_gridCells: someKillage");
 		}
 	}
 }
@@ -1679,6 +1684,8 @@ static void load_cell(int row, int col){
 
 	/* TRUE if this cell is in spinup mode */
 	DuringSpinup = gridCells[row][col].duringSpinup;
+
+	_SomeKillage = gridCells[row][col].someKillage;
 
 	/* Copy this cell's accumulators into the local accumulators in ST_stats.c */
 	stat_Copy_Accumulators(gridCells[row][col]._Dist, gridCells[row][col]._Ppt, gridCells[row][col]._Temp,
