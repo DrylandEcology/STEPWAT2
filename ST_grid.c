@@ -531,7 +531,7 @@ void runGrid(void)
 	char SW_prefix_permanent[2048];
 	sprintf(SW_prefix_permanent, "%s/%s", grid_directories[GRID_DIRECTORY_STEPWAT_INPUTS], SW_Weather.name_prefix);
 
-	for (iter = 1; iter <= Globals->runModelIterations; iter++)
+	for (iter = 1; iter <= gridCells[0][0].myGlobals.runModelIterations; iter++)
 	{ //for each iteration
 
 		/*
@@ -553,14 +553,14 @@ void runGrid(void)
 		}
 		unload_cell(); // Reset the global variables
 
-		RandSeed(Globals->randseed, &environs_rng);
-		RandSeed(Globals->randseed, &mortality_rng);
-		RandSeed(Globals->randseed, &resgroups_rng);
-		RandSeed(Globals->randseed, &species_rng);
-		RandSeed(Globals->randseed, &grid_rng);
-		RandSeed(Globals->randseed, &markov_rng);
+		RandSeed(gridCells[0][0].myGlobals.randseed, &environs_rng);
+		RandSeed(gridCells[0][0].myGlobals.randseed, &mortality_rng);
+		RandSeed(gridCells[0][0].myGlobals.randseed, &resgroups_rng);
+		RandSeed(gridCells[0][0].myGlobals.randseed, &species_rng);
+		RandSeed(gridCells[0][0].myGlobals.randseed, &grid_rng);
+		RandSeed(gridCells[0][0].myGlobals.randseed, &markov_rng);
 
-		for (year = 1; year <= Globals->runModelYears; year++)
+		for (year = 1; year <= gridCells[0][0].myGlobals.runModelYears; year++)
 		{ //for each year
 			for (i = 0; i < grid_Rows; i++){
 				for (j = 0; j < grid_Cols; j++)
