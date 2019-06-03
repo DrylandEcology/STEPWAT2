@@ -185,9 +185,9 @@ struct grid_cell_st
 	/* -------------- end accumulators ------------------ */
 
 	/* -------------------- SXW ------------------------- */
-	transp_t myTranspWindow;
-	SXW_t mySXW;
-	SXW_resourceType mySXWResources;
+	transp_t* myTranspWindow;
+	SXW_t* mySXW;
+	SXW_resourceType* mySXWResources;
 	/* ------------------ End SXW ----------------------- */
 
 	/* ------------------- Soils ------------------------ */
@@ -361,6 +361,10 @@ void copy_sxw_variables(SXW_t* newSXW, SXW_resourceType* newSXWResources, transp
 
 void maxrgroupspecies_init(void);
 void files_init(void);
+
+SXW_t* getSXW(void);
+SXW_resourceType* getSXWResources(void);
+transp_t* getTranspWindow(void);
 
 /*********** Locally Used Function Declarations ************/
 /***********************************************************/
@@ -921,6 +925,13 @@ static void _init_stepwat_inputs(void)
 			gridCells[i][j].mySpecies = Species; // This is necessary because load_cell only points Species to our cell-specific
 			                                     // species array, not to the variable that points to that array.
 			_init_SXW_inputs(TRUE, NULL);	     // Initialize the SXW and SOILWAT variables
+
+			// Set mySXW to the location of the newly allocated SXW
+			gridCells[i][j].mySXW = getSXW();	
+			// Set myTanspWindow to the location of the newly allocated transp window
+			gridCells[i][j].myTranspWindow = getTranspWindow(); 
+			// Set mySXWResources to the location of the newly allocated SXW resources
+			gridCells[i][j].mySXWResources = getSXWResources();
 		} /* End for each column */
 	} /* End for each row */
 	unload_cell(); // Reset the global variables
@@ -1677,7 +1688,7 @@ static void load_cell(int row, int col){
 						   gridCells[row][col]._Sreceived, gridCells[row][col]._Gwf, gridCells[row][col].stats_init);
 
 	/* Copy this cell's SXW variables into the local variables in sxw.c */
-	copy_sxw_variables(&gridCells[row][col].mySXW, &gridCells[row][col].mySXWResources, &gridCells[row][col].myTranspWindow);
+	copy_sxw_variables(gridCells[row][col].mySXW, gridCells[row][col].mySXWResources, gridCells[row][col].myTranspWindow);
 }
 
 /* Nullify all global variables. This function should appear after every call to load_cell to prevent

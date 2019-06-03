@@ -141,6 +141,9 @@ void load_sxw_memory( RealD * grid_roots_max, RealD* grid_rootsXphen, RealD* gri
 void save_sxw_memory( RealD * grid_roots_max, RealD* grid_rootsXphen, RealD* grid_roots_active, RealD* grid_roots_active_rel, RealD* grid_roots_active_sum, RealD* grid_phen, RealD* grid_prod_bmass, RealD* grid_prod_pctlive );
 void free_sxw_memory( void );
 void _deallocate_memory(void);
+SXW_t* getSXW(void);
+SXW_resourceType* getSXWResources(void);
+transp_t* getTranspWindow(void);
 
 void copy_sxw_variables(SXW_t* newSXW, SXW_resourceType* newSXWResources, transp_t* newTransp_window);
 
@@ -162,13 +165,7 @@ void SXW_Init( Bool init_SW, char *f_roots ) {
 
 	RandSeed(Globals->randseed, &resource_rng);
 
-	/* If we are running gridded mode we do not need to allocate any memory
-	   because allocate_gridCells() in ST_grid did it for us. */
-	if(!UseGrid){
-		_allocate_memory(); //Allocate memory for all local pointers
-	}
-
-	SXWResources->_resource_cur = (RealF *)Mem_Calloc(SuperGlobals.max_rgroups, sizeof(RealF), "SXW_Init");
+	_allocate_memory(); //Allocate memory for all local pointers
 
    _sxwfiles[0] = &SXW->f_roots;
    _sxwfiles[1] = &SXW->f_phen;
@@ -429,6 +426,23 @@ static void _allocate_memory(void){
 
 	SXW = (SXW_t*) Mem_Calloc(1, sizeof(SXW_t), "_allocate_memory: SXW");
 	SXWResources = (SXW_resourceType*) Mem_Calloc(1, sizeof(SXW_resourceType), "_allocate_memory: SXWResources");
+
+	SXWResources->_resource_cur = (RealF *)Mem_Calloc(SuperGlobals.max_rgroups, sizeof(RealF), "_allocate_memory: _resource_cur");
+}
+
+/* Returns a pointer to the local SXW variable. */
+SXW_t* getSXW(void){
+	return SXW;
+}
+
+/* Returns a pointer to the local SXWResources variable. */
+SXW_resourceType* getSXWResources(void){
+	return SXWResources;
+}
+
+/* Returns a pointer to the local transp_window variable. */
+transp_t* getTranspWindow(void){
+	return transp_window;
 }
 
 /* Deallocate any sxw local pointers. When running the non-gridded mode
