@@ -382,6 +382,7 @@ static void _init_stepwat_inputs(void);
 static void _init_grid_globals(void);
 static void _init_spinup_globals(void);
 static void allocate_gridCells(int rows, int cols);
+static void allocate_accumulators(void);
 static void _load_grid_globals(void);
 static void _load_spinup_globals(void);
 static void _free_grid_memory(void);
@@ -939,6 +940,12 @@ static void _init_stepwat_inputs(void)
 	} /* End for each row */
 	unload_cell(); // Reset the global variables
 
+	/* Since the accumulators used in ST_stats.c are local, we need to allocate our accumulators in ST_grid.
+	   The other option is to create get functions for every accumulator, which is what we do for SXW variables.
+	   The reason we do not do this for accumulators is the sheer number of accumulators, which would require
+	   14 get functions (as of 4/5/19). */
+	allocate_accumulators();
+
 	ChDir("..");						// go back to the folder we started in
 }
 
@@ -965,6 +972,203 @@ static void allocate_gridCells(int rows, int cols){
 			gridCells[i][j].someKillage = (Bool*) Mem_Calloc(1, sizeof(Bool), "allocate_gridCells: someKillage");
 		}
 	}
+}
+
+/* Initialize each gridCell's accumulators. 
+   Must be called after STEPWAT inputs have been read. */
+static void allocate_accumulators(void){
+	int i, j;
+	SppIndex sp;
+	GrpIndex rg;
+
+	/* Iterate across all cells */
+	for(int i = 0; i < grid_Rows; ++i){
+		for(int j = 0; j < grid_Cols; ++j){
+			/* load_cell is not necessary for the actual accumulators, but it is necessary for
+			   the ForEach loops. We still have to refer to the accumulators as
+			   gridCells[i][j].<accumulator> because the ST_stats accumulators are local. */
+			load_cell(i,j);
+
+  			if (BmassFlags.dist) {
+    			gridCells[i][j]._Dist = (StatType*) Mem_Calloc(1, sizeof(StatType), "allocate_accumulators(Dist)");
+		    	gridCells[i][j]._Dist->s = (struct accumulators_st *)
+		               		Mem_Calloc( Globals->runModelYears,
+		                           		sizeof(struct accumulators_st),
+ 		                         		"allocate_accumulators(Dist)");
+		  	}
+ 		 	if (BmassFlags.ppt) {
+		    	gridCells[i][j]._Ppt = (StatType*) Mem_Calloc(1, sizeof(StatType), "allocate_accumulators(PPT");
+		    	gridCells[i][j]._Ppt->s  = (struct accumulators_st *)
+		               		Mem_Calloc( Globals->runModelYears,
+		                           		sizeof(struct accumulators_st),
+		                          		"allocate_accumulators(PPT)");
+ 		 	}
+		  	if (BmassFlags.tmp) {
+		    	gridCells[i][j]._Temp = (StatType*) Mem_Calloc(1, sizeof(StatType), "allocate_accumulators(Temp)");
+		    	gridCells[i][j]._Temp->s = (struct accumulators_st *)
+		               		Mem_Calloc( Globals->runModelYears,
+ 		                          		sizeof(struct accumulators_st),
+ 		                         		"allocate_accumulators(Temp)");
+		  	}
+		  	if (BmassFlags.grpb) {
+ 			   	gridCells[i][j]._Grp = (struct stat_st *)
+           				Mem_Calloc( Globals->grpCount,
+                		       sizeof(struct stat_st),
+                		      "allocate_accumulators(Grp)");
+    			ForEachGroup(rg){
+      				gridCells[i][j]._Grp[rg].s = (struct accumulators_st *)
+             			Mem_Calloc( Globals->runModelYears,
+                         			sizeof(struct accumulators_st),
+                        			"allocate_accumulators(Grp[rg].s)");
+				}
+
+    			if (BmassFlags.size) {
+      				gridCells[i][j]._Gsize = (struct stat_st *)
+             				Mem_Calloc( Globals->grpCount,
+                         				sizeof(struct stat_st),
+                        				"allocate_accumulators(GSize)");
+      				ForEachGroup(rg){
+          				gridCells[i][j]._Gsize[rg].s = (struct accumulators_st *)
+             							Mem_Calloc( Globals->runModelYears,
+                         							sizeof(struct accumulators_st),
+                        							"allocate_accumulators(GSize[rg].s)");
+					}
+    			}
+    			if (BmassFlags.pr) {
+      				gridCells[i][j]._Gpr = (struct stat_st *)
+             				Mem_Calloc( Globals->grpCount,
+                		         		sizeof(struct stat_st),
+                		        		"allocate_accumulators(Gpr)");
+      				ForEachGroup(rg){
+          				gridCells[i][j]._Gpr[rg].s = (struct accumulators_st *)
+             							Mem_Calloc( Globals->runModelYears,
+                    		     					sizeof(struct accumulators_st),
+                        							"allocate_accumulators(Gpr[rg].s)");
+					}
+    			}
+
+    			if (BmassFlags.wildfire || BmassFlags.prescribedfire) {
+      				gridCells[i][j]._Gwf = (struct fire_st *)
+             				Mem_Calloc( 1, sizeof(struct fire_st),
+                		        		"allocate_accumulators(Gwf)");
+
+      				gridCells[i][j]._Gwf->wildfire = (int *) Mem_Calloc( 1,
+                    		  		 sizeof(int) * Globals->runModelYears,
+                    		  		 "allocate_accumulators(Gwf->wildfire)");
+      
+      				gridCells[i][j]._Gwf->prescribedFire = (int **) Mem_Calloc( 1,
+                      						sizeof(int **) * SuperGlobals.max_rgroups,
+                       						"allocate_accumulators(Gwf->prescribedfire");
+
+      				ForEachGroup(rg){
+        				gridCells[i][j]._Gwf->prescribedFire[rg] = (int *)
+          										   Mem_Calloc( Globals->runModelYears,
+                      										   sizeof(int) * Globals->runModelYears,
+                      										   "allocate_accumulators(Gwf->prescribedFire)");
+      				}
+    			}
+  			}
+
+  			if (MortFlags.group) {
+    			gridCells[i][j]._Gestab = (struct stat_st *)
+             	  		  Mem_Calloc( Globals->grpCount,
+                         			sizeof(struct stat_st),
+                         			"allocate_accumulators(Gestab)");
+
+				gridCells[i][j]._Gmort = (struct stat_st *)
+           		 		 Mem_Calloc( Globals->grpCount,
+                       				sizeof(struct stat_st),
+                      				"allocate_accumulators(Gmort)");
+    			ForEachGroup(rg){
+      				gridCells[i][j]._Gestab[rg].s = (struct accumulators_st *)
+                     				Mem_Calloc( 1, sizeof(struct accumulators_st),
+                                				"allocate_accumulators(Gestab[rg].s)");
+					gridCells[i][j]._Gmort[rg].s = (struct accumulators_st *)
+           							Mem_Calloc( GrpMaxAge(rg),
+                       							sizeof(struct accumulators_st),
+                      							"allocate_accumulators(Gmort[rg].s)");
+				}
+  			}
+
+  			if (BmassFlags.sppb) {
+      			gridCells[i][j]._Spp = (struct stat_st *)
+               		   Mem_Calloc( Globals->sppCount,
+                           		   sizeof(struct stat_st),
+                          		   "allocate_accumulators(Spp)");
+      			ForEachSpecies(sp){
+        			gridCells[i][j]._Spp[sp].s = (struct accumulators_st *)
+               			 		  Mem_Calloc( Globals->runModelYears,
+                           					sizeof(struct accumulators_st),
+                          					"allocate_accumulators(Spp[sp].s)");
+				}
+
+      			if (BmassFlags.indv) {
+        			gridCells[i][j]._Indv = (struct stat_st *)
+               		 		Mem_Calloc( Globals->sppCount,
+                           		 		sizeof(struct stat_st),
+                          		 		"allocate_accumulators(Indv)");
+        			ForEachSpecies(sp){
+          				gridCells[i][j]._Indv[sp].s = (struct accumulators_st *)
+               				  		Mem_Calloc( Globals->runModelYears,
+                           						sizeof(struct accumulators_st),
+                          						"allocate_accumulators(Indv[sp].s)");
+					}
+    			}
+  			}
+  			if (MortFlags.species) {
+    			gridCells[i][j]._Sestab = (struct stat_st *)
+           					Mem_Calloc( Globals->sppCount,
+                       					sizeof(struct stat_st),
+                      					"allocate_accumulators(Sestab)");
+
+				gridCells[i][j]._Smort = (struct stat_st *)
+           		 		Mem_Calloc( Globals->sppCount,
+                       				sizeof(struct stat_st),
+                      				"allocate_accumulators(Smort)");
+
+    			ForEachSpecies(sp){
+      				gridCells[i][j]._Sestab[sp].s = (struct accumulators_st *)
+                    				Mem_Calloc( 1, sizeof(struct accumulators_st),
+                                				"allocate_accumulators(Sestab[sp].s)");
+					gridCells[i][j]._Smort[sp].s = (struct accumulators_st *)
+            		        		Mem_Calloc( SppMaxAge(sp),
+            		                    	   sizeof(struct accumulators_st),
+             		                   	   	   "allocate_accumulators(Smort[sp].s)");
+				}
+  			}
+
+  			if (UseSeedDispersal) {
+	  			gridCells[i][j]._Sreceived = Mem_Calloc( Globals->sppCount, sizeof(struct stat_st), "allocate_accumulators(Sreceived)");
+
+	  			ForEachSpecies(sp) {
+		  			gridCells[i][j]._Sreceived[sp].s = (struct accumulators_st *)
+					  									Mem_Calloc( Globals->runModelYears,
+														  		   sizeof(struct accumulators_st), 
+																   "allocate_accumulators(Sreceived[sp].s)");
+		  			gridCells[i][j]._Sreceived[sp].name = &Species[sp]->name[0];
+	  			}
+  			}
+
+  			/* "appoint" names of columns*/
+  			if (BmassFlags.grpb) {
+    			ForEachGroup(rg)
+      				gridCells[i][j]._Grp[rg].name = &RGroup[rg]->name[0];
+  				}
+  			if (MortFlags.group) {
+    			ForEachGroup(rg)
+      				gridCells[i][j]._Gmort[rg].name = &RGroup[rg]->name[0];
+  			}
+  			if (BmassFlags.sppb) {
+    			ForEachSpecies(sp)
+      				gridCells[i][j]._Spp[sp].name = &Species[sp]->name[0];
+  			}
+			if (MortFlags.species) {
+				ForEachSpecies(sp)
+    				gridCells[i][j]._Smort[sp].name = &Species[sp]->name[0];
+			}
+		} /* End for each column */
+	} /* End for each row */
+	unload_cell(); // Unload the cell to protect the last cell from unintended modification.
 }
 
 /***********************************************************/
