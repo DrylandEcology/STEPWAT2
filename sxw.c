@@ -134,7 +134,7 @@ void _print_debuginfo(void);
 void debugCleanUp(void);
 static void _make_swc_array(void);
 static void SXW_SW_Setup_Echo(void);
-static void SXW_Reinit(void);
+static void SXW_Reinit(char* SOILWAT_file);
 
 //these last four functions are to be used in ST_grid.c
 void load_sxw_memory( RealD * grid_roots_max, RealD* grid_rootsXphen, RealD* grid_roots_active, RealD* grid_roots_active_rel, RealD* grid_roots_active_sum, RealD* grid_phen, RealD* grid_prod_bmass, RealD* grid_prod_pctlive );
@@ -194,7 +194,7 @@ void SXW_Init( Bool init_SW, char *f_roots ) {
 
   if (init_SW)
   {
-		SXW_Reinit();
+		SXW_Reinit(SXW->f_watin);
   }
 
   SXW->NTrLyrs = SW_Site.n_transp_lyrs[0];
@@ -234,14 +234,14 @@ void SXW_Init( Bool init_SW, char *f_roots ) {
 		@brief This function initializes and allocates SOILWAT2 structures,
 		and reads SOIILWAT2 inputs.
  */
-static void SXW_Reinit(void) {
+static void SXW_Reinit(char* SOILWAT_file) {
 	char *temp;
 
-	temp = strdup(SXW->f_watin);
+	temp = strdup(SOILWAT_file);
 	SW_CTL_init_model(temp);
 	SW_CTL_obtain_inputs();
 	SW_OUT_set_SXWrequests();
-  free(temp);
+	free(temp);
 }
 
 
@@ -256,9 +256,9 @@ static void SXW_Reinit(void) {
 		over from one STEPWAT2 iteration to the next. They are only de-allocated
 		at the end of an entire STEPWAT2 run (see `ST_main.c/main()`).
  */
-void SXW_Reset(void) {
+void SXW_Reset(char* SOILWAT_file) {
 	SW_CTL_clear_model(FALSE); // don't reset output arrays
-	SXW_Reinit();
+	SXW_Reinit(SOILWAT_file);
 }
 
 void SXW_InitPlot (void) {

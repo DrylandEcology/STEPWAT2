@@ -305,7 +305,7 @@ int main(int argc, char **argv) {
 		{
 			// don't reset in last iteration because we need to close files
 			// before clearing/de-allocated SOILWAT2-memory
-			SXW_Reset();
+			SXW_Reset(SXW->f_watin);
 		}
 	} /* end model run for this iteration*/
 

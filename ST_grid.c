@@ -641,7 +641,7 @@ void runGrid(void)
 		unload_cell(); 
 		//reset soilwat to initial condition
 		ChDir(grid_directories[GRID_DIRECTORY_STEPWAT_INPUTS]);
-		SXW_Reset();
+		SXW_Reset(gridCells[0][0].mySXW->f_watin);
 		Mem_Free(SW_Soilwat.hist.file_prefix);
 		SW_Soilwat.hist.file_prefix = NULL;
 		ChDir("..");
@@ -806,13 +806,7 @@ static void _run_spinup(void)
 
 					grazing_EndOfYear(); 		// Livestock grazing
 					
-					//save_annual_species_relsize(); // See stat_Collect below for why this is commented out.
-
 					mort_EndOfYear(); 			// End of year mortality.
-
-					/* stat_Collect was called in spinup, but I have no idea why. We definitely
-					   do not want to use the accumulator values, so why collect them? -Chandler */
-					//stat_Collect(year);
 
 				    _kill_annuals(); 			// Kill annuals
 					proportion_Recovery(); 		// Recover from any disturbances
@@ -824,12 +818,11 @@ static void _run_spinup(void)
 		} /* end model run for this year*/
 
 		ChDir(grid_directories[GRID_DIRECTORY_STEPWAT_INPUTS]);
-		SXW_Reset();
+		SXW_Reset(gridCells[0][0].mySXW->f_watin);
 		//TODO: This is a shortcut. swc history is not used and shouldn't be until this is fixed.
 		Mem_Free(SW_Soilwat.hist.file_prefix);
 		SW_Soilwat.hist.file_prefix = NULL;
 		ChDir("..");
-		//_free_grid_globals(); //free's the grid variables that change every iter
 	} /* End iterations */
 
 	/* Swap back Species[sp]->use_me and species_seed_avail[sp]. */
@@ -837,7 +830,6 @@ static void _run_spinup(void)
 		for(j = 0; j < grid_Cols; ++j){
 			load_cell(i, j);	/* We could do this without loading the cell, but there would be no guarantee
 								   that ForEachGroup would iterate correctly */
-
 			/* Begin swaping variables */
 			ForEachGroup(rg){
 				ForEachGroupSpp(sp, rg, k){
@@ -1008,8 +1000,8 @@ static void allocate_accumulators(void){
 	GrpIndex rg;
 
 	/* Iterate across all cells */
-	for(int i = 0; i < grid_Rows; ++i){
-		for(int j = 0; j < grid_Cols; ++j){
+	for(i = 0; i < grid_Rows; ++i){
+		for(j = 0; j < grid_Cols; ++j){
 			/* load_cell is not necessary for the actual accumulators, but it is necessary for
 			   the ForEach loops. We still have to refer to the accumulators as
 			   gridCells[i][j].<accumulator> because the ST_stats accumulators are local. */
