@@ -207,9 +207,13 @@ void SXW_Init( Bool init_SW, char *f_roots ) {
 
   SXW->NSoLyrs = SW_Site.n_layers;
 
-  printf("Number of layers: %d\n", SW_Site.n_layers);
-  printf("Number of iterations: %d\n", Globals->runModelIterations);
-  printf("Number of years: %d\n", Globals->runModelYears);
+  /* Print general information to stdout. 
+     If we are using gridded mode this functionallity will be handled in ST_grid.c */
+  if(!UseGrid){
+    printf("Number of layers: %d\n", SW_Site.n_layers);
+    printf("Number of iterations: %d\n", Globals->runModelIterations);
+    printf("Number of years: %d\n", Globals->runModelYears);
+  }
 
   _make_arrays();
 

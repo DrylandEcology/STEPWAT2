@@ -527,6 +527,22 @@ void runGrid(void)
 	Mem_Free(SW_Soilwat.hist.file_prefix);
 	SW_Soilwat.hist.file_prefix = NULL;
 
+	/* Print some general information to stdout */
+	load_cell(0,0);
+	printf("Number of layers: %d\n", SW_Site.n_layers);
+    printf("Number of iterations: %d\n", Globals->runModelIterations);
+    printf("Number of years: %d\n", Globals->runModelYears);
+	printf("Number of cells: %d\n\n", grid_Cells);
+	if(UseDisturbances) printf("Using grid Disturbances file.\n");
+	if(UseSoils) printf("Using grid soils file\n");
+	if(UseSeedDispersal){
+		 printf("Seeds availible for %d years at the start of the simulation.\n",sd_NYearsSeedsAvailable);
+		 if(sd_Option1a) printf("All species and cells are eligible for seed dispersal.\n");
+	}
+	if(sd_Option2a) printf("Running Spinup for %s cells.\n", sd_Option2b ? "all" : "specified");
+	unload_cell();
+	/* END printing general info */
+
 	if (sd_Option2a || sd_Option2b)
 		_run_spinup();				// does the initial spinup
 
@@ -1882,9 +1898,6 @@ static void load_cell(int row, int col){
 
 	/* Global variables corresponding to this cell */ 
 	Globals = &gridCells[row][col].myGlobals;
-
-	/* If TRUE this cell should use seed dispersal */
-	UseSeedDispersal = gridCells[row][col].useSeedDispersal;
 
 	/* TRUE if this cell is in spinup mode */
 	DuringSpinup = gridCells[row][col].duringSpinup;
