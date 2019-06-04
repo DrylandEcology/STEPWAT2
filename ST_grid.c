@@ -628,15 +628,17 @@ void runGrid(void)
 		}/* end model run for this year*/
 
 		// collects the data appropriately for the mort output... (ie. fills the accumulators in ST_stats.c with the values that they need)
-		if (MortFlags.summary)
-			for (i = 1; i <= grid_Rows; i++)
+		if (MortFlags.summary){
+			for (i = 1; i <= grid_Rows; i++){
 				for (j = 1; j <= grid_Cols; j++)
 				{
-					_load_cell(i, j, Globals->runModelYears, TRUE);
+					load_cell(i, j);
 					stat_Collect_GMort();
 					stat_Collect_SMort();
-					_save_cell(i, j, Globals->runModelYears, TRUE);
 				}
+			}
+		}
+		unload_cell(); 
 		//reset soilwat to initial condition
 		ChDir(grid_directories[GRID_DIRECTORY_STEPWAT_INPUTS]);
 		SXW_Reset();
@@ -723,17 +725,25 @@ static void _run_spinup(void)
 	{ //for each iteration... only 1 iteration allowed for now
 
 		/* Since this is technically an iteration so we need to seed the RNGs. */
-		RandSeed(Globals->randseed, &environs_rng);
-		RandSeed(Globals->randseed, &mortality_rng);
-		RandSeed(Globals->randseed, &resgroups_rng);
-		RandSeed(Globals->randseed, &species_rng);
-		RandSeed(Globals->randseed, &grid_rng);
-		RandSeed(Globals->randseed, &markov_rng);
+		RandSeed(gridCells[0][0].myGlobals.randseed, &environs_rng);
+		RandSeed(gridCells[0][0].myGlobals.randseed, &mortality_rng);
+		RandSeed(gridCells[0][0].myGlobals.randseed, &resgroups_rng);
+		RandSeed(gridCells[0][0].myGlobals.randseed, &species_rng);
+		RandSeed(gridCells[0][0].myGlobals.randseed, &grid_rng);
+		RandSeed(gridCells[0][0].myGlobals.randseed, &markov_rng);
 
 		if (BmassFlags.yearly || MortFlags.yearly)
 			parm_Initialize();
 
-		Plot_Initialize();
+		// Initialize the plot for each grid cell
+		for (i = 0; i < grid_Rows; i++){
+			for (j = 0; j < grid_Cols; j++){
+				load_cell(i, j);
+				Plot_Initialize();
+				Globals->currIter = iter;
+			}
+		}
+		unload_cell(); // Reset the global variables
 
 		/* Before we start iterating we need to swap Species[sp]->use_me and mySpeciesInit.species_seed_avail[sp].
 		   species_seed_avail is an array of booleans that represent whether the given species should be used 
