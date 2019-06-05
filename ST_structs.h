@@ -283,16 +283,12 @@ struct globals_st {
   RealF plotsize,   /* size of plot in square meters */
         gsppt_prop, /* proportion of ppt during growing season*/
         tempparm[2][3]; /* three parms for Warm/Cool growth mod*/
-  IntUS runModelYears,  /* number of years to run the model*/
-      Max_Age,        /* oldest plant; same as runModelYears for now */
+  IntUS Max_Age,        /* oldest plant; same as runModelYears for now */
       currYear,
-      runModelIterations, /* run model this many times for statistics */
       currIter,
       grpCount,     /* number of groups defined*/
       sppCount,     /* number of species defined*/
-      transp_window, /* Number of years for which transpiration data is kept*/
-      nCells;		/* number of cells to use in Grid, only applicable if grid function is being used */
-  IntL randseed;     /* random seed from input file */
+      transp_window; /* Number of years for which transpiration data is kept*/
 
   struct outfiles_st bmass, mort;
 };
@@ -331,6 +327,12 @@ struct superglobals_st {
            max_spp_per_grp, /* Maximum species allowed per resource group. */
            max_indivs_per_spp, /* Maximum individuals allowed per species. */
            max_speciesnamelen; /* Maximum species name length. */
+    
+    IntUS runModelIterations,
+          runModelYears,
+          nCells;		/* number of cells to use in Grid, only applicable if grid function is being used */
+
+    IntL randseed;
 };
 
 #endif

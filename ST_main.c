@@ -198,12 +198,12 @@ int main(int argc, char **argv) {
 	    ST_connect("Output/stdebug");
 	}
 
-	incr = (IntS) ((float) Globals->runModelIterations / 10);
+	incr = (IntS) ((float) SuperGlobals.runModelIterations / 10);
 	if (incr == 0)
 		incr = 1;
 
 	/* --- Begin a new iteration ------ */
-	for (iter = 1; iter <= Globals->runModelIterations; iter++) {
+	for (iter = 1; iter <= SuperGlobals.runModelIterations; iter++) {
 		if (progfp == stderr) {
 			if (iter % incr == 0)
 				fprintf(progfp, ".");
@@ -213,12 +213,12 @@ int main(int argc, char **argv) {
 
 		Plot_Initialize();
 
-		RandSeed(Globals->randseed, &environs_rng);
-		RandSeed(Globals->randseed, &mortality_rng);
-		RandSeed(Globals->randseed, &resgroups_rng);
-		RandSeed(Globals->randseed, &species_rng);
-		RandSeed(Globals->randseed, &grid_rng);
-		RandSeed(Globals->randseed, &markov_rng);
+		RandSeed(SuperGlobals.randseed, &environs_rng);
+		RandSeed(SuperGlobals.randseed, &mortality_rng);
+		RandSeed(SuperGlobals.randseed, &resgroups_rng);
+		RandSeed(SuperGlobals.randseed, &species_rng);
+		RandSeed(SuperGlobals.randseed, &grid_rng);
+		RandSeed(SuperGlobals.randseed, &markov_rng);
 
 		Globals->currIter = iter;
                 
@@ -227,11 +227,11 @@ int main(int argc, char **argv) {
 		}
 
 		if (prepare_IterationSummary) {
-			print_IterationSummary = (Bool) (Globals->currIter == Globals->runModelIterations);
+			print_IterationSummary = (Bool) (Globals->currIter == SuperGlobals.runModelIterations);
 		}
 
 		/* ------  Begin running the model ------ */
-		for (year = 1; year <= Globals->runModelYears; year++) {
+		for (year = 1; year <= SuperGlobals.runModelYears; year++) {
 
       //printf("------------------------Repetition/year = %d / %d\n", iter, year);
 
@@ -301,7 +301,7 @@ int main(int argc, char **argv) {
 
 		// dont need to restart if last iteration finished
 		// this keeps it from re-writing the output folder and overwriting output files
-		if (Globals->currIter != Globals->runModelIterations)
+		if (Globals->currIter != SuperGlobals.runModelIterations)
 		{
 			// don't reset in last iteration because we need to close files
 			// before clearing/de-allocated SOILWAT2-memory

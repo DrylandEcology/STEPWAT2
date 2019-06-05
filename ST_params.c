@@ -184,17 +184,17 @@ static void _model_init( void) {
              &years,
              &seed);
 
-     Globals->runModelYears = years;
-     Globals->Max_Age = Globals->runModelYears;
-     Globals->runModelIterations = atoi(tmp);
-     if (Globals->runModelIterations < 1 ||
-         Globals->runModelYears < 1 ) {
+     SuperGlobals.runModelYears = years;
+     Globals->Max_Age = SuperGlobals.runModelYears;
+     SuperGlobals.runModelIterations = atoi(tmp);
+     if (SuperGlobals.runModelIterations < 1 ||
+         SuperGlobals.runModelYears < 1 ) {
        LogError(logfp, LOGFATAL,"Invalid parameters for RunModelIterations "
                "or RunModelYears (%s)",
                MyFileName);
      }
      Globals->bmass.suffixwidth = Globals->mort.suffixwidth = strlen(tmp);
-     Globals->randseed = (IntL) ((seed) ? -abs(seed) : 0);
+     SuperGlobals.randseed = (IntL) ((seed) ? -abs(seed) : 0);
    }
    
    CloseFile(&f);
@@ -324,7 +324,7 @@ static void _check_species( void) {
    */
   IntS i, cnt,
        maxage, minage, /* placeholders */
-       runyrs = Globals->runModelYears;  /* shorthand */
+       runyrs = SuperGlobals.runModelYears;  /* shorthand */
   SppIndex sp;
   GrpIndex rg;
   Bool tripped = FALSE;

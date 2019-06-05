@@ -267,7 +267,7 @@ static void insertInfo(void) {
 	beginTransaction();
 	sprintf(sql,
 			"INSERT INTO info (Years, Iterations, Seed, RGroups, Species,  PlotSize) VALUES (%d, %d, %d, %d, %d, %f);",
-			Globals->runModelYears, Globals->runModelIterations, (int) Globals->randseed,
+			SuperGlobals.runModelYears, SuperGlobals.runModelIterations, (int) SuperGlobals.randseed,
 			Globals->grpCount, Globals->sppCount, Globals->plotsize);
 	rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
 	sqlcheck(rc, zErrMsg);

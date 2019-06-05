@@ -163,7 +163,7 @@ void SXW_Init( Bool init_SW, char *f_roots ) {
    */
 	char roots[MAX_FILENAMESIZE] = { '\0' };
 
-	RandSeed(Globals->randseed, &resource_rng);
+	RandSeed(SuperGlobals.randseed, &resource_rng);
 
 	_allocate_memory(); //Allocate memory for all local pointers
 
@@ -211,8 +211,8 @@ void SXW_Init( Bool init_SW, char *f_roots ) {
      If we are using gridded mode this functionallity will be handled in ST_grid.c */
   if(!UseGrid){
     printf("Number of layers: %d\n", SW_Site.n_layers);
-    printf("Number of iterations: %d\n", Globals->runModelIterations);
-    printf("Number of years: %d\n", Globals->runModelYears);
+    printf("Number of iterations: %d\n", SuperGlobals.runModelIterations);
+    printf("Number of years: %d\n", SuperGlobals.runModelYears);
   }
 
   _make_arrays();

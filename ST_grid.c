@@ -530,8 +530,8 @@ void runGrid(void)
 	/* Print some general information to stdout */
 	load_cell(0,0);
 	printf("Number of layers: %d\n", SW_Site.n_layers);
-    printf("Number of iterations: %d\n", Globals->runModelIterations);
-    printf("Number of years: %d\n", Globals->runModelYears);
+    printf("Number of iterations: %d\n", SuperGlobals.runModelIterations);
+    printf("Number of years: %d\n", SuperGlobals.runModelYears);
 	printf("Number of cells: %d\n\n", grid_Cells);
 	if(UseDisturbances) printf("Using grid Disturbances file.\n");
 	if(UseSoils) printf("Using grid soils file\n");
@@ -551,7 +551,7 @@ void runGrid(void)
 	char SW_prefix_permanent[2048];
 	sprintf(SW_prefix_permanent, "%s/%s", grid_directories[GRID_DIRECTORY_STEPWAT_INPUTS], SW_Weather.name_prefix);
 
-	for (iter = 1; iter <= gridCells[0][0].myGlobals.runModelIterations; iter++)
+	for (iter = 1; iter <= SuperGlobals.runModelIterations; iter++)
 	{ //for each iteration
 
 		/*
@@ -573,14 +573,14 @@ void runGrid(void)
 		}
 		unload_cell(); // Reset the global variables
 
-		RandSeed(gridCells[0][0].myGlobals.randseed, &environs_rng);
-		RandSeed(gridCells[0][0].myGlobals.randseed, &mortality_rng);
-		RandSeed(gridCells[0][0].myGlobals.randseed, &resgroups_rng);
-		RandSeed(gridCells[0][0].myGlobals.randseed, &species_rng);
-		RandSeed(gridCells[0][0].myGlobals.randseed, &grid_rng);
-		RandSeed(gridCells[0][0].myGlobals.randseed, &markov_rng);
+		RandSeed(SuperGlobals.randseed, &environs_rng);
+		RandSeed(SuperGlobals.randseed, &mortality_rng);
+		RandSeed(SuperGlobals.randseed, &resgroups_rng);
+		RandSeed(SuperGlobals.randseed, &species_rng);
+		RandSeed(SuperGlobals.randseed, &grid_rng);
+		RandSeed(SuperGlobals.randseed, &markov_rng);
 
-		for (year = 1; year <= gridCells[0][0].myGlobals.runModelYears; year++)
+		for (year = 1; year <= SuperGlobals.runModelYears; year++)
 		{ //for each year
 			for (i = 0; i < grid_Rows; i++){
 				for (j = 0; j < grid_Cols; j++)
@@ -683,7 +683,7 @@ void runGrid(void)
 	_deallocate_memory(); // sxw memory.
 }
 
-/* "Spinup" the model by running for Globals->runModelYears without seed dispersal or statistics outputs. */
+/* "Spinup" the model by running for SuperGlobals.runModelYears without seed dispersal or statistics outputs. */
 static void _run_spinup(void)
 {
 	/* Dummy accumulators to ensure we do not collect statistics */
@@ -705,8 +705,8 @@ static void _run_spinup(void)
 
 	/* 'Globals' is not allocated in gridded mode. Therefore we need to implicitely remember years
 	   and iterations. gridCells[0][0] is guaranteed to exist because it is populated first. */
-	int iterations = gridCells[0][0].myGlobals.runModelIterations;
-	int total_years = gridCells[0][0].myGlobals.runModelYears;
+	int iterations = SuperGlobals.runModelIterations;
+	int total_years = SuperGlobals.runModelYears;
 
 	/* killedany for mortality functions, temporary_storage for swapping variables */
 	Bool killedany, temporary_storage;
@@ -725,12 +725,12 @@ static void _run_spinup(void)
 	{ //for each iteration... only 1 iteration allowed for now
 
 		/* Since this is technically an iteration so we need to seed the RNGs. */
-		RandSeed(gridCells[0][0].myGlobals.randseed, &environs_rng);
-		RandSeed(gridCells[0][0].myGlobals.randseed, &mortality_rng);
-		RandSeed(gridCells[0][0].myGlobals.randseed, &resgroups_rng);
-		RandSeed(gridCells[0][0].myGlobals.randseed, &species_rng);
-		RandSeed(gridCells[0][0].myGlobals.randseed, &grid_rng);
-		RandSeed(gridCells[0][0].myGlobals.randseed, &markov_rng);
+		RandSeed(SuperGlobals.randseed, &environs_rng);
+		RandSeed(SuperGlobals.randseed, &mortality_rng);
+		RandSeed(SuperGlobals.randseed, &resgroups_rng);
+		RandSeed(SuperGlobals.randseed, &species_rng);
+		RandSeed(SuperGlobals.randseed, &grid_rng);
+		RandSeed(SuperGlobals.randseed, &markov_rng);
 
 		if (BmassFlags.yearly || MortFlags.yearly)
 			parm_Initialize();
@@ -1010,21 +1010,21 @@ static void allocate_accumulators(void){
   			if (BmassFlags.dist) {
     			gridCells[i][j]._Dist = (StatType*) Mem_Calloc(1, sizeof(StatType), "allocate_accumulators(Dist)");
 		    	gridCells[i][j]._Dist->s = (struct accumulators_st *)
-		               		Mem_Calloc( Globals->runModelYears,
+		               		Mem_Calloc( SuperGlobals.runModelYears,
 		                           		sizeof(struct accumulators_st),
  		                         		"allocate_accumulators(Dist)");
 		  	}
  		 	if (BmassFlags.ppt) {
 		    	gridCells[i][j]._Ppt = (StatType*) Mem_Calloc(1, sizeof(StatType), "allocate_accumulators(PPT");
 		    	gridCells[i][j]._Ppt->s  = (struct accumulators_st *)
-		               		Mem_Calloc( Globals->runModelYears,
+		               		Mem_Calloc( SuperGlobals.runModelYears,
 		                           		sizeof(struct accumulators_st),
 		                          		"allocate_accumulators(PPT)");
  		 	}
 		  	if (BmassFlags.tmp) {
 		    	gridCells[i][j]._Temp = (StatType*) Mem_Calloc(1, sizeof(StatType), "allocate_accumulators(Temp)");
 		    	gridCells[i][j]._Temp->s = (struct accumulators_st *)
-		               		Mem_Calloc( Globals->runModelYears,
+		               		Mem_Calloc( SuperGlobals.runModelYears,
  		                          		sizeof(struct accumulators_st),
  		                         		"allocate_accumulators(Temp)");
 		  	}
@@ -1035,7 +1035,7 @@ static void allocate_accumulators(void){
                 		      "allocate_accumulators(Grp)");
     			ForEachGroup(rg){
       				gridCells[i][j]._Grp[rg].s = (struct accumulators_st *)
-             			Mem_Calloc( Globals->runModelYears,
+             			Mem_Calloc( SuperGlobals.runModelYears,
                          			sizeof(struct accumulators_st),
                         			"allocate_accumulators(Grp[rg].s)");
 				}
@@ -1047,7 +1047,7 @@ static void allocate_accumulators(void){
                         				"allocate_accumulators(GSize)");
       				ForEachGroup(rg){
           				gridCells[i][j]._Gsize[rg].s = (struct accumulators_st *)
-             							Mem_Calloc( Globals->runModelYears,
+             							Mem_Calloc( SuperGlobals.runModelYears,
                          							sizeof(struct accumulators_st),
                         							"allocate_accumulators(GSize[rg].s)");
 					}
@@ -1059,7 +1059,7 @@ static void allocate_accumulators(void){
                 		        		"allocate_accumulators(Gpr)");
       				ForEachGroup(rg){
           				gridCells[i][j]._Gpr[rg].s = (struct accumulators_st *)
-             							Mem_Calloc( Globals->runModelYears,
+             							Mem_Calloc( SuperGlobals.runModelYears,
                     		     					sizeof(struct accumulators_st),
                         							"allocate_accumulators(Gpr[rg].s)");
 					}
@@ -1071,7 +1071,7 @@ static void allocate_accumulators(void){
                 		        		"allocate_accumulators(Gwf)");
 
       				gridCells[i][j]._Gwf->wildfire = (int *) Mem_Calloc( 1,
-                    		  		 sizeof(int) * Globals->runModelYears,
+                    		  		 sizeof(int) * SuperGlobals.runModelYears,
                     		  		 "allocate_accumulators(Gwf->wildfire)");
       
       				gridCells[i][j]._Gwf->prescribedFire = (int **) Mem_Calloc( 1,
@@ -1080,8 +1080,8 @@ static void allocate_accumulators(void){
 
       				ForEachGroup(rg){
         				gridCells[i][j]._Gwf->prescribedFire[rg] = (int *)
-          										   Mem_Calloc( Globals->runModelYears,
-                      										   sizeof(int) * Globals->runModelYears,
+          										   Mem_Calloc( SuperGlobals.runModelYears,
+                      										   sizeof(int) * SuperGlobals.runModelYears,
                       										   "allocate_accumulators(Gwf->prescribedFire)");
       				}
     			}
@@ -1115,7 +1115,7 @@ static void allocate_accumulators(void){
                           		   "allocate_accumulators(Spp)");
       			ForEachSpecies(sp){
         			gridCells[i][j]._Spp[sp].s = (struct accumulators_st *)
-               			 		  Mem_Calloc( Globals->runModelYears,
+               			 		  Mem_Calloc( SuperGlobals.runModelYears,
                            					sizeof(struct accumulators_st),
                           					"allocate_accumulators(Spp[sp].s)");
 				}
@@ -1127,7 +1127,7 @@ static void allocate_accumulators(void){
                           		 		"allocate_accumulators(Indv)");
         			ForEachSpecies(sp){
           				gridCells[i][j]._Indv[sp].s = (struct accumulators_st *)
-               				  		Mem_Calloc( Globals->runModelYears,
+               				  		Mem_Calloc( SuperGlobals.runModelYears,
                            						sizeof(struct accumulators_st),
                           						"allocate_accumulators(Indv[sp].s)");
 					}
@@ -1160,7 +1160,7 @@ static void allocate_accumulators(void){
 
 	  			ForEachSpecies(sp) {
 		  			gridCells[i][j]._Sreceived[sp].s = (struct accumulators_st *)
-					  									Mem_Calloc( Globals->runModelYears,
+					  									Mem_Calloc( SuperGlobals.runModelYears,
 														  		   sizeof(struct accumulators_st), 
 																   "allocate_accumulators(Sreceived[sp].s)");
 		  			gridCells[i][j]._Sreceived[sp].name = &Species[sp]->name[0];

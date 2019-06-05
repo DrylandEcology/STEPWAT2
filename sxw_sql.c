@@ -154,7 +154,7 @@ void insertInfo() {
 
 	beginTransaction();
 	sprintf(sql, "INSERT INTO info (StartYear, Years, Iterations, RGroups, TranspirationLayers, SoilLayers, PlotSize, BVT) VALUES (%d, %d, %d, %d, %d, %d, %f, %f);", 
-				  SW_Model.startyr, Globals->runModelYears, Globals->runModelIterations, Globals->grpCount, SXW->NTrLyrs, SXW->NSoLyrs, Globals->plotsize, SXWResources->_bvt);
+				  SW_Model.startyr, SuperGlobals.runModelYears, SuperGlobals.runModelIterations, Globals->grpCount, SXW->NTrLyrs, SXW->NSoLyrs, Globals->plotsize, SXWResources->_bvt);
 	rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
 	sqlcheck(rc, zErrMsg);
 	endTransaction();
