@@ -3130,12 +3130,13 @@ static void _do_seed_dispersal(void)
 /***********************************************************/
 static void _set_sd_lyppt(int row, int col)
 {
-	int cell = col + ((row - 1) * grid_Cols) - 1;
 	SppIndex s;
 
-	ForEachSpecies(s)
-		if (Species[s]->use_me && Species[s]->use_dispersal)
-			grid_SD[s][cell].lyppt = grid_Env[cell].ppt;
+	ForEachSpecies(s){
+		if (Species[s]->use_me && Species[s]->use_dispersal){
+			gridCells[row][col].mySeedDispersal->lyppt = gridCells[row][col].myEnvironment.ppt;
+		}
+	}
 }
 
 
