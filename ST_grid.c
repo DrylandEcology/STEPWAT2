@@ -403,7 +403,6 @@ static float _read_a_float(FILE *f, char *buf, const char *filename,
 static float _cell_dist(int row1, int row2, int col1, int col2, float cellLen);
 static void _read_seed_dispersal_in(void);
 static void _do_seed_dispersal(void);
-static void _set_sd_lyppt(int row, int col);
 static void _kill_groups_and_species(void);
 static int _do_grid_disturbances(int row, int col);
 static void _read_init_species(void);
@@ -591,8 +590,11 @@ void runGrid(void)
 
 					Globals->currYear = year;
 
-					if (year > 1 && UseSeedDispersal)
-						_set_sd_lyppt(i, j);
+					/* Seed dispersal needs to take into account last year's precipitation, 
+					   so we'll record it before calling Env_Generate(). */
+					if (year > 1 && UseSeedDispersal){
+						gridCells[i][j].mySeedDispersal->lyppt = gridCells[i][j].myEnvironment.ppt;
+					}
 
 					/* The following functions mimic ST_main.c. load_cell(i, j) ensures that all global variables reference the specific cell */
 
@@ -3126,19 +3128,6 @@ static void _do_seed_dispersal(void)
 		}
 	}
 }
-
-/***********************************************************/
-static void _set_sd_lyppt(int row, int col)
-{
-	SppIndex s;
-
-	ForEachSpecies(s){
-		if (Species[s]->use_me && Species[s]->use_dispersal){
-			gridCells[row][col].mySeedDispersal->lyppt = gridCells[row][col].myEnvironment.ppt;
-		}
-	}
-}
-
 
 /*
  *
