@@ -623,8 +623,8 @@ void runGrid(void)
 
 				} /* end model run for this cell*/
 			} /* end model run for this row */
-			//if (UseSeedDispersal)
-				//_do_seed_dispersal();
+			if (UseSeedDispersal)
+				_do_seed_dispersal();
 			
 			unload_cell(); // Reset the global variables
 		}/* end model run for this year*/
