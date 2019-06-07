@@ -623,16 +623,16 @@ void runGrid(void)
 
 				} /* end model run for this cell*/
 			} /* end model run for this row */
-			if (UseSeedDispersal)
-				_do_seed_dispersal();
+			//if (UseSeedDispersal)
+				//_do_seed_dispersal();
 			
 			unload_cell(); // Reset the global variables
 		}/* end model run for this year*/
 
 		// collects the data appropriately for the mort output... (ie. fills the accumulators in ST_stats.c with the values that they need)
 		if (MortFlags.summary){
-			for (i = 1; i <= grid_Rows; i++){
-				for (j = 1; j <= grid_Cols; j++)
+			for (i = 0; i < grid_Rows; i++){
+				for (j = 0; j < grid_Cols; j++)
 				{
 					load_cell(i, j);
 					stat_Collect_GMort();
@@ -654,7 +654,7 @@ void runGrid(void)
 	for (i = 0; i < grid_Rows; i++){
 		for (j = 0; j < grid_Cols; j++)
 		{
-			int cell = j + ((i - 1) * grid_Cols) - 1;
+			int cell = (j + 1) + (i * grid_Cols) - 1;
 			load_cell(i, j);
 			char fileMort[1024], fileBMass[1024], fileReceivedProb[1024];
 
