@@ -1,9 +1,7 @@
 # Seed dispersal setup for STEPWAT grid version - DLM 07-29-13.  This file contains constants that are used in seed dispersal.  The rest of the seed dispersal inputs are set up on a species basis in the species input file.
 
 #CONSTANTS from the max distance function: MAXD = (H * VW) / VT.  MAXD refers to the maximum distance that a seed can be dispersed to.  If you're MAXD ends up being really small, then you can get kinda weird results, so be careful.
-#30.0		# H - the average release height of the inflorescences (30 cm in the paper)
 500.0		# VW - the mean horizontal wind speed (500 cm/sec in the paper)
-#100.0		# VT - the average sinking velocity of the seeds (100 cm/sec in the paper)
 
 #SEED DISPERSAL OUTPUTS
 1		# output seed dispersal (ie. the total probability that a cell received seeds for each cell for each year for each species)?  1 means yes, 0 means no
