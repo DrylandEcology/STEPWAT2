@@ -2973,23 +2973,37 @@ static void _read_seed_dispersal_in(void)
 static void _do_seed_dispersal(void)
 {
 	float biomass, randomN, LYPPT, presentProb, receivedProb;
-	int i, j, germ, sgerm, year;
+	int i, j, germ, sgerm, year, row, col;
 	SppIndex s;
+	CellType *cell;
+
+    // Load the first cell so we can access seedling_estab_prob and currYear,
+    // which are not specific to each cell.
+    load_cell(0, 0);
 
 	if (Globals->currYear == 1 && !sd_Option1a && !sd_Option1b)
 	{ //since we have no previous data to go off of, use the current years...
 		for (i = 0; i < grid_Cells; i++)
-			ForEachSpecies(s)
-			{
-				if (!(Species[s]->use_me && Species[s]->use_dispersal))
-					continue;
-				grid_Species[s][i].allow_growth = grid_Species[s][i].sd_sgerm =
-						1;// since it's the first year, we have to allow growth...
-				if (UseDisturbances)
-					if (1 == grid_Disturb[i].kill_yr)
-						grid_Species[s][i].allow_growth = 0;
-				grid_SD[s][i].lyppt = grid_Env[i].ppt;
-			}
+		{
+		    row = i / grid_Cols;
+		    col = i % grid_Cols;
+		    cell = &gridCells[row][col];
+
+		    load_cell(row, col);
+
+            ForEachSpecies(s)
+            {
+                if (!(Species[s]->use_me && Species[s]->use_dispersal))
+                    continue;
+                Species[s]->allow_growth = Species[s]->sd_sgerm =
+                        1;// since it's the first year, we have to allow growth...
+                if (UseDisturbances)
+                    // RGroup[x]->killyr is the same for all x
+                    if (1 == RGroup[0]->killyr)
+                        Species[s]->allow_growth = 0;
+                cell->mySeedDispersal[s].lyppt = Env->ppt;
+            }
+        }
 	}
 	else
 	{
@@ -3008,23 +3022,28 @@ static void _do_seed_dispersal(void)
 
 			for (i = 0; i < grid_Cells; i++)
 			{
+                row = i / grid_Cols;
+                col = i % grid_Cols;
+                cell = &gridCells[row][col];
+
+                load_cell(row, col);
 
 				if (sd_Option1a && Globals->currYear <= sd_NYearsSeedsAvailable)
 				{
-					grid_SD[s][i].seeds_present = 1;
+					cell->mySeedDispersal[s].seeds_present = 1;
 				}
 				else if (sd_Option1b
 						&& Globals->currYear <= sd_NYearsSeedsAvailable
-						&& grid_initSpecies[i].species_seed_avail[s])
+						&& cell->mySpeciesInit.species_seed_avail[s])
 				{
-					grid_SD[s][i].seeds_present = 1;
+					cell->mySeedDispersal[s].seeds_present = 1;
 				}
 
-				sgerm = (grid_SD[s][i].seeds_present
-						|| grid_SD[s][i].seeds_received) && germ; //refers to whether the species has seeds available from the previous year and conditions are correct for germination this year
-				grid_Species[s][i].allow_growth = FALSE;
-				biomass = grid_Species[s][i].relsize
-						* grid_Species[s][i].mature_biomass;
+				sgerm = (cell->mySeedDispersal[s].seeds_present
+						|| cell->mySeedDispersal[s].seeds_received) && germ; //refers to whether the species has seeds available from the previous year and conditions are correct for germination this year
+				Species[s]->allow_growth = FALSE;
+				biomass = Species[s]->relsize
+						* Species[s]->mature_biomass;
 
 				if (UseDisturbances)
 				{
@@ -3038,15 +3057,13 @@ static void _do_seed_dispersal(void)
 						//will fail and allow_growth will not become TRUE, then when Globals->currYear=8 this allow_growth= FALSE will carry forward and there will no call
 						// to other functions like Species_Update_Newsize() so new size will not be updated and last year size will carry forward so in final output year 7 and year 8 will
 						// have same output that is not correct.
-						grid_Species[s][i].allow_growth = TRUE;
+						Species[s]->allow_growth = TRUE;
 					}
 
 				}
 				else if (sgerm || GT(biomass, 0.0))
-					grid_Species[s][i].allow_growth = TRUE;
-				grid_Species[s][i].sd_sgerm = sgerm; //based upon whether we have received/produced seeds that germinated
-				//if(grid_Species[s][i].allow_growth == TRUE &&  i == 52 && s == 0 && Globals->currIter == 1)
-				//	printf("%s allow_growth:%d year:%d sgerm:%d iter:%d\n", grid_Species[s][i].name, grid_Species[s][i].allow_growth, year, sgerm, Globals->currIter);
+					Species[s]->allow_growth = TRUE;
+				Species[s]->sd_sgerm = sgerm; //based upon whether we have received/produced seeds that germinated
 			}
 		}
 
@@ -3063,27 +3080,33 @@ static void _do_seed_dispersal(void)
 		// figure out which species in each cell produced seeds...
 		for (i = 0; i < grid_Cells; i++)
 		{
-			grid_SD[s][i].seeds_present = grid_SD[s][i].seeds_received =
-					grid_Species[s][i].received_prob = 0;
+            row = i / grid_Cols;
+            col = i % grid_Cols;
+            cell = &gridCells[row][col];
+
+            load_cell(row, col);
+
+			cell->mySeedDispersal[s].seeds_present = cell->mySeedDispersal[s].seeds_received =
+					Species[s]->received_prob = 0;
 
 			biomass = 0;	//getting the biggest individual in the species...
-			ForEachIndiv(indiv, &grid_Species[s][i])
-				if (indiv->relsize * grid_Species[s][i].mature_biomass
+			ForEachIndiv(indiv, Species[s])
+				if (indiv->relsize * Species[s]->mature_biomass
 						> biomass)
 					biomass = indiv->relsize
-							* grid_Species[s][i].mature_biomass;
+							* Species[s]->mature_biomass;
 
 			if (GE(biomass,
-					grid_Species[s][i].mature_biomass
-							* grid_Species[s][i].sd_Param1))
+					Species[s]->mature_biomass
+							* Species[s]->sd_Param1))
 			{
 				randomN = RandUni(&grid_rng);
 
-				LYPPT = grid_SD[s][i].lyppt;
-				float PPTdry = grid_Species[s][i].sd_PPTdry, PPTwet =
-						grid_Species[s][i].sd_PPTwet;
-				float Pmin = grid_Species[s][i].sd_Pmin, Pmax =
-						grid_Species[s][i].sd_Pmax;
+				LYPPT = cell->mySeedDispersal[s].lyppt;
+				float PPTdry = Species[s]->sd_PPTdry, PPTwet =
+						Species[s]->sd_PPTwet;
+				float Pmin = Species[s]->sd_Pmin, Pmax =
+						Species[s]->sd_Pmax;
 
 				//p3 = Pmin, if LYPPT < PPTdry
 				//p3 = 1 - (1-Pmin) * exp(-d * (LYPPT - PPTdry)) with d = - ln((1 - Pmax)/(1 - Pmin)) / (PPTwet - PPTdry), if PPTdry <= LYPPT <= PPTwet
@@ -3102,31 +3125,38 @@ static void _do_seed_dispersal(void)
 					presentProb = Pmax;
 
 				if (LE(randomN, presentProb))
-					grid_SD[s][i].seeds_present = 1;
+					cell->mySeedDispersal[s].seeds_present = 1;
 			}
-			//if(i == 0) printf("cell: %d lyppt: %f\n", i, grid_SD[i].lyppt);
 		}
 
 		// figure out which species in each cell received seeds...
 		for (i = 0; i < grid_Cells; i++)
 		{
-			if (grid_SD[s][i].seeds_present)
+            row = i / grid_Cols;
+            col = i % grid_Cols;
+            cell = &gridCells[row][col];
+
+            load_cell(row, col);
+
+			if (cell->mySeedDispersal[s].seeds_present)
 				continue;
 			receivedProb = 0;
 
-			for (j = 0; j < grid_SD[s][i].size; j++)
-				if (grid_SD[s][grid_SD[s][i].cells[j]].seeds_present)
-					receivedProb += grid_SD[s][i].prob[j];
+			for (j = 0; j < cell->mySeedDispersal[s].size; j++)
+				if (cell->mySeedDispersal[cell->mySeedDispersal[s].cells[j]].seeds_present)
+					receivedProb += cell->mySeedDispersal[s].prob[j];
 
 			randomN = RandUni(&grid_rng);
 			if (LE(randomN, receivedProb) && !ZRO(receivedProb))
-				grid_SD[s][i].seeds_received = 1;
+				cell->mySeedDispersal[s].seeds_received = 1;
 			else
-				grid_SD[s][i].seeds_received = 0;
+				cell->mySeedDispersal[s].seeds_received = 0;
 
-			grid_Species[s][i].received_prob = receivedProb;
+			Species[s]->received_prob = receivedProb;
 		}
 	}
+
+	unload_cell();
 }
 
 /*
