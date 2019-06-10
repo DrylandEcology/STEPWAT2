@@ -162,7 +162,7 @@ void stat_Collect( Int year ) {
 
       if (BmassFlags.size)
         _collect_add( &_Gsize[rg].s[year],
-                          RGroup[rg]->relsize);
+                          getRGroupRelsize(rg));
       if (BmassFlags.pr)
         _collect_add( &_Gpr[rg].s[year],
                           RGroup[rg]->pr);

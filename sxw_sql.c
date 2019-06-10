@@ -343,7 +343,7 @@ void insertOutputVars(RealF * _resource_cur, RealF added_transp) {
 	}
 
 	ForEachGroup(r) {
-			sum1 += RGroup[r]->relsize;
+			sum1 += getRGroupRelsize(r);
 			sum2 += RGroup[r]->pr;
 			sum3 += _resource_cur[r];
 	}
@@ -382,7 +382,7 @@ void insertRgroupInfo(RealF * _resource_cur) {
 
 	beginTransaction();
 	ForEachGroup(r) {
-		insertSXWoutputRgroupRow(Year, Iteration, r+1, RGroup_GetBiomass(r),RGroup[r]->relsize, RGroup[r]->pr, _resource_cur[r]/SXWResources->_bvt, _resource_cur[r]);
+		insertSXWoutputRgroupRow(Year, Iteration, r+1, RGroup_GetBiomass(r),getRGroupRelsize(r), RGroup[r]->pr, _resource_cur[r]/_bvt, _resource_cur[r]);
 	}
 	endTransaction();
 }
