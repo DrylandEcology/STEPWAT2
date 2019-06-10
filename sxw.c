@@ -914,10 +914,10 @@ void _print_debuginfo(void) {
 	fprintf(f, "Group     \tRelsize\tPR\tResource_cur\tResource_cur\n");
 	fprintf(f, "-----     \t-------\t-----\t-no scaling-\t-with scaling-\n");
 	ForEachGroup(r) {
-		sum1 += RGroup[r]->relsize;
+		sum1 += getRGroupRelsize(r);
 		sum2 += RGroup[r]->pr;
 		sum3 += _resource_cur[r];
-		fprintf(f, "%s\t%.4f\t%.4f\t%.4f\t\t%.4f\n", RGroup[r]->name, RGroup[r]->relsize, RGroup[r]->pr, _resource_cur[r]/_bvt, _resource_cur[r]);
+		fprintf(f, "%s\t%.4f\t%.4f\t%.4f\t\t%.4f\n", RGroup[r]->name, getRGroupRelsize(r), RGroup[r]->pr, _resource_cur[r]/_bvt, _resource_cur[r]);
 	}
 	fprintf(f, "-----     \t-------\t-----\t-----\t\t-----\n");
 	fprintf(f, "%s\t\t%.4f\t%.4f\t%.4f\t\t%.4f\n", "Total", sum1, sum2, sum3/_bvt, sum3);
