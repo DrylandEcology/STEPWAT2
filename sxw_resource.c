@@ -69,8 +69,7 @@ extern
         * _phen;          /* phenological activity for each month for STEPPE functional groups, read from input */
 
 extern
-  RealF _resource_pr[MAX_RGROUPS],  /* resource convertable to pr */
-        _resource_cur[MAX_RGROUPS]; /* resources currently available by group*/
+  RealF *_resource_cur; /* resources currently available by group*/
         RealF added_transp; /* transpiration added for the current year */
 
 extern
@@ -133,21 +132,11 @@ void _sxw_update_resource(void) {
  * soil layer and month with transpiration in each layer and month. Finally, we 
  * scale resources available (cm) to resources in terms of grams of biomass */
   
-  RealF sizes[MAX_RGROUPS] = {0.};
+  RealF *sizes;
   GrpIndex g;
+  
+  sizes = (RealF *)Mem_Calloc(Globals.max_rgroups, sizeof(RealF), "_sxw_update_resource");
 
-  #ifdef SXW_BYMAXSIZE
-    int i;
-    SppIndex sp;
-    ForEachGroup(g) {
-      sizes[g] = 0.;
-      if (RGroup[g]->regen_ok) {
-        ForEachGroupSpp(sp, g, i) {
-          sizes[g] += Species[sp]->mature_biomass;
-        }
-      }
-    }
-  #else
 	ForEachGroup(g)
 	{
 		//RGroup[g]->veg_prod_type
@@ -157,7 +146,6 @@ void _sxw_update_resource(void) {
 			continue;
 		sizes[g] = RGroup_GetBiomass(g);
 	}
-  #endif
         
         /* Update the active relative roots based on current biomass values */
 	_sxw_update_root_tables(sizes);
@@ -174,6 +162,8 @@ void _sxw_update_resource(void) {
 //printf("for groupName= %s, resource_cur post multiplication: %f\n\n",Rgroup[g]->name, _resource_cur[g]);
 	}
 /* _print_debuginfo(); */
+        
+        Mem_Free(sizes);
 }
 
 void _sxw_update_root_tables( RealF sizes[] ) {

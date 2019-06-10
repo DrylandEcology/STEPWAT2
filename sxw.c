@@ -108,8 +108,7 @@ RealD * _roots_max,     /* read from root distr. file */
 
 /* simple vectors hold the resource information for each group */
 /* curr/equ gives the available/required ratio */
-RealF _resource_cur[MAX_RGROUPS],  /* current resource availability for each STEPPE functional type */
-      _resource_pr[MAX_RGROUPS];   /* resource convertable to PR */
+RealF *_resource_cur; /*[MAX_RGROUPS];*/  /* current resource availability for each STEPPE functional type */
 
 // Window of transpiration used by _transp_contribution_by_group() in sxw_resource.c
 // "Window" refers to the number of years over which transpiration data is averaged.
@@ -119,11 +118,6 @@ transp_t transp_window;
 RealF added_transp;
 
 pcg32_random_t resource_rng; //rng for swx_resource.c functions.
-
-#ifdef SXW_BYMAXSIZE
-/* addition to meet changes specified at the top of the file */
-RealF _Grp_BMass[MAX_RGROUPS];
-#endif
 
 /* and one vector for the production constants */
 RealD _prod_litter[MAX_MONTHS];
@@ -182,17 +176,10 @@ void SXW_Init( Bool init_SW, char *f_roots ) {
    * 	match sxwroots.in
    */
 	char roots[MAX_FILENAMESIZE] = { '\0' };
+        
+        _resource_cur = (RealF *)Mem_Calloc(Globals.max_rgroups, sizeof(RealF), "SXW_Init");
 
 RandSeed(Globals.randseed, &resource_rng);
-
-#ifdef SXW_BYMAXSIZE
-   GrpIndex rg; SppIndex sp;
-   /* Sum each group's maximum biomass */
-   ForEachGroup(rg) _Grp_BMass[rg] = 0.0;
-   ForEachSpecies(sp)
-     _Grp_BMass[Species[sp]->res_grp] += Species[sp]->mature_biomass;
-   /* end code 2/14/03 */
-#endif
 
    _sxwfiles[0] = &SXW.f_roots;
    _sxwfiles[1] = &SXW.f_phen;
@@ -288,26 +275,9 @@ void SXW_InitPlot (void) {
 /* Call this from main::Plot_Init() after killing everything
  * so the sxw tables will be reset.
  */
-#ifdef SXW_BYMAXSIZE
-	GrpIndex g;
-	RealF sizes[MAX_RGROUPS];
-#endif
 
 	_sxw_sw_clear_transp();
 	_sxw_update_resource();
-
-#ifdef SXW_BYMAXSIZE
-	/* this stuff was taken from Run_Soilwat() but we're now trying
-	 * to minimize the dynamic effect, so resources are always based
-	 * on full-sized plants.  So we only need to do this at the
-	 * beginning of each steppe-model iteration.
-	 */
-	ForEachGroup(g) sizes[g] = 1.0;
-	_sxw_update_root_tables(sizes);
-	_sxw_sw_setup(sizes);
-#endif
-
-
 }
 
 
@@ -323,14 +293,15 @@ void SXW_Run_SOILWAT (void) {
  *             gets done once during init plot.
  */
 
-#ifndef SXW_BYMAXSIZE
 	GrpIndex g;
-	RealF sizes[MAX_RGROUPS];
+	RealF *sizes;
+        
+        sizes = (RealF *)Mem_Calloc(Globals.max_rgroups, sizeof(RealF), "SXW_Run_SOILWAT");
+        
 	/* compute production values for transp based on current plant sizes */
 	ForEachGroup(g)
 	sizes[g] = RGroup_GetBiomass(g);
 	_sxw_sw_setup(sizes);
-#endif
 
         // Initialize `SXW` values for current year's run:
 	SXW.aet = 0.; /* used to be in sw_setup() but it needs clearing each run */
@@ -343,6 +314,8 @@ void SXW_Run_SOILWAT (void) {
 
 	/* Set annual precipitation and annual temperature */
 	_sxw_set_environs();
+        
+        Mem_Free(sizes);
 }
 
 void SXW_SW_Setup_Echo(void) {
@@ -402,18 +375,6 @@ void SXW_SW_Setup_Echo(void) {
 
 	fprintf(f, "\n");
 	CloseFile(&f);
-}
-
-RealF SXW_GetPR( GrpIndex rg) {
-/*======================================================*/
-/* see _sxw_update_resource() for _resource_cur[]
-This function is no longer utilized, SXW_GetResource has replaced it
-_resource_pr is no longer used as a parameter. We remain the code for the time being
-KAP 7/20/2016
-*/
-	RealF pr = ZRO(_resource_pr[rg]) ? 0.0 : 1. / _resource_pr[rg];
-	return pr;
-	//return pr > 10 ? 10 : pr;
 }
 
 RealF SXW_GetTranspiration( GrpIndex rg) {
@@ -490,8 +451,10 @@ static void  _read_roots_max(void) {
 	GrpIndex g;
 	int cnt = 0, lyr;
 	char *p;
-	char name[MAX_GROUPNAMELEN];
+	char *name;
 	FILE *fp;
+        
+        name = (char *)Mem_Calloc(Globals.max_groupnamelen + 1, sizeof(char), "_read_roots_max");
 
 	MyFileName = SXW.f_roots;
 	fp = OpenFile(MyFileName, "r");
@@ -523,6 +486,8 @@ static void  _read_roots_max(void) {
 	}
 
 	CloseFile(&fp);
+        
+        Mem_Free(name);
 }
 
 static void _read_phen(void) {

@@ -68,10 +68,6 @@ extern RealD _prod_litter[MAX_MONTHS];
 extern RealD * _prod_bmass;
 extern RealD * _prod_pctlive;
 
-#ifdef SXW_BYMAXSIZE
-extern RealF _Grp_BMass[];  /* added 2/28/03 */
-#endif
-
 /*************** Local Function Declarations ***************/
 /***********************************************************/
 static void _update_transp_coeff(RealF relsize[]);
@@ -89,7 +85,6 @@ void _sxw_sw_setup (RealF sizes[]) {
         _update_productivity();
 	_update_transp_coeff(sizes);
 
-#ifndef SXW_BYMAXSIZE
   for (doy = 1; doy <= MAX_DAYS; doy++) {
     ForEachVegType(k) {
       v->veg[k].litter_daily[doy] = 0.;
@@ -100,8 +95,6 @@ void _sxw_sw_setup (RealF sizes[]) {
   }
 
 	SW_VPD_init();
-#endif
-
 }
 
 void _sxw_sw_run(void) {
@@ -199,32 +192,19 @@ static void _update_transp_coeff(RealF relsize[]) {
 }
 
 static void _update_productivity(void) {
-    /*======================================================*/
-    /* must convert STEPPE's plot-level biomass to SOILWAT's
-     * sq.meter - based biomass.
-     *
-     * 2/28/03 - cwb - as per the notes at the top of this file,
-     *     RGroup_GetBiomass is being changed to
-     *     SUM(RGroup[g]->mature_biomass)
-     *
-     * 12-Apr-2004 - cwb - update biomass, %Live, and litter with
-     *     actual biomass if SXW_BYMAXSIZE defined or max biomass
-     *     otherwise.
-     */
+
     GrpIndex g;
     TimeInt m;
     IntUS k;
 
     SW_VEGPROD *v = &SW_VegProd;
     RealF totbmass = 0.0,
-            bmassg[MAX_RGROUPS] = {0.},
+            *bmassg,
     vegTypeBiomass[4] = {0.};
-
-#ifdef SXW_BYMAXSIZE
-#define Biomass(g)  _Grp_BMass[g]
-#else
+    
+    bmassg = (RealF *)Mem_Calloc(Globals.max_rgroups, sizeof(RealF), "_update_productivity");
+    
 #define Biomass(g)  RGroup_GetBiomass(g)
-#endif
 
     /* get total biomass for the plot in sq.m */
     ForEachGroup(g) {
@@ -300,4 +280,6 @@ static void _update_productivity(void) {
         v->bare_cov.fCover = 1;
     }
 #undef Biomass
+    
+    Mem_Free(bmassg);
 }

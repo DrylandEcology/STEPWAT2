@@ -266,6 +266,7 @@ static SpeciesType *_create(void)
 	SpeciesType *p;
 
 	p = (SpeciesType *) Mem_Calloc(1, sizeof(SpeciesType), "Species_Create");
+        p->name = Mem_Calloc(Globals.max_speciesnamelen + 1, sizeof(char), "Species_Create");
 
 	return (p);
 
@@ -410,16 +411,13 @@ void Species_Kill(const SppIndex sp, int killType)
     
     IndivType *p = Species[sp]->IndvHead, *t;
 
-	if (Species[sp]->max_age != 1)
-	{
-		while (p)
-		{
-            t = p->Next;
-            indiv_Kill_Complete(p, killType);
-            p = t;
-        }
+    while (p)
+    {
+        t = p->Next;
+        indiv_Kill_Complete(p, killType);
+        p = t;
     }
-
+    
     rgroup_DropSpecies(sp);
 
 }

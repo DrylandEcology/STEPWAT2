@@ -63,6 +63,7 @@ static void _stretched_clonal( GrpIndex rg, Int start, Int last,
 //Nov 4th 15 -AT - Made below two function non-static as they also getting call from main.c
 void _kill_annuals(void);
 void _kill_extra_growth(void);
+void _kill_maxage(void);
 
 
 /************ File-Level Variable Declarations *************/
@@ -166,7 +167,7 @@ void mort_Main( Bool *killed) {
         _slow_growth( sp );
 
       }
-      /* Now implement succulent mortality if this year is "wet" year */
+      /* Implement mortality of succulents if this year's PPT is above the PPT threshold that triggers succulent mortality */
       if (g->succulent
           && Env.wet_dry == Ppt_Wet
           && RandUni(&mortality_rng) <= Succulent.prob_death )
@@ -448,7 +449,9 @@ static void _pat( const SppIndex sp) {
 /* Chris Bennett @ LTER-CSU 6/15/2000            */
 /*------------------------------------------------------*/
     Int i, k=-1;
-    IndivType *p, *kills[MAX_INDIVS_PER_SPP];
+    IndivType *p, **kills;
+    
+    kills = (IndivType **)Mem_Calloc(Globals.max_indivs_per_spp, sizeof(IndivType *), "_pat");
 
     /* ---------------------------------------------*/
     /* Generate kill list, depending on sensitivity */
@@ -478,6 +481,8 @@ static void _pat( const SppIndex sp) {
     }
 
     if (k >= 0) _SomeKillage = TRUE;
+    
+    Mem_Free(kills);
 }
 
 
@@ -557,9 +562,11 @@ static void _succulents( const SppIndex sp) {
 /*------------------------------------------------------*/
 
   IndivType *p,
-            *kills[MAX_INDIVS_PER_SPP];
+            **kills;
   RealF killamt = Succulent.reduction;
   int i, k=0;
+  
+  kills = (IndivType **)Mem_Calloc(Globals.max_indivs_per_spp, sizeof(IndivType *), "_succulents");
 
   ForEachIndiv (p, Species[sp]) {
     if ( GT(p->relsize, killamt) )
@@ -573,6 +580,8 @@ static void _succulents( const SppIndex sp) {
 
 
   if (Species[sp]->est_count) _SomeKillage = TRUE;
+  
+  Mem_Free(kills);
 }
 
 
@@ -603,7 +612,9 @@ static void _slow_growth( const SppIndex sp) {
   RealF pm = 0.368, /* probability of mortality*/
         slowrate;
   IndivType *ndv,
-            *kills[MAX_INDIVS_PER_SPP];
+            **kills;
+  
+  kills = (IndivType **)Mem_Calloc(Globals.max_indivs_per_spp, sizeof(IndivType *), "_slow_growth");
 
   slowrate = RGroup[Species[sp]->res_grp]->slowrate
            * Species[sp]->max_rate;
@@ -625,6 +636,8 @@ static void _slow_growth( const SppIndex sp) {
     indiv_Kill_Complete(kills[n], 8);
 
   if (k >= 0) _SomeKillage = TRUE;
+  
+  Mem_Free(kills);
 }
 
 /***********************************************************/
@@ -756,16 +769,21 @@ static void _stretched_clonal( GrpIndex rg, Int start, Int last,
        total_reduction,
        indiv_reduction;
 
-  IndivType *clist[MAX_INDIVS_PER_SPP]; /* list of clonal individuals */
+  IndivType **clist; /* list of clonal individuals */
 
+  clist = (IndivType **)Mem_Calloc(Globals.max_indivs_per_spp, sizeof(IndivType *), "_stretched_clonal");
+  
   /* get a list of remaining clonal plants, still ranked by size */
   for( np=-1, i=start; i <= last; i++) {
     if (Species[nlist[i]->myspecies]->isclonal)
       clist[++np] = nlist[i];
   }
   if (np < 0)
+  {
+    Mem_Free(clist);
     return;  /* Exit if no clonals remain alive in this rgroup */
-
+  }
+    
   y = RGroup[rg]->yrs_neg_pr;
 
   if (y >= RGroup[rg]->max_stretch) {
@@ -818,6 +836,8 @@ static void _stretched_clonal( GrpIndex rg, Int start, Int last,
 
     } /* end if pm*/
   } /* end if y >= 1*/
+  
+  Mem_Free(clist);
 }
 
 /***********************************************************/
@@ -892,6 +912,28 @@ void _kill_extra_growth(void) {
                     p1 = t1;
                 }
                 rgroup_DropSpecies(sp);
+            }
+        }
+    }
+}
+
+/******************************************************************************/
+void _kill_maxage(void) {
+/******************************************************************************/
+/* PURPOSE:
+ * Kill plants once they reach their maximum age.
+ *
+ * HISTORY:
+ * Created by Frederick Pierson on 4/6/2019. */
+/******************************************************************************/
+    
+    SppIndex s;
+    IndivType *i;
+    
+    ForEachSpecies(s) {
+        ForEachIndiv(i, Species[s]) {
+            if (i->age == Species[s]->max_age) {
+                indiv_Kill_Complete(i, 12);
             }
         }
     }

@@ -88,11 +88,11 @@ Bool indiv_New( SppIndex sp) {
   IndivType *p;
   static int id=0;
 
-  if (Species[sp]->est_count == MAX_INDIVS_PER_SPP) {
+  if (Species[sp]->est_count == Globals.max_indivs_per_spp) {
     LogError(logfp, LOGWARN, "Limit reached: %s is about to get %d "
                    "indivs (max=%d)\n", Species[sp]->name,
                    Species[sp]->est_count +1,
-                   MAX_INDIVS_PER_SPP);
+                   Globals.max_indivs_per_spp);
   }
 
   p = _create();

@@ -19,6 +19,7 @@
 #include "ST_steppe.h"
 #include "ST_globals.h"
 #include "filefuncs.h"
+#include "myMemory.h"
 
 
 /******** Modular External Function Declarations ***********/
@@ -43,15 +44,22 @@ void output_Bmass_Yearly( Int year ) {
 /* note that year is only printed, not used as index, so
  * we don't need to decrement to make base0
  */
-  char fields[MAX_OUTFIELDS][MAX_FIELDLEN+1];
+  char **fields;
   GrpIndex rg;
   SppIndex sp;
   int i, fc = 0;
-  char s[MAX_FIELDLEN];
+  char *s;
   char filename[FILENAME_MAX];
-
+  
   if (!BmassFlags.yearly) return;
 
+  fields = (char **)Mem_Calloc(MAX_OUTFIELDS, sizeof(char *), "output_Bmass_Yearly");
+  s = (char *)Mem_Calloc(MAX_FIELDLEN + 1, sizeof(char), "output_Bmass_Yearly");
+  
+  for (i = 0; i < MAX_OUTFIELDS; i++) {
+      fields[i] = (char *)Mem_Calloc(MAX_FIELDLEN + 1, sizeof(char), "output_Bmass_Yearly");
+  }
+  
   if(Globals.currYear == 1) // At year one we need a header.
   {
   /* --------- Begin setting up header ------- */
@@ -69,6 +77,9 @@ void output_Bmass_Yearly( Int year ) {
       strcpy(fields[fc++], "Temp");
     }
     if (BmassFlags.grpb) {
+      if(BmassFlags.wildfire){
+        strcpy(fields[fc++], "Wildfire");
+      }
       ForEachGroup(rg) 
       {
         strcpy(fields[fc++], RGroup[rg]->name);
@@ -79,6 +90,10 @@ void output_Bmass_Yearly( Int year ) {
         if (BmassFlags.pr) {
           strcpy(fields[fc], RGroup[rg]->name);
           strcat(fields[fc++],"_PR");
+        }
+        if(BmassFlags.prescribedfire){
+          strcpy(fields[fc], RGroup[rg]->name);
+          strcat(fields[fc++],"_PFire");
         }
       }
     }
@@ -141,14 +156,14 @@ void output_Bmass_Yearly( Int year ) {
     sprintf(fields[fc++], "%0.1f", Env.temp);
 
   if (BmassFlags.grpb) {
+    if (BmassFlags.wildfire)
+        sprintf(fields[fc++],"%d", RGroup[0]->wildfire);
     ForEachGroup(rg) {
       sprintf(fields[fc++], "%f", RGroup_GetBiomass(rg));
       if (BmassFlags.size)
         sprintf(fields[fc++],"%f", getRGroupRelsize(rg));
       if (BmassFlags.pr)
         sprintf(fields[fc++],"%f", RGroup[rg]->pr);
-      if (BmassFlags.wildfire)
-        sprintf(fields[fc++],"%d", RGroup[rg]->wildfire);
       if (BmassFlags.prescribedfire)
         sprintf(fields[fc++],"%d", RGroup[rg]->prescribedfire);
     }
@@ -174,6 +189,13 @@ void output_Bmass_Yearly( Int year ) {
   if (i) fprintf(Globals.bmass.fp_year,"%s\n", fields[i]);
   fflush(Globals.bmass.fp_year);
   CloseFile(&Globals.bmass.fp_year);
+  
+  for (i = 0; i < MAX_OUTFIELDS; i++) {
+      Mem_Free(fields[i]);
+  }
+  
+  Mem_Free(s);
+  Mem_Free(fields);
 }
 
 
@@ -191,7 +213,19 @@ void output_Mort_Yearly( void ) {
 	if (!MortFlags.yearly)
 		return;
 
-	/* Note: Header line already printed */
+    /* Print header line */
+	fprintf(f, "Age");
+
+	if (MortFlags.group) {
+        ForEachGroup(rg) fprintf(f, "%c%s", MortFlags.sep, RGroup[rg]->name);
+	}
+
+	if (MortFlags.species) {
+        ForEachSpecies(sp) fprintf(f, "%c%s", MortFlags.sep, Species[sp]->name);
+	}
+
+	/* Header line is now complete */
+	fprintf(f, "\n");
 
 	/* Print a line of establishments */
 	fprintf(f, "(Estabs)");

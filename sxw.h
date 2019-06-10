@@ -15,17 +15,6 @@
 #ifndef SXW_DEF
 #define SXW_DEF
 
-// Months with a mean temperature >= base are contributing to growing season
-// precipitation:
-// Coffin & Lauenroth 1990 Ecological Modelling:
-//  * growing season at CPER is 1 April - 30 September
-//  * growing season ppt = 0.86 * annual ppt at CPER
-// A base of 5 C will on average include April - October for Fort Collins recent climate
-// A base of 4.4 C as described in Sims et al. 1978 Journal of Ecology
-// Additional testing required here and GROWING_BASE_TEMP should eventually be moved to env.in
-#define GROWING_BASE_TEMP 4.4 // base-temperature in degree Celsius
-
-
 #include "generic.h"
 #include "SW_Times.h"
 #include "ST_defines.h"

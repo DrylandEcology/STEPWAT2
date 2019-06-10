@@ -1,0 +1,8 @@
+# These values determine the memory allocated for resource groups, species, and their names.
+# If these limits are exceeded, memory leaks will result.
+
+10  # Maximum resource groups allowed.
+15  # Maximum resource group name length.
+10  # Maximum species allowed per resource group.
+100 # Maximum individuals allowed per species.
+4   # Maximum species name length.
