@@ -637,7 +637,7 @@ void check_sizes(const char *chkpt) {
             if (LT(diff, fabs(spsize - getSpeciesRelsize(sp)))) {
                 LogError(stdout, LOGWARN, "%s (%d:%d): SP: \"%s\" size error: "
                         "SP=%.7f, ndv=%.7f",
-                        chkpt, Globals.currIter, Globals.currYear,
+                        chkpt, Globals->currIter, Globals->currYear,
                         Species[sp]->name, getSpeciesRelsize(sp), spsize);
             }
         }
@@ -645,7 +645,7 @@ void check_sizes(const char *chkpt) {
         if (LT(diff, fabs(rgsize - getRGroupRelsize(rg)))) {
             LogError(stdout, LOGWARN, "%s (%d:%d): RG \"%s\" size error: "
                     "RG=%.7f, ndv=%.7f",
-                    chkpt, Globals.currIter, Globals.currYear,
+                    chkpt, Globals->currIter, Globals->currYear,
                     RGroup[rg]->name, getRGroupRelsize(rg), rgsize);
         }
     }

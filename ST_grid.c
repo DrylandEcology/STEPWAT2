@@ -3042,7 +3042,7 @@ static void _do_seed_dispersal(void)
 				sgerm = (cell->mySeedDispersal[s].seeds_present
 						|| cell->mySeedDispersal[s].seeds_received) && germ; //refers to whether the species has seeds available from the previous year and conditions are correct for germination this year
 				Species[s]->allow_growth = FALSE;
-				biomass = Species[s]->relsize
+				biomass = getSpeciesRelsize(s)
 						* Species[s]->mature_biomass;
 
 				if (UseDisturbances)

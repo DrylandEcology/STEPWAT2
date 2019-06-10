@@ -382,7 +382,7 @@ void insertRgroupInfo(RealF * _resource_cur) {
 
 	beginTransaction();
 	ForEachGroup(r) {
-		insertSXWoutputRgroupRow(Year, Iteration, r+1, RGroup_GetBiomass(r),getRGroupRelsize(r), RGroup[r]->pr, _resource_cur[r]/_bvt, _resource_cur[r]);
+		insertSXWoutputRgroupRow(Year, Iteration, r+1, RGroup_GetBiomass(r),getRGroupRelsize(r), RGroup[r]->pr, SXWResources->_resource_cur[r]/SXWResources->_bvt, _resource_cur[r]);
 	}
 	endTransaction();
 }
