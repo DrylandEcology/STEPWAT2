@@ -3047,13 +3047,13 @@ static void _do_seed_dispersal(void)
 
 				if (UseDisturbances)
 				{
-					if ((sgerm || year < grid_Disturb[i].kill_yr
-							|| grid_Disturb[i].kill_yr <= 0 || GT(biomass, 0.0))
-					/*&& (year != grid_Disturb[i].kill_yr)*/)
+					if ((sgerm || year < RGroup[0]->killyr
+							|| RGroup[0]->killyr <= 0 || GT(biomass, 0.0))
+					/*&& (year != RGroup[0].killyr)*/)
 					{
 						//commented above one condition as it was causing a bug there, next year of killing year will make
 						//allow_growth flag to false as 	year = Globals->currYear - 1 , so for example if killing year= 6 and Globals->currYear=7 then here
-						// year variable will be 7-1 =6 that is equal to killing year 6, so this condition (year != grid_Disturb[i].kill_yr)
+						// year variable will be 7-1 =6 that is equal to killing year 6, so this condition (year != RGroup[0].killyr)
 						//will fail and allow_growth will not become TRUE, then when Globals.currYear=8 this allow_growth= FALSE will carry forward and there will no call
 						// to other functions. Last year size will carry forward so in final output year 7 and year 8 will
 						// have same output that is not correct.
