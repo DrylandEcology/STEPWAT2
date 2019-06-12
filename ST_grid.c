@@ -326,6 +326,7 @@ void parm_free_memory(void);
 
 //from ST_main.c
 void Plot_Initialize(void);
+void deallocate_Globals(void);
 
 //functions from ST_stats.c
 void stat_Collect(Int year);
@@ -684,7 +685,6 @@ void runGrid(void)
 	}
 
 	_free_grid_memory(); // free our allocated memory since we do not need it anymore
-	_deallocate_memory(); // sxw memory.
 }
 
 /* "Spinup" the model by running for SuperGlobals.runModelYears without seed dispersal or statistics outputs. */
@@ -1638,88 +1638,22 @@ static void _free_spinup_globals(void)
 static void _free_grid_memory(void)
 {
 	//frees all the memory allocated in this file ST_Grid.c (most of it is dynamically allocated in _init_grid_globals() & _load_grid_globals() functions)
-
-	int i;
+	int i, j;
 	GrpIndex c;
 	SppIndex s;
 
-	_free_grid_globals();
-	if (sd_Option2a || sd_Option2b)
-		_free_spinup_memory();
-
-	ForEachSpecies(s)
-		if (Species[s]->use_me)
-			Mem_Free(grid_Species[s]);
-	ForEachGroup(c)
-		if (RGroup[c]->use_me)
-			Mem_Free(grid_RGroup[c]);
-
-	Mem_Free(grid_Succulent);
-	Mem_Free(grid_Env);
-	Mem_Free(grid_Plot);
-	Mem_Free(grid_Globals);
-
-	Mem_Free(grid_SXW);
-	Mem_Free(grid_SW_Soilwat);
-	Mem_Free(grid_SW_Site);
-	Mem_Free(grid_SW_VegProd);
-
-	if (UseSoils)
-	{
-		free_all_sxw_memory();
-		Mem_Free(grid_SXW_ptrs);
-		for (i = 0; i < grid_Cells; i++)
-			Mem_Free(grid_Soils[i].lyr);
-		Mem_Free(grid_Soils);
+	/* Free memory that we have allocated in ST_grid.c */
+	for(i = 0; i < grid_Rows; ++i){
+		for(j = 0; j < grid_Cols; ++j){
+			Mem_Free(gridCells[i][j].mySpeciesInit.species_seed_avail);
+			Mem_Free(gridCells[i][j].someKillage);
+			Mem_Free(gridCells[i][j].mySoils.lyr);
+		}
 	}
-	if (UseDisturbances)
-		Mem_Free(grid_Disturb);
-	if (UseSeedDispersal)
-	{
-		ForEachSpecies(s)
-			if (Species[s]->use_me && Species[s]->use_dispersal)
-			{
-				for (i = 0; i < grid_Cells; i++)
-				{
-					Mem_Free(grid_SD[s][i].cells);
-					Mem_Free(grid_SD[s][i].prob);
-					grid_SD[s][i].size = 0;
-				}
-				Mem_Free(grid_SD[s]);
-			}
-
-		for (i = 0; i < grid_Cells; i++)
-			Mem_Free(grid_initSpecies[i].species_seed_avail);
-		Mem_Free(grid_initSpecies);
+	for(i = 0; i < grid_Rows; ++i){
+		Mem_Free(gridCells[i]);
 	}
-
-	stat_Free_Accumulators(); //free our memory we allocated for all the accumulators now that they're unnecessary to have
-
-	for (i = 0; i < N_GRID_DIRECTORIES; i++) //frees the strings allocated in _init_grid_files()
-		Mem_Free(grid_directories[i]);
-	for (i = 0; i < N_GRID_FILES; i++)
-		Mem_Free(grid_files[i]);
-
-	// freeing random memory that other parts of steppe/soilwat allocate... this isn't quite everything but it's a good start
-	parm_free_memory(); //frees memory allocated in ST_params.c
-
-	ForEachSpecies(s)
-	{
-		if (!Species[s]->use_me)
-			continue;
-		_free_head(Species[s]->IndvHead);
-		Mem_Free(Species[s]->kills);
-		Mem_Free(Species[s]->seedprod);
-	}
-
-	ForEachGroup(c)
-		if (RGroup[c]->use_me)
-			Mem_Free(RGroup[c]->kills);
-
-	for (i = 0; i < SW_Site.n_layers + SW_Site.deepdrain; i++)
-		Mem_Free(SW_Site.lyr[i]);
-	Mem_Free(SW_Site.lyr);
-
+	Mem_Free(gridCells);
 }
 
 /***********************************************************/
