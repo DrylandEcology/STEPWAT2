@@ -335,7 +335,7 @@ void stat_Output_AllMorts(void);
 void stat_Output_AllBmass(void);
 //Adding functions for creating grid cells avg values output file
 void stat_Output_AllBmassAvg(void);
-void stat_Output_AllCellAvgBmass(const char * filename);
+void Output_AllCellAvgBmass(const char * filename);
 void stat_Output_Seed_Dispersal(const char * filename, const char sep,
 		Bool makeHeader);
 void stat_Load_Accumulators(int cell, int year);
@@ -667,7 +667,7 @@ void runGrid(void)
 			if (MortFlags.summary)
 				stat_Output_AllMorts();
 			if (BmassFlags.summary)
-				stat_Output_AllBmassAvg();
+				stat_Output_AllBmass();
 			if (UseSeedDispersal && sd_DoOutput)
 				stat_Output_Seed_Dispersal(fileReceivedProb, sd_Sep,
 						sd_MakeHeader);
@@ -678,8 +678,9 @@ void runGrid(void)
 	//Here creating grid cells avg values output file
 	char fileBMassCellAvg[1024];
 	sprintf(fileBMassCellAvg, "%s.csv", grid_files[GRID_FILE_PREFIX_BMASSCELLAVG]);
-	if (BmassFlags.summary)
-		stat_Output_AllCellAvgBmass(fileBMassCellAvg);
+	if (BmassFlags.summary){
+		Output_AllCellAvgBmass(fileBMassCellAvg);
+	}
 
 	_free_grid_memory(); // free our allocated memory since we do not need it anymore
 	_deallocate_memory(); // sxw memory.
@@ -3532,4 +3533,27 @@ static void _read_grid_setup(void)
     UseSeedDispersal = itob(j);
 
     CloseFile(&f);
+}
+
+void Output_AllCellAvgBmass(const char * filename){
+	int i, j, year;
+	FILE* file;
+	file = fopen(filename, "w");
+	float ppt, temp;
+
+	for(year = 0; year < SuperGlobals.runModelYears; ++year){
+		ppt = 0;
+		temp = 0;
+		for(i = 0; i < grid_Rows; ++i){
+			for(j = 0; j < grid_Cols; ++j){
+				ppt += gridCells[i][j]._Ppt->s[year].ave;
+				temp += gridCells[i][j]._Temp->s[year].ave;
+			}
+		}
+		ppt /= grid_Cells;
+		temp /= grid_Cells;
+		fprintf(file, "%f,%f\n", ppt, temp);
+	}
+
+	fclose(file);
 }
