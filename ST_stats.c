@@ -90,7 +90,7 @@ static RealF _get_gridcell_avg( struct accumulators_grid_cell_st *p);
 static int _get_gridcell_sum( struct accumulators_grid_cell_st *p);
 static RealF _get_gridcell_std( struct accumulators_grid_cell_st *p);
 static void _make_header( char *buf);
-static void _make_header_with_std( char *buf);
+void _make_header_with_std( char *buf);
 
 /* I'm making this a macro because it gets called a lot, but
  * note that the syntax checker is obviated, so make sure
@@ -1408,7 +1408,7 @@ static RealF _get_gridcell_std(struct accumulators_grid_cell_st *p)
 
 
 /***********************************************************/
-static void _make_header_with_std( char *buf) {
+void _make_header_with_std( char *buf) {
 
   char **fields;
   char tbuf[80];

@@ -345,6 +345,7 @@ void stat_Init_Accumulators(void);
 void stat_Copy_Accumulators(StatType* newDist, StatType* newPpt, StatType* newTemp, StatType* newGrp, StatType* newGsize, 
                             StatType* newGpr, StatType* newGmort, StatType* newGestab, StatType* newSpp, StatType* newIndv,
                             StatType* newSmort, StatType* newSestab, StatType* newSrecieved, FireStatsType* newGwf, Bool firstTime);
+void _make_header_with_std( char *buf);
 
 //functions from sxw.c
 //void free_sxw_memory( void );
@@ -3536,24 +3537,162 @@ static void _read_grid_setup(void)
 }
 
 void Output_AllCellAvgBmass(const char * filename){
-	int i, j, year;
+	int i, j, year;	//for iterating
+	GrpIndex rg;	//for iterating
+	SppIndex sp;	//for iterating
+
+	/* One accumulator for every accumulator in ST_stats.c */
+	float ppt, temp, dist, wildfire, grp[SuperGlobals.max_rgroups], gsize[SuperGlobals.max_rgroups],
+		  gpr[SuperGlobals.max_rgroups], prescribedfire[SuperGlobals.max_rgroups],
+		  spp[SuperGlobals.max_spp_per_grp * SuperGlobals.max_rgroups],
+		  indv[SuperGlobals.max_spp_per_grp * SuperGlobals.max_rgroups];
+
+	char buf[2048], tbuf[2048];	// Two buffers: one for accumulating and one for formatting.
+	char sep = BmassFlags.sep;	// Separator specified in inputs
+
 	FILE* file;
 	file = fopen(filename, "w");
-	float ppt, temp;
 
-	for(year = 0; year < SuperGlobals.runModelYears; ++year){
-		ppt = 0;
-		temp = 0;
-		for(i = 0; i < grid_Rows; ++i){
-			for(j = 0; j < grid_Cols; ++j){
-				ppt += gridCells[i][j]._Ppt->s[year].ave;
-				temp += gridCells[i][j]._Temp->s[year].ave;
-			}
-		}
-		ppt /= grid_Cells;
-		temp /= grid_Cells;
-		fprintf(file, "%f,%f\n", ppt, temp);
+	buf[0]='\0';
+
+	load_cell(0, 0);
+
+	if(BmassFlags.header){
+		_make_header_with_std(buf);
+		fprintf(file, "%s", buf);
 	}
 
-	fclose(file);
+	for(year = 0; year < SuperGlobals.runModelYears; ++year){
+		*buf = '\0';	//Initialize buffer as empty string
+
+		/* -------- Initialize all accumulators to 0 ------- */
+		ppt = 0;		
+		temp = 0;
+		dist = 0;
+		wildfire = 0;
+		ForEachGroup(rg){
+			grp[rg] = 0;
+			gsize[rg] = 0;
+			grp[rg] = 0;
+			prescribedfire[rg] = 0;
+		}
+		ForEachSpecies(sp){
+			spp[sp] = 0;
+			indv[sp] = 0;
+		}
+		/* ------ End Initialize all accumulators to 0 ------ */
+
+		for(i = 0; i < grid_Rows; ++i){ // For each row
+			for(j = 0; j < grid_Cols; ++j){ // For each column
+				/* ------------- Accumulate requested output ----------------- */
+				if(BmassFlags.ppt) ppt += gridCells[i][j]._Ppt->s[year].ave;
+				if(BmassFlags.tmp) temp += gridCells[i][j]._Temp->s[year].ave;
+				if(BmassFlags.dist) dist += gridCells[i][j]._Dist->s[year].nobs;
+				if(BmassFlags.grpb) {
+					if(BmassFlags.wildfire){
+						wildfire + gridCells[i][j]._Gwf->wildfire[year];
+					}
+					ForEachGroup(rg){
+						grp[rg] += gridCells[i][j]._Grp[rg].s[year].ave;
+						if(BmassFlags.size){
+							gsize[rg] += gridCells[i][j]._Gsize[rg].s[year].ave;
+						}
+						if(BmassFlags.pr){
+							gpr[rg] += gridCells[i][j]._Gpr[rg].s[year].ave;
+						}
+						if(BmassFlags.prescribedfire){
+							prescribedfire[rg] += gridCells[i][j]._Gwf->prescribedFire[rg][year];
+						}
+					} // End ForEachGroup
+				} // End grpb
+				if(BmassFlags.sppb){
+					ForEachSpecies(sp){
+						spp[sp] += gridCells[i][j]._Spp[sp].s[year].ave;
+						if(BmassFlags.indv){
+							indv[sp] += gridCells[i][j]._Indv[sp].s[year].ave;
+						}
+					} // End ForEachSpecies
+				} // End sppb
+				/* ------------ End Accumulate requested output --------------- */	
+			} // End for each column
+		} // End for each row
+
+		/* ---------------- Average all accumulators ---------------- */
+		ppt /= grid_Cells;
+		temp /= grid_Cells;
+		dist /= grid_Cells;
+		wildfire /= grid_Cells;
+		ForEachGroup(rg){
+			grp[rg] /= grid_Cells;
+			gsize[rg] /= grid_Cells;
+			grp[rg] /= grid_Cells;
+			prescribedfire[rg] /= grid_Cells;
+		}
+		ForEachSpecies(sp){
+			spp[sp] /= grid_Cells;
+			indv[sp] /= grid_Cells;
+		}
+		/* --------------- End average all accumulators --------------- */
+
+		/* ----------------- Generate output string ------------------- */
+		/* buf will hold the entire string. tbuf will format the output */
+		if(BmassFlags.yr){
+			sprintf(buf,"%d%c", year+1, sep);
+		}
+		if(BmassFlags.dist){
+			sprintf(tbuf, "%ld%c", dist, sep);
+			strcat(buf, tbuf);
+		}
+		if(BmassFlags.ppt){
+			sprintf(tbuf, "%f%cTODO%c", ppt, sep, sep);
+			strcat(buf, tbuf);
+		}
+		if (BmassFlags.pclass) {
+			sprintf(tbuf, "\"NA\"%c", sep);
+      		strcat(buf, tbuf);
+    	}
+		if(BmassFlags.tmp){
+			sprintf(tbuf, "%f%cTODO%c", temp, sep, sep);
+			strcat(buf, tbuf);
+		}
+		if(BmassFlags.grpb){
+			if(BmassFlags.wildfire){
+				sprintf(tbuf, "%f%c", wildfire, sep);
+				strcat(buf, tbuf);
+			}
+			ForEachGroup(rg){
+				sprintf(tbuf, "%f%cTODO%c", grp[rg], sep, sep);
+				strcat(buf, tbuf);
+
+				if(BmassFlags.size){
+					sprintf(tbuf, "%f%c", gsize[rg], sep);
+					strcat(buf, tbuf);
+				}
+				if(BmassFlags.pr){
+					sprintf(tbuf, "%f%cTODO%c", gpr[rg], sep, sep);
+					strcat(buf, tbuf);
+				}
+				if(BmassFlags.prescribedfire){
+					sprintf(tbuf, "%f%c", prescribedfire[rg], sep);
+					strcat(buf, tbuf);
+				}
+			}
+		}
+		if(BmassFlags.sppb){
+			ForEachSpecies(sp){
+				sprintf(tbuf, "%f%c", spp[sp], sep);
+				strcat(buf, tbuf);
+				if(BmassFlags.indv){
+					sprintf(tbuf, "%f%c", indv[sp], sep);
+					strcat(buf, tbuf);
+				}
+			}
+		}
+		/* --------------- End generate output string ---------------- */
+
+		fprintf(file, "%s\n", buf); // Finally, print this line
+	} // End for each year
+
+	unload_cell();
+	fclose(file); // Close the file
 }
