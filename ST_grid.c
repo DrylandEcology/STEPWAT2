@@ -3524,7 +3524,7 @@ void Output_AllCellAvgBmass(const char * filename){
 				if(BmassFlags.dist) dist += gridCells[i][j]._Dist->s[year].nobs;
 				if(BmassFlags.grpb) {
 					if(BmassFlags.wildfire){
-						wildfire + gridCells[i][j]._Gwf->wildfire[year];
+						wildfire += gridCells[i][j]._Gwf->wildfire[year];
 					}
 					ForEachGroup(rg){
 						grp[rg] += gridCells[i][j]._Grp[rg].s[year].ave;
