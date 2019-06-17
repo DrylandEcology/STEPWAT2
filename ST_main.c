@@ -423,12 +423,48 @@ void allocate_Globals(void){
 	_SomeKillage = (Bool*) Mem_Calloc(1, sizeof(Bool), "allocate_Globals: _SomeKillage");
 }
 
+/* Deallocates the global variables */
 void deallocate_Globals(void){
+	GrpIndex rg;
+	SppIndex sp;
 	Mem_Free(Env);
 	Mem_Free(Succulent);
 	Mem_Free(Globals);
 	Mem_Free(Plot);
 	Mem_Free(_SomeKillage);
+
+	/* Free Species */
+	ForEachSpecies(sp){
+		/* Start by freeing any pointers in the Species struct */
+		Mem_Free(Species[sp]->kills);
+		Mem_Free(Species[sp]->seedprod);
+		Mem_Free(Species[sp]->name);
+		IndivType *indv = Species[sp]->IndvHead, *next;
+		/* Next free the linked list of individuals */
+		while(indv){
+			next = indv->Next;
+			Mem_Free(indv);
+			indv = next;
+		}
+		Mem_Free(next);
+		Mem_Free(indv);
+		/* Finally free the actual species */
+		Mem_Free(Species[sp]);
+	}
+	/* Then free the entire array */
+	Mem_Free(Species); 
+
+	/* Free RGroup */
+	ForEachGroup(rg){
+		/* Free all pointers in the RGroup struct */
+		Mem_Free(RGroup[rg]->est_spp);
+		Mem_Free(RGroup[rg]->kills);
+		Mem_Free(RGroup[rg]->name);
+		Mem_Free(RGroup[rg]->species);
+		Mem_Free(RGroup[rg]);
+	}
+	/* Then free the entire array */
+	Mem_Free(RGroup);
 }
 
 /**************************************************************/
