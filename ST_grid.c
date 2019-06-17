@@ -326,7 +326,7 @@ void parm_free_memory(void);
 
 //from ST_main.c
 void Plot_Initialize(void);
-void deallocate_Globals(void);
+void deallocate_Globals(Bool isGriddedMode);
 
 //functions from ST_stats.c
 void stat_Collect(Int year);
@@ -1646,10 +1646,20 @@ static void _free_grid_memory(void)
 	for(i = 0; i < grid_Rows; ++i){
 		for(j = 0; j < grid_Cols; ++j){
 			Mem_Free(gridCells[i][j].mySpeciesInit.species_seed_avail);
+			Mem_Free(gridCells[i][j].mySeedDispersal->prob);
+			Mem_Free(gridCells[i][j].mySeedDispersal);
 			Mem_Free(gridCells[i][j].someKillage);
 			Mem_Free(gridCells[i][j].mySoils.lyr);
+
+			/* Use deallocate_Globals from ST_main to deallocate global variables,
+			   and free_all_sxw_memory from sxw to deallocate SXW variables. */
+			load_cell(i,j);
+			deallocate_Globals(TRUE);
+			free_all_sxw_memory();
+			unload_cell();
 		}
 	}
+
 	for(i = 0; i < grid_Rows; ++i){
 		Mem_Free(gridCells[i]);
 	}

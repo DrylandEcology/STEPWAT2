@@ -136,11 +136,7 @@ static void _make_swc_array(void);
 static void SXW_SW_Setup_Echo(void);
 static void SXW_Reinit(char* SOILWAT_file);
 
-//these last four functions are to be used in ST_grid.c
-void load_sxw_memory( RealD * grid_roots_max, RealD* grid_rootsXphen, RealD* grid_roots_active, RealD* grid_roots_active_rel, RealD* grid_roots_active_sum, RealD* grid_phen, RealD* grid_prod_bmass, RealD* grid_prod_pctlive );
 void save_sxw_memory( RealD * grid_roots_max, RealD* grid_rootsXphen, RealD* grid_roots_active, RealD* grid_roots_active_rel, RealD* grid_roots_active_sum, RealD* grid_phen, RealD* grid_prod_bmass, RealD* grid_prod_pctlive );
-void free_sxw_memory( void );
-void _deallocate_memory(void);
 SXW_t* getSXW(void);
 SXW_resourceType* getSXWResources(void);
 transp_t* getTranspWindow(void);
@@ -447,18 +443,6 @@ SXW_resourceType* getSXWResources(void){
 /* Returns a pointer to the local transp_window variable. */
 transp_t* getTranspWindow(void){
 	return transp_window;
-}
-
-/* Deallocate any sxw local pointers. When running the non-gridded mode
- * there is no need to call this since we only have one transp_window variable */
-void _deallocate_memory(void){
-	Mem_Free(transp_window->ratios);
-	Mem_Free(transp_window->transp);
-	Mem_Free(transp_window->SoS_array);
-	Mem_Free(transp_window);
-
-	Mem_Free(SXW);
-	Mem_Free(SXWResources);
 }
 
 /* Shallow copy variables into the local sxw variables. */
@@ -1139,26 +1123,13 @@ int getNTranspLayers(int veg_prod_type) {
 void free_all_sxw_memory( void ) {
 	int k;
 
-  free_sxw_memory();
-  Mem_Free(SXW->f_files);
-	Mem_Free(SXW->f_roots);
-	Mem_Free(SXW->f_phen);
-	Mem_Free(SXW->f_bvt);
-	Mem_Free(SXW->f_prod);
-	Mem_Free(SXW->f_watin);
+	/* Free transp_window */
+	Mem_Free(transp_window->ratios);
+	Mem_Free(transp_window->transp);
+	Mem_Free(transp_window->SoS_array);
+	Mem_Free(transp_window);
 
-	Mem_Free(SXW->transpTotal);
-	ForEachVegType(k) {
-		Mem_Free(SXW->transpVeg[k]);
-	}
-
-	//Mem_Free(SXW->sum_dSWA_repartitioned); // required for `_SWA_contribution_by_group`
-
-  Mem_Free(SXW->swc);
-}
-
-/***********************************************************/
-void free_sxw_memory( void ) {
+	/* Free SXWResources memory */
 	Mem_Free(SXWResources->_roots_max);
 	Mem_Free(SXWResources->_rootsXphen);
 	Mem_Free(SXWResources->_roots_active);
@@ -1167,29 +1138,20 @@ void free_sxw_memory( void ) {
 	Mem_Free(SXWResources->_phen);
 	Mem_Free(SXWResources->_prod_bmass);
 	Mem_Free(SXWResources->_prod_pctlive);
-}
+	Mem_Free(SXWResources);
 
-/***********************************************************/
-void load_sxw_memory( RealD* grid_roots_max, RealD* grid_rootsXphen, RealD* grid_roots_active, RealD* grid_roots_active_rel, RealD* grid_roots_active_sum, RealD* grid_phen, RealD* grid_prod_bmass, RealD* grid_prod_pctlive ) {
-	//load memory from the grid
-	free_sxw_memory();
-	SXWResources->_roots_max = Mem_Calloc(SXW->NGrps * SXW->NTrLyrs, sizeof(RealD), "load_sxw_memory()");
-	SXWResources->_rootsXphen = Mem_Calloc(SXW->NGrps * SXW->NPds * SXW->NTrLyrs, sizeof(RealD), "load_sxw_memory()");
-	SXWResources->_roots_active = Mem_Calloc(SXW->NGrps * SXW->NPds * SXW->NTrLyrs, sizeof(RealD), "load_sxw_memory()");
-	SXWResources->_roots_active_rel = Mem_Calloc(SXW->NGrps * SXW->NPds * SXW->NTrLyrs, sizeof(RealD), "load_sxw_memory()");
-	SXWResources->_roots_active_sum = Mem_Calloc(4 * SXW->NPds * SXW->NTrLyrs, sizeof(RealD), "load_sxw_memory()");
-	SXWResources->_phen = Mem_Calloc(SXW->NGrps * MAX_MONTHS, sizeof(RealD), "load_sxw_memory()");
-	SXWResources->_prod_bmass = Mem_Calloc(SXW->NGrps * MAX_MONTHS, sizeof(RealD), "load_sxw_memory()");
-	SXWResources->_prod_pctlive = Mem_Calloc(SXW->NGrps * MAX_MONTHS, sizeof(RealD), "load_sxw_memory()");
-
-	memcpy(SXWResources->_roots_max, grid_roots_max, SXW->NGrps * SXW->NTrLyrs * sizeof(RealD));
-	memcpy(SXWResources->_rootsXphen, grid_rootsXphen, SXW->NGrps * SXW->NPds * SXW->NTrLyrs * sizeof(RealD));
-	memcpy(SXWResources->_roots_active, grid_roots_active, SXW->NGrps * SXW->NPds * SXW->NTrLyrs * sizeof(RealD));
-	memcpy(SXWResources->_roots_active_rel, grid_roots_active_rel, SXW->NGrps * SXW->NPds * SXW->NTrLyrs * sizeof(RealD));
-	memcpy(SXWResources->_roots_active_sum, grid_roots_active_sum, 4 * SXW->NPds * SXW->NTrLyrs * sizeof(RealD));
-	memcpy(SXWResources->_phen, grid_phen, SXW->NGrps * MAX_MONTHS * sizeof(RealD));
-	memcpy(SXWResources->_prod_bmass, grid_prod_bmass, SXW->NGrps * MAX_MONTHS * sizeof(RealD));
-	memcpy(SXWResources->_prod_pctlive, grid_prod_pctlive, SXW->NGrps * MAX_MONTHS * sizeof(RealD));
+	/* Free SXW */
+	Mem_Free(SXW->f_roots);
+	Mem_Free(SXW->f_phen);
+	Mem_Free(SXW->f_bvt);
+	Mem_Free(SXW->f_prod);
+	Mem_Free(SXW->f_watin);
+	Mem_Free(SXW->transpTotal);
+	ForEachVegType(k) {
+		Mem_Free(SXW->transpVeg[k]);
+	}
+	Mem_Free(SXW->swc);
+	Mem_Free(SXW);
 }
 
 /***********************************************************/

@@ -92,7 +92,7 @@ extern Bool* _SomeKillage;
 /***********************************************************/
 void Plot_Initialize( void);
 void allocate_Globals(void);
-void deallocate_Globals(void);
+void deallocate_Globals(Bool isGriddedMode);
 
 static void usage(void) {
   char *s ="STEPPE plant community dynamics (SGS-LTER Jan-04).\n"
@@ -329,7 +329,7 @@ int main(int argc, char **argv) {
   SW_CTL_clear_model(TRUE); // de-allocate all memory
   free_all_sxw_memory();
 
-	deallocate_Globals();
+	deallocate_Globals(FALSE);
 
   printf("\nend program\n");
 	fprintf(progfp, "\n");
@@ -424,15 +424,18 @@ void allocate_Globals(void){
 }
 
 /* Deallocates the global variables */
-void deallocate_Globals(void){
+void deallocate_Globals(Bool isGriddedMode){
 	GrpIndex rg;
 	SppIndex sp;
-	Mem_Free(Env);
-	Mem_Free(Succulent);
-	Mem_Free(Globals);
-	Mem_Free(Plot);
-	Mem_Free(_SomeKillage);
 
+	if(!isGriddedMode){
+		Mem_Free(Env);
+		Mem_Free(Succulent);
+		Mem_Free(Globals);
+		Mem_Free(Plot);
+		Mem_Free(_SomeKillage);
+	}
+	
 	/* Free Species */
 	ForEachSpecies(sp){
 		/* Start by freeing any pointers in the Species struct */
