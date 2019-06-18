@@ -295,6 +295,7 @@ extern Bool* _SomeKillage;
 // Declare functions defined elsewhere:
 void runGrid(void); //to be called from ST_main.c
 void _kill_annuals(void);
+void _kill_maxage(void);
 void _kill_extra_growth(void);
 void rgroup_Extirpate(GrpIndex rg);
 
@@ -616,6 +617,7 @@ void runGrid(void)
 					stat_Collect(year); 		// Update the accumulators
 
 				    _kill_annuals(); 			// Kill annuals
+				    _kill_maxage();             // Kill plants that reach max age
 					proportion_Recovery(); 		// Recover from any disturbances
 					_kill_extra_growth(); 		// Kill superfluous growth
 
@@ -809,6 +811,7 @@ static void _run_spinup(void)
 					mort_EndOfYear(); 			// End of year mortality.
 
 				    _kill_annuals(); 			// Kill annuals
+				    _kill_maxage();             // Kill plants that reach max age
 					proportion_Recovery(); 		// Recover from any disturbances
 					_kill_extra_growth(); 		// Kill superfluous growth			
 				} /* end column */
