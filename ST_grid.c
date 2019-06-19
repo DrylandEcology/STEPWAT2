@@ -3461,13 +3461,14 @@ static void _read_grid_setup(void)
 }
 
 void Output_AllCellAvgBmass(const char * filename){
-	int i, j, year;	//for iterating
+	int i, j, year, nobs = 0;	//for iterating
 	GrpIndex rg;	//for iterating
 	SppIndex sp;	//for iterating
 
 	/* One accumulator for every accumulator in ST_stats.c */
-	float ppt, temp, dist, wildfire, grp[SuperGlobals.max_rgroups], gsize[SuperGlobals.max_rgroups],
-		  gpr[SuperGlobals.max_rgroups], prescribedfire[SuperGlobals.max_rgroups],
+	float ppt, pptstd, pptsos, temp, tempstd, tempsos, dist, wildfire, grp[SuperGlobals.max_rgroups], grpstd[SuperGlobals.max_rgroups], grpsos[SuperGlobals.max_rgroups], 
+	      gsize[SuperGlobals.max_rgroups],
+		  gpr[SuperGlobals.max_rgroups], gprsos[SuperGlobals.max_rgroups], gprstd[SuperGlobals.max_rgroups], prescribedfire[SuperGlobals.max_rgroups],
 		  spp[SuperGlobals.max_spp_per_grp * SuperGlobals.max_rgroups],
 		  indv[SuperGlobals.max_spp_per_grp * SuperGlobals.max_rgroups];
 
@@ -3490,14 +3491,23 @@ void Output_AllCellAvgBmass(const char * filename){
 		*buf = '\0';	//Initialize buffer as empty string
 
 		/* -------- Initialize all accumulators to 0 ------- */
-		ppt = 0;		
+		nobs = 0;
+		ppt = 0;
+		pptstd = 0;
+		pptsos = 0;		
 		temp = 0;
+		tempstd = 0;
+		tempsos = 0;
 		dist = 0;
 		wildfire = 0;
 		ForEachGroup(rg){
 			grp[rg] = 0;
+			grpsos[rg] = 0;
+			grpstd[rg] = 0;
 			gsize[rg] = 0;
-			grp[rg] = 0;
+			gpr[rg] = 0;
+			gprsos[rg] = 0;
+			gprstd[rg] = 0; 
 			prescribedfire[rg] = 0;
 		}
 		ForEachSpecies(sp){
@@ -3509,20 +3519,38 @@ void Output_AllCellAvgBmass(const char * filename){
 		for(i = 0; i < grid_Rows; ++i){ // For each row
 			for(j = 0; j < grid_Cols; ++j){ // For each column
 				/* ------------- Accumulate requested output ----------------- */
-				if(BmassFlags.ppt) ppt += gridCells[i][j]._Ppt->s[year].ave;
-				if(BmassFlags.tmp) temp += gridCells[i][j]._Temp->s[year].ave;
+				nobs++;
+				if(BmassFlags.ppt) {
+					
+					float old_ppt_ave = ppt;
+					ppt = get_running_mean(nobs, ppt, gridCells[i][j]._Ppt->s[year].ave);
+					pptsos += get_running_sqr(old_ppt_ave, ppt, gridCells[i][j]._Ppt->s[year].ave);
+					pptstd = final_running_sd(nobs, pptsos);
+				}
+				if(BmassFlags.tmp) {
+					float old_temp_ave = temp;
+					temp = get_running_mean(nobs, temp, gridCells[i][j]._Temp->s[year].ave);
+					tempsos += get_running_sqr(old_temp_ave, temp, gridCells[i][j]._Temp->s[year].ave);
+					tempstd = final_running_sd(nobs, tempsos);
+				}
 				if(BmassFlags.dist) dist += gridCells[i][j]._Dist->s[year].nobs;
 				if(BmassFlags.grpb) {
 					if(BmassFlags.wildfire){
 						wildfire += gridCells[i][j]._Gwf->wildfire[year];
 					}
 					ForEachGroup(rg){
-						grp[rg] += gridCells[i][j]._Grp[rg].s[year].ave;
+						float old_grp_ave = grp[rg];
+						grp[rg] = get_running_mean(nobs, grp[rg], gridCells[i][j]._Grp[rg].s[year].ave);
+						grpsos[rg] += get_running_sqr(old_grp_ave, grp[rg], gridCells[i][j]._Grp[rg].s[year].ave);
+						grpstd[rg] = final_running_sd(nobs, grpsos[rg]);
 						if(BmassFlags.size){
 							gsize[rg] += gridCells[i][j]._Gsize[rg].s[year].ave;
 						}
 						if(BmassFlags.pr){
-							gpr[rg] += gridCells[i][j]._Gpr[rg].s[year].ave;
+							float old_gpr_ave = gpr[rg];
+							gpr[rg] = get_running_mean(nobs, gpr[rg], gridCells[i][j]._Gpr[rg].s[year].ave);
+							gprsos[rg] += get_running_sqr(old_gpr_ave, gpr[rg], gridCells[i][j]._Gpr[rg].s[year].ave);
+							gprstd[rg] = final_running_sd(nobs, gprsos[rg]);
 						}
 						if(BmassFlags.prescribedfire){
 							prescribedfire[rg] += gridCells[i][j]._Gwf->prescribedFire[rg][year];
@@ -3542,14 +3570,10 @@ void Output_AllCellAvgBmass(const char * filename){
 		} // End for each row
 
 		/* ---------------- Average all accumulators ---------------- */
-		ppt /= grid_Cells;
-		temp /= grid_Cells;
 		dist /= grid_Cells;
 		wildfire /= grid_Cells;
 		ForEachGroup(rg){
-			grp[rg] /= grid_Cells;
 			gsize[rg] /= grid_Cells;
-			grp[rg] /= grid_Cells;
 			prescribedfire[rg] /= grid_Cells;
 		}
 		ForEachSpecies(sp){
@@ -3568,7 +3592,7 @@ void Output_AllCellAvgBmass(const char * filename){
 			strcat(buf, tbuf);
 		}
 		if(BmassFlags.ppt){
-			sprintf(tbuf, "%f%cTODO%c", ppt, sep, sep);
+			sprintf(tbuf, "%f%c%f%c", ppt, sep, pptstd, sep);
 			strcat(buf, tbuf);
 		}
 		if (BmassFlags.pclass) {
@@ -3576,7 +3600,7 @@ void Output_AllCellAvgBmass(const char * filename){
       		strcat(buf, tbuf);
     	}
 		if(BmassFlags.tmp){
-			sprintf(tbuf, "%f%cTODO%c", temp, sep, sep);
+			sprintf(tbuf, "%f%c%f%c", temp, sep, tempstd, sep);
 			strcat(buf, tbuf);
 		}
 		if(BmassFlags.grpb){
@@ -3585,7 +3609,7 @@ void Output_AllCellAvgBmass(const char * filename){
 				strcat(buf, tbuf);
 			}
 			ForEachGroup(rg){
-				sprintf(tbuf, "%f%cTODO%c", grp[rg], sep, sep);
+				sprintf(tbuf, "%f%c%f%c", grp[rg], sep, grpstd[rg], sep);
 				strcat(buf, tbuf);
 
 				if(BmassFlags.size){
@@ -3593,7 +3617,7 @@ void Output_AllCellAvgBmass(const char * filename){
 					strcat(buf, tbuf);
 				}
 				if(BmassFlags.pr){
-					sprintf(tbuf, "%f%cTODO%c", gpr[rg], sep, sep);
+					sprintf(tbuf, "%f%c%f%c", gpr[rg], sep, gprstd[rg], sep);
 					strcat(buf, tbuf);
 				}
 				if(BmassFlags.prescribedfire){
