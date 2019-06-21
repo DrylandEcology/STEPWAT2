@@ -538,8 +538,16 @@ void runGrid(void)
 	unload_cell();
 	/* END printing general info */
 
-	if (sd_Option2a || sd_Option2b)
+	if (sd_Option2a || sd_Option2b) {
 		_run_spinup();				// does the initial spinup
+	} else {
+		ChDir(grid_directories[GRID_DIRECTORY_STEPWAT_INPUTS]);
+		SXW_Reset(gridCells[0][0].mySXW->f_watin);
+		//TODO: This is a shortcut. swc history is not used and shouldn't be until this is fixed.
+		Mem_Free(SW_Soilwat.hist.file_prefix);
+		SW_Soilwat.hist.file_prefix = NULL;
+		ChDir("..");
+	}
 
 	// SOILWAT resets SW_Weather.name_prefix every iteration. This is not the behavior we want 
 	// so the name is stored here.
