@@ -383,7 +383,6 @@ static void _init_spinup_globals(void);
 static void allocate_gridCells(int rows, int cols);
 static void allocate_accumulators(void);
 static void _load_grid_globals(void);
-static void _load_spinup_globals(void);
 static void _free_grid_memory(void);
 static void _free_spinup_memory(void);
 static void _free_grid_globals(void);
@@ -392,8 +391,6 @@ static void _load_cell(int row, int col, int year, Bool useAccumulators);
 static void load_cell(int row, int col);
 static void unload_cell(void);
 static void _load_spinup_cell(int cell);
-static void _save_cell(int row, int col, int year, Bool useAccumulators);
-static void _save_spinup_cell(int cell);
 static void _read_disturbances_in(void);
 static void _read_soils_in(void);
 static void _init_soil_layers(int cell, int isSpinup);
@@ -705,11 +702,6 @@ static void _run_spinup(void)
 	SppIndex sp;
 	IntS k;
 
-	/* 'Globals' is not allocated in gridded mode. Therefore we need to implicitely remember years
-	   and iterations. gridCells[0][0] is guaranteed to exist because it is populated first. */
-	int iterations = SuperGlobals.runModelIterations;
-	int total_years = SuperGlobals.runModelYears;
-
 	/* killedany for mortality functions, temporary_storage for swapping variables */
 	Bool killedany, temporary_storage;
 
@@ -773,7 +765,7 @@ static void _run_spinup(void)
 		} /* End for each row */
 		unload_cell(); // Reset the global variables
 
-		for (year = 1; year <= total_years; year++)
+		for (year = 1; year <= SuperGlobals.runModelYears; year++)
 		{ //for each year
 			for (i = 0; i < grid_Rows; ++i)
 			{ // for each row
@@ -1638,7 +1630,6 @@ static void _free_grid_memory(void)
 {
 	//frees all the memory allocated in this file ST_Grid.c (most of it is dynamically allocated in _init_grid_globals() & _load_grid_globals() functions)
 	int i, j;
-	GrpIndex c;
 	SppIndex s;
 
 	/* Free memory that we have allocated in ST_grid.c */
@@ -1990,245 +1981,6 @@ static void _load_spinup_cell(int cell)
 		memcpy(SW_Site.lyr[j], spinup_SW_Site[cell].lyr[j],
 				sizeof(SW_LAYER_INFO));
 	}
-}
-
-/***********************************************************/
-static void _save_cell(int row, int col, int year, Bool useAccumulators)
-{
-	// saves the specified cell into the grid variables
-
-	int cell = col + ((row - 1) * grid_Cols) - 1; // converts the row/col into an array index
-	int j, k;
-	GrpIndex c;
-	SppIndex s;
-	//fprintf(stderr, "saving cell: %d\n", cell);
-
-	if (useAccumulators)
-		stat_Save_Accumulators(cell, year);
-
-	ForEachSpecies(s)
-	{
-		if (!Species[s]->use_me)
-			continue;
-
-		Mem_Free(grid_Species[s][cell].kills);
-		Mem_Free(grid_Species[s][cell].seedprod);
-		_free_head(grid_Species[s][cell].IndvHead);
-
-		grid_Species[s][cell] = *Species[s];
-
-		grid_Species[s][cell].kills = Mem_Calloc(Species[s]->max_age,
-				sizeof(IntUS), "_save_cell(grid_Species[cell][s].kills)");
-		grid_Species[s][cell].seedprod = Mem_Calloc(Species[s]->viable_yrs,
-				sizeof(RealF), "_save_cell(grid_Species[cell][s].seedprod)");
-
-		memcpy(grid_Species[s][cell].kills, Species[s]->kills,
-				Species[s]->max_age * sizeof(IntUS));
-		memcpy(grid_Species[s][cell].seedprod, Species[s]->seedprod,
-				Species[s]->viable_yrs * sizeof(RealF));
-		grid_Species[s][cell].IndvHead = _copy_head(Species[s]->IndvHead);
-	}
-
-	ForEachGroup(c)
-	{
-		if (!RGroup[c]->use_me)
-			continue;
-		Mem_Free(grid_RGroup[c][cell].kills); //kills is the only pointer in the resourcegroup_st struct (which is what RGroup is defined as)
-
-		grid_RGroup[c][cell] = *RGroup[c]; //does a shallow copy, we have to do the freeing/malloc/memcpy to deep copy (i.e. copy the values in the pointers instead of the addresses) the pointers
-
-		grid_RGroup[c][cell].kills = Mem_Calloc(RGroup[c]->max_age,
-				sizeof(IntUS), "_save_cell(grid_RGroup[cell][c].kills)");
-		memcpy(grid_RGroup[c][cell].kills, RGroup[c]->kills,
-				RGroup[c]->max_age * sizeof(IntUS));
-	}
-
-	grid_Succulent[cell] = *Succulent;
-	grid_Env[cell] = *Env;
-	grid_Plot[cell] = *Plot;
-	grid_Globals[cell] = *Globals;
-
-	Mem_Free(grid_SXW[cell].f_roots);
-	Mem_Free(grid_SXW[cell].f_phen);
-	Mem_Free(grid_SXW[cell].f_bvt);
-	Mem_Free(grid_SXW[cell].f_prod);
-	Mem_Free(grid_SXW[cell].f_watin);
-	Mem_Free(grid_SXW[cell].transpTotal);
-	ForEachVegType(k) {
-		Mem_Free(grid_SXW[cell].transpVeg[k]);
-	}
-	Mem_Free(grid_SXW[cell].swc);
-	for (j = 0;
-			j < grid_SW_Site[cell].n_layers + grid_SW_Site[cell].deepdrain;
-			j++)
-		Mem_Free(grid_SW_Site[cell].lyr[j]);
-	Mem_Free(grid_SW_Site[cell].lyr);
-
-	grid_SXW[cell] = *SXW;
-	grid_SW_Site[cell] = SW_Site;
-	grid_SW_Soilwat[cell] = SW_Soilwat;
-	grid_SW_VegProd[cell] = SW_VegProd;
-
-	grid_SXW[cell].transpTotal = Mem_Calloc(SXW->NPds * SXW->NSoLyrs,
-			sizeof(RealD), "_save_cell(grid_SXW[cell].transp)");
-	ForEachVegType(k) {
-		grid_SXW[cell].transpVeg[k] = Mem_Calloc(SXW->NPds * SXW->NSoLyrs,
-				sizeof(RealD), "_save_cell(grid_SXW[cell].transp)");
-	}
-	grid_SXW[cell].swc = Mem_Calloc(SXW->NPds * SXW->NSoLyrs, sizeof(RealF),
-			"_save_cell(grid_SXW[cell].swc)");
-
-	grid_SXW[cell].f_roots = Str_Dup(SXW->f_roots);
-	grid_SXW[cell].f_phen = Str_Dup(SXW->f_phen);
-	grid_SXW[cell].f_bvt = Str_Dup(SXW->f_bvt);
-	grid_SXW[cell].f_prod = Str_Dup(SXW->f_prod);
-	grid_SXW[cell].f_watin = Str_Dup(SXW->f_watin);
-	memcpy(grid_SXW[cell].transpTotal, SXW->transpTotal,
-			SXW->NPds * SXW->NSoLyrs * sizeof(RealD));
-	ForEachVegType(k) {
-		memcpy(grid_SXW[cell].transpVeg[k], SXW->transpVeg[k],
-				SXW->NPds * SXW->NSoLyrs * sizeof(RealD));
-	}
-	memcpy(grid_SXW[cell].swc, SXW->swc,
-			SXW->NPds * SXW->NSoLyrs * sizeof(RealF));
-
-	grid_SW_Site[cell].lyr = Mem_Calloc(
-			SW_Site.n_layers + SW_Site.deepdrain, sizeof(SW_LAYER_INFO *),
-			"_save_cell(grid_SW_Site[cell].lyr[j])");
-	for (j = 0; j < SW_Site.n_layers + SW_Site.deepdrain; j++)
-	{
-		grid_SW_Site[cell].lyr[j] = Mem_Calloc(1, sizeof(SW_LAYER_INFO),
-				"_save_cell(grid_SW_Site[cell].lyr[j])");
-		memcpy(grid_SW_Site[cell].lyr[j], SW_Site.lyr[j],
-				sizeof(SW_LAYER_INFO));
-	}
-
-	if (UseSoils)
-		save_sxw_memory(grid_SXW_ptrs[cell].roots_max,
-				grid_SXW_ptrs[cell].rootsXphen,
-				grid_SXW_ptrs[cell].roots_active,
-				grid_SXW_ptrs[cell].roots_active_rel,
-				grid_SXW_ptrs[cell].roots_active_sum,
-				grid_SXW_ptrs[cell].phen, grid_SXW_ptrs[cell].prod_bmass,
-				grid_SXW_ptrs[cell].prod_pctlive);
-}
-
-/***********************************************************/
-static void _save_spinup_cell(int cell)
-{
-	// saves the specified cell into the grid variables (from the spinup)
-
-	int j, k;
-	GrpIndex c;
-	SppIndex s;
-
-	ForEachSpecies(s)
-	{
-		if (!Species[s]->use_me)
-			continue;
-
-		Mem_Free(spinup_Species[s][cell].kills);
-		Mem_Free(spinup_Species[s][cell].seedprod);
-		_free_head(spinup_Species[s][cell].IndvHead);
-
-		spinup_Species[s][cell] = *Species[s];
-
-		spinup_Species[s][cell].kills = Mem_Calloc(Species[s]->max_age,
-				sizeof(IntUS), "_save_cell(grid_Species[cell][s].kills)");
-		spinup_Species[s][cell].seedprod = Mem_Calloc(Species[s]->viable_yrs,
-				sizeof(RealF), "_save_cell(grid_Species[cell][s].seedprod)");
-
-		memcpy(spinup_Species[s][cell].kills, Species[s]->kills,
-				Species[s]->max_age * sizeof(IntUS));
-		memcpy(spinup_Species[s][cell].seedprod, Species[s]->seedprod,
-				Species[s]->viable_yrs * sizeof(RealF));
-		spinup_Species[s][cell].IndvHead = _copy_head(Species[s]->IndvHead);
-	}
-
-	ForEachGroup(c)
-	{
-		if (!RGroup[c]->use_me)
-			continue;
-		Mem_Free(spinup_RGroup[c][cell].kills); //kills is the only pointer in the resourcegroup_st struct (which is what RGroup is defined as)
-
-		spinup_RGroup[c][cell] = *RGroup[c]; //does a shallow copy, we have to do the freeing/malloc/memcpy to deep copy (i.e. copy the values in the pointers instead of the addresses) the pointers
-
-		spinup_RGroup[c][cell].kills = Mem_Calloc(RGroup[c]->max_age,
-				sizeof(IntUS), "_save_cell(grid_RGroup[cell][c].kills)");
-		memcpy(spinup_RGroup[c][cell].kills, RGroup[c]->kills,
-				RGroup[c]->max_age * sizeof(IntUS));
-	}
-
-	spinup_Succulent[cell] = *Succulent;
-	spinup_Env[cell] = *Env;
-	spinup_Plot[cell] = *Plot;
-	spinup_Globals[cell] = *Globals;
-
-	Mem_Free(spinup_SXW[cell].f_roots);
-	Mem_Free(spinup_SXW[cell].f_phen);
-	Mem_Free(spinup_SXW[cell].f_bvt);
-	Mem_Free(spinup_SXW[cell].f_prod);
-	Mem_Free(spinup_SXW[cell].f_watin);
-	Mem_Free(spinup_SXW[cell].transpTotal);
-	ForEachVegType(k) {
-		Mem_Free(spinup_SXW[cell].transpVeg[k]);
-	}
-	Mem_Free(spinup_SXW[cell].swc);
-	for (j = 0;
-			j
-					< spinup_SW_Site[cell].n_layers
-							+ spinup_SW_Site[cell].deepdrain; j++)
-		Mem_Free(spinup_SW_Site[cell].lyr[j]);
-	Mem_Free(spinup_SW_Site[cell].lyr);
-
-	spinup_SXW[cell] = *SXW;
-	spinup_SW_Site[cell] = SW_Site;
-	spinup_SW_Soilwat[cell] = SW_Soilwat;
-	spinup_SW_VegProd[cell] = SW_VegProd;
-
-	spinup_SXW[cell].transpTotal = Mem_Calloc(SXW->NPds * SXW->NSoLyrs,
-			sizeof(RealD), "_save_cell(grid_SXW[cell].transp)");
-	ForEachVegType(k) {
-		spinup_SXW[cell].transpVeg[k] = Mem_Calloc(SXW->NPds * SXW->NSoLyrs,
-				sizeof(RealD), "_save_cell(grid_SXW[cell].transp)");
-	}
-	spinup_SXW[cell].swc = Mem_Calloc(SXW->NPds * SXW->NSoLyrs, sizeof(RealF),
-			"_save_cell(grid_SXW[cell].swc)");
-
-	spinup_SXW[cell].f_roots = Str_Dup(SXW->f_roots);
-	spinup_SXW[cell].f_phen = Str_Dup(SXW->f_phen);
-	spinup_SXW[cell].f_bvt = Str_Dup(SXW->f_bvt);
-	spinup_SXW[cell].f_prod = Str_Dup(SXW->f_prod);
-	spinup_SXW[cell].f_watin = Str_Dup(SXW->f_watin);
-	memcpy(spinup_SXW[cell].transpTotal, SXW->transpTotal,
-			SXW->NPds * SXW->NSoLyrs * sizeof(RealD));
-	ForEachVegType(k) {
-		memcpy(spinup_SXW[cell].transpVeg[k], SXW->transpVeg[k],
-				SXW->NPds * SXW->NSoLyrs * sizeof(RealD));
-	}
-	memcpy(spinup_SXW[cell].swc, SXW->swc,
-			SXW->NPds * SXW->NSoLyrs * sizeof(RealF));
-
-	spinup_SW_Site[cell].lyr = Mem_Calloc(
-			SW_Site.n_layers + SW_Site.deepdrain, sizeof(SW_LAYER_INFO *),
-			"_save_cell(grid_SW_Site[cell].lyr[j])");
-	for (j = 0; j < SW_Site.n_layers + SW_Site.deepdrain; j++)
-	{
-		spinup_SW_Site[cell].lyr[j] = Mem_Calloc(1, sizeof(SW_LAYER_INFO),
-				"_save_cell(grid_SW_Site[cell].lyr[j])");
-		memcpy(spinup_SW_Site[cell].lyr[j], SW_Site.lyr[j],
-				sizeof(SW_LAYER_INFO));
-	}
-
-	if (UseSoils)
-		save_sxw_memory(spinup_SXW_ptrs[cell].roots_max,
-				spinup_SXW_ptrs[cell].rootsXphen,
-				spinup_SXW_ptrs[cell].roots_active,
-				spinup_SXW_ptrs[cell].roots_active_rel,
-				spinup_SXW_ptrs[cell].roots_active_sum,
-				spinup_SXW_ptrs[cell].phen,
-				spinup_SXW_ptrs[cell].prod_bmass,
-				spinup_SXW_ptrs[cell].prod_pctlive);
 }
 
 /**************************************************************/
@@ -3593,7 +3345,7 @@ void Output_AllCellAvgBmass(const char * filename){
 			sprintf(buf,"%d%c", year+1, sep);
 		}
 		if(BmassFlags.dist){
-			sprintf(tbuf, "%ld%c", dist, sep);
+			sprintf(tbuf, "%f%c", dist, sep);
 			strcat(buf, tbuf);
 		}
 		if(BmassFlags.ppt){
