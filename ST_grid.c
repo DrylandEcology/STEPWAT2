@@ -1644,18 +1644,23 @@ static void _free_grid_memory(void)
 	/* Free memory that we have allocated in ST_grid.c */
 	for(i = 0; i < grid_Rows; ++i){
 		for(j = 0; j < grid_Cols; ++j){
-			Mem_Free(gridCells[i][j].mySpeciesInit.species_seed_avail);
-			Mem_Free(gridCells[i][j].mySeedDispersal->prob);
-			Mem_Free(gridCells[i][j].mySeedDispersal);
-			Mem_Free(gridCells[i][j].someKillage);
-			Mem_Free(gridCells[i][j].mySoils.lyr);
-
 			/* Use deallocate_Globals from ST_main to deallocate global variables,
 			   and free_all_sxw_memory from sxw to deallocate SXW variables. */
 			load_cell(i,j);
 			deallocate_Globals(TRUE);
 			free_all_sxw_memory();
+			// If seed dispersal is on we allocated additional memory
+			if(UseSeedDispersal) {
+				ForEachSpecies(s) {
+					Mem_Free(gridCells[i][j].mySeedDispersal[s].prob);
+				}
+			}
 			unload_cell();
+
+			Mem_Free(gridCells[i][j].mySpeciesInit.species_seed_avail);
+			Mem_Free(gridCells[i][j].mySeedDispersal);
+			Mem_Free(gridCells[i][j].someKillage);
+			Mem_Free(gridCells[i][j].mySoils.lyr);
 		}
 	}
 
