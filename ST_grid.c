@@ -640,7 +640,13 @@ void runGrid(void)
 		unload_cell(); 
 		//reset soilwat to initial condition
 		ChDir(grid_directories[GRID_DIRECTORY_STEPWAT_INPUTS]);
-		SXW_Reset(gridCells[0][0].mySXW->f_watin);
+		for(i = 0; i < grid_Rows; ++i){
+			for(j = 0; j < grid_Cols; ++j){
+				load_cell(i, j);
+				SXW_Reset(gridCells[i][j].mySXW->f_watin);
+				unload_cell();
+			}
+		}
 		Mem_Free(SW_Soilwat.hist.file_prefix);
 		SW_Soilwat.hist.file_prefix = NULL;
 		ChDir("..");
