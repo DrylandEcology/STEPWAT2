@@ -541,11 +541,10 @@ void runGrid(void)
 	if (sd_Option2a || sd_Option2b) {
 		_run_spinup();				// does the initial spinup
 	} else {
+		/* If no spinup is requested we still need to reset SXW to set the historical weather
+		   file names. */
 		ChDir(grid_directories[GRID_DIRECTORY_STEPWAT_INPUTS]);
 		SXW_Reset(gridCells[0][0].mySXW->f_watin);
-		//TODO: This is a shortcut. swc history is not used and shouldn't be until this is fixed.
-		Mem_Free(SW_Soilwat.hist.file_prefix);
-		SW_Soilwat.hist.file_prefix = NULL;
 		ChDir("..");
 	}
 
