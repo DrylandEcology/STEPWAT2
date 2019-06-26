@@ -8,11 +8,5 @@
 1		# output header (ie. the names of all the species)?  1 means yes, 0 means no.  Suggested: yes, as it's hard to figure out what all the numbers mean elsewise.
 ,		# output seperator... specify one of the following as a separator: t = tab, s = space, or any single character such as , | : etc (excluding '#','t', and 's').  Suggested: tab.
 
-#Spinup and Seed Availability options
-#NOTE: options 1a, 2a, and Xb are mutually exclusive.  Options 1b and 2b can be combined.  Cells can be empty of plants.
-10		# option 1) number of years N at the beginning of the simulation during which seeds are available for germination.  Input: N years.
-0		# option 1a) all cells and species.  1 means yes, 0 means no.
-0		# option 1b) input for each cell: seeds of which species are available during those first N years [names & order of all species in species.in].  1 means yes, 0 means no.
-# option 2) run one site without dispersal (ie, conditions of 1-site StepWat, ie, seeds available in every cell for every year) for inputted # of years x replications (eg, 500 years times 10 replications) as spinup
-1		# option 2a) use this spinup as init condition in all cells.  1 means yes, 0 means no.
-0		# option 2b) input for each cell whether or not to use this spinup as inits.  1 means yes, 0 means no. 
+#Seed Availability options
+10		# number of years N at the beginning of the simulation during which seeds are available for germination.  Input: N years.

@@ -148,7 +148,7 @@ struct _grid_init_species_st
 	int use_SpinUp;
 	/* Array of Boolean values. TRUE if given species
 	   should be included in spinup */
-	int *species_seed_avail;
+	int *shouldBeInitialized;
 }typedef Grid_Init_Species_St;
 
 /* Struct to hold all plot-specific parameters */
@@ -231,11 +231,18 @@ enum
     N_GRID_FILES
 };
 
+/* Enumerator for initialization types */
+enum
+{
+	INIT_WITH_SPINUP,
+	INIT_WITH_SEEDS,
+	INIT_WITH_NOTHING
+};
+
 char *grid_files[N_GRID_FILES], *grid_directories[N_GRID_DIRECTORIES], sd_Sep;
 
 int grid_Cols, grid_Rows, grid_Cells, sd_NYearsSeedsAvailable;
-int UseDisturbances, UseSoils, sd_DoOutput, sd_MakeHeader, sd_Option1a,
-		sd_Option1b, sd_Option2a, sd_Option2b; //these are treated like booleans
+int UseDisturbances, UseSoils, sd_DoOutput, sd_MakeHeader; //these are treated like booleans
 
 // these variables are for storing the globals in STEPPE... they are dynamically allocated/freed
 SpeciesType **grid_Species, **spinup_Species;
@@ -522,23 +529,24 @@ void runGrid(void)
 	Mem_Free(SW_Soilwat.hist.file_prefix);
 	SW_Soilwat.hist.file_prefix = NULL;
 
-	/* Print some general information to stdout */
-	load_cell(0,0);
+	/* ------------------- Print some general information to stdout ----------------------- */
 	printf("Number of layers: %d\n", SW_Site.n_layers);
     printf("Number of iterations: %d\n", SuperGlobals.runModelIterations);
     printf("Number of years: %d\n", SuperGlobals.runModelYears);
 	printf("Number of cells: %d\n\n", grid_Cells);
 	if(UseDisturbances) printf("Using grid Disturbances file.\n");
 	if(UseSoils) printf("Using grid soils file\n");
-	if(UseSeedDispersal){
+	if(InitializationMethod == INIT_WITH_SEEDS){
 		 printf("Seeds availible for %d years at the start of the simulation.\n",sd_NYearsSeedsAvailable);
-		 if(sd_Option1a) printf("All species and cells are eligible for seed dispersal.\n");
+	} else if(InitializationMethod == INIT_WITH_SPINUP) { 
+		printf("Running Spinup\n");
 	}
-	if(sd_Option2a) printf("Running Spinup for %s cells.\n", sd_Option2b ? "all" : "specified");
-	unload_cell();
-	/* END printing general info */
+	if(UseSeedDispersal){
+		printf("Dispersing seeds between cells\n");
+	}
+	/* --------------------------- END printing general info -------------------------------- */
 
-	if (sd_Option2a || sd_Option2b) {
+	if (InitializationMethod == INIT_WITH_SPINUP) {
 		_run_spinup();				// does the initial spinup
 	} else {
 		/* If no spinup is requested we still need to reset SXW to set the historical weather
@@ -716,7 +724,7 @@ static void _run_spinup(void)
 	IntS k;
 
 	/* killedany for mortality functions, temporary_storage for swapping variables */
-	Bool killedany, temporary_storage;
+	Bool killedany, temporary_storage, isAtLeastOneSpeciesOn;
 
 	DuringSpinup = TRUE;
 
@@ -752,12 +760,16 @@ static void _run_spinup(void)
 		}
 		unload_cell(); // Reset the global variables
 
-		/* Before we start iterating we need to swap Species[sp]->use_me and mySpeciesInit.species_seed_avail[sp].
-		   species_seed_avail is an array of booleans that represent whether the given species should be used 
-		   in spinup. use_me is a boolean that represents whether the given species should be used in production.
+		/* Before we start iterating we need to swap Species[sp]->use_me and mySpeciesInit.shouldBeInitialized[sp].
+		   shouldBeInitialized is an array of booleans that represent whether the given species should be used 
+		   in initialization. use_me is a boolean that represents whether the given species should be used in production.
 		   By swaping them we save space, but we have to remember to swap them back before the production run. */
 		for(i = 0; i < grid_Rows; ++i){
 			for(j = 0; j < grid_Cols; ++j){
+				if(!gridCells[i][j].mySpeciesInit.use_SpinUp){
+					continue;
+				}
+				isAtLeastOneSpeciesOn = FALSE;
 				load_cell(i, j);	/* We could do this without loading the cell, but there would be no guarantee
 									   that ForEachGroup would iterate correctly */
 
@@ -769,11 +781,19 @@ static void _run_spinup(void)
 						// Temporarily store use_me
 						temporary_storage = Species[sp]->use_me;
 						// Swap use_me
-						Species[sp]->use_me = gridCells[i][j].mySpeciesInit.species_seed_avail[sp]; 
-						// Swap species_seed_avail[sp]
-						gridCells[i][j].mySpeciesInit.species_seed_avail[sp] = temporary_storage;
+						Species[sp]->use_me = gridCells[i][j].mySpeciesInit.shouldBeInitialized[sp]; 
+						// Swap shouldBeInitialized[sp]
+						gridCells[i][j].mySpeciesInit.shouldBeInitialized[sp] = temporary_storage;
+						/* Make sure at least one species in this cell is turned on */
+						if(Species[sp]->use_me) isAtLeastOneSpeciesOn = TRUE;
 					} /* End for each species */
 				} /* End for each group */
+
+				if(!isAtLeastOneSpeciesOn){
+					LogError(logfp, LOGWARN, 
+					         "Grid Cell %d %d is turned on for spinup, but none of the species in the cell are turned on.\n"
+							 "This can be corrected in the init species file.", i, j);
+				}
 			} /* End for each column */
 		} /* End for each row */
 		unload_cell(); // Reset the global variables
@@ -833,9 +853,12 @@ static void _run_spinup(void)
 		ChDir("..");
 	} /* End iterations */
 
-	/* Swap back Species[sp]->use_me and species_seed_avail[sp]. */
+	/* Swap back Species[sp]->use_me and shouldBeInitialized[sp]. */
 	for(i = 0; i < grid_Rows; ++i){
 		for(j = 0; j < grid_Cols; ++j){
+			if(!gridCells[i][j].mySpeciesInit.use_SpinUp){
+					continue;
+			}
 			load_cell(i, j);	/* We could do this without loading the cell, but there would be no guarantee
 								   that ForEachGroup would iterate correctly */
 			/* Begin swaping variables */
@@ -844,9 +867,9 @@ static void _run_spinup(void)
 					// Temporarily store use_me
 					temporary_storage = Species[sp]->use_me;
 					// Swap use_me
-					Species[sp]->use_me = gridCells[i][j].mySpeciesInit.species_seed_avail[sp]; 
-					// Swap species_seed_avail[sp]
-					gridCells[i][j].mySpeciesInit.species_seed_avail[sp] = temporary_storage;
+					Species[sp]->use_me = gridCells[i][j].mySpeciesInit.shouldBeInitialized[sp]; 
+					// Swap shouldBeInitialized[sp]
+					gridCells[i][j].mySpeciesInit.shouldBeInitialized[sp] = temporary_storage;
 				} /* End for each species */
 			} /* End for each group */
 		} /* End for each column */
@@ -907,7 +930,7 @@ static void _init_grid_inputs(void)
 
 	if (UseDisturbances)
 		_read_disturbances_in();
-	if (UseSeedDispersal)
+	if (UseSeedDispersal || InitializationMethod != INIT_WITH_NOTHING)
 	{
 		_read_seed_dispersal_in();
 		_read_init_species();
@@ -991,8 +1014,8 @@ static void allocate_gridCells(int rows, int cols){
 			gridCells[i][j].mySoils.lyr = (Grid_Soil_Lyr*) 
 				Mem_Calloc(MAX_LAYERS, sizeof(Grid_Soil_Lyr), "allocate_gridCells: mySoils");
 			
-			// species_seed_avail is a dynamically allocated array
-			gridCells[i][j].mySpeciesInit.species_seed_avail = (int*)
+			// shouldBeInitialized is a dynamically allocated array
+			gridCells[i][j].mySpeciesInit.shouldBeInitialized = (int*)
 				Mem_Calloc(MAX_SPECIES, sizeof(int), "allocate_gridCells: mySpeciesInit");
 
 			gridCells[i][j].someKillage = (Bool*) Mem_Calloc(1, sizeof(Bool), "allocate_gridCells: someKillage");
@@ -1661,7 +1684,7 @@ static void _free_grid_memory(void)
 			}
 			unload_cell();
 
-			Mem_Free(gridCells[i][j].mySpeciesInit.species_seed_avail);
+			Mem_Free(gridCells[i][j].mySpeciesInit.shouldBeInitialized);
 			Mem_Free(gridCells[i][j].mySeedDispersal);
 			Mem_Free(gridCells[i][j].someKillage);
 			Mem_Free(gridCells[i][j].mySoils.lyr);
@@ -1706,10 +1729,8 @@ static void _free_spinup_memory(void)
 		Mem_Free(spinup_SXW_ptrs);
 	}
 
-	//if(sd_Option2a || sd_Option2b) {
 	Mem_Free(soilTypes_Array);
 	Mem_Free(grid_SoilTypes);
-	//}
 }
 
 /***********************************************************/
@@ -2122,8 +2143,7 @@ static void _read_soils_in(void)
 			stringIndex, row, col, copy_cell_row, copy_cell_col;
 	float d[11];
 
-	if (sd_Option2a || sd_Option2b)
-		nSoilTypes = 0; //initialize our soil types counter
+	nSoilTypes = 0; //initialize our soil types counter
 
 	f = OpenFile(grid_files[GRID_FILE_SOILS], "r");
 
@@ -2190,8 +2210,7 @@ static void _read_soils_in(void)
 			gridCells[row][col].mySoils.num_layers = gridCells[copy_cell_row][copy_cell_col].mySoils.num_layers;
 
             // TODO: figure out how to change this code for our new struct
-			if (sd_Option2a || sd_Option2b)
-			    grid_SoilTypes[cell] = grid_SoilTypes[copy_cell];
+			grid_SoilTypes[cell] = grid_SoilTypes[copy_cell];
 
 			strcpy(gridCells[row][col].mySoils.rootsFile, gridCells[copy_cell_row][copy_cell_col].mySoils.rootsFile);
 
@@ -2203,12 +2222,9 @@ static void _read_soils_in(void)
 					grid_files[GRID_FILE_SOILS], i + 2);
 
         // TODO: figure out how to change this code for our new struct
-		if (sd_Option2a || sd_Option2b)
-		{
-			grid_SoilTypes[cell] = nSoilTypes;
-			soilTypes_Array[nSoilTypes] = cell;
-			nSoilTypes++;
-		}
+		grid_SoilTypes[cell] = nSoilTypes;
+		soilTypes_Array[nSoilTypes] = cell;
+		nSoilTypes++;
 
 		depthMin = 0;
 		gridCells[row][col].mySoils.num_layers = num_layers;
@@ -2544,31 +2560,6 @@ static void _read_seed_dispersal_in(void)
 		LogError(logfp, LOGFATAL, "Invalid %s file: option 1 line\n",
 				grid_files[GRID_FILE_SEED_DISPERSAL]);
 
-	GetALine(f, buf);
-	if (sscanf(buf, "%d", &sd_Option1a) != 1)
-		LogError(logfp, LOGFATAL, "Invalid %s file: option 1a line\n",
-				grid_files[GRID_FILE_SEED_DISPERSAL]);
-
-	GetALine(f, buf);
-	if (sscanf(buf, "%d", &sd_Option1b) != 1)
-		LogError(logfp, LOGFATAL, "Invalid %s file: option 1b line\n",
-				grid_files[GRID_FILE_SEED_DISPERSAL]);
-
-	GetALine(f, buf);
-	if (sscanf(buf, "%d", &sd_Option2a) != 1)
-		LogError(logfp, LOGFATAL, "Invalid %s file: option 2a line\n",
-				grid_files[GRID_FILE_SEED_DISPERSAL]);
-
-	GetALine(f, buf);
-	if (sscanf(buf, "%d", &sd_Option2b) != 1)
-		LogError(logfp, LOGFATAL, "Invalid %s file: option 2b line\n",
-				grid_files[GRID_FILE_SEED_DISPERSAL]);
-
-	if ((sd_Option1a && (sd_Option1b || sd_Option2a || sd_Option2b))
-			|| (sd_Option2a && (sd_Option1a || sd_Option1b || sd_Option2b)))
-		LogError(logfp, LOGFATAL,
-				"Invalid %s file: conflicting options chosen\n", grid_files[GRID_FILE_SEED_DISPERSAL]);
-
 	CloseFile(&f);
 
     for (i = 0; i < grid_Cells; i++) {
@@ -2677,7 +2668,7 @@ static void _do_seed_dispersal(void)
     // which are not specific to each cell.
     load_cell(0, 0);
 
-	if (Globals->currYear == 1 && !sd_Option1a && !sd_Option1b)
+	if (Globals->currYear == 1)
 	{ //since we have no previous data to go off of, use the current years...
 		for (i = 0; i < grid_Cells; i++)
 		{
@@ -2724,13 +2715,12 @@ static void _do_seed_dispersal(void)
 
                 load_cell(row, col);
 
-				if (sd_Option1a && Globals->currYear <= sd_NYearsSeedsAvailable)
+				if (Globals->currYear <= sd_NYearsSeedsAvailable)
 				{
 					cell->mySeedDispersal[s].seeds_present = 1;
 				}
-				else if (sd_Option1b
-						&& Globals->currYear <= sd_NYearsSeedsAvailable
-						&& cell->mySpeciesInit.species_seed_avail[s])
+				else if (Globals->currYear <= sd_NYearsSeedsAvailable
+						 && cell->mySpeciesInit.shouldBeInitialized[s])
 				{
 					cell->mySeedDispersal[s].seeds_present = 1;
 				}
@@ -3134,8 +3124,8 @@ static void _read_init_species(void)
 				&& cell != 0 && copy_cell < cell)
 		{ //copy this cells values from a previous cell's
 			for (j = 0; j < Globals->sppCount; j++)
-				gridCells[row][col].mySpeciesInit.species_seed_avail[j] =
-				    gridCells[copy_cell_row][copy_cell_col].mySpeciesInit.species_seed_avail[j];
+				gridCells[row][col].mySpeciesInit.shouldBeInitialized[j] =
+				    gridCells[copy_cell_row][copy_cell_col].mySpeciesInit.shouldBeInitialized[j];
 			gridCells[row][col].mySpeciesInit.use_SpinUp =
 			    gridCells[copy_cell_row][copy_cell_col].mySpeciesInit.use_SpinUp;
 			continue;
@@ -3155,7 +3145,7 @@ static void _read_init_species(void)
 						"Invalid %s file line %d invalid species input",
 						grid_files[GRID_FILE_INIT_SPECIES], i + 2);
 
-			gridCells[row][col].mySpeciesInit.species_seed_avail[s] = seeds_Avail;
+			gridCells[row][col].mySpeciesInit.shouldBeInitialized[s] = seeds_Avail;
 			stringIndex += _get_value_index(&buf[stringIndex], ',', 1);
 		}
 	}
@@ -3189,7 +3179,7 @@ static void _read_files(void)
 static void _read_grid_setup(void)
 {
     FILE *f;
-    char buf[1024];
+    char buf[1024], initializationType[1024];
     int i, j;
 
     f = OpenFile(grid_files[GRID_FILE_SETUP], "r");
@@ -3226,6 +3216,22 @@ static void _read_grid_setup(void)
         LogError(logfp, LOGFATAL,
                  "Invalid grid setup file (seed dispersal line wrong)");
     UseSeedDispersal = itob(j);
+
+	GetALine(f, buf);
+	i = sscanf(buf, "%s", initializationType);
+	if(i < 1){
+		LogError(logfp, LOGFATAL, "Invalid grid setup file (Initialization line wrong)");
+	}
+	if(!strncmp(initializationType, "spinup", 6)){
+		InitializationMethod = INIT_WITH_SPINUP;
+	} else if(!strncmp(initializationType, "seeds", 5)){
+		InitializationMethod = INIT_WITH_SEEDS;
+	} else if(!strncmp(initializationType, "none", 4)){
+		InitializationMethod = INIT_WITH_NOTHING;
+	} else {
+		LogError(logfp, LOGFATAL, 
+		         "Invalid grid setup file (Initialization line wrong. Valid options are \"spinup\", \"seeds\", or \"none\")");
+	}
 
     CloseFile(&f);
 }

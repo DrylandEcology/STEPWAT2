@@ -4,3 +4,4 @@
 1		# use disturbances csv file (0 or 1)... 0 means no, 1 means yes
 1		# use soils csv file (0 or 1)... 0 means no, 1 means yes
 1		# use seed dispersal (0 or 1)... 0 means no, 1 means yes
+spinup  	# Initialization method. Options are "spinup", "seeds", or "none"
