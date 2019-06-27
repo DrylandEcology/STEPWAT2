@@ -100,10 +100,6 @@ void rgroup_PartResources(void) {
             LogError(logfp, LOGWARN, "RGroup %s : res_avail is Zero and res_required > 0", g->name);
         }
 
-        /* Calculate PR at the functional group level: resources required/resources available */
-        g->pr = ZRO(g->res_avail) ? 0. : g->res_required / g->res_avail;
-        //printf("g->pr = %f\n,Group = %s \n",RGroup[rg]->name,  g->pr);
-
         /* If relsize>0 and individuals are established, reset noplants from TRUE to FALSE */
         if (GT(getRGroupRelsize(rg), 0.))
             noplants = FALSE;
@@ -267,9 +263,10 @@ static void _res_part_extra(RealF extra, RealF size[]) {
 
         /* If the group can use extra resources, divide out extra based on
          * proportional biomass */
-        if (g->use_extra_res)
+        if (g->use_extra_res) {
             g->res_extra = req_prop * extra;
-
+            g->res_avail += g->res_extra;
+        }
         /* If the group can't use extra resources, set res_extra to 0 */
         else
             g->res_extra = 0.;
