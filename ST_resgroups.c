@@ -44,6 +44,7 @@ void rgroup_ResPartIndiv(void);
 void rgroup_DropSpecies(SppIndex sp);
 void rgroup_AddSpecies(GrpIndex rg, SppIndex sp);
 void rgroup_Extirpate(GrpIndex rg);
+void copy_rgroup(const GroupType* src, GroupType* dest);
 
 /*********** Locally Used Function Declarations ************/
 /***********************************************************/
@@ -974,6 +975,87 @@ void rgroup_Extirpate(GrpIndex rg)
 
 	RGroup[rg]->extirpated = TRUE;
 
+}
+
+void copy_rgroup(const GroupType* src, GroupType* dest){
+    int i; 
+    SppIndex sp;
+
+    // This would be very bad.
+    if(src == dest){
+        return;
+    }
+
+    /* -------------- Copy any arrays -------------- */
+    Mem_Free(dest->kills);
+    dest->kills = (IntUS*) Mem_Calloc(GrpMaxAge(src->grp_num), sizeof(IntUS), "copy_rgroup: kills");
+    for(i = 0; i < GrpMaxAge(src->grp_num); ++i){
+        dest->kills[i] = src->kills[i];
+    }
+
+    Mem_Free(dest->est_spp);
+    dest->est_spp = (SppIndex*) Mem_Calloc(src->est_count, sizeof(SppIndex), "copy_rgroup: est_spp");
+    for(i = 0; i < src->est_count; ++i){
+        dest->est_spp[i] = src->est_spp[i];
+    }
+
+    /* ------------- Copy all fields --------------- */
+    dest->cheatgrass_coefficient = src->cheatgrass_coefficient;
+    dest->depth = src->depth;
+    dest->est_annually = src->est_annually;
+    dest->est_count = src->est_count;
+    dest->estabs = src->estabs;
+    dest->extirp = src->extirp;
+    dest->extirpated = src->extirpated;
+    dest->grazingfreq_startyr = src->grazingfreq_startyr;
+    dest->grazingfrq = src->grazingfrq;
+    dest->grp_num = src->grp_num;
+    dest->ignition = src->ignition;
+    dest->killfreq = src->killfreq;
+    dest->killfreq_startyr = src->killfreq_startyr;
+    dest->killyr= src->killyr;
+    dest->max_age = src->max_age;
+    dest->max_bmass = src->max_bmass;
+    dest->max_density = src->max_density;
+    dest->max_per_sqm = src->max_per_sqm;
+    dest->max_spp = src->max_spp;
+    dest->max_spp_estab = src->max_spp_estab;
+    dest->max_stretch = src->max_stretch;
+    dest->min_res_req = src->min_res_req;
+    dest->mm_extra_res = src->mm_extra_res;
+    strcpy(dest->name, src->name);
+    dest->ppt_intcpt[0] = src->ppt_intcpt[0];
+    dest->ppt_intcpt[1] = src->ppt_intcpt[1];
+    dest->ppt_intcpt[2] = src->ppt_intcpt[2];
+    dest->ppt_slope[0] = src->ppt_slope[0];
+    dest->ppt_slope[1] = src->ppt_slope[1];
+    dest->ppt_slope[2] = src->ppt_slope[2];
+    dest->pr = src->pr;
+    dest->prescribedfire = src->prescribedfire;
+    dest->proportion_grazing = src->proportion_grazing;
+    dest->proportion_killed = src->proportion_killed;
+    dest->proportion_recovered = src->proportion_recovered;
+    dest->regen_ok = src->regen_ok;
+    dest->res_avail = src->res_avail;
+    dest->res_extra = src->res_extra;
+    dest->res_required = src->res_required;
+    dest->rgroupFractionOfVegTypeBiomass = src->rgroupFractionOfVegTypeBiomass;
+    dest->slowrate = src->slowrate;
+    dest->startyr = src->startyr;
+    dest->succulent = src->succulent;
+    dest->use_extra_res = src->use_extra_res;
+    dest->use_me = src->use_me;
+    dest->use_mort = src->use_mort;
+    dest->veg_prod_type = src->veg_prod_type;
+    dest->wild_fire_slope = src->wild_fire_slope;
+    dest->wildfire = src->wildfire;
+    dest->xgrow = src->xgrow;
+    dest->yrs_neg_pr = src->yrs_neg_pr;
+
+    /* ---------------- Copy Species Array ----------------- */
+    for(i = 0; i < SuperGlobals.max_spp_per_grp; ++i){
+        dest->species[i] = src->species[i];
+    }
 }
 
 /**************************************************************/

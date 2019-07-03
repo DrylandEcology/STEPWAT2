@@ -34,6 +34,7 @@ void species_Update_Kills( SppIndex sp, IntS age );
 /* places; that is, they are not generally useful       */
 /* (like C++ friend functions) but have to be declared. */
 Bool indiv_New( SppIndex sp);
+void copy_individual(const IndivType* src, IndivType* dest);
 Bool indiv_Kill_Partial( MortalityType code,
                           IndivType *ndv,
                           RealF killamt);
@@ -116,6 +117,30 @@ Bool indiv_New( SppIndex sp) {
 	//  insertIndiv(p);
   id++;
   return( TRUE);
+}
+
+/* Copy one individual's information to another individual. 
+   Note: this does not modify either individual's linked list functionality.
+   Both individuals MUST be allocated. */
+void copy_individual(const IndivType* src, IndivType* dest){
+  dest->id = src->id;
+  dest->normal_growth = src->normal_growth;
+  dest->pr = src->pr;
+  dest->prob_veggrow = src->prob_veggrow;
+  dest->prv_yr_relsize = src->prv_yr_relsize;
+  dest->relsize = src->relsize;
+  dest->res_avail = src->res_avail;
+  dest->res_extra = src->res_extra;
+  dest->res_required = src->res_required;
+  dest->slow_yrs = src->slow_yrs;
+  dest->yrs_neg_pr = src->yrs_neg_pr;
+  dest->age = src->age;
+  dest->growthrate = src->growthrate;
+  dest->grp_res_prop = src->grp_res_prop;
+  dest->killed = src->killed;
+  dest->killedby = src->killedby;
+  dest->mm_extra_res = src->mm_extra_res;
+  dest->myspecies = src->myspecies;
 }
 
 /**************************************************************/

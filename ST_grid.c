@@ -253,6 +253,7 @@ PlotType *grid_Plot, *spinup_Plot;
 ModelType *grid_Globals, *spinup_Globals;
 
 CellType** gridCells;
+CellType** spinupCells;
 
 // these two variables are for storing SXW variables... also dynamically allocated/freed
 SXW_t *grid_SXW, *spinup_SXW;
@@ -312,6 +313,7 @@ void rgroup_Extirpate(GrpIndex rg);
 //from ST_species.c
 void proportion_Recovery(void);
 void save_annual_species_relsize(void);
+void copy_species(const SpeciesType* src, SpeciesType* dest);
 
 
 //from ST_resgroups.c
@@ -320,6 +322,7 @@ void rgroup_Establish(void);
 void rgroup_IncrAges(void);
 void rgroup_PartResources(void);
 //void rgroup_ResPartIndiv(void);
+void copy_rgroup(const GroupType* src, GroupType* dest);
 
 //from ST_mortality.c
 void mort_Main(Bool *killed);
@@ -381,6 +384,8 @@ transp_t* getTranspWindow(void);
 static int _load_bar(char* prefix, clock_t start, int x, int n, int r, int w);
 static double _time_remaining(clock_t start, char* timeChar, double percentDone);
 static void _run_spinup(void);
+static void saveAsSpinupConditions();
+static void loadSpinupConditions();
 static void _init_grid_files(void);
 static void _init_grid_inputs(void);
 static void _init_SXW_inputs(Bool init_SW, char *f_roots);
@@ -582,6 +587,11 @@ void runGrid(void)
 			}
 		}
 		unload_cell(); // Reset the global variables
+
+		// If we used spinup we need to reset to the state of the program right after spinup.
+		if (InitializationMethod == INIT_WITH_SPINUP){
+			loadSpinupConditions();
+		}
 
 		RandSeed(SuperGlobals.randseed, &environs_rng);
 		RandSeed(SuperGlobals.randseed, &mortality_rng);
@@ -876,7 +886,46 @@ static void _run_spinup(void)
 	} /* End for each row */
 	unload_cell(); // Reset the global variables
 
+	// Save everything that has happened thus far.
+	saveAsSpinupConditions();
+
 	DuringSpinup = FALSE;
+}
+
+static void saveAsSpinupConditions(){
+	// Save gridCells as spinupCells
+	spinupCells = gridCells;
+	// Nullify gridCells. This ensures we can no longer modify spinupCells on accident.
+	gridCells = NULL;
+
+	// The easiest way to reallocate gridCells is reread the files.
+	_read_grid_setup();             // reads in grid_setup.in file
+    _read_files();                  // reads in Stepwat_Inputs/files.in file
+    _init_stepwat_inputs();			// reads the stepwat inputs in
+	_init_grid_inputs();			// reads the grid inputs in & initializes the global grid variables
+}
+
+static void loadSpinupConditions(){
+	int row, col;
+	GrpIndex rg;
+	SppIndex sp;
+
+	for(row = 0; row < grid_Rows; ++row){
+		for(col = 0; col < grid_Cols; ++col){
+			load_cell(row, col);
+
+			ForEachSpecies(sp){
+				copy_species(spinupCells[row][col].mySpecies[sp], Species[sp]);
+			}
+
+			ForEachGroup(rg){
+				copy_rgroup(spinupCells[row][col].myGroup[rg], RGroup[rg]);
+			}
+
+			unload_cell();
+		}
+	}
+
 }
 
 /***********************************************************/
