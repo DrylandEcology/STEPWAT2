@@ -743,7 +743,7 @@ static void _run_spinup(void)
 	IntS k;
 
 	/* killedany for mortality functions, temporary_storage for swapping variables */
-	Bool killedany, temporary_storage, isAtLeastOneSpeciesOn;
+	Bool killedany, temporary_storage;
 
 	DuringSpinup = TRUE;
 
@@ -788,7 +788,6 @@ static void _run_spinup(void)
 				if(!gridCells[i][j].mySpeciesInit.use_SpinUp){
 					continue;
 				}
-				isAtLeastOneSpeciesOn = FALSE;
 				load_cell(i, j);	/* We could do this without loading the cell, but there would be no guarantee
 									   that ForEachGroup would iterate correctly */
 
@@ -803,16 +802,8 @@ static void _run_spinup(void)
 						Species[sp]->use_me = gridCells[i][j].mySpeciesInit.shouldBeInitialized[sp]; 
 						// Swap shouldBeInitialized[sp]
 						gridCells[i][j].mySpeciesInit.shouldBeInitialized[sp] = temporary_storage;
-						/* Make sure at least one species in this cell is turned on */
-						if(Species[sp]->use_me) isAtLeastOneSpeciesOn = TRUE;
 					} /* End for each species */
 				} /* End for each group */
-
-				if(!isAtLeastOneSpeciesOn){
-					LogError(logfp, LOGWARN, 
-					         "Grid Cell %d %d is turned on for spinup, but none of the species in the cell are turned on.\n"
-							 "This can be corrected in the init species file.", i, j);
-				}
 			} /* End for each column */
 		} /* End for each row */
 		unload_cell(); // Reset the global variables
@@ -3134,6 +3125,7 @@ static void _read_init_species(void)
 	FILE *f;
 	int i, j, num, cell, do_copy, copy_cell, use_SpinUp, seeds_Avail,
 	    row, col, copy_cell_row, copy_cell_col;
+	Bool isAnyCellOnForSpinup = FALSE;
 	char buf[4096];
 
 	//open the file/do the reading
@@ -3142,6 +3134,7 @@ static void _read_init_species(void)
 	GetALine2(f, buf, 4096); // gets rid of the first line (since it just defines the columns)... it's only there for user readability
 	for (i = 0; i < grid_Cells; i++)
 	{
+		use_SpinUp = FALSE;
 	    row = i / grid_Cols;
 	    col = i % grid_Cols;
 
@@ -3150,18 +3143,15 @@ static void _read_init_species(void)
 		if (!GetALine2(f, buf, 4096))
 			break;
 
-		num = sscanf(buf, "%d,%d,%d,%d", &cell, &do_copy, &copy_cell,
-				&use_SpinUp);
+		num = sscanf(buf, "%d,%d,%d", &cell, &do_copy, &copy_cell);
 
 		copy_cell_row = copy_cell / grid_Cols;
 		copy_cell_col = copy_cell % grid_Cols;
 
-		if (num != 4)
+		if (num != 3)
 			LogError(logfp, LOGFATAL, "Invalid %s file", grid_files[GRID_FILE_INIT_SPECIES]);
 
-		gridCells[row][col].mySpeciesInit.use_SpinUp = use_SpinUp;
-
-		int stringIndex = _get_value_index(buf, ',', 4); //gets us the index of the string that is right after what we just parsed in
+		int stringIndex = _get_value_index(buf, ',', 3); //gets us the index of the string that is right after what we just parsed in
 
 		if (do_copy == 1 && copy_cell > -1 && copy_cell < grid_Cells
 				&& cell != 0 && copy_cell < cell)
@@ -3183,19 +3173,31 @@ static void _read_init_species(void)
 		ForEachSpecies(s)
 		{
 			num = sscanf(&buf[stringIndex], "%d,", &seeds_Avail);
-			if (num != 1)
-				LogError(logfp, LOGFATAL,
-						"Invalid %s file line %d invalid species input",
-						grid_files[GRID_FILE_INIT_SPECIES], i + 2);
+			if (num != 1){
+				LogError(logfp, LOGFATAL, "Invalid %s file line %d invalid species input",
+						 grid_files[GRID_FILE_INIT_SPECIES], i + 2);
+			}
+
+			if(seeds_Avail){
+				use_SpinUp = TRUE;
+				isAnyCellOnForSpinup = TRUE;
+			}
 
 			gridCells[row][col].mySpeciesInit.shouldBeInitialized[s] = seeds_Avail;
 			stringIndex += _get_value_index(&buf[stringIndex], ',', 1);
 		}
+
+		gridCells[row][col].mySpeciesInit.use_SpinUp = use_SpinUp;
 	}
 
 	if (i != grid_Cells)
 		LogError(logfp, LOGFATAL, "Invalid %s file, not enough cells",
 				grid_files[GRID_FILE_INIT_SPECIES]);
+
+	if(!isAnyCellOnForSpinup){
+		LogError(logfp, LOGWARN, "Initialization is on, but no species are turned on for initialization inside %s.",
+				grid_files[GRID_FILE_INIT_SPECIES]);
+	}
 
     unload_cell();
 	CloseFile(&f);
