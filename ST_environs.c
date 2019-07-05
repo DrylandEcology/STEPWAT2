@@ -60,6 +60,49 @@ void Env_Generate( void) {
   _make_disturbance();
 }
 
+/* Deep copy one EnvType's information to another. Note that both must be initialized
+   BEFORE calling this function. */
+void copy_environment(const EnvType* src, EnvType* dest){
+  if(!src){
+    return;
+  }
+
+  dest->lyppt = src->lyppt;
+  dest->ppt = src->ppt;
+  dest->temp = src->temp;
+  dest->gsppt = src->gsppt;
+  dest->temp_reduction[0] = src->temp_reduction[0];
+  dest->temp_reduction[1] = src->temp_reduction[1];
+  dest->wet_dry = src->wet_dry;
+}
+
+/* Deep copy one PlotType's information to another. Note that both must be initialized
+   BEFORE calling this function. */
+void copy_plot(const PlotType* src, PlotType* dest){
+  if(!src){
+    return;
+  }
+
+  dest->disturbance = src->disturbance;
+  dest->disturbed = src->disturbed;
+  dest->pat_removed = src->pat_removed;
+}
+
+/* Deep copy one SucculentType's information to another. Note that both must be initialized
+   BEFORE calling this function. */
+void copy_succulent(const SucculentType* src, SucculentType* dest){
+  if(!src){
+    return;
+  }
+
+  dest->growth[0] = src->growth[0];
+  dest->growth[1] = src->growth[1];
+  dest->mort[0] = src->mort[0];
+  dest->mort[1] = src->mort[1];
+  dest->prob_death = src->prob_death;
+  dest->reduction = src->reduction;
+}
+
 /**************************************************************/
 static void _make_ppt( void) {
 /*======================================================*/

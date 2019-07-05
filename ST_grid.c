@@ -253,7 +253,7 @@ PlotType *grid_Plot, *spinup_Plot;
 ModelType *grid_Globals, *spinup_Globals;
 
 CellType** gridCells;
-CellType** spinupCells;
+CellType** spinupCells = NULL;
 
 // these two variables are for storing SXW variables... also dynamically allocated/freed
 SXW_t *grid_SXW, *spinup_SXW;
@@ -383,6 +383,7 @@ transp_t* getTranspWindow(void);
 
 static int _load_bar(char* prefix, clock_t start, int x, int n, int r, int w);
 static double _time_remaining(clock_t start, char* timeChar, double percentDone);
+static void printGeneralInfo(void);
 static void _run_spinup(void);
 static void saveAsSpinupConditions();
 static void loadSpinupConditions();
@@ -514,6 +515,26 @@ static int _load_bar(char* prefix, clock_t start, int x, int n, int r, int w)
 	return result;
 }
 
+/* Print information about the simulation to stdout. */
+static void printGeneralInfo(void){
+	/* ------------------- Print some general information to stdout ----------------------- */
+	printf("Number of layers: %d\n", SW_Site.n_layers);
+    printf("Number of iterations: %d\n", SuperGlobals.runModelIterations);
+    printf("Number of years: %d\n", SuperGlobals.runModelYears);
+	printf("Number of cells: %d\n\n", grid_Cells);
+	if(UseDisturbances) printf("Using grid Disturbances file.\n");
+	if(UseSoils) printf("Using grid soils file\n");
+	if(InitializationMethod == INIT_WITH_SEEDS){
+		 printf("Seeds availible for %d years at the start of the simulation.\n",sd_NYearsSeedsAvailable);
+	} else if(InitializationMethod == INIT_WITH_SPINUP) { 
+		printf("Running Spinup\n");
+	}
+	if(UseSeedDispersal){
+		printf("Dispersing seeds between cells\n");
+	}
+	/* --------------------------- END printing general info -------------------------------- */
+}
+
 /* Runs the gridded version of the code */
 void runGrid(void)
 {
@@ -534,22 +555,7 @@ void runGrid(void)
 	Mem_Free(SW_Soilwat.hist.file_prefix);
 	SW_Soilwat.hist.file_prefix = NULL;
 
-	/* ------------------- Print some general information to stdout ----------------------- */
-	printf("Number of layers: %d\n", SW_Site.n_layers);
-    printf("Number of iterations: %d\n", SuperGlobals.runModelIterations);
-    printf("Number of years: %d\n", SuperGlobals.runModelYears);
-	printf("Number of cells: %d\n\n", grid_Cells);
-	if(UseDisturbances) printf("Using grid Disturbances file.\n");
-	if(UseSoils) printf("Using grid soils file\n");
-	if(InitializationMethod == INIT_WITH_SEEDS){
-		 printf("Seeds availible for %d years at the start of the simulation.\n",sd_NYearsSeedsAvailable);
-	} else if(InitializationMethod == INIT_WITH_SPINUP) { 
-		printf("Running Spinup\n");
-	}
-	if(UseSeedDispersal){
-		printf("Dispersing seeds between cells\n");
-	}
-	/* --------------------------- END printing general info -------------------------------- */
+	printGeneralInfo();
 
 	if (InitializationMethod == INIT_WITH_SPINUP) {
 		_run_spinup();				// does the initial spinup
@@ -711,6 +717,9 @@ void runGrid(void)
 	}
 
 	_free_grid_memory(); // free our allocated memory since we do not need it anymore
+	if(InitializationMethod == INIT_WITH_SPINUP) {
+		_free_spinup_memory();
+	}
 }
 
 /* "Spinup" the model by running for SuperGlobals.runModelYears without seed dispersal or statistics outputs. */
@@ -921,6 +930,10 @@ static void loadSpinupConditions(){
 			ForEachGroup(rg){
 				copy_rgroup(spinupCells[row][col].myGroup[rg], RGroup[rg]);
 			}
+
+			copy_environment(&spinupCells[row][col].myEnvironment, Env);
+			copy_plot(&spinupCells[row][col].myPlot, Plot);
+			copy_succulent(&spinupCells[row][col].mySucculent, Succulent);
 
 			unload_cell();
 		}
@@ -1710,7 +1723,7 @@ static void _free_spinup_globals(void)
 
 }
 
-/***********************************************************/
+/* Free all memory allocated to the gridded mode during initialization. */
 static void _free_grid_memory(void)
 {
 	//frees all the memory allocated in this file ST_Grid.c (most of it is dynamically allocated in _init_grid_globals() & _load_grid_globals() functions)
@@ -1746,40 +1759,21 @@ static void _free_grid_memory(void)
 	Mem_Free(gridCells);
 }
 
-/***********************************************************/
+/* Free memory allocated to spinupCells. This function should only be called once per simulation. */
 static void _free_spinup_memory(void)
 {
-	// frees spinup memory
+	// Remember where gridCells pointed.
+	CellType** locationOfGridCells = gridCells;
 
-	GrpIndex c;
-	SppIndex s;
-
-	_free_spinup_globals();
-
-	ForEachSpecies(s)
-		if (Species[s]->use_me)
-			Mem_Free(spinup_Species[s]);
-	ForEachGroup(c)
-		if (RGroup[c]->use_me)
-			Mem_Free(spinup_RGroup[c]);
-
-	Mem_Free(spinup_Succulent);
-	Mem_Free(spinup_Env);
-	Mem_Free(spinup_Plot);
-	Mem_Free(spinup_Globals);
-
-	Mem_Free(spinup_SXW);
-	Mem_Free(spinup_SW_Soilwat);
-	Mem_Free(spinup_SW_Site);
-	Mem_Free(spinup_SW_VegProd);
-
-	if (UseSoils)
-	{
-		Mem_Free(spinup_SXW_ptrs);
+	// If spinupCells is allocated.
+	if(spinupCells){
+		// move gridCells to point to spinupCells. This allows us to deallocate using _free_grid_memory();
+		gridCells = spinupCells;
+		// Since we already have a function to deallocate gridCells we can use it.
+		_free_grid_memory();
+		// And we need to reset gridCells in case it hasn't been deallocated.
+		gridCells = locationOfGridCells;
 	}
-
-	Mem_Free(soilTypes_Array);
-	Mem_Free(grid_SoilTypes);
 }
 
 /***********************************************************/
