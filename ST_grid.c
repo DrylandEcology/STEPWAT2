@@ -385,8 +385,8 @@ static int _load_bar(char* prefix, clock_t start, int x, int n, int r, int w);
 static double _time_remaining(clock_t start, char* timeChar, double percentDone);
 static void printGeneralInfo(void);
 static void _run_spinup(void);
-static void saveAsSpinupConditions();
-static void loadSpinupConditions();
+static void saveAsSpinupConditions(void);
+static void loadSpinupConditions(void);
 static void _init_grid_files(void);
 static void _init_grid_inputs(void);
 static void _init_SXW_inputs(Bool init_SW, char *f_roots);
@@ -581,8 +581,10 @@ void runGrid(void)
 		 */
 		sprintf(SW_Weather.name_prefix, "%s", SW_prefix_permanent); //updates the directory correctly for the weather files so soilwat can find them
 
-		if (BmassFlags.yearly || MortFlags.yearly)
+		if (BmassFlags.yearly || MortFlags.yearly){
 			parm_Initialize();
+			_init_grid_inputs();
+		}
 
 		// Initialize the plot for each grid cell
 		for (i = 0; i < grid_Rows; i++){
@@ -2084,7 +2086,7 @@ static void _read_disturbances_in(void)
 
 	FILE *f;
 	char buf[1024];
-	int i, row, col, cell, num = 0, choices[3];
+	int i, row, col, cell, num = 0;
     GrpIndex rg;
 
 	f = OpenFile(grid_files[GRID_FILE_DISTURBANCES], "r");
@@ -2100,24 +2102,15 @@ static void _read_disturbances_in(void)
 		if (!GetALine2(f, buf, 1024))
 			break;
 
-        // xgrow and veg_prod_type not found in grid_disturbances.csv
-        ForEachGroup(rg)
-            num = sscanf(buf, "%d,%d,%d,%d,%hd,%f,%hd,%hd,%hu,%hd", &cell,
-                &choices[0], &choices[1],
-                &choices[2], &RGroup[rg]->killyr,
-                &RGroup[rg]->killfreq, &RGroup[rg]->extirp,
-                &RGroup[rg]->killfreq_startyr,
-                &RGroup[rg]->grazingfrq, &RGroup[rg]->grazingfreq_startyr);
+        ForEachGroup(rg) {
+            num = sscanf(buf, "%d,%d,%d,%d,%d,%d,%f,%d,%d,%d,%f,%f,%f", &cell,
+                &Globals->pat.use, &Globals->mound.use, &Globals->burrow.use, &RGroup[rg]->killyr, 
+				&RGroup[rg]->killfreq_startyr, &RGroup[rg]->killfreq, &RGroup[rg]->extirp, 
+				&RGroup[rg]->grazingfrq, &RGroup[rg]->grazingfreq_startyr, &RGroup[rg]->ignition, 
+				&RGroup[rg]->cheatgrass_coefficient, &RGroup[rg]->wild_fire_slope);
+		}
 
-        // Comes from _load_grid_globals
-        if (UseDisturbances) {
-            Globals->pat.use = choices[0];
-            Globals->mound.use = choices[1];
-            Globals->burrow.use = choices[2];
-        }
-
-        // xgrow and veg_prod_type not found in grid_disturbances.csv
-		if (num != 10)
+		if (num != 13)
 			LogError(logfp, LOGFATAL, "Invalid %s file line %d wrong",
 					grid_files[GRID_FILE_DISTURBANCES], i + 2);
 	}
