@@ -381,7 +381,7 @@ void rgroup_ResPartIndiv(void) {
 
                     /* If individuals already have the resources they require do 
                      * not assign extra */
-                    if (ndv->res_avail == ndv->res_required) {
+                    if (GE(ndv->res_avail, ndv->res_required)) {
                         ndv->res_extra = 0.0;
                         //printf("ndv->res_extra = %f\n", ndv->res_extra);
                     }
