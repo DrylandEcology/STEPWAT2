@@ -139,7 +139,6 @@ void _sxw_update_resource(void) {
 
 	ForEachGroup(g)
 	{
-		//RGroup[g]->veg_prod_type
 		sizes[g] = 0.;
 //printf("_sxw_update_resource()RGroup Name= %s, RGroup[g]->regen_ok=%d \n ", RGroup[g]->name, RGroup[g]->regen_ok);
 		if (!RGroup[g]->regen_ok)
@@ -179,20 +178,19 @@ void _sxw_update_root_tables( RealF sizes[] ) {
 	int t,nLyrs;
 
 	/* Set some things to zero where 4 refers to Tree, Shrub, Grass, Forb */
-	Mem_Set(_roots_active_sum, 0, 4 * SXW.NPds * SXW.NTrLyrs * sizeof(RealD));
-        
+	Mem_Set(_roots_active_sum, 0, NVEGTYPES * SXW.NPds * SXW.NTrLyrs * sizeof(RealD));
+
         /* Calculate the active roots in each month and soil layer for each STEPPE
          * functional group based on the functional group biomass this year */
 	ForEachGroup(g)
 	{
-		t = RGroup[g]->veg_prod_type-1;
 		nLyrs = getNTranspLayers(RGroup[g]->veg_prod_type);
 		for (l = 0; l < nLyrs; l++) {
 			ForEachTrPeriod(p)
 			{
 				x = _rootsXphen[Iglp(g, l, p)] * sizes[g];
 				_roots_active[Iglp(g, l, p)] = x;
-				_roots_active_sum[Itlp(t, l, p)] += x;
+				_roots_active_sum[Itlp(RGroup[g]->veg_prod_type, l, p)] += x;
 			}
 		}
 	}
@@ -206,7 +204,7 @@ void _sxw_update_root_tables( RealF sizes[] ) {
 			ForEachTrPeriod(p)
 			{
         RealD sum_all_veg_types = 0;
-        for(t = 0; t < NVEGTYPES; ++t){
+        ForEachVegType(t) {
           sum_all_veg_types += _roots_active_sum[Itlp(t,l,p)];
         }
 
