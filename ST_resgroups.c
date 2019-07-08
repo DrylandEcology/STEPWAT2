@@ -978,8 +978,7 @@ void rgroup_Extirpate(GrpIndex rg)
 }
 
 void copy_rgroup(const GroupType* src, GroupType* dest){
-    int i; 
-    SppIndex sp;
+    int i;
 
     // This would be very bad.
     if(src == dest){

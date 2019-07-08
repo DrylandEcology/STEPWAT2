@@ -699,7 +699,7 @@ void maxrgroupspecies_init( void) {
        LogError(logfp, LOGFATAL, "%s: Could not read maximum resource groups allowed.", MyFileName);
     }
 
-    if (sscanf(inbuf, "%u", &SuperGlobals.max_rgroups) != 1) {
+    if (sscanf(inbuf, "%zu", &SuperGlobals.max_rgroups) != 1) {
        LogError(logfp, LOGFATAL, "%s: Could not read maximum resource groups allowed.", MyFileName);
     }
 
@@ -707,7 +707,7 @@ void maxrgroupspecies_init( void) {
        LogError(logfp, LOGFATAL, "%s: Could not read maximum resource group name length.", MyFileName);
     }
 
-    if (sscanf(inbuf, "%u", &SuperGlobals.max_groupnamelen) != 1) {
+    if (sscanf(inbuf, "%zu", &SuperGlobals.max_groupnamelen) != 1) {
        LogError(logfp, LOGFATAL, "%s: Could not read maximum resource group name length.", MyFileName);
     }
 
@@ -717,7 +717,7 @@ void maxrgroupspecies_init( void) {
        LogError(logfp, LOGFATAL, "%s: Could not read maximum species allowed per resource group.", MyFileName);
     }
 
-    if (sscanf(inbuf, "%u", &SuperGlobals.max_spp_per_grp) != 1) {
+    if (sscanf(inbuf, "%zu", &SuperGlobals.max_spp_per_grp) != 1) {
        LogError(logfp, LOGFATAL, "%s: Could not read maximum species allowed per resource group.", MyFileName);
     }
 
@@ -725,7 +725,7 @@ void maxrgroupspecies_init( void) {
        LogError(logfp, LOGFATAL, "%s: Could not read maximum individuals allowed per species.", MyFileName);
     }
 
-    if (sscanf(inbuf, "%u", &SuperGlobals.max_indivs_per_spp) != 1) {
+    if (sscanf(inbuf, "%zu", &SuperGlobals.max_indivs_per_spp) != 1) {
        LogError(logfp, LOGFATAL, "%s: Could not read maximum individuals allowed per species.", MyFileName);
     }
 
@@ -733,7 +733,7 @@ void maxrgroupspecies_init( void) {
        LogError(logfp, LOGFATAL, "%s: Could not read maximum species name length.", MyFileName);
     }
 
-    if (sscanf(inbuf, "%u", &SuperGlobals.max_speciesnamelen) != 1) {
+    if (sscanf(inbuf, "%zu", &SuperGlobals.max_speciesnamelen) != 1) {
        LogError(logfp, LOGFATAL, "%s: Could not read maximum species name length.", MyFileName);
     }
     
