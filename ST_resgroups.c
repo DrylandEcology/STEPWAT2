@@ -468,8 +468,7 @@ void rgroup_Grow(void) {
                 continue;
 
             /* Modify growth rate by temperature calculated in Env_Generate() */
-            if (s->tempclass != NoSeason)
-                tgmod = Env.temp_reduction[s->tempclass];
+            tgmod = (s->tempclass == NoSeason) ? 1. : Env.temp_reduction[s->tempclass];
 
             /* Now increase size of the individual plants of current species */
             ForEachIndiv(ndv, s) {
