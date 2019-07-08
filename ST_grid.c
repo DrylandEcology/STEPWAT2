@@ -239,14 +239,14 @@ enum
 	INIT_WITH_NOTHING
 };
 
-enum status
+typedef enum 
 {
 	SPINUP,
 	DISPERSAL,
 	SIMULATION,
 	OUTPUT,
 	DONE
-};
+} Status;
 
 char *grid_files[N_GRID_FILES], *grid_directories[N_GRID_DIRECTORIES], sd_Sep;
 
@@ -390,10 +390,8 @@ transp_t* getTranspWindow(void);
 /*********** Locally Used Function Declarations ************/
 /***********************************************************/
 
-static int _load_bar(char* prefix, clock_t start, int x, int n, int r, int w);
-static double _time_remaining(clock_t start, char* timeChar, double percentDone);
-static void logProgress(int iteration, int year, int status);
-static double calculateProgress(int year, int iteration, int status);
+static void logProgress(int iteration, int year, Status status);
+static double calculateProgress(int year, int iteration, Status status);
 static void printGeneralInfo(void);
 static void _run_spinup(void);
 static void saveAsSpinupConditions(void);
@@ -433,94 +431,11 @@ static void _read_files(void);
 /******************** Begin Model Code *********************/
 /***********************************************************/
 
-/***********************************************************/
-double _time_remaining(clock_t start, char* timeChar, double percentDone)
-{
-	// for use in _load_bar() function... pretty much it returns the amount of time left and a character in timeChar representing the units
-	// percent done must be from 0 to 1, with 0 representing no work done (0%) and 1 representing all of the work done (ie 100%)
-	clock_t timeElapsed = clock() - start; //gets the time since we started (this is in CPU cycles).  We convert to seconds in the next part
-	double result = (((double) timeElapsed) / CLOCKS_PER_SEC) / percentDone
-			* (1.0 - percentDone); //gets estimated time left until the work is complete based upon timeElapsed and percentDone
-
-	*timeChar = 's'; //get the biggest time units that we can use (ie no use displaying 120 seconds if we can display 2 minutes)
-	if (result > 60)
-	{
-		result /= 60.0;
-		*timeChar = 'm';
-		if (result > 60)
-		{
-			result /= 60.0;
-			*timeChar = 'h';
-			if (result > 24)
-			{
-				result /= 24.0;
-				*timeChar = 'd';
-				if (result > 7)
-				{
-					result /= 7.0;
-					*timeChar = 'w';
-				}
-			}
-		}
-	}
-
-	return result;
-}
-
-/***********************************************************/
-static int _load_bar(char* prefix, clock_t start, int x, int n, int r, int w)
-{
-	//loads a progress bar, x is how much progress has been made, n is how much progress to be done, r is how many times to update, and w is width of the progress bar
-	//wouldn't suggest using this if your stdout is being redirected somewhere else (it doesn't work right in that case and gives unwanted output)
-	//gotten from: http://www.rosshemsley.co.uk/2011/02/creating-a-progress-bar-in-c-or-any-other-console-app/
-
-	//modified to include an estimate of the time remaining... start must be a clock started (using clock() function) right before beginning the work
-
-	// Only update r times.
-	if (x % (n / r) != 0)
-		return (int) ((x / (float) n) * 100);
-
-	int i;
-
-	printf("\r"); //we output a carriage-return character to put us back at the beginning of the line
-	if (prefix != NULL)
-		printf("%s", prefix);
-
-	// Calculuate the ratio of complete-to-incomplete.
-	float ratio = x / (float) n;
-	int c = ratio * w;
-	int result = (int) (ratio * 100);
-
-	if (result > 1)
-	{ //we don't give an estimate if less than 2% of the work is complete because we don't have any data to go off of...
-		char timeChar;
-		double timeLeft = _time_remaining(start, &timeChar, (double) ratio);
-		if (timeLeft < 10)
-			printf("(est 0%.2f%c) ", timeLeft, timeChar);
-		else
-			printf("(est %.2f%c) ", timeLeft, timeChar);
-	}
-
-	// Show the percentage complete.
-	printf("%3d%% [", (int) (ratio * 100));
-
-	// Show the load bar.
-	for (i = 0; i < c; i++)
-		printf("=");
-
-	for (i = c; i < w; i++)
-		printf(" ");
-
-	printf("]");
-	fflush(stdout); //we do this to flush (ie. print) the output, since stdout typically waits for a newline character before flushing
-	return result;
-}
-
 /* Log the program's progress using a progress bar.
 	Param iteration: integer greater than 0. Input 0 iff the program is not currently in an iteration loop.
 	Param year: integer greater than 0. Input 0 iff the program is not currently in a years loop.
 	Param status: Use the "status" enum to choose a value.  */
-static void logProgress(int iteration, int year, int status){
+static void logProgress(int iteration, int year, Status status){
 	static char progressString[256];
 	int index = 0;					// Where we are in progressString
 	Bool needsProgressBar = FALSE;	// By default we donot need a progress bar
@@ -589,7 +504,7 @@ static void logProgress(int iteration, int year, int status){
      Param year: Current year in the loop.
 	 Param iteration: Current iteration in the loop.
 	 Param status: Use the "status" enumerator. Valid options are SPINUP or SIMULATION. */
-double calculateProgress(int year, int iteration, int status){
+double calculateProgress(int year, int iteration, Status status){
 	double percentComplete;
 	if(status == SPINUP){
 		percentComplete = (year / (double) SuperGlobals.runModelYears);
