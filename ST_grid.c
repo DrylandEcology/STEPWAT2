@@ -239,6 +239,15 @@ enum
 	INIT_WITH_NOTHING
 };
 
+enum status
+{
+	SPINUP,
+	DISPERSAL,
+	SIMULATION,
+	OUTPUT,
+	DONE
+};
+
 char *grid_files[N_GRID_FILES], *grid_directories[N_GRID_DIRECTORIES], sd_Sep;
 
 int grid_Cols, grid_Rows, grid_Cells, sd_NYearsSeedsAvailable;
@@ -383,6 +392,8 @@ transp_t* getTranspWindow(void);
 
 static int _load_bar(char* prefix, clock_t start, int x, int n, int r, int w);
 static double _time_remaining(clock_t start, char* timeChar, double percentDone);
+static void logProgress(int iteration, int year, int status);
+static double calculateProgress(int year, int iteration, int status);
 static void printGeneralInfo(void);
 static void _run_spinup(void);
 static void saveAsSpinupConditions(void);
@@ -505,6 +516,92 @@ static int _load_bar(char* prefix, clock_t start, int x, int n, int r, int w)
 	return result;
 }
 
+/* Log the program's progress using a progress bar.
+	Param iteration: integer greater than 0. Input 0 iff the program is not currently in an iteration loop.
+	Param year: integer greater than 0. Input 0 iff the program is not currently in a years loop.
+	Param status: Use the "status" enum to choose a value.  */
+static void logProgress(int iteration, int year, int status){
+	static char progressString[256];
+	int index = 0;					// Where we are in progressString
+	Bool needsProgressBar = FALSE;	// By default we donot need a progress bar
+	progressString[0] = '\0';		// Empty the string
+	iteration--;					// iteration loops are 1 indexed, but we need 0 indexing.
+
+	switch(status){
+		case SPINUP:
+			strcpy(progressString, "Spinup     |");
+			index += 12;	// We have copied over 12 characters
+			needsProgressBar = TRUE;
+			break;
+		case DISPERSAL:
+			strcpy(progressString, "Dispersing seeds");
+			index += 16;	// We have copied over 16 characters
+			break;
+		case SIMULATION:
+			strcpy(progressString, "Simulating |");
+			index += 12;	// We have copied over 12 characters
+			needsProgressBar = TRUE;
+			break;
+		case OUTPUT:
+			strcpy(progressString, "Writing files");
+			index += 13;	// We have copied over 12 characters
+			break;
+		case DONE:
+			strcpy(progressString, "Done");
+			// We need to pad the string with spaces to make sure we overwrite any progress bars.
+			for(index = 4; index < 40; ++index) progressString[index] = ' ';
+			break;
+		default:
+			break;
+	}
+
+	// If our program is currently in a looping state we can make a progress bar using year and iteration.
+	if(needsProgressBar){
+		int numberOfCharacters = 0;
+		double percentComplete = calculateProgress(year, iteration, status);
+		// Add '=' characters for every 5% complete.
+		while(percentComplete > 0){
+			progressString[index] = '=';
+			index++;
+			numberOfCharacters++;
+			percentComplete -= 5;
+		}
+		// Add spaces until we hit 20 characters
+		while(numberOfCharacters < 20){
+			progressString[index] = ' ';
+			numberOfCharacters++;
+			index++;
+		}
+		progressString[index++] = '|';
+		progressString[index++] = '\0';
+	}
+
+	printf("\r%s", progressString);	// print the string we generated
+	fflush(stdout);					// Explicitly print the output.
+
+	// If we are done we want to print a newline character so the terminal isn't appended to our "Done" string.
+	if(status == DONE){
+		printf("\n");
+	}
+}
+
+/* Returns a double between 0 and 100 representing how close the program is to completing a given loop.
+     Param year: Current year in the loop.
+	 Param iteration: Current iteration in the loop.
+	 Param status: Use the "status" enumerator. Valid options are SPINUP or SIMULATION. */
+double calculateProgress(int year, int iteration, int status){
+	double percentComplete;
+	if(status == SPINUP){
+		percentComplete = (year / (double) SuperGlobals.runModelYears);
+	} else if(status == SIMULATION) {
+		percentComplete = ((iteration * SuperGlobals.runModelYears) + year) 
+						  / (double) (SuperGlobals.runModelIterations * SuperGlobals.runModelYears);
+	} else {
+		return 0;	// If the program isn't in spinup or simulation then this function isn't applicable.
+	}
+	return percentComplete * 100;
+}
+
 /* Print information about the simulation to stdout. */
 static void printGeneralInfo(void){
 	/* ------------------- Print some general information to stdout ----------------------- */
@@ -522,6 +619,7 @@ static void printGeneralInfo(void){
 	if(UseSeedDispersal){
 		printf("Dispersing seeds between cells\n");
 	}
+	printf("\n");
 	/* --------------------------- END printing general info -------------------------------- */
 }
 
@@ -531,9 +629,6 @@ void runGrid(void)
 	int i, j;
 	Bool killedany;
 	IntS year, iter;
-	double prog_Percent = 0.0, prog_Incr, prog_Acc = 0.0;
-	char prog_Prefix[32];
-	clock_t prog_Time;
 
 	_init_grid_files();				// reads in files.in file
 	_read_maxrgroupspecies();       // reads in maxrgroupspecies.in file
@@ -600,6 +695,9 @@ void runGrid(void)
 
 		for (year = 1; year <= SuperGlobals.runModelYears; year++)
 		{ //for each year
+			if(UseProgressBar){
+				logProgress(iter, year, SIMULATION);
+			}
 			for (i = 0; i < grid_Rows; i++){
 				for (j = 0; j < grid_Cols; j++)
 				{ //for each cell
@@ -676,6 +774,10 @@ void runGrid(void)
 
 	} /*end iterations */
 
+	if(UseProgressBar){
+		logProgress(0, 0, OUTPUT);
+	}
+
 	// outputs all of the mort and BMass files for each cell...
 	for (i = 0; i < grid_Rows; i++){
 		for (j = 0; j < grid_Cols; j++)
@@ -712,6 +814,7 @@ void runGrid(void)
 	if(InitializationMethod == INIT_WITH_SPINUP) {
 		_free_spinup_memory();
 	}
+	logProgress(0, 0, DONE);
 }
 
 /* "Spinup" the model by running for SuperGlobals.runModelYears without seed dispersal or statistics outputs. */
@@ -802,6 +905,9 @@ static void _run_spinup(void)
 
 		for (year = 1; year <= SuperGlobals.runModelYears; year++)
 		{ //for each year
+			if(UseProgressBar){
+				logProgress(iter, year, SPINUP);
+			}
 			for (i = 0; i < grid_Rows; ++i)
 			{ // for each row
 				for(j = 0; j < grid_Cols; ++j)
@@ -2549,9 +2655,9 @@ void Output_AllCellAvgBmass(const char * filename){
 	SppIndex sp;	//for iterating
 
 	/* One accumulator for every accumulator in ST_stats.c */
-	float ppt, pptstd, pptsos, temp, tempstd, tempsos, dist, wildfire, grp[SuperGlobals.max_rgroups], grpstd[SuperGlobals.max_rgroups], grpsos[SuperGlobals.max_rgroups], 
-	      gsize[SuperGlobals.max_rgroups],
-		  gpr[SuperGlobals.max_rgroups], gprsos[SuperGlobals.max_rgroups], gprstd[SuperGlobals.max_rgroups], prescribedfire[SuperGlobals.max_rgroups],
+	float ppt, pptstd, pptsos, temp, tempstd, tempsos, dist, wildfire, grp[SuperGlobals.max_rgroups], grpstd[SuperGlobals.max_rgroups], 
+		  grpsos[SuperGlobals.max_rgroups], gsize[SuperGlobals.max_rgroups], gpr[SuperGlobals.max_rgroups], 
+		  gprsos[SuperGlobals.max_rgroups], gprstd[SuperGlobals.max_rgroups], prescribedfire[SuperGlobals.max_rgroups],
 		  spp[SuperGlobals.max_spp_per_grp * SuperGlobals.max_rgroups],
 		  indv[SuperGlobals.max_spp_per_grp * SuperGlobals.max_rgroups];
 
