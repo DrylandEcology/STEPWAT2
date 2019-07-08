@@ -253,7 +253,7 @@ static void _res_part_extra(RealF extra, RealF size[]) {
             continue;
 
         /* Check to avoid dividing by 0 */
-        if (sum_size == 0.)
+        if (ZRO(sum_size))
             req_prop = 0.;
 
         /* Calculate proportional biomass of each group out of the total biomass
