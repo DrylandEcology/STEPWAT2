@@ -139,7 +139,6 @@ void _sxw_update_resource(void) {
 
 	ForEachGroup(g)
 	{
-		//RGroup[g]->veg_prod_type
 		sizes[g] = 0.;
 //printf("_sxw_update_resource()RGroup Name= %s, RGroup[g]->regen_ok=%d \n ", RGroup[g]->name, RGroup[g]->regen_ok);
 		if (!RGroup[g]->regen_ok)
@@ -179,20 +178,19 @@ void _sxw_update_root_tables( RealF sizes[] ) {
 	int t,nLyrs;
 
 	/* Set some things to zero where 4 refers to Tree, Shrub, Grass, Forb */
-	Mem_Set(_roots_active_sum, 0, 4 * SXW.NPds * SXW.NTrLyrs * sizeof(RealD));
-        
+	Mem_Set(_roots_active_sum, 0, NVEGTYPES * SXW.NPds * SXW.NTrLyrs * sizeof(RealD));
+
         /* Calculate the active roots in each month and soil layer for each STEPPE
          * functional group based on the functional group biomass this year */
 	ForEachGroup(g)
 	{
-		t = RGroup[g]->veg_prod_type-1;
 		nLyrs = getNTranspLayers(RGroup[g]->veg_prod_type);
 		for (l = 0; l < nLyrs; l++) {
 			ForEachTrPeriod(p)
 			{
 				x = _rootsXphen[Iglp(g, l, p)] * sizes[g];
 				_roots_active[Iglp(g, l, p)] = x;
-				_roots_active_sum[Itlp(t, l, p)] += x;
+				_roots_active_sum[Itlp(RGroup[g]->veg_prod_type, l, p)] += x;
 			}
 		}
 	}
@@ -201,16 +199,20 @@ void _sxw_update_root_tables( RealF sizes[] ) {
          * STEPPE group's roots in a given layer in a given month */
 	ForEachGroup(g)
 	{
-		int t = RGroup[g]->veg_prod_type-1;
 		int nLyrs = getNTranspLayers(RGroup[g]->veg_prod_type);
 		for (l = 0; l < nLyrs; l++) {
 			ForEachTrPeriod(p)
 			{
+        RealD sum_all_veg_types = 0;
+        ForEachVegType(t) {
+          sum_all_veg_types += _roots_active_sum[Itlp(t,l,p)];
+        }
+
 				_roots_active_rel[Iglp(g, l, p)] =
-				ZRO(_roots_active_sum[Itlp(t,l,p)]) ?
+				ZRO(sum_all_veg_types) ?
 						0. :
 						_roots_active[Iglp(g, l, p)]
-								/ _roots_active_sum[Itlp(t,l, p)];
+								/ sum_all_veg_types;
 			}
 		}
 	}
@@ -257,25 +259,7 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
     ForEachGroup(g) //Steppe functional group
     {
         use_by_group[g] = 0.;
-        t = RGroup[g]->veg_prod_type - 1;
-
-        switch (t) {
-            case 0://Tree
-                transp = SXW.transpVeg[SW_TREES];
-                break;
-            case 1://Shrub
-                transp = SXW.transpVeg[SW_SHRUB];
-                break;
-            case 2://Grass
-                transp = SXW.transpVeg[SW_GRASS];
-                break;
-            case 3://Forb
-                transp = SXW.transpVeg[SW_FORBS];
-                break;
-            default:
-                transp = SXW.transpTotal;
-                break;
-        }
+        transp = SXW.transpVeg[RGroup[g]->veg_prod_type];
 
         //Loops through each month and calculates amount of transpiration for each STEPPE functional group
         //according to whether that group has active living roots in each soil layer for each month
