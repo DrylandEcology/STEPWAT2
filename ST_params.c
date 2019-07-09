@@ -1052,9 +1052,9 @@ static void _species_init( void) {
       }
 
 		x = sscanf(inbuf,
-				"%s %hd %hd %f %f %hd %hd %f %hd %f %f %s %hd %hd %f %hd %f %hd",
-				name, &rg, &age, &irate, &ratep, &slow, &dist, &estab, &eind,
-				&minb, &maxb, clonal, &vegi, &temp, &cohort, &turnon, &var, &pseed);
+				"%s %hd %hd %hd %hd %hd %hd %hd %hd %hd %s %f %f %f %f %f %f %f",
+				name, &rg, &age, &slow, &dist, &eind, &vegi, &temp, &turnon, &pseed, clonal, &irate, &ratep,  &estab,
+				&minb, &maxb, &cohort, &var);
       if (x != 18) {
         LogError(logfp, LOGFATAL, "%s: Wrong number of columns in species",
                 MyFileName);
