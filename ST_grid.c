@@ -394,6 +394,8 @@ static void logProgress(int iteration, int year, Status status);
 static double calculateProgress(int year, int iteration, Status status);
 static void printGeneralInfo(void);
 static void _run_spinup(void);
+static void beginInitialization(void);
+static void endInitialization(void);
 static void saveAsSpinupConditions(void);
 static void loadSpinupConditions(void);
 static void _init_grid_files(void);
@@ -747,15 +749,10 @@ static void _run_spinup(void)
 	/* ints used for iterating over years and iterations */
 	IntS year, iter;
 
-	/* For iterating over RGroup and Species */
-	GrpIndex rg;
-	SppIndex sp;
-	IntS k;
+	/* killedany for mortality functions */
+	Bool killedany;
 
-	/* killedany for mortality functions, temporary_storage for swapping variables */
-	Bool killedany, temporary_storage;
-
-	DuringSpinup = TRUE;
+	beginInitialization();
 
 	if (!UseSoils)
 	{ // if we're not using inputting soils then there is simply one soil type as all the soils are the same
@@ -787,35 +784,6 @@ static void _run_spinup(void)
 				Globals->currIter = iter;
 			}
 		}
-		unload_cell(); // Reset the global variables
-
-		/* Before we start iterating we need to swap Species[sp]->use_me and mySpeciesInit.shouldBeInitialized[sp].
-		   shouldBeInitialized is an array of booleans that represent whether the given species should be used 
-		   in initialization. use_me is a boolean that represents whether the given species should be used in production.
-		   By swaping them we save space, but we have to remember to swap them back before the production run. */
-		for(i = 0; i < grid_Rows; ++i){
-			for(j = 0; j < grid_Cols; ++j){
-				if(!gridCells[i][j].mySpeciesInit.use_SpinUp){
-					continue;
-				}
-				load_cell(i, j);	/* We could do this without loading the cell, but there would be no guarantee
-									   that ForEachGroup would iterate correctly */
-
-				Globals->currIter = iter; // We need to do this before the "years" loop.
-
-				/* Begin swaping variables */
-				ForEachGroup(rg){
-					ForEachGroupSpp(sp, rg, k){
-						// Temporarily store use_me
-						temporary_storage = Species[sp]->use_me;
-						// Swap use_me
-						Species[sp]->use_me = gridCells[i][j].mySpeciesInit.shouldBeInitialized[sp]; 
-						// Swap shouldBeInitialized[sp]
-						gridCells[i][j].mySpeciesInit.shouldBeInitialized[sp] = temporary_storage;
-					} /* End for each species */
-				} /* End for each group */
-			} /* End for each column */
-		} /* End for each row */
 		unload_cell(); // Reset the global variables
 
 		for (year = 1; year <= SuperGlobals.runModelYears; year++)
@@ -876,35 +844,58 @@ static void _run_spinup(void)
 		ChDir("..");
 	} /* End iterations */
 
-	/* Swap back Species[sp]->use_me and shouldBeInitialized[sp]. */
+	endInitialization();
+}
+
+/* Prepares for initialization by turning on species that have requested initialization and turning off 
+   species that have not requested initialization. This function should be accompanied by a call to 
+   endInitialization. */
+static void beginInitialization(void){
+	int i, j; 				/* For iterating over cells */
+	SppIndex sp;			/* For iterating over species */
+	Bool temporary_storage;	/* For swapping variables */
+
+	DuringSpinup = TRUE;
+
+	/* Swap Species[sp]->use_me and mySpeciesInit.shouldBeInitialized[sp]. shouldBeInitialized is an array 
+	   of booleans that represent whether the given species should be used in initialization. use_me is a 
+	   boolean that represents whether the given species should be used in production. By swaping them we 
+	   save space, but we have to remember to swap them back before the production run. */
 	for(i = 0; i < grid_Rows; ++i){
 		for(j = 0; j < grid_Cols; ++j){
 			if(!gridCells[i][j].mySpeciesInit.use_SpinUp){
-					continue;
+				continue;
 			}
 			load_cell(i, j);	/* We could do this without loading the cell, but there would be no guarantee
-								   that ForEachGroup would iterate correctly */
+									that ForEachGroup would iterate correctly */
+
 			/* Begin swaping variables */
-			ForEachGroup(rg){
-				ForEachGroupSpp(sp, rg, k){
-					// Temporarily store use_me
-					temporary_storage = Species[sp]->use_me;
-					// Swap use_me
-					Species[sp]->use_me = gridCells[i][j].mySpeciesInit.shouldBeInitialized[sp]; 
-					// Swap shouldBeInitialized[sp]
-					gridCells[i][j].mySpeciesInit.shouldBeInitialized[sp] = temporary_storage;
-				} /* End for each species */
-			} /* End for each group */
+			ForEachSpecies(sp){
+				// Temporarily store use_me
+				temporary_storage = Species[sp]->use_me;
+				// Swap use_me
+				Species[sp]->use_me = gridCells[i][j].mySpeciesInit.shouldBeInitialized[sp]; 
+				// Swap shouldBeInitialized[sp]
+				gridCells[i][j].mySpeciesInit.shouldBeInitialized[sp] = temporary_storage;
+			} /* End for each species */
 		} /* End for each column */
 	} /* End for each row */
 	unload_cell(); // Reset the global variables
+}
 
-	// Save everything that has happened thus far.
+/* Return the program to the state it needs to be in for the main simulation. This should only be called if you
+   have called beginInitialization. */
+static void endInitialization(void){
+	// Calling this function a second time will swap the variables back to their original state.
+	beginInitialization();
+	// Save the state of the program as our initialization conditions.
 	saveAsSpinupConditions();
-
+	// We have now exited spinup.
 	DuringSpinup = FALSE;
 }
 
+/* Save the current state of the program as spinup conditions. This is low level function. If you have already called
+   endInitialization() there is no need to call this function. */
 static void saveAsSpinupConditions(){
 	// Save gridCells as spinupCells
 	spinupCells = gridCells;
@@ -918,6 +909,7 @@ static void saveAsSpinupConditions(){
 	_init_grid_inputs();			// reads the grid inputs in & initializes the global grid variables
 }
 
+/* Load the state of the program right after initialization. */
 static void loadSpinupConditions(){
 	int row, col;
 	GrpIndex rg;
