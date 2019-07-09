@@ -32,4 +32,4 @@ extern GlobalType     SuperGlobals;
 extern Bool UseSeedDispersal;
 extern int InitializationMethod;
 extern Bool UseGrid;
-extern Bool DuringSpinup;
+extern Bool DuringInitialization;

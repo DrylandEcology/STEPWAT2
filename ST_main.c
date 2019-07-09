@@ -138,7 +138,7 @@ MortFlagsType  MortFlags;
 Bool UseGrid;
 Bool UseSeedDispersal;
 int InitializationMethod;
-Bool DuringSpinup;
+Bool DuringInitialization;
 Bool EchoInits;
 Bool UseProgressBar;
 Bool STdebug_requested;

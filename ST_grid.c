@@ -144,8 +144,8 @@ struct _grid_sxw_st
 
 struct _grid_init_species_st
 {
-	/* TRUE is this cell should use spinup */
-	int use_SpinUp;
+	/* TRUE if at least one species has requested initialization */
+	int useInitialization;
 	/* Array of Boolean values. TRUE if given species
 	   should be included in spinup */
 	int *shouldBeInitialized;
@@ -170,7 +170,7 @@ struct grid_cell_st
 	/* If TRUE this cell should use seed dispersal */
 	Bool useSeedDispersal;
 	/* TRUE if this cell is in spinup mode */
-	Bool duringSpinup;
+	Bool DuringInitialization;
 	/* species spinup information */
 	Grid_Init_Species_St mySpeciesInit;
 	/* seed dispersal information corresponding to this cell */
@@ -396,8 +396,8 @@ static void printGeneralInfo(void);
 static void _run_spinup(void);
 static void beginInitialization(void);
 static void endInitialization(void);
-static void saveAsSpinupConditions(void);
-static void loadSpinupConditions(void);
+static void saveAsInitializationConditions(void);
+static void loadInitializationConditions(void);
 static void _init_grid_files(void);
 static void _init_grid_inputs(void);
 static void _init_SXW_inputs(Bool init_SW, char *f_roots);
@@ -599,7 +599,7 @@ void runGrid(void)
 
 		// If we used spinup we need to reset to the state of the program right after spinup.
 		if (InitializationMethod == INIT_WITH_SPINUP){
-			loadSpinupConditions();
+			loadInitializationConditions();
 		}
 
 		RandSeed(SuperGlobals.randseed, &environs_rng);
@@ -795,7 +795,7 @@ static void _run_spinup(void)
 				for(j = 0; j < grid_Cols; ++j)
 				{ // for each column
 					// If we should run spinup on this cell
-					if(gridCells[i][j].mySpeciesInit.use_SpinUp){
+					if(gridCells[i][j].mySpeciesInit.useInitialization){
 						// Load up a cell
 						load_cell(i, j);
 					} else {
@@ -854,7 +854,7 @@ static void beginInitialization(void){
 	SppIndex sp;			/* For iterating over species */
 	Bool temporary_storage;	/* For swapping variables */
 
-	DuringSpinup = TRUE;
+	DuringInitialization = TRUE;
 
 	/* Swap Species[sp]->use_me and mySpeciesInit.shouldBeInitialized[sp]. shouldBeInitialized is an array 
 	   of booleans that represent whether the given species should be used in initialization. use_me is a 
@@ -862,7 +862,7 @@ static void beginInitialization(void){
 	   save space, but we have to remember to swap them back before the production run. */
 	for(i = 0; i < grid_Rows; ++i){
 		for(j = 0; j < grid_Cols; ++j){
-			if(!gridCells[i][j].mySpeciesInit.use_SpinUp){
+			if(!gridCells[i][j].mySpeciesInit.useInitialization){
 				continue;
 			}
 			load_cell(i, j);	/* We could do this without loading the cell, but there would be no guarantee
@@ -888,14 +888,14 @@ static void endInitialization(void){
 	// Calling this function a second time will swap the variables back to their original state.
 	beginInitialization();
 	// Save the state of the program as our initialization conditions.
-	saveAsSpinupConditions();
+	saveAsInitializationConditions();
 	// We have now exited spinup.
-	DuringSpinup = FALSE;
+	DuringInitialization = FALSE;
 }
 
 /* Save the current state of the program as spinup conditions. This is low level function. If you have already called
    endInitialization() there is no need to call this function. */
-static void saveAsSpinupConditions(){
+static void saveAsInitializationConditions(){
 	// Save gridCells as spinupCells
 	spinupCells = gridCells;
 	// Nullify gridCells. This ensures we can no longer modify spinupCells on accident.
@@ -909,7 +909,7 @@ static void saveAsSpinupConditions(){
 }
 
 /* Load the state of the program right after initialization. */
-static void loadSpinupConditions(){
+static void loadInitializationConditions(){
 	int row, col;
 	GrpIndex rg;
 	SppIndex sp;
@@ -998,7 +998,7 @@ static void _init_grid_inputs(void)
     for(i = 0; i < grid_Rows; ++i) {
         for(j = 0; j < grid_Cols; ++j) {
             load_cell(i, j);
-            gridCells[i][j].duringSpinup = FALSE;
+            gridCells[i][j].DuringInitialization = FALSE;
         }
     }
 
@@ -1532,7 +1532,7 @@ static void load_cell(int row, int col){
 	Globals = &gridCells[row][col].myGlobals;
 
 	/* TRUE if this cell is in spinup mode */
-	DuringSpinup = gridCells[row][col].duringSpinup;
+	DuringInitialization = gridCells[row][col].DuringInitialization;
 
 	_SomeKillage = gridCells[row][col].someKillage;
 
@@ -2393,11 +2393,11 @@ static void _do_seed_dispersal(void)
 static void _read_init_species(void)
 {
 	// reads the grid init species input
-	// the file should be something like: "cell,copy_cell,copy_which,use_SpinUp,(all the species names seperated by a comma)"
+	// the file should be something like: "cell,copy_cell,copy_which,(all the species names seperated by a comma)"
 	// there should be no spaces in between, just commas separating the values (ie it should be a .csv file, but does not account for all of the possibilities that a .csv file could be)
 
 	FILE *f;
-	int i, j, num, cell, do_copy, copy_cell, use_SpinUp, seeds_Avail,
+	int i, j, num, cell, do_copy, copy_cell, useInitialization, seeds_Avail,
 	    row, col, copy_cell_row, copy_cell_col;
 	Bool isAnyCellOnForSpinup = FALSE;
 	char buf[4096];
@@ -2408,7 +2408,7 @@ static void _read_init_species(void)
 	GetALine2(f, buf, 4096); // gets rid of the first line (since it just defines the columns)... it's only there for user readability
 	for (i = 0; i < grid_Cells; i++)
 	{
-		use_SpinUp = FALSE;
+		useInitialization = FALSE;
 	    row = i / grid_Cols;
 	    col = i % grid_Cols;
 
@@ -2433,8 +2433,8 @@ static void _read_init_species(void)
 			for (j = 0; j < Globals->sppCount; j++)
 				gridCells[row][col].mySpeciesInit.shouldBeInitialized[j] =
 				    gridCells[copy_cell_row][copy_cell_col].mySpeciesInit.shouldBeInitialized[j];
-			gridCells[row][col].mySpeciesInit.use_SpinUp =
-			    gridCells[copy_cell_row][copy_cell_col].mySpeciesInit.use_SpinUp;
+			gridCells[row][col].mySpeciesInit.useInitialization =
+			    gridCells[copy_cell_row][copy_cell_col].mySpeciesInit.useInitialization;
 			continue;
 		}
 		else if (do_copy == 1)
@@ -2453,7 +2453,7 @@ static void _read_init_species(void)
 			}
 
 			if(seeds_Avail){
-				use_SpinUp = TRUE;
+				useInitialization = TRUE;
 				isAnyCellOnForSpinup = TRUE;
 			}
 
@@ -2461,7 +2461,7 @@ static void _read_init_species(void)
 			stringIndex += _get_value_index(&buf[stringIndex], ',', 1);
 		}
 
-		gridCells[row][col].mySpeciesInit.use_SpinUp = use_SpinUp;
+		gridCells[row][col].mySpeciesInit.useInitialization = useInitialization;
 	}
 
 	if (i != grid_Cells)
