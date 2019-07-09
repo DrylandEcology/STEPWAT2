@@ -46,11 +46,6 @@
 #      see also the same flag in group parameters file.
 # dispersal = turn on/off seed dispersal for this species. 1=use, 0=don't use.
 # 	dispersal is only applicable when using gridded option.
-# var = the variance parameter of the beta distribution for annual establishment. This parameter, 
-#       along with the mean (pestab), is used to calculate the two shape parameters: alpha and beta. 
-#       Default value: 0.0001. NOTE: var must be < pestab * (1-pestab) or alpha and/or beta will be negative,
-#       we will no longer be meeting the assumptions of a beta distribution, and the code will fail.
-# pseed = the average number of seeds produced by annual species per 1g of biomass, per 1m^2 and per year.
 
 ###PARAMETER SOURCES     
 #TM - eind values are density values taken from Adler datasets from Idaho. Species vuoc (1090), bogr, spcr, brar (2080), are from Karl et al 1999
@@ -77,25 +72,25 @@
 #		ALSO tested max biomass for ARTR - found 400 worked best but is flexible 200-500 with above irates
 #		ALSO tested max age for ARTR - found that model is not very sensitive to max age but literature shows 100-150 max age
 
-# name   rg   age  slow  disturb  eind  vegindv  tclass  onoff  pseed  clonal   irate   ratep   pestab   minbio    maxbio  cosurv    var
-  artr   1    100    4      3       2      0        2      1        0     n     0.100   0.900    0.30    2.000    400.000   0.01    0.0000  
-  trdu   2      1    2      3       5      0        2      0        0     n     0.947   0.900    0.03    0.035      4.700   0.00    0.0000  
-  cryp   2      1    2      3      10      0        2      1      100     n     0.947   0.900    0.20    0.035      4.700   0.00    0.0001         
-  amre   3      1    2      3       5      0        2      0        0     n     0.947   0.900    0.03    0.035      4.429   0.00    0.0000                           
-  chen   3      1    2      2       8      0        1      1      100     n     0.947   0.900    0.20    0.035      4.429   0.00    0.0001                              
-  acmi   4     10    2      3       6      0        2      0        0     n     0.426   0.900    0.15    0.035      5.000   0.01    0.0000                    
-  phho   4     10    2      3      15      0        2      1        0     n     0.426   0.900    0.15    0.035      5.000   0.01    0.0000                          
-  arfr   5      5    2      3       5      0        2      1        0     n     0.426   0.900    0.10    0.035      7.480   0.01    0.0000                       
-  lipu   5     35    2      3       4      0        2      0        0     n     0.426   0.900    0.10    0.035      7.480   0.01    0.0000                    
-  brte   6      1    2      3      20      0        2      1     1000     n     0.947   0.900    0.15    0.020      5.000   0.00    0.0001        
-  vuoc   6      1    2      1      16      0        2      0        0     n     0.947   0.900    0.03    0.020      5.000   0.00    0.0000 
-  pssp   7     35    2      3      20      3        2      1        0     y     0.474   0.900    0.15    0.500     15.096   0.01    0.0000                                     
-  koma   7      5    2      3       2      3        2      0        0     y     0.474   0.900    0.15    0.500     15.096   0.01    0.0000                                                               
-  bogr   8     35    2      2       2      3        1      0        0     y     0.474   0.900    0.05    0.605     15.096   0.01    0.0000                                                            
-  spcr   8     29    2      3       3      0        1      1        0     y     0.474   0.900    0.05    0.605      6.000   0.01    0.0000                
-  gusa   9     35    2      3       2      0        2      0        0     n     0.737   0.900    0.15    0.986     12.126   0.01    0.0000                    
-  chvi   9     17    2      2       2      0        2      1        0     n     0.474   0.900    0.15    0.986     70.726   0.01    0.0000                          
-  oppo   10    30    4      4       1      3        1      1        0     y     0.289   0.900    0.05    2.250     15.000   0.01    0.0000    
+# name   rg  onoff  age  slow  disturb  eind  vegindv  tclass  clonal   irate   ratep   pestab   minbio    maxbio  cosurv
+  artr   1     1    100    4      3       2      0        2       n     0.100   0.900    0.30    2.000    400.000   0.01
+  trdu   2     0      1    2      3       5      0        2       n     0.947   0.900    0.03    0.035      4.700   0.00
+  cryp   2     1      1    2      3      10      0        2       n     0.947   0.900    0.20    0.035      4.700   0.00
+  amre   3     0      1    2      3       5      0        2       n     0.947   0.900    0.03    0.035      4.429   0.00
+  chen   3     1      1    2      2       8      0        1       n     0.947   0.900    0.20    0.035      4.429   0.00
+  acmi   4     0     10    2      3       6      0        2       n     0.426   0.900    0.15    0.035      5.000   0.01
+  phho   4     1     10    2      3      15      0        2       n     0.426   0.900    0.15    0.035      5.000   0.01
+  arfr   5     1      5    2      3       5      0        2       n     0.426   0.900    0.10    0.035      7.480   0.01
+  lipu   5     0     35    2      3       4      0        2       n     0.426   0.900    0.10    0.035      7.480   0.01
+  brte   6     1      1    2      3      20      0        2       n     0.947   0.900    0.15    0.020      5.000   0.00
+  vuoc   6     0      1    2      1      16      0        2       n     0.947   0.900    0.03    0.020      5.000   0.00
+  pssp   7     1     35    2      3      20      3        2       y     0.474   0.900    0.15    0.500     15.096   0.01
+  koma   7     0      5    2      3       2      3        2       y     0.474   0.900    0.15    0.500     15.096   0.01
+  bogr   8     0     35    2      2       2      3        1       y     0.474   0.900    0.05    0.605     15.096   0.01
+  spcr   8     1     29    2      3       3      0        1       y     0.474   0.900    0.05    0.605      6.000   0.01
+  gusa   9     0     35    2      3       2      0        2       n     0.737   0.900    0.15    0.986     12.126   0.01
+  chvi   9     1     17    2      2       2      0        2       n     0.474   0.900    0.15    0.986     70.726   0.01
+  oppo   10    1     30    4      4       1      3        1       y     0.289   0.900    0.05    2.250     15.000   0.01
 
 [end]  # this marks the end of the species-specific parameters above
 
@@ -105,17 +100,22 @@
 # name = name as found in previous table.  must be exactly the same.
 # viable = max years seed viability.  sets seedprod array size.
 # xdecay = decay exponent.  indivs established = SUM(1/seed_age^xdecay)
+# pseed = the average number of seeds produced by annual species per 1g of biomass, per 1m^2 and per year.
+# var = the variance parameter of the beta distribution for annual establishment. This parameter, 
+#       along with the mean (pestab), is used to calculate the two shape parameters: alpha and beta. 
+#       Default value: 0.0001. NOTE: var must be < pestab * (1-pestab) or alpha and/or beta will be negative,
+#       we will no longer be meeting the assumptions of a beta distribution, and the code will fail.
 #
-# name     viable xdecay 
- vuoc        10    1.00
- brte        3	   1.00
- cryp        10    1.00
- trdu        10    1.00
- amre        10    1.00
- chen        10    1.00
+# name  viable xdecay  pseed   var
+ vuoc     10    1.00       0  0.0000     
+ brte      3    1.00    1000  0.0001   
+ cryp     10    1.00     100  0.0001    
+ trdu     10    1.00       0  0.0000 
+ amre     10    1.00       0  0.0000
+ chen     10    1.00     100  0.0001
  
-#spp1       10    1.00
-#spp2       10    1.00
+#spp1     10    1.00       0  0.0000
+#spp2     10    1.00       0  0.0000
 
 [end]  # end of additional annuals-only parameters.
 
