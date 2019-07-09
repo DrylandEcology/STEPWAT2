@@ -522,11 +522,10 @@ double calculateProgress(int year, int iteration, Status status){
 /* Print information about the simulation to stdout. */
 static void printGeneralInfo(void){
 	/* ------------------- Print some general information to stdout ----------------------- */
-	printf("Number of layers: %d\n", SW_Site.n_layers);
     printf("Number of iterations: %d\n", SuperGlobals.runModelIterations);
     printf("Number of years: %d\n", SuperGlobals.runModelYears);
 	printf("Number of cells: %d\n\n", grid_Cells);
-	if(UseDisturbances) printf("Using grid Disturbances file.\n");
+	if(UseDisturbances) printf("Using grid disturbances file\n");
 	if(UseSoils) printf("Using grid soils file\n");
 	if(InitializationMethod == INIT_WITH_SEEDS){
 		 printf("Seeds availible for %d years at the start of the simulation.\n",sd_NYearsSeedsAvailable);
