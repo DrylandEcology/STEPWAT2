@@ -279,10 +279,9 @@ static void _update_productivity(void) {
                 }
             }
 
-            v->veg[SW_TREES].litter[m] = (vegTypeBiomass[0] / v->veg[SW_TREES].cov.fCover * _prod_litter[m]);
-            v->veg[SW_SHRUB].litter[m] = (vegTypeBiomass[1] / v->veg[SW_SHRUB].cov.fCover * _prod_litter[m]);
-            v->veg[SW_GRASS].litter[m] = (vegTypeBiomass[2] / v->veg[SW_GRASS].cov.fCover * _prod_litter[m]);
-            v->veg[SW_FORBS].litter[m] = (vegTypeBiomass[3] / v->veg[SW_FORBS].cov.fCover * _prod_litter[m]);
+            ForEachVegType(k) {
+                v->veg[k].litter[m] = v->veg[k].biomass[m] * _prod_litter[m];
+            }
         }
     }
 #undef Biomass
