@@ -1,5 +1,5 @@
 [submodule "sw_src"]
 	path = sw_src
 	url = https://github.com/DrylandEcology/SOILWAT2.git
-	branch = enhancement_262_biomassunits
+	branch = master
         ignore = dirty
