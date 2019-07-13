@@ -1,9 +1,0 @@
-# Seed dispersal setup for STEPWAT grid version - DLM 07-29-13.  This file contains constants that are used in seed dispersal.  The rest of the seed dispersal inputs are set up on a species basis in the species input file.
-
-#SEED DISPERSAL OUTPUTS
-1		# output seed dispersal (ie. the total probability that a cell received seeds for each cell for each year for each species)?  1 means yes, 0 means no
-1		# output header (ie. the names of all the species)?  1 means yes, 0 means no.  Suggested: yes, as it's hard to figure out what all the numbers mean elsewise.
-,		# output seperator... specify one of the following as a separator: t = tab, s = space, or any single character such as , | : etc (excluding '#','t', and 's').  Suggested: tab.
-
-#Seed Availability options
-10		# number of years N at the beginning of the simulation during which seeds are available for germination.  Input: N years.

@@ -217,7 +217,6 @@ enum
     GRID_FILE_SETUP,
     GRID_FILE_DISTURBANCES,
     GRID_FILE_SOILS,
-    GRID_FILE_SEED_DISPERSAL,
     GRID_FILE_INIT_SPECIES,
     GRID_FILE_FILES,
     GRID_FILE_MAXRGROUPSPECIES,
@@ -250,7 +249,7 @@ typedef enum
 
 char *grid_files[N_GRID_FILES], *grid_directories[N_GRID_DIRECTORIES], sd_Sep;
 
-int grid_Cols, grid_Rows, grid_Cells, sd_NYearsSeedsAvailable;
+int grid_Cols, grid_Rows, grid_Cells;
 int UseDisturbances, UseSoils, sd_DoOutput, sd_MakeHeader; //these are treated like booleans
 
 // these variables are for storing the globals in STEPPE... they are dynamically allocated/freed
@@ -416,7 +415,7 @@ static void _init_soil_layers(int cell, int isSpinup);
 static float _read_a_float(FILE *f, char *buf, const char *filename,
 		const char *descriptor);
 static float _cell_dist(int row1, int row2, int col1, int col2, float cellLen);
-static void _read_seed_dispersal_in(void);
+static void _init_seed_dispersal(void);
 static void _do_seed_dispersal(void);
 static void _read_init_species(void);
 
@@ -528,7 +527,7 @@ static void printGeneralInfo(void){
 	if(UseDisturbances) printf("Using grid disturbances file\n");
 	if(UseSoils) printf("Using grid soils file\n");
 	if(InitializationMethod == INIT_WITH_SEEDS){
-		 printf("Seeds availible for %d years at the start of the simulation.\n",sd_NYearsSeedsAvailable);
+		 printf("Seeds availible for %d years at the start of the simulation.\n",SuperGlobals.runInitializationYears);
 	} else if(InitializationMethod == INIT_WITH_SPINUP) { 
 		printf("Running Spinup\n");
 	}
@@ -989,7 +988,7 @@ static void _init_grid_inputs(void)
 		_read_disturbances_in();
 	if (UseSeedDispersal || InitializationMethod != INIT_WITH_NOTHING)
 	{
-		_read_seed_dispersal_in();
+		_init_seed_dispersal();
 		_read_init_species();
 	}
 	if (UseSoils)
@@ -2027,7 +2026,7 @@ static void _init_soil_layers(int cell, int isSpinup)
 static float _read_a_float(FILE *f, char *buf, const char *filename,
 		const char *descriptor)
 {
-	//small function to reduce code duplication in the _read_seed_dispersal_in() function...
+	//small function to reduce code duplication in the _init_seed_dispersal() function...
 	//f should be already open, and all of the character arrays should be pre-allocated before calling the function...
 	float result;
 
@@ -2060,54 +2059,22 @@ static float _cell_dist(int row1, int row2, int col1, int col2, float cellLen)
 	}
 }
 
-/***********************************************************/
-static void _read_seed_dispersal_in(void)
+/* Initialize all derived seed dispersal variables. (variables that are not specified directly in inputs). 
+   This function is safe to call multiple times, but it only needs to be called once.*/
+static void _init_seed_dispersal(void)
 {
 	// reads the grid seed dispersal input file and sets up grid_SD with the correct values and probabilities
-
 	FILE *f;
 	char buf[1024];
 	float sd_Rate, H, VW, VT, MAXD, plotLength, pd, d;
 	int maxCells, i, j, k, MAXDP, row, col, cell;
 	SppIndex s;
 
-	// read in the seed dispersal input file to get the constants that we need
-	f = OpenFile(grid_files[GRID_FILE_SEED_DISPERSAL], "r");
-
-	GetALine(f, buf);
-	if (sscanf(buf, "%d", &sd_DoOutput) != 1)
-		LogError(logfp, LOGFATAL,
-				"Invalid %s file: seed dispersal output line\n", grid_files[GRID_FILE_SEED_DISPERSAL]);
-
-	GetALine(f, buf);
-	if (sscanf(buf, "%d", &sd_MakeHeader) != 1)
-		LogError(logfp, LOGFATAL,
-				"Invalid %s file: seed dispersal make header line\n",
-				grid_files[GRID_FILE_SEED_DISPERSAL]);
-
-	GetALine(f, buf);
-	if (sscanf(buf, "%c", &sd_Sep) != 1)
-		LogError(logfp, LOGFATAL,
-				"Invalid %s file: seed dispersal seperator line\n",
-				grid_files[GRID_FILE_SEED_DISPERSAL]);
-
-	if (sd_Sep == 't') //dealing with tab and space special cases...
-		sd_Sep = '\t';
-	else if (sd_Sep == 's')
-		sd_Sep = ' ';
-
-	GetALine(f, buf);
-	if (sscanf(buf, "%d", &sd_NYearsSeedsAvailable) != 1)
-		LogError(logfp, LOGFATAL, "Invalid %s file: option 1 line\n",
-				grid_files[GRID_FILE_SEED_DISPERSAL]);
-
-	CloseFile(&f);
-
     for (i = 0; i < grid_Cells; i++) {
         row = i / grid_Cols;
         col = i % grid_Cols;
 
-        gridCells[row][col].mySeedDispersal = Mem_Calloc(MAX_SPECIES, sizeof(Grid_SD_St), "_read_seed_dispersal_in");
+		gridCells[row][col].mySeedDispersal = Mem_Calloc(MAX_SPECIES, sizeof(Grid_SD_St), "_init_seed_dispersal");
     }
 
 	/*
@@ -2148,9 +2115,9 @@ static void _read_seed_dispersal_in(void)
 		    col = i % grid_Cols;
 
 			gridCells[row][col].mySeedDispersal[s].cells = Mem_Calloc(maxCells, sizeof(int),
-					"_read_seed_dispersal_in()"); //the cell number
+					"_init_seed_dispersal()"); //the cell number
 			gridCells[row][col].mySeedDispersal[s].prob = Mem_Calloc(maxCells, sizeof(float),
-					"_read_seed_dispersal_in()"); //the probability that the cell will disperse seeds to this distance
+					"_init_seed_dispersal()"); //the probability that the cell will disperse seeds to this distance
 			gridCells[row][col].mySeedDispersal[s].size = 0; //refers to the number of cells reachable...
 		}
 
@@ -2256,11 +2223,11 @@ static void _do_seed_dispersal(void)
 
                 load_cell(row, col);
 
-				if (Globals->currYear <= sd_NYearsSeedsAvailable)
+				if (Globals->currYear <= SuperGlobals.runInitializationYears)
 				{
 					cell->mySeedDispersal[s].seeds_present = 1;
 				}
-				else if (Globals->currYear <= sd_NYearsSeedsAvailable
+				else if (Globals->currYear <= SuperGlobals.runInitializationYears
 						 && cell->mySpeciesInit.shouldBeInitialized[s])
 				{
 					cell->mySeedDispersal[s].seeds_present = 1;
@@ -2556,6 +2523,28 @@ static void _read_grid_setup(void)
 			LogError(logfp, LOGFATAL, "Invalid grid setup file (Initialization years line wrong)");
 		}
 	}
+
+	GetALine(f, buf);
+	if (sscanf(buf, "%d", &sd_DoOutput) != 1)
+		LogError(logfp, LOGFATAL,
+				"Invalid %s file: seed dispersal output line\n", grid_files[GRID_FILE_SETUP]);
+
+	GetALine(f, buf);
+	if (sscanf(buf, "%d", &sd_MakeHeader) != 1)
+		LogError(logfp, LOGFATAL,
+				"Invalid %s file: seed dispersal make header line\n",
+				grid_files[GRID_FILE_SETUP]);
+
+	GetALine(f, buf);
+	if (sscanf(buf, "%c", &sd_Sep) != 1)
+		LogError(logfp, LOGFATAL,
+				"Invalid %s file: seed dispersal seperator line\n",
+				grid_files[GRID_FILE_SETUP]);
+
+	if (sd_Sep == 't') //dealing with tab and space special cases...
+		sd_Sep = '\t';
+	else if (sd_Sep == 's')
+		sd_Sep = ' ';
 
     CloseFile(&f);
 }
