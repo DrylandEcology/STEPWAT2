@@ -509,7 +509,7 @@ static void logProgress(int iteration, int year, Status status){
 double calculateProgress(int year, int iteration, Status status){
 	double percentComplete;
 	if(status == SPINUP){
-		percentComplete = (year / (double) SuperGlobals.runModelYears);
+		percentComplete = (year / (double) SuperGlobals.runInitializationYears);
 	} else if(status == SIMULATION) {
 		percentComplete = ((iteration * SuperGlobals.runModelYears) + year) 
 						  / (double) (SuperGlobals.runModelIterations * SuperGlobals.runModelYears);
@@ -785,7 +785,7 @@ static void _run_spinup(void)
 		}
 		unload_cell(); // Reset the global variables
 
-		for (year = 1; year <= SuperGlobals.runModelYears; year++)
+		for (year = 1; year <= SuperGlobals.runInitializationYears; year++)
 		{ //for each year
 			if(UseProgressBar){
 				logProgress(iter, year, SPINUP);
@@ -2549,6 +2549,14 @@ static void _read_grid_setup(void)
 	} else {
 		LogError(logfp, LOGFATAL, 
 		         "Invalid grid setup file (Initialization line wrong. Valid options are \"spinup\", \"seeds\", or \"none\")");
+	}
+
+	if(InitializationMethod != INIT_WITH_NOTHING){
+		GetALine(f, buf);
+		i = sscanf(buf, "%hd", &SuperGlobals.runInitializationYears);
+		if(i < 1){
+			LogError(logfp, LOGFATAL, "Invalid grid setup file (Initialization years line wrong)");
+		}
 	}
 
     CloseFile(&f);
