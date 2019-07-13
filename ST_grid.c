@@ -1620,14 +1620,13 @@ static void _read_disturbances_in(void)
 			break;
 
         ForEachGroup(rg) {
-            num = sscanf(buf, "%d,%d,%d,%d,%hu,%hu,%f,%hu,%hu,%hu,%f,%f,%f", &cell,
+            num = sscanf(buf, "%d,%d,%d,%d,%hu,%hu,%f,%hu,%hu,%hu,%f", &cell,
                 &Globals->pat.use, &Globals->mound.use, &Globals->burrow.use, &RGroup[rg]->killyr, 
 				&RGroup[rg]->killfreq_startyr, &RGroup[rg]->killfreq, &RGroup[rg]->extirp, 
-				&RGroup[rg]->grazingfrq, &RGroup[rg]->grazingfreq_startyr, &RGroup[rg]->ignition, 
-				&RGroup[rg]->cheatgrass_coefficient, &RGroup[rg]->wild_fire_slope);
+				&RGroup[rg]->grazingfrq, &RGroup[rg]->grazingfreq_startyr, &RGroup[rg]->ignition);
 		}
 
-		if (num != 13)
+		if (num != 11)
 			LogError(logfp, LOGFATAL, "Invalid %s file line %d wrong",
 					grid_files[GRID_FILE_DISTURBANCES], i + 2);
 	}
