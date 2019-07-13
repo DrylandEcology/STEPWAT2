@@ -2067,14 +2067,12 @@ static void _read_seed_dispersal_in(void)
 
 	FILE *f;
 	char buf[1024];
-	float sd_Rate, H, VW, VT, MAXD, plotLength, d, pd;
+	float sd_Rate, H, VW, VT, MAXD, plotLength, pd, d;
 	int maxCells, i, j, k, MAXDP, row, col, cell;
 	SppIndex s;
 
 	// read in the seed dispersal input file to get the constants that we need
 	f = OpenFile(grid_files[GRID_FILE_SEED_DISPERSAL], "r");
-
-	VW = _read_a_float(f, buf, grid_files[GRID_FILE_SEED_DISPERSAL], "VW line");
 
 	GetALine(f, buf);
 	if (sscanf(buf, "%d", &sd_DoOutput) != 1)
@@ -2132,6 +2130,7 @@ static void _read_seed_dispersal_in(void)
 		// set up grid_SD with the seed dispersal probabilities needed later on...
 		H = Species[s]->sd_H;
 		VT = Species[s]->sd_VT;
+		VW = Species[s]->sd_VW;
 		MAXD = ((H * VW) / VT) / 100.0; // divide by 100.0 because we want it in meters, not centimeters
 		sd_Rate = -(log(0.05) / MAXD); //sd_Rate is the seed dispersal rate... 0.05 = exp(-RATE*MAXD) => RATE = -(ln(0.05)/MAXD) See Coffin et al. 1993
 
@@ -2155,16 +2154,13 @@ static void _read_seed_dispersal_in(void)
 			gridCells[row][col].mySeedDispersal[s].size = 0; //refers to the number of cells reachable...
 		}
 
-		for (row = 1; row <= grid_Rows; row++)
-			for (col = 1; col <= grid_Cols; col++)
-			{
-
+		for (row = 1; row <= grid_Rows; row++){
+			for (col = 1; col <= grid_Cols; col++){
 				cell = col + ((row - 1) * grid_Cols) - 1;
 				k = 0;
 
-				for (i = 1; i <= grid_Rows; i++)
-					for (j = 1; j <= grid_Cols; j++)
-					{
+				for (i = 1; i <= grid_Rows; i++) {
+					for (j = 1; j <= grid_Cols; j++){
 						if (i == row && j == col)
 							continue;
 
@@ -2180,7 +2176,9 @@ static void _read_seed_dispersal_in(void)
 							k++;
 						}
 					}
+				}
 			}
+		}
 
 		for (i = 0; i < grid_Cells; i++) {
 		    row = i / grid_Cols;

@@ -123,13 +123,14 @@ struct species_st {
         cohort_surv,
         exp_decay,        /* annuals: exponent for viability decay function */
         prob_veggrow[4],  /* 1 value for each mortality type, if clonal*/
-  	sd_Param1,	  /* for seed dispersal */
-  	sd_PPTdry,
-	sd_PPTwet,
-	sd_Pmin,
-	sd_Pmax,
-	sd_H,
-	sd_VT;
+  	    sd_Param1,	  /* for seed dispersal */
+  	    sd_PPTdry,    /* for seed dispersal */
+	      sd_PPTwet,    /* for seed dispersal */
+      	sd_Pmin,      /* for seed dispersal */
+        sd_Pmax,      /* for seed dispersal */
+        sd_H,         /* for seed dispersal */
+        sd_VT,        /* for seed dispersal */
+        sd_VW;        /* for seed dispersal */
   TempClass tempclass;
   DisturbClass disturbclass;
   Bool isclonal,
