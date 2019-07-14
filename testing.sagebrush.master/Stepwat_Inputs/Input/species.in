@@ -50,7 +50,7 @@
 #       along with the mean (pestab), is used to calculate the two shape parameters: alpha and beta. 
 #       Default value: 0.0001. NOTE: var must be < pestab * (1-pestab) or alpha and/or beta will be negative,
 #       we will no longer be meeting the assumptions of a beta distribution, and the code will fail.
-# pseed = the average number of seeds produced by annual species per 1g of biomass, per 1m^2 and per year.
+# pseed = the average number of seeds produced by annual species per 1g of biomass, per 1m^2 and per year (internally re-calculated as seeds per 1 g biomass per plot and per year)
 
 ###PARAMETER SOURCES     
 #TM - eind values are density values taken from Adler datasets from Idaho. Species vuoc (1090), bogr, spcr, brar (2080), are from Karl et al 1999
