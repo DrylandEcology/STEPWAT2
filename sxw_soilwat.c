@@ -26,7 +26,7 @@
  *                 types for internal dynamic matrices and
  *                 other affected variables.  See notes in
  *                 sxw.c.
- *	08/01/2012 - DLM - updated _update_productivity() function 
+ *	08/01/2012 - DLM - updated _update_productivity() function
  *          to use the 3 different VegProds now used in soilwat */
 /********************************************************/
 /********************************************************/
@@ -212,7 +212,8 @@ static void _update_productivity(RealF sizes[]) {
     bmassg = (RealF *)Mem_Calloc(Globals.max_rgroups, sizeof(RealF), "_update_productivity");
 
 
-    /* get total biomass for the plot in sq.m */
+    // totbmass: total biomass in g/m2
+    // vegTypeBiomass: biomass for each of the SOILWAT2 vegetation types in g/m2
     ForEachGroup(g) {
         bmassg[g] = sizes[g] / Globals.plotsize; // gram per plot -> gram per m2
         totbmass += bmassg[g];
@@ -221,7 +222,26 @@ static void _update_productivity(RealF sizes[]) {
         vegTypeBiomass[RGroup[g]->veg_prod_type] += bmassg[g];
     }
 
-    // calculate contribution of a resource group per SOILWAT2 vegetation type
+    // Calculate the cover fraction of each SOILWAT2 vegetation type (sum = 1):
+    // here, approximate cover with the contribution of vegetation type biomass
+    // to total biomass
+    if (GT(totbmass, 0.)) {
+        ForEachVegType(k) {
+          v->veg[k].cov.fCover = vegTypeBiomass[k] / totbmass;
+        }
+
+        //TODO: figure how to calculate bareground fraction.
+        v->bare_cov.fCover = 0;
+    } else {
+
+        ForEachVegType(k) {
+            v->veg[k].cov.fCover = 0.0;
+        }
+        v->bare_cov.fCover = 1;
+    }
+
+    // Calculate the biomass contribution of a STEPWAT2 resource group relative
+    // to its SOILWAT2 vegetation type
     ForEachGroup(g) {
         // Get biomass of SOILWAT2 vegetation type for current resource group
         tmp = vegTypeBiomass[RGroup[g]->veg_prod_type];
@@ -232,39 +252,28 @@ static void _update_productivity(RealF sizes[]) {
             RGroup[g]->rgroupFractionOfVegTypeBiomass = 0;
     }
 
-    /* compute monthly biomass, litter, and pct live per month */
+    // Calculate monthly biomass, litter, and pct live:
+    // Note: SOILWAT2 expects biomass per vegetation type as if that type
+    //       covered 100% of a square meter --> scale biomass by 1 / fCover
     ForEachMonth(m) {
 
         ForEachVegType(k) {
             v->veg[k].pct_live[m] = 0.;
             v->veg[k].biomass[m] = 0.;
-            v->veg[k].litter[m] = vegTypeBiomass[k] * _prod_litter[m];
+            v->veg[k].litter[m] = 0.;
         }
 
         if (GT(totbmass, 0.)) {
             ForEachGroup(g) {
               k = RGroup[g]->veg_prod_type;
               v->veg[k].pct_live[m] += _prod_pctlive[Igp(g, m)] * RGroup[g]->rgroupFractionOfVegTypeBiomass;
-              v->veg[k].biomass[m] += _prod_bmass[Igp(g, m)] * bmassg[g];
+              v->veg[k].biomass[m] += _prod_bmass[Igp(g, m)] * bmassg[g] / v->veg[k].cov.fCover;
+            }
+
+            ForEachVegType(k) {
+                v->veg[k].litter[m] = v->veg[k].biomass[m] * _prod_litter[m];
             }
         }
-    }
-
-    // calculate cover of SOILWAT2 vegetation as biomass contribution
-    if (GT(totbmass, 0.)) {
-        ForEachVegType(k) {
-          v->veg[k].cov.fCover = vegTypeBiomass[k] / totbmass;
-        }
-
-        //TODO: figure how to calculate bareground fraction.
-        v->bare_cov.fCover = 0;
-
-    } else {
-        ForEachVegType(k) {
-            v->veg[k].cov.fCover = 0.0;
-        }
-
-        v->bare_cov.fCover = 1;
     }
 
     Mem_Free(bmassg);
