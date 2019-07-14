@@ -206,7 +206,8 @@ static void _update_productivity(void) {
     
 #define Biomass(g)  RGroup_GetBiomass(g)
 
-    /* get total biomass for the plot in sq.m */
+    // totbmass: total biomass in g/m2
+    // vegTypeBiomass: biomass for each of the SOILWAT2 vegetation types in g/m2
     ForEachGroup(g) {
         RGroup[g]->rgroupFractionOfVegTypeBiomass = 0.0;
         bmassg[g] = Biomass(g) / Globals.plotsize;
@@ -222,50 +223,10 @@ static void _update_productivity(void) {
         }
     }
 
-    ForEachGroup(g) {
-        if (GT(vegTypeBiomass[RGroup[g]->veg_prod_type - 1], 0.))
-            RGroup[g]->rgroupFractionOfVegTypeBiomass = bmassg[g] / vegTypeBiomass[RGroup[g]->veg_prod_type - 1];
-        else
-            RGroup[g]->rgroupFractionOfVegTypeBiomass = 0;
-    }
-
-    /* compute monthly biomass, litter, and pct live per month */
-    ForEachMonth(m) {
-
-        ForEachVegType(k) {
-            v->veg[k].pct_live[m] = 0.;
-            v->veg[k].biomass[m] = 0.;
-            v->veg[k].litter[m] = 0.;
-        }
-
-        if (GT(totbmass, 0.)) {
-
-            ForEachGroup(g) {
-                if (1 == RGroup[g]->veg_prod_type) { //tree
-                    v->veg[SW_TREES].pct_live[m] += _prod_pctlive[Igp(g, m)] * RGroup[g]->rgroupFractionOfVegTypeBiomass;
-                    v->veg[SW_TREES].biomass[m] += _prod_bmass[Igp(g, m)] * bmassg[g];
-                } else if (2 == RGroup[g]->veg_prod_type) { //shrub
-                    v->veg[SW_SHRUB].pct_live[m] += _prod_pctlive[Igp(g, m)] * RGroup[g]->rgroupFractionOfVegTypeBiomass;
-                    v->veg[SW_SHRUB].biomass[m] += _prod_bmass[Igp(g, m)] * bmassg[g];
-                } else if (3 == RGroup[g]->veg_prod_type) { //grass
-                    v->veg[SW_GRASS].pct_live[m] += _prod_pctlive[Igp(g, m)] * RGroup[g]->rgroupFractionOfVegTypeBiomass;
-                    v->veg[SW_GRASS].biomass[m] += _prod_bmass[Igp(g, m)] * bmassg[g];
-                } else if (4 == RGroup[g]->veg_prod_type) { //forb
-                    v->veg[SW_FORBS].pct_live[m] += _prod_pctlive[Igp(g, m)] * RGroup[g]->rgroupFractionOfVegTypeBiomass;
-                    v->veg[SW_FORBS].biomass[m] += _prod_bmass[Igp(g, m)] * bmassg[g];
-                }
-            }
-
-            v->veg[SW_TREES].litter[m] = (vegTypeBiomass[0] * _prod_litter[m]);
-            v->veg[SW_SHRUB].litter[m] = (vegTypeBiomass[1] * _prod_litter[m]);
-            v->veg[SW_GRASS].litter[m] = (vegTypeBiomass[2] * _prod_litter[m]);
-            v->veg[SW_FORBS].litter[m] = (vegTypeBiomass[3] * _prod_litter[m]);
-        }
-    }
-
+    // Calculate the cover fraction of each SOILWAT2 vegetation type (sum = 1):
+    // here, approximate cover with the contribution of vegetation type biomass
+    // to total biomass
     if (GT(totbmass, 0.)) {
-        //if (ZRO(biomass))
-        //	biomass = 1;
         v->veg[SW_TREES].cov.fCover = (vegTypeBiomass[0] / totbmass);
         v->veg[SW_SHRUB].cov.fCover = (vegTypeBiomass[1] / totbmass);
         v->veg[SW_GRASS].cov.fCover = (vegTypeBiomass[2] / totbmass);
@@ -279,7 +240,51 @@ static void _update_productivity(void) {
         }
         v->bare_cov.fCover = 1;
     }
+
+    // Calculate the biomass contribution of a STEPWAT2 resource group relative
+    // to its SOILWAT2 vegetation type
+    ForEachGroup(g) {
+        if (GT(vegTypeBiomass[RGroup[g]->veg_prod_type - 1], 0.))
+            RGroup[g]->rgroupFractionOfVegTypeBiomass = bmassg[g] / vegTypeBiomass[RGroup[g]->veg_prod_type - 1];
+        else
+            RGroup[g]->rgroupFractionOfVegTypeBiomass = 0;
+    }
+
+    // Calculate monthly biomass, litter, and pct live:
+    // Note: SOILWAT2 expects biomass per vegetation type as if that type
+    //       covered 100% of a square meter --> scale biomass by 1 / fCover
+    ForEachMonth(m) {
+
+        ForEachVegType(k) {
+            v->veg[k].pct_live[m] = 0.;
+            v->veg[k].biomass[m] = 0.;
+            v->veg[k].litter[m] = 0.;
+        }
+
+        if (GT(totbmass, 0.)) {
+
+            ForEachGroup(g) {
+                if (1 == RGroup[g]->veg_prod_type) { //tree
+                    v->veg[SW_TREES].pct_live[m] += _prod_pctlive[Igp(g, m)] * RGroup[g]->rgroupFractionOfVegTypeBiomass;
+                    v->veg[SW_TREES].biomass[m] += _prod_bmass[Igp(g, m)] * bmassg[g] / v->veg[SW_TREES].cov.fCover;
+                } else if (2 == RGroup[g]->veg_prod_type) { //shrub
+                    v->veg[SW_SHRUB].pct_live[m] += _prod_pctlive[Igp(g, m)] * RGroup[g]->rgroupFractionOfVegTypeBiomass;
+                    v->veg[SW_SHRUB].biomass[m] += _prod_bmass[Igp(g, m)] * bmassg[g] / v->veg[SW_SHRUB].cov.fCover;
+                } else if (3 == RGroup[g]->veg_prod_type) { //grass
+                    v->veg[SW_GRASS].pct_live[m] += _prod_pctlive[Igp(g, m)] * RGroup[g]->rgroupFractionOfVegTypeBiomass;
+                    v->veg[SW_GRASS].biomass[m] += _prod_bmass[Igp(g, m)] * bmassg[g] / v->veg[SW_GRASS].cov.fCover;
+                } else if (4 == RGroup[g]->veg_prod_type) { //forb
+                    v->veg[SW_FORBS].pct_live[m] += _prod_pctlive[Igp(g, m)] * RGroup[g]->rgroupFractionOfVegTypeBiomass;
+                    v->veg[SW_FORBS].biomass[m] += _prod_bmass[Igp(g, m)] * bmassg[g] / v->veg[SW_FORBS].cov.fCover;
+                }
+            }
+
+            ForEachVegType(k) {
+                v->veg[k].litter[m] = v->veg[k].biomass[m] * _prod_litter[m];
+            }
+        }
+    }
 #undef Biomass
-    
+
     Mem_Free(bmassg);
 }
