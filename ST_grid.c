@@ -393,6 +393,8 @@ static void logProgress(int iteration, int year, Status status);
 static double calculateProgress(int year, int iteration, Status status);
 static void printGeneralInfo(void);
 static void _run_spinup(void);
+static void _run_seed_initialization(void);
+static void runInitialization(void);
 static void beginInitialization(void);
 static void endInitialization(void);
 static void saveAsInitializationConditions(void);
@@ -525,9 +527,12 @@ static void printGeneralInfo(void){
 	if(UseDisturbances) printf("Using grid disturbances file\n");
 	if(UseSoils) printf("Using grid soils file\n");
 	if(InitializationMethod == INIT_WITH_SEEDS){
-		 printf("Seeds availible for %d years at the start of the simulation.\n",SuperGlobals.runInitializationYears);
+		printf("Running seed dispersal as initialization\n");
 	} else if(InitializationMethod == INIT_WITH_SPINUP) { 
-		printf("Running Spinup\n");
+		printf("Running Spinup as initialization\n");
+	}
+	if(InitializationMethod != INIT_WITH_NOTHING){
+		printf("Number of initialization years: %d\n", SuperGlobals.runInitializationYears);
 	}
 	if(UseSeedDispersal){
 		printf("Dispersing seeds between cells\n");
@@ -555,8 +560,8 @@ void runGrid(void)
 
 	printGeneralInfo();
 
-	if (InitializationMethod == INIT_WITH_SPINUP) {
-		_run_spinup();				// does the initial spinup
+	if(InitializationMethod != INIT_WITH_NOTHING){
+		runInitialization();
 	} else {
 		/* If no spinup is requested we still need to reset SXW to set the historical weather
 		   file names. */
@@ -748,8 +753,6 @@ static void _run_spinup(void)
 	/* killedany for mortality functions */
 	Bool killedany;
 
-	beginInitialization();
-
 	if (!UseSoils)
 	{ // if we're not using inputting soils then there is simply one soil type as all the soils are the same
 		nSoilTypes = 1;
@@ -839,6 +842,31 @@ static void _run_spinup(void)
 		SW_Soilwat.hist.file_prefix = NULL;
 		ChDir("..");
 	} /* End iterations */
+}
+
+/* TODO: This is a dummy method. It needs to be implemented once seed dispersal is fully planned. */
+static void _run_seed_initialization(void){
+	printf("You have attempted to initialize with seed dispersal.\n" 
+	        "This option is currently in development and will be availible soon.\n");
+	return;
+}
+
+/* Initializes the plot with whichever method you have specified with InitializationMethod. 
+   This function takes care of EVERYTHING involved with initialization.
+   After calling this function you can load in the initialization information by calling loadInitializationConditions(). */
+static void runInitialization(void){
+	beginInitialization();
+
+	switch (InitializationMethod){
+		case INIT_WITH_SPINUP:
+			_run_spinup();
+			break;
+		case INIT_WITH_SEEDS:
+			_run_seed_initialization();
+			break;
+		default:
+			break;
+	}
 
 	endInitialization();
 }
@@ -886,7 +914,7 @@ static void endInitialization(void){
 	beginInitialization();
 	// Save the state of the program as our initialization conditions.
 	saveAsInitializationConditions();
-	// We have now exited spinup.
+	// We have now exited initialization.
 	DuringInitialization = FALSE;
 }
 
