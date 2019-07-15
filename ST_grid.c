@@ -363,7 +363,6 @@ static void _init_grid_files(void);
 static void _init_grid_inputs(void);
 static void _init_SXW_inputs(Bool init_SW, char *f_roots);
 static void _init_stepwat_inputs(void);
-static void _init_grid_globals(void);
 static void allocate_gridCells(int rows, int cols);
 static void allocate_accumulators(void);
 static void _free_grid_memory(void);
@@ -713,14 +712,6 @@ static void _run_spinup(void)
 	/* killedany for mortality functions */
 	Bool killedany;
 
-	if (!UseSoils)
-	{ // if we're not using inputting soils then there is simply one soil type as all the soils are the same
-		nSoilTypes = 1;
-		soilTypes_Array[0] = 0;
-		for (i = 0; i < grid_Cells; i++)
-			grid_SoilTypes[i] = 0;
-	}
-
 	for (iter = 1; iter <= 1; iter++)
 	{ //for each iteration... only 1 iteration allowed for now
 
@@ -921,11 +912,11 @@ static void loadInitializationConditions(){
 
 }
 
-/***********************************************************/
+/* Read the files.in file which was supplied to the program as an argument.
+   This function saves the file names it reads to grid_files and grid_directories. */
 static void _init_grid_files(void)
 {
 	// reads the files.in file
-
 	FILE *f;
 	char buf[1024];
 	int i;
@@ -956,29 +947,28 @@ static void _init_grid_files(void)
 	else
 		logfp = OpenFile(grid_files[GRID_FILE_LOGFILE], "w");
 
-	/*printf("stepwat dir: %s\n", grid_directories[GRID_DIRECTORY_STEPWAT_INPUTS]);
-	 for(i = 0; i < N_GRID_FILES; i++)
-	 printf("%d : %s\n", i, grid_files[i]);*/
-
 	CloseFile(&f);
 }
 
-/***********************************************************/
+/* Read all gridded mode files excluding grid_setup.in. This function overrided values specified in non-gridded 
+   mode files, so make sure you have read the non-gridded mode files before calling this function.*/
 static void _init_grid_inputs(void)
 {
     int i, j;
 
-    _init_grid_globals();
-
-	if (UseDisturbances)
+	if (UseDisturbances){
 		_read_disturbances_in();
-	if (UseSeedDispersal || InitializationMethod != INIT_WITH_NOTHING)
+	}
+	if (UseSeedDispersal || InitializationMethod == INIT_WITH_SEEDS)
 	{
 		_init_seed_dispersal();
+	}
+	if(InitializationMethod != INIT_WITH_NOTHING){
 		_read_init_species();
 	}
-	if (UseSoils)
+	if (UseSoils) {
 		_read_soils_in();
+	}
 
     for(i = 0; i < grid_Rows; ++i) {
         for(j = 0; j < grid_Cols; ++j) {
@@ -986,10 +976,10 @@ static void _init_grid_inputs(void)
             gridCells[i][j].DuringInitialization = FALSE;
         }
     }
-
     unload_cell();
 }
-/***********************************************************/
+
+/* Read SXW input files */
 static void _init_SXW_inputs(Bool init_SW, char *f_roots)
 {
 	SXW_Init(init_SW, f_roots);	// initializes soilwat
@@ -1002,7 +992,7 @@ static void _init_SXW_inputs(Bool init_SW, char *f_roots)
 }
 
 /* Read in the STEPWAT2 files and populate the grid. This only needs to be called once. 
-   DEPENDENCYS: allocate_gridCells() must be called first. */
+   DEPENDENCYS: gridCells must be allocated first. */
 static void _init_stepwat_inputs(void)
 {
 	int i, j; 							// Used as indices in gridCells
@@ -1315,18 +1305,6 @@ static IndivType* _copy_head(IndivType *head)
 	return _copy_individuals(head);
 }
 
-/***********************************************************/
-static void _init_grid_globals(void)
-{
-	//initializes grid variables, allocating the memory necessary for them (this step is only needed to be done once)
-
-    // Keep these until I know if the CellType struct accounts for these variables.
-	soilTypes_Array = Mem_Calloc(grid_Cells, sizeof(int*),
-			"_init_grid_globals()");
-	grid_SoilTypes = Mem_Calloc(grid_Cells, sizeof(int*),
-			"_init_grid_globals()");
-}
-
 /* Free all memory allocated to the gridded mode during initialization. */
 static void _free_grid_memory(void)
 {
@@ -1578,14 +1556,9 @@ static Bool GetALine2(FILE *f, char buf[], int limit)
 	return TRUE;
 }
 
-/***********************************************************/
+/* Reads the grid disturbance CSV. This function will override disturbance inputs from non-gridded mode. */
 static void _read_disturbances_in(void)
 {
-	// reads the grid disturbances input file
-	// the file should be something like: "cell,use_fecal_pats,use_ant_mounds,use_animal_burrows,kill_yr"
-	// there should be no spaces in between, just commas separating the values
-	// kill_yr will overwrite the kill year for each RGroup in the cell (0 means don't use, a # > 0 means kill everything at this year)
-
 	FILE *f;
 	char buf[1024];
 	int i, row, col, cell, num = 0;
@@ -1738,20 +1711,21 @@ static void _read_soils_in(void)
 			gridCells[row][col].mySoils.num_layers = gridCells[copy_cell_row][copy_cell_col].mySoils.num_layers;
 
             // TODO: figure out how to change this code for our new struct
-			grid_SoilTypes[cell] = grid_SoilTypes[copy_cell];
+			// grid_SoilTypes[cell] = grid_SoilTypes[copy_cell];
 
 			strcpy(gridCells[row][col].mySoils.rootsFile, gridCells[copy_cell_row][copy_cell_col].mySoils.rootsFile);
 
 			continue;
 		}
-		else if (do_copy == 1)
+		else if (do_copy == 1){
 			LogError(logfp, LOGFATAL,
 					"Invalid %s file line %d invalid copy_cell attempt",
 					grid_files[GRID_FILE_SOILS], i + 2);
+		}
 
         // TODO: figure out how to change this code for our new struct
-		grid_SoilTypes[cell] = nSoilTypes;
-		soilTypes_Array[nSoilTypes] = cell;
+		// grid_SoilTypes[cell] = nSoilTypes;
+		// soilTypes_Array[nSoilTypes] = cell;
 		nSoilTypes++;
 
 		depthMin = 0;
@@ -2320,13 +2294,9 @@ static void _do_seed_dispersal(void)
 	unload_cell();
 }
 
-/***********************************************************/
+/* Read the species initialization CSV. This function only needs to be called if the user requests initialization.*/
 static void _read_init_species(void)
 {
-	// reads the grid init species input
-	// the file should be something like: "cell,copy_cell,copy_which,(all the species names seperated by a comma)"
-	// there should be no spaces in between, just commas separating the values (ie it should be a .csv file, but does not account for all of the possibilities that a .csv file could be)
-
 	FILE *f;
 	int i, j, num, cell, do_copy, copy_cell, useInitialization, seeds_Avail,
 	    row, col, copy_cell_row, copy_cell_col;
@@ -2408,7 +2378,7 @@ static void _read_init_species(void)
 	CloseFile(&f);
 }
 
-/***********************************************************/
+/* Read the maxrgroupspecies file. */
 static void _read_maxrgroupspecies(void)
 {
     ChDir(grid_directories[GRID_DIRECTORY_STEPWAT_INPUTS]);
@@ -2417,7 +2387,7 @@ static void _read_maxrgroupspecies(void)
     ChDir("..");
 }
 
-/***********************************************************/
+/* Read the non-gridded mode files.in file. */
 static void _read_files(void)
 {
     ChDir(grid_directories[GRID_DIRECTORY_STEPWAT_INPUTS]);
@@ -2425,7 +2395,7 @@ static void _read_files(void)
     ChDir("..");
 }
 
-/***********************************************************/
+/* Reads the grid setup file and allocates gridCells.*/
 static void _read_grid_setup(void)
 {
     FILE *f;
