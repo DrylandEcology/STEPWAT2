@@ -73,34 +73,12 @@ struct Soil_st
 	Grid_Soil_Lyr* lyr;
 }typedef SoilType;
 
-
-struct _grid_disturb_st
-{
-	int choices[3]; //used as boolean values (ie flags as to whether or not to use the specified disturbance)
-	int kill_yr, /* kill the group in this year; if 0, don't kill, but see killfreq */
-	    killfreq_startyr,/* start year for kill frequency*/
-	    killfrq, /* kill group at this frequency: <1=prob, >1=# years */
-	    extirp, /* year in which group is extirpated (0==ignore) */
-	    veg_prod_type, /* type of VegProd.  1 for tree, 2 for shrub, 3 for grass, 4 for forb */
-		grazingfreq_startyr,/* start year for grazing frequency*/
-	    grazing_frq; /* grazing effect on group at this frequency: <1=prob, >1=# years */
-
-	RealF xgrow; /* ephemeral growth = mm extra ppt * xgrow */
-
-}typedef Grid_Disturb_St;
-
 struct _grid_sd_struct
 { //for seed dispersal
 	//the idea is that this structure contains all of the cells that the cell represented can possibly disperse seeds to and the probability of the happening for each cell
 	int size, seeds_present, seeds_received, *cells; //seeds_present && seeds_received are treated as boolean values... cells & prob are to be the length of size
 	float *prob, lyppt;
 }typedef Grid_SD_St;
-
-struct _grid_sxw_st
-{ //holds pointers dynamically allocated by SXW->c
-	RealD *roots_max, *rootsXphen, *roots_active, *roots_active_rel,
-			*roots_active_sum, *phen, *prod_bmass, *prod_pctlive;
-}typedef Grid_SXW_St;
 
 struct _grid_init_species_st
 {
@@ -212,20 +190,8 @@ char *grid_files[N_GRID_FILES], *grid_directories[N_GRID_DIRECTORIES], sd_Sep;
 int grid_Cols, grid_Rows, grid_Cells;
 int UseDisturbances, UseSoils, sd_DoOutput, sd_MakeHeader; //these are treated like booleans
 
-// these variables are for storing the globals in STEPPE... they are dynamically allocated/freed
-SpeciesType **grid_Species, **spinup_Species;
-GroupType **grid_RGroup, **spinup_RGroup;
-SucculentType *grid_Succulent, *spinup_Succulent;
-EnvType *grid_Env, *spinup_Env;
-PlotType *grid_Plot, *spinup_Plot;
-ModelType *grid_Globals, *spinup_Globals;
-
 CellType** gridCells;
 CellType** spinupCells = NULL;
-
-// these two variables are for storing SXW variables... also dynamically allocated/freed
-SXW_t *grid_SXW, *spinup_SXW;
-Grid_SXW_St *grid_SXW_ptrs, *spinup_SXW_ptrs;
 
 // these are SOILWAT variables that we need...
 extern SW_SOILWAT SW_Soilwat;
@@ -241,10 +207,6 @@ extern pcg32_random_t resgroups_rng;
 extern pcg32_random_t species_rng;
 extern pcg32_random_t markov_rng;
 
-//This is Rgroup structure pointer that will read rgroup disturbance value, will be used in
-// grid disturbance
-//extern GroupType     *RGroup [MAX_RGROUPS]; // don't need to extern here, because this is done in ST_Globals->h
-
 // these are grids to store the SOILWAT variables... also dynamically allocated/freed
 SW_SOILWAT *grid_SW_Soilwat, *spinup_SW_Soilwat;
 SW_SITE *grid_SW_Site, *spinup_SW_Site;
@@ -253,8 +215,6 @@ SW_MODEL *grid_SW_Model, *spinup_SW_Model;
 
 // these two variables are used to store the soil/distubance inputs for each grid cell... also dynamically allocated/freed
 SoilType *grid_Soils;
-Grid_Disturb_St *grid_Disturb;
-Grid_Init_Species_St *grid_initSpecies;
 
 Grid_SD_St **grid_SD; //for seed dispersal
 
@@ -267,41 +227,33 @@ extern Bool* _SomeKillage;
 /******** Modular External Function Declarations ***********/
 /* -- truly global functions are declared in functions.h --*/
 /***********************************************************/
-
-// Declare functions defined elsewhere:
-void runGrid(void); //to be called from ST_main.c
-void _kill_annuals(void);
-void _kill_maxage(void);
-void _kill_extra_growth(void);
-void rgroup_Extirpate(GrpIndex rg);
-
-/************* External Function Declarations **************/
-/***********************************************************/
-
 //from ST_species.c
 void proportion_Recovery(void);
 void save_annual_species_relsize(void);
 void copy_species(const SpeciesType* src, SpeciesType* dest);
-
 
 //from ST_resgroups.c
 void rgroup_Grow(void);
 void rgroup_Establish(void);
 void rgroup_IncrAges(void);
 void rgroup_PartResources(void);
-//void rgroup_ResPartIndiv(void);
 void copy_rgroup(const GroupType* src, GroupType* dest);
 
 //from ST_mortality.c
 void mort_Main(Bool *killed);
 void mort_EndOfYear(void);
 void grazing_EndOfYear(void);
+void _kill_annuals(void);
+void _kill_maxage(void);
+void _kill_extra_growth(void);
 
 //functions from ST_params.c
 void parm_Initialize(void);
 void parm_SetFirstName(char *s);
 void parm_SetName(char *s, int which);
 void parm_free_memory(void);
+void files_init(void);
+void maxrgroupspecies_init(void);
 
 //from ST_main.c
 void Plot_Initialize(void);
@@ -313,42 +265,25 @@ void stat_Collect_GMort(void);
 void stat_Collect_SMort(void);
 void stat_Output_AllMorts(void);
 void stat_Output_AllBmass(void);
-//Adding functions for creating grid cells avg values output file
-void stat_Output_AllBmassAvg(void);
 void Output_AllCellAvgBmass(const char * filename);
 void stat_Output_Seed_Dispersal(const char * filename, const char sep,
 		Bool makeHeader);
-void stat_Load_Accumulators(int cell, int year);
-void stat_Save_Accumulators(int cell, int year);
-void stat_Free_Accumulators(void);
-void stat_Init_Accumulators(void);
 void stat_Copy_Accumulators(StatType* newDist, StatType* newPpt, StatType* newTemp, StatType* newGrp, StatType* newGsize, 
                             StatType* newGpr, StatType* newGmort, StatType* newGestab, StatType* newSpp, StatType* newIndv,
                             StatType* newSmort, StatType* newSestab, StatType* newSrecieved, FireStatsType* newGwf, Bool firstTime);
 void _make_header_with_std( char *buf);
 
-//functions from sxw.c
-//void free_sxw_memory( void );
-
-void save_sxw_memory(RealD * grid_roots_max, RealD* grid_rootsXphen,
-		RealD* grid_roots_active, RealD* grid_roots_active_rel,
-		RealD* grid_roots_active_sum, RealD* grid_phen, RealD* grid_prod_bmass,
-		RealD* grid_prod_pctlive);
-void _deallocate_memory(void);
-//void SXW_init( Bool init_SW );
-
-void copy_sxw_variables(SXW_t* newSXW, SXW_resourceType* newSXWResources, transp_t* newTransp_window);
-
-void maxrgroupspecies_init(void);
-void files_init(void);
-
+/* Functions from sxw.c */
 SXW_t* getSXW(void);
 SXW_resourceType* getSXWResources(void);
 transp_t* getTranspWindow(void);
+void copy_sxw_variables(SXW_t* newSXW, SXW_resourceType* newSXWResources, transp_t* newTransp_window);
+
+/********************** Exported Functions ***********************/
+void runGrid(void); //to be called from ST_main.c
 
 /*********** Locally Used Function Declarations ************/
 /***********************************************************/
-
 static void logProgress(int iteration, int year, Status status);
 static double calculateProgress(int year, int iteration, Status status);
 static void printGeneralInfo(void);
@@ -377,13 +312,6 @@ static float _cell_dist(int row1, int row2, int col1, int col2, float cellLen);
 static void _init_seed_dispersal(void);
 static void _do_seed_dispersal(void);
 static void _read_init_species(void);
-
-static IndivType* _create_empty_indv(void); //these 5 functions are used for copying/freeing the linked list of individuals correctly...
-static void _free_individuals(IndivType *head);
-static void _free_head(IndivType *head);
-static IndivType* _copy_individuals(IndivType *head);
-static IndivType* _copy_head(IndivType *head);
-
 static void _read_maxrgroupspecies(void);
 static void _read_grid_setup(void);
 static void _read_files(void);
@@ -687,7 +615,8 @@ void runGrid(void)
 		Output_AllCellAvgBmass(fileBMassCellAvg);
 	}
 
-	_free_grid_memory(); // free our allocated memory since we do not need it anymore
+	_free_grid_memory();	// Free our allocated memory since we do not need it anymore
+	parm_free_memory();		// Free memory allocated to the _files array in ST_params.c
 	if(InitializationMethod == INIT_WITH_SPINUP) {
 		_free_spinup_memory();
 	}
@@ -1252,59 +1181,6 @@ static void allocate_accumulators(void){
 	unload_cell(); // Unload the cell to protect the last cell from unintended modification.
 }
 
-/***********************************************************/
-static IndivType* _create_empty_indv(void)
-{
-	//simply allocates memory for an individual and returns the pointer to it
-
-	return Mem_Calloc(1, sizeof(IndivType), "_create_empty_indv()");
-
-}
-
-/***********************************************************/
-static void _free_individuals(IndivType *head)
-{
-	//frees the memory allocated in the linked list of individuals pointed to by head
-	if (head->Next != NULL)
-		_free_individuals(head->Next); //recursively call itself in order to free the next obj in the list (Mem_Free() will end up getting called on the objects in the list from last to first)
-	Mem_Free(head);
-}
-
-/***********************************************************/
-static void _free_head(IndivType * head)
-{
-	if (head == NULL)
-		return; //if head == NULL then there is no memory to free, so just return
-	_free_individuals(head);
-}
-
-/***********************************************************/
-static IndivType* _copy_individuals(IndivType *head)
-{
-	//performs a deep copy (not to be confused with a shallow copy) since that's what we want
-	IndivType *n = _create_empty_indv(); //allocate space for the individual to be copied to
-
-	*n = *head;
-
-	if (head->Next != NULL)
-	{
-		n->Next = _copy_individuals(head->Next); //recursively call itself in order to copy the next obj in the list
-		n->Next->Prev = n;
-	}
-	else
-		n->Next = NULL;
-
-	return n;
-}
-
-/***********************************************************/
-static IndivType* _copy_head(IndivType *head)
-{
-	if (head == NULL)
-		return NULL; //if head == NULL then there is nothing to copy...
-	return _copy_individuals(head);
-}
-
 /* Free all memory allocated to the gridded mode during initialization. */
 static void _free_grid_memory(void)
 {
@@ -1358,7 +1234,7 @@ static void _free_spinup_memory(void)
 	}
 }
 
-/***********************************************************/
+/*
 static void _load_cell(int row, int col, int year, Bool useAccumulators)
 {
 	// loads the specified cell into the global variables
@@ -1471,6 +1347,7 @@ static void _load_cell(int row, int col, int year, Bool useAccumulators)
 				sizeof(SW_LAYER_INFO));
 	}
 }
+*/
 
 /* Load gridCells[row][col] into the globals variables.
    Any call to this function should have an accompanying call to unload_cell(). */
@@ -1767,7 +1644,7 @@ static void _read_soils_in(void)
 	CloseFile(&f);
 }
 
-/***********************************************************/
+/*
 static void _init_soil_layers(int cell, int isSpinup)
 {
 	// initializes the soilwat soil layers for the cell correctly based upon the input gathered from our grid_soils input file
@@ -1777,7 +1654,7 @@ static void _init_soil_layers(int cell, int isSpinup)
 	i = cell;
 	char* errtype;
 	Bool evap_ok = TRUE, transp_ok_forb = TRUE, transp_ok_tree = TRUE,
-			transp_ok_shrub = TRUE, transp_ok_grass = TRUE; /* mitigate gaps in layers */
+			transp_ok_shrub = TRUE, transp_ok_grass = TRUE; //mitigate gaps in layers
 	Bool fail = FALSE;
 	RealF fval = 0;
 
@@ -1919,68 +1796,8 @@ static void _init_soil_layers(int cell, int isSpinup)
 	init_site_info(); //in SW_Site.c, called to initialize layer data...
 
 	_init_SXW_inputs(FALSE, grid_Soils[i].rootsFile); //we call this so that SXW can set the correct sizes/values up for the memory dynamically allocated in sxw.c
-
-	if (!isSpinup)
-	{
-
-		grid_SXW_ptrs[i].roots_max = Mem_Calloc(SXW->NGrps * SXW->NTrLyrs,
-				sizeof(RealD), "_init_soil_layers()");
-		grid_SXW_ptrs[i].rootsXphen = Mem_Calloc(
-				SXW->NGrps * SXW->NPds * SXW->NTrLyrs, sizeof(RealD),
-				"_init_soil_layers()");
-		grid_SXW_ptrs[i].roots_active = Mem_Calloc(
-				SXW->NGrps * SXW->NPds * SXW->NTrLyrs, sizeof(RealD),
-				"_init_soil_layers()");
-		grid_SXW_ptrs[i].roots_active_rel = Mem_Calloc(
-				SXW->NGrps * SXW->NPds * SXW->NTrLyrs, sizeof(RealD),
-				"_init_soil_layers()");
-		grid_SXW_ptrs[i].roots_active_sum = Mem_Calloc(
-				4 * SXW->NPds * SXW->NTrLyrs, sizeof(RealD),
-				"_init_soil_layers()");
-		grid_SXW_ptrs[i].phen = Mem_Calloc(SXW->NGrps * MAX_MONTHS,
-				sizeof(RealD), "_init_soil_layers()");
-		grid_SXW_ptrs[i].prod_bmass = Mem_Calloc(SXW->NGrps * MAX_MONTHS,
-				sizeof(RealD), "_init_soil_layers()");
-		grid_SXW_ptrs[i].prod_pctlive = Mem_Calloc(SXW->NGrps * MAX_MONTHS,
-				sizeof(RealD), "_init_soil_layers()");
-
-		save_sxw_memory(grid_SXW_ptrs[i].roots_max, grid_SXW_ptrs[i].rootsXphen,
-				grid_SXW_ptrs[i].roots_active,
-				grid_SXW_ptrs[i].roots_active_rel,
-				grid_SXW_ptrs[i].roots_active_sum, grid_SXW_ptrs[i].phen,
-				grid_SXW_ptrs[i].prod_bmass, grid_SXW_ptrs[i].prod_pctlive);
-	}
-	else
-	{
-
-		spinup_SXW_ptrs[i].roots_max = Mem_Calloc(SXW->NGrps * SXW->NTrLyrs,
-				sizeof(RealD), "_init_soil_layers()");
-		spinup_SXW_ptrs[i].rootsXphen = Mem_Calloc(
-				SXW->NGrps * SXW->NPds * SXW->NTrLyrs, sizeof(RealD),
-				"_init_soil_layers()");
-		spinup_SXW_ptrs[i].roots_active = Mem_Calloc(
-				SXW->NGrps * SXW->NPds * SXW->NTrLyrs, sizeof(RealD),
-				"_init_soil_layers()");
-		spinup_SXW_ptrs[i].roots_active_rel = Mem_Calloc(
-				SXW->NGrps * SXW->NPds * SXW->NTrLyrs, sizeof(RealD),
-				"_init_soil_layers()");
-		spinup_SXW_ptrs[i].roots_active_sum = Mem_Calloc(
-				4 * SXW->NPds * SXW->NTrLyrs, sizeof(RealD),
-				"_init_soil_layers()");
-		spinup_SXW_ptrs[i].phen = Mem_Calloc(SXW->NGrps * MAX_MONTHS,
-				sizeof(RealD), "_init_soil_layers()");
-		spinup_SXW_ptrs[i].prod_bmass = Mem_Calloc(SXW->NGrps * MAX_MONTHS,
-				sizeof(RealD), "_init_soil_layers()");
-		spinup_SXW_ptrs[i].prod_pctlive = Mem_Calloc(SXW->NGrps * MAX_MONTHS,
-				sizeof(RealD), "_init_soil_layers()");
-
-		save_sxw_memory(spinup_SXW_ptrs[i].roots_max,
-				spinup_SXW_ptrs[i].rootsXphen, spinup_SXW_ptrs[i].roots_active,
-				spinup_SXW_ptrs[i].roots_active_rel,
-				spinup_SXW_ptrs[i].roots_active_sum, spinup_SXW_ptrs[i].phen,
-				spinup_SXW_ptrs[i].prod_bmass, spinup_SXW_ptrs[i].prod_pctlive);
-	}
 }
+*/
 
 /***********************************************************/
 static float _cell_dist(int row1, int row2, int col1, int col2, float cellLen)
