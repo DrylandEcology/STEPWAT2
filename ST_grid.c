@@ -412,8 +412,6 @@ static void unload_cell(void);
 static void _read_disturbances_in(void);
 static void _read_soils_in(void);
 static void _init_soil_layers(int cell, int isSpinup);
-static float _read_a_float(FILE *f, char *buf, const char *filename,
-		const char *descriptor);
 static float _cell_dist(int row1, int row2, int col1, int col2, float cellLen);
 static void _init_seed_dispersal(void);
 static void _do_seed_dispersal(void);
@@ -2020,22 +2018,6 @@ static void _init_soil_layers(int cell, int isSpinup)
 				spinup_SXW_ptrs[i].roots_active_sum, spinup_SXW_ptrs[i].phen,
 				spinup_SXW_ptrs[i].prod_bmass, spinup_SXW_ptrs[i].prod_pctlive);
 	}
-}
-
-/***********************************************************/
-static float _read_a_float(FILE *f, char *buf, const char *filename,
-		const char *descriptor)
-{
-	//small function to reduce code duplication in the _init_seed_dispersal() function...
-	//f should be already open, and all of the character arrays should be pre-allocated before calling the function...
-	float result;
-
-	if (!GetALine(f, buf))
-		LogError(logfp, LOGFATAL, "Invalid %s file: %s", filename, descriptor);
-	if (sscanf(buf, "%f", &result) != 1)
-		LogError(logfp, LOGFATAL, "Invalid %s file: %s", filename, descriptor);
-
-	return result;
 }
 
 /***********************************************************/
