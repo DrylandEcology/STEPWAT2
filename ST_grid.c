@@ -2063,9 +2063,6 @@ static float _cell_dist(int row1, int row2, int col1, int col2, float cellLen)
    This function is safe to call multiple times, but it only needs to be called once.*/
 static void _init_seed_dispersal(void)
 {
-	// reads the grid seed dispersal input file and sets up grid_SD with the correct values and probabilities
-	FILE *f;
-	char buf[1024];
 	float sd_Rate, H, VW, VT, MAXD, plotLength, pd, d;
 	int maxCells, i, j, k, MAXDP, row, col, cell;
 	SppIndex s;
