@@ -1,65 +1,25 @@
-/********************************************************/
+/********************************************************************************/
 //  Source file: ST_grid.c
 //  Type: module
 //  Application: STEPPE - plant community dynamics simulator
 //  Purpose: This module handles the grid.
 //  History:
 //     (5/24/2013) -- INITIAL CODING - DLM
-//
-//	WARNING: This module deals with a LARGE amount of dynamic memory allocation/deallocation (there can be potentially hundreds of thousands of allocations/frees called by this code depending on settings ran).
-//			 Be very wary when editing it as even small changes could possibly cause massive memory errors/leaks to occur.  In particular be careful when copy/freeing the linked list of individuals (I would suggest just using the code I wrote for this as it works and it's pretty easy to screw it up).
-//			 Always keep in mind that for every time memory is allocated (every time alloc or calloc is called), a corresponding free is required.  I would recommend valgrind or a similar program to debug memory errors as doing it without some kind of tool would be crazy.
-/********************************************************/
+//     (March - July 2019) -- Overhauled by Chandler Haukap with Fredrick Pierson
+/********************************************************************************/
 /*
+ Summary:
+    This module handles the gridded mode of STEPWAT2. To accomplish this we use a grid of cells represented by the 
+    CellType struct. The entire grid of cells can be referenced by the gridCells variable which is a 2d array of 
+	CellTypes. To allow this module to use the same functions as non-gridded mode the CellType structs must be loaded
+	into the global variables using the load_cell function. As long as a cell is loaded in you can be sure that all 
+	functions will work as expected. 
 
- ----------------------------------------------------------------------------------------------------------------
- ----------------------------------------------------------------------------------------------------------------
- (DLM) : 7-16-2012 : General notes about this module and why it does certain things (put in the beginning so that they'd be seen)
- ----------------------------------------------------------------------------------------------------------------
- ----------------------------------------------------------------------------------------------------------------
-
- ----------------------------------------------------------------------------------------------------------------
- the general idea when copying over the dynamically allocated data is (ie. how to deep copy a structure):
- ----------------------------------------------------------------------------------------------------------------
-
- 1.) Free the dynamically allocated memory (use the _free_head() function to free a linked list of individuals)
- 2.) Shallow copy the data (ie. *Species[s] = grid_Species[s][cell])... this will correctly copy all of the data of the structure that isn't a pointer.  For the pointers it will simply copy the address (hence why it is a shallow copy).
- 3.) Allocate the appropriate amount of memory for the pointers that are being copied to
- 4.) Use memcpy to copy the data over to your newly allocated pointer (or use the _copy_head() function to copy the linked list of individuals)
- 5.) Be careful at all stages of this process as it is easy to make a simple error that can be very aggravating to try and track down.
-
- ----------------------------------------------------------------------------------------------------------------
- explanation of why all this trouble is gone through when copying the memory (as it is not obvious by any means):
- ----------------------------------------------------------------------------------------------------------------
-
- First off, the sizes of all the dynamically allocated memory can be different for every grid cell.  To deal with this we free and reallocate memory every time we copy a grid cell.
- This also gets around the problem that doing a shallow copy via something like "*Species[s] = grid_Species[s][cell]" would overwrite the address of all the pointers contained within and cause a memory leak if they had already been allocated memory.
- The only other way to copy the data would be to individually copy each data member of each structure which would lead to both a much larger code size and code that would break every time a new member is added to any structure in the program while providing likely no performance difference.
- It is also important to know what the difference between a shallow copy and a deep copy is.  When we are copying over all of these variables, what we want is a deep copy (never to be confused with a shallow copy).
- A shallow copy of a structure is when all of the data members are copied over.  However, the pointers are treated specially.  Instead of copying the data contained within the pointers directly it simply copies the address.
- This leaves two pointers that point to the same thing (not what we want) and if the pointer that is copied over was pointing to any memory it would subsequently cause a memory leak.
- A deep copy of a structure will copy over all of the data members and copy the memory that the pointers are pointing to (not the addresses).  It would be great if C inherently knew how to do this, but it does not.
- C's copy constructor cannot know how to do this because it cannot know the length of the pointers.  Also, it would be potentially confusing as it would have to allocate memory which would be unexpected.
- We must code this behavior in so that we copy over the values held by the pointers into the copy's own separate memory.
-
- ----------------------------------------------------------------------------------------------------------------
- about performance concerns:
- ----------------------------------------------------------------------------------------------------------------
-
- This module (ST_grid.c) allocates/deallocates a very large amount of memory.  It does so because it must in order to successfully run as desired.
- The performance hit of all this memory management is surprisingly low in CPU execution time.  Luckily, modern day implementations of malloc/free/memcpy are very fast.
- After profiling the code the time spent allocating/deallocating/copying memory is completely negligible compared to the time spent doing calculations.
- Where the approach has it's downsides is that the program requires a TON of memory in order to do large simulations (ie. it took around 2.8 GB for a 10,000 cell grid when I tried it).
- This shouldn't be an issue in most cases.  It is unavoidable though that at some point the number of cells in a simulation will be bounded by the amount of memory available.
- Issues could possibly arise if you're trying to run a simulation that requires more memory then your system has available.  I don't know of a way to easily check for that condition, so just don't do it.
-
- ----------------------------------------------------------------------------------------------------------------
- If any of the concepts I have been discussing seem confusing (or your knowledge of pointers feels rusty) I would suggest brushing up on your pointers/memory management.
- Some things to go over would be correct free/alloc/memcpy usage (keep in mind that a free is needed for every corresponding alloc call, some people seem not to comprehend that a pointer of pointers (ie. int**) must be freed in multiple steps, otherwise you lose memory), pointer arithmetic, and the difference between arrays & pointers in C.
- ----------------------------------------------------------------------------------------------------------------
- (AKT) : 9-7-2015 : Added extra Grid Cell Avg Output file for biomass values
- */
-/********************************************************/
+    In addition to all of the functionality of non-gridded mode, gridded mode has two additional features: 
+	initialization and seed dispersal. Initialization allows the user to run some small-scale simulation to allow 
+	the environment to stabilize before recording any statistics. Seed dispersal allows each cell to disperse seeds 
+	to nearby cells.
+*/
 
 /* =================================================== */
 /*                INCLUDES / DEFINES                   */
