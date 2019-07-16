@@ -1925,6 +1925,13 @@ static void _init_seed_dispersal(void)
 /***********************************************************/
 static void _do_seed_dispersal(void)
 {
+	/************ TODO: overhaul seed dispersal. This block prevents seed dispersal from running. **************/
+	printf("\nSeed dispersal during the simulation is not yet functional.\n"
+		    "Check out GitHub for updates on this feature.\n");
+	UseSeedDispersal = FALSE;
+	return;
+	/***********************************************************************************************************/
+
 	float biomass, randomN, LYPPT, presentProb, receivedProb;
 	int i, j, germ, sgerm, year, row, col;
 	SppIndex s;
