@@ -73,11 +73,17 @@ struct Soil_st
 	Grid_Soil_Lyr* lyr;
 }typedef SoilType;
 
+/* A struct for holding seed dispersal information. */
 struct _grid_sd_struct
 { //for seed dispersal
-	//the idea is that this structure contains all of the cells that the cell represented can possibly disperse seeds to and the probability of the happening for each cell
-	int size, seeds_present, seeds_received, *cells; //seeds_present && seeds_received are treated as boolean values... cells & prob are to be the length of size
-	float *prob, lyppt;
+	/* TRUE if seeds are present. */
+	Bool seeds_present;
+	/* TRUE if this cell has recieved any seeds. */
+	Bool seeds_received;
+	/* probabilityOfDispersing[row][col] = the probability that this cell will disperse seeds to cell (row,col). */
+	double **probabilityOfDispersing;
+	/* Last year's precipitation. */
+	double lyppt;
 }typedef Grid_SD_St;
 
 struct _grid_init_species_st
@@ -1185,7 +1191,7 @@ static void allocate_accumulators(void){
 static void _free_grid_memory(void)
 {
 	//frees all the memory allocated in this file ST_Grid.c (most of it is dynamically allocated in _init_grid_globals() & _load_grid_globals() functions)
-	int i, j;
+	int i, j, sd_i;
 	SppIndex s;
 
 	/* Free memory that we have allocated in ST_grid.c */
@@ -1199,7 +1205,10 @@ static void _free_grid_memory(void)
 			// If seed dispersal is on we allocated additional memory
 			if(UseSeedDispersal) {
 				ForEachSpecies(s) {
-					Mem_Free(gridCells[i][j].mySeedDispersal[s].prob);
+					for(sd_i = 0; sd_i < grid_Rows; ++sd_i){
+						Mem_Free(gridCells[i][j].mySeedDispersal[s].probabilityOfDispersing[sd_i]);
+					}
+					Mem_Free(gridCells[i][j].mySeedDispersal[s].probabilityOfDispersing);
 				}
 			}
 			unload_cell();
@@ -1802,123 +1811,85 @@ static void _init_soil_layers(int cell, int isSpinup)
 /***********************************************************/
 static float _cell_dist(int row1, int row2, int col1, int col2, float cellLen)
 {
+    double rowDist = row1 - row2;
+    double colDist = col1 - col2;
+
 	//returns the distance between the two grid cells
 	if (row1 == row2)
 	{
-		return (abs(col1-col2) * cellLen);
+		return (abs(colDist) * cellLen);
 	}
 	else if (col1 == col2)
 	{
-		return (abs(row1-row2) * cellLen);
+		return (abs(rowDist) * cellLen);
 	}
 	else
 	{ // row1 != row2 && col1 != col2
 		//the problem can be thought of in terms of a right triangle...
 		//using the pythagorean theorem: c = sqrt(a^2 + b^2)... c (the hypotenuse) represents the distance that we need.  a is the distance between columns and b is the distance between rows.
-		return sqrt(
-				pow(abs(col1-col2)*cellLen, 2.0) + pow(abs(row1-row2)*cellLen, 2.0));
+		return sqrt(pow(abs(colDist)*cellLen, 2.0) + pow(abs(rowDist)*cellLen, 2.0));
 	}
 }
 
-/* Initialize all derived seed dispersal variables. (variables that are not specified directly in inputs). 
-   This function is safe to call multiple times, but it only needs to be called once.*/
+/* Derives the probabilities that a given cell will disperse seeds to any other cell. 
+   results of this function can be accessed using 
+   gridCells[a][b].mySeedDispersal[s].probabilityOfDispersing[c][d] 
+   where (a,b) are the coordinates of the sender,
+   (b, c) are the coordinates of the reciever,
+   and s is the species. */
 static void _init_seed_dispersal(void)
 {
-	float sd_Rate, H, VW, VT, MAXD, plotLength, pd, d;
-	int maxCells, i, j, k, MAXDP, row, col, cell;
-	SppIndex s;
+	int senderRow, senderCol, recieverRow, recieverCol;
+	SppIndex sp;
+	double MAXD; /* maximum distance that a given species can disperse seeds */
+	double maxRate; /* Dispersability of the seeds */
+	double plotWidth; /* width of the plots (all plots are equal and square) */
+	double distanceBetweenPlots; /* distance between the sender and the reciever */
 
-    for (i = 0; i < grid_Cells; i++) {
-        row = i / grid_Cols;
-        col = i % grid_Cols;
+	/* sender denotes that these loops refer to the cell distributing seeds */
+	for(senderRow = 0; senderCol < grid_Rows; ++senderRow){
+		for(senderCol = 0; senderCol < grid_Cols; ++senderCol){
+			/* Cell is loaded to ensure the ForEachSpecies loop works */
+			load_cell(senderRow, senderCol);
 
-		gridCells[row][col].mySeedDispersal = Mem_Calloc(MAX_SPECIES, sizeof(Grid_SD_St), "_init_seed_dispersal");
-    }
+			/* Allocate seed dispersal information. */
+			gridCells[senderRow][senderCol].mySeedDispersal = Mem_Calloc(MAX_SPECIES, sizeof(Grid_SD_St), "_init_seed_dispersal");
 
-	/*
-	 * The following variables should be global (not cell-specific):
-	 *     Globals->sppCount
-	 *     Species[s]->sd_H
-	 *     Species[s]->sd_VT
-	 *     Globals->plotsize
-	 *     Species[s]->use_me
-	 *     Species[s]->use_dispersal
-	 *
-	 * Since the values of these variables do not change between cells, we can call load_cell(0, 0)
-	 * to load their values so that ForEachSpecies and other lines of code do not segfault.
-	 */
-	load_cell(0, 0);
+			ForEachSpecies(sp){
+				if (!(Species[sp]->use_me && Species[sp]->use_dispersal)){
+					continue;
+				}
 
-	// Begin reading cell-specific fields
-	ForEachSpecies(s)
-	{
-		// set up grid_SD with the seed dispersal probabilities needed later on...
-		H = Species[s]->sd_H;
-		VT = Species[s]->sd_VT;
-		VW = Species[s]->sd_VW;
-		MAXD = ((H * VW) / VT) / 100.0; // divide by 100.0 because we want it in meters, not centimeters
-		sd_Rate = -(log(0.05) / MAXD); //sd_Rate is the seed dispersal rate... 0.05 = exp(-RATE*MAXD) => RATE = -(ln(0.05)/MAXD) See Coffin et al. 1993
+				/* These are the three values we need to calculate the probability of dispersal */
+				MAXD = ((Species[sp]->sd_H * Species[sp]->sd_VW) / Species[sp]->sd_VT) / 100.0; // divided by 100 to convert from cm to m.
+				maxRate = -(log(0.005) / MAXD);
+				plotWidth = sqrt(Globals->plotsize);
 
-		plotLength = sqrt(Globals->plotsize);
-		MAXDP = (int) ceil(MAXD / plotLength); //MAXD in terms of plots... rounds up to the nearest integer
-		maxCells = (int) pow((MAXDP * 2) + 1.0, 2.0); //gets the maximum number of cells that a grid cell can possibly disperse seeds to... it ends up being more then the maximum actually...
-		if (grid_Cells < maxCells)
-			maxCells = grid_Cells;
-		if (!(Species[s]->use_me && Species[s]->use_dispersal))
-			continue;
+				/* Allocate the probabilityOfDispersing 2d array */
+				gridCells[senderRow][senderCol].mySeedDispersal[sp].probabilityOfDispersing = Mem_Calloc(grid_Rows, 
+							sizeof(double*), "_init_seed_dispersal: probabilityOfDispersing");
+				for(recieverRow = 0; recieverRow < grid_Rows; ++recieverRow){
+					gridCells[senderRow][senderCol].mySeedDispersal[sp].probabilityOfDispersing[recieverRow] = 
+								Mem_Calloc(grid_Cols, sizeof(double), "_init_seed_dispersal: probabilityOfDispersing[i]");
+				}
 
-		for (i = 0; i < grid_Cells; i++)
-		{
-		    row = i / grid_Cols;
-		    col = i % grid_Cols;
-
-			gridCells[row][col].mySeedDispersal[s].cells = Mem_Calloc(maxCells, sizeof(int),
-					"_init_seed_dispersal()"); //the cell number
-			gridCells[row][col].mySeedDispersal[s].prob = Mem_Calloc(maxCells, sizeof(float),
-					"_init_seed_dispersal()"); //the probability that the cell will disperse seeds to this distance
-			gridCells[row][col].mySeedDispersal[s].size = 0; //refers to the number of cells reachable...
-		}
-
-		for (row = 1; row <= grid_Rows; row++){
-			for (col = 1; col <= grid_Cols; col++){
-				cell = col + ((row - 1) * grid_Cols) - 1;
-				k = 0;
-
-				for (i = 1; i <= grid_Rows; i++) {
-					for (j = 1; j <= grid_Cols; j++){
-						if (i == row && j == col)
-							continue;
-
-						d = _cell_dist(i, row, j, col, plotLength); //distance
-						pd = (d > MAXD) ? (0.0) : (exp(-sd_Rate * d)); //dispersal probability
-
-						if (!ZRO(pd))
-						{
-							gridCells[row - 1][col - 1].mySeedDispersal[s].cells[k] = i
-									+ ((j - 1) * grid_Cols) - 1;
-							gridCells[row - 1][col - 1].mySeedDispersal[s].prob[k] = pd;
-							gridCells[row - 1][col - 1].mySeedDispersal[s].size++;
-							k++;
+				/* Loop through all possible recipients of seeds. */
+				for(recieverRow = 0; recieverRow < grid_Rows; ++recieverRow){
+					for(recieverCol = 0; recieverCol < grid_Cols; ++recieverCol){
+						if(senderRow == recieverRow && senderCol == recieverCol){
+							continue; // No need to calculate a probability for dispersal to itself
 						}
+                        
+						distanceBetweenPlots = _cell_dist(senderRow, recieverRow, senderCol, recieverCol, plotWidth);
+
+                        /* The value that we are after should be saved to the sender cell. */
+						gridCells[senderRow][senderCol].mySeedDispersal[sp].probabilityOfDispersing[recieverRow][recieverCol]
+                                    = (distanceBetweenPlots > MAXD) ? (0.0) : (exp(-maxRate * distanceBetweenPlots));
 					}
 				}
 			}
 		}
-
-		for (i = 0; i < grid_Cells; i++) {
-		    row = i / grid_Cols;
-		    col = i % grid_Cols;
-
-			if (gridCells[row][col].mySeedDispersal[s].size > 0)
-			{
-                gridCells[row][col].mySeedDispersal[s].cells = Mem_ReAlloc(gridCells[row][col].mySeedDispersal[s].cells,
-                        gridCells[row][col].mySeedDispersal[s].size * sizeof(int));
-                gridCells[row][col].mySeedDispersal[s].prob = Mem_ReAlloc(gridCells[row][col].mySeedDispersal[s].prob,
-                        gridCells[row][col].mySeedDispersal[s].size * sizeof(float));
-			}
-		}
 	}
-
 	unload_cell();
 }
 
@@ -1931,7 +1902,7 @@ static void _do_seed_dispersal(void)
 	UseSeedDispersal = FALSE;
 	return;
 	/***********************************************************************************************************/
-
+/* 
 	float biomass, randomN, LYPPT, presentProb, receivedProb;
 	int i, j, germ, sgerm, year, row, col;
 	SppIndex s;
@@ -2008,7 +1979,7 @@ static void _do_seed_dispersal(void)
 				{
 					if ((sgerm || year < RGroup[0]->killyr
 							|| RGroup[0]->killyr <= 0 || GT(biomass, 0.0))
-					/*&& (year != RGroup[0].killyr)*/)
+					&& (year != RGroup[0].killyr))
 					{
 						//commented above one condition as it was causing a bug there, next year of killing year will make
 						//allow_growth flag to false as 	year = Globals->currYear - 1 , so for example if killing year= 6 and Globals->currYear=7 then here
@@ -2103,7 +2074,7 @@ static void _do_seed_dispersal(void)
 
 			for (j = 0; j < cell->mySeedDispersal[s].size; j++)
 				if (cell->mySeedDispersal[cell->mySeedDispersal[s].cells[j]].seeds_present)
-					receivedProb += cell->mySeedDispersal[s].prob[j];
+					receivedProb += cell->mySeedDispersal[s].probabilityOfDispersing[j];
 
 			randomN = RandUni(&grid_rng);
 			if (LE(randomN, receivedProb) && !ZRO(receivedProb))
@@ -2116,6 +2087,7 @@ static void _do_seed_dispersal(void)
 	}
 
 	unload_cell();
+*/
 }
 
 /* Read the species initialization CSV. This function only needs to be called if the user requests initialization.*/
