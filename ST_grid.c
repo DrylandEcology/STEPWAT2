@@ -184,8 +184,7 @@ enum
 
 typedef enum 
 {
-	SPINUP,
-	DISPERSAL,
+	INITIALIZATION,
 	SIMULATION,
 	OUTPUT,
 	DONE
@@ -341,18 +340,14 @@ static void logProgress(int iteration, int year, Status status){
 	iteration--;					// iteration loops are 1 indexed, but we need 0 indexing.
 
 	switch(status){
-		case SPINUP:
-			strcpy(progressString, "Spinup     |");
-			index += 12;	// We have copied over 12 characters
-			needsProgressBar = TRUE;
-			break;
-		case DISPERSAL:
-			strcpy(progressString, "Dispersing seeds");
-			index += 16;	// We have copied over 16 characters
+		case INITIALIZATION:
+			strcpy(progressString, "Initializing |");
+			index += 14;	// We have copied over 16 characters
+            needsProgressBar = TRUE;
 			break;
 		case SIMULATION:
-			strcpy(progressString, "Simulating |");
-			index += 12;	// We have copied over 12 characters
+			strcpy(progressString, "Simulating   |");
+			index += 14;	// We have copied over 12 characters
 			needsProgressBar = TRUE;
 			break;
 		case OUTPUT:
@@ -404,7 +399,7 @@ static void logProgress(int iteration, int year, Status status){
 	 Param status: Use the "status" enumerator. Valid options are SPINUP or SIMULATION. */
 double calculateProgress(int year, int iteration, Status status){
 	double percentComplete;
-	if(status == SPINUP){
+	if(status == INITIALIZATION){
 		percentComplete = (year / (double) SuperGlobals.runInitializationYears);
 	} else if(status == SIMULATION) {
 		percentComplete = ((iteration * SuperGlobals.runModelYears) + year) 
@@ -633,111 +628,32 @@ void runGrid(void)
 	logProgress(0, 0, DONE);
 }
 
-/* "Spinup" the model by running for SuperGlobals.runInitializationYears without seed dispersal or statistics outputs. */
+/* "Spinup" the model by running without stat collection. */
 static void _run_spinup(void)
 {
-	/* Dummy accumulators to ensure we do not collect statistics */
-	StatType *dummy_Dist, *dummy_Ppt, *dummy_Temp,
-  		*dummy_Grp, *dummy_Gsize, *dummy_Gpr, *dummy_Gmort, *dummy_Gestab,
-  		*dummy_Spp, *dummy_Indv, *dummy_Smort, *dummy_Sestab, *dummy_Sreceived;
-	FireStatsType *dummy_Gwf;
+	Bool killedany;             // killedany for mortality functions
 
-	/* ints used for iterating over gridCells */
-	int i, j;
-
-	/* ints used for iterating over years and iterations */
-	IntS year, iter;
-
-	/* killedany for mortality functions */
-	Bool killedany;
-
-	for (iter = 1; iter <= 1; iter++)
-	{ //for each iteration... only 1 iteration allowed for now
-
-		/* Since this is technically an iteration so we need to seed the RNGs. */
-		RandSeed(SuperGlobals.randseed, &environs_rng);
-		RandSeed(SuperGlobals.randseed, &mortality_rng);
-		RandSeed(SuperGlobals.randseed, &resgroups_rng);
-		RandSeed(SuperGlobals.randseed, &species_rng);
-		RandSeed(SuperGlobals.randseed, &grid_rng);
-		RandSeed(SuperGlobals.randseed, &markov_rng);
-
-		if (BmassFlags.yearly || MortFlags.yearly)
-			parm_Initialize();
-
-		// Initialize the plot for each grid cell
-		for (i = 0; i < grid_Rows; i++){
-			for (j = 0; j < grid_Cols; j++){
-				load_cell(i, j);
-				Plot_Initialize();
-				Globals->currIter = iter;
-			}
-		}
-		unload_cell(); // Reset the global variables
-
-		for (year = 1; year <= SuperGlobals.runInitializationYears; year++)
-		{ //for each year
-			if(UseProgressBar){
-				logProgress(iter, year, SPINUP);
-			}
-			for (i = 0; i < grid_Rows; ++i)
-			{ // for each row
-				for(j = 0; j < grid_Cols; ++j)
-				{ // for each column
-					// If we should run spinup on this cell
-					if(gridCells[i][j].mySpeciesInit.useInitialization){
-						// Load up a cell
-						load_cell(i, j);
-					} else {
-						continue; // No spinup requested. Move on to next cell.
-					}
-
-					/* This step is important. load_cell loaded in the actual accumulators, but we do not want
-					   to accumulate stats while in spinup. We need to load in dummy accumulators to ensure
-					   we ignore everything that happens in spinup. */
-					stat_Copy_Accumulators(dummy_Dist, dummy_Ppt, dummy_Temp, dummy_Grp, dummy_Gsize, dummy_Gpr, dummy_Gmort, dummy_Gestab,
-										   dummy_Spp, dummy_Indv, dummy_Smort, dummy_Sestab, dummy_Sreceived, dummy_Gwf, TRUE);
-
-					Globals->currYear = year;
-
-					rgroup_Establish(); 		// Establish individuals. Excludes annuals.
-
-					Env_Generate();				// Generated the SOILWAT environment
-
-					rgroup_PartResources();		// Distribute resources
-					rgroup_Grow(); 				// Grow
-
-					mort_Main(&killedany); 		// Mortality that occurs during the growing season
-
-					rgroup_IncrAges(); 			// Increment ages of all plants
-
-					grazing_EndOfYear(); 		// Livestock grazing
-					
-					mort_EndOfYear(); 			// End of year mortality.
-
-				    _kill_annuals(); 			// Kill annuals
-				    _kill_maxage();             // Kill plants that reach max age
-					proportion_Recovery(); 		// Recover from any disturbances
-					_kill_extra_growth(); 		// Kill superfluous growth			
-				} /* end column */
-			} /* end row */
-
-			unload_cell(); // Reset the global variables
-		} /* end model run for this year*/
-
-		ChDir(grid_directories[GRID_DIRECTORY_STEPWAT_INPUTS]);
-		SXW_Reset(gridCells[0][0].mySXW->f_watin);
-		//TODO: This is a shortcut. swc history is not used and shouldn't be until this is fixed.
-		Mem_Free(SW_Soilwat.hist.file_prefix);
-		SW_Soilwat.hist.file_prefix = NULL;
-		ChDir("..");
-	} /* End iterations */
+    rgroup_Establish(); 		// Establish individuals. Excludes annuals.
+    Env_Generate();				// Generated the SOILWAT environment
+    rgroup_PartResources();		// Distribute resources
+    rgroup_Grow(); 				// Grow
+    mort_Main(&killedany); 		// Mortality that occurs during the growing season
+    rgroup_IncrAges(); 			// Increment ages of all plants
+    grazing_EndOfYear(); 		// Livestock grazing
+    mort_EndOfYear(); 			// End of year mortality.
+    _kill_annuals(); 			// Kill annuals
+    _kill_maxage();             // Kill plants that reach max age
+    proportion_Recovery(); 		// Recover from any disturbances
+    _kill_extra_growth(); 		// Kill superfluous growth			
 }
 
 /* TODO: This is a dummy method. It needs to be implemented once seed dispersal is fully planned. */
 static void _run_seed_initialization(void){
-	printf("You have attempted to initialize with seed dispersal.\n" 
-	        "This option is currently in development and will be availible soon.\n");
+    if(Globals->currYear == 1){
+	    printf("\nYou have attempted to initialize with seed dispersal.\n" 
+	            "This option is currently in development and will be availible soon.\n");
+    }
+    InitializationMethod = INIT_WITH_NOTHING;
 	return;
 }
 
@@ -748,16 +664,86 @@ static void _run_seed_initialization(void){
 static void runInitialization(void){
 	beginInitialization();
 
-	switch (InitializationMethod){
-		case INIT_WITH_SPINUP:
-			_run_spinup();
-			break;
-		case INIT_WITH_SEEDS:
-			_run_seed_initialization();
-			break;
-		default:
-			break;
-	}
+    /* Dummy accumulators to ensure we do not collect statistics */
+	StatType *dummy_Dist, *dummy_Ppt, *dummy_Temp,
+  		*dummy_Grp, *dummy_Gsize, *dummy_Gpr, *dummy_Gmort, *dummy_Gestab,
+  		*dummy_Spp, *dummy_Indv, *dummy_Smort, *dummy_Sestab, *dummy_Sreceived;
+	FireStatsType *dummy_Gwf;
+
+	/* For iterating over gridCells */
+	int i, j;
+
+	/* For iterating over years */
+	IntS year;
+
+    /* Initialization is technically an iteration so we need to seed the RNGs. */
+    RandSeed(SuperGlobals.randseed, &environs_rng);
+    RandSeed(SuperGlobals.randseed, &mortality_rng);
+    RandSeed(SuperGlobals.randseed, &resgroups_rng);
+    RandSeed(SuperGlobals.randseed, &species_rng);
+    RandSeed(SuperGlobals.randseed, &grid_rng);
+    RandSeed(SuperGlobals.randseed, &markov_rng);
+
+    if (BmassFlags.yearly || MortFlags.yearly)
+        parm_Initialize();
+
+    // Initialize the plot for each grid cell
+    for (i = 0; i < grid_Rows; i++){
+        for (j = 0; j < grid_Cols; j++){
+            load_cell(i, j);
+            Plot_Initialize();
+            Globals->currIter = 1; // Iteration doesn't really matter, I set it to 1 here just in case.
+        }
+    }
+    unload_cell(); // Reset the global variables
+
+    for (year = 1; year <= SuperGlobals.runInitializationYears; year++)
+    { //for each year
+        if(UseProgressBar){
+            logProgress(0, year, INITIALIZATION); // iter = 0 because we are not actually in an iterations loop.
+        }
+        for (i = 0; i < grid_Rows; ++i)
+        { // for each row
+            for(j = 0; j < grid_Cols; ++j)
+            { // for each column
+                // If we should run spinup on this cell
+                if(gridCells[i][j].mySpeciesInit.useInitialization){
+                    // Load up a cell
+                    load_cell(i, j);
+                } else {
+                    continue; // No spinup requested. Move on to next cell.
+                }
+
+                /* This step is important. load_cell loaded in the actual accumulators, but we do not want
+                    to accumulate stats while in spinup. We need to load in dummy accumulators to ensure
+                    we ignore everything that happens in spinup. */
+                stat_Copy_Accumulators(dummy_Dist, dummy_Ppt, dummy_Temp, dummy_Grp, dummy_Gsize, dummy_Gpr, dummy_Gmort, dummy_Gestab,
+                                        dummy_Spp, dummy_Indv, dummy_Smort, dummy_Sestab, dummy_Sreceived, dummy_Gwf, TRUE);
+
+                Globals->currYear = year;
+
+                switch (InitializationMethod){
+		            case INIT_WITH_SPINUP:
+			            _run_spinup();
+			            break;
+		            case INIT_WITH_SEEDS:
+			            _run_seed_initialization();
+			            break;
+		            default:
+			            break;
+	            }
+
+            } /* end column */
+        } /* end row */
+        unload_cell(); // Reset the global variables
+    } /* end model run for this year*/
+
+    ChDir(grid_directories[GRID_DIRECTORY_STEPWAT_INPUTS]);
+    SXW_Reset(gridCells[0][0].mySXW->f_watin);
+    //TODO: This is a shortcut. swc history is not used and shouldn't be until this is fixed.
+    Mem_Free(SW_Soilwat.hist.file_prefix);
+    SW_Soilwat.hist.file_prefix = NULL;
+    ChDir("..");
 
 	endInitialization();
 }
