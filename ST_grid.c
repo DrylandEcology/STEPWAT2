@@ -196,7 +196,9 @@ char *grid_files[N_GRID_FILES], *grid_directories[N_GRID_DIRECTORIES], sd_Sep;
 int grid_Cols, grid_Rows, grid_Cells;
 int UseDisturbances, UseSoils, sd_DoOutput, sd_MakeHeader; //these are treated like booleans
 
+/* gridCells[i][j] denotes the cell at position (i,j) */
 CellType** gridCells;
+/* Stores the state of the cells following spinup. */
 CellType** spinupCells = NULL;
 
 // these are SOILWAT variables that we need...
@@ -286,10 +288,12 @@ transp_t* getTranspWindow(void);
 void copy_sxw_variables(SXW_t* newSXW, SXW_resourceType* newSXWResources, transp_t* newTransp_window);
 
 /********************** Exported Functions ***********************/
+
 void runGrid(void); //to be called from ST_main.c
 
 /*********** Locally Used Function Declarations ************/
 /***********************************************************/
+
 static void logProgress(int iteration, int year, Status status);
 static double calculateProgress(int year, int iteration, Status status);
 static void printGeneralInfo(void);
@@ -434,7 +438,7 @@ static void printGeneralInfo(void){
 	/* --------------------------- END printing general info -------------------------------- */
 }
 
-/* Runs the gridded version of the code */
+/* Run gridded mode. */
 void runGrid(void)
 {
 	int i, j;
@@ -629,7 +633,7 @@ void runGrid(void)
 	logProgress(0, 0, DONE);
 }
 
-/* "Spinup" the model by running for SuperGlobals.runModelYears without seed dispersal or statistics outputs. */
+/* "Spinup" the model by running for SuperGlobals.runInitializationYears without seed dispersal or statistics outputs. */
 static void _run_spinup(void)
 {
 	/* Dummy accumulators to ensure we do not collect statistics */
@@ -739,7 +743,8 @@ static void _run_seed_initialization(void){
 
 /* Initializes the plot with whichever method you have specified with InitializationMethod. 
    This function takes care of EVERYTHING involved with initialization.
-   After calling this function you can load in the initialization information by calling loadInitializationConditions(). */
+   After calling this function you can load in the initialization information by calling 
+   loadInitializationConditions(). */
 static void runInitialization(void){
 	beginInitialization();
 
@@ -1396,8 +1401,8 @@ static void load_cell(int row, int col){
 	copy_sxw_variables(gridCells[row][col].mySXW, gridCells[row][col].mySXWResources, gridCells[row][col].myTranspWindow);
 }
 
-/* Nullify all global variables. This function should appear after every call to load_cell to prevent
-   accidental modification of a grid cell.
+/* Nullify all global variables. This function should appear after every call 
+   to load_cell to prevent accidental modification of a grid cell.
    Example usage:
    for i in rows{
        for j in columns{
@@ -1513,14 +1518,9 @@ static int _get_value_index2(char* s, int nSeperators)
 	return i;
 }
 
-/***********************************************************/
+/* Read the grid soils input */
 static void _read_soils_in(void)
 {
-	// reads the grid soils input
-	// the file should be something like: "cell,copy_cell,copy_which,num_layers,..."
-	// there should be no spaces in between, just commas separating the values
-	// this function reads in pretty much a .csv file, but it will not account for all of the possibilities that a .csv file could be written as (as accounting for all these possibilities would take a while to code and be unproductive) so keep that in mind
-
 	FILE *f;
 	char buf[4096];
 	char rootsin[20];
@@ -1808,7 +1808,9 @@ static void _init_soil_layers(int cell, int isSpinup)
 }
 */
 
-/***********************************************************/
+/* Returns the distance in meters between two cells. 
+   To calculate the distance between cells (a,b) and (c,d) with plot width w,
+   input _cell_dist(a, c, b, d, w) */
 static float _cell_dist(int row1, int row2, int col1, int col2, float cellLen)
 {
     double rowDist = row1 - row2;
@@ -1895,7 +1897,7 @@ static void _init_seed_dispersal(void)
 	unload_cell();
 }
 
-/***********************************************************/
+/* Perform seed dispersal durring the simulation. This is NOT functional yet. */
 static void _do_seed_dispersal(void)
 {
 	/************ TODO: overhaul seed dispersal. This block prevents seed dispersal from running. **************/
@@ -2284,6 +2286,7 @@ static void _read_grid_setup(void)
     CloseFile(&f);
 }
 
+/* Output a master .csv file containing the averages across all cells. */
 void Output_AllCellAvgBmass(const char * filename){
 	int i, j, year, nobs = 0;	//for iterating
 	GrpIndex rg;	//for iterating
