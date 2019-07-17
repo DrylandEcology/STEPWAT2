@@ -205,7 +205,7 @@ static void _update_productivity(RealF sizes[]) {
     IntUS k;
 
     SW_VEGPROD *v = &SW_VegProd;
-    RealF totbmass = 0.0, tmp,
+    RealF totbmass = 0.0,
             *bmassg,
     vegTypeBiomass[NVEGTYPES] = {0.};
 
@@ -244,10 +244,8 @@ static void _update_productivity(RealF sizes[]) {
     // to its SOILWAT2 vegetation type
     ForEachGroup(g) {
         // Get biomass of SOILWAT2 vegetation type for current resource group
-        tmp = vegTypeBiomass[RGroup[g]->veg_prod_type];
-
-        if (GT(tmp, 0.))
-            RGroup[g]->rgroupFractionOfVegTypeBiomass = bmassg[g] / tmp;
+        if (GT(vegTypeBiomass[RGroup[g]->veg_prod_type], 0.))
+            RGroup[g]->rgroupFractionOfVegTypeBiomass = bmassg[g] / vegTypeBiomass[RGroup[g]->veg_prod_type];
         else
             RGroup[g]->rgroupFractionOfVegTypeBiomass = 0;
     }

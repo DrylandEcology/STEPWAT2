@@ -172,10 +172,9 @@ void _sxw_update_root_tables( RealF sizes[] ) {
  * (resources) to each STEPPE functional group. */
 
 	GrpIndex g;
-	LyrIndex l;
+	LyrIndex l, nLyrs;
 	TimeInt p;
 	RealD x;
-	int t,nLyrs;
 
 	/* Set some things to zero where 4 refers to Tree, Shrub, Grass, Forb */
 	Mem_Set(_roots_active_sum, 0, NVEGTYPES * SXW.NPds * SXW.NTrLyrs * sizeof(RealD));
@@ -199,20 +198,14 @@ void _sxw_update_root_tables( RealF sizes[] ) {
          * STEPPE group's roots in a given layer in a given month */
 	ForEachGroup(g)
 	{
-		int nLyrs = getNTranspLayers(RGroup[g]->veg_prod_type);
+		nLyrs = getNTranspLayers(RGroup[g]->veg_prod_type);
 		for (l = 0; l < nLyrs; l++) {
 			ForEachTrPeriod(p)
 			{
-        RealD sum_all_veg_types = 0;
-        ForEachVegType(t) {
-          sum_all_veg_types += _roots_active_sum[Itlp(t,l,p)];
-        }
-
 				_roots_active_rel[Iglp(g, l, p)] =
-				ZRO(sum_all_veg_types) ?
+					ZRO(_roots_active_sum[Itlp(RGroup[g]->veg_prod_type, l, p)]) ?
 						0. :
-						_roots_active[Iglp(g, l, p)]
-								/ sum_all_veg_types;
+						_roots_active[Iglp(g, l, p)] / _roots_active_sum[Itlp(RGroup[g]->veg_prod_type, l, p)];
 			}
 		}
 	}
