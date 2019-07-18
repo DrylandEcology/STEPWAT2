@@ -79,7 +79,7 @@ extern
 extern
   transp_t transp_window;
 
-extern 
+extern
   pcg32_random_t resource_rng;
 
 // _transp_contribution_by_group() has different behavior for production years and setup years.
@@ -128,32 +128,31 @@ void _sxw_update_resource(void) {
  * The first step is to get the current biomass for each STEPPE functional group.
  * Second, we re-calculate the relative active roots in each layer in each month
  * using the updated functional group biomass. Third, we divide transpiration to
- * each STEPPE functional group based on the matching of active roots in each 
- * soil layer and month with transpiration in each layer and month. Finally, we 
+ * each STEPPE functional group based on the matching of active roots in each
+ * soil layer and month with transpiration in each layer and month. Finally, we
  * scale resources available (cm) to resources in terms of grams of biomass */
-  
+
   RealF *sizes;
   GrpIndex g;
-  
+
   sizes = (RealF *)Mem_Calloc(Globals.max_rgroups, sizeof(RealF), "_sxw_update_resource");
 
 	ForEachGroup(g)
 	{
-		//RGroup[g]->veg_prod_type
 		sizes[g] = 0.;
 //printf("_sxw_update_resource()RGroup Name= %s, RGroup[g]->regen_ok=%d \n ", RGroup[g]->name, RGroup[g]->regen_ok);
 		if (!RGroup[g]->regen_ok)
 			continue;
 		sizes[g] = RGroup_GetBiomass(g);
 	}
-        
+
         /* Update the active relative roots based on current biomass values */
 	_sxw_update_root_tables(sizes);
-        
+
 	/* Assign transpiration (resource availability) to each STEPPE functional group */
 	_transp_contribution_by_group(_resource_cur);
-        
-        /* Scale transpiration resources by a constant, bvt, to convert resources 
+
+        /* Scale transpiration resources by a constant, bvt, to convert resources
          * (cm) to biomass that can be supported by those resources (g/cm) */
 	ForEachGroup(g)
 	{
@@ -162,7 +161,7 @@ void _sxw_update_resource(void) {
 //printf("for groupName= %s, resource_cur post multiplication: %f\n\n",Rgroup[g]->name, _resource_cur[g]);
 	}
 /* _print_debuginfo(); */
-        
+
         Mem_Free(sizes);
 }
 
@@ -173,48 +172,46 @@ void _sxw_update_root_tables( RealF sizes[] ) {
  * (resources) to each STEPPE functional group. */
 
 	GrpIndex g;
-	LyrIndex l;
+	LyrIndex l, nLyrs;
 	TimeInt p;
-	RealD x;
-	int t,nLyrs;
+	RealD x, sum_all_veg_types;
+	int t;
 
 	/* Set some things to zero where 4 refers to Tree, Shrub, Grass, Forb */
-	Mem_Set(_roots_active_sum, 0, 4 * SXW.NPds * SXW.NTrLyrs * sizeof(RealD));
-        
+	Mem_Set(_roots_active_sum, 0, NVEGTYPES * SXW.NPds * SXW.NTrLyrs * sizeof(RealD));
+
         /* Calculate the active roots in each month and soil layer for each STEPPE
          * functional group based on the functional group biomass this year */
 	ForEachGroup(g)
 	{
-		t = RGroup[g]->veg_prod_type-1;
 		nLyrs = getNTranspLayers(RGroup[g]->veg_prod_type);
 		for (l = 0; l < nLyrs; l++) {
 			ForEachTrPeriod(p)
 			{
 				x = _rootsXphen[Iglp(g, l, p)] * sizes[g];
 				_roots_active[Iglp(g, l, p)] = x;
-				_roots_active_sum[Itlp(t, l, p)] += x;
+				_roots_active_sum[Itlp(RGroup[g]->veg_prod_type, l, p)] += x;
 			}
 		}
 	}
 
-	/* Rescale _roots_active_sum to represent the relative "activity" of a 
+	/* Rescale _roots_active_sum to represent the relative "activity" of a
          * STEPPE group's roots in a given layer in a given month */
 	ForEachGroup(g)
 	{
-		int nLyrs = getNTranspLayers(RGroup[g]->veg_prod_type);
+		nLyrs = getNTranspLayers(RGroup[g]->veg_prod_type);
 		for (l = 0; l < nLyrs; l++) {
 			ForEachTrPeriod(p)
 			{
-        RealD sum_all_veg_types = 0;
-        for(t = 0; t < NVEGTYPES; ++t){
-          sum_all_veg_types += _roots_active_sum[Itlp(t,l,p)];
+        sum_all_veg_types = 0;
+        ForEachVegType(t) {
+          sum_all_veg_types += _roots_active_sum[Itlp(t, l, p)];
         }
 
 				_roots_active_rel[Iglp(g, l, p)] =
 				ZRO(sum_all_veg_types) ?
 						0. :
-						_roots_active[Iglp(g, l, p)]
-								/ sum_all_veg_types;
+						_roots_active[Iglp(g, l, p)] / sum_all_veg_types;
 			}
 		}
 	}
@@ -223,7 +220,7 @@ void _sxw_update_root_tables( RealF sizes[] ) {
 
 static void _transp_contribution_by_group(RealF use_by_group[]) {
     /*======================================================*/
-    /* use_by_group is the amount of transpiration (cm) assigned to each STEPPE 
+    /* use_by_group is the amount of transpiration (cm) assigned to each STEPPE
      * functional group. Must call _update_root_tables() before this.
      * Compute each group's amount of transpiration from SOILWAT2
      * based on its biomass, root distribution, and phenological
@@ -274,7 +271,7 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
         sumUsedByGroup += use_by_group[g];
         //printf(" sumUsedByGroup in transp=%f \n",sumUsedByGroup);
     }
-    
+
     // Rescale transpiration based on space (min_res_req)
     ForEachGroup(g){
       if(use_by_group[g] != 0){ //Prevents NaN errors
@@ -292,7 +289,7 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
     ForEachGroup(g){
       sumUsedByGroup += use_by_group[g];
     }
-    
+
     //Very small amounts of transpiration remain and not perfectly partitioned to functional groups.
     //This check makes sure any remaining transpiration is divided proportionately among groups.
     ForEachTrPeriod(p) {
@@ -359,7 +356,7 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
             RealF min = transp_window.ratio_average - transp_ratio_sd;
             RealF max = transp_window.ratio_average + transp_ratio_sd;
 
-            // This transpiration will be added 
+            // This transpiration will be added
             added_transp = (1 - transp_ratio / RandUniFloatRange(min, max, &resource_rng)) * transp_window.average;
             if(added_transp < 0){
                 LogError(logfp, LOGNOTE, "sxw_resource: Added transpiration less than 0.\n");
@@ -387,8 +384,8 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
 
             //printf("Year %d: ratio = %f, mean = %f, sos = %f\n",Globals.currYear,
                //transp_ratio+added_transp_ratio,transp_window.ratio_average, transp_window.sum_of_sqrs);
-            
-            /* Adds the additional transpiration to the remaining transpiration 
+
+            /* Adds the additional transpiration to the remaining transpiration
              * so it can be distributed proportionally to the functional groups. */
             TranspRemaining += added_transp;
     }
@@ -407,7 +404,7 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
             //printf("for groupName= %s, after sum use_by_group[g]= %f \n",RGroup[g]->name,use_by_group[g]);
         }
     }
-    
+
     //remember the last year. When setting up for a new iteration the same year will appear twice, and we want to skip it the second time
-    lastYear = Globals.currYear; 
+    lastYear = Globals.currYear;
 }

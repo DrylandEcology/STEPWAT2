@@ -299,8 +299,10 @@ void SXW_Run_SOILWAT (void) {
         sizes = (RealF *)Mem_Calloc(Globals.max_rgroups, sizeof(RealF), "SXW_Run_SOILWAT");
         
 	/* compute production values for transp based on current plant sizes */
-	ForEachGroup(g)
-	sizes[g] = RGroup_GetBiomass(g);
+	ForEachGroup(g) {
+		sizes[g] = RGroup_GetBiomass(g);
+	}
+
 	_sxw_sw_setup(sizes);
 
         // Initialize `SXW` values for current year's run:
@@ -868,11 +870,11 @@ void _print_debuginfo(void) {
 	RealF sum2 = 0.;
 	RealF sum3 = 0.;
 	static Bool beenhere = FALSE;
-	char vegProdNames[4][7];
-	strcpy(vegProdNames[0], "TREE");
-	strcpy(vegProdNames[1], "SHRUB");
-	strcpy(vegProdNames[2], "GRASS");
-	strcpy(vegProdNames[3], "FORB");
+	char vegProdNames[NVEGTYPES][7];
+	strcpy(vegProdNames[SW_TREES], "TREE");
+	strcpy(vegProdNames[SW_SHRUB], "SHRUB");
+	strcpy(vegProdNames[SW_GRASS], "GRASS");
+	strcpy(vegProdNames[SW_FORBS], "FORB");
 	char name[256] = {0};
 	strcat(name, _debugout);
 	f = OpenFile(strcat(name, ".output.out"), "a");
@@ -976,7 +978,7 @@ void _print_debuginfo(void) {
 				pct_live, lai_live, bLAI_total, total_agb);
 	}
 
-	for (t = 0; t < 4; t++) {
+	ForEachVegType(t) {
 		fprintf(f, "\n------ Active Roots (sum) %s -------\n", vegProdNames[t]);
 		fprintf(f, "Layer:");
 		ForEachTrPeriod(p)
@@ -1074,18 +1076,35 @@ void SXW_SetMemoryRefs( void) {
 
 #endif
 
+/** Convert STEPWAT2 indices of SOILWAT2's vegetation type into a
+    SOILWAT2 index
+
+    @param veg_prod_type 1 for tree, 2 for shrub, 3 for grass, 4 for forb
+      (see comments for "veg_prod_type" in `rgroup.in`).
+
+    @return One of the SOILWAT2 defined values `SW_TREES`, `SW_SHRUB`,
+      `SW_FORBS`, `SW_GRASS` or -1 if no match.
+      See `SW_Defines.h` for definitions.
+*/
+int get_SW2_veg_index(int veg_prod_type) {
+  if (veg_prod_type == 1)
+    return SW_TREES;
+  else if (veg_prod_type == 2)
+    return SW_SHRUB;
+  else if (veg_prod_type == 3)
+    return SW_GRASS;
+  else if (veg_prod_type == 4)
+    return SW_FORBS;
+
+  return -1;
+}
+
+
+
  /***********************************************************/
  //returns the number of transpiration layers correctly for each veg_prod_type
 int getNTranspLayers(int veg_prod_type) {
-	if(veg_prod_type == 1)
-		return SW_Site.n_transp_lyrs[0];
-	else if(veg_prod_type == 2)
-		return SW_Site.n_transp_lyrs[1];
-	else if(veg_prod_type == 3)
-		return SW_Site.n_transp_lyrs[3];
-	else if(veg_prod_type == 4)
-		return SW_Site.n_transp_lyrs[2];
-	return -1;
+  return SW_Site.n_transp_lyrs[veg_prod_type];
 }
 
 /***********************************************************/
@@ -1130,7 +1149,7 @@ void load_sxw_memory( RealD* grid_roots_max, RealD* grid_rootsXphen, RealD* grid
 	_rootsXphen = Mem_Calloc(SXW.NGrps * SXW.NPds * SXW.NTrLyrs, sizeof(RealD), "load_sxw_memory()");
 	_roots_active = Mem_Calloc(SXW.NGrps * SXW.NPds * SXW.NTrLyrs, sizeof(RealD), "load_sxw_memory()");
 	_roots_active_rel = Mem_Calloc(SXW.NGrps * SXW.NPds * SXW.NTrLyrs, sizeof(RealD), "load_sxw_memory()");
-	_roots_active_sum = Mem_Calloc(4 * SXW.NPds * SXW.NTrLyrs, sizeof(RealD), "load_sxw_memory()");
+	_roots_active_sum = Mem_Calloc(NVEGTYPES * SXW.NPds * SXW.NTrLyrs, sizeof(RealD), "load_sxw_memory()");
 	_phen = Mem_Calloc(SXW.NGrps * MAX_MONTHS, sizeof(RealD), "load_sxw_memory()");
 	_prod_bmass = Mem_Calloc(SXW.NGrps * MAX_MONTHS, sizeof(RealD), "load_sxw_memory()");
 	_prod_pctlive = Mem_Calloc(SXW.NGrps * MAX_MONTHS, sizeof(RealD), "load_sxw_memory()");
@@ -1139,7 +1158,7 @@ void load_sxw_memory( RealD* grid_roots_max, RealD* grid_rootsXphen, RealD* grid
 	memcpy(_rootsXphen, grid_rootsXphen, SXW.NGrps * SXW.NPds * SXW.NTrLyrs * sizeof(RealD));
 	memcpy(_roots_active, grid_roots_active, SXW.NGrps * SXW.NPds * SXW.NTrLyrs * sizeof(RealD));
 	memcpy(_roots_active_rel, grid_roots_active_rel, SXW.NGrps * SXW.NPds * SXW.NTrLyrs * sizeof(RealD));
-	memcpy(_roots_active_sum, grid_roots_active_sum, 4 * SXW.NPds * SXW.NTrLyrs * sizeof(RealD));
+	memcpy(_roots_active_sum, grid_roots_active_sum, NVEGTYPES * SXW.NPds * SXW.NTrLyrs * sizeof(RealD));
 	memcpy(_phen, grid_phen, SXW.NGrps * MAX_MONTHS * sizeof(RealD));
 	memcpy(_prod_bmass, grid_prod_bmass, SXW.NGrps * MAX_MONTHS * sizeof(RealD));
 	memcpy(_prod_pctlive, grid_prod_pctlive, SXW.NGrps * MAX_MONTHS * sizeof(RealD));
@@ -1152,7 +1171,7 @@ void save_sxw_memory( RealD * grid_roots_max, RealD* grid_rootsXphen, RealD* gri
 	memcpy(grid_rootsXphen, _rootsXphen, SXW.NGrps * SXW.NPds * SXW.NTrLyrs * sizeof(RealD));
 	memcpy(grid_roots_active, _roots_active, SXW.NGrps * SXW.NPds * SXW.NTrLyrs * sizeof(RealD));
 	memcpy(grid_roots_active_rel, _roots_active_rel, SXW.NGrps * SXW.NPds * SXW.NTrLyrs * sizeof(RealD));
-	memcpy(grid_roots_active_sum, _roots_active_sum, 4 * SXW.NPds * SXW.NTrLyrs * sizeof(RealD));
+	memcpy(grid_roots_active_sum, _roots_active_sum, NVEGTYPES * SXW.NPds * SXW.NTrLyrs * sizeof(RealD));
 	memcpy(grid_phen, _phen, SXW.NGrps * MAX_MONTHS * sizeof(RealD));
 	memcpy(grid_prod_bmass, _prod_bmass, SXW.NGrps * MAX_MONTHS * sizeof(RealD));
 	memcpy(grid_prod_pctlive, _prod_pctlive, SXW.NGrps * MAX_MONTHS * sizeof(RealD));

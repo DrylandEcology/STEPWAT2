@@ -115,7 +115,9 @@ struct _grid_disturb_st
 	    killfreq_startyr,/* start year for kill frequency*/
 	    killfrq, /* kill group at this frequency: <1=prob, >1=# years */
 	    extirp, /* year in which group is extirpated (0==ignore) */
-	    veg_prod_type, /* type of VegProd.  1 for tree, 2 for shrub, 3 for grass, 4 for forb */
+      veg_prod_type, /* type of SOILWAT2 vegetation type:
+        STEPWAT2 inputs via "rgroup.in" are defined as: 1 for tree, 2 for shrub, 3 for grass, 4 for forb;
+        however, the inputs get translated by get_SW2_veg_index() to SOILWAT2 values immediately upon reading the inputs (see SW_Defines.h) */
 		grazingfreq_startyr,/* start year for grazing frequency*/
 	    grazing_frq; /* grazing effect on group at this frequency: <1=prob, >1=# years */
 
@@ -1997,6 +1999,9 @@ static void _read_disturbances_in(void)
 				&grid_Disturb[i].killfrq, &grid_Disturb[i].extirp,
 				&grid_Disturb[i].killfreq_startyr,&grid_Disturb[i].xgrow,&grid_Disturb[i].veg_prod_type,
 				&grid_Disturb[i].grazing_frq,&grid_Disturb[i].grazingfreq_startyr);
+
+		// Convert to SOILWAT2 vegetation index
+		grid_Disturb[i].veg_prod_type = get_SW2_veg_index(grid_Disturb[i].veg_prod_type);
 
 //		printf("values :  cell=%d ,choices[0]=%d ,choices[1]=%d ,choices[2]=%d ,kill_yr=%d ,killfrq=%d ,extirp=%d ,killfreq_startyr=%d ,xgrow=%f ,veg_prod_type=%d ,grazing_frq=%d ,grazingfrd_start_year=%d \n", cell,
 //						grid_Disturb[i].choices[0], grid_Disturb[i].choices[1],
