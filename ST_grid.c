@@ -24,14 +24,13 @@
 /* =================================================== */
 /*                INCLUDES / DEFINES                   */
 /* --------------------------------------------------- */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
 #include <ctype.h>
 #include <errno.h>
-#include <time.h>
+#include "ST_grid.h"
 #include "ST_steppe.h"
 #include "generic.h"
 #include "filefuncs.h"
@@ -39,180 +38,13 @@
 #include "ST_globals.h"
 #include "ST_stats.h"
 #include "rands.h"
-
 #include "sxw_funcs.h"
-#include "sxw.h"
-#include "sxw_vars.h"
+#include "ST_initialization.h"
 
-#include "SW_Site.h"
-#include "SW_SoilWater.h"
-#include "SW_VegProd.h"
-#include "SW_Model.h"
-#include "SW_Weather.h"
-#include "sw_src/pcg/pcg_basic.h"
+char sd_Sep;
 
-/***************** Structure Declarations ******************/
-/***********************************************************/
-// represents a single soil layer
-struct _grid_soil_lyr_st
-{ 
-	// Data for this soil layer
-	float data[11];
-	// Vertical width of this layer
-	int width;
-}typedef Grid_Soil_Lyr;
-
-//represents the input data for all the soil layers of a cell
-struct Soil_st
-{
-	// Number of soil layers (size of lyr array)
-	int num_layers;
-	// Name of the roots file belonging to this cell
-	char rootsFile[20];
-	// Specific layer's information
-	Grid_Soil_Lyr* lyr;
-}typedef SoilType;
-
-/* A struct for holding seed dispersal information. */
-struct _grid_sd_struct
-{ //for seed dispersal
-	/* TRUE if seeds are present. */
-	Bool seeds_present;
-	/* TRUE if this cell has recieved any seeds. */
-	Bool seeds_received;
-	/* probabilityOfDispersing[row][col] = the probability that this cell will disperse seeds to cell (row,col). */
-	double **probabilityOfDispersing;
-	/* Last year's precipitation. */
-	double lyppt;
-}typedef Grid_SD_St;
-
-struct _grid_init_species_st
-{
-	/* TRUE if at least one species has requested initialization */
-	int useInitialization;
-	/* Array of Boolean values. TRUE if given species
-	   should be included in spinup */
-	int *shouldBeInitialized;
-}typedef Grid_Init_Species_St;
-
-/* Struct to hold all plot-specific parameters */
-struct grid_cell_st
-{
-	/* RGroup coresponding to this cell */
-	GroupType **myGroup;
-	/* Species corresponding to this cell */
-	SpeciesType **mySpecies;
-	/* Succulents corresponding to this cell */
-	SucculentType mySucculent;
-	/* This cell's environment. We expect each cell to
-	 * have slightly different weather each year */
-	EnvType myEnvironment;
-	/* Cell's plot data */
-	PlotType myPlot;
-	/* Global variables corresponding to this cell */ 
-	ModelType myGlobals;
-	/* If TRUE this cell should use seed dispersal */
-	Bool useSeedDispersal;
-	/* TRUE if this cell is in spinup mode */
-	Bool DuringInitialization;
-	/* species spinup information */
-	Grid_Init_Species_St mySpeciesInit;
-	/* seed dispersal information corresponding to this cell */
-	Grid_SD_St *mySeedDispersal;
-
-	Bool* someKillage;
-	
-	/* ---------------- accumulators -------------------- */
-	StatType *_Dist, *_Ppt, *_Temp,
-  		*_Grp, *_Gsize, *_Gpr, *_Gmort, *_Gestab,
-  		*_Spp, *_Indv, *_Smort, *_Sestab, *_Sreceived;
-	FireStatsType *_Gwf;
-	Bool stats_init;
-	/* -------------- end accumulators ------------------ */
-
-	/* -------------------- SXW ------------------------- */
-	transp_t* myTranspWindow;
-	SXW_t* mySXW;
-	SXW_resourceType* mySXWResources;
-	/* ------------------ End SXW ----------------------- */
-
-	/* ------------------- Soils ------------------------ */
-	// Soil layer information for this cell.
-	SoilType mySoils;
-	/* ------------------ End Soils --------------------- */
-} typedef CellType;
-
-/************ Module Variable Declarations ***************/
-/***********************************************************/
-
-/* Indices for grid_directories go here */
-enum
-{
-    GRID_DIRECTORY_STEPWAT_INPUTS,
-
-    /* Automatically generate number of directories since enums start at 0 */
-    N_GRID_DIRECTORIES
-};
-
-/* Indices for grid_files go here */
-enum
-{
-    GRID_FILE_LOGFILE,
-    GRID_FILE_SETUP,
-    GRID_FILE_DISTURBANCES,
-    GRID_FILE_SOILS,
-    GRID_FILE_INIT_SPECIES,
-    GRID_FILE_FILES,
-    GRID_FILE_MAXRGROUPSPECIES,
-
-    GRID_FILE_PREFIX_BMASSAVG,
-    GRID_FILE_PREFIX_MORTAVG,
-    GRID_FILE_PREFIX_RECEIVEDPROB,
-    GRID_FILE_PREFIX_BMASSCELLAVG,
-
-    /* Automatically generate number of files since enums start at 0 */
-    N_GRID_FILES
-};
-
-/* Enumerator for initialization types */
-enum
-{
-	INIT_WITH_SPINUP,
-	INIT_WITH_SEEDS,
-	INIT_WITH_NOTHING
-};
-
-typedef enum 
-{
-	INITIALIZATION,
-	SIMULATION,
-	OUTPUT,
-	DONE
-} Status;
-
-char *grid_files[N_GRID_FILES], *grid_directories[N_GRID_DIRECTORIES], sd_Sep;
-
-int grid_Cols, grid_Rows, grid_Cells;
+int grid_Cells;
 int UseDisturbances, UseSoils, sd_DoOutput, sd_MakeHeader; //these are treated like booleans
-
-/* gridCells[i][j] denotes the cell at position (i,j) */
-CellType** gridCells;
-/* Stores the state of the cells following spinup. */
-CellType** spinupCells = NULL;
-
-// these are SOILWAT variables that we need...
-extern SW_SOILWAT SW_Soilwat;
-extern SW_SITE SW_Site;
-extern SW_VEGPROD SW_VegProd;
-extern SW_WEATHER SW_Weather;
-extern pcg32_random_t grid_rng; //this file's unique random number generator
-
-/* We need to seed these RNGs when using the gridded mode but do not use them in this file. */
-extern pcg32_random_t environs_rng;
-extern pcg32_random_t mortality_rng;
-extern pcg32_random_t resgroups_rng;
-extern pcg32_random_t species_rng;
-extern pcg32_random_t markov_rng;
 
 // these are grids to store the SOILWAT variables... also dynamically allocated/freed
 SW_SOILWAT *grid_SW_Soilwat, *spinup_SW_Soilwat;
@@ -228,8 +60,28 @@ Grid_SD_St **grid_SD; //for seed dispersal
 // these variables are used for the soil types in the spinup options
 int nSoilTypes, *soilTypes_Array, *grid_SoilTypes;
 
-extern Bool UseProgressBar;
-extern Bool* _SomeKillage;
+/***************************** Externed variables **********************************/
+/* Note that in an ideal world we wouldn't need to extern any variables because 
+   every module would declate them in a header file. Hopefully we can get this
+   cleaned up soon! -CH */
+
+// these are SOILWAT variables that we need...
+extern SW_SOILWAT SW_Soilwat;
+extern SW_SITE SW_Site;
+extern SW_VEGPROD SW_VegProd;
+extern SW_WEATHER SW_Weather;
+
+extern pcg32_random_t grid_rng;         // Gridded mode's unique RNG.
+
+/* We need to seed these RNGs when using the gridded mode but do not use them in this file. */
+extern pcg32_random_t environs_rng;     // Used exclusively in ST_environs.c
+extern pcg32_random_t mortality_rng;    // Used exclusively in ST_mortality.c
+extern pcg32_random_t resgroups_rng;    // Used exclusively in ST_resgroups.c
+extern pcg32_random_t species_rng;      // Used exclusively in ST_species.c
+extern pcg32_random_t markov_rng;       // Used exclusively in SW_Markov.c
+
+extern Bool UseProgressBar;             // From ST_main.c
+extern Bool* _SomeKillage;              // From ST_mortality.c
 
 /******** Modular External Function Declarations ***********/
 /* -- truly global functions are declared in functions.h --*/
@@ -286,34 +138,16 @@ SXW_resourceType* getSXWResources(void);
 transp_t* getTranspWindow(void);
 void copy_sxw_variables(SXW_t* newSXW, SXW_resourceType* newSXWResources, transp_t* newTransp_window);
 
-/********************** Exported Functions ***********************/
-
-void runGrid(void); //to be called from ST_main.c
-
 /*********** Locally Used Function Declarations ************/
 /***********************************************************/
 
-static void logProgress(int iteration, int year, Status status);
 static double calculateProgress(int year, int iteration, Status status);
 static void printGeneralInfo(void);
-static void _run_spinup(void);
-static void _run_seed_initialization(void);
-static void runInitialization(void);
-static void beginInitialization(void);
-static void endInitialization(void);
-static void saveAsInitializationConditions(void);
-static void loadInitializationConditions(void);
 static void _init_grid_files(void);
-static void _init_grid_inputs(void);
 static void _init_SXW_inputs(Bool init_SW, char *f_roots);
-static void _init_stepwat_inputs(void);
 static void allocate_gridCells(int rows, int cols);
 static void allocate_accumulators(void);
-static void _free_grid_memory(void);
-static void _free_spinup_memory(void);
 static void _load_cell(int row, int col, int year, Bool useAccumulators);
-static void load_cell(int row, int col);
-static void unload_cell(void);
 static void _read_disturbances_in(void);
 static void _read_soils_in(void);
 static void _init_soil_layers(int cell, int isSpinup);
@@ -324,6 +158,8 @@ static void _read_init_species(void);
 static void _read_maxrgroupspecies(void);
 static void _read_grid_setup(void);
 static void _read_files(void);
+static void _init_stepwat_inputs(void);
+static void _init_grid_inputs(void);
 
 /******************** Begin Model Code *********************/
 /***********************************************************/
@@ -332,7 +168,7 @@ static void _read_files(void);
 	Param iteration: integer greater than 0. Input 0 iff the program is not currently in an iteration loop.
 	Param year: integer greater than 0. Input 0 iff the program is not currently in a years loop.
 	Param status: Use the "status" enum to choose a value.  */
-static void logProgress(int iteration, int year, Status status){
+void logProgress(int iteration, int year, Status status){
 	static char progressString[256];
 	int index = 0;					// Where we are in progressString
 	Bool needsProgressBar = FALSE;	// By default we donot need a progress bar
@@ -418,12 +254,12 @@ static void printGeneralInfo(void){
 	printf("Number of cells: %d\n\n", grid_Cells);
 	if(UseDisturbances) printf("Using grid disturbances file\n");
 	if(UseSoils) printf("Using grid soils file\n");
-	if(InitializationMethod == INIT_WITH_SEEDS){
+	if(initializationMethod == INIT_WITH_SEEDS){
 		printf("Running seed dispersal as initialization\n");
-	} else if(InitializationMethod == INIT_WITH_SPINUP) { 
+	} else if(initializationMethod == INIT_WITH_SPINUP) { 
 		printf("Running Spinup as initialization\n");
 	}
-	if(InitializationMethod != INIT_WITH_NOTHING){
+	if(initializationMethod != INIT_WITH_NOTHING){
 		printf("Number of initialization years: %d\n", SuperGlobals.runInitializationYears);
 	}
 	if(UseSeedDispersal){
@@ -452,7 +288,7 @@ void runGrid(void)
 
 	printGeneralInfo();
 
-	if(InitializationMethod != INIT_WITH_NOTHING){
+	if(initializationMethod != INIT_WITH_NOTHING){
 		runInitialization();
 	} else {
 		/* If no spinup is requested we still need to reset SXW to set the historical weather
@@ -492,7 +328,7 @@ void runGrid(void)
 		unload_cell(); // Reset the global variables
 
 		// If we used spinup we need to reset to the state of the program right after spinup.
-		if (InitializationMethod == INIT_WITH_SPINUP){
+		if (initializationMethod == INIT_WITH_SPINUP){
 			loadInitializationConditions();
 		}
 
@@ -620,222 +456,12 @@ void runGrid(void)
 		Output_AllCellAvgBmass(fileBMassCellAvg);
 	}
 
-	_free_grid_memory();	// Free our allocated memory since we do not need it anymore
+	free_grid_memory();	// Free our allocated memory since we do not need it anymore
 	parm_free_memory();		// Free memory allocated to the _files array in ST_params.c
-	if(InitializationMethod == INIT_WITH_SPINUP) {
-		_free_spinup_memory();
+	if(initializationMethod == INIT_WITH_SPINUP) {
+		freeInitializationMemory();
 	}
 	logProgress(0, 0, DONE);
-}
-
-/* "Spinup" the model by running without stat collection. */
-static void _run_spinup(void)
-{
-	Bool killedany;             // killedany for mortality functions
-
-    rgroup_Establish(); 		// Establish individuals. Excludes annuals.
-    Env_Generate();				// Generated the SOILWAT environment
-    rgroup_PartResources();		// Distribute resources
-    rgroup_Grow(); 				// Grow
-    mort_Main(&killedany); 		// Mortality that occurs during the growing season
-    rgroup_IncrAges(); 			// Increment ages of all plants
-    grazing_EndOfYear(); 		// Livestock grazing
-    mort_EndOfYear(); 			// End of year mortality.
-    _kill_annuals(); 			// Kill annuals
-    _kill_maxage();             // Kill plants that reach max age
-    proportion_Recovery(); 		// Recover from any disturbances
-    _kill_extra_growth(); 		// Kill superfluous growth			
-}
-
-/* TODO: This is a dummy method. It needs to be implemented once seed dispersal is fully planned. */
-static void _run_seed_initialization(void){
-    if(Globals->currYear == 1){
-	    printf("\nYou have attempted to initialize with seed dispersal.\n" 
-	            "This option is currently in development and will be availible soon.\n");
-    }
-    InitializationMethod = INIT_WITH_NOTHING;
-	return;
-}
-
-/* Initializes the plot with whichever method you have specified with InitializationMethod. 
-   This function takes care of EVERYTHING involved with initialization.
-   After calling this function you can load in the initialization information by calling 
-   loadInitializationConditions(). */
-static void runInitialization(void){
-	beginInitialization();
-
-    /* Dummy accumulators to ensure we do not collect statistics */
-	StatType *dummy_Dist, *dummy_Ppt, *dummy_Temp,
-  		*dummy_Grp, *dummy_Gsize, *dummy_Gpr, *dummy_Gmort, *dummy_Gestab,
-  		*dummy_Spp, *dummy_Indv, *dummy_Smort, *dummy_Sestab, *dummy_Sreceived;
-	FireStatsType *dummy_Gwf;
-
-	/* For iterating over gridCells */
-	int i, j;
-
-	/* For iterating over years */
-	IntS year;
-
-    /* Initialization is technically an iteration so we need to seed the RNGs. */
-    RandSeed(SuperGlobals.randseed, &environs_rng);
-    RandSeed(SuperGlobals.randseed, &mortality_rng);
-    RandSeed(SuperGlobals.randseed, &resgroups_rng);
-    RandSeed(SuperGlobals.randseed, &species_rng);
-    RandSeed(SuperGlobals.randseed, &grid_rng);
-    RandSeed(SuperGlobals.randseed, &markov_rng);
-
-    if (BmassFlags.yearly || MortFlags.yearly)
-        parm_Initialize();
-
-    // Initialize the plot for each grid cell
-    for (i = 0; i < grid_Rows; i++){
-        for (j = 0; j < grid_Cols; j++){
-            load_cell(i, j);
-            Plot_Initialize();
-            Globals->currIter = 1; // Iteration doesn't really matter, I set it to 1 here just in case.
-        }
-    }
-    unload_cell(); // Reset the global variables
-
-    for (year = 1; year <= SuperGlobals.runInitializationYears; year++)
-    { //for each year
-        if(UseProgressBar){
-            logProgress(0, year, INITIALIZATION); // iter = 0 because we are not actually in an iterations loop.
-        }
-        for (i = 0; i < grid_Rows; ++i)
-        { // for each row
-            for(j = 0; j < grid_Cols; ++j)
-            { // for each column
-                // If we should run spinup on this cell
-                if(gridCells[i][j].mySpeciesInit.useInitialization){
-                    // Load up a cell
-                    load_cell(i, j);
-                } else {
-                    continue; // No spinup requested. Move on to next cell.
-                }
-
-                /* This step is important. load_cell loaded in the actual accumulators, but we do not want
-                    to accumulate stats while in spinup. We need to load in dummy accumulators to ensure
-                    we ignore everything that happens in spinup. */
-                stat_Copy_Accumulators(dummy_Dist, dummy_Ppt, dummy_Temp, dummy_Grp, dummy_Gsize, dummy_Gpr, dummy_Gmort, dummy_Gestab,
-                                        dummy_Spp, dummy_Indv, dummy_Smort, dummy_Sestab, dummy_Sreceived, dummy_Gwf, TRUE);
-
-                Globals->currYear = year;
-
-                switch (InitializationMethod){
-		            case INIT_WITH_SPINUP:
-			            _run_spinup();
-			            break;
-		            case INIT_WITH_SEEDS:
-			            _run_seed_initialization();
-			            break;
-		            default:
-			            break;
-	            }
-
-            } /* end column */
-        } /* end row */
-        unload_cell(); // Reset the global variables
-    } /* end model run for this year*/
-
-    ChDir(grid_directories[GRID_DIRECTORY_STEPWAT_INPUTS]);
-    SXW_Reset(gridCells[0][0].mySXW->f_watin);
-    //TODO: This is a shortcut. swc history is not used and shouldn't be until this is fixed.
-    Mem_Free(SW_Soilwat.hist.file_prefix);
-    SW_Soilwat.hist.file_prefix = NULL;
-    ChDir("..");
-
-	endInitialization();
-}
-
-/* Prepares for initialization by turning on species that have requested initialization and turning off 
-   species that have not requested initialization. This function should be accompanied by a call to 
-   endInitialization. */
-static void beginInitialization(void){
-	int i, j; 				/* For iterating over cells */
-	SppIndex sp;			/* For iterating over species */
-	Bool temporary_storage;	/* For swapping variables */
-
-	DuringInitialization = TRUE;
-
-	/* Swap Species[sp]->use_me and mySpeciesInit.shouldBeInitialized[sp]. shouldBeInitialized is an array 
-	   of booleans that represent whether the given species should be used in initialization. use_me is a 
-	   boolean that represents whether the given species should be used in production. By swaping them we 
-	   save space, but we have to remember to swap them back before the production run. */
-	for(i = 0; i < grid_Rows; ++i){
-		for(j = 0; j < grid_Cols; ++j){
-			if(!gridCells[i][j].mySpeciesInit.useInitialization){
-				continue;
-			}
-			load_cell(i, j);	/* We could do this without loading the cell, but there would be no guarantee
-									that ForEachGroup would iterate correctly */
-
-			/* Begin swaping variables */
-			ForEachSpecies(sp){
-				// Temporarily store use_me
-				temporary_storage = Species[sp]->use_me;
-				// Swap use_me
-				Species[sp]->use_me = gridCells[i][j].mySpeciesInit.shouldBeInitialized[sp]; 
-				// Swap shouldBeInitialized[sp]
-				gridCells[i][j].mySpeciesInit.shouldBeInitialized[sp] = temporary_storage;
-			} /* End for each species */
-		} /* End for each column */
-	} /* End for each row */
-	unload_cell(); // Reset the global variables
-}
-
-/* Return the program to the state it needs to be in for the main simulation. This should only be called if you
-   have called beginInitialization. */
-static void endInitialization(void){
-	// Calling this function a second time will swap the variables back to their original state.
-	beginInitialization();
-	// Save the state of the program as our initialization conditions.
-	saveAsInitializationConditions();
-	// We have now exited initialization.
-	DuringInitialization = FALSE;
-}
-
-/* Save the current state of the program as spinup conditions. This is low level function. If you have already called
-   endInitialization() there is no need to call this function. */
-static void saveAsInitializationConditions(){
-	// Save gridCells as spinupCells
-	spinupCells = gridCells;
-	// Nullify gridCells. This ensures we can no longer modify spinupCells on accident.
-	gridCells = NULL;
-
-	// The easiest way to reallocate gridCells is reread the files.
-	_read_grid_setup();             // reads in grid_setup.in file
-    _read_files();                  // reads in Stepwat_Inputs/files.in file
-    _init_stepwat_inputs();			// reads the stepwat inputs in
-	_init_grid_inputs();			// reads the grid inputs in & initializes the global grid variables
-}
-
-/* Load the state of the program right after initialization. */
-static void loadInitializationConditions(){
-	int row, col;
-	GrpIndex rg;
-	SppIndex sp;
-
-	for(row = 0; row < grid_Rows; ++row){
-		for(col = 0; col < grid_Cols; ++col){
-			load_cell(row, col);
-
-			ForEachSpecies(sp){
-				copy_species(spinupCells[row][col].mySpecies[sp], Species[sp]);
-			}
-
-			ForEachGroup(rg){
-				copy_rgroup(spinupCells[row][col].myGroup[rg], RGroup[rg]);
-			}
-
-			copy_environment(&spinupCells[row][col].myEnvironment, Env);
-			copy_plot(&spinupCells[row][col].myPlot, Plot);
-			copy_succulent(&spinupCells[row][col].mySucculent, Succulent);
-
-			unload_cell();
-		}
-	}
-
 }
 
 /* Read the files.in file which was supplied to the program as an argument.
@@ -885,11 +511,11 @@ static void _init_grid_inputs(void)
 	if (UseDisturbances){
 		_read_disturbances_in();
 	}
-	if (UseSeedDispersal || InitializationMethod == INIT_WITH_SEEDS)
+	if (UseSeedDispersal || initializationMethod == INIT_WITH_SEEDS)
 	{
 		_init_seed_dispersal();
 	}
-	if(InitializationMethod != INIT_WITH_NOTHING){
+	if(initializationMethod != INIT_WITH_NOTHING){
 		_read_init_species();
 	}
 	if (UseSoils) {
@@ -954,6 +580,15 @@ static void _init_stepwat_inputs(void)
 	allocate_accumulators();
 
 	ChDir("..");						// go back to the folder we started in
+}
+
+/* Reread input files. Be careful because this function reallocates the grid.
+   Make sure you call free_grid_memory before calling this function. */
+void rereadInputs(void){
+    _read_grid_setup();
+    _read_files();
+    _init_stepwat_inputs();
+    _init_grid_inputs();
 }
 
 /* Allocates memory for the grid cells. This only needs to be called once. */
@@ -1179,7 +814,7 @@ static void allocate_accumulators(void){
 }
 
 /* Free all memory allocated to the gridded mode during initialization. */
-static void _free_grid_memory(void)
+void free_grid_memory(void)
 {
 	//frees all the memory allocated in this file ST_Grid.c (most of it is dynamically allocated in _init_grid_globals() & _load_grid_globals() functions)
 	int i, j, sd_i;
@@ -1215,23 +850,6 @@ static void _free_grid_memory(void)
 		Mem_Free(gridCells[i]);
 	}
 	Mem_Free(gridCells);
-}
-
-/* Free memory allocated to spinupCells. This function should only be called once per simulation. */
-static void _free_spinup_memory(void)
-{
-	// Remember where gridCells pointed.
-	CellType** locationOfGridCells = gridCells;
-
-	// If spinupCells is allocated.
-	if(spinupCells){
-		// move gridCells to point to spinupCells. This allows us to deallocate using _free_grid_memory();
-		gridCells = spinupCells;
-		// Since we already have a function to deallocate gridCells we can use it.
-		_free_grid_memory();
-		// And we need to reset gridCells in case it hasn't been deallocated.
-		gridCells = locationOfGridCells;
-	}
 }
 
 /*
@@ -1351,7 +969,7 @@ static void _load_cell(int row, int col, int year, Bool useAccumulators)
 
 /* Load gridCells[row][col] into the globals variables.
    Any call to this function should have an accompanying call to unload_cell(). */
-static void load_cell(int row, int col){
+void load_cell(int row, int col){
     /* RGroup for this cell */
 	RGroup = gridCells[row][col].myGroup;
 
@@ -1397,7 +1015,7 @@ static void load_cell(int row, int col){
 	   }
    }
    unload_cell() */
-static void unload_cell(){
+void unload_cell(){
 	Species = NULL;
 	RGroup = NULL;
 	Succulent = NULL;
@@ -2229,17 +1847,17 @@ static void _read_grid_setup(void)
 		LogError(logfp, LOGFATAL, "Invalid grid setup file (Initialization line wrong)");
 	}
 	if(!strncmp(initializationType, "spinup", 6)){
-		InitializationMethod = INIT_WITH_SPINUP;
+		initializationMethod = INIT_WITH_SPINUP;
 	} else if(!strncmp(initializationType, "seeds", 5)){
-		InitializationMethod = INIT_WITH_SEEDS;
+		initializationMethod = INIT_WITH_SEEDS;
 	} else if(!strncmp(initializationType, "none", 4)){
-		InitializationMethod = INIT_WITH_NOTHING;
+		initializationMethod = INIT_WITH_NOTHING;
 	} else {
 		LogError(logfp, LOGFATAL, 
 		         "Invalid grid setup file (Initialization line wrong. Valid options are \"spinup\", \"seeds\", or \"none\")");
 	}
 
-	if(InitializationMethod != INIT_WITH_NOTHING){
+	if(initializationMethod != INIT_WITH_NOTHING){
 		GetALine(f, buf);
 		i = sscanf(buf, "%hd", &SuperGlobals.runInitializationYears);
 		if(i < 1){

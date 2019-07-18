@@ -23,6 +23,7 @@
 #include "myMemory.h"
 #include "rands.h"
 #include "sw_src/pcg/pcg_basic.h"
+#include "ST_initialization.h"
 
 extern
   pcg32_random_t species_rng;

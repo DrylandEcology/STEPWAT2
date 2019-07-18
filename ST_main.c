@@ -33,6 +33,7 @@
 #include "sw_src/SW_Output_outtext.h"
 #include "sw_src/SW_Output_outarray.h"
 #include "sw_src/rands.h"
+#include "ST_initialization.h"
 extern SXW_t* SXW;
 
 extern Bool prepare_IterationSummary; // defined in `SOILWAT2/SW_Output.c`
@@ -67,8 +68,6 @@ extern Bool* _SomeKillage;
 
   void stat_Output_AllMorts( void) ;
   void stat_Output_AllBmass(void) ;
-
-  void runGrid( void ); //for the grid... declared in ST_grid.c */
 
   void _kill_annuals(void);
   void _kill_extra_growth(void);
@@ -136,9 +135,6 @@ BmassFlagsType BmassFlags;
 MortFlagsType  MortFlags;
 
 Bool UseGrid;
-Bool UseSeedDispersal;
-int InitializationMethod;
-Bool DuringInitialization;
 Bool EchoInits;
 Bool UseProgressBar;
 Bool STdebug_requested;

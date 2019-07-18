@@ -27,6 +27,7 @@
 #include "sw_src/SW_Site.h"
 #include "ST_structs.h"
 #include "ST_stats.h"
+#include "ST_initialization.h"
 #include "sxw.h"
   extern SW_SITE SW_Site;
 
