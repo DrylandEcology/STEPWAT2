@@ -17,6 +17,7 @@
 #include "sxw.h"
 
 RealF SXW_GetTranspiration( GrpIndex rg);
+int get_SW2_veg_index(int veg_prod_type);
 
 void SXW_Init( Bool init_SW, char *f_roots );
 void SXW_Reset(void);
