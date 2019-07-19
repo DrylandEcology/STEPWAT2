@@ -28,6 +28,7 @@
 #include "sxw_funcs.h"
 #include "myMemory.h"
 #include "filefuncs.h"
+#include "ST_progressBar.h"
 
 /********** Local functions. These should all be treated as private. *************/
 static void _run_spinup(void);

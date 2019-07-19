@@ -34,6 +34,7 @@
 #include "sw_src/SW_Output_outarray.h"
 #include "sw_src/rands.h"
 #include "ST_initialization.h"
+#include "ST_progressBar.h"
 extern SXW_t* SXW;
 
 extern Bool prepare_IterationSummary; // defined in `SOILWAT2/SW_Output.c`
@@ -201,13 +202,6 @@ int main(int argc, char **argv) {
 
 	/* --- Begin a new iteration ------ */
 	for (iter = 1; iter <= SuperGlobals.runModelIterations; iter++) {
-		if (progfp == stderr) {
-			if (iter % incr == 0)
-				fprintf(progfp, ".");
-		} else {
-			fprintf(progfp, "%d\n", iter);
-		}
-
 		Plot_Initialize();
 
 		RandSeed(SuperGlobals.randseed, &environs_rng);
@@ -229,6 +223,9 @@ int main(int argc, char **argv) {
 
 		/* ------  Begin running the model ------ */
 		for (year = 1; year <= SuperGlobals.runModelYears; year++) {
+            if(UseProgressBar){
+                logProgress(iter, year, SIMULATION);
+            }
 
       //printf("------------------------Repetition/year = %d / %d\n", iter, year);
 
@@ -306,6 +303,10 @@ int main(int argc, char **argv) {
 		}
 	} /* end model run for this iteration*/
 
+    if(UseProgressBar){
+        logProgress(0, 0, OUTPUT);
+    }
+
 	/*------------------------------------------------------*/
 	if (MortFlags.summary)
 		stat_Output_AllMorts();
@@ -328,8 +329,9 @@ int main(int argc, char **argv) {
 
 	deallocate_Globals(FALSE);
 
-  printf("\nend program\n");
-	fprintf(progfp, "\n");
+    // This isn't wrapped in an if statement on purpose. 
+    // We should print "Done" either way.
+    logProgress(0, 0, DONE);
 
 	return 0;
 }

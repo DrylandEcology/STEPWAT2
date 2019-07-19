@@ -143,15 +143,6 @@ typedef enum
     N_GRID_FILES
 } File_Indices;
 
-/* Possible states of the program */
-typedef enum 
-{
-	INITIALIZATION,
-	SIMULATION,
-	OUTPUT,
-	DONE
-} Status;
-
 /************************ Exported Variable Declarations **************************/
 
 /* gridCells[i][j] denotes the cell at position (i,j) */
@@ -172,7 +163,6 @@ Bool UseSeedDispersal;
 void runGrid(void);
 void load_cell(int row, int col);
 void unload_cell(void);
-void logProgress(int iteration, int year, Status status);
 void rereadInputs(void);
 void free_grid_memory(void);
 

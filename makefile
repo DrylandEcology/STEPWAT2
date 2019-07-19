@@ -56,7 +56,8 @@ SRCS	=\
 	$(Src)/ST_stats.c\
 	$(Src)/ST_grid.c\
 	$(Src)/ST_sql.c\
-	$(Src)/ST_initialization.c
+	$(Src)/ST_initialization.c\
+	$(Src)/ST_progressBar.c
 	#$(Src)/sxw_tester.c
 
 EXOBJS	=\
@@ -100,7 +101,8 @@ EXOBJS	=\
 	$(oDir)/sxw_environs.o\
 	$(oDir)/ST_grid.o\
 	$(oDir)/ST_sql.o\
-	$(oDir)/ST_initialization.o
+	$(oDir)/ST_initialization.o\
+	$(oDir)/ST_progressBar.o
 	#$(oDir)/sxw_tester.o
 
 ALLOBJS	=	$(EXOBJS)
@@ -358,4 +360,7 @@ $(oDir)/ST_sql.o: ST_sql.c ST_steppe.h ST_globals.h
 	$(CC) $(C_FLAGS) $(CPPFLAGS) $(incDirs) -c -o $@ $<
 
 $(oDir)/ST_initialization.o: ST_initialization.c
+	$(CC) $(C_FLAGS) $(CPPFLAGS) $(incDirs) -c -o $@ $<
+
+$(oDir)/ST_progressBar.o: ST_progressBar.c
 	$(CC) $(C_FLAGS) $(CPPFLAGS) $(incDirs) -c -o $@ $<

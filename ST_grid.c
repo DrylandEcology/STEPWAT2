@@ -40,6 +40,7 @@
 #include "rands.h"
 #include "sxw_funcs.h"
 #include "ST_initialization.h"
+#include "ST_progressBar.h"
 
 char sd_Sep;
 
@@ -141,7 +142,6 @@ void copy_sxw_variables(SXW_t* newSXW, SXW_resourceType* newSXWResources, transp
 /*********** Locally Used Function Declarations ************/
 /***********************************************************/
 
-static double calculateProgress(int year, int iteration, Status status);
 static void printGeneralInfo(void);
 static void _init_grid_files(void);
 static void _init_SXW_inputs(Bool init_SW, char *f_roots);
@@ -163,88 +163,6 @@ static void _init_grid_inputs(void);
 
 /******************** Begin Model Code *********************/
 /***********************************************************/
-
-/* Log the program's progress using a progress bar.
-	Param iteration: integer greater than 0. Input 0 iff the program is not currently in an iteration loop.
-	Param year: integer greater than 0. Input 0 iff the program is not currently in a years loop.
-	Param status: Use the "status" enum to choose a value.  */
-void logProgress(int iteration, int year, Status status){
-	static char progressString[256];
-	int index = 0;					// Where we are in progressString
-	Bool needsProgressBar = FALSE;	// By default we donot need a progress bar
-	progressString[0] = '\0';		// Empty the string
-	iteration--;					// iteration loops are 1 indexed, but we need 0 indexing.
-
-	switch(status){
-		case INITIALIZATION:
-			strcpy(progressString, "Initializing |");
-			index += 14;	// We have copied over 16 characters
-            needsProgressBar = TRUE;
-			break;
-		case SIMULATION:
-			strcpy(progressString, "Simulating   |");
-			index += 14;	// We have copied over 12 characters
-			needsProgressBar = TRUE;
-			break;
-		case OUTPUT:
-			strcpy(progressString, "Writing files");
-			index += 13;	// We have copied over 12 characters
-			break;
-		case DONE:
-			strcpy(progressString, "Done");
-			// We need to pad the string with spaces to make sure we overwrite any progress bars.
-			for(index = 4; index < 40; ++index) progressString[index] = ' ';
-			break;
-		default:
-			break;
-	}
-
-	// If our program is currently in a looping state we can make a progress bar using year and iteration.
-	if(needsProgressBar){
-		int numberOfCharacters = 0;
-		double percentComplete = calculateProgress(year, iteration, status);
-		// Add '=' characters for every 5% complete.
-		while(percentComplete > 0){
-			progressString[index] = '=';
-			index++;
-			numberOfCharacters++;
-			percentComplete -= 5;
-		}
-		// Add spaces until we hit 20 characters
-		while(numberOfCharacters < 20){
-			progressString[index] = ' ';
-			numberOfCharacters++;
-			index++;
-		}
-		progressString[index++] = '|';
-		progressString[index++] = '\0';
-	}
-
-	printf("\r%s", progressString);	// print the string we generated
-	fflush(stdout);					// Explicitly print the output.
-
-	// If we are done we want to print a newline character so the terminal isn't appended to our "Done" string.
-	if(status == DONE){
-		printf("\n");
-	}
-}
-
-/* Returns a double between 0 and 100 representing how close the program is to completing a given loop.
-     Param year: Current year in the loop.
-	 Param iteration: Current iteration in the loop.
-	 Param status: Use the "status" enumerator. Valid options are SPINUP or SIMULATION. */
-double calculateProgress(int year, int iteration, Status status){
-	double percentComplete;
-	if(status == INITIALIZATION){
-		percentComplete = (year / (double) SuperGlobals.runInitializationYears);
-	} else if(status == SIMULATION) {
-		percentComplete = ((iteration * SuperGlobals.runModelYears) + year) 
-						  / (double) (SuperGlobals.runModelIterations * SuperGlobals.runModelYears);
-	} else {
-		return 0;	// If the program isn't in spinup or simulation then this function isn't applicable.
-	}
-	return percentComplete * 100;
-}
 
 /* Print information about the simulation to stdout. */
 static void printGeneralInfo(void){
