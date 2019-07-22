@@ -20,6 +20,7 @@
 #include "SW_VegProd.h"
 #include "SW_Model.h"
 #include "SW_Weather.h"
+#include "ST_seedDispersal.h"
 
 /*********************** Grid Structures ****************************/
 // represents a single soil layer
@@ -41,19 +42,6 @@ struct Soil_st
 	// Specific layer's information
 	Grid_Soil_Lyr* lyr;
 }typedef SoilType;
-
-/* Holds seed dispersal information. */
-struct _grid_sd_struct
-{ //for seed dispersal
-	/* TRUE if seeds are present. */
-	Bool seeds_present;
-	/* TRUE if this cell has recieved any seeds. */
-	Bool seeds_received;
-	/* probabilityOfDispersing[row][col] = the probability that this cell will disperse seeds to cell (row,col). */
-	double **probabilityOfDispersing;
-	/* Last year's precipitation. */
-	double lyppt;
-}typedef Grid_SD_St;
 
 /* Initialization information. */
 struct _grid_init_species_st

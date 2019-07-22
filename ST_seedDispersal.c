@@ -20,7 +20,7 @@ pcg32_random_t dispersal_rng;
 
 /* Derives the probabilities that a given cell will disperse seeds to any other cell. 
    results of this function can be accessed using 
-   gridCells[a][b].mySeedDispersal[s].probabilityOfDispersing[c][d] 
+   gridCells[a][b].mySeedDispersal[s].dispersalProb[c][d] 
    where (a,b) are the coordinates of the sender,
    (b, c) are the coordinates of the reciever,
    and s is the species. */
@@ -28,7 +28,7 @@ void initDispersalParameters(void)
 {
 	int senderRow, senderCol, recieverRow, recieverCol;
 	SppIndex sp;
-	double MAXD; /* maximum distance that a given species can disperse seeds */
+	double MAXD; /* maximum seed dispersal distance for a given species */
 	double maxRate; /* Dispersability of the seeds */
 	double plotWidth; /* width of the plots (all plots are equal and square) */
 	double distanceBetweenPlots; /* distance between the sender and the reciever */
@@ -56,12 +56,12 @@ void initDispersalParameters(void)
 				maxRate = -(log(0.005) / MAXD);
 				plotWidth = sqrt(Globals->plotsize);
 
-				/* Allocate the probabilityOfDispersing 2d array */
-				sender->mySeedDispersal[sp].probabilityOfDispersing = Mem_Calloc(grid_Rows, 
-							sizeof(double*), "initDispersalParameters: probabilityOfDispersing");
+				/* Allocate the dispersalProb 2d array */
+				sender->mySeedDispersal[sp].dispersalProb = Mem_Calloc(grid_Rows, 
+							sizeof(double*), "initDispersalParameters: dispersalProb");
 				for(recieverRow = 0; recieverRow < grid_Rows; ++recieverRow){
-					sender->mySeedDispersal[sp].probabilityOfDispersing[recieverRow] = 
-								Mem_Calloc(grid_Cols, sizeof(double), "initDispersalParameters: probabilityOfDispersing[i]");
+					sender->mySeedDispersal[sp].dispersalProb[recieverRow] = 
+								Mem_Calloc(grid_Cols, sizeof(double), "initDispersalParameters: dispersalProb[i]");
 				}
 
 				/* Loop through all possible recipients of seeds. */
@@ -74,7 +74,7 @@ void initDispersalParameters(void)
 						distanceBetweenPlots = _cell_dist(senderRow, recieverRow, senderCol, recieverCol, plotWidth);
 
                         /* The value that we are after should be saved to the sender cell. */
-						sender->mySeedDispersal[sp].probabilityOfDispersing[recieverRow][recieverCol]
+						sender->mySeedDispersal[sp].dispersalProb[recieverRow][recieverCol]
                                     = (distanceBetweenPlots > MAXD) ? (0.0) : (exp(-maxRate * distanceBetweenPlots));
 					}
 				}
@@ -274,7 +274,7 @@ void disperseSeeds(void)
 
 			for (j = 0; j < cell->mySeedDispersal[s].size; j++)
 				if (cell->mySeedDispersal[cell->mySeedDispersal[s].cells[j]].seeds_present)
-					receivedProb += cell->mySeedDispersal[s].probabilityOfDispersing[j];
+					receivedProb += cell->mySeedDispersal[s].dispersalProb[j];
 
 			randomN = RandUni(&grid_rng);
 			if (LE(randomN, receivedProb) && !ZRO(receivedProb))

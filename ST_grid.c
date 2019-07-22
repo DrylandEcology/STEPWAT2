@@ -749,9 +749,9 @@ void free_grid_memory(void)
 			if(UseSeedDispersal) {
 				ForEachSpecies(s) {
 					for(sd_i = 0; sd_i < grid_Rows; ++sd_i){
-						Mem_Free(gridCells[i][j].mySeedDispersal[s].probabilityOfDispersing[sd_i]);
+						Mem_Free(gridCells[i][j].mySeedDispersal[s].dispersalProb[sd_i]);
 					}
-					Mem_Free(gridCells[i][j].mySeedDispersal[s].probabilityOfDispersing);
+					Mem_Free(gridCells[i][j].mySeedDispersal[s].dispersalProb);
 				}
 			}
 			unload_cell();
