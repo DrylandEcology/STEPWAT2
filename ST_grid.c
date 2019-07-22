@@ -9,16 +9,17 @@
 /********************************************************************************/
 /*
  Summary:
-    This module handles the gridded mode of STEPWAT2. To accomplish this we use a grid of cells represented by the 
-    CellType struct. The entire grid of cells can be referenced by the gridCells variable which is a 2d array of 
-	CellTypes. To allow this module to use the same functions as non-gridded mode the CellType structs must be loaded
-	into the global variables using the load_cell function. As long as a cell is loaded in you can be sure that all 
+    This module handles the gridded mode of STEPWAT2. To accomplish this we use a grid of cells 
+    represented by the CellType struct. The entire grid of cells can be referenced by the 
+    gridCells variable which is a 2d array of CellTypes. To allow this module to use the same 
+    functions as non-gridded mode the CellType structs must be loaded into the global variables 
+    using the load_cell function. As long as a cell is loaded in you can be sure that all 
 	functions will work as expected. 
 
-    In addition to all of the functionality of non-gridded mode, gridded mode has two additional features: 
-	initialization and seed dispersal. Initialization allows the user to run some small-scale simulation to allow 
-	the environment to stabilize before recording any statistics. Seed dispersal allows each cell to disperse seeds 
-	to nearby cells.
+    In addition to all of the functionality of non-gridded mode, gridded mode has two additional 
+    features: initialization and seed dispersal. Initialization allows vegetation to establish 
+    before the simulation experiments begin. Seed dispersal allows each cell to disperse seeds 
+    to nearby cells.
 */
 
 /* =================================================== */
