@@ -57,7 +57,8 @@ SRCS	=\
 	$(Src)/ST_grid.c\
 	$(Src)/ST_sql.c\
 	$(Src)/ST_initialization.c\
-	$(Src)/ST_progressBar.c
+	$(Src)/ST_progressBar.c\
+	$(Src)/ST_seedDispersal.c
 	#$(Src)/sxw_tester.c
 
 EXOBJS	=\
@@ -102,7 +103,8 @@ EXOBJS	=\
 	$(oDir)/ST_grid.o\
 	$(oDir)/ST_sql.o\
 	$(oDir)/ST_initialization.o\
-	$(oDir)/ST_progressBar.o
+	$(oDir)/ST_progressBar.o\
+	$(oDir)/ST_seedDispersal.o
 	#$(oDir)/sxw_tester.o
 
 ALLOBJS	=	$(EXOBJS)
@@ -363,4 +365,7 @@ $(oDir)/ST_initialization.o: ST_initialization.c
 	$(CC) $(C_FLAGS) $(CPPFLAGS) $(incDirs) -c -o $@ $<
 
 $(oDir)/ST_progressBar.o: ST_progressBar.c
+	$(CC) $(C_FLAGS) $(CPPFLAGS) $(incDirs) -c -o $@ $<
+
+$(oDir)/ST_seedDispersal.o: ST_seedDispersal.c
 	$(CC) $(C_FLAGS) $(CPPFLAGS) $(incDirs) -c -o $@ $<

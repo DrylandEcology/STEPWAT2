@@ -155,8 +155,6 @@ int grid_Cols;
 char *grid_files[N_GRID_FILES];
 /* Array of directory names. Use the Directory_Indices enum to pick the correct index. */
 char *grid_directories[N_GRID_DIRECTORIES];
-/* TRUE if we should run seed dispersal between years during the main simulation. */
-Bool UseSeedDispersal;
 
 /**************************** Exported Functions **********************************/
 

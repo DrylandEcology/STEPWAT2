@@ -28,6 +28,7 @@
 #include "ST_structs.h"
 #include "ST_stats.h"
 #include "ST_initialization.h"
+#include "ST_seedDispersal.h"
 #include "sxw.h"
   extern SW_SITE SW_Site;
 
