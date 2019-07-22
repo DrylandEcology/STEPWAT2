@@ -1,3 +1,8 @@
+/*********************************************************************************
+ * ST_seedDispersal.c
+ * 
+ * Contains definitions for all functions belonging to the seed dispersal module.
+ *********************************************************************************/
 
 #include "ST_globals.h"
 #include "ST_defines.h"
@@ -10,7 +15,8 @@ int _do_bulk_dispersal(SppIndex sp);
 void _do_precise_dispersal(int leftoverSeeds, SppIndex sp);
 float _cell_dist(int row1, int row2, int col1, int col2, float cellLen);
 
-pcg32_random_t dispersal_rng;      // Used exclusively in this file
+/* RNG unique to seed dispersal. */
+pcg32_random_t dispersal_rng;
 
 /* Derives the probabilities that a given cell will disperse seeds to any other cell. 
    results of this function can be accessed using 
