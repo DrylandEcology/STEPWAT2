@@ -197,6 +197,9 @@ void _sxw_update_root_tables( RealF sizes[] ) {
 
 	/* Rescale _roots_active_sum to represent the relative "activity" of a
          * STEPPE group's roots in a given layer in a given month */
+  /* Details: for each soil layer `l` and each month (trperiod) `p`, the sum
+     of `_roots_active_rel[Iglp(g, l, p)]` across rgroups `g` must be 1;
+     see its use by function _transp_contribution_by_group() */
 	ForEachGroup(g)
 	{
 		nLyrs = getNTranspLayers(RGroup[g]->veg_prod_type);
@@ -260,6 +263,10 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
 
         //Loops through each month and calculates amount of transpiration for each STEPPE functional group
         //according to whether that group has active living roots in each soil layer for each month
+        /* Details: for each soil layer `l` and each month (trperiod) `p`, the
+           sum of `_roots_active_rel[Iglp(g, l, p)]` across rgroups `g` must
+           be 1; only if they sum to 1, can they can be used as proper weights
+           for `transp[Ilp(l, p)]` to be split up among rgroups */
         ForEachTrPeriod(p) {
             nLyrs = getNTranspLayers(RGroup[g]->veg_prod_type);
             for (l = 0; l < nLyrs; l++) {
