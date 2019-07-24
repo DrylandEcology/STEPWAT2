@@ -1128,17 +1128,6 @@ void free_all_sxw_memory( void ) {
 	Mem_Free(transp_window->SoS_array);
 	Mem_Free(transp_window);
 
-	/* Free SXWResources memory */
-	Mem_Free(SXWResources->_roots_max);
-	Mem_Free(SXWResources->_rootsXphen);
-	Mem_Free(SXWResources->_roots_active);
-	Mem_Free(SXWResources->_roots_active_rel);
-	Mem_Free(SXWResources->_roots_active_sum);
-	Mem_Free(SXWResources->_phen);
-	Mem_Free(SXWResources->_prod_bmass);
-	Mem_Free(SXWResources->_prod_pctlive);
-	Mem_Free(SXWResources);
-
 	/* Free SXW */
 	Mem_Free(SXW->f_roots);
 	Mem_Free(SXW->f_phen);
@@ -1151,6 +1140,18 @@ void free_all_sxw_memory( void ) {
 	}
 	Mem_Free(SXW->swc);
 	Mem_Free(SXW);
+
+	Mem_Free(SXWResources->_phen);
+	Mem_Free(SXWResources->_prod_bmass);
+	Mem_Free(SXWResources->_prod_pctlive);
+	Mem_Free(SXWResources->_resource_cur);
+	Mem_Free(SXWResources->_resource_pr);
+	Mem_Free(SXWResources->_roots_active);
+	Mem_Free(SXWResources->_roots_active_rel);
+	Mem_Free(SXWResources->_roots_active_sum);
+	Mem_Free(SXWResources->_roots_max);
+	Mem_Free(SXWResources->_rootsXphen);
+	Mem_Free(SXWResources);
 }
 
 /***********************************************************/

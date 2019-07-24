@@ -133,6 +133,7 @@ void stat_Output_Seed_Dispersal(const char * filename, const char sep,
 void stat_Copy_Accumulators(StatType* newDist, StatType* newPpt, StatType* newTemp, StatType* newGrp, StatType* newGsize, 
                             StatType* newGpr, StatType* newGmort, StatType* newGestab, StatType* newSpp, StatType* newIndv,
                             StatType* newSmort, StatType* newSestab, StatType* newSrecieved, FireStatsType* newGwf, Bool firstTime);
+void stat_free_mem(void);
 void _make_header_with_std( char *buf);
 
 /* Functions from sxw.c */
@@ -745,6 +746,7 @@ void free_grid_memory(void)
 			load_cell(i,j);
 			deallocate_Globals(TRUE);
 			free_all_sxw_memory();
+			stat_free_mem();
 			// If seed dispersal is on we allocated additional memory
 			if(UseSeedDispersal) {
 				ForEachSpecies(s) {
