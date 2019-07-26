@@ -279,45 +279,58 @@ void SXW_InitPlot (void) {
 	_sxw_sw_clear_transp();
 	_sxw_update_resource();
 }
+void SXW_Run_SOILWAT(void) {
+    /*======================================================*/
+    /* need to update the resource vectors and set up the
+     * ppt and temp (environs) here before calling
+     * Env_Generate() and rgroup_Establish() in main().
+     *
+     * 2/28/2003 - cwb - adding changes mentioned at top of file.
+     * 3/31/2003 - cwb - because we're always running soilwat to
+     *             emulate full-size plants, computing roots etc
+     *             gets done once during init plot.
+     */
 
+    GrpIndex g;
+    Int j;
+    SppIndex sp;
+    RealF *sizes;
 
-void SXW_Run_SOILWAT (void) {
-/*======================================================*/
-/* need to update the resource vectors and set up the
- * ppt and temp (environs) here before calling
- * Env_Generate() and rgroup_Establish() in main().
- *
- * 2/28/2003 - cwb - adding changes mentioned at top of file.
- * 3/31/2003 - cwb - because we're always running soilwat to
- *             emulate full-size plants, computing roots etc
- *             gets done once during init plot.
- */
+    sizes = (RealF *) Mem_Calloc(Globals.max_rgroups, sizeof (RealF), "SXW_Run_SOILWAT");
 
-	GrpIndex g;
-	RealF *sizes;
-        
-        sizes = (RealF *)Mem_Calloc(Globals.max_rgroups, sizeof(RealF), "SXW_Run_SOILWAT");
-        
-	/* compute production values for transp based on current plant sizes */
-	ForEachGroup(g) {
-		sizes[g] = RGroup_GetBiomass(g);
-	}
+    /* Compute current STEPPE biomass which represents last year's biomass and biomass due to establishment this year (for perennials) and biomass due to establishment this year (for annuals) */
+    ForEachGroup(g) {
+        sizes[g] = RGroup_GetBiomass(g);
 
-	_sxw_sw_setup(sizes);
+        //printf("First call to sizes: RGroup = %s, sizes[g] = %f\n", RGroup[g]->name, sizes[g]);
 
-        // Initialize `SXW` values for current year's run:
-	SXW.aet = 0.; /* used to be in sw_setup() but it needs clearing each run */
+        ForEachEstSpp(sp, g, j) {
+            
+            /* For annual species, increment the biomass that is passed into SOILWAT2 to also include last year's biomass, in addition to biomass due to establishment this year */
+            if (Species[sp]->max_age == 1) {
 
-	//SXW_SW_Setup_Echo();
-	_sxw_sw_run();
+                sizes[g] += Species[sp]->lastyear_relsize * Species[sp]->mature_biomass;
+            }
+        }
+        //printf("Second call to sizes: RGroup = %s, sizes[g] = %f\n", RGroup[g]->name, sizes[g]);
 
-	/* Now compute resource availability for each STEPPE functional group */
-	_sxw_update_resource();
+    }
 
-	/* Set annual precipitation and annual temperature */
-	_sxw_set_environs();
-        
-        Mem_Free(sizes);
+    _sxw_sw_setup(sizes);
+
+    // Initialize `SXW` values for current year's run:
+    SXW.aet = 0.; /* used to be in sw_setup() but it needs clearing each run */
+
+    //SXW_SW_Setup_Echo();
+    _sxw_sw_run();
+
+    /* Now compute resource availability for each STEPPE functional group */
+    _sxw_update_resource();
+
+    /* Set annual precipitation and annual temperature */
+    _sxw_set_environs();
+
+    Mem_Free(sizes);
 }
 
 void SXW_SW_Setup_Echo(void) {
