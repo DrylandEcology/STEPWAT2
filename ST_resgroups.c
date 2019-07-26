@@ -737,17 +737,18 @@ void rgroup_IncrAges(void)
 /* Sums relsize for all individuals in all species in RGroup rg.
    param rg = RGroup index.
    Return: RGroup relsize. */
+
 RealF getRGroupRelsize(GrpIndex rg){
     Int n;
 	SppIndex sp;
 	double sum = 0.0;
 
     ForEachEstSpp( sp, rg, n){
-		sum += getSpeciesRelsize(sp);
+	sum += getSpeciesRelsize(sp);
     }
 
     if(RGroup[rg]->est_count > 0){
-        return (RealF) sum / (RealF) RGroup[rg]->est_count;
+        return (RealF) sum;
     } else {
         return 0;
     }
