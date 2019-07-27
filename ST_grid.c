@@ -356,13 +356,15 @@ void runGrid(void)
 			parm_SetName(fileMort, F_MortAvg);
 			parm_SetName(fileBMass, F_BMassAvg);
 
-			if (MortFlags.summary)
+			if (MortFlags.summary && writeIndividualFiles){
 				stat_Output_AllMorts();
-			if (BmassFlags.summary)
+			}
+			if (BmassFlags.summary && writeIndividualFiles){
 				stat_Output_AllBmass();
-			if (UseSeedDispersal && sd_DoOutput)
-				stat_Output_Seed_Dispersal(fileReceivedProb, sd_Sep,
-						sd_MakeHeader);
+			}
+			if (UseSeedDispersal && sd_DoOutput && writeIndividualFiles){
+				stat_Output_Seed_Dispersal(fileReceivedProb, sd_Sep, sd_MakeHeader);
+			}
 		}
 	}
 	unload_cell(); // Reset the global variables
@@ -1490,12 +1492,16 @@ static void _read_grid_setup(void)
 		         "Invalid grid setup file (Initialization line wrong. Valid options are \"spinup\", \"seeds\", or \"none\")");
 	}
 
-	if(initializationMethod != INIT_WITH_NOTHING){
-		GetALine(f, buf);
-		i = sscanf(buf, "%hd", &SuperGlobals.runInitializationYears);
-		if(i < 1){
-			LogError(logfp, LOGFATAL, "Invalid grid setup file (Initialization years line wrong)");
-		}
+	GetALine(f, buf);
+	i = sscanf(buf, "%hd", &SuperGlobals.runInitializationYears);
+	if(i < 1){
+		LogError(logfp, LOGFATAL, "Invalid grid setup file (Initialization years line wrong)");
+	}
+
+	GetALine(f, buf);
+	i = sscanf(buf, "%hd", &writeIndividualFiles);
+	if(i < 1){
+		LogError(logfp, LOGFATAL, "Invalid grid setup file (Individual output line wrong)");
 	}
 
 	GetALine(f, buf);
