@@ -1476,6 +1476,13 @@ static void _read_grid_setup(void)
                  "Invalid grid setup file (seed dispersal line wrong)");
     UseSeedDispersal = itob(j);
 
+	// TODO: Remove this block once seed dispersal works.
+	if(UseSeedDispersal){
+		printf("\nSeed dispersal during the simulation is not yet functional.\n"
+		    "Check out GitHub for updates on this feature.\n");
+		UseSeedDispersal = FALSE;
+	}
+
 	GetALine(f, buf);
 	i = sscanf(buf, "%s", initializationType);
 	if(i < 1){
