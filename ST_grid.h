@@ -126,6 +126,7 @@ typedef enum
     GRID_FILE_PREFIX_MORTAVG,
     GRID_FILE_PREFIX_RECEIVEDPROB,
     GRID_FILE_PREFIX_BMASSCELLAVG,
+    GRID_FILE_PREFIX_MORTCELLAVG,
 
     /* Automatically generate number of files since enums start at 0 */
     N_GRID_FILES

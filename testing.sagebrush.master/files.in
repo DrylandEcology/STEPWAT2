@@ -16,3 +16,4 @@ Output/g_bmassavg			# name of the prefix given to the biomass output files
 Output/g_mortavg			# name of the prefix given to the mortuary output files
 Output/g_receivedprob			# name of the prefix given to the seed disperal received probability output files
 Output/g_bmass_cell_avg			# name of the prefix given to the biomass grid cell avg output files
+Output/g_mort_cell_avg			# name of the prefix given to the mortality grid cell avg output files

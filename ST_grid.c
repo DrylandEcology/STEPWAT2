@@ -128,6 +128,7 @@ void stat_Collect_SMort(void);
 void stat_Output_AllMorts(void);
 void stat_Output_AllBmass(void);
 void Output_AllCellAvgBmass(const char * filename);
+void Output_AllCellAvgMort(const char* fileName);
 void stat_Output_Seed_Dispersal(const char * filename, const char sep,
 		Bool makeHeader);
 void stat_Copy_Accumulators(StatType* newDist, StatType* newPpt, StatType* newTemp, StatType* newGrp, StatType* newGsize, 
@@ -370,11 +371,15 @@ void runGrid(void)
 	unload_cell(); // Reset the global variables
 
 	//Here creating grid cells avg values output file
-	char fileBMassCellAvg[1024];
-	sprintf(fileBMassCellAvg, "%s.csv", grid_files[GRID_FILE_PREFIX_BMASSCELLAVG]);
+	char fileBMassCellAvg[1024], fileMortCellAvg[1024];
 	if (BmassFlags.summary){
+        sprintf(fileBMassCellAvg, "%s.csv", grid_files[GRID_FILE_PREFIX_BMASSCELLAVG]);
 		Output_AllCellAvgBmass(fileBMassCellAvg);
 	}
+    if (MortFlags.summary){
+        sprintf(fileMortCellAvg, "%s.csv", grid_files[GRID_FILE_PREFIX_MORTCELLAVG]);
+        Output_AllCellAvgMort(fileMortCellAvg);
+    }
 
 	free_grid_memory();	// Free our allocated memory since we do not need it anymore
 	parm_free_memory();		// Free memory allocated to the _files array in ST_params.c
@@ -1646,7 +1651,7 @@ void Output_AllCellAvgBmass(const char * filename){
 			} // End for each column
 		} // End for each row
 
-		/* ---------------- Average all accumulators ---------------- */
+		/* ------------------ Average all accumulators ----------------- */
 		dist /= grid_Cells;
 		wildfire /= grid_Cells;
 		ForEachGroup(rg){
@@ -1720,4 +1725,128 @@ void Output_AllCellAvgBmass(const char * filename){
 
 	unload_cell();
 	fclose(file); // Close the file
+}
+
+/* Output the average mortality across cells. */
+void Output_AllCellAvgMort(const char* fileName){
+    if (!MortFlags.summary) return;
+
+    /* We need a cell loaded for the ForEach loops. */
+    load_cell(0,0);
+
+    FILE *file;
+    IntS age;
+    GrpIndex rg;
+    SppIndex sp;
+    char sep = MortFlags.sep;
+
+    int row, col, nobs = 0;
+
+    float Gestab[SuperGlobals.max_rgroups],
+          Sestab[SuperGlobals.max_spp_per_grp * SuperGlobals.max_rgroups],
+          Gmort[SuperGlobals.max_rgroups][Globals->Max_Age],
+          Smort[SuperGlobals.max_spp_per_grp * SuperGlobals.max_rgroups][Globals->Max_Age];
+
+    file = OpenFile( fileName, "w");
+
+    /* --------------------- Initialize values ----------------------- */
+    ForEachSpecies(sp){
+        Sestab[sp] = 0;
+        for(age = 0; age < Globals->Max_Age; ++age){
+            Smort[sp][age] = 0;
+        }
+    }
+    ForEachGroup(rg){
+        Gestab[rg] = 0;
+        for(age = 0; age < Globals->Max_Age; ++age){
+            Gmort[rg][age] = 0;
+        }
+    }
+    /* ------------------ End initializing values -------------------- */
+
+    /* ----------------------------- Calculate averaged values ------------------------------------- */
+    for(row = 0; row < grid_Rows; row++){
+        for(col = 0; col < grid_Cols; col++){
+            nobs++;
+            if (MortFlags.group) {
+                ForEachGroup(rg){
+                    Gestab[rg] = get_running_mean(nobs, Gestab[rg], gridCells[row][col]._Gestab[rg].s[0].ave);
+                }
+            }
+
+            if (MortFlags.species) {
+                ForEachSpecies(sp){
+                    Sestab[sp] = get_running_mean(nobs, Sestab[sp], gridCells[row][col]._Sestab[sp].s[0].ave);
+                }
+            }
+
+            /* print one line of kill frequencies per age */
+            for(age=0; age < Globals->Max_Age; age++) {
+                if (MortFlags.group) {
+                    ForEachGroup(rg){
+                        Gmort[rg][age] = get_running_mean(nobs, Gmort[rg][age], gridCells[row][col]._Gmort[rg].s[age].ave);
+                    }
+                }
+                if (MortFlags.species) {
+                    ForEachSpecies(sp) {
+                        Smort[sp][age] = get_running_mean(nobs, Smort[sp][age], gridCells[row][col]._Smort[sp].s[age].ave);
+                    }
+                }
+            }
+        }
+    }
+    /* --------------------------- End calculating averaged values -------------------------------- */
+
+    /* --------------------- Print header ------------------ */
+    fprintf(file, "Age");
+    if (MortFlags.group) {
+        ForEachGroup(rg) {
+            fprintf(file,"%c%s", sep, RGroup[rg]->name);
+        }
+    }
+    if (MortFlags.species) {
+        ForEachSpecies(sp)
+            fprintf(file,"%c%s", sep, Species[sp]->name);
+    }
+    fprintf(file,"\n");
+    fprintf(file,"Estabs");
+    /* ---------------------- End header ------------------- */
+
+    /* --------------------- Print values ------------------ */
+    if(MortFlags.group){
+        ForEachGroup(rg){
+            fprintf(file,"%c%5.1f", sep, Gestab[rg]);
+        }
+    }
+
+    if (MortFlags.species) {
+        ForEachSpecies(sp){
+            fprintf(file,"%c%5.1f", sep, Sestab[sp]);
+        }
+    }
+
+    fprintf(file,"\n");
+
+    /* print one line of kill frequencies per age */
+    for(age=0; age < Globals->Max_Age; age++) {
+        fprintf(file,"%d", age+1);
+        if (MortFlags.group) {
+            ForEachGroup(rg)
+                fprintf(file,"%c%5.1f", sep, ( age < GrpMaxAge(rg) )
+                                  ? Gmort[rg][age]
+                                  : 0.);
+        }
+        if (MortFlags.species) {
+            ForEachSpecies(sp) {
+                fprintf(file,"%c%5.1f", sep, ( age < SppMaxAge(sp))
+                                ? Smort[sp][age]
+                                : 0.);
+            }
+        }
+        fprintf(file,"\n");
+    }
+    /* ----------------- End printing values --------------- */
+
+    unload_cell();
+    CloseFile(&file);
 }
