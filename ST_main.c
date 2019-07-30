@@ -36,7 +36,6 @@
 #include "ST_initialization.h"
 #include "ST_progressBar.h"
 #include "ST_seedDispersal.h"
-extern SXW_t* SXW;
 
 extern Bool prepare_IterationSummary; // defined in `SOILWAT2/SW_Output.c`
 extern Bool print_IterationSummary; // defined in `SOILWAT2/SW_Output_outtext.c`

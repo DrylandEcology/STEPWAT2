@@ -63,8 +63,7 @@ extern Bool* _SomeKillage;              // From ST_mortality.c
 /********* Modular functions defined elsewhere ************/
 /* Again, we should clean this up eventually. -CH */
 
-void rgroup_Establish(void); 
-void Env_Generate(void);
+void rgroup_Establish(void);
 void rgroup_PartResources(void);
 void rgroup_Grow(void); 
 void mort_Main(Bool* killed);
