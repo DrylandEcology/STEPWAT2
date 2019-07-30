@@ -612,7 +612,8 @@ void rgroup_Establish(void) {
     /*------------------------------------------------------*/
 
     IntS i, num_est; /* number of individuals of sp. that establish*/
-    RealF unused_space = 0; /* sums up all of the space that goes unused if a species does not establish */
+    RealF
+      used_space = 0; /* sums up all of the space that is currently used */
     GrpIndex rg;
     SppIndex sp;
     GroupType *g;
@@ -669,29 +670,43 @@ void rgroup_Establish(void) {
             } /* end ForEachGroupSpp() */
         }
 
-        // if no species in this group established we need to redistribute min_res_req
-        if(g->est_count == 0){
-            unused_space += g->min_res_req;
+        // sum up min_res_req in case we need to redistribute min_res_req
+        if (g->est_count > 0) {
+            used_space += g->min_res_req;
+        } else {
             // this group needs no resources because it is not established.
             g->min_res_req = 0;
         }
     } /* end ForEachGroup() */
 
-    // If there is unused space we need to redistribute
-    if(unused_space > 0){
-        // printf("\nYear %d: unused_space = %f\n\n", Globals.currYear, unused_space);
-        ForEachGroup(rg){
-            g = RGroup[rg];
-            // If this group is established, give it some of the unused space.
-            if(g->est_count != 0){
-                // printf("%s before: %f\n", g->name, g->min_res_req);
-                /* This formula will proportionally redistribute the unused space to all groups that are established */
-                g->min_res_req = g->min_res_req / (1 - unused_space);
-                // printf("%s after: %f\n", g->name, g->min_res_req);
-            }
-        }
+
+    if (ZRO(used_space)) {
+      // We shouldn't have arrived here
+      LogError(stderr, LOGFATAL, "Invalid space values");
     }
+
+    //RealF tmp = 0.;
+
+    // If there is unused (or too much used) space we need to redistribute
+    if (!EQ(used_space, 1.0)) {
+      //printf("\nYear %d: used_space = %f\n", Globals.currYear, used_space);
+
+      ForEachGroup(rg) {
+        g = RGroup[rg];
+        /* Redistribute the unused (or too much used) space to all groups that
+           are established */
+        if (g->est_count > 0) {
+          //printf("%s before: %f -- ", g->name, g->min_res_req);
+          g->min_res_req = g->min_res_req / used_space;
+          //printf("%s after: %f\n", g->name, g->min_res_req);
+          //tmp += g->min_res_req;
+        }
+      }
+    }
+
+    //printf("Sum of space after adjustment = %f\n", tmp);
 }
+
 /***********************************************************/
 void rgroup_IncrAges(void)
 {
