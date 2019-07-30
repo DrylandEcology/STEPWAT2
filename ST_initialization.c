@@ -68,8 +68,6 @@ void rgroup_PartResources(void);
 void rgroup_Grow(void); 
 void mort_Main(Bool* killed);
 void rgroup_IncrAges(void);
-void grazing_EndOfYear(void); 
-void mort_EndOfYear(void); 
 void _kill_annuals(void);
 void _kill_maxage(void);
 void proportion_Recovery(void); 
@@ -271,8 +269,6 @@ static void _run_spinup(void)
     rgroup_Grow(); 				// Grow
     mort_Main(&killedany); 		// Mortality that occurs during the growing season
     rgroup_IncrAges(); 			// Increment ages of all plants
-    grazing_EndOfYear(); 		// Livestock grazing
-    mort_EndOfYear(); 			// End of year mortality.
     _kill_annuals(); 			// Kill annuals
     _kill_maxage();             // Kill plants that reach max age
     proportion_Recovery(); 		// Recover from any disturbances
