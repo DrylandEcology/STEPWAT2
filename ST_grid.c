@@ -528,10 +528,6 @@ static void allocate_gridCells(int rows, int cols){
 	   since they are allocated elsewhere in the code.*/
 	for(i = 0; i < grid_Rows; ++i){
 		for(j = 0; j < grid_Cols; ++j){
-			// lyr is a dynamically allocated array
-			gridCells[i][j].mySoils.lyr = (Grid_Soil_Lyr*) 
-				Mem_Calloc(MAX_LAYERS, sizeof(Grid_Soil_Lyr), "allocate_gridCells: mySoils");
-			
 			// shouldBeInitialized is a dynamically allocated array
 			gridCells[i][j].mySpeciesInit.shouldBeInitialized = (int*)
 				Mem_Calloc(MAX_SPECIES, sizeof(int), "allocate_gridCells: mySpeciesInit");
@@ -768,7 +764,19 @@ void free_grid_memory(void)
 			Mem_Free(gridCells[i][j].mySpeciesInit.shouldBeInitialized);
 			Mem_Free(gridCells[i][j].mySeedDispersal);
 			Mem_Free(gridCells[i][j].someKillage);
-			Mem_Free(gridCells[i][j].mySoils.lyr);
+
+			Mem_Free(gridCells[i][j].mySoils.depth);
+            Mem_Free(gridCells[i][j].mySoils.evco);
+            Mem_Free(gridCells[i][j].mySoils.gravel);
+            Mem_Free(gridCells[i][j].mySoils.imperm);
+            Mem_Free(gridCells[i][j].mySoils.matricd);
+            Mem_Free(gridCells[i][j].mySoils.pclay);
+            Mem_Free(gridCells[i][j].mySoils.psand);
+            Mem_Free(gridCells[i][j].mySoils.soiltemp);
+            Mem_Free(gridCells[i][j].mySoils.trco_forb);
+            Mem_Free(gridCells[i][j].mySoils.trco_grass);
+            Mem_Free(gridCells[i][j].mySoils.trco_shrub);
+            Mem_Free(gridCells[i][j].mySoils.trco_tree);
 		}
 	}
 
@@ -1056,7 +1064,7 @@ static void _read_soils_in(void)
 	char rootsin[20];
 	char seps[] = ",";
 	char *token;
-	int i, j, k, cell, num, do_copy, copy_cell, num_layers, depth, depthMin,
+	int i, j, k, cell, num, do_copy, copy_cell, num_layers, depth,
 			stringIndex, row, col, copy_cell_row, copy_cell_col;
 	float d[11];
 
@@ -1117,38 +1125,66 @@ static void _read_soils_in(void)
 					"Invalid %s file line %d num_layers (%d) exceeds MAX_LAYERS (%d)",
 					grid_files[GRID_FILE_SOILS], i + 2, num_layers, MAX_LAYERS);
 
-		if (do_copy == 1 && copy_cell > -1 && copy_cell < grid_Cells
-				&& cell != 0 && copy_cell < cell)
+		if (do_copy && copy_cell > -1 && copy_cell < grid_Cells && copy_cell < cell)
 		{ //copy this cells values from a previous cell's
-			gridCells[row][col].mySoils.lyr = Mem_Calloc(gridCells[copy_cell_row][copy_cell_col].mySoils.num_layers,
-					sizeof(Grid_Soil_Lyr), "_read_soils_in()");
-			for (j = 0; j < gridCells[copy_cell_row][copy_cell_col].mySoils.num_layers; j++)
-				gridCells[row][col].mySoils.lyr[j] = gridCells[copy_cell_row][copy_cell_col].mySoils.lyr[j];
-			gridCells[row][col].mySoils.num_layers = gridCells[copy_cell_row][copy_cell_col].mySoils.num_layers;
+            CellType* srcCell = &gridCells[copy_cell_row][copy_cell_col];
+            CellType* destCell = &gridCells[row][col];
+            num_layers = srcCell->mySoils.num_layers;
 
-            // TODO: figure out how to change this code for our new struct
-			// grid_SoilTypes[cell] = grid_SoilTypes[copy_cell];
+            destCell->mySoils.num_layers = num_layers;
+			destCell->mySoils.depth = Mem_Calloc(num_layers, sizeof(RealF), "_read_soils_in()");
+            destCell->mySoils.evco = Mem_Calloc(num_layers, sizeof(RealF), "_read_soils_in()");
+            destCell->mySoils.gravel = Mem_Calloc(num_layers, sizeof(RealF), "_read_soils_in()");
+            destCell->mySoils.imperm = Mem_Calloc(num_layers, sizeof(RealF), "_read_soils_in()");
+            destCell->mySoils.matricd = Mem_Calloc(num_layers, sizeof(RealF), "_read_soils_in()");
+            destCell->mySoils.trco_forb = Mem_Calloc(num_layers, sizeof(RealF), "_read_soils_in()");
+            destCell->mySoils.pclay = Mem_Calloc(num_layers, sizeof(RealF), "_read_soils_in()");
+            destCell->mySoils.psand = Mem_Calloc(num_layers, sizeof(RealF), "_read_soils_in()");
+            destCell->mySoils.soiltemp = Mem_Calloc(num_layers, sizeof(RealF), "_read_soils_in()");
+            destCell->mySoils.trco_grass = Mem_Calloc(num_layers, sizeof(RealF), "_read_soils_in()");
+            destCell->mySoils.trco_shrub = Mem_Calloc(num_layers, sizeof(RealF), "_read_soils_in()");
+            destCell->mySoils.trco_tree = Mem_Calloc(num_layers, sizeof(RealF), "_read_soils_in()");
+
+			for (j = 0; j < srcCell->mySoils.num_layers; j++){
+				destCell->mySoils.depth[j] = srcCell->mySoils.depth[j];
+                destCell->mySoils.evco[j] = srcCell->mySoils.evco[j];
+                destCell->mySoils.gravel[j] = srcCell->mySoils.gravel[j];
+                destCell->mySoils.imperm[j] = srcCell->mySoils.imperm[j];
+                destCell->mySoils.matricd[j] = srcCell->mySoils.matricd[j];
+                destCell->mySoils.pclay[j] = srcCell->mySoils.pclay[j];
+                destCell->mySoils.psand[j] = srcCell->mySoils.psand[j];
+                destCell->mySoils.soiltemp[j] = srcCell->mySoils.soiltemp[j];
+                destCell->mySoils.trco_forb[j] = srcCell->mySoils.trco_forb[j];
+                destCell->mySoils.trco_grass[j] = srcCell->mySoils.trco_grass[j];
+                destCell->mySoils.trco_shrub[j] = srcCell->mySoils.trco_shrub[j];
+                destCell->mySoils.trco_tree[j] = srcCell->mySoils.trco_tree[j];
+            }
 
 			strcpy(gridCells[row][col].mySoils.rootsFile, gridCells[copy_cell_row][copy_cell_col].mySoils.rootsFile);
-
 			continue;
-		}
-		else if (do_copy == 1){
+		} else if (do_copy == 1){
 			LogError(logfp, LOGFATAL,
 					"Invalid %s file line %d invalid copy_cell attempt",
 					grid_files[GRID_FILE_SOILS], i + 2);
 		}
 
-        // TODO: figure out how to change this code for our new struct
-		// grid_SoilTypes[cell] = nSoilTypes;
-		// soilTypes_Array[nSoilTypes] = cell;
 		nSoilTypes++;
 
-		depthMin = 0;
 		gridCells[row][col].mySoils.num_layers = num_layers;
 		strcpy(gridCells[row][col].mySoils.rootsFile, rootsin);
-		gridCells[row][col].mySoils.lyr = Mem_Calloc(num_layers, sizeof(Grid_Soil_Lyr),
-				"_read_soils_in()");
+		gridCells[row][col].mySoils.depth = Mem_Calloc(num_layers, sizeof(RealF), "_read_soils_in()");
+        gridCells[row][col].mySoils.evco = Mem_Calloc(num_layers, sizeof(RealF), "_read_soils_in()");
+        gridCells[row][col].mySoils.gravel = Mem_Calloc(num_layers, sizeof(RealF), "_read_soils_in()");
+        gridCells[row][col].mySoils.imperm = Mem_Calloc(num_layers, sizeof(RealF), "_read_soils_in()");
+        gridCells[row][col].mySoils.matricd = Mem_Calloc(num_layers, sizeof(RealF), "_read_soils_in()");
+        gridCells[row][col].mySoils.trco_forb = Mem_Calloc(num_layers, sizeof(RealF), "_read_soils_in()");
+        gridCells[row][col].mySoils.pclay = Mem_Calloc(num_layers, sizeof(RealF), "_read_soils_in()");
+        gridCells[row][col].mySoils.psand = Mem_Calloc(num_layers, sizeof(RealF), "_read_soils_in()");
+        gridCells[row][col].mySoils.soiltemp = Mem_Calloc(num_layers, sizeof(RealF), "_read_soils_in()");
+        gridCells[row][col].mySoils.trco_grass = Mem_Calloc(num_layers, sizeof(RealF), "_read_soils_in()");
+        gridCells[row][col].mySoils.trco_shrub = Mem_Calloc(num_layers, sizeof(RealF), "_read_soils_in()");
+        gridCells[row][col].mySoils.trco_tree = Mem_Calloc(num_layers, sizeof(RealF), "_read_soils_in()");
+
 		for (j = 0; j < num_layers; j++)
 		{
 			//the idea behind using &buf[stringIndex] is that we start scanning at the point in the string that is right after what we just parsed... the & is there because we have to send sscanf the pointer that points to that location
@@ -1168,10 +1204,18 @@ static void _read_soils_in(void)
 						"Invalid %s file line %d not enough soil layers",
 						grid_files[GRID_FILE_SOILS], i + 2);
 
-			for (k = 0; k < 11; k++)
-				gridCells[row][col].mySoils.lyr[j].data[k] = d[k];
-			gridCells[row][col].mySoils.lyr[j].width = depth - depthMin;
-			depthMin = depth;
+            gridCells[row][col].mySoils.depth[j] = d[0];
+            gridCells[row][col].mySoils.matricd[j] = d[1];
+            gridCells[row][col].mySoils.gravel[j] = d[2];
+            gridCells[row][col].mySoils.evco[j] = d[3];
+            gridCells[row][col].mySoils.trco_grass[j] = d[4];
+            gridCells[row][col].mySoils.trco_shrub[j] = d[5];
+            gridCells[row][col].mySoils.trco_tree[j] = d[6];
+            gridCells[row][col].mySoils.trco_forb[j] = d[7];
+            gridCells[row][col].mySoils.psand[j] = d[8];
+            gridCells[row][col].mySoils.pclay[j] = d[9];
+            gridCells[row][col].mySoils.imperm[j] = d[10];
+			gridCells[row][col].mySoils.depth[j] = depth;
 		}
 	}
 

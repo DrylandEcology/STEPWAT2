@@ -23,14 +23,6 @@
 #include "ST_seedDispersal.h"
 
 /*********************** Grid Structures ****************************/
-// represents a single soil layer
-struct _grid_soil_lyr_st
-{ 
-	// Data for this soil layer
-	float data[11];
-	// Vertical width of this layer
-	int width;
-}typedef Grid_Soil_Lyr;
 
 //represents the input data for all the soil layers of a cell
 struct Soil_st
@@ -39,8 +31,20 @@ struct Soil_st
 	int num_layers;
 	// Name of the roots file belonging to this cell
 	char rootsFile[20];
-	// Specific layer's information
-	Grid_Soil_Lyr* lyr;
+	// Specific layer's information. The size of these arrays is the
+    // same as num_layers.
+    RealF *depth;       /* Each Layer's max depth */
+    RealF *matricd;     /* Each Layer's matricx */
+    RealF *gravel;      /* Each Layer's gravel content */
+    RealF *evco;        /* Each Layer's evco */
+    RealF *trco_grass;  /* Each Layer's trco for grass */
+    RealF *trco_shrub;  /* Each Layer's trco for shrubs */
+    RealF *trco_tree;   /* Each Layer's trco for tree */
+    RealF *trco_forb;   /* Each Layer's trco for forbs */
+    RealF *psand;       /* Each Layer's sand content */
+    RealF *pclay;       /* Each Layer's clay content */
+    RealF *imperm;      /* Each layer's impermiability */
+    RealF *soiltemp;    /* Each Layer's temperature */
 }typedef SoilType;
 
 /* Initialization information. */
