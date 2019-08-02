@@ -151,10 +151,8 @@ static void _init_grid_files(void);
 static void _init_SXW_inputs(Bool init_SW, char *f_roots);
 static void allocate_gridCells(int rows, int cols);
 static void allocate_accumulators(void);
-static void _load_cell(int row, int col, int year, Bool useAccumulators);
 static void _read_disturbances_in(void);
 static void _read_soils_in(void);
-static void _init_soil_layers(int cell, int isSpinup);
 static void _read_init_species(void);
 static void _read_maxrgroupspecies(void);
 static void _read_grid_setup(void);
@@ -786,121 +784,6 @@ void free_grid_memory(void)
 	Mem_Free(gridCells);
 }
 
-/*
-static void _load_cell(int row, int col, int year, Bool useAccumulators)
-{
-	// loads the specified cell into the global variables
-
-	int cell = col + ((row - 1) * grid_Cols) - 1; // converts the row/col into an array index
-	int j, k;
-	GrpIndex c;
-	SppIndex s;
-	//fprintf(stderr, " loading cell: %d; ", cell);
-	if (useAccumulators)
-		stat_Load_Accumulators(cell, year);
-
-	ForEachSpecies(s)
-	{
-		if (!Species[s]->use_me)
-			continue;
-
-		Mem_Free(Species[s]->kills);
-		Mem_Free(Species[s]->seedprod);
-		_free_head(Species[s]->IndvHead); //free_head() frees the memory allocated by the head and the memory allocated by each part of the linked list
-
-		*Species[s] = grid_Species[s][cell];
-
-		Species[s]->kills = Mem_Calloc(grid_Species[s][cell].max_age,
-				sizeof(IntUS), "_load_cell(Species[s]->kills)");
-		Species[s]->seedprod = Mem_Calloc(grid_Species[s][cell].viable_yrs,
-				sizeof(RealF), "_load_cell(Species[s]->seedprod)");
-
-		memcpy(Species[s]->kills, grid_Species[s][cell].kills,
-				grid_Species[s][cell].max_age * sizeof(IntUS));
-		memcpy(Species[s]->seedprod, grid_Species[s][cell].seedprod,
-				grid_Species[s][cell].viable_yrs * sizeof(RealF));
-		Species[s]->IndvHead = _copy_head(grid_Species[s][cell].IndvHead); //copy_head() deep copies the linked list structure (allocating memory when needed)... it will even allocate memory for the head of the list
-
-	}
-
-	ForEachGroup(c)
-	{
-		if (!RGroup[c]->use_me)
-			continue;
-		Mem_Free(RGroup[c]->kills); //kills is the only pointer in the resourcegroup_st struct (which is what RGroup is defined as)... we need to free it then reallocate it then memcpy it to get the deep copy we want
-
-		*RGroup[c] = grid_RGroup[c][cell]; //does a shallow copy, we have to do the freeing/malloc/memcpy to deep copy (ie copy the values in the pointers instead of the addresses) the pointers.  A shallow copy will copy over the values for every non-pointer (C itself does not inherently know how to deep copy, so we must code this behaviour).
-
-		RGroup[c]->kills = Mem_Calloc(grid_RGroup[c][cell].max_age,
-				sizeof(IntUS), "_load_cell(RGroup[c]->kills");
-		memcpy(RGroup[c]->kills, grid_RGroup[c][cell].kills,
-				grid_RGroup[c][cell].max_age * sizeof(IntUS));
-	}
-
-	*Succulent = grid_Succulent[cell];
-	*Env = grid_Env[cell];
-	*Plot = grid_Plot[cell];
-	*Globals = grid_Globals[cell];
-
-	Mem_Free(SXW->f_roots);
-	Mem_Free(SXW->f_phen);
-	Mem_Free(SXW->f_bvt);
-	Mem_Free(SXW->f_prod);
-	Mem_Free(SXW->f_watin);
-	Mem_Free(SXW->transpTotal);
-	ForEachVegType(k) {
-		Mem_Free(SXW->transpVeg[k]);
-	}
-
-	if (SXW->swc != NULL)
-		Mem_Free(SXW->swc);
-	for (j = 0; j < SW_Site.n_layers + SW_Site.deepdrain; j++)
-		Mem_Free(SW_Site.lyr[j]);
-	Mem_Free(SW_Site.lyr);
-
-	*SXW = grid_SXW[cell];
-	SW_Site = grid_SW_Site[cell];
-	SW_Soilwat = grid_SW_Soilwat[cell];
-	SW_VegProd = grid_SW_VegProd[cell];
-
-	SXW->transpTotal = Mem_Calloc(SXW->NPds * SXW->NSoLyrs, sizeof(RealD),
-			"_load_cell(SXW->transp)");
-	ForEachVegType(k) {
-		SXW->transpVeg[k] = Mem_Calloc(SXW->NPds * SXW->NSoLyrs, sizeof(RealD),
-				"_load_cell(SXW->transp)");
-	}
-	SXW->swc = Mem_Calloc(SXW->NPds * SXW->NSoLyrs, sizeof(RealF),
-			"_load_cell(SXW->swc)");
-
-	SXW->f_roots = Str_Dup(grid_SXW[cell].f_roots);
-	SXW->f_phen = Str_Dup(grid_SXW[cell].f_phen);
-	SXW->f_bvt = Str_Dup(grid_SXW[cell].f_bvt);
-	SXW->f_prod = Str_Dup(grid_SXW[cell].f_prod);
-	SXW->f_watin = Str_Dup(grid_SXW[cell].f_watin);
-	memcpy(SXW->transpTotal, grid_SXW[cell].transpTotal,
-			SXW->NPds * SXW->NSoLyrs * sizeof(RealD));
-	ForEachVegType(k) {
-		memcpy(SXW->transpVeg[k], grid_SXW[cell].transpVeg[k],
-				SXW->NPds * SXW->NSoLyrs * sizeof(RealD));
-	}
-	memcpy(SXW->swc, grid_SXW[cell].swc,
-			SXW->NPds * SXW->NSoLyrs * sizeof(RealF));
-
-	SW_Site.lyr = Mem_Calloc(
-			grid_SW_Site[cell].n_layers + grid_SW_Site[cell].deepdrain,
-			sizeof(SW_LAYER_INFO *), "_load_cell(SW_Site.lyr)");
-	for (j = 0;
-			j < grid_SW_Site[cell].n_layers + grid_SW_Site[cell].deepdrain;
-			j++)
-	{
-		SW_Site.lyr[j] = Mem_Calloc(1, sizeof(SW_LAYER_INFO),
-				"_load_cell(SW_Site.lyr[j])");
-		memcpy(SW_Site.lyr[j], grid_SW_Site[cell].lyr[j],
-				sizeof(SW_LAYER_INFO));
-	}
-}
-*/
-
 /* Load gridCells[row][col] into the globals variables.
    Any call to this function should have an accompanying call to unload_cell(). */
 void load_cell(int row, int col){
@@ -937,6 +820,17 @@ void load_cell(int row, int col){
 
 	/* Copy this cell's SXW variables into the local variables in sxw.c */
 	copy_sxw_variables(gridCells[row][col].mySXW, gridCells[row][col].mySXWResources, gridCells[row][col].myTranspWindow);
+
+	// If we have read in the soil information num_layers will be > 0.
+	// Otherwise we haven't read the file so there is no point wasting time on this.
+	if(gridCells[row][col].mySoils.num_layers > 0){
+		RealD soilRegionsLowerBounds[3] = { 30, 70, 100 };
+		set_soillayers(gridCells[row][col].mySoils.num_layers, gridCells[row][col].mySoils.depth, gridCells[row][col].mySoils.matricd,
+	    	           gridCells[row][col].mySoils.gravel, gridCells[row][col].mySoils.evco, gridCells[row][col].mySoils.trco_grass,
+					   gridCells[row][col].mySoils.trco_shrub, gridCells[row][col].mySoils.trco_tree, gridCells[row][col].mySoils.trco_forb,
+					   gridCells[row][col].mySoils.psand, gridCells[row][col].mySoils.pclay, gridCells[row][col].mySoils.imperm,
+				   	   gridCells[row][col].mySoils.soiltemp, 3, soilRegionsLowerBounds);
+	}
 }
 
 /* Nullify all global variables. This function should appear after every call 
@@ -1204,18 +1098,18 @@ static void _read_soils_in(void)
 						"Invalid %s file line %d not enough soil layers",
 						grid_files[GRID_FILE_SOILS], i + 2);
 
-            gridCells[row][col].mySoils.depth[j] = d[0];
-            gridCells[row][col].mySoils.matricd[j] = d[1];
-            gridCells[row][col].mySoils.gravel[j] = d[2];
-            gridCells[row][col].mySoils.evco[j] = d[3];
-            gridCells[row][col].mySoils.trco_grass[j] = d[4];
-            gridCells[row][col].mySoils.trco_shrub[j] = d[5];
-            gridCells[row][col].mySoils.trco_tree[j] = d[6];
-            gridCells[row][col].mySoils.trco_forb[j] = d[7];
-            gridCells[row][col].mySoils.psand[j] = d[8];
-            gridCells[row][col].mySoils.pclay[j] = d[9];
-            gridCells[row][col].mySoils.imperm[j] = d[10];
 			gridCells[row][col].mySoils.depth[j] = depth;
+            gridCells[row][col].mySoils.matricd[j] = d[0];
+            gridCells[row][col].mySoils.gravel[j] = d[1];
+            gridCells[row][col].mySoils.evco[j] = d[2];
+            gridCells[row][col].mySoils.trco_grass[j] = d[3];
+            gridCells[row][col].mySoils.trco_shrub[j] = d[4];
+            gridCells[row][col].mySoils.trco_tree[j] = d[5];
+            gridCells[row][col].mySoils.trco_forb[j] = d[6];
+            gridCells[row][col].mySoils.psand[j] = d[7];
+            gridCells[row][col].mySoils.pclay[j] = d[8];
+            gridCells[row][col].mySoils.imperm[j] = d[9];
+			gridCells[row][col].mySoils.soiltemp[j] = d[10];
 		}
 	}
 
@@ -1226,161 +1120,6 @@ static void _read_soils_in(void)
     unload_cell();
 	CloseFile(&f);
 }
-
-/*
-static void _init_soil_layers(int cell, int isSpinup)
-{
-	// initializes the soilwat soil layers for the cell correctly based upon the input gathered from our grid_soils input file
-	// pretty much takes the data from grid_Soils (read in in _read_soils_in()) and converts it to what SW_Site needs...
-	// this function does generally the same things that the _read_layers() function in SW_Site.c does, except that it does it in a way that lets us use it in the grid...
-	int i, j;
-	i = cell;
-	char* errtype;
-	Bool evap_ok = TRUE, transp_ok_forb = TRUE, transp_ok_tree = TRUE,
-			transp_ok_shrub = TRUE, transp_ok_grass = TRUE; //mitigate gaps in layers
-	Bool fail = FALSE;
-	RealF fval = 0;
-
-	if (SW_Site.deepdrain)
-		SW_Site.n_layers++;
-	for (j = 0; j < SW_Site.n_layers; j++)
-		Mem_Free(SW_Site.lyr[j]);
-	Mem_Free(SW_Site.lyr);
-
-	SW_Site.n_layers = grid_Soils[i].num_layers;
-	SW_Site.n_evap_lyrs = SW_Site.n_transp_lyrs[SW_FORBS] =
-			SW_Site.n_transp_lyrs[SW_TREES] = SW_Site.n_transp_lyrs[SW_SHRUB] =
-					SW_Site.n_transp_lyrs[SW_GRASS] = 0;
-
-	SW_Site.lyr = Mem_Calloc(SW_Site.n_layers + SW_Site.deepdrain,
-			sizeof(SW_LAYER_INFO *), "_init_grid_globals()");
-	for (j = 0; j < SW_Site.n_layers; j++)
-	{
-		if (LT(grid_Soils[i].lyr[j].data[0], 0.))
-		{
-			fail = TRUE;
-			fval = grid_Soils[i].lyr[j].data[0];
-			errtype = Str_Dup("bulk density");
-		}
-		else if (LT(grid_Soils[i].lyr[j].data[1],
-				0.) || GT(grid_Soils[i].lyr[j].data[1], 1.0))
-		{
-			fail = TRUE;
-			fval = grid_Soils[i].lyr[j].data[1];
-			errtype = Str_Dup("gravel content");
-		}
-		else if (LE(grid_Soils[i].lyr[j].data[7], 0.))
-		{
-			fail = TRUE;
-			fval = grid_Soils[i].lyr[j].data[7];
-			errtype = Str_Dup("sand proportion");
-		}
-		else if (LE(grid_Soils[i].lyr[j].data[8], 0.))
-		{
-			fail = TRUE;
-			fval = grid_Soils[i].lyr[j].data[8];
-			errtype = Str_Dup("clay proportion");
-		}
-		else if (LT(grid_Soils[i].lyr[j].data[9], 0.))
-		{
-			fail = TRUE;
-			fval = grid_Soils[i].lyr[j].data[9];
-			errtype = Str_Dup("impermeability");
-		}
-		if (fail)
-		{
-			LogError(logfp, LOGFATAL, "Invalid %s (%5.4f) in layer %d.\n",
-					errtype, fval, j + 1);
-		}
-
-		SW_Site.lyr[j] = Mem_Calloc(1, sizeof(SW_LAYER_INFO),
-				"_init_grid_globals()");
-
-		//indexes (for grid_Soils[i].lyr[j].data):
-		//0		   1				2		3	  		4			5			6			7	   8		9		10
-		//matricd	gravel_content  evco  	trco_grass  trco_shrub  trco_tree  	trco_forb	%sand  %clay imperm soiltemp
-		SW_Site.lyr[j]->width = grid_Soils[i].lyr[j].width;
-		SW_Site.lyr[j]->soilMatric_density = grid_Soils[i].lyr[j].data[0];
-		SW_Site.lyr[j]->fractionVolBulk_gravel = grid_Soils[i].lyr[j].data[1];
-		SW_Site.lyr[j]->evap_coeff = grid_Soils[i].lyr[j].data[2];
-		SW_Site.lyr[j]->transp_coeff[3] = grid_Soils[i].lyr[j].data[3];
-		SW_Site.lyr[j]->transp_coeff[1] = grid_Soils[i].lyr[j].data[4];
-		SW_Site.lyr[j]->transp_coeff[0] = grid_Soils[i].lyr[j].data[5];
-		SW_Site.lyr[j]->transp_coeff[2] = grid_Soils[i].lyr[j].data[6];
-		SW_Site.lyr[j]->fractionWeightMatric_sand =
-				grid_Soils[i].lyr[j].data[7];
-		SW_Site.lyr[j]->fractionWeightMatric_clay =
-				grid_Soils[i].lyr[j].data[8];
-		SW_Site.lyr[j]->impermeability = grid_Soils[i].lyr[j].data[9];
-		SW_Site.lyr[j]->my_transp_rgn[0] = 0;
-		SW_Site.lyr[j]->my_transp_rgn[2] = 0;
-		SW_Site.lyr[j]->my_transp_rgn[1] = 0;
-		SW_Site.lyr[j]->my_transp_rgn[3] = 0;
-		SW_Site.lyr[j]->sTemp = grid_Soils[i].lyr[j].data[10];
-
-		if (evap_ok)
-		{
-			if (GT(SW_Site.lyr[j]->evap_coeff, 0.0))
-				SW_Site.n_evap_lyrs++;
-			else
-				evap_ok = FALSE;
-		}
-		if (transp_ok_tree)
-		{
-			if (GT(SW_Site.lyr[j]->transp_coeff[0], 0.0))
-				SW_Site.n_transp_lyrs[SW_TREES]++;
-			else
-				transp_ok_tree = FALSE;
-		}
-		if (transp_ok_shrub)
-		{
-			if (GT(SW_Site.lyr[j]->transp_coeff[1], 0.0))
-				SW_Site.n_transp_lyrs[SW_SHRUB]++;
-			else
-				transp_ok_shrub = FALSE;
-		}
-		if (transp_ok_grass)
-		{
-			if (GT(SW_Site.lyr[j]->transp_coeff[3], 0.0))
-				SW_Site.n_transp_lyrs[SW_GRASS]++;
-			else
-				transp_ok_grass = FALSE;
-		}
-		if (transp_ok_forb)
-		{
-			if (GT(SW_Site.lyr[j]->transp_coeff[2], 0.0))
-				SW_Site.n_transp_lyrs[SW_FORBS]++;
-			else
-				transp_ok_forb = FALSE;
-		}
-		water_eqn(SW_Site.lyr[j]->fractionVolBulk_gravel,
-				SW_Site.lyr[j]->fractionWeightMatric_sand,
-				SW_Site.lyr[j]->fractionWeightMatric_clay, j); //in SW_Site.c, called to initialize some layer data...
-		SW_Site.lyr[j]->swcBulk_fieldcap = SW_SWPmatric2VWCBulk(
-				SW_Site.lyr[j]->fractionVolBulk_gravel, 0.333, j)
-				* SW_Site.lyr[j]->width;
-		SW_Site.lyr[j]->swcBulk_wiltpt = SW_SWPmatric2VWCBulk(
-				SW_Site.lyr[j]->fractionVolBulk_gravel, 15, j)
-				* SW_Site.lyr[j]->width;
-		//From calculate_soilBulkDensity in SW_Site.c
-		SW_Site.lyr[j]->soilBulk_density = SW_Site.lyr[j]->soilMatric_density
-				* (1 - SW_Site.lyr[j]->fractionVolBulk_gravel)
-				+ (SW_Site.lyr[j]->fractionVolBulk_gravel * 2.65);
-		//already checked for max_layers condition
-	}
-	if (SW_Site.deepdrain)
-	{
-		SW_Site.n_layers++;
-		SW_Site.lyr[j] = Mem_Calloc(1, sizeof(SW_LAYER_INFO),
-				"_init_grid_globals()");
-		SW_Site.lyr[j]->width = 1.0;
-	}
-
-	init_site_info(); //in SW_Site.c, called to initialize layer data...
-
-	_init_SXW_inputs(FALSE, grid_Soils[i].rootsFile); //we call this so that SXW can set the correct sizes/values up for the memory dynamically allocated in sxw.c
-}
-*/
 
 /* Read the species initialization CSV. This function only needs to be called if the user requests initialization.*/
 static void _read_init_species(void)
