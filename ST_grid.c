@@ -60,9 +60,6 @@ SoilType *grid_Soils;
 
 Grid_SD_St **grid_SD; //for seed dispersal
 
-// these variables are used for the soil types in the spinup options
-int nSoilTypes, *soilTypes_Array, *grid_SoilTypes;
-
 /***************************** Externed variables **********************************/
 /* Note that in an ideal world we wouldn't need to extern any variables because 
    every module would declate them in a header file. Hopefully we can get this
@@ -146,6 +143,7 @@ void copy_sxw_variables(SXW_t* newSXW, SXW_resourceType* newSXWResources, transp
 /*********** Locally Used Function Declarations ************/
 /***********************************************************/
 
+void _copy_soils(SoilType* src, SoilType* dest);
 static void printGeneralInfo(void);
 static void _init_grid_files(void);
 static void _init_SXW_inputs(Bool init_SW, char *f_roots);
@@ -935,190 +933,146 @@ static int _get_value_index(char* s, char seperator, int nSeperators)
 	return i;
 }
 
-static int _get_value_index2(char* s, int nSeperators)
-{
-	//pretty much this function goes through s until it find nSeperators worth of seperators and then returns the index of the next character
-	//this is used to do most of the parsing in the _read_soils_in() function
-	int i = 0, sep = 0;
-	while (1)
-	{
-		i++;
-		if (*s++ == '\0') //checks if the current char equals the seperator... and then increments the char pointer
-			if (++sep == nSeperators) //needs ++sep, not sep++
-				break;
-	}
-	return i;
-}
-
-/* Read the grid soils input */
-static void _read_soils_in(void)
-{
-	FILE *f;
+/* Read the grid_soils.csv file and assign values to all gridCells.mySoils variables. */
+static void _read_soils_in(void){
+	int i, row, col, entriesRead, cellNum, cellToCopy, 
+	    layerRead;
+	SoilType* destSoil;
 	char buf[4096];
-	char rootsin[20];
-	char seps[] = ",";
-	char *token;
-	int i, j, k, cell, num, do_copy, copy_cell, num_layers, depth,
-			stringIndex, row, col, copy_cell_row, copy_cell_col;
-	float d[11];
+	Bool copyAnotherCell;	// TRUE if we need to copy another cell
 
-	nSoilTypes = 0; //initialize our soil types counter
+	/* tempSoil is allocated the maximum amount of memory that a SoilType could need.
+	   It will serve to read in parameters. */
+	SoilType tempSoil;
+	tempSoil.depth = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil");
+	tempSoil.evco = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil");
+	tempSoil.gravel = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil");
+	tempSoil.imperm = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil");
+	tempSoil.matricd = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil");
+	tempSoil.pclay = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil");
+	tempSoil.psand = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil");
+	tempSoil.soiltemp = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil");
+	tempSoil.trco_forb = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil");
+	tempSoil.trco_grass = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil");
+	tempSoil.trco_shrub = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil");
+	tempSoil.trco_tree = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil");
 
-	f = OpenFile(grid_files[GRID_FILE_SOILS], "r");
+	FILE* f = OpenFile(grid_files[GRID_FILE_SOILS], "r");
+	GetALine(f, buf); // Throw out the header line.
 
-	GetALine2(f, buf, 4096); // gets rid of the first line (since it just defines the columns)... it's only there for user readability
-	for (i = 0; i < grid_Cells; i++)
-	{
-	    row = i / grid_Cols;
+	for(i = 0; i < grid_Cells; ++i){
+		row = i / grid_Cols;
 	    col = i % grid_Cols;
 
-	    load_cell(row, col);
+		load_cell(row, col);
+		destSoil = &gridCells[row][col].mySoils;
 
-		if (!GetALine2(f, buf, 4096))
-			break;
-		gridCells[row][col].mySoils.rootsFile[0] = '\0';
-		rootsin[0] = '\0';
-
-		num = 0;
-		token = strtok(buf, seps);
-		while (token != NULL && num < 5)
-		{
-			switch (num)
-			{
-			case 0:
-				cell = atoi(token);
-				break;
-			case 1:
-				do_copy = atoi(token);
-				break;
-			case 2:
-				copy_cell = atoi(token);
-				copy_cell_row = copy_cell / grid_Cols;
-				copy_cell_col = copy_cell % grid_Cols;
-				break;
-			case 3:
-				num_layers = atoi(token);
-				break;
-			case 4:
-				strcpy(rootsin, token);
-				break;
+		tempSoil.num_layers = 0;
+		copyAnotherCell = FALSE;
+		do {
+			GetALine(f, buf);
+			/* If the user defined all columns except copy_cell. */
+			entriesRead = sscanf(buf, "%d,,%d,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%s",
+			                    &cellNum, &layerRead, &tempSoil.depth[tempSoil.num_layers], 
+								&tempSoil.matricd[tempSoil.num_layers], &tempSoil.gravel[tempSoil.num_layers], 
+								&tempSoil.evco[tempSoil.num_layers], &tempSoil.trco_grass[tempSoil.num_layers], 
+								&tempSoil.trco_shrub[tempSoil.num_layers], &tempSoil.trco_tree[tempSoil.num_layers],
+								&tempSoil.trco_forb[tempSoil.num_layers], &tempSoil.psand[tempSoil.num_layers], 
+								&tempSoil.pclay[tempSoil.num_layers], &tempSoil.imperm[tempSoil.num_layers], 
+								&tempSoil.soiltemp[tempSoil.num_layers], tempSoil.rootsFile);
+			/* If the user entered a cell to copy but also entered all parameters */
+			if(entriesRead == 1){
+				entriesRead = sscanf(buf, "%d,%d,%d,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%s",
+			                    	&cellNum, &cellToCopy, &layerRead, &tempSoil.depth[tempSoil.num_layers], 
+									&tempSoil.matricd[tempSoil.num_layers], &tempSoil.gravel[tempSoil.num_layers], 
+									&tempSoil.evco[tempSoil.num_layers], &tempSoil.trco_grass[tempSoil.num_layers], 
+									&tempSoil.trco_shrub[tempSoil.num_layers], &tempSoil.trco_tree[tempSoil.num_layers],
+									&tempSoil.trco_forb[tempSoil.num_layers], &tempSoil.psand[tempSoil.num_layers], 
+									&tempSoil.pclay[tempSoil.num_layers], &tempSoil.imperm[tempSoil.num_layers], 
+									&tempSoil.soiltemp[tempSoil.num_layers], tempSoil.rootsFile);
 			}
-			num++;
-			if (num != 5)
-				token = strtok(NULL, seps);
-		}
 
-		if (num < 5)
-			if (!do_copy)
-				LogError(logfp, LOGFATAL, "Invalid %s file", grid_files[GRID_FILE_SOILS]);
-		if (!do_copy)
-			stringIndex = _get_value_index2(buf, 5); //gets us the index of the string that is right after what we just parsed in
+			/* if the user only defined a cell to copy */
+			if(entriesRead == 2){
+				copyAnotherCell = TRUE;
+			/* Error checking. These are the only valid number of columns. */
+			} else if(entriesRead != 0 && entriesRead != 15 && entriesRead != 16){
+				LogError(logfp, LOGFATAL, "%s: Incorrect number of columns in grid soils file. (%d)",
+				         grid_files[GRID_FILE_SOILS], entriesRead);
+			}
 
-		if (num_layers > MAX_LAYERS)
-			LogError(logfp, LOGFATAL,
-					"Invalid %s file line %d num_layers (%d) exceeds MAX_LAYERS (%d)",
-					grid_files[GRID_FILE_SOILS], i + 2, num_layers, MAX_LAYERS);
+			if(entriesRead >  2){
+				tempSoil.num_layers++;
+			}
+		} while (entriesRead != 0);
 
-		if (do_copy && copy_cell > -1 && copy_cell < grid_Cells && copy_cell < cell)
-		{ //copy this cells values from a previous cell's
-            CellType* srcCell = &gridCells[copy_cell_row][copy_cell_col];
-            CellType* destCell = &gridCells[row][col];
-            num_layers = srcCell->mySoils.num_layers;
+		if(copyAnotherCell){
+			if(cellToCopy > i){
+				LogError(logfp, LOGFATAL, "%s: Attempted to copy values that have not been read yet.\n"
+				                          "\tIf you want to copy a soil make sure you define the layers"
+										  "the FIRST time you use it.", grid_files[GRID_FILE_SOILS]);
+			}
 
-            destCell->mySoils.num_layers = num_layers;
-			destCell->mySoils.depth = Mem_Calloc(num_layers, sizeof(RealF), "_read_soils_in()");
-            destCell->mySoils.evco = Mem_Calloc(num_layers, sizeof(RealF), "_read_soils_in()");
-            destCell->mySoils.gravel = Mem_Calloc(num_layers, sizeof(RealF), "_read_soils_in()");
-            destCell->mySoils.imperm = Mem_Calloc(num_layers, sizeof(RealF), "_read_soils_in()");
-            destCell->mySoils.matricd = Mem_Calloc(num_layers, sizeof(RealF), "_read_soils_in()");
-            destCell->mySoils.trco_forb = Mem_Calloc(num_layers, sizeof(RealF), "_read_soils_in()");
-            destCell->mySoils.pclay = Mem_Calloc(num_layers, sizeof(RealF), "_read_soils_in()");
-            destCell->mySoils.psand = Mem_Calloc(num_layers, sizeof(RealF), "_read_soils_in()");
-            destCell->mySoils.soiltemp = Mem_Calloc(num_layers, sizeof(RealF), "_read_soils_in()");
-            destCell->mySoils.trco_grass = Mem_Calloc(num_layers, sizeof(RealF), "_read_soils_in()");
-            destCell->mySoils.trco_shrub = Mem_Calloc(num_layers, sizeof(RealF), "_read_soils_in()");
-            destCell->mySoils.trco_tree = Mem_Calloc(num_layers, sizeof(RealF), "_read_soils_in()");
-
-			for (j = 0; j < srcCell->mySoils.num_layers; j++){
-				destCell->mySoils.depth[j] = srcCell->mySoils.depth[j];
-                destCell->mySoils.evco[j] = srcCell->mySoils.evco[j];
-                destCell->mySoils.gravel[j] = srcCell->mySoils.gravel[j];
-                destCell->mySoils.imperm[j] = srcCell->mySoils.imperm[j];
-                destCell->mySoils.matricd[j] = srcCell->mySoils.matricd[j];
-                destCell->mySoils.pclay[j] = srcCell->mySoils.pclay[j];
-                destCell->mySoils.psand[j] = srcCell->mySoils.psand[j];
-                destCell->mySoils.soiltemp[j] = srcCell->mySoils.soiltemp[j];
-                destCell->mySoils.trco_forb[j] = srcCell->mySoils.trco_forb[j];
-                destCell->mySoils.trco_grass[j] = srcCell->mySoils.trco_grass[j];
-                destCell->mySoils.trco_shrub[j] = srcCell->mySoils.trco_shrub[j];
-                destCell->mySoils.trco_tree[j] = srcCell->mySoils.trco_tree[j];
-            }
-
-			strcpy(gridCells[row][col].mySoils.rootsFile, gridCells[copy_cell_row][copy_cell_col].mySoils.rootsFile);
-			continue;
-		} else if (do_copy == 1){
-			LogError(logfp, LOGFATAL,
-					"Invalid %s file line %d invalid copy_cell attempt",
-					grid_files[GRID_FILE_SOILS], i + 2);
-		}
-
-		nSoilTypes++;
-
-		gridCells[row][col].mySoils.num_layers = num_layers;
-		strcpy(gridCells[row][col].mySoils.rootsFile, rootsin);
-		gridCells[row][col].mySoils.depth = Mem_Calloc(num_layers, sizeof(RealF), "_read_soils_in()");
-        gridCells[row][col].mySoils.evco = Mem_Calloc(num_layers, sizeof(RealF), "_read_soils_in()");
-        gridCells[row][col].mySoils.gravel = Mem_Calloc(num_layers, sizeof(RealF), "_read_soils_in()");
-        gridCells[row][col].mySoils.imperm = Mem_Calloc(num_layers, sizeof(RealF), "_read_soils_in()");
-        gridCells[row][col].mySoils.matricd = Mem_Calloc(num_layers, sizeof(RealF), "_read_soils_in()");
-        gridCells[row][col].mySoils.trco_forb = Mem_Calloc(num_layers, sizeof(RealF), "_read_soils_in()");
-        gridCells[row][col].mySoils.pclay = Mem_Calloc(num_layers, sizeof(RealF), "_read_soils_in()");
-        gridCells[row][col].mySoils.psand = Mem_Calloc(num_layers, sizeof(RealF), "_read_soils_in()");
-        gridCells[row][col].mySoils.soiltemp = Mem_Calloc(num_layers, sizeof(RealF), "_read_soils_in()");
-        gridCells[row][col].mySoils.trco_grass = Mem_Calloc(num_layers, sizeof(RealF), "_read_soils_in()");
-        gridCells[row][col].mySoils.trco_shrub = Mem_Calloc(num_layers, sizeof(RealF), "_read_soils_in()");
-        gridCells[row][col].mySoils.trco_tree = Mem_Calloc(num_layers, sizeof(RealF), "_read_soils_in()");
-
-		for (j = 0; j < num_layers; j++)
-		{
-			//the idea behind using &buf[stringIndex] is that we start scanning at the point in the string that is right after what we just parsed... the & is there because we have to send sscanf the pointer that points to that location
-			num = sscanf(&buf[stringIndex],
-					"%d,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f", &depth, &d[0], &d[1],
-					&d[2], &d[3], &d[4], &d[5], &d[6], &d[7], &d[8], &d[9],
-					&d[10]);
-			if (num != 12)
-				LogError(logfp, LOGFATAL,
-						"Invalid '%s' file line %d invalid soil layer input",
-						grid_files[GRID_FILE_SOILS], i + 2);
-
-			k = stringIndex;
-			stringIndex += _get_value_index(&buf[stringIndex], ',', 12); //updates the index of the string that we are at
-			if (k == stringIndex)
-				LogError(logfp, LOGFATAL,
-						"Invalid %s file line %d not enough soil layers",
-						grid_files[GRID_FILE_SOILS], i + 2);
-
-			gridCells[row][col].mySoils.depth[j] = depth;
-            gridCells[row][col].mySoils.matricd[j] = d[0];
-            gridCells[row][col].mySoils.gravel[j] = d[1];
-            gridCells[row][col].mySoils.evco[j] = d[2];
-            gridCells[row][col].mySoils.trco_grass[j] = d[3];
-            gridCells[row][col].mySoils.trco_shrub[j] = d[4];
-            gridCells[row][col].mySoils.trco_tree[j] = d[5];
-            gridCells[row][col].mySoils.trco_forb[j] = d[6];
-            gridCells[row][col].mySoils.psand[j] = d[7];
-            gridCells[row][col].mySoils.pclay[j] = d[8];
-            gridCells[row][col].mySoils.imperm[j] = d[9];
-			gridCells[row][col].mySoils.soiltemp[j] = d[10];
+			_copy_soils(&gridCells[cellToCopy / grid_Cols][cellToCopy % grid_Cols].mySoils, destSoil);
+		} else {
+			_copy_soils(&tempSoil, destSoil);
 		}
 	}
 
-	if (i != grid_Cells)
-		LogError(logfp, LOGFATAL, "Invalid %s file, not enough cells",
-				grid_files[GRID_FILE_SOILS]);
-
-    unload_cell();
+	unload_cell();
 	CloseFile(&f);
+
+	Mem_Free(tempSoil.soiltemp);
+	Mem_Free(tempSoil.trco_forb);
+	Mem_Free(tempSoil.trco_grass);
+	Mem_Free(tempSoil.trco_shrub);
+	Mem_Free(tempSoil.trco_tree);
+	Mem_Free(tempSoil.depth);
+	Mem_Free(tempSoil.evco);
+	Mem_Free(tempSoil.gravel);
+	Mem_Free(tempSoil.imperm);
+	Mem_Free(tempSoil.matricd);
+	Mem_Free(tempSoil.pclay);
+	Mem_Free(tempSoil.psand);
+}
+
+/* Copy one SoilType variable to another. 
+     param src: An allocated and assigned SoilType
+	 param dest: An unallocated SoilType
+	 
+	 note: dest will be allocated memory, so do not call this function
+	       if dest is already allocated. */
+void _copy_soils(SoilType* src, SoilType* dest){
+	int i;
+
+	dest->num_layers = src->num_layers;
+	dest->gravel = Mem_Calloc(src->num_layers, sizeof(RealF), "_copy_Soils: gravel");
+	dest->depth = Mem_Calloc(src->num_layers, sizeof(RealF), "_copy_Soils: depth");
+	dest->matricd = Mem_Calloc(src->num_layers, sizeof(RealF), "_copy_Soils: matricd");
+	dest->evco = Mem_Calloc(src->num_layers, sizeof(RealF), "_copy_Soils: evco");
+	dest->trco_grass = Mem_Calloc(src->num_layers, sizeof(RealF), "_copy_Soils: trco_grass");
+	dest->trco_shrub = Mem_Calloc(src->num_layers, sizeof(RealF), "_copy_Soils: trco_shrub");
+	dest->trco_tree = Mem_Calloc(src->num_layers, sizeof(RealF), "_copy_Soils: trco_tree");
+	dest->trco_forb = Mem_Calloc(src->num_layers, sizeof(RealF), "_copy_Soils: trco_forb");
+	dest->psand = Mem_Calloc(src->num_layers, sizeof(RealF), "_copy_Soils: psand");
+	dest->pclay = Mem_Calloc(src->num_layers, sizeof(RealF), "_copy_Soils: pclay");
+	dest->imperm = Mem_Calloc(src->num_layers, sizeof(RealF), "_copy_Soils: imperm");
+	dest->soiltemp = Mem_Calloc(src->num_layers, sizeof(RealF), "_copy_Soils: soiltemp");
+
+	for(i = 0; i < src->num_layers; ++i){
+		dest->gravel[i] = src->gravel[i];
+		dest->evco[i] = src->evco[i];
+		dest->depth[i] = src->depth[i];
+		dest->matricd[i] = src->matricd[i];
+		dest->trco_shrub[i] = src->trco_shrub[i];
+		dest->trco_grass[i] = src->trco_grass[i];
+		dest->trco_forb[i] = src->trco_forb[i];
+		dest->trco_tree[i] = src->trco_tree[i];
+		dest->psand[i] = src->psand[i];
+		dest->pclay[i] = src->pclay[i];
+		dest->imperm[i] = src->imperm[i];
+		dest->soiltemp[i] = src->soiltemp[i];
+	}
 }
 
 /* Read the species initialization CSV. This function only needs to be called if the user requests initialization.*/
