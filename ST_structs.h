@@ -174,7 +174,9 @@ struct resourcegroup_st {
 
         extirp,         /* year in which group is extirpated (0==ignore) */
         grp_num,        /* index number of this group */
-        veg_prod_type,  /* type of VegProd.  1 for tree, 2 for shrub, 3 for grass, 4 for forb */
+        veg_prod_type, /* type of SOILWAT2 vegetation type:
+          STEPWAT2 inputs via "rgroup.in" are defined as: 1 for tree, 2 for shrub, 3 for grass, 4 for forb;
+          however, the inputs get translated by get_SW2_veg_index() to SOILWAT2 values immediately upon reading the inputs (see SW_Defines.h) */
 		grazingfrq,     /* grazing effect on group at this frequency: <1=prob, >1=# years */
         grazingfreq_startyr;/* start year for grazing frequency*/
   SppIndex *species; /*list of spp belonging to this grp*/
