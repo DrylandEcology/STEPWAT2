@@ -894,7 +894,7 @@ static void _read_disturbances_in(void)
 	    col = i % grid_Cols;
 
 	    load_cell(row, col);
-
+		
 		if (!GetALine2(f, buf, 1024))
 			break;
 

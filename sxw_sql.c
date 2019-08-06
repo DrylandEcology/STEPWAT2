@@ -490,10 +490,11 @@ void insertRootsSum(RealD * _roots_active_sum) {
 	int Iteration = Globals->currIter;
 
 	beginTransaction();
-	for(i=1; i<=4; i++) {
+
+  ForEachVegType(i) {
 		for (l = 0; l < SXW->NTrLyrs; l++) {
 			for (p = 0; p < 12; p++) {
-				m[p] = _roots_active_sum[Itlp(i-1,l, p)];
+				m[p] = _roots_active_sum[Itlp(i, l, p)];
 			}
 			insertSXWoutputRootsSumRow(Year, Iteration, l+1, i, m[0], m[1],
 					m[2], m[3], m[4], m[5], m[6], m[7], m[8], m[9], m[10],

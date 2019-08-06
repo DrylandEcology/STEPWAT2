@@ -27,6 +27,8 @@
 #include "filefuncs.h"
 #include "myMemory.h"
 #include "rands.h"
+#include "sxw_funcs.h"
+
 
 /************ External Variable Declarations ***************/
 /***********************************************************/
@@ -793,6 +795,9 @@ static void _rgroup_init( void) {
        LogError(logfp, LOGFATAL, "%s: Too few columns in groups",
                MyFileName);
      }
+
+    // Convert to SOILWAT2 vegetation index
+    veg_prod_type = get_SW2_veg_index(veg_prod_type);
 
      _rgroup_add1( name, space, density, estab,
                    slow, stretch, xres, estann,

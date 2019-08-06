@@ -265,43 +265,58 @@ void SXW_InitPlot (void) {
 	_sxw_sw_clear_transp();
 	_sxw_update_resource();
 }
+void SXW_Run_SOILWAT(void) {
+    /*======================================================*/
+    /* need to update the resource vectors and set up the
+     * ppt and temp (environs) here before calling
+     * Env_Generate() and rgroup_Establish() in main().
+     *
+     * 2/28/2003 - cwb - adding changes mentioned at top of file.
+     * 3/31/2003 - cwb - because we're always running soilwat to
+     *             emulate full-size plants, computing roots etc
+     *             gets done once during init plot.
+     */
 
+    GrpIndex g;
+    Int j;
+    SppIndex sp;
+    RealF *sizes;
 
-void SXW_Run_SOILWAT (void) {
-/*======================================================*/
-/* need to update the resource vectors and set up the
- * ppt and temp (environs) here before calling
- * Env_Generate() and rgroup_Establish() in main().
- *
- * 2/28/2003 - cwb - adding changes mentioned at top of file.
- * 3/31/2003 - cwb - because we're always running soilwat to
- *             emulate full-size plants, computing roots etc
- *             gets done once during init plot.
- */
-
-	GrpIndex g;
-	RealF *sizes;
-        
         sizes = (RealF *)Mem_Calloc(SuperGlobals.max_rgroups, sizeof(RealF), "SXW_Run_SOILWAT");
-        
-	/* compute production values for transp based on current plant sizes */
-	ForEachGroup(g)
-	sizes[g] = RGroup_GetBiomass(g);
-	_sxw_sw_setup(sizes);
 
-        // Initialize `SXW` values for current year's run:
+    /* Compute current STEPPE biomass which represents last year's biomass and biomass due to establishment this year (for perennials) and biomass due to establishment this year (for annuals) */
+    ForEachGroup(g) {
+        sizes[g] = RGroup_GetBiomass(g);
+
+        //printf("First call to sizes: RGroup = %s, sizes[g] = %f\n", RGroup[g]->name, sizes[g]);
+
+        ForEachEstSpp(sp, g, j) {
+            
+            /* For annual species, increment the biomass that is passed into SOILWAT2 to also include last year's biomass, in addition to biomass due to establishment this year */
+            if (Species[sp]->max_age == 1) {
+
+                sizes[g] += Species[sp]->lastyear_relsize * Species[sp]->mature_biomass;
+            }
+        }
+        //printf("Second call to sizes: RGroup = %s, sizes[g] = %f\n", RGroup[g]->name, sizes[g]);
+
+    }
+
+    _sxw_sw_setup(sizes);
+
+    // Initialize `SXW` values for current year's run:
 	SXW->aet = 0.; /* used to be in sw_setup() but it needs clearing each run */
 
-	//SXW_SW_Setup_Echo();
-	_sxw_sw_run();
+    //SXW_SW_Setup_Echo();
+    _sxw_sw_run();
 
-	/* Now compute resource availability for each STEPPE functional group */
-	_sxw_update_resource();
+    /* Now compute resource availability for each STEPPE functional group */
+    _sxw_update_resource();
 
-	/* Set annual precipitation and annual temperature */
-	_sxw_set_environs();
-        
-        Mem_Free(sizes);
+    /* Set annual precipitation and annual temperature */
+    _sxw_set_environs();
+
+    Mem_Free(sizes);
 }
 
 void SXW_SW_Setup_Echo(void) {
@@ -898,11 +913,11 @@ void _print_debuginfo(void) {
 	RealF sum2 = 0.;
 	RealF sum3 = 0.;
 	static Bool beenhere = FALSE;
-	char vegProdNames[4][7];
-	strcpy(vegProdNames[0], "TREE");
-	strcpy(vegProdNames[1], "SHRUB");
-	strcpy(vegProdNames[2], "GRASS");
-	strcpy(vegProdNames[3], "FORB");
+	char vegProdNames[NVEGTYPES][7];
+	strcpy(vegProdNames[SW_TREES], "TREE");
+	strcpy(vegProdNames[SW_SHRUB], "SHRUB");
+	strcpy(vegProdNames[SW_GRASS], "GRASS");
+	strcpy(vegProdNames[SW_FORBS], "FORB");
 	char name[256] = {0};
 	strcat(name, _debugout);
 	f = OpenFile(strcat(name, ".output.out"), "a");
@@ -1006,7 +1021,7 @@ void _print_debuginfo(void) {
 				pct_live, lai_live, bLAI_total, total_agb);
 	}
 
-	for (t = 0; t < 4; t++) {
+	ForEachVegType(t) {
 		fprintf(f, "\n------ Active Roots (sum) %s -------\n", vegProdNames[t]);
 		fprintf(f, "Layer:");
 		ForEachTrPeriod(p)
@@ -1104,18 +1119,35 @@ void SXW_SetMemoryRefs( void) {
 
 #endif
 
+/** Convert STEPWAT2 indices of SOILWAT2's vegetation type into a
+    SOILWAT2 index
+
+    @param veg_prod_type 1 for tree, 2 for shrub, 3 for grass, 4 for forb
+      (see comments for "veg_prod_type" in `rgroup.in`).
+
+    @return One of the SOILWAT2 defined values `SW_TREES`, `SW_SHRUB`,
+      `SW_FORBS`, `SW_GRASS` or -1 if no match.
+      See `SW_Defines.h` for definitions.
+*/
+int get_SW2_veg_index(int veg_prod_type) {
+  if (veg_prod_type == 1)
+    return SW_TREES;
+  else if (veg_prod_type == 2)
+    return SW_SHRUB;
+  else if (veg_prod_type == 3)
+    return SW_GRASS;
+  else if (veg_prod_type == 4)
+    return SW_FORBS;
+
+  return -1;
+}
+
+
+
  /***********************************************************/
  //returns the number of transpiration layers correctly for each veg_prod_type
 int getNTranspLayers(int veg_prod_type) {
-	if(veg_prod_type == 1)
-		return SW_Site.n_transp_lyrs[0];
-	else if(veg_prod_type == 2)
-		return SW_Site.n_transp_lyrs[1];
-	else if(veg_prod_type == 3)
-		return SW_Site.n_transp_lyrs[3];
-	else if(veg_prod_type == 4)
-		return SW_Site.n_transp_lyrs[2];
-	return -1;
+  return SW_Site.n_transp_lyrs[veg_prod_type];
 }
 
 /***********************************************************/
@@ -1161,7 +1193,7 @@ void save_sxw_memory( RealD * grid_roots_max, RealD* grid_rootsXphen, RealD* gri
 	memcpy(grid_rootsXphen, SXWResources->_rootsXphen, SXW->NGrps * SXW->NPds * SXW->NTrLyrs * sizeof(RealD));
 	memcpy(grid_roots_active, SXWResources->_roots_active, SXW->NGrps * SXW->NPds * SXW->NTrLyrs * sizeof(RealD));
 	memcpy(grid_roots_active_rel, SXWResources->_roots_active_rel, SXW->NGrps * SXW->NPds * SXW->NTrLyrs * sizeof(RealD));
-	memcpy(grid_roots_active_sum, SXWResources->_roots_active_sum, 4 * SXW->NPds * SXW->NTrLyrs * sizeof(RealD));
+	memcpy(grid_roots_active_sum, SXWResources->_roots_active_sum, NVEGTYPES * SXW->NPds * SXW->NTrLyrs * sizeof(RealD));
 	memcpy(grid_phen, SXWResources->_phen, SXW->NGrps * MAX_MONTHS * sizeof(RealD));
 	memcpy(grid_prod_bmass, SXWResources->_prod_bmass, SXW->NGrps * MAX_MONTHS * sizeof(RealD));
 	memcpy(grid_prod_pctlive, SXWResources->_prod_pctlive, SXW->NGrps * MAX_MONTHS * sizeof(RealD));

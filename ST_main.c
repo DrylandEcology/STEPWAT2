@@ -496,7 +496,7 @@ static void init_args(int argc, char **argv) {
    * 10/9/17 - BEB Added -i flag for writing SOILWAT output for every iteration
    */
   char str[1024],
-       *opts[]  = {"-d","-f","-q","-e", "-p", "-g", "-o", "-i", "-S"};  /* valid options */
+       *opts[]  = {"-d","-f","-q","-e", "-p", "-g", "-o", "-i", "-s", "-S"};  /* valid options */
   int valopts[] = {  1,   1,   0,  -1,   0,    0,    0,   0,   0,   0};  /* indicates options with values */
                  /* 0=none, 1=required, -1=optional */
   int i, /* looper through all cmdline arguments */
@@ -612,8 +612,15 @@ static void init_args(int argc, char **argv) {
       		printf("storing SOILWAT output for each iteration (-i flag)\n");
       		storeAllIterations = TRUE;
       		break;
+
+		case 8: // -s
+			if (strlen(argv[a]) > 1){
+				printf("Generating SXW debug file\n");
+				SXW->debugfile = Str_Dup(&argv[a][1]);
+			}
+			break;
 	  
-	  	case 8: // -S
+	  	case 9: // -S
 		    if(!strncmp("-STdebug", argv[a], 8)){ //  -STdebug
 				printf("Generating STdebug.sqlite database (-STdebug flag)\n");
 				STdebug_requested = TRUE;
