@@ -267,8 +267,8 @@ void copy_species(const SpeciesType* src, SpeciesType* dest){
 	}
 
 	/* ---- Reallocate and copy any arrays ---- */
-	// kills
-	if(src->max_age > 1 && src->use_me){
+	// kills: Note that this array is allocated iff MortFlags.summary.
+	if(src->max_age > 1 && src->use_me && MortFlags.summary){
 		Mem_Free(dest->kills);
 		dest->kills = (IntUS*) Mem_Calloc(src->max_age, sizeof(IntUS), "copy_species: kills");
 		for(i = 0; i < src->max_age; ++i){

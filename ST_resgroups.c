@@ -986,10 +986,12 @@ void copy_rgroup(const GroupType* src, GroupType* dest){
     }
 
     /* -------------- Copy any arrays -------------- */
-    Mem_Free(dest->kills);
-    dest->kills = (IntUS*) Mem_Calloc(GrpMaxAge(src->grp_num), sizeof(IntUS), "copy_rgroup: kills");
-    for(i = 0; i < GrpMaxAge(src->grp_num); ++i){
-        dest->kills[i] = src->kills[i];
+    if(MortFlags.summary){
+        Mem_Free(dest->kills);
+        dest->kills = (IntUS*) Mem_Calloc(GrpMaxAge(src->grp_num), sizeof(IntUS), "copy_rgroup: kills");
+        for(i = 0; i < GrpMaxAge(src->grp_num); ++i){
+            dest->kills[i] = src->kills[i];
+        }
     }
 
     Mem_Free(dest->est_spp);
