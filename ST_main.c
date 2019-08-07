@@ -448,7 +448,6 @@ void deallocate_Globals(Bool isGriddedMode){
 			Mem_Free(indv);
 			indv = next;
 		}
-		Mem_Free(next);
 		Mem_Free(indv);
 		/* Finally free the actual species */
 		Mem_Free(Species[sp]);
