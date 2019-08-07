@@ -58,7 +58,7 @@ SRCS	=\
 	$(Src)/ST_sql.c
 	#$(Src)/sxw_tester.c
 
-EXOBJS	=\
+CORE_EXOBJS	=\
 	$(oDir)/sqlite-amalgamation/sqlite3.o\
 	$(oDir)/sw_src/filefuncs.o\
 	$(oDir)/sw_src/generic.o\
@@ -89,7 +89,6 @@ EXOBJS	=\
 	$(oDir)/sw_src/SW_Control.o\
 	$(oDir)/sw_src/SW_SoilWater.o\
 	$(oDir)/ST_indivs.o\
-	$(oDir)/ST_main.o\
 	$(oDir)/ST_mortality.o\
 	$(oDir)/ST_output.o\
 	$(oDir)/ST_params.o\
@@ -101,9 +100,14 @@ EXOBJS	=\
 	$(oDir)/ST_sql.o
 	#$(oDir)/sxw_tester.o
 
-ALLOBJS	=	$(EXOBJS)
-ALLBIN	=	$(Bin)/stepwat
-ALLTGT	=	$(Bin)/stepwat
+# ST_Main.o is separated from CORE_EXOBJS (formerly EXOBJS) to allow for other
+# implementations of the main function.
+EXOBJS = $(CORE_EXOBJS)\
+	$(oDir)/ST_main.o
+
+ALLOBJS	=	$(EXOBJS) $(TEST_EXOBJS)
+ALLBIN	=	$(Bin)/stepwat $(Bin)/stepwat_test
+ALLTGT	=	$(Bin)/stepwat $(Bin)/stepwat_test
 
 # User defines:
 
@@ -112,6 +116,8 @@ ALLTGT	=	$(Bin)/stepwat
 all:	$(ALLTGT)
 		cp stepwat testing.sagebrush.master
 		cp stepwat testing.sagebrush.master/Stepwat_Inputs
+		cp stepwat_test testing.sagebrush.master
+		cp stepwat_test testing.sagebrush.master/Stepwat_Inputs
 
 
 objs:	$(ALLOBJS)
@@ -144,6 +150,39 @@ clean:	cleanobjs cleanbin
 
 .PHONY : cleanall
 cleanall: clean output_clean
+
+# Implements Google Test based on the SOILWAT2 implementation.
+
+GTEST_DIR = sw_src/googletest/googletest
+
+TEST_EXOBJS = $(CORE_EXOBJS)\
+	$(oDir)/ST_main_test.o
+
+TEST_SRCS = test/*.cc
+
+test: $(Bin)/stepwat_test
+
+$(oDir)/$(GTEST_DIR)/gtest-all.o:
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -std=gnu++11 \
+	-isystem ${GTEST_DIR}/include -I${GTEST_DIR} \
+	-pthread -c ${GTEST_DIR}/src/gtest-all.cc -o $@ $<
+
+# We can always get rid of this if we want to implement our own main function.
+$(oDir)/$(GTEST_DIR)/gtest_main.o:
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -std=gnu++11 \
+	-isystem ${GTEST_DIR}/include -I${GTEST_DIR} \
+	-pthread -c ${GTEST_DIR}/src/gtest_main.cc -o $@ $<
+
+$(oDir)/ST_main_test.o: ST_main.c ST_steppe.h ST_defines.h sw_src/generic.h \
+	ST_structs.h ST_functions.h sw_src/filefuncs.h \
+	sw_src/myMemory.h sw_src/SW_VegProd.h sw_src/pcg/pcg_basic.h
+		$(CC) -DST_TEST $(C_FLAGS) $(CPPFLAGS) $(incDirs) -c -o $@ $<
+
+$(Bin)/stepwat_test: $(TEST_EXOBJS) $(oDir)/$(GTEST_DIR)/gtest-all.o $(oDir)/$(GTEST_DIR)/gtest_main.o
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -std=gnu++11 -isystem ${GTEST_DIR}/include \
+	-g -O2 $(TEST_SRCS) -o $(Bin)/stepwat_test \
+	$(TEST_EXOBJS) $(oDir)/$(GTEST_DIR)/gtest-all.o $(oDir)/$(GTEST_DIR)/gtest_main.o \
+	$(incDirs) $(libDirs) $(LIBS)
 
 #@# Dependency rules follow -----------------------------
 

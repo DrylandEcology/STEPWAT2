@@ -145,6 +145,7 @@ pcg32_random_t species_rng;
 pcg32_random_t grid_rng;
 extern pcg32_random_t markov_rng;
 
+#ifndef ST_TEST
 /******************** Begin Model Code *********************/
 /***********************************************************/
 int main(int argc, char **argv) {
@@ -323,6 +324,7 @@ int main(int argc, char **argv) {
 	return 0;
 }
 /* END PROGRAM */
+#endif /* ST_TEST */
 
 
 
