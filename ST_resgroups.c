@@ -651,7 +651,6 @@ void rgroup_Establish(void) {
                 if (Species[sp]->max_age == 1) {
                     //printf("Globals.currYear = %hu, call to _add_annuals sp=%d Species[sp]->lastyear_relsize : %.5f \n", Globals.currYear, sp, Species[sp]->lastyear_relsize);
                     num_est = _add_annuals(rg, sp, Species[sp]->lastyear_relsize);
-                    //  printf("g->seedbank annuals=%d \n",g->seedbank);
                 }
 
                     /* Establishment for species that belong to perennial functional groups*/
@@ -679,14 +678,6 @@ void rgroup_Establish(void) {
         }
     } /* end ForEachGroup() */
 
-
-    if (ZRO(used_space)) {
-      // We shouldn't have arrived here
-      LogError(stderr, LOGFATAL, "Invalid space values");
-    }
-
-    //RealF tmp = 0.;
-
     // If there is unused (or too much used) space we need to redistribute
     if (!EQ(used_space, 1.0)) {
       //printf("\nYear %d: used_space = %f\n", Globals.currYear, used_space);
@@ -698,13 +689,9 @@ void rgroup_Establish(void) {
         if (g->est_count > 0) {
           //printf("%s before: %f -- ", g->name, g->min_res_req);
           g->min_res_req = g->min_res_req / used_space;
-          //printf("%s after: %f\n", g->name, g->min_res_req);
-          //tmp += g->min_res_req;
         }
       }
     }
-
-    //printf("Sum of space after adjustment = %f\n", tmp);
 }
 
 /***********************************************************/
