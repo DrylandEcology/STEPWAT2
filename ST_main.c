@@ -153,7 +153,7 @@ extern pcg32_random_t markov_rng;
 /******************** Begin Model Code *********************/
 /***********************************************************/
 int main(int argc, char **argv) {
-  IntS year, iter, incr;
+  IntS year, iter;
 	Bool killedany;
 
 	logged = FALSE;
@@ -169,7 +169,7 @@ int main(int argc, char **argv) {
 
 	printf("STEPWAT  init_args() executed successfully \n");
 
-	if (UseGrid == TRUE) {
+	if (UseGrid) {
 		runGrid();
 		return 0;
 	}
@@ -195,10 +195,6 @@ int main(int argc, char **argv) {
 	if(STdebug_requested){
 	    ST_connect("Output/stdebug");
 	}
-
-	incr = (IntS) ((float) SuperGlobals.runModelIterations / 10);
-	if (incr == 0)
-		incr = 1;
 
 	/* --- Begin a new iteration ------ */
 	for (iter = 1; iter <= SuperGlobals.runModelIterations; iter++) {
