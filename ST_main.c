@@ -33,6 +33,7 @@
 #include "sw_src/SW_Output_outtext.h"
 #include "sw_src/SW_Output_outarray.h"
 #include "sw_src/rands.h"
+#include "ST_stats.h"
 #include "ST_initialization.h"
 #include "ST_progressBar.h"
 #include "ST_seedDispersal.h"
@@ -62,13 +63,6 @@ extern Bool* _SomeKillage;
 
   void output_Bmass_Yearly( Int year );
   void output_Mort_Yearly( void );
-
-  void stat_Collect( Int year ) ;
-  void stat_Collect_GMort ( void ) ;
-  void stat_Collect_SMort ( void ) ;
-
-  void stat_Output_AllMorts( void) ;
-  void stat_Output_AllBmass(void) ;
 
   void _kill_annuals(void);
   void _kill_extra_growth(void);

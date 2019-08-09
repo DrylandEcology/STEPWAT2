@@ -8,6 +8,7 @@
 #ifndef STATS_STRUCT_DEF
 #define STATS_STRUCT_DEF
 
+#include "ST_defines.h"
 
 /* Basic struct that holds average, sum of differences squared, standard deviation
  * and number of entries. This is enough information to calculate running values without
@@ -24,26 +25,26 @@ struct stat_st {
   struct accumulators_st *s;
 } typedef StatType;
 
-typedef struct  {
-  struct accumulators_st *dist, *temp, *ppt, **grp1, **gsize, **gpr2,  **gwf2,  **gpf2, 
-  							**gmort, **gestab, **spp, **indv, **smort, **sestab, **sreceived;
-} accumulators_grid_st;
-
 /* Struct for wildfire and prescribed fire stats. */
 struct fire_st {
   int *wildfire;
   int **prescribedFire;
 } typedef FireStatsType;
 
-// Structure for holding sum values of all the grid cells
-struct accumulators_grid_cell_st {
-  double sum, sum_std;
-  unsigned long nobs;
-};
-
-struct stat_grid_cell_st {
-  char *name; /* array of ptrs to names in RGroup & Species */
-  struct accumulators_grid_cell_st *s;    /* array of holding all the years values */
-} typedef GridStatsType;
+/*----------------------- Exported Functions ---------------------------------- */
+void stat_Collect( Int year ) ;
+void stat_Collect_GMort ( void ) ;
+void stat_Collect_SMort ( void ) ;
+void stat_Output_YrMorts( void ) ;
+void stat_Output_AllMorts( void) ;
+void stat_Output_AllBmass(void) ;
+void stat_Output_Seed_Dispersal(const char * filename, const char sep, Bool makeHeader);
+void stat_free_mem( void );
+void stat_Copy_Accumulators(StatType* newDist, StatType* newPpt, StatType* newTemp, StatType* newGrp, 
+                            StatType* newGsize, StatType* newGpr, StatType* newGmort, StatType* newGestab, 
+                            StatType* newSpp, StatType* newIndv, StatType* newSmort, StatType* newSestab, 
+                            StatType* newSrecieved, FireStatsType* newGwf, Bool firstTime);
+void make_header( char *buf);
+void make_header_with_std( char *buf);
 
 #endif

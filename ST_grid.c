@@ -118,22 +118,6 @@ void maxrgroupspecies_init(void);
 void Plot_Initialize(void);
 void deallocate_Globals(Bool isGriddedMode);
 
-//functions from ST_stats.c
-void stat_Collect(Int year);
-void stat_Collect_GMort(void);
-void stat_Collect_SMort(void);
-void stat_Output_AllMorts(void);
-void stat_Output_AllBmass(void);
-void Output_AllCellAvgBmass(const char * filename);
-void Output_AllCellAvgMort(const char* fileName);
-void stat_Output_Seed_Dispersal(const char * filename, const char sep,
-		Bool makeHeader);
-void stat_Copy_Accumulators(StatType* newDist, StatType* newPpt, StatType* newTemp, StatType* newGrp, StatType* newGsize, 
-                            StatType* newGpr, StatType* newGmort, StatType* newGestab, StatType* newSpp, StatType* newIndv,
-                            StatType* newSmort, StatType* newSestab, StatType* newSrecieved, FireStatsType* newGwf, Bool firstTime);
-void stat_free_mem(void);
-void _make_header_with_std( char *buf);
-
 /* Functions from sxw.c */
 SXW_t* getSXW(void);
 SXW_resourceType* getSXWResources(void);
@@ -148,6 +132,8 @@ static void printGeneralInfo(void);
 static void _init_grid_files(void);
 static void _init_SXW_inputs(Bool init_SW, char *f_roots);
 static void allocate_gridCells(int rows, int cols);
+static void Output_AllCellAvgBmass(const char* filename);
+static void Output_AllCellAvgMort(const char* filename);
 static void allocate_accumulators(void);
 static void _read_disturbances_in(void);
 static void _read_soils_in(void);
@@ -1302,7 +1288,7 @@ void Output_AllCellAvgBmass(const char * filename){
 	load_cell(0, 0);
 
 	if(BmassFlags.header){
-		_make_header_with_std(buf);
+		make_header_with_std(buf);
 		fprintf(file, "%s", buf);
 	}
 

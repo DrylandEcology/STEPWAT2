@@ -29,6 +29,7 @@
 #include "myMemory.h"
 #include "filefuncs.h"
 #include "ST_progressBar.h"
+#include "ST_stats.h"
 
 /********** Local functions. These should all be treated as private. *************/
 static void _run_spinup(void);
@@ -76,9 +77,6 @@ void parm_Initialize(void);
 void Plot_Initialize(void);
 void copy_rgroup(const GroupType* src, GroupType* dest);
 void copy_species(const SpeciesType* src, SpeciesType* dest);
-void stat_Copy_Accumulators(StatType* newDist, StatType* newPpt, StatType* newTemp, StatType* newGrp, StatType* newGsize, 
-                            StatType* newGpr, StatType* newGmort, StatType* newGestab, StatType* newSpp, StatType* newIndv,
-                            StatType* newSmort, StatType* newSestab, StatType* newSrecieved, FireStatsType* newGwf, Bool firstTime);
 
 /* Initializes the plot with whichever method you have specified with initializationMethod. 
    This function takes care of EVERYTHING involved with initialization.
