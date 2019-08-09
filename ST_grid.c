@@ -926,6 +926,7 @@ static void _read_soils_in(void){
 	SoilType* destSoil;
 	char buf[4096];
 	Bool copyAnotherCell;	// TRUE if we need to copy another cell
+	Bool entryFound;
 
 	/* tempSoil is allocated the maximum amount of memory that a SoilType could need.
 	   It will serve to read in parameters. */
@@ -955,8 +956,9 @@ static void _read_soils_in(void){
 
 		tempSoil.num_layers = 0;
 		copyAnotherCell = FALSE;
-		do {
-			GetALine(f, buf);
+		entryFound = FALSE;
+		entriesRead = 1; // This is just to get us in the loop.
+		while (entriesRead != 0 && GetALine(f, buf)) {
 			/* If the user defined all columns except copy_cell. */
 			entriesRead = sscanf(buf, "%d,,%d,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%s",
 			                    &cellNum, &layerRead, &tempSoil.depth[tempSoil.num_layers], 
@@ -990,7 +992,13 @@ static void _read_soils_in(void){
 			if(entriesRead >  2){
 				tempSoil.num_layers++;
 			}
-		} while (entriesRead != 0);
+
+			entryFound = TRUE;
+		} 
+
+		if(!entryFound){
+			LogError(logfp, LOGFATAL, "Not enough soils specified in %s.", grid_files[GRID_FILE_SOILS]);
+		}
 
 		if(copyAnotherCell){
 			if(cellToCopy > i){
