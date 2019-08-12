@@ -632,7 +632,7 @@ void rgroup_Establish(void) {
             continue;
 
         g->regen_ok = TRUE; /* default */
-        g->min_res_req = g->baseline_min_res_req; /* reset min_res_req, if it was modified last year */
+        g->min_res_req = g->space; /* reset min_res_req, if it was modified last year */
 
         if (Globals.currYear < RGroup[rg]->startyr) {
             g->regen_ok = FALSE;

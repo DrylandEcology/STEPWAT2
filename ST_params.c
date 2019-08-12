@@ -914,7 +914,7 @@ static void _rgroup_add1( char name[], RealF space, RealF density,
   RGroup[rg]->max_per_sqm   = density; // density per square-meter
   RGroup[rg]->use_mort      = itob(mort);
   RGroup[rg]->slowrate      = slow;
-  RGroup[rg]->baseline_min_res_req = space;
+  RGroup[rg]->space = space;
   RGroup[rg]->min_res_req   = space;
   RGroup[rg]->est_annually  = itob(estann);
   RGroup[rg]->startyr       = styr;
