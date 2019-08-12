@@ -137,6 +137,7 @@ static void Output_AllCellAvgMort(const char* filename);
 static void allocate_accumulators(void);
 static void _read_disturbances_in(void);
 static void _read_soils_in(void);
+static int _read_soil_line(char* buf, SoilType* destination, int layer);
 static void _read_init_species(void);
 static void _read_maxrgroupspecies(void);
 static void _read_grid_setup(void);
@@ -921,12 +922,8 @@ static int _get_value_index(char* s, char seperator, int nSeperators)
 
 /* Read the grid_soils.csv file and assign values to all gridCells.mySoils variables. */
 static void _read_soils_in(void){
-	int i, row, col, entriesRead, cellNum, cellToCopy, 
-	    layerRead;
-	SoilType* destSoil;
+	int i, row, col, lineReadReturnValue;
 	char buf[4096];
-	Bool copyAnotherCell;	// TRUE if we need to copy another cell
-	Bool entryFound;
 
 	/* tempSoil is allocated the maximum amount of memory that a SoilType could need.
 	   It will serve to read in parameters. */
@@ -945,71 +942,48 @@ static void _read_soils_in(void){
 	tempSoil.trco_tree = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil");
 
 	FILE* f = OpenFile(grid_files[GRID_FILE_SOILS], "r");
-	GetALine(f, buf); // Throw out the header line.
+	if(!GetALine(f, buf)){ // Throw out the header line.
+		LogError(logfp, LOGFATAL, "%s file empty.", grid_files[GRID_FILE_SOILS]);
+	}
 
 	for(i = 0; i < grid_Cells; ++i){
 		row = i / grid_Cols;
 	    col = i % grid_Cols;
-
 		load_cell(row, col);
-		destSoil = &gridCells[row][col].mySoils;
 
-		tempSoil.num_layers = 0;
-		copyAnotherCell = FALSE;
-		entryFound = FALSE;
-		entriesRead = 1; // This is just to get us in the loop.
-		while (entriesRead != 0 && GetALine(f, buf)) {
-			/* If the user defined all columns except copy_cell. */
-			entriesRead = sscanf(buf, "%d,,%d,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%s",
-			                    &cellNum, &layerRead, &tempSoil.depth[tempSoil.num_layers], 
-								&tempSoil.matricd[tempSoil.num_layers], &tempSoil.gravel[tempSoil.num_layers], 
-								&tempSoil.evco[tempSoil.num_layers], &tempSoil.trco_grass[tempSoil.num_layers], 
-								&tempSoil.trco_shrub[tempSoil.num_layers], &tempSoil.trco_tree[tempSoil.num_layers],
-								&tempSoil.trco_forb[tempSoil.num_layers], &tempSoil.psand[tempSoil.num_layers], 
-								&tempSoil.pclay[tempSoil.num_layers], &tempSoil.imperm[tempSoil.num_layers], 
-								&tempSoil.soiltemp[tempSoil.num_layers], tempSoil.rootsFile);
-			/* If the user entered a cell to copy but also entered all parameters */
-			if(entriesRead == 1){
-				entriesRead = sscanf(buf, "%d,%d,%d,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%s",
-			                    	&cellNum, &cellToCopy, &layerRead, &tempSoil.depth[tempSoil.num_layers], 
-									&tempSoil.matricd[tempSoil.num_layers], &tempSoil.gravel[tempSoil.num_layers], 
-									&tempSoil.evco[tempSoil.num_layers], &tempSoil.trco_grass[tempSoil.num_layers], 
-									&tempSoil.trco_shrub[tempSoil.num_layers], &tempSoil.trco_tree[tempSoil.num_layers],
-									&tempSoil.trco_forb[tempSoil.num_layers], &tempSoil.psand[tempSoil.num_layers], 
-									&tempSoil.pclay[tempSoil.num_layers], &tempSoil.imperm[tempSoil.num_layers], 
-									&tempSoil.soiltemp[tempSoil.num_layers], tempSoil.rootsFile);
-			}
-
-			/* if the user only defined a cell to copy */
-			if(entriesRead == 2){
-				copyAnotherCell = TRUE;
-			/* Error checking. These are the only valid number of columns. */
-			} else if(entriesRead != 0 && entriesRead != 15 && entriesRead != 16){
-				LogError(logfp, LOGFATAL, "%s: Incorrect number of columns in grid soils file. (%d)",
-				         grid_files[GRID_FILE_SOILS], entriesRead);
-			}
-
-			if(entriesRead >  2){
-				tempSoil.num_layers++;
-			}
-
-			entryFound = TRUE;
-		} 
-
-		if(!entryFound){
-			LogError(logfp, LOGFATAL, "Not enough soils specified in %s.", grid_files[GRID_FILE_SOILS]);
+		if(!GetALine(f, buf)){
+			LogError(logfp, LOGFATAL, "Too few lines in %s", grid_files[GRID_FILE_SOILS]);
 		}
-
-		if(copyAnotherCell){
-			if(cellToCopy > i){
+		lineReadReturnValue = _read_soil_line(buf, &tempSoil, 0);
+		if (lineReadReturnValue == SOIL_READ_FAILURE){
+			LogError(logfp, LOGFATAL, "Error reading %s file.", grid_files[GRID_FILE_SOILS]);
+		} 
+		/* If _read_soil_line didnt return SUCCESS or FAILURE, 
+		   it returned a cell number to copy. */
+		else if (lineReadReturnValue != SOIL_READ_SUCCESS){
+			if(lineReadReturnValue > i){
 				LogError(logfp, LOGFATAL, "%s: Attempted to copy values that have not been read yet.\n"
 				                          "\tIf you want to copy a soil make sure you define the layers"
 										  "the FIRST time you use it.", grid_files[GRID_FILE_SOILS]);
 			}
-
-			_copy_soils(&gridCells[cellToCopy / grid_Cols][cellToCopy % grid_Cols].mySoils, destSoil);
-		} else {
-			_copy_soils(&tempSoil, destSoil);
+			_copy_soils(&gridCells[lineReadReturnValue / grid_Cols][lineReadReturnValue % grid_Cols].mySoils, &gridCells[row][col].mySoils);
+		}
+		/* If we get here we have successfully populated the first layer of soil. 
+		   Now we must populate the rest. */
+		else {
+			for(int j = 1; j < tempSoil.num_layers; ++j){
+				if(!GetALine(f, buf)){
+					LogError(logfp, LOGFATAL, "Too few lines in %s", grid_files[GRID_FILE_SOILS]);
+				}
+				lineReadReturnValue = _read_soil_line(buf, &tempSoil, j);
+				if(lineReadReturnValue != SOIL_READ_SUCCESS){
+					LogError(logfp, LOGFATAL, "Different behavior is specified between layers %d and %d of"
+					                          " cell %d in file %s. (Perhaps you specified a cell to copy in one"
+											  " but not the other?)", j, j+1, i, grid_files[GRID_FILE_SOILS]);
+				}
+			}
+			/* And finally copy the temporary soil into the grid. */
+			_copy_soils(&tempSoil, &gridCells[row][col].mySoils);
 		}
 	}
 
@@ -1028,6 +1002,48 @@ static void _read_soils_in(void){
 	Mem_Free(tempSoil.matricd);
 	Mem_Free(tempSoil.pclay);
 	Mem_Free(tempSoil.psand);
+}
+
+/* Reads a line of soil input from buf into destination. 
+
+   Param buf: line of soil input.
+   Param destination: SoilType struct to fill.
+   Param layer: layer number of destination to fill (0 indexed).
+
+   Return: SOIL_READ_FAILURE if buf is incorrectly formatted.
+           SOIL_READ_SUCCESS if destination is populated correctly.
+		   Otherwise returns the cell number that destination should copy. */
+static int _read_soil_line(char* buf, SoilType* destination, int layer){
+	int entriesRead, cellToCopy, cellNum, layerRead;
+	entriesRead = sscanf(buf, "%d,,%d,%d,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%s",
+			                    &cellNum, &destination->num_layers, &layerRead, &destination->depth[layer], 
+								&destination->matricd[layer], &destination->gravel[layer], 
+								&destination->evco[layer], &destination->trco_grass[layer], 
+								&destination->trco_shrub[layer], &destination->trco_tree[layer],
+								&destination->trco_forb[layer], &destination->psand[layer], 
+								&destination->pclay[layer], &destination->imperm[layer], 
+								&destination->soiltemp[layer], destination->rootsFile);
+
+	if(cellNum > grid_Cells || layerRead > destination->num_layers){
+		LogError(logfp, LOGFATAL, "%s: cells out of order or too many layers.", grid_files[GRID_FILE_SOILS]);
+	}
+
+	/* If the user specified a cell to copy we will perform the copy, regardless
+	   of whether or not they also entered parameters. */
+	if(entriesRead == 1){
+		entriesRead = sscanf(buf, "%d,%d", &cellNum, &cellToCopy);
+		if(entriesRead == 2){
+			return cellToCopy;
+		} else {
+			return SOIL_READ_FAILURE;
+		}
+	}
+
+	if(entriesRead == 16) {
+		return SOIL_READ_SUCCESS;
+	} else {
+		return SOIL_READ_FAILURE;
+	}
 }
 
 /* Copy one SoilType variable to another. 

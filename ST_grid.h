@@ -136,6 +136,12 @@ typedef enum
     N_GRID_FILES
 } File_Indices;
 
+typedef enum
+{
+	SOIL_READ_SUCCESS = -2,
+	SOIL_READ_FAILURE = -1,
+} Soil_Read_Return_Values;
+
 /************************ Exported Variable Declarations **************************/
 
 /* gridCells[i][j] denotes the cell at position (i,j) */
