@@ -42,100 +42,236 @@
 
 #include "generic.h"
 
-/* structure for indiv of perennial species */
+/**
+ * \brief Holds information on perenial plant individuals. 
+ * 
+ * An individual is one plant specimen. Most of the code associated with this
+ * struct is found in ST_indivs.c.
+ * 
+ * \sa indiv_ann_st
+ */
 struct indiv_st {
+      /** \brief unique identifier for each individual. */
   IntUS id,
+      /** \brief age in years of this individual. */
   	  age,
+      /** \brief millimeters of extra resources. */
       mm_extra_res,
-      slow_yrs,  /* number of years this individual has slow growth */
+      /** \brief number of years this individual has slow growth */
+      slow_yrs,
+      /** \brief Species[indv->myspecies] is the species this individual belongs to.
+       * \sa Species  */
       myspecies,
-      yrs_neg_pr;     /* num yrs pr > 1 (stretched resources) */
+      /** \brief num yrs pr > 1 (stretched resources) */
+      yrs_neg_pr;
+      /** \brief What killed this individual.
+       * \sa MortalityType */
   MortalityType killedby;
-  Bool killed;        /* only for clonal plants, means veggrow possible*/
-  RealF relsize,      /* relative to full-sized individual -- 0-1.0) */
-       prv_yr_relsize, /*previous year relsize relative to full-sized individual, saving before killing, used for proportional recovery calculation) */
-       grp_res_prop,  /* prop'l contribution this indiv makes to group relsize */
-       res_required, /* resources required, biomass of the individual */
-       res_avail,    /* resource available */
-       res_extra,    /* resource applied to superficial growth */
-       pr,           /* ratio of resources required to amt available */
-       growthrate,   /* actual growth rate*/
-       normal_growth, /* biomass the plant gained this year excluding superfluous biomass. Used for grazing.*/
-       prob_veggrow; /* set when killed; 0 if not clonal*/
-  struct indiv_st *Next, *Prev;  /* facility for linked list 8/3/01 */
+      /** \brief only for clonal plants, means veggrow possible. */
+  Bool killed;
+      /** \brief Size relative to a full-sized individual. */
+  RealF relsize,
+       /** \brief Previous year's relsize. Used for proportional recovery calculation.
+        * \sa proportion_Recovery() */
+       prv_yr_relsize,
+       /** \brief proportion of total group relsize belonging to this individual. */
+       grp_res_prop,
+       /** \brief resources required, biomass of the individual. 
+        * \sa rgroup_ResPartIndiv */
+       res_required,
+       /** \brief Resources available. */
+       res_avail,
+       /** \brief Resources applied to superficial growth. */
+       res_extra,
+       /** \brief Ratio of resources required to amt available. */
+       pr,
+       /** \brief Actual growth rate .
+        * \sa rgroup_Grow() */
+       growthrate,
+       /** \brief biomass the plant gained this year excluding superfluous biomass. Used for grazing. 
+        * \sa grazing_EndOfYear() */
+       normal_growth,
+       /** \brief set when killed; 0 if not clonal.
+        * \sa indiv_Kill_Partial() */
+       prob_veggrow;
+       /** \brief Allows for a doubly-linked list of individuals. Implemented in Species.
+        * \sa Species */
+  struct indiv_st *Next, 
+       /** \brief Allows for a doubly-linked list of individuals. Implemented in Species.
+        * \sa Species */
+                  *Prev;
 };
 
-/* structure for indiv of annual species */
+/** 
+ * \brief Holds information on annual plant individuals.
+ * 
+ * An individual is one plant specimen. Most of the code associated with this
+ * struct is found in ST_indivs.c.
+ * 
+ * \sa indiv_st
+ */
 struct indiv_ann_st {
-	 // (DLM) - 6/5/2013 - this struct was defined when I got steppe, but now that I've been analyzing the individuals file (and it's linked list) I don't actually see it being used anywhere... it seems like it's just a relic of some older version of steppe that was never removed.  Will leave it in the code for now though in case someone else knows.
+      /** \brief millimeters of extra resources. */
   IntUS mm_extra_res,
+      /** \brief Species[indv->myspecies] is the species this individual belongs to.
+       * \sa Species  */
       myspecies;
-  RealF relsize,      /* relative to full-sized individual -- 0-1.0) */
-       grp_res_prop,  /* prop'l contribution this indiv makes to group relsize */
-       res_required, /* resources required, biomass of the individual */
-       res_avail,    /* resource available */
-       res_extra,    /* resource applied to superficial growth */
-       pr,           /* ratio of resources required to amt available */
-       growthrate;   /* actual growth rate*/
-  struct indiv_ann_st *Next, *Prev;  /* facility for linked list 8/3/01 */
+      /** \brief Size relative to a full-sized individual. */
+  RealF relsize,
+       /** \brief proportion of total group relsize belonging to this individual. */
+       grp_res_prop,
+       /** \brief resources required, biomass of the individual. 
+        * \sa rgroup_ResPartIndiv */
+       res_required,
+       /** \brief Resources available. */
+       res_avail,
+       /** \brief Resources applied to superficial growth. */
+       res_extra,
+       /** \brief Ratio of resources required to amt available. */
+       pr,
+       /** \brief Actual growth rate .
+        * \sa rgroup_Grow() */
+       growthrate;
+        /** \brief Allows for a doubly-linked list of individuals. Implemented in Species.
+         * \sa Species */
+  struct indiv_ann_st *Next, 
+        /** \brief Allows for a doubly-linked list of individuals. Implemented in Species.
+         * \sa Species */
+                  *Prev;
 };
 
-/* structure for species with some annuals-only variables thrown in */
+/** \brief Holds all species-specific information.
+ * 
+ * This struct contains constants and variables that differ between
+ * species. Species is a global array of these structs.
+ * 
+ * \sa Species
+ */
 struct species_st {
 
   /**** Quantities that can change during model runs *****/
 
-  SppIndex est_count;  /* number of individuals established (growing)*/
-  IntUS *kills,        /* ptr to array of # indivs killed by age. index=age. */
-        estabs,        /* number of individuals established in iter */
-        *seedprod,    /* annuals: array of previous years' seed production (size = viable_yrs)*/
+      /** \brief Number of individuals established (growing) */
+  SppIndex est_count;
+      /** \brief Pointer to array of individuals killed, indexed by age at death. */
+  IntUS *kills,
+      /** \brief Number of individuals established in current iteration. */
+        estabs,
+      /** \brief Specific to annuals. Array of seeds produced indexed by year. 
+       * \sa ST_seedDispersal.c */
+        *seedprod,
+      /** \brief not sure what this does yet.
+       * \sa ST_seedDispersal.c */
          seedbank,
+      /** \brief not sure what this does yet.
+       * \sa ST_seedDispersal.c */
          pseed;
-  RealF lastyear_relsize,    /* relsize from the previous year, used for annual establishment */
-        extragrowth,   /* amt of superfluous growth from extra resources */
-	received_prob,	//the chance that this species received seeds this year... only applicable if using seed dispersal and gridded option
-        alpha,         /* species-specific alpha parameter used for random number draw from beta distribution in establishment of annual species */
-        beta;           /* species-specific beta parameter used for random number draw from beta distribution in establishment of annual species */
-  float       var;    /* the variance parameter of the beta distribution for establishment..*/
-  struct indiv_st *IndvHead;    /* facility for linked list 8/3/01; top of list */
-  Bool allow_growth, //whether to allow growth this year... only applicable if using seed dispersal and gridded option
-	sd_sgerm;	//whether seeds where produced/received and germinated this year... only applicable if using seed dispersal and gridded option
+      /** \brief relsize from the previous year, used for annual establishment. 
+       * \sa rgroup_Establish() */
+  RealF lastyear_relsize,
+      /** \brief Amount of superfluous growth from extra resources. */
+        extragrowth,
+      /** \brief Probability that this species received seeds this year. */
+	      received_prob,
+      /** \brief Alpha parameter for random number draw from beta distribution in establishment of annual species. 
+       * \sa _add_annuals() */
+        alpha,
+      /** \brief Beta parameter for random number draw from beta distribution in establishment of annual species.
+       * \sa _add_annuals() */
+        beta;
+      /** \brief Variance parameter of the beta distribution for establishment. */
+  float var;
+      /** \brief Head of a doubly-linked list of all individuals of this species. 
+       * \sa indiv_st*/
+  struct indiv_st *IndvHead;
+      /** \brief Seed dispersal only- whether to allow growth for the current year.
+       * \sa ST_seedDispersal.c */
+  Bool allow_growth,
+      /** \brief Whether seeds where produced/received and germinated this year. 
+       * \sa ST_seedDispersal.c */
+	     sd_sgerm;
 
   /**** Quantities that DO NOT change during model runs *****/
 
-    /* 4-letter code (plus \0) for genus and species*/
+      /** \brief 4-letter code (plus \0) for genus and species. */
   char* name;
-  IntUS max_age,         /* max age of mature plant, also flag for annual */
-        viable_yrs,      /* annuals: max years of viability of seeds */
-        max_seed_estab,  /* max seedlings that can estab in 1 yr*/
-        max_vegunits,    /* max vegetative regrowth units (eg tillers)*/
-        max_slow,        /* years slow growth allowed before mortality */
-        sp_num,          /* index number of this species */
-        res_grp;         /* this sp. belongs to this res_grp*/
-  RealF max_rate,      /* intrin_rate * proportion*/
+      /** \brief Max age of mature plant. Also used to determine annual species. */
+  IntUS max_age,
+      /** \brief Annuals: max years of viability of seeds. */
+        viable_yrs,
+      /** \brief Max seedlings that can establish in 1 year. */
+        max_seed_estab,
+      /** \brief Max vegetative regrowth units, for example tillers. */
+        max_vegunits,
+      /** \brief Years slow growth is allowed before mortality. */
+        max_slow,
+      /** \brief Index of this species in the Species variable.
+       * \sa Species */
+        sp_num,
+      /** \brief Resource group that this species belongs to. 
+       * \sa RGroup */
+        res_grp;
+      /** \brief Max growth rate. Defined as intrin_rate * proportion. */
+  RealF max_rate,
+      /** \brief Intrinsic growth rate. */
         intrin_rate,
+      /** \brief Starting size of a new individual of this species, relative to an adult plant. */
         relseedlingsize,
+      /** \brief Starting biomass in grams of a new individual of this species. */
         seedling_biomass,
-        mature_biomass,    /* biomass of mature_size individual */
-        seedling_estab_prob_old,  /* supports Extirpate() and Kill() */
+      /** \brief Biomass in grams of a mature individual. */
+        mature_biomass,
+      /** \brief Holds seedling establishment probability directly from inputs. 
+       * \sa seedling_estab_prob */
+        seedling_estab_prob_old,
+      /** \brief Seedling establishment probability.
+       * \sa seedling_estab_prob_old */
         seedling_estab_prob,
+      /** \brief Annual mortality probability. This variable is currently unused. */
         ann_mort_prob,
+      /** \brief Used in age-independent mortality.
+       * \sa _age_independent() */
         cohort_surv,
-        exp_decay,        /* annuals: exponent for viability decay function */
-        prob_veggrow[4],  /* 1 value for each mortality type, if clonal*/
-  	sd_Param1,	  /* for seed dispersal */
-  	sd_PPTdry,
-	sd_PPTwet,
-	sd_Pmin,
-	sd_Pmax,
-	sd_H,
-	sd_VT;
+      /** \brief Annuals-specific exponent for viability decay function. */
+        exp_decay,
+      /** \brief 1 value for each mortality type, if clonal*/
+        prob_veggrow[4],
+      /** \brief Seed dispersal parameter read from inputs.
+       * \sa ST_seedDispersal.c */
+  	    sd_Param1,
+      /** \brief Seed dispersal parameter read from inputs.
+       * \sa ST_seedDispersal.c */
+  	    sd_PPTdry,
+      /** \brief Seed dispersal parameter read from inputs.
+       * \sa ST_seedDispersal.c */
+	      sd_PPTwet,
+      /** \brief Seed dispersal parameter read from inputs.
+       * \sa ST_seedDispersal.c */
+	      sd_Pmin,
+      /** \brief Seed dispersal parameter read from inputs.
+       * \sa ST_seedDispersal.c */
+  	    sd_Pmax,
+      /** \brief Seed dispersal parameter read from inputs.
+       * \sa ST_seedDispersal.c */
+	      sd_H,
+      /** \brief Seed dispersal parameter read from inputs.
+       * \sa ST_seedDispersal.c */
+      	sd_VT;
+      /** \brief Temperature class for this species.
+       * \sa TempClass */
   TempClass tempclass;
+      /** \brief Disturbance class for this species.
+       * \sa DisturbClass */
   DisturbClass disturbclass;
+      /** \brief TRUE if this species is clonal. */
   Bool isclonal,
+      /** \brief TRUE if this species should respond to temperature. Not currently implemented. */
        use_temp_response,
-       use_me,           /* do not establish if this is false */
-       use_dispersal;	//whether to use seed dispersal... only applicable if using gridded option
+      /** \brief If FALSE do not establish this species. */
+       use_me,
+      /** \brief TRUE if the user has requested seed dispersal for this species.
+       * \sa ST_seedDispersal.c */
+       use_dispersal;
 };
 
 struct resourcegroup_st {
