@@ -439,6 +439,8 @@ struct succulent_st {
  * \sa Env_Generate()
  */
 struct environs_st {
+      /** \brief Is this site wet, dry, or normal?.
+       * \sa PPTClass */
   PPTClass wet_dry;
       /** \brief Precipitation for the year in millimeters. */
   IntS ppt,
@@ -472,15 +474,35 @@ struct plot_st {
   IntUS disturbed;
 };
 
-
+/**
+ * \brief Stores precipitation information.
+ * 
+ * Used inside the globals_st struct.
+ * 
+ * \sa globals_st
+ */
 struct ppt_st {
+      /** \brief Average precipitation. */
   RealF avg,
+      /** \brief Standard deviation of precipitation. */
        std;
+      /** \brief Minimum precipitation. */
   IntUS  min,
+      /** \brief Maximum precipitation. */
        max,
+      /** \brief Number of dry days. */
        dry,
+      /** \brief Number of wet days. */
        wet;
 };
+
+/**
+ * \brief Stores temperature information.
+ * 
+ * Used in the globals_st struct.
+ * 
+ * \sa globals_st
+ */
 struct temp_st {
   RealF avg,
         std,
@@ -488,12 +510,25 @@ struct temp_st {
         max,
         gstemp;
 };
+
+/** 
+ * \brief Fecal pat information.
+ * 
+ * Used in the globals_st struct.
+ * 
+ * \sa globals_st
+ */
 struct fecalpats_st {
+      /** \brief If TRUE fecal pats will be used. */
   Bool use;
+      /** \brief Between 0 and 1. How often pats occur. */
   RealF occur,
+      /** \brief Between 0 and 1. How likely pats are removed. */
         removal,
-        recol[2]; /* 1 elem. for slope and intercept*/
+      /** \brief 1 elem. for slope and intercept. */
+        recol[2];
 };
+
 struct antmounds_st {
   Bool use;
   RealF occur;
