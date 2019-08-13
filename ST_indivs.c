@@ -53,11 +53,12 @@ void _delete (IndivType *ndv);
 /****************** Begin Function Code ********************/
 
 
-/***********************************************************/
-Bool indiv_New( SppIndex sp) {
-/*======================================================*/
-/* PURPOSE */
-/* Use this routine to when a new plant is established.
+/**
+ * \brief Add an individual to the Species->IndivHead linked list.
+ * 
+ * \param sp The SppIndex of the species that this individual belongs to.
+ * 
+ * Use this routine to when a new plant is established.
  * Calls _create() to allocate the object, then the
  * individuals parameters are initialized. The Species
  * "object" contains a list of its individuals which is
@@ -78,11 +79,17 @@ Bool indiv_New( SppIndex sp) {
  * The Species obj keeps an array of pointers to allocated
  * indiv objects for normal access to the individuals. The
  * Head pointer is set to null in Species_New().
-*/
+ * 
+ * \return TRUE
+ * 
+ * \sa Species
+ * \sa SppIndex
+ * \sa rgroup_Establish()
+ * \sa Indiv_Kill_Complete()
+ */
+Bool indiv_New( SppIndex sp) {
 /* HISTORY */
 /* Chris Bennett @ LTER-CSU 6/15/2000            */
-
-/*------------------------------------------------------*/
 
 
   IndivType *p;
@@ -118,21 +125,20 @@ Bool indiv_New( SppIndex sp) {
   return( TRUE);
 }
 
-/**************************************************************/
-static IndivType *_create ( void) {
-/*======================================================*/
-/* PURPOSE */
-/* Local routine creates object, initializes to zero and
+/**
+ * \brief creates a new IndivType object.
+ * 
+ * Local routine creates object, initializes to zero and
  * returns a pointer to it.  Returned indiv has no identity
  * until called by Indiv_New().
- *
- * Guarantees the creation of a valid object or it fails.
-*/
+ * 
+ * \return pointer to the individual.
+ * 
+ * \sa indiv_New()
+ */
+static IndivType *_create ( void) {
 /* HISTORY */
 /* Chris Bennett @ LTER-CSU 6/15/2000            */
-
-/*------------------------------------------------------*/
-
   IndivType *p;
 
   p = (IndivType *) Mem_Calloc( 1, sizeof(IndivType),

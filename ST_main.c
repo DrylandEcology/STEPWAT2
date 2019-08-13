@@ -88,6 +88,12 @@ SW_FILE_STATUS SW_File_Status;
 /***********************************************************/
 void Plot_Initialize( void);
 
+/** \brief Prints a description of flags then exits the program.
+ *  
+ * Meant to be used when the user inputs an undefined flag.
+ * 
+ * \sa init_args(int argc, char **argv)
+ */
 static void usage(void) {
   char *s ="STEPPE plant community dynamics (SGS-LTER Jan-04).\n"
            "   Usage : steppe [-d startdir] [-f files.in] [-q] [-e] [-o] [-g]\n"
@@ -116,16 +122,27 @@ Bool QuietMode;
 /***********************************************************/
 char errstr[1024];
 char inbuf[1024];
-FILE *logfp,   /* used everywhere by LogError */
-     *progfp;  /* optional place to put progress info */
-int logged;  /* indicator that err file was written to */
+/** \brief The log file */
+FILE *logfp;
+/** \brief optional place to put progress info */
+FILE *progfp;
+/** \brief indicator that err file was written to */
+int logged;
+/** \brief Global struct holding species-specific variables. */
 SpeciesType  **Species;
+/** \brief Global struct holding resgroup-specific variables. */
 GroupType    **RGroup;
+/** \brief Global struct holding succulent-specific constants. */
 SucculentType  Succulent;
+/** \brief Global struct holding environment-specific variables. */
 EnvType        Env;
+/** \brief Global struct holding plot-specific variables. */
 PlotType       Plot;
+/** \brief Global struct holding global variables. */
 ModelType      Globals;
+/** \brief Global struct holding biomass output flags. */
 BmassFlagsType BmassFlags;
+/** \brief Global struct holding mortality output flags. */
 MortFlagsType  MortFlags;
 
 Bool UseGrid;
@@ -145,8 +162,11 @@ pcg32_random_t species_rng;
 pcg32_random_t grid_rng;
 extern pcg32_random_t markov_rng;
 
-/******************** Begin Model Code *********************/
-/***********************************************************/
+/** \brief Runs the program.
+ * 
+ * Initializes flags and parameters, and runs the non-gridded mode. If the
+ * user requests gridded mode this function calls RunGrid.
+ */
 int main(int argc, char **argv) {
   IntS year, iter, incr;
 	Bool killedany;
@@ -326,7 +346,13 @@ int main(int argc, char **argv) {
 
 
 
-/**************************************************************/
+/** \brief (re)initializes the plot.
+ * 
+ * Zeros out Species and RGroup and kills all individuals.
+ * Finally this function calls resets sxw.
+ * 
+ * \sa SXW_InitPlot(void)
+ */
 void Plot_Initialize(void) {
 	GrpIndex rg;
 	SppIndex sp;
@@ -401,7 +427,13 @@ void Plot_Initialize(void) {
 }
 
 
-/**************************************************************/
+/** \brief Translates the input flags to in program flags.
+ * 
+ * The recognised flags are -d, -f, -q, -e, -p, -g, -o, -i, -s and -S.
+ * Note that flags are case sensitive. 
+ * 
+ * When the -f flag is uses this function looks next for the name of the file.
+ */
 static void init_args(int argc, char **argv) {
   /* to add an option:
    *  - include it in opts[]
@@ -576,6 +608,13 @@ static void init_args(int argc, char **argv) {
 }
 
 
+/** \brief Prints a warning if there is an entry in the logfile
+ * 
+ * The warning is printed to the progress file, which is usually the 
+ * same as stdout.
+ * 
+ * check_log is registered to run automatically at exit.
+ */
 static void check_log(void) {
 /* =================================================== */
 
@@ -588,6 +627,13 @@ static void check_log(void) {
 
 }
 
+/** \brief Compares the getRelsize funcitons to calculated values.
+ * 
+ * Used for debugging. 
+ * 
+ * \sa getSpeciesRelsize
+ * \sa getRGroupRelsize
+ */
 void check_sizes(const char *chkpt) {
     /* =================================================== */
     /* Use this for debugging to check that the sum of the individual

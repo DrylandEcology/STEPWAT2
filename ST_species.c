@@ -197,10 +197,15 @@ void species_Update_Estabs(SppIndex sp, IntS num)
 	RGroup[Species[sp]->res_grp]->estabs += num;
 }
 
-/**************************************************************/
-/* Sums the relative sizes of all individuals in Species sp
-   Param sp = species index            
-   Return: species relsize */
+/** \brief Returns the relsize of Species[sp]
+ * 
+ * \param sp the index of the Species array that you want to measure.
+ * 
+ * \return RealF greater than of equal to 0 representing the summed
+ *         relsizes of all individuals in Species[sp]
+ * 
+ * \sa getRGroupRelsize()
+ */
 RealF getSpeciesRelsize(SppIndex sp)
 {
 	IndivType *p = Species[sp]->IndvHead;
@@ -218,7 +223,17 @@ RealF getSpeciesRelsize(SppIndex sp)
 	return (RealF) (sum + Species[sp]->extragrowth);
 }
 
-/**************************************************************/
+/**
+ * \brief Create a new species and integrate it into Species.
+ * 
+ * \return index of the new species inside Species.
+ * 
+ * Allocates memory of the new species and integrates it into
+ * Species.
+ * 
+ * \sa Species
+ * \sa _create()
+ */
 SppIndex species_New(void)
 {
 	/*======================================================*/
@@ -252,7 +267,15 @@ SppIndex species_New(void)
 	return i;
 }
 
-/**************************************************************/
+/**
+ * \brief Allocates memory for a new SpeciesType.
+ * 
+ * \return pointer to the newely allocated struct.
+ * 
+ * Used in species_New.
+ * 
+ * \sa species_New()
+ */
 static SpeciesType *_create(void)
 {
 	/*======================================================*/

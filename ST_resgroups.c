@@ -713,10 +713,15 @@ void rgroup_IncrAges(void)
 	}
 }
 
-/************************************************************/
-/* Sums relsize for all individuals in all species in RGroup rg.
-   param rg = RGroup index.
-   Return: RGroup relsize. */
+/** \brief Returns the relative size of RGroup[rg]
+ * 
+ * \param rg index of the RGroup array you want to measure.
+ * 
+ * \return RealF greater than or equal to 0 representing the summed 
+ *         relsizes of all individuals in all species in RGroup[rg].
+ * 
+ * \sa getSpeciesRelsize()
+ */
 RealF getRGroupRelsize(GrpIndex rg){
     Int n;
 	SppIndex sp;
