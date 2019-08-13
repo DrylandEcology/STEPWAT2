@@ -134,6 +134,23 @@ git submodule update --init --recursive
 
 <br>
 
+## Doxygen documentation:
+STEPWAT2 uses Doxygen to automatically generate documentation for the code base.
+* To generate the documentation:
+```
+Doxygen doxyfile
+```
+* To view the documentation:
+```
+open Documentation/html/index.html
+```
+* If you are on Linux this might throw an error. Try
+```
+xdg-open Documentation/html/index.html
+```
+
+<br>
+
 ## Note: repository renamed from StepWat to STEPWAT2 on Feb 23, 2017
 
 All existing information should [automatically be redirected](https://help.github.com/articles/renaming-a-repository/) to the new name.
