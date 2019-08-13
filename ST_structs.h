@@ -140,7 +140,8 @@ struct indiv_ann_st {
                   *Prev;
 };
 
-/** \brief Holds all species-specific information.
+/** 
+ * \brief Holds all species-specific information.
  * 
  * This struct contains constants and variables that differ between
  * species. Species is a global array of these structs.
@@ -274,99 +275,201 @@ struct species_st {
        use_dispersal;
 };
 
+/** 
+ * \brief Contains all resource group-specific fields. 
+ * 
+ * Some fields are consant and some are variable, so be careful what you are modifying. 
+ * RGroup is a global array of these structs used in STEPWAT2.
+ * 
+ * \sa RGroup 
+ */
 struct resourcegroup_st {
 
   /**** Quantities that can change during model runs *****/
 
-  IntUS *kills,        /* indivs in group killed. index by age killed. */
-        estabs,         /* total indivs in group established during iter */
-        killyr,         /* kill the group in this year; if 0, don't kill, but see killfreq */
-        yrs_neg_pr,     /* counter for consecutive years low resources */
-        wildfire, 	/* number of wildfires during all iterations in this year */
-        prescribedfire, /* number of prescribed fires during all iterations in this year */
-        mm_extra_res;   /* extra resource converted back to mm */
-  RealF res_required, /* resource required for current size */
-        res_avail,    /* resource available from environment X competition */
-        res_extra,    /* resource applied to superficial growth */
-        pr,           /* resources required / resources available */
-        rgroupFractionOfVegTypeBiomass; /*proportional biomass of the STEPPE functional group out of the SOILWAT2 functional type biomass */
-  SppIndex est_count, /* number of species actually established in group*/
-           *est_spp; /*list of spp actually estab in grp*/
-  Bool extirpated,    /* group extirpated, no more regen */
-       regen_ok;      /* annuals: startyr; TM this is a flag for annuals.  When
-                       * you set the start year for the group this will flag all
-                       * species within that group that establishment will start.
-                       * EG start year = 96 I will have 5 flags for one annual species
-                       * for year 96,97,98,99,100. BUT extirpate will not un-flag this*/
+      /** \brief individuals in group killed. Index by age at death. */
+  IntUS *kills,
+      /** \brief Total indivs in group established during current iteration. */
+        estabs,
+      /** \brief Treated as a Bool. If TRUE kill the group this year.
+       * \sa killfreq
+       * \sa mort_EndOfYear() */
+        killyr,
+      /** \brief Accumulator for consecutive years of low resources. */
+        yrs_neg_pr,
+      /** \brief Treated as a Bool. If TRUE there was a wildfire in the current year. 
+       * \sa mort_EndOfYear() */
+        wildfire,
+      /** \brief Treated as a Bool. If TRUE there was a prescribed fire in the current year. 
+       * \sa mort_EndOfYear() */
+        prescribedfire,
+      /** \brief Xxtra resources in millimeters */
+        mm_extra_res;
+      /** \brief Resources required for current biomass of resgroup. */
+  RealF res_required,
+      /** \brief Resources available adjusted to account for competition. */
+        res_avail,
+      /** \brief Resource applied to superficial growth. */
+        res_extra,
+      /** \brief Ratio of resources required to resources available */
+        pr,
+      /** \brief Fraction of the total biomass for this vegtype contributed by this resgroup.
+       * \sa veg_prod_type */
+        rgroupFractionOfVegTypeBiomass;
+      /** \brief Number of species established in group. */
+  SppIndex est_count,
+      /** \brief Array of indexes of species established in this resgroup. 
+       * \sa Species */
+           *est_spp;
+      /** \brief If TRUE this group is extirpated, no more regeneration. */
+  Bool extirpated,
+      /** \brief For annuals: If TRUE this group can regenerate. */
+       regen_ok;
 
   /**** Quantities that DO NOT change during model runs *****/
 
-  IntUS max_stretch,    /* num yrs resources can be stretched w/o killing*/
-        max_spp_estab,  /* max # species that can add new plants per year*/
-        max_spp,        /* number of species in the group*/
-        max_age,        /* longest lifespan in group. used to malloc kills[] */
-        startyr,        /* don't start trying to grow until this year */
-	killfreq_startyr,/* start year for kill frequency*/
-
-        extirp,         /* year in which group is extirpated (0==ignore) */
-        grp_num,        /* index number of this group */
-        veg_prod_type, /* type of SOILWAT2 vegetation type:
-          STEPWAT2 inputs via "rgroup.in" are defined as: 1 for tree, 2 for shrub, 3 for grass, 4 for forb;
-          however, the inputs get translated by get_SW2_veg_index() to SOILWAT2 values immediately upon reading the inputs (see SW_Defines.h) */
-		grazingfrq,     /* grazing effect on group at this frequency: <1=prob, >1=# years */
-        grazingfreq_startyr;/* start year for grazing frequency*/
-  SppIndex *species; /*list of spp belonging to this grp*/
-  RealF min_res_req,  /* input from table */
-        max_density,  /* number of mature plants per plot allowed */
-        max_per_sqm,  /* convert density and plotsize to max plants/m^2 */
-        max_bmass,    /* sum of mature biomass for all species in group */
-        killfreq,       /* kill group at this frequency: <1=prob, >1=# years */
-        ignition,       /* cheatgrass biomass (g/m2) that triggers potential ignition of a wildfire */
-        cheatgrass_coefficient,   /* intercept of the cheatgrass biomass-wildfire probability relationship */
-        wild_fire_slope,  /* slope of the cheatgrass biomass-wildfire probability relationship */	
-        xgrow,        /* ephemeral growth = mm extra ppt * xgrow */
-        slowrate,     /* user-defined growthrate that triggers mortality */
-        ppt_slope[3], /* res. space eqn: slope for wet/dry/norm yrs*/
-        ppt_intcpt[3],/* res. space eqn: intercept for "" ""*/
-		proportion_killed,      /* proportion killing  */
-		proportion_recovered,   /* proportion recovery after killing year */
-        proportion_grazing;     /* proportion grazing on grazing year */
+      /** \brief Number of yers resources can be stretched without killing the group. */
+  IntUS max_stretch,
+      /** \brief Max number of species that can add new plants per year*/
+        max_spp_estab,
+      /** \brief Number of species in the group*/
+        max_spp,
+      /** \brief Longest lifespan in resgroup. Used to malloc kills[] */
+        max_age,
+      /** \brief Don't start trying to grow until this year. */
+        startyr,
+      /** \brief Start year for kill frequency. 
+       * \sa killfreq */
+	      killfreq_startyr,
+      /** \brief Year in which group is extirpated. Setting to 0 turns off extirpation. */
+        extirp,
+      /** \brief Index number of this group in the RGroup array.
+       * \sa RGroup */
+        grp_num,
+      /** \brief SOILWAT2 vegetation type:
+       * STEPWAT2 inputs via "rgroup.in" are defined as: 1 for tree, 2 for shrub, 3 for grass, 4 for forb;
+       * however, the inputs get translated by get_SW2_veg_index() to SOILWAT2 values immediately upon reading the inputs. 
+       * \sa SW_Defines.h */
+        veg_prod_type,
+      /** \brief Perform grazing on this group at this frequency. */
+		    grazingfrq,
+      /** \brief Start year for grazing frequency.
+       * \sa grazingfrq */
+        grazingfreq_startyr;
+      /** \brief Array of species indexes belonging to this group.
+       * \sa Species */
+  SppIndex *species;
+      /** \brief Minimum resources required by this group, defined in inputs. */
+  RealF min_res_req,
+      /** \brief Number of mature plants allowed per plot. */
+        max_density,
+      /** \brief Max plants per meter squared.
+       * \sa max_density */
+        max_per_sqm,
+      /** \brief Max biomass of group. */
+        max_bmass,
+      /** \brief Kill group at this frequency.
+       * Values < 1 result in probablistic fires
+       * values > 1 result in fires ever killfreq years. 
+       * \sa mort_EndOfYear() */
+        killfreq,
+      /** \brief Cheatgrass biomass (g/m2) that triggers potential ignition of a wildfire.
+       * If ignition == 0 wildfire is turned off. 
+       * \sa mort_EndOfYear() */
+        ignition,
+      /** \brief Intercept of the cheatgrass biomass-wildfire probability relationship. */
+        cheatgrass_coefficient,
+      /** \brief Slope of the cheatgrass biomass-wildfire probability relationship. */	
+        wild_fire_slope,
+      /** \brief Ephemeral growth. Used to calculate superficial growth when precipitation is high. */
+        xgrow,
+      /** \brief Growthrate that triggers mortality. Defined in inputs. */
+        slowrate,
+      /** \brief Space equation: slope for wet/dry/normal years */
+        ppt_slope[3],
+      /** \brief Space equation: intercept for wet/dry/normal years*/
+        ppt_intcpt[3],
+      /** \brief Proportion of group killed. */
+		    proportion_killed,
+      /** \brief Proportion recovery after killing year */
+		    proportion_recovered,
+      /** \brief Proportion of biomass removed during grazing year.
+       * \sa grazingfrq */
+        proportion_grazing;
+      /** \brief TRUE if this group is comprised of succulents. */
   Bool succulent,
-       use_extra_res, /* responds to other groups' unused resources */
-       use_me,        /* establish no species of this group if false; TMartyn5.26.15 - this
-                       * is 0 of the onoff in species.in and of the on in rgroup.in */
-       use_mort,      /* use age-independent+slowgrowth mortality?  */
-       est_annually;  /* establish this group every year if true  */
-  DepthClass depth;  /* rooting depth class */
+      /** \brief IF TRUE this group responds to other group's unused resources. */
+       use_extra_res,
+      /** \brief If FALSE establish no species of this group. */
+       use_me,
+      /** \brief If TRUE use age-independent and slowgrowth mortality. */
+       use_mort,
+      /** \brief Establish this group every year if TRUE. */
+       est_annually;
+      /** \brief Rooting depth class.
+       * \sa DepthClass */
+  DepthClass depth;
+      /** \brief name of this group, specified in inputs. */
   char *name;
 };
 
+/** 
+ * \brief Succulent specific constants read from or derived from inputs.
+ * 
+ * A global instance of this struct is Succulent.
+ * 
+ * \sa Succulent.
+ */
 struct succulent_st {
-  RealF growth[2], /* growth modifier eqn parms for succulents (eqn 10)*/
-        mort[2],   /* mortality eqn parms for succulents (eqn 16)*/
-        reduction, /* if not killed, reduce by eqn 10*/
-        prob_death;  /* calculated from eqn 16*/
+      /** \brief Growth modifier parameters for succulents (eqn 10). */
+  RealF growth[2],
+      /** \brief Mortality modifier parameters for succulents (eqn 16). */
+        mort[2],
+      /** \brief If not killed, reduce by eqn 10. */
+        reduction,
+      /** \brief Calculated from eqn 16. */
+        prob_death;
 };
 
+/**
+ * \brief Contains variables used in generating the environment.
+ * 
+ * This struct is instanciated by the global variable Env.
+ * 
+ * \sa Env_Generate()
+ */
 struct environs_st {
   PPTClass wet_dry;
-  IntS ppt,  /* precip for the year (mm)*/
-       lyppt, /* precip for the previous (last) year (mm)*/
-       gsppt;  /* precip during growing season (mm)*/
-  RealF temp,  /* average daily temp for the year (C)*/
-       temp_reduction[2]; /* amt to reduce growth by temp */
-                           /*(eqns 12,13), one for each tempclass*/
+      /** \brief Precipitation for the year in millimeters. */
+  IntS ppt,
+      /** \brief Precipitation for the previous (last) year in millimeters. */
+       lyppt,
+      /** \brief Precipitation during the growing season in millimeters. */
+       gsppt;
+      /** \brief Average daily temp for the year in celsius. */
+  RealF temp,
+      /** \brief Amount to reduce growth by temperature.
+       * (eqns 12,13), one for each tempclass. */
+       temp_reduction[2];
 };
 
-struct plot_st {  /* plot-level things */
+/**
+ * \brief Contains variables used in generating the plot.
+ * 
+ * plot_st is instanciated by the global variable Plot.
+ * 
+ * \sa Plot
+ */
+struct plot_st {
+  /** \brief Type of disturbance.
+   * \sa DisturbanceEvent */
   DisturbEvent disturbance;
-  Bool pat_removed;  /* fecalpats can be removed which only*/
-                     /* kills seedlings and not other plants*/
-  IntUS disturbed;  /* years remaining before recolonization*/
-                  /* (ie, new establishments) can begin again,*/
-                  /* or, if disturbance is fecalpat, number of*/
-                  /* years it has been ongoing.  Set to 0*/
-                  /* when the disturbance effect is expired.*/
+  /** \brief If TRUE fecal pats can be removed. */
+  Bool pat_removed;
+  /** \brief Years remaining before recolonization (ie, new establishments) can begin again.
+   * Otherwise, if disturbance is fecalpat, number of years it has been ongoing. Set to 0
+   * when the disturbance effect is expired. */
+  IntUS disturbed;
 };
 
 
