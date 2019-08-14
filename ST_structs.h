@@ -529,78 +529,184 @@ struct fecalpats_st {
         recol[2];
 };
 
+/**
+ * \brief Ant mound information.
+ * 
+ * Used in the globals_st struct.
+ * 
+ * \sa globals_st
+ */
 struct antmounds_st {
+      /** \brief If TRUE ant mounds will be used. */ 
   Bool use;
+      /** \brief The probability of ant mound occurance. Between 0 and 1. */
   RealF occur;
+      /** \brief The minimum number of ant mounds to generate in a year. */
   IntUS minyr,
+      /** \brief The maximum number of ant mounds to generate in a year. */
        maxyr;
 };
+
+/**
+ * \brief Holds information on animal burrows.
+ * 
+ * Used in the globals_st struct.
+ * 
+ * \sa globals_st
+ */
 struct burrows_st {
+  /** \brief If TRUE burrows will be used. */
   Bool use;
+  /** \brief Value between 0 and 1. The probability that a burrow will occur. */
   RealF occur;
+  /** \brief Minimum number of burrows in a year. */
   IntUS minyr;
 };
 
+/**
+ * \brief Stores file names for output.
+ * 
+ * The struct contains the name of the yearly and summary output files.
+ * Used in the globals_st struct.
+ * 
+ * \sa globals_st
+ */
 struct outfiles_st {
-  FILE *fp_year,  /* file handle for yearly so it can stay open*/
-       *fp_sumry; /* file handle for averages output */
-  IntUS suffixwidth; /* max width of outfile suffix if printing yearly */
+      /** \brief File handle for yearly output. */
+  FILE *fp_year,
+      /**\brief File handle for averages output. */
+       *fp_sumry;
+      /** \brief max width of outfile suffix if printing yearly. */
+  IntUS suffixwidth;
 };
 
+/**
+ * \brief Stores global information that is independent of any species or group.
+ * 
+ * globals_st deals mainly with structural variables like year and iteration. It also
+ * contains information on file names, precipitation, temperature, mounds, pats and burrows.
+ * This struct is instanciated by the global variable Globals.
+ * 
+ * \sa Globals
+ */
 struct globals_st {
+  /** \brief Precipitation constants. \sa ppt_st */
   struct ppt_st ppt;
+  /** \brief Temperature constants. \sa temp_st */
   struct temp_st temp;
+  /** \brief Fecal pat constants. \sa fecalpats_st */
   struct fecalpats_st pat;
+  /** \brief Ant mound constants. \sa antmounds_st */
   struct antmounds_st mound;
+  /** \brief Animal burrow constants. \sa burrows_st */
   struct burrows_st burrow;
 
-  RealF plotsize,   /* size of plot in square meters */
-        gsppt_prop, /* proportion of ppt during growing season*/
-        tempparm[2][3]; /* three parms for Warm/Cool growth mod*/
-  IntUS runModelYears,  /* number of years to run the model*/
-      Max_Age,        /* oldest plant; same as runModelYears for now */
+      /** \brief Size of the plot in square meters */
+  RealF plotsize,
+      /** \brief Proportion of ppt during growing season. */
+        gsppt_prop,
+      /** \brief Three parameters for Warm/Cool growth modifiers. */
+        tempparm[2][3];
+      /** \brief Number of years to run the model. */
+  IntUS runModelYears,
+      /** \brief Oldest plant; same as runModelYears for now. \sa runModelYears. */
+      Max_Age,
+      /** \brief The year that the simulation is currently in. */
       currYear,
-      runModelIterations, /* run model this many times for statistics */
+      /** \brief Number of iterations to run the simulation. */
+      runModelIterations,
+      /** \brief The iteration that the simulation is currently in. */
       currIter,
-      grpCount,     /* number of groups defined*/
-      sppCount,     /* number of species defined*/
-      transp_window, /* Number of years for which transpiration data is kept*/
-      nCells;		/* number of cells to use in Grid, only applicable if grid function is being used */
-  IntL randseed;     /* random seed from input file */
-  size_t max_rgroups, /* Maximum resource groups allowed. */
-         max_groupnamelen, /* Maximum resource group name length. */
-         max_spp_per_grp, /* Maximum species allowed per resource group. */
-         max_indivs_per_spp, /* Maximum individuals allowed per species. */
-         max_speciesnamelen; /* Maximum species name length. */
+      /** \brief Number of groups defined. */
+      grpCount,
+      /** \brief Number of species defined*/
+      sppCount,
+      /** \brief Number of years for which transpiration data is kept. \sa _transp_contribution_by_group() */
+      transp_window,
+      /** \brief Number of cells to use in Grid, only applicable if gridded mode is being used. */
+      nCells;
+      /** \brief Random seed from input file. Used to seed the PCG32 RNGs. */
+  IntL randseed;
+      /** \brief Maximum resource groups allowed. */
+  size_t max_rgroups,
+      /** \brief Maximum resource group name length. */
+         max_groupnamelen,
+      /** \brief Maximum species allowed per resource group. */
+         max_spp_per_grp,
+      /** \brief Maximum individuals allowed per species. */
+         max_indivs_per_spp,
+      /** \brief Maximum species name length. */
+         max_speciesnamelen;
 
-  struct outfiles_st bmass, mort;
+                    /** \brief Output file names for bmass files. */
+  struct outfiles_st bmass, 
+                    /** \brief Output file names for mort files. */
+                     mort;
 };
 
+/**
+ * \brief Flags for what biomass files we would like output.
+ * 
+ * These flags are specified in inputs and used heavily in ST_stats.c.
+ * They are instanciated globally by BmassFlags.
+ * 
+ * \sa BmassFlags
+ */
 struct bmassflags_st {
-  Bool summary,  /* if FALSE, print no biomass output */
-       yearly, /* print individual yearly runs as well as average */
+      /** \brief If FALSE print no biomass output. */
+  Bool summary,
+      /** \brief If TRUE print biomass output for each year of the simulation. */
+       yearly,
+      /** \brief If TRUE the output files need a header. */
        header,
+      /** \brief If TRUE the output files will contain a year column. */
        yr,
+      /** \brief If TRUE Output disturbance information. */
        dist,
+      /** \brief If TRUE Output precipitation information. */
        ppt,
+      /** \brief If TRUE Output precipitation class information. */
        pclass,
+      /** \brief If TRUE output the yearly average temperature. */
        tmp,
+      /** \brief If TRUE output the grou biomasses. */
        grpb,
+      /** \brief If TRUE output relsize. */
        pr,
+      /** \brief If TRUE output biomass. */
        size,
+      /** \brief If TRUE output species information. */
        sppb,
-       wildfire,/* print wild fires count during all the iterations */
-       prescribedfire,/* print prescribed fires count during all the iterations */
+      /** \brief Print total wild fire count across all iterations. */
+       wildfire,
+      /** \brief Print prescribed fire count across all the iterations */
+       prescribedfire,
+      /** \brief print individual information like number of establishments by year. */
        indv;
+      /** \brief the character used to separate values in the output files. */
   char sep;
 };
 
+/**
+ * \brief Defines which mortality output files we would like, and what they should contain.
+ * 
+ * These flags, all from inputs, determine how many files should be printed as well as what 
+ * the columns should contain. This struct is instanciated by the global variable MortFlags.
+ * 
+ * \sa MortFlags
+ */
 struct mortflags_st {
-  Bool summary,  /* if FALSE, print no mortality output */
-       yearly, /* print individual yearly data as well as summary */
-       header, /* print a header line of names in each file */
-       group,  /* print data summarized by group */
-       species; /* print data for species */
+      /** \brief If FALSE print no mortality output. */
+  Bool summary,
+      /** \brief Print individual yearly data as well as a summary. */
+       yearly,
+      /** \brief Print a header line of names in each file. */
+       header,
+      /** \brief Print mortality data for each group. */
+       group,
+      /** \brief Print mortality data for each species. */
+       species;
+      /** \brief The separator between values in the output files. */
   char sep;
 };
 
