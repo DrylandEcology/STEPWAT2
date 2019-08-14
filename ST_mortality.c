@@ -74,64 +74,62 @@ Bool _SomeKillage;
 extern
   pcg32_random_t mortality_rng; //declared in ST_main.c
 
-
-/***********************************************************/
-/***********************************************************/
+/**
+ * \brief Performs mortality that occurs during the growing season.
+ * 
+ *  This function reduces "plant-space" according to
+ *  resource availability, age, growth rate, and disturbance
+ *  conditions.  Also, succulents are "mortified" if it's a wet
+ *  year.
+ * 
+ *  This function is not to be confused with mort_EndOfYear().
+ *
+ *  An important consideration is the fact that the age of new
+ *  plants starts at 1.  Consider that for it to establish, it
+ *  has already survived the massive mortality of year 0; this
+ *  rate of year 0 mortality, among other factors of survival,
+ *  is captured by the probability of establishment (see
+ *  rgroup_Establish()).  However, for consistency with other
+ *  arrays, the age-related arrays are indexed from 0.  Thus,
+ *  age is base1 but the arrays are base0.
+ * 
+ *  The outline for this function is:
+ *    1) Death by limited resources.
+ *    2) Age independent mortality.
+ *    3) Slow growth mortality.
+ *    4) Succulent wet season mortality.
+ *    5) Death by pats, mounds or burrows.
+ *
+ *  More specifically:
+ *  - Process each group separately.
+ *  - If resources required for a group are greater than available
+ *    (PR > 1) for the maximum years stretching is allowed, kill
+ *    plants according the rules for insufficient resources.  If
+ *    PR < 1, reset number of stretched years to zero.  This means
+ *    that even one year of adequate resources nulls any number of
+ *    years of stretched resources.
+ *  - For each species, if the user requested the mortality functions
+ *    to be executed, run the age-independent and slow-growth
+ *    routines.
+ *  - If the current species is a succulent and this is a wet year,
+ *    execute the mortality function for succulents.  That is,
+ *    reduce each plant by some constant proportion, defined by
+ *    eqn 16.  The parameters are defined in the group-parms and
+ *    the reduction amount is computed in the Env module based
+ *    on precipitation.
+ *  - execute disturbance effects, if any.
+ * 
+ * \param killed Reference to a boolean. Set to TRUE if one or more
+ *               individuals were killed in any species. FALSE otherwise.
+ * 
+ * \sideeffect Individuals are killed. Individuals are stored in a
+ *             linked list in Species[sp]->IndivHead, so expect the 
+ *             list to be modified for all sp.
+ * 
+ * \sa mort_EndOfYear()
+ * \sa rgroup_Establish()
+ */
 void mort_Main( Bool *killed) {
-/*======================================================*/
-/* PURPOSE */
-/* This routine contains all the references to mortality
-   that occurs during the growing season.  (See mort_EndOfYear()
-   for other routines.)  It reduces "plant-space" according to
-   resource availability, age, growth rate, and disturbance
-   conditions.  Also, succulents are "mortified" if it's a wet
-   year.
-
-   An important consideration is the fact that the age of new
-   plants starts at 1.  Consider that for it to establish, it
-   has already survived the massive mortality of year 0; this
-   rate of year 0 mortality, among other factors of survival,
-   is captured by the probability of establishment (see
-   rgroup_Establish()).  However, for consistency with other
-   arrays, the age-related arrays are indexed from 0.  Thus,
-   age is base1 but the arrays are base0.
-
-   ALGORITHM
-   The outline of the steps is:
-     _no_resources(group)  - eqns 7, 8, 9
-     _age_independent(spp) - eqn 14
-     _slow_growth(spp) - slow growth rate, constant probability
-     _succulents(sp) - if wet year
-     Mort based on disturbances.
-
-   More specifically:
-   - Process each group separately.
-   - If resources required for a group are greater than available
-     (PR > 1) for the maximum years stretching is allowed, kill
-     plants according the rules for insufficient resources.  If
-     PR < 1, reset number of stretched years to zero.  This means
-     that even one year of adequate resources nulls any number of
-     years of stretched resources.
-   - For each species, if the user requested the mortality functions
-     to be executed, run the age-independent and slow-growth
-     routines.
-   - If the current species is a succulent and this is a wet year,
-     execute the mortality function for succulents.  That is,
-     reduce each plant by some constant proportion, defined by
-     eqn 16.  The parameters are defined in the group-parms and
-     the reduction amount is computed in the Env module based
-     on precipitation.
-   - execute disturbance effects, if any.
-*/
-
-/* HISTORY */
-/* Chris Bennett @ LTER-CSU 6/15/2000            */
-/*   11/5/00 - moved NoResources() from growth routine
- *              to here.
- *   7-Nov-03 (cwb) No need to apply this mortality system
- *             to annuals.  That is now done in mort_EndOfYear()
- *             so the statistics can be accumulated. */
-/*------------------------------------------------------*/
 
   Int j;
   GrpIndex rg;
@@ -201,14 +199,27 @@ void mort_Main( Bool *killed) {
   *killed = _SomeKillage;
 }
 
-/***********************************************************/
+/**
+ * \brief Simulates fires and extirpation.
+ * 
+ * Implements killing of plants through wildfire, prescribed fire, or another event
+ * that would result in mortality in single year (killyr) or
+ * extirpation (extirp) where plants are killed and do not return.
+ * 
+ * If wildfire is simulated it will affect all individuals in all species in all groups.
+ * If prescribed fire is simulated it is possible to specify inputs such that fire will 
+ * only affect one group.
+ * 
+ * \sideeffect If fire is simulated RGroup[rg]->killyr will be set to the current year.\n
+ *             If fire is simulated all individuals in RGroup[rg] will be killed.\n
+ *             If prescribed fire is simulated RGroup[rg]->prescribedfire will be set to 1.\n
+ *             If wildfire is simulated RGroup[rg]->wildfire will be set to 1.\n
+ *             If extirpation is performed all species in RGroup[rg] will be dropped.\n
+ *             
+ * \sa mort_Main()
+ * \sa rgroup_Extirpate()
+ */
 void mort_EndOfYear(void) {
-    /*======================================================*/
-    /* PURPOSE */
-    /* Implements killing of plants through wildfire, prescribed fire, or another event
-     * that would result in mortality in single year (killyr) or
-     * extirpation (extirp) where plants are killed and do not return. */
-
     GrpIndex rg;
     GroupType *g = NULL;
     SppIndex sp;
@@ -451,7 +462,7 @@ static void _pat( const SppIndex sp) {
     Int i, k=-1;
     IndivType *p, **kills;
     
-    kills = (IndivType **)Mem_Calloc(Globals.max_indivs_per_spp, sizeof(IndivType *), "_pat");
+    kills = (IndivType **) Mem_Calloc(Globals.max_indivs_per_spp, sizeof(IndivType *), "_pat");
 
     /* ---------------------------------------------*/
     /* Generate kill list, depending on sensitivity */
