@@ -59,7 +59,6 @@ SRCS	=\
 	$(Src)/ST_initialization.c\
 	$(Src)/ST_progressBar.c\
 	$(Src)/ST_seedDispersal.c
-	#$(Src)/sxw_tester.c
 
 EXOBJS	=\
 	$(oDir)/sqlite-amalgamation/sqlite3.o\
@@ -105,7 +104,6 @@ EXOBJS	=\
 	$(oDir)/ST_initialization.o\
 	$(oDir)/ST_progressBar.o\
 	$(oDir)/ST_seedDispersal.o
-	#$(oDir)/sxw_tester.o
 
 ALLOBJS	=	$(EXOBJS)
 ALLBIN	=	$(Bin)/stepwat

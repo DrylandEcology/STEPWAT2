@@ -257,7 +257,8 @@ static void _make_disturbance( void) {
       case NoDisturb: // Does nothing but prevent a compiler warning
       case LastDisturb:
       default:
-           Plot->disturbed = (Plot->disturbed) ? Plot->disturbed -1 : 0;
+           Plot->disturbed = (Plot->disturbed) ? (Plot->disturbed - 1) : 0;
+           break;
     }
     if (Plot->disturbed == 0)
       Plot->disturbance = NoDisturb;
@@ -279,8 +280,7 @@ static void _make_disturbance( void) {
          event = (RandUni(&environs_rng) <= Globals->pat.occur)
                ? event : NoDisturb;
          if (event == NoDisturb) break;
-         Plot->pat_removed = (RandUni(&environs_rng) <= Globals->pat.removal)
-                           ? TRUE : FALSE;
+         Plot->pat_removed = (RandUni(&environs_rng) <= Globals->pat.removal);
          Plot->disturbed = 0;
          break;
       case AntMound:
