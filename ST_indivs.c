@@ -126,10 +126,10 @@ Bool indiv_New( SppIndex sp) {
 }
 
 /**
- * \brief creates a new IndivType object.
+ * \brief Creates a new IndivType object.
  * 
  * Local routine creates object, initializes to zero and
- * returns a pointer to it.  Returned indiv has no identity
+ * returns a pointer to it. Returned indiv has no identity
  * until called by Indiv_New().
  * 
  * \return pointer to the individual.
@@ -147,39 +147,31 @@ static IndivType *_create ( void) {
 
 }
 
-/**************************************************************/
+/**
+ * \brief Partially kills a single individual.
+ * 
+ * Clonal plants can be partially killed. If so, the type
+ * of mortality must be recorded as it determines when or
+ * if the plant can vegetatively propogate.  Amount of
+ * damage/killage/shrinkage is subtracted from size.
+ * 
+ * \param code The type of mortality causing size to be reduced.
+ * \param ndv A pointer to the individual.
+ * \param killamt The amount of relative size to remove.
+ * 
+ * \return TRUE if relative size was reduced. FALSE if killamt
+ *         is greater than or equal to the relative size of the
+ *         plant (which requires indiv_Kill_Complete()), or if
+ *         the individual isn't clonal.
+ * 
+ * \sideeffect The size of ndv is reduced and it's growth rate is modified.
+ * 
+ * \sa indiv_Kill_Complete()
+ * \sa IndivType
+ */
 Bool indiv_Kill_Partial( MortalityType code,
                           IndivType *ndv,
                           RealF killamt) {
-/*======================================================*/
-/* PURPOSE */
-/* Clonal plants can be partially killed. If so, the type
- * of mortality must be recorded as it determines when or
- * if the plant can vegetatively propogate.  Amount of
- * damage/killage/shrinkage is subtracted from size and
- * RGroup and Species sizes are updated.
- *
- * code - stored in indiv to control vegetative propogation
- *        (see rgroup_Grow() for prop., see mort_Main() for
- *         vegetative reduction).
- * ndv  - pointer to the individual to be shrunken.
- * killamt - relative amount of the plant to be removed
- *           from the relative size variable.
-*/
-/* HISTORY */
-/*   Chris Bennett @ LTER-CSU 6/15/2000            */
-/*   cwb - 2-Dec-02 -- Another bug became apparent while
- *       adding SOILWAT code and this exists in the old
- *       model as well.  The problem is in the list
- *       processing: partial kills don't remove the
- *       indiv object whereas if killamt > relsize the
- *       object was removed from the list though the caller
- *       may not be able to know this.  My solution is
- *       to return TRUE if killamt < relsize (and relsize
- *       etc is updated) or FALSE otherwise which allows
- *       the caller to kill completely and handle the
- *       removal properly. */
-/*------------------------------------------------------*/
   SppIndex sp;
   Bool result = FALSE;
 
@@ -196,22 +188,20 @@ Bool indiv_Kill_Partial( MortalityType code,
   return( result);
 }
 
+/**
+ * \brief Kill a portion of an individual plant.
+ * 
+ * Remove individual proportionally and adjust relative size.
+ * Also keep up with survivorship data.
+ * 
+ * \param ndv A pointer to the individual.
+ * \param killType The MortalityType code. This parameter is currently unused.
+ * \param proportionKilled value between 0 and 1. The percent total biomass to remove.
+ * 
+ * \sideeffect ndv->relsize is adjusted. 
+ */
 void indiv_proportion_Kill(IndivType *ndv, int killType, RealF proportKilled)
 {
-	/*======================================================*/
-	/* PURPOSE */
-	/* Remove individual proportionally and adjust relative sizes of the
-	 * RGroup and Species downward proportionally by the size of the indiv.
-	 * Also keep up with survivorship data.
-	 */
-	/* HISTORY */
-	/* Chris Bennett @ LTER-CSU 6/15/2000
-	 *  09/23/15 -AT  -Added proportionKilled
-	 *  Nov 4 2015- AT - Modified code for doing proportional kill for annual as well and not deleting species
-	 *  and indi from memory only adjusting their real size  */
-
-	/*------------------------------------------------------*/
-
     #define xF_DELTA (20*F_DELTA)
 	#define xD_DELTA (20*D_DELTA)
 	#define ZERO(x) \
@@ -250,18 +240,21 @@ void indiv_proportion_Kill(IndivType *ndv, int killType, RealF proportKilled)
 	#undef xD_DELTA
 	#undef ZERO
 }
+
+/**
+ * \brief Reduces biomass of an individual proportionally
+ * 
+ * Implement grazing for each individual. Also keep up with survivorship data.
+ * 
+ * \param ndv A pointer to the individual.
+ * \param proportionGrazing Value between 0 and 1. The proportion of biomass to remove.
+ * 
+ * \sideeffect ndv->relsize is adjusted.
+ * 
+ * \sa Species_Proportion_Grazing()
+ */
 void indiv_proportion_Grazing( IndivType *ndv, RealF proportionGrazing)
 {
-    /*======================================================*/
-    /* PURPOSE */
-    /* Implement grazing for each individual and adjust relative sizes of the
-     * RGroup and Species downward proportionally by amount of growth the 
-     * individual experienced this year. Also keep up with survivorship data.*/
-    /* HISTORY */
-    /* 1st Nov 2015- AT */
-    /* 14th Aug 2018 - CH */
-    /*------------------------------------------------------*/
-
 #define xF_DELTA (20*F_DELTA)
 #define xD_DELTA (20*D_DELTA)
 #define ZERO(x) \
@@ -283,16 +276,22 @@ void indiv_proportion_Grazing( IndivType *ndv, RealF proportionGrazing)
 #undef ZERO
 }
 
-void indiv_proportion_Recovery(IndivType *ndv, int killType, RealF proportionRecovery, RealF proportionKilled) {
-    /*======================================================*/
-    /* PURPOSE */
-    /* Recover individuals proportionally after fire and adjust relative sizes 
-     * of the RGroup and Species upward proportionally by the size of the indiv.
-     * Also keep up with survivorship data. */
-    /* HISTORY */
-    /* 1st Nov 2015- AT */
-    /*------------------------------------------------------*/
-
+/**
+ * \brief Recover some biomass proportionally after a disturbance event.
+ * 
+ * Recover individuals proportionally after fire.
+ * Also keep up with survivorship data. 
+ * 
+ * \param ndv Pointer to the individual.
+ * \param killType The MortalityType code of what killed the individual.
+ * \param proportionRecovery Value between 0 and 1. The proportion of biomass to recover.
+ * 
+ * \sideeffect ndv->relsize is modified.
+ * 
+ * \sa Species_Proportion_Recovery
+ */
+void indiv_proportion_Recovery(IndivType *ndv, int killType, RealF proportionRecovery, RealF proportionKilled) 
+{
 #define xF_DELTA (20*F_DELTA)
 #define xD_DELTA (20*D_DELTA)
 #define ZERO(x) \
@@ -333,19 +332,23 @@ void indiv_proportion_Recovery(IndivType *ndv, int killType, RealF proportionRec
 #undef ZERO
 }
 
-/**************************************************************/
-void indiv_Kill_Complete( IndivType *ndv, int killType) {
-/*======================================================*/
-/* PURPOSE */
-/* Remove individual and adjust relative sizes of the
- * RGroup and Species downward by the size of the indiv.
- * Also keep up with survivorship data.
-*/
-/* HISTORY */
-/* Chris Bennett @ LTER-CSU 6/15/2000            */
-
-/*------------------------------------------------------*/
-
+/**
+ * \brief Completely kill an individual.
+ * 
+ * Kills the individual, deallocates it, and removes it from the linked
+ * list of individuals stored in Species.
+ * 
+ * Initial programming by Chris Bennett @ LTER-CSU 6/15/2000.
+ * 
+ * \param ndv Pointer to the individual to kill.
+ * \param killType MortalityType code. This parameter is currently unused.
+ * 
+ * \sideeffect The Species[ndv->myspecies]->IndivHead linked list is updated.\n
+ *             The Species[ndv->myspecies]->est_count is updated.\n
+ *             The individual is deallocated.
+ */
+void indiv_Kill_Complete( IndivType *ndv, int killType) 
+{
   if( ndv->age > Species[ndv->myspecies]->max_age ) {
     LogError(logfp, LOGWARN, "%s dies older than max_age (%d > %d). Iter=%d, Year=%d\n",
                     Species[ndv->myspecies]->name,
@@ -360,21 +363,18 @@ void indiv_Kill_Complete( IndivType *ndv, int killType) {
 
 }
 
-/**************************************************************/
-void _delete (IndivType *ndv) {
-/*======================================================*/
-/* PURPOSE */
-/* Local routine to remove the data object of an individual and update
- * the number of individuals `Species[ndv->myspecies]->est_count`
- * Called from indiv_Kill_Complete().*/
-/* HISTORY */
-/* Chris Bennett @ LTER-CSU 6/15/2000
- *   a species' list of indivs is kept as a doubly linked list.
- *   although a singly linked list would work, I implemented
- *   the double just in case it might be useful in the future.
- *   as of 12/02 it hasn't been, but who knows? */
-
-/*------------------------------------------------------*/
+/**
+ * \brief Deletes an individual.
+ * 
+ * \param ndv A pointer to the individual.
+ * 
+ * \sideeffect Species[ndv->myspecies]->est_count is updated.\n
+ *             The Species[ndv->myspecies]->IndivHead linked list us updated.
+ * 
+ * \sa indiv_Kill_Complete() where this function is called.
+ */
+void _delete (IndivType *ndv) 
+{
   SppIndex sp;
   SpeciesType *s;
 
@@ -415,7 +415,6 @@ void _delete (IndivType *ndv) {
   Mem_Free(ndv);
 }
 
-/**********************************************************/
 void Indiv_SortSize( const byte sorttype,
                      const size_t n, IndivType **list) {
 /*======================================================*/
