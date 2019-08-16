@@ -45,13 +45,10 @@ void indiv_proportion_Grazing( IndivType *ndv, RealF proportionGrazing);
 /*********** Locally Used Function Declarations ************/
 /***********************************************************/
 static IndivType *_create ( void);
-
-//_delete function also called from ST_species.c
 void _delete (IndivType *ndv);
 
 /***********************************************************/
 /****************** Begin Function Code ********************/
-
 
 /**
  * \brief Add an individual to the Species->IndivHead linked list.
@@ -80,7 +77,12 @@ void _delete (IndivType *ndv);
  * indiv objects for normal access to the individuals. The
  * Head pointer is set to null in Species_New().
  * 
+ * Initial programming by Chris Bennett @ LTER-CSU 6/15/2000.
+ * 
  * \return TRUE
+ * 
+ * \sideeffect The new individual becomes the first individual in
+ *             the Species linked list.
  * 
  * \sa Species
  * \sa SppIndex
@@ -88,10 +90,6 @@ void _delete (IndivType *ndv);
  * \sa Indiv_Kill_Complete()
  */
 Bool indiv_New( SppIndex sp) {
-/* HISTORY */
-/* Chris Bennett @ LTER-CSU 6/15/2000            */
-
-
   IndivType *p;
   static int id=0;
 
@@ -415,19 +413,20 @@ void _delete (IndivType *ndv)
   Mem_Free(ndv);
 }
 
+/**
+ * \brief Sort a list of pointers to individuals according to the
+ *             size of the individuals.
+ * 
+ * This function is irrespective of species, age, etc.
+ * 
+ * \param sorttype indicates whether ascending or descending
+ * \param n number of individuals to be sorted
+ * \param list an array of n pointers to individuals to be sorted.
+ * 
+ * \sideeffect The list is returned sorted. 
+ */
 void Indiv_SortSize( const byte sorttype,
                      const size_t n, IndivType **list) {
-/*======================================================*/
-/* Sort a list of pointers to individuals according to the
- * size of the individuals irrespective of species, age, etc.
- * sorttype - indicates whether ascending or descending
- * n - number of individuals to be sorted
- * list[]  - an array of n pointers to individuals to be sorted.
- * the list is returned sorted. */
-/* HISTORY */
-/* Chris Bennett @ LTER-CSU 12/15/2000            */
-/*     8/2/01 - cwb - replaced shell sort with qsort(). */
-/*------------------------------------------------------*/
   int (*cmpfunc)(const void*, const void*);
 
   if ( n < 1) return;  /* shouldn't happen */
@@ -451,20 +450,19 @@ void Indiv_SortSize( const byte sorttype,
 }
 
 
-/**********************************************************/
-int Indiv_CompSize_A( const void *key1, const void *key2) {
-/*======================================================*/
-/* Comparison function for qsort, ascending order.
- * compare key1->relsize with key2->relsize.
- * if key1 < key2, return -1
- * if key1 == key2, return 0
- * if key1 > key2, return 1
+/**
+ * \brief Comparison function for qsort, ascending order
+ * 
+ * Initial programming by Chris Bennett @ LTER-CSU 8/2/01.
+ * 
+ * \param key1 Pointer to first IndivType to compare.
+ * \param key2 Pointer to first IndivType to compare.
+ * 
+ * \return -1 if key1 < key2
+ * \return 0 if key1 == key2
+ * \return 1 if key1 > key2
  */
-
-/* HISTORY */
-/* Chris Bennett @ LTER-CSU 8/2/01            */
-
-/*------------------------------------------------------*/
+int Indiv_CompSize_A( const void *key1, const void *key2) {
   int r =0;
   IndivType **p1=((IndivType **)(key1)),
             **p2=((IndivType **)(key2));
@@ -475,20 +473,19 @@ int Indiv_CompSize_A( const void *key1, const void *key2) {
   return r;
 }
 
-/**********************************************************/
-int Indiv_CompSize_D( const void *key1, const void *key2) {
-/*======================================================*/
-/* Comparison function for qsort, descending order.
- * compare key1->relsize with key2->relsize.
- * if key1 < key2, return 1
- * if key1 == key2, return 0
- * if key1 > key2, return -1
+/**
+ * \brief Comparison function for qsort, descending order
+ * 
+ * Initial programming by Chris Bennett @ LTER-CSU 8/2/01.
+ * 
+ * \param key1 Pointer to first IndivType to compare.
+ * \param key2 Pointer to first IndivType to compare.
+ * 
+ * \return 1 if key1 < key2
+ * \return 0 if key1 == key2
+ * \return -1 if key1 > key2
  */
-
-/* HISTORY */
-/* Chris Bennett @ LTER-CSU 8/2/01            */
-
-/*------------------------------------------------------*/
+int Indiv_CompSize_D( const void *key1, const void *key2) {
   int r =0;
   IndivType **p1=((IndivType **)(key1)),
             **p2=((IndivType **)(key2));
