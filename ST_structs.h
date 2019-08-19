@@ -181,7 +181,7 @@ struct resourcegroup_st {
         grazingfreq_startyr;/* start year for grazing frequency*/
   SppIndex *species; /*list of spp belonging to this grp*/
   RealF space,  /* input from table */
-        min_res_req,  /* input from table, rescaled if an rgroup is not established */
+        min_res_req,  /* input space from table, rescaled if one or more rgroups is not established */ 
         max_density,  /* number of mature plants per plot allowed */
         max_per_sqm,  /* density of mature plants in units of plants / m^2 */
         max_bmass,    /* sum of mature biomass for all species in group */

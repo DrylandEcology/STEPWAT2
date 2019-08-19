@@ -383,7 +383,6 @@ void rgroup_ResPartIndiv(void) {
                      * not assign extra */
                     if (GE(ndv->res_avail, ndv->res_required)) {
                         ndv->res_extra = 0.0;
-                        //printf("ndv->res_extra = %f\n", ndv->res_extra);
                     }
                     
                     /* Assign extra resource as the difference of what is required
@@ -680,14 +679,12 @@ void rgroup_Establish(void) {
 
     // If there is unused (or too much used) space we need to redistribute
     if (!EQ(used_space, 1.0)) {
-      //printf("\nYear %d: used_space = %f\n", Globals.currYear, used_space);
 
       ForEachGroup(rg) {
         g = RGroup[rg];
         /* Redistribute the unused (or too much used) space to all groups that
            are established */
         if (g->est_count > 0) {
-          //printf("%s before: %f -- ", g->name, g->min_res_req);
           g->min_res_req = g->min_res_req / used_space;
         }
       }

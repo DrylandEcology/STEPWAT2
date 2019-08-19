@@ -305,7 +305,6 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
     }
 
     TranspRemaining = sumTranspTotal - sumUsedByGroup;
-    //printf("Total = %f\tUsed = %f\tRemaining = %f\n", sumTranspTotal, sumUsedByGroup, TranspRemaining);
 
     /* ------------- Begin testing to see if additional transpiration is necessary ------------- */
 
@@ -388,9 +387,6 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
             transp_window.sum_of_sqrs += ssqr - transp_window.SoS_array[transp_window.oldest_index];
             // replace the sum of squares with what we just calculated
             transp_window.SoS_array[transp_window.oldest_index] =  ssqr;
-
-            //printf("Year %d: ratio = %f, mean = %f, sos = %f\n",Globals.currYear,
-               //transp_ratio+added_transp_ratio,transp_window.ratio_average, transp_window.sum_of_sqrs);
 
             /* Adds the additional transpiration to the remaining transpiration
              * so it can be distributed proportionally to the functional groups. */
