@@ -345,8 +345,6 @@ void grazing_EndOfYear( void){
 		IntU grazingyr =0;
 		g = RGroup[rg];
 
-		//printf("inside grazing_EndOfYear() year=%d, rgroupName=%s, grazingfreq_startyr=%d, grazingfreq=%d, proportionGrazing=%f startYear=%d \n",Globals->currYear,g->name,g->grazingfreq_startyr,g->grazingfrq,g->proportion_grazing, RGroup[rg]->startyr);
-
 		if (Globals->currYear < RGroup[rg]->startyr)
 		{
 			/* Grazing cannot occur for an RGroup[rg] until the year that RGroup[rg] is turned on */
@@ -381,8 +379,7 @@ void grazing_EndOfYear( void){
 				{
 					continue;
 				}
-				//printf( "year=%d calling Species_Proportion_Grazing()  rgroupName=%s, est_count =%d,grazingfreq_startyr=%d, grazingfreq=%d, proportionGrazing=%f \n",Globals->currYear,g->name,RGroup[rg]->est_count,g->grazingfreq_startyr,g->grazingfrq,g->proportion_grazing);
-				
+        
 				/* Remove plant biomass to implement grazing using the proportion_grazing specified in inputs */
 				Species_Proportion_Grazing(RGroup[rg]->est_spp[i],RGroup[rg]->proportion_grazing );
 			}

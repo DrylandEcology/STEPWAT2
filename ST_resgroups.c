@@ -651,7 +651,6 @@ void rgroup_Establish(void) {
 
                 /* Establishment for species that belong to annual functional groups*/
                 if (Species[sp]->max_age == 1) {
-                    //printf("Globals->currYear = %hu, call to _add_annuals sp=%d Species[sp]->lastyear_relsize : %.5f \n", Globals->currYear, sp, Species[sp]->lastyear_relsize);
                     num_est = _add_annuals(rg, sp, Species[sp]->lastyear_relsize);
                     //  printf("g->seedbank annuals=%d \n",g->seedbank);
                 }
@@ -662,9 +661,6 @@ void rgroup_Establish(void) {
                 }
 
                 if (num_est) {
-                    /* printf("%d %d %d %d\n",
-                     Globals->currIter, Globals->currYear, sp, num_est); */
-
                     Species_Add_Indiv(sp, num_est);
                     species_Update_Estabs(sp, num_est);
                 }

@@ -141,7 +141,7 @@ static void _update_transp_coeff(void) {
 
             /*printf("* lyr=%d, group=%s(%d), type=%d, tl=%d, rootmax=%f, relsize2=%f, trco=%f\n",
               l, RGroup[g]->name, g, RGroup[g]->veg_prod_type, getNTranspLayers(RGroup[g]->veg_prod_type),
-              SXWResources->_roots_max[Ilg(l, g)], RGroup[g]->relsize, y->transp_coeff[SW_SHRUB]);
+              SXWResources->_roots_max[Ilg(l, g)], getRGroupRelsize(g), y->transp_coeff[SW_SHRUB]);
              */
         }
         sum[SW_SHRUB] += y->transp_coeff[SW_SHRUB];
