@@ -93,11 +93,6 @@ void _sxw_sw_setup (RealF sizes[]) {
       v->veg[k].lai_conv_daily[doy] = 0.;
     }
   }
-
-  /* We no longer need to call `SW_VPD_init` since SOILWAT2 v3.5.0. SOILWAT2
-     calls `SW_VPD_init` at the beginning of each year (for dynamic CO2-effects)
-  */
-  // SW_VPD_init();
 }
 
 void _sxw_sw_run(void) {
