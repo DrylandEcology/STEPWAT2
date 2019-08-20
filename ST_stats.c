@@ -118,10 +118,15 @@ static RealF _get_gridcell_std( struct accumulators_grid_cell_st *p);
 static void _make_header( char *buf);
 static void _make_header_with_std( char *buf);
 
-/* I'm making this a macro because it gets called a lot, but
- * note that the syntax checker is obviated, so make sure
+/** \brief A macro for collecting statistics.
+ * 
+ * \param p is a pointer to the \ref accumulators_st which is collecting the data.
+ * \param v is a double which will be collected.
+ * 
+ * Note that the syntax checker is obviated, so make sure
  * you follow the this prototype:
- * static void _collect_add(struct accumulators_st *p, double v) */
+ * static void _collect_add(struct accumulators_st *p, double v).
+ */
 #define _collect_add(p, v) {					\
   (p)->nobs++;							\
   RealF old_ave = (p)->ave;					\
@@ -130,8 +135,13 @@ static void _make_header_with_std( char *buf);
   (p)->sd = final_running_sd((p)->nobs, (p)->sum_dif_sqr);	\
 }
 
-// quick macro to make life easier in the load/save accumulators functions... it just copies the data of p into v
-// static void _copy_over(struct accumulators_st *p, struct accumulators_st *v)
+/** \brief A macro that copies the data of p into v.
+ * 
+ * \param p is a pointer to the \ref accumulators_st to copy from.
+ * \param v is a pointer to the \ref accumulators_st to copy to.
+ * 
+ * The correct usage is _copy_over(struct accumulators_st *p, struct accumulators_st *v).
+ */
 #define _copy_over(p, v) { \
 	(p)->ave = (v)->ave; \
 	(p)->sum_dif_sqr = (v)->sum_dif_sqr; \
@@ -146,7 +156,17 @@ static Bool firsttime = TRUE;
 /*              BEGIN FUNCTIONS                            */
 /***********************************************************/
 
-/***********************************************************/
+/**
+ * \brief Collects the requested statistics.
+ * 
+ * \param year is the year you are collecting. year should be base 1.
+ * 
+ * Statistics are collected for every metric specified in bmassflags.in
+ * and mortflags.in.
+ * 
+ * \sa Stat_Output() which is where the collected statistics are printed
+ *     to CSV files.
+ */
 void stat_Collect( Int year ) {
 /* fill data structures with samples to be
    computed later in Stat_Output().
@@ -221,7 +241,15 @@ void stat_Collect( Int year ) {
 }
 
 
-/***********************************************************/
+/**
+ * \brief initialize the statistics accumulators.
+ * 
+ * The function will allocate the accumulators. Note that this function only has to be
+ * called once per simulation.
+ * 
+ * \sideeffect Accumulators are allocated memory based on which statistics are requested
+ *             in bmassflags.in and mortflags.in.
+ */
 static void _init( void) {
 /* must be called after model is initialized */
   SppIndex sp;
@@ -789,14 +817,17 @@ void stat_free_mem( void ) {
 
 }
 
-/***********************************************************/
+/**
+ * \brief Collects mortality statistics across iterations for all entries in \ref RGroup.
+ * 
+ * Mortality statistics are accumulated in species_Update_Kills(). stat_Collect_GMort should 
+ * be called after every iteration to add the iteration to the simulation statistics.
+ * 
+ * \sideeffect \ref _Gmort will be modified according to the last iteration's mortality stats.
+ * 
+ * \sa species_Update_Kills().
+ */
 void stat_Collect_GMort ( void ) {
-/* accumulated for the entire model run within
-   Species_Update_Kills(), then collected
-   here to compare among iterations.
-
-   5/20/01
-*/
     IntS rg, age;
 
     ForEachGroup(rg) {
@@ -810,15 +841,17 @@ void stat_Collect_GMort ( void ) {
 
 }
 
-/***********************************************************/
+/**
+ * \brief Collects mortality statistics across iterations for all entries in \ref Species.
+ * 
+ * Mortality statistics are accumulated in species_Update_Kills(). stat_Collect_SMort should 
+ * be called after every iteration to add the iteration to the simulation statistics.
+ * 
+ * \sideeffect \ref _Smort will be modified according to the last iteration's mortality stats.
+ * 
+ * \sa species_Update_Kills().
+ */
 void stat_Collect_SMort ( void ) {
-/* accumulated for the entire model run within
-   Species_Update_Kills(), then collected
-   here to compare among iterations.
-
-   5/20/01
-
-*/
    SppIndex sp;
    IntS age;
 
@@ -833,7 +866,12 @@ void stat_Collect_SMort ( void ) {
 
 }
 
-/***********************************************************/
+/**
+ * \brief Prints mortality statistics to the file specified in Globals.mort.fp_year.
+ * 
+ * This function Will create the header and all entries in the mortality output
+ * file. The statistics output are those specified in mortflags.in.
+ */
 void stat_Output_YrMorts( void ) {
 
   FILE *f = Globals.mort.fp_year;
