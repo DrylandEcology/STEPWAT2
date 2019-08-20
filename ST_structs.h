@@ -46,7 +46,7 @@
  * \brief Holds information on perenial plant individuals. 
  * 
  * An individual is one plant specimen. Most of the code associated with this
- * struct is found in ST_indivs.c.
+ * struct is found in \ref ST_indivs.c.
  * 
  * \sa indiv_ann_st
  */
@@ -83,7 +83,7 @@ struct indiv_st {
        res_avail,
        /** \brief Resources applied to superficial growth. */
        res_extra,
-       /** \brief Ratio of resources required to amt available. */
+       /** \brief Ratio of resources required to amount available. */
        pr,
        /** \brief Actual growth rate .
         * \sa rgroup_Grow() */
@@ -94,10 +94,10 @@ struct indiv_st {
        /** \brief set when killed; 0 if not clonal.
         * \sa indiv_Kill_Partial() */
        prob_veggrow;
-       /** \brief Allows for a doubly-linked list of individuals. Implemented in Species.
+       /** \brief Allows for a doubly-linked list of individuals. Implemented in \ref Species.
         * \sa Species */
   struct indiv_st *Next, 
-       /** \brief Allows for a doubly-linked list of individuals. Implemented in Species.
+       /** \brief Allows for a doubly-linked list of individuals. Implemented in \ref Species.
         * \sa Species */
                   *Prev;
 };
