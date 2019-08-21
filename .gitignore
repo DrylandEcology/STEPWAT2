@@ -81,4 +81,5 @@ cmake-build-debug/*
 CMakeLists.txt
 
 # Doxygen output
-Documentation/*
+Documentation/html
+Documentation/latex
