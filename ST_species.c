@@ -57,15 +57,20 @@ static SpeciesType *_create(void);
 /****************** Begin Function Code ********************/
 /***********************************************************/
 
+/**
+ * \brief Calculates the number of individuals of a species to establish.
+ * 
+ * This function stochastically determines the number of seedlings based on
+ * The maximum number of seedlings the given species can produce.
+ * 
+ * Initial programming by Chris Bennett @ LTER-CSU 6/15/2000.
+ * 
+ * \param sp the index in \ref Species of the species to establish
+ * 
+ * \return A number of seedlings between 0 and \ref Species[sp]->max_seed_estab
+ */
 IntS Species_NumEstablish(SppIndex sp)
 {
-	/*======================================================*/
-	/* PURPOSE */
-	/* return a number: 0 or more seedlings that establish */
-	/* HISTORY */
-	/* Chris Bennett @ LTER-CSU 6/15/2000 */
-	/*------------------------------------------------------*/
-
 	//special conditions if we're using the grid and seed dispersal options (as long as its not during the spinup, because we dont use seed dispersal during spinup)
 	if (UseGrid && UseSeedDispersal && !DuringSpinup) {
 		if (Species[sp]->sd_sgerm)
@@ -95,33 +100,33 @@ IntS Species_NumEstablish(SppIndex sp)
 	}
 }
 
-/**************************************************************/
+/**
+ * \brief Returns the biomass in grams of a given species.
+ * 
+ * \param sp is the index in \ref Species of the species.
+ * 
+ * \return The biomass of the species. The value will always be
+ *         greater than or equal to 0.
+ */
 RealF Species_GetBiomass(SppIndex sp) {
-	/*======================================================*/
-	/* PURPOSE */
-    /* Retrieve species biomass */
-	/* HISTORY */
-	/* Chris Bennett @ LTER-CSU 6/15/2000            */
-	/*------------------------------------------------------*/
-	
 	if (Species[sp]->est_count == 0) return 0.0;
 	return (getSpeciesRelsize(sp) * Species[sp]->mature_biomass);
 }
 
-/**************************************************************/
+/**
+ * \brief Adds a number of new individuals to the list of individuals of
+ *        the given species.
+ * 
+ * Initial programming by Chris Bennett @ LTER-CSU 6/15/2000.
+ * 
+ * \param sp is the index in \ref Species of the species to add individuals to.
+ * \param new_indivs is the number of individuals to add.
+ * 
+ * \sideeffect Adds \Species to \RGroup if this species had been dropped previously.\n
+ *             Modifies the linked list of individuals stored in \ref Species[ \ref sp ]
+ */
 void Species_Add_Indiv(SppIndex sp, Int new_indivs)
 {
-	/*======================================================*/
-	/* PURPOSE */
-	/* Add n=new_indivs individuals to the established list for
-	 * species=sp.  add the species to the established list for
-	 * the species group if needed and update the relsizes.   */
-
-	/* HISTORY */
-	/* Chris Bennett @ LTER-CSU 6/15/2000            */
-
-	/*------------------------------------------------------*/
-
 	Int i;
 	GrpIndex rg;
 	RealF newsize = 0.0; /*accumulate total relsize for new indivs*/
@@ -152,24 +157,21 @@ void Species_Add_Indiv(SppIndex sp, Int new_indivs)
 	//printf("Inside Species_Add_Indiv() calculated total newsize=%.5f \n ",newsize);
 }
 
-/**************************************************************/
+/**
+ * \brief Accumulates the frequencies of kills by age for a given species.
+ * 
+ * Note that age should be entered in base 1.
+ * 
+ * Initial programming by Chris Bennett @ LTER-CSU 5/18/2001.
+ * 
+ * \param sp is the index in \ref Species of the requested species.
+ * \param age is the age for which to update the statistics.
+ * 
+ * \sideeffect \ref Species[sp]->kills[age] is updated.\n
+ *             \ref RGroup[Species[sp]->res_grp]->kills[age] is updated.
+ */
 void species_Update_Kills(SppIndex sp, IntS age)
 {
-	/*======================================================*/
-	/* PURPOSE */
-	/* accumulate frequencies of kills by age for survivorship */
-	/* 'kills' is a pointer to a dynamically sized array created
-	 * in params_check_species().
-	 *
-	 * Important note: age is base1 so it must be decremented
-	 * for the base0 arrays.
-	 */
-
-	/* HISTORY */
-	/* Chris Bennett @ LTER-CSU 5/18/2001            */
-
-	/*------------------------------------------------------*/
-
 	if (!isnull(Species[sp]->kills))
 	{
 		age--;
@@ -180,29 +182,30 @@ void species_Update_Kills(SppIndex sp, IntS age)
 	}
 }
 
-/**************************************************************/
+/**
+ * \brief Accumulate a number of individuals established in the given species.
+ * 
+ * Initial programming by Chris Bennett @ LTER-CSU 5/21/2001.
+ * 
+ * \param sp is the index in \ref Species of the species ot update.
+ * \param num is the number of individuals established since the last time this function
+ *            was called.
+ * 
+ * \sideeffect \ref Species and \ref RGroup estabs are updated.
+ */
 void species_Update_Estabs(SppIndex sp, IntS num)
 {
-	/*======================================================*/
-	/* PURPOSE */
-	/* accumulate number of indivs established by species */
-	/* for fecundity rates.                               */
-
-	/* HISTORY */
-	/* Chris Bennett @ LTER-CSU 5/21/2001            */
-
-	/*------------------------------------------------------*/
-
 	Species[sp]->estabs += num;
 	RGroup[Species[sp]->res_grp]->estabs += num;
 }
 
-/** \brief Returns the relsize of Species[sp]
+/** 
+ * \brief Returns the relsize of the requested species.
  * 
- * \param sp the index of the Species array that you want to measure.
+ * \param sp the index in the \ref Species array that you want to measure.
  * 
  * \return RealF greater than of equal to 0 representing the summed
- *         relsizes of all individuals in Species[sp]
+ *         relsizes of all individuals in \ref Species[sp]
  * 
  * \sa getRGroupRelsize()
  */
@@ -224,35 +227,20 @@ RealF getSpeciesRelsize(SppIndex sp)
 }
 
 /**
- * \brief Create a new species and integrate it into Species.
+ * \brief Create a new species and integrate it into \ref Species.
  * 
- * \return index of the new species inside Species.
+ * Initial programming by Chris Bennett @ LTER-CSU 6/15/2000.
  * 
- * Allocates memory of the new species and integrates it into
- * Species.
+ * \return index of the new species inside \ref Species.
+ * 
+ * \sideeffect Allocates memory for the new species and integrates it into
+ * 			   \ref Species.
  * 
  * \sa Species
  * \sa _create()
  */
 SppIndex species_New(void)
 {
-	/*======================================================*/
-	/* PURPOSE */
-	/* Create a new species object and give it the next
-	 * consecutive identifier.
-	 *
-	 * Return the index of the new object.
-	 *
-	 * Initialization is performed in parm_Species_Init
-	 * but the list of individuals in the species is
-	 * maintained by a linked list which is of course
-	 * empty when the species is first created.  See the
-	 * Indiv module for details. */
-
-	 /* HISTORY */
-	/* Chris Bennett @ LTER-CSU 6/15/2000            */
-
-	/*------------------------------------------------------*/
 	SppIndex i = (SppIndex) Globals.sppCount;
 
 	if (++Globals.sppCount > MAX_SPECIES)
@@ -268,43 +256,38 @@ SppIndex species_New(void)
 }
 
 /**
- * \brief Allocates memory for a new SpeciesType.
+ * \brief Allocates memory for a new \ref SpeciesType.
  * 
- * \return pointer to the newely allocated struct.
+ * Initial programming by Chris Bennett @ LTER-CSU 6/15/2000.
  * 
- * Used in species_New.
+ * \return pointer to the newly allocated struct.
  * 
- * \sa species_New()
+ * Called from \ref species_New().
+ * 
+ * \sideeffect A \ref SpeciesType struct is allocated.
  */
 static SpeciesType *_create(void)
 {
-	/*======================================================*/
-	/* PURPOSE */
-
-	/* HISTORY */
-	/* Chris Bennett @ LTER-CSU 6/15/2000            */
-
-	/*------------------------------------------------------*/
-
 	SpeciesType *p;
 
 	p = (SpeciesType *) Mem_Calloc(1, sizeof(SpeciesType), "Species_Create");
         p->name = Mem_Calloc(Globals.max_speciesnamelen + 1, sizeof(char), "Species_Create");
 
 	return (p);
-
 }
 
-/**************************************************************/
+/**
+ * \brief Converts a species name into it's location in \ref Species.
+ * 
+ * Initial programming by Chris Bennett @ LTER-CSU 6/15/2000.
+ * 
+ * \param name is the name of the species.
+ * 
+ * \return The index in \ref Species of the species with this name. 
+ * \return -1 if the given name is not the name of any species.
+ */
 SppIndex Species_Name2Index(const char *name)
 {
-	/*======================================================*/
-	/* PURPOSE */
-
-	/* HISTORY */
-	/* Chris Bennett @ LTER-CSU 6/15/2000            */
-
-	/*------------------------------------------------------*/
 	Int i, sp = -1;
 	ForEachSpecies(i)
 	{
@@ -317,15 +300,21 @@ SppIndex Species_Name2Index(const char *name)
 	return ((SppIndex) sp);
 }
 
+/**
+ * \brief Kills all individuals in the gievn species.
+ * 
+ * This is meant to be called for annual species only.
+ * 
+ * \param sp the index in \ref Species of the requested annual species.
+ * \param killType is a deprecated parameter that does nothing.
+ * 
+ * \sideeffect The entire linked list of individuals is deleted.\n
+ *             The species is dropped from the RGroup.
+ * 
+ * \sa rgroup_DropSpecies() which is called from this function.
+ */
 void Species_Annual_Kill(const SppIndex sp, int killType)
 {
-	/*======================================================*/
-	/* PURPOSE */
-	/* To kill all the annual species and their individuals */
-	/* HISTORY */
-	/* Added - Nov 4th 2015 -AT */
-	/*------------------------------------------------------*/
-
 	IndivType *p1 = Species[sp]->IndvHead, *t1;
 	while (p1)
 	{
@@ -336,24 +325,24 @@ void Species_Annual_Kill(const SppIndex sp, int killType)
 	rgroup_DropSpecies(sp);
 }
 
+/**
+ * \brief Kill some proportion of the given species.
+ * 
+ * Initial programming by Chris Bennett @ LTER-CSU 6/15/2000.
+ * 
+ * This proportion is removed from every individual in the species. 
+ * 
+ * \param sp is the index in \ref Species of the individual.
+ * \param killType is deprecated and does nothing.
+ * \param proportionKilled is a value between 0 and 1 denoting the proportion of
+ *                         relative size to remove.
+ * 
+ * \sideeffect All individuals in the \ref Species[sp]->IndivHead linked list 
+ *             will be reduced in size.
+ */
 void Species_Proportion_Kill(const SppIndex sp, int killType,
 		RealF proportionKilled)
 {
-	/*======================================================*/
-	/* PURPOSE */
-	/* Proportion Killed all established individuals in a species.
-	 *
-	 * Note the special loop construct.  we have to save the
-	 * pointer to next prior to killing because the object
-	 * is deleted. */
-
-	 /* HISTORY */
-	/* Chris Bennett @ LTER-CSU 11/15/2000            */
-	/*   8/3/01 - cwb - added linked list processing.
-	 *   09/23/15 -AT  -Added proportionKilled for all even for annual
-	 *   now deletion of species and individual is hold till recovery function */
-	/*------------------------------------------------------*/
-
 	IndivType *p = Species[sp]->IndvHead, *t;
 	//kill  all the species individuals  proportionally or adjust their real size irrespective of being annual or perennial, both will have this effect
 	while (p)

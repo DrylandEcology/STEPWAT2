@@ -869,7 +869,7 @@ void stat_Collect_SMort ( void ) {
 /**
  * \brief Prints mortality statistics to the file specified in Globals.mort.fp_year.
  * 
- * This function Will create the header and all entries in the mortality output
+ * This function Will create the header and all entries in the yearly mortality output
  * file. The statistics output are those specified in mortflags.in.
  */
 void stat_Output_YrMorts( void ) {
@@ -929,7 +929,12 @@ void stat_Output_YrMorts( void ) {
   CloseFile(&f);
 }
 
-/***********************************************************/
+/**
+ * \brief Outputs all mortality statistics.
+ * 
+ * The file they are printed to is denoted by \ref Parm_name(F_MortAvg).
+ * The statistics printed are those denoted in the mortflags.in file.
+ */
 void stat_Output_AllMorts( void) {
   FILE *f;
   IntS age;
@@ -1227,7 +1232,12 @@ void stat_Output_AllCellAvgBmass(const char * filename)
 
 
 
-/***********************************************************/
+/**
+ * \brief Outputs all requested biomas statistics to a CSV file.
+ * 
+ * The file name is taken from \ref Parm_name(F_BMassAvg).
+ * The statistics printed are those specified in bmassflags.in.
+ */
 void stat_Output_AllBmass(void) {
 
   char buf[2048], tbuf[80], sep = BmassFlags.sep;
@@ -1383,19 +1393,31 @@ void stat_Output_Seed_Dispersal(const char * filename, const char sep, Bool make
 }
 
 
-/***********************************************************/
+/**
+ * \brief returns the average value of an accumulator.
+ * 
+ * This function works, but is deprecated. You can reference the
+ * average directly with p->ave.
+ * 
+ * \param p is a pointer to the \ref accumulators_st.
+ */
 static RealF _get_avg( struct accumulators_st *p) 
 {
 	return p->ave;
 }
 
-/***********************************************************/
+/**
+ * \brief returns the standard deviation of an accumulator.
+ * 
+ * This function works, but is deprecated. You can reference the
+ * standard deviation directly with p->sd.
+ * 
+ * \param p is a pointer to the \ref accumulators_st.
+ */
 static RealF _get_std(struct accumulators_st *p)
 {
 	return p->sd;
 }
-
-
 
 static void copyStruct(RealF val,RealF std_val,struct accumulators_grid_cell_st *p)
 {
@@ -1432,7 +1454,15 @@ static RealF _get_gridcell_std(struct accumulators_grid_cell_st *p)
 }
 
 
-/***********************************************************/
+/**
+ * \brief prints the header for biomass statistics with standard deviations.
+ * 
+ * This function is called when a header is requested in bmassflags.in.
+ * stat_Output_AllBmass() takes care of calling this function when
+ * requested.
+ * 
+ * \sa _make_header()
+ */
 static void _make_header_with_std( char *buf) {
 
   char **fields;
@@ -1517,7 +1547,15 @@ static void _make_header_with_std( char *buf) {
     Mem_Free(fields);
 }
 
-/***********************************************************/
+/**
+ * \brief prints the header for biomass statistics without standard deviations.
+ * 
+ * This function is called when a header is requested in bmassflags.in.
+ * stat_Output_AllBmass() takes care of calling this function when
+ * requested.
+ * 
+ * \sa _make_header_with_std()
+ */
 static void _make_header( char *buf) {
 
   char **fields;
