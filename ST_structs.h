@@ -90,7 +90,7 @@ struct species_st {
         estabs,        /* number of individuals established in iter */
         *seedprod,    /* annuals: array of previous years' seed production (size = viable_yrs)*/
          seedbank,
-         pseed;
+         pseed;       /* average number of seeds produced by annual species per 1g of biomass, per 1m^2 and per year (internally re-calculated as seeds per 1 g biomass per plot and per year) */
   RealF lastyear_relsize,    /* relsize from the previous year, used for annual establishment */
         extragrowth,   /* amt of superfluous growth from extra resources */
 	received_prob,	//the chance that this species received seeds this year... only applicable if using seed dispersal and gridded option
@@ -180,9 +180,10 @@ struct resourcegroup_st {
 		grazingfrq,     /* grazing effect on group at this frequency: <1=prob, >1=# years */
         grazingfreq_startyr;/* start year for grazing frequency*/
   SppIndex *species; /*list of spp belonging to this grp*/
-  RealF min_res_req,  /* input from table */
+  RealF space,  /* input from table */
+        min_res_req,  /* input space from table, rescaled if one or more rgroups is not established */ 
         max_density,  /* number of mature plants per plot allowed */
-        max_per_sqm,  /* convert density and plotsize to max plants/m^2 */
+        max_per_sqm,  /* density of mature plants in units of plants / m^2 */
         max_bmass,    /* sum of mature biomass for all species in group */
         killfreq,       /* kill group at this frequency: <1=prob, >1=# years */
         ignition,       /* cheatgrass biomass (g/m2) that triggers potential ignition of a wildfire */
