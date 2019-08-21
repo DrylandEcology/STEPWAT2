@@ -101,10 +101,6 @@ void rgroup_PartResources(void) {
             LogError(logfp, LOGWARN, "RGroup %s : res_avail is Zero and res_required > 0", g->name);
         }
 
-        /* Calculate PR at the functional group level: resources required/resources available */
-        g->pr = ZRO(g->res_avail) ? 0. : g->res_required / g->res_avail;
-        //printf("g->pr = %f\n,Group = %s \n",RGroup[rg]->name,  g->pr);
-
         /* If relsize>0 and individuals are established, reset noplants from TRUE to FALSE */
         if (GT(getRGroupRelsize(rg), 0.))
             noplants = FALSE;
@@ -258,7 +254,7 @@ static void _res_part_extra(RealF extra, RealF size[]) {
             continue;
 
         /* Check to avoid dividing by 0 */
-        if (sum_size == 0.)
+        if (ZRO(sum_size))
             req_prop = 0.;
 
         /* Calculate proportional biomass of each group out of the total biomass
@@ -268,9 +264,10 @@ static void _res_part_extra(RealF extra, RealF size[]) {
 
         /* If the group can use extra resources, divide out extra based on
          * proportional biomass */
-        if (g->use_extra_res)
+        if (g->use_extra_res) {
             g->res_extra = req_prop * extra;
-
+            g->res_avail += g->res_extra;
+        }
         /* If the group can't use extra resources, set res_extra to 0 */
         else
             g->res_extra = 0.;
@@ -385,9 +382,8 @@ void rgroup_ResPartIndiv(void) {
 
                     /* If individuals already have the resources they require do 
                      * not assign extra */
-                    if (ndv->res_avail == ndv->res_required) {
+                    if (GE(ndv->res_avail, ndv->res_required)) {
                         ndv->res_extra = 0.0;
-                        //printf("ndv->res_extra = %f\n", ndv->res_extra);
                     }
                     
                     /* Assign extra resource as the difference of what is required
@@ -472,8 +468,7 @@ void rgroup_Grow(void) {
                 continue;
 
             /* Modify growth rate by temperature calculated in Env_Generate() */
-            if (s->tempclass != NoSeason)
-                tgmod = Env->temp_reduction[s->tempclass];
+            tgmod = (s->tempclass == NoSeason) ? 1. : Env->temp_reduction[s->tempclass];
 
             /* Now increase size of the individual plants of current species */
             ForEachIndiv(ndv, s) {
@@ -617,6 +612,8 @@ void rgroup_Establish(void) {
     /*------------------------------------------------------*/
 
     IntS i, num_est; /* number of individuals of sp. that establish*/
+    RealF
+      used_space = 0; /* sums up all of the space that is currently used */
     GrpIndex rg;
     SppIndex sp;
     GroupType *g;
@@ -635,6 +632,7 @@ void rgroup_Establish(void) {
             continue;
 
         g->regen_ok = TRUE; /* default */
+        g->min_res_req = g->space; /* reset min_res_req, if it was modified last year */
 
         if (Globals->currYear < RGroup[rg]->startyr) {
             g->regen_ok = FALSE;
@@ -652,7 +650,6 @@ void rgroup_Establish(void) {
                 /* Establishment for species that belong to annual functional groups*/
                 if (Species[sp]->max_age == 1) {
                     num_est = _add_annuals(rg, sp, Species[sp]->lastyear_relsize);
-                    //  printf("g->seedbank annuals=%d \n",g->seedbank);
                 }
 
                     /* Establishment for species that belong to perennial functional groups*/
@@ -667,8 +664,30 @@ void rgroup_Establish(void) {
 
             } /* end ForEachGroupSpp() */
         }
+
+        // sum up min_res_req in case we need to redistribute min_res_req
+        if (g->est_count > 0) {
+            used_space += g->min_res_req;
+        } else {
+            // this group needs no resources because it is not established.
+            g->min_res_req = 0;
+        }
     } /* end ForEachGroup() */
+
+    // If there is unused (or too much used) space we need to redistribute
+    if (!EQ(used_space, 1.0)) {
+
+      ForEachGroup(rg) {
+        g = RGroup[rg];
+        /* Redistribute the unused (or too much used) space to all groups that
+           are established */
+        if (g->est_count > 0) {
+          g->min_res_req = g->min_res_req / used_space;
+        }
+      }
+    }
 }
+
 /***********************************************************/
 void rgroup_IncrAges(void)
 {
@@ -714,17 +733,18 @@ void rgroup_IncrAges(void)
 /* Sums relsize for all individuals in all species in RGroup rg.
    param rg = RGroup index.
    Return: RGroup relsize. */
+
 RealF getRGroupRelsize(GrpIndex rg){
     Int n;
 	SppIndex sp;
 	double sum = 0.0;
 
     ForEachEstSpp( sp, rg, n){
-		sum += getSpeciesRelsize(sp);
+	sum += getSpeciesRelsize(sp);
     }
 
     if(RGroup[rg]->est_count > 0){
-        return (RealF) sum / (RealF) RGroup[rg]->est_count;
+        return (RealF) sum;
     } else {
         return 0;
     }
