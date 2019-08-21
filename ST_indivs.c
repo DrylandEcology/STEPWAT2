@@ -219,7 +219,6 @@ void indiv_proportion_Kill(IndivType *ndv, int killType, RealF proportKilled)
 	//	insertIndivKill(ndv->id, killType);
 
     //kill indiv Proportionally or adjust their real size irrespective of being annual or perennial, both will have this effect
-	species_Update_Kills(ndv->myspecies, ndv->age);
 	// saving killing year real size here that is going to use for calculating next year proportional recovery
 	ndv->prv_yr_relsize = ndv->relsize;
 
@@ -232,6 +231,8 @@ void indiv_proportion_Kill(IndivType *ndv, int killType, RealF proportKilled)
 	if (ZERO(ndv->relsize) || LT(ndv->relsize, 0.0))
 	{
 		ndv->relsize =0.0;
+		// increase mortality count only if relsize has become zero due to fire
+		species_Update_Kills(ndv->myspecies, ndv->age);
 	}
 
 	#undef xF_DELTA

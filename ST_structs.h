@@ -164,8 +164,8 @@ struct species_st {
       /** \brief not sure what this does yet.
        * \sa ST_seedDispersal.c */
          seedbank,
-      /** \brief not sure what this does yet.
-       * \sa ST_seedDispersal.c */
+      /** \brief Average number of seeds produced by annual species per 1g of biomass, per 1m^2 and per year.
+       * internally re-calculated as seeds per 1 g biomass per plot and per year. */
          pseed;
       /** \brief relsize from the previous year, used for annual establishment. 
        * \sa rgroup_Establish() */
@@ -291,7 +291,7 @@ struct resourcegroup_st {
   IntUS *kills,
       /** \brief Total indivs in group established during current iteration. */
         estabs,
-      /** \brief Treated as a Bool. If TRUE kill the group this year.
+      /** \brief If killyr equals the current year there will be a fire.
        * \sa killfreq
        * \sa mort_EndOfYear() */
         killyr,
@@ -351,21 +351,22 @@ struct resourcegroup_st {
        * however, the inputs get translated by get_SW2_veg_index() to SOILWAT2 values immediately upon reading the inputs. 
        * \sa SW_Defines.h */
         veg_prod_type,
-      /** \brief Perform grazing on this group at this frequency. */
-		    grazingfrq,
       /** \brief Start year for grazing frequency.
        * \sa grazingfrq */
         grazingfreq_startyr;
       /** \brief Array of species indexes belonging to this group.
        * \sa Species */
   SppIndex *species;
-      /** \brief Minimum resources required by this group, defined in inputs. */
-  RealF min_res_req,
+      /** \brief Input from table. */
+  RealF space,
+      /** \brief input space from table, rescaled if one or more rgroups is not established. */ 
+        min_res_req,
+      /** \brief density of mature plants in units of plants / m^2 */
+        max_per_sqm,
+      /** \brief Perform grazing on this group at this frequency. */
+		    grazingfrq,
       /** \brief Number of mature plants allowed per plot. */
         max_density,
-      /** \brief Max plants per meter squared.
-       * \sa max_density */
-        max_per_sqm,
       /** \brief Max biomass of group. */
         max_bmass,
       /** \brief Kill group at this frequency.
