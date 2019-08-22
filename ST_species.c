@@ -1,19 +1,22 @@
-/********************************************************/
-/********************************************************/
-/*  Source file: species.c
- *  Type: module
- *  Application: STEPPE - plant community dynamics simulator
- *  Purpose: Read / write and otherwise manage the
- *           site specific information.  See also the
- *           Layer module. */
- /*  History:
-  *     (6/15/2000) -- INITIAL CODING - cwb */
- /********************************************************/
-/********************************************************/
-
-/* =================================================== */
-/*                INCLUDES / DEFINES                   */
-/* --------------------------------------------------- */
+/**
+ * \file ST_species.c
+ * \brief Contains function definitions for all species-specific functions.
+ * 
+ * This file modifies the \ref Species global variable and all of it's fields
+ * including the linked list of [IndivTypes](\ref IndivType).
+ * 
+ * For the most part these functions will be used by their resgroup counterparts
+ * in \ref ST_resgroup.c. There very few times were we would want to call these 
+ * functions from \ref main().
+ * 
+ * \author
+ *     Kyle Palmquist\n
+ *     Chris Bennett\n
+ *     Chandler Haukap\n
+ *     Freddy Pierson
+ * 
+ * \date 22 August 2019
+ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -353,17 +356,29 @@ void Species_Proportion_Kill(const SppIndex sp, int killType,
 	}
 }
 
+/**
+ * \brief Performs grazing on a given species at a given proportion.
+ * 
+ * This function will perform grazing on every individual in the given species.
+ * It will also graze the extra (superfluous) growth stored at the species level.
+ * 
+ * Initial programming by AT on 1/11/15.
+ * Extra growth grazing added by Chandler Haukap 14/8/18.
+ * 
+ * \param sp is the index in \ref Species of the species.
+ * \param proportionGrazing is the proportion of relative size to remove. Value
+ *                          between 0 and 1.
+ * 
+ * \sideeffect All individuals in the given species' relsizes will be reduced
+ *             proportionally.\n
+ *             \ref Species[sp]->relsize will be reduced by the same proportion.
+ * 
+ * \sa indiv_proportion_Grazing() which is the function this function calls to 
+ *                                perform grazing on each individual.
+ * 
+ */
 void Species_Proportion_Grazing(const SppIndex sp, RealF proportionGrazing)
 {
-	/*======================================================*/
-	/* PURPOSE */
-	/* Proportion Grazing on all individuals and on the extra growth that 
-         * resulted from extra resources this year,stored in Species->extragrowth. */
-	 /* HISTORY */
-	/* AT  1st Nov 2015 -Added Species Proportion Grazing for all even for annual */
-	/* 14 August 2018 -CH -Added functionality to graze the species' extra growth. */
-	/*------------------------------------------------------*/
-
 	//CH- extra growth is only stored at the species level. This will graze extra
 	//    growth for the whole species.
 	//    loss represents the proportion of extragrowth that is eaten by livestock
@@ -382,18 +397,24 @@ void Species_Proportion_Grazing(const SppIndex sp, RealF proportionGrazing)
 	}
 }
 
+/**
+ * \brief Proportion Recovery (representing re-sprouting after fire) for all 
+ *        established individuals in a species.
+ * 
+ * \param sp is the index in \ref Species of the species.
+ * \param killType is the \ref MortalityType code that killed this individual.
+ * \param proportionRecovery The proportion of previous (before the fire) biomass 
+ *                           to recover. Value between 0 and 1.
+ * \param proportionKilled is the proportion of biomass removed by the disturbance
+ *                         event. Value between 0 and 1.
+ * 
+ * \sideeffect All individual's relative sizes will be increased.
+ * 
+ * \sa indiv_proportion_Recovery() which is called by this function to perform
+ *                                 the recovery on an individual level.
+ */
 void Species_Proportion_Recovery(const SppIndex sp, int killType,
         RealF proportionRecovery, RealF proportionKilled) {
-    /*======================================================*/
-    /* PURPOSE */
-    /* Proportion Recovery (representing re-sprouting after fire) for all 
-     * established individuals in a species. Note the special loop construct.  
-     * We have to save the pointer to next prior to killing because the object
-     * is deleted. */
-    /* HISTORY */
-    /* AT  1st Nov 2015 -Added Species Proportion Recovery  */
-    /*------------------------------------------------------*/
-    
     IndivType *p = Species[sp]->IndvHead, *t;
     //Recover biomass for each perennial species that is established
     while (p) {
@@ -403,24 +424,27 @@ void Species_Proportion_Recovery(const SppIndex sp, int killType,
         p = t;
     }
     //printf("'within proportion_recovery after first killing': Species = %s, relsize = %f, est_count = %d\n",Species[sp]->name, Species[sp]->relsize, Species[sp]->est_count);
-   
 }
 
-/**************************************************************/
+/**
+ * \brief Kills all established individuals in a species.
+ * 
+ * The species will be completely killed and dropped from it's RGroup.
+ * 
+ * Initial programming by Chris Bennett @ LTER-CSU 11/15/2000.
+ * 
+ * \param sp is the index in \ref Species of the species.
+ * \param killType is the \ref MortalityType code that killed the species.
+ * 
+ * \sideeffect 
+ *    \* Every individual in the linked list will be deleted.
+ *    \* The species will be dropped from it's RGroup.
+ * 
+ * \sa rgroup_DropSpecies() for what happens when a species is dropped.
+ *     indiv_Kill_Complete() for how each individual is killed.
+ */
 void Species_Kill(const SppIndex sp, int killType)
 {
-    /*======================================================*/
-    /* PURPOSE */
-    /* Kill all established individuals in a species.
-     *
-     * Note the special loop construct.  we have to save the
-     * pointer to next prior to killing because the object
-     * is deleted. */
-     /* HISTORY */
-    /* Chris Bennett @ LTER-CSU 11/15/2000 */
-    /* 8/3/01 - cwb - added linked list processing. */
-    /*------------------------------------------------------*/
-    
     IndivType *p = Species[sp]->IndvHead, *t;
 
     while (p)
@@ -431,8 +455,18 @@ void Species_Kill(const SppIndex sp, int killType)
     }
     
     rgroup_DropSpecies(sp);
-
 }
+
+/**
+ * \brief Records the relative size of all annual species.
+ * 
+ * Loops through all species and if the species is an annual it's relative size is
+ * saved to Species[sp]->lastyear_relsize. This function is usefull for determining
+ * proportion recovery in Species_Proportion_Recovery().
+ * 
+ * \sideeffect the lastyear_relsize field of \ref Species is populated for all
+ *             annual species.
+ */
 void save_annual_species_relsize() {
     int sp = 0;
 

@@ -284,6 +284,8 @@ void indiv_proportion_Grazing( IndivType *ndv, RealF proportionGrazing)
  * \param ndv Pointer to the individual.
  * \param killType The MortalityType code of what killed the individual.
  * \param proportionRecovery Value between 0 and 1. The proportion of biomass to recover.
+ * \param proportionKilled Value between 0 and 1. The proportion of the individual killed
+ *                         by the disturbance event.
  * 
  * \sideeffect ndv->relsize is modified.
  * 

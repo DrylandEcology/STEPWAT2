@@ -1,17 +1,28 @@
-/********************************************************/
-/*  Source file: resgroups.c
-    Type: module
-    Application: STEPPE - plant community dynamics simulator
-    Purpose: This is the module that executes the growth
-            functions and otherwise manages the bookkeeping
-            at the group level.
-   History:
-      (6/15/2000) -- INITIAL CODING - cwb
+/**  
+ * \file: ST_resgroups.c
+ * \brief Function definitions for all resource group-specific functions.
+ * 
+ * Resource group functions will modify the \ref RGroup global variable
+ * and it's corresponding entries in \ref Species. This includes the linked
+ * list of [IndivTypes](\ref IndivType) stored in \ref Species.
+ * 
+ * These are the functions one is most likely to call from \ref main() to
+ * simulate the plant community. They will handle calling the necessary
+ * functions on the species level from \ref ST_species.c and on the individual
+ * level from \ref ST_indivs.c
+ * 
+ * \author
+ *     Kyle Palmquist\n
+ *     Chandler Haukap\n
+ *     Freddy Pierson\n 
+ *     Chris Bennett
+ * 
+ * \date 22 August 2019
+ */
 
-* =================================================== *
-*                INCLUDES / DEFINES                   *
-* --------------------------------------------------- */
-
+/* =================================================== *
+ *                INCLUDES / DEFINES                   *
+ * --------------------------------------------------- */
 #include <math.h>
 #include <string.h>
 #include <stdio.h>
