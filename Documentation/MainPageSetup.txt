@@ -25,7 +25,10 @@ This file contains the main page setup for Doxygen documentation.
  * \author Chandler Haukap
  * \date 21 August 2019
  *
- * \defgroup SXW Interface between \ref SOILWAT2 and \ref STEPPE
- * \defgroup STEPPE Steppe plant community simulator
- * \defgroup SOILWAT2 Soil water simulator
+ * \defgroup SXW 
+ *           \brief Interface between \ref SOILWAT2 and \ref STEPPE
+ * \defgroup STEPPE 
+ *           \brief Steppe plant community simulator
+ * \defgroup SOILWAT2 
+ *           \brief Soil water simulator
  */
