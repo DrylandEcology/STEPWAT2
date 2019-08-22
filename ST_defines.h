@@ -35,16 +35,21 @@
  * 
  * Replaced by (Globals.max_spp_per_grp * Globals.max_rgroups) which are both
  * read from inputs.
+ * 
+ * \ingroup STEPPE
  */
 #define MAX_SPECIES (Globals.max_spp_per_grp * Globals.max_rgroups)
 /**
  * \brief how long the name of a species can be.
+ * 
+ * \ingroup STEPPE
  */
 #define MAX_SPECIESNAMELEN   4 /* keep around for SOILWAT for now */
 
 /**
  * \brief MAX_OUTFIELDS The maximum number of fields our output functions are 
- *                      capable of outputting. 
+ *                      capable of outputting.
+ * \ingroup STEPPE 
  */
 #define MAX_OUTFIELDS ((MAX_SPECIES * 2) + (Globals.max_rgroups * 6) + 8)
 
@@ -56,10 +61,13 @@
  * 
  * This is defined as Globals.max_groupnamelen + 6 currently, but can be increased
  * as needed.
+ * 
+ * \ingroup STEPPE
  */
 #define MAX_FIELDLEN (Globals.max_groupnamelen + 6)
 /**
  * \brief defines the maximum number of cells in gridded mode.
+ * \ingroup STEPPE
  */
 #define MAX_CELLS 10000
 
@@ -68,6 +76,8 @@
  * 
  * \sa Indiv_SortSize() is one function that could take this
  *                      as a parameter.
+ * 
+ * \ingroup STEPPE
  */
 #define SORT_A 'a'
 /**
@@ -75,10 +85,14 @@
  * 
  * \sa Indiv_SortSize() is one function that could take this
  *                      as a parameter.
+ * 
+ * \ingroup STEPPE
  */
 #define SORT_D 'd'
 /**
  * \brief Means "don't sort this array".
+ * 
+ * \ingroup STEPPE
  */
 #define SORT_0 '\0'
 
@@ -90,6 +104,8 @@
  * Any variable of type GrpIndex is clearly meant to access RGroup.
  * 
  * \sa RGroup
+ * 
+ * \ingroup STEPPE
  */
 typedef IntS GrpIndex;
 /**
@@ -99,6 +115,8 @@ typedef IntS GrpIndex;
  * Any variable of type GrpIndex is clearly meant to access RGroup.
  * 
  * \sa Species
+ * 
+ * \ingroup STEPPE
  */
 typedef IntS SppIndex;
 
@@ -117,6 +135,8 @@ typedef IntS SppIndex;
  * Each species has a temperatuce class.
  * 
  * \sa species_st which instanciates this enumerator.
+ * 
+ * \ingroup STEPPE
  */
 typedef enum {NoSeason=-1, CoolSeason, WarmSeason}
   TempClass;
@@ -127,6 +147,8 @@ typedef enum {NoSeason=-1, CoolSeason, WarmSeason}
  * Used to record what killed an individual.
  * 
  * \sa indiv_st which instanciates this enumerator.
+ * 
+ * \ingroup STEPPE
  */
 typedef enum {Slow, NoResources, Intrinsic, Disturbance, LastMort}
   MortalityType;
@@ -137,6 +159,8 @@ typedef enum {Slow, NoResources, Intrinsic, Disturbance, LastMort}
  * Used to determine what type of disturbance is on the plot.
  * 
  * \sa plot_st which instanciates this enumerator.
+ * 
+ * \ingroup STEPPE
  */
 typedef enum {NoDisturb, FecalPat, AntMound, Burrow, LastDisturb}
   DisturbEvent;
@@ -147,6 +171,8 @@ typedef enum {NoDisturb, FecalPat, AntMound, Burrow, LastDisturb}
  * Used to determine how severely a disturbance will affect a species.
  * 
  * \sa species_st which instanciates this enumerator.
+ * 
+ * \ingroup STEPPE
  */
 typedef enum {VerySensitive, Sensitive, Insensitive, VeryInsensitive}
   DisturbClass;
@@ -157,6 +183,8 @@ typedef enum {VerySensitive, Sensitive, Insensitive, VeryInsensitive}
  * Used to determine how much precipitation an environment gets.
  * 
  * \sa environs_st which instanciates this enumerator.
+ * 
+ * \ingroup STEPPE
  */
 typedef enum {Ppt_Wet, Ppt_Norm, Ppt_Dry}
   PPTClass;
@@ -170,6 +198,8 @@ typedef enum {Ppt_Wet, Ppt_Norm, Ppt_Dry}
  * 
  * \sa _make_disturbance() which is an example of a function
  *                         that uses Slope.
+ * 
+ * \ingroup STEPPE
  */
 typedef enum {Intcpt, Slope, P0=0, P1, P2, P3, P4}
   Params;
@@ -180,6 +210,8 @@ typedef enum {Intcpt, Slope, P0=0, P1, P2, P3, P4}
  * Defined at the resgroup level.
  * 
  * \sa resourcegroup_st which instanciates this enumerator.
+ * 
+ * \ingroup STEPPE
  */
 typedef enum {DepthNonComp, DepthShallow, DepthMedium, DepthDeep, DepthLast}
   DepthClass;
@@ -190,6 +222,8 @@ typedef enum {DepthNonComp, DepthShallow, DepthMedium, DepthDeep, DepthLast}
  * ST_params.c stores the file names according to this convention.
  * 
  * \sa ST_params.c for its usage.
+ * 
+ * \ingroup STEPPE
  */
 typedef enum {F_First, F_Log, F_Model, F_Env, F_Plot, F_RGroup, F_Species,
               F_BMassFlag, F_BMassPre, F_BMassAvg,
@@ -231,6 +265,8 @@ typedef enum {F_First, F_Log, F_Model, F_Env, F_Plot, F_RGroup, F_Species,
  * 
  * \param c is a GrpIndex. Use it to access each element in RGroup
  *          like RGroup[c]
+ * 
+ * \ingroup STEPPE
  */
 #define ForEachGroup(c)    for((c)=0; (c)< Globals.grpCount; (c)++)
 
@@ -244,6 +280,8 @@ typedef enum {F_First, F_Log, F_Model, F_Env, F_Plot, F_RGroup, F_Species,
  *          access every element in Species like Species[s].
  * 
  * \sa Species
+ * 
+ * \ingroup STEPPE
  */
 #define ForEachSpecies(s)    for((s)=0; (s)< Globals.sppCount; (s)++)
 
@@ -253,7 +291,9 @@ typedef enum {F_First, F_Log, F_Model, F_Env, F_Plot, F_RGroup, F_Species,
  * \param i is a IndivType* which will point to a different
  *          individual every iteration of the loop.
  * \param s is a SpeciesType* which points to the desired
- *          SpeciesType. Must be set before calling this macro. 
+ *          SpeciesType. Must be set before calling this macro.
+ * 
+ * \ingroup STEPPE 
  */
 #define ForEachIndiv(i,s)  for((i)=(s)->IndvHead; (i)!=NULL; (i)=(i)->Next)
 
@@ -276,6 +316,8 @@ typedef enum {F_First, F_Log, F_Model, F_Env, F_Plot, F_RGroup, F_Species,
  * i must be a declared lvalue but is only used internally to
  * the loop.  it is the index into the list of all species
  * that are actually established.
+ * 
+ * \ingroup STEPPE
  */
 #define ForEachEstSpp(s,g,i) for((i)=0,(s)=RGroup[g]->est_spp[i];\
                                   (i) < RGroup[g]->est_count;    \
@@ -289,6 +331,8 @@ typedef enum {F_First, F_Log, F_Model, F_Env, F_Plot, F_RGroup, F_Species,
  *          group.
  * \param i is an int that will increment by 1 every loop of
  *          the program.
+ * 
+ * \ingroup STEPPE
  */
 #define ForEachEstSpp2(g,i) for((i)=0; (i) < RGroup[g]->est_count; (i)++)
 
@@ -304,7 +348,10 @@ typedef enum {F_First, F_Log, F_Model, F_Env, F_Plot, F_RGroup, F_Species,
  * Works exactly like ForEachEstSpp() but looks up a group's
  * possible species instead of established species.
  * 
- * \sa ForEachEstSpp() */
+ * \sa ForEachEstSpp() 
+ * 
+ * \ingroup STEPPE
+ */
 #define ForEachGroupSpp(s,g,i) for((i)=0,(s)=RGroup[g]->species[i];\
                                    (i) < RGroup[g]->max_spp;    \
                                    (s) = RGroup[g]->species[++(i)])
@@ -318,6 +365,8 @@ typedef enum {F_First, F_Log, F_Model, F_Env, F_Plot, F_RGroup, F_Species,
  * This is not to be used by future developers. Instead use Species[s]->max_age
  * 
  * \sa SppIndex
+ * 
+ * \ingroup STEPPE
  */
 #define SppMaxAge(s)      (Species[s]->max_age)
 
@@ -330,6 +379,8 @@ typedef enum {F_First, F_Log, F_Model, F_Env, F_Plot, F_RGroup, F_Species,
  * This is not to be used by future developers. Instead use RGroup[g]->max_age.
  * 
  * \sa GrpIndex
+ * 
+ * \ingroup STEPPE
  */
 #define GrpMaxAge(g)      (RGroup[g]->max_age)
 /**************************************************************/

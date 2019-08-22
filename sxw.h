@@ -1,16 +1,21 @@
-/********************************************************/
-/********************************************************/
-/*  Source file: sxw.h
- *  Type: header
- *  Purpose: Contains pertinent declarations, global variables,
- *           etc required to support new functions that
- *           interface STEPPE with SOILWAT.
- *  Application: STEPWAT - plant community dynamics simulator
- *               coupled with the  SOILWAT model. */
-/*  History:
- *     (14-Apr-2002) -- INITIAL CODING - cwb */
-/********************************************************/
-/********************************************************/
+/**
+ * \file sxw.h
+ * \brief Contains function declarations, global variables,
+ *        etc required to interface STEPPE with SOILWAT.
+ * 
+ * The structs, functions, variables, and macros defined in this file
+ * facilitate the conversion of SOILWAT output into STEPWAT input. 
+ * 
+ * \author
+ *     Kyle Palmquist\n
+ *     Daniel Schlaepfer\n
+ *     Chandler Haukap\n
+ *     Chris Bennett\n
+ * 
+ * \date 22 August 2019
+ * 
+ * \ingroup SXW
+ */
 
 #ifndef SXW_DEF
 #define SXW_DEF
@@ -64,11 +69,17 @@ struct stepwat_st {
 // The number of transpiration values retained by transp_data
 #define MAX_WINDOW 100
 
-// transp_data stores three arrays: ratios, transp, and sum of squares. These arrays form 
-// a moving window that stores "size" years worth of previous transpiration data.
-// average, ratio_average, and sum_of_sqrs all store summaries of their respective arrays
-// so that you do not have to iterate through the arrays every time to get information. 
-// size and add_here deal directly with manipulating the arrays.
+/** 
+ * \brief Stores statistics on transpiration over a window defined in inputs.
+ * 
+ * transp_data stores three arrays: ratios, transp, and sum of squares. These arrays form 
+ * a moving window that stores "size" years worth of previous transpiration data.
+ * average, ratio_average, and sum_of_sqrs all store summaries of their respective arrays
+ * so that you do not have to iterate through the arrays every time to get information. 
+ * size and add_here deal directly with manipulating the arrays.
+ * 
+ * \ingroup SXW
+ */
 struct transp_data {
   // average of all transp/ppt values currently inside ratios[]. It should be updated every time
   // a value is added to transp[].

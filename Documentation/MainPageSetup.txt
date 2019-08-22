@@ -13,15 +13,19 @@ This file contains the main page setup for Doxygen documentation.
  *
  * \par Overview\n
  * There are three components to STEPWAT2.
- * \* STEPWAT2, which refers to all program files beginning with "ST_". The functions 
+ * \* [STEPPE](\ref STEPPE), which refers to all program files beginning with "ST_". The functions 
  * in these files deal with the plant speciments and their environment.  
- * \* SOILWAT2, which simulates the water cycle. SOILWAT2 is developed in its
+ * \* [SOILWAT2](\ref SOILWAT2), which simulates the water cycle. SOILWAT2 is developed in its
  * [own repository](https://github.com/DrylandEcology/SOILWAT2) but, since it also
  * uses doxygen, you can view it's documentation at \ref sw_src.
- * \* SXW, which handles communication between SOILWAT2 and STEPWAT2. In general this
- * means translating soil water values from SOILWAT2 into resource values for STEPWAT2.
+ * \* [SXW](\ref SXW), which handles communication between SOILWAT2 and STEPPE. In general this
+ * means translating soil water values from SOILWAT2 into resource values for STEPPE.
  * SXW files are denoted with the "sxw" prefix.
  *
  * \author Chandler Haukap
  * \date 21 August 2019
+ *
+ * \defgroup SXW Interface between \ref SOILWAT2 and \ref STEPPE
+ * \defgroup STEPPE Steppe plant community simulator
+ * \defgroup SOILWAT2 Soil water simulator
  */

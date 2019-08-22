@@ -131,6 +131,8 @@ extern
  * 
  * \sa mort_EndOfYear()
  * \sa rgroup_Establish()
+ * 
+ * \ingroup STEPPE
  */
 void mort_Main( Bool *killed) {
 
@@ -224,6 +226,8 @@ void mort_Main( Bool *killed) {
  *             
  * \sa mort_Main()
  * \sa rgroup_Extirpate()
+ * 
+ * \ingroup STEPPE
  */
 void mort_EndOfYear(void) {
     GrpIndex rg;
@@ -360,6 +364,8 @@ void mort_EndOfYear(void) {
  * 
  * \sa Species_Proportion_Grazing() this function is called to modify any species that need
  *                                  grazing.
+ * 
+ * \ingroup STEPPE
  */
 void grazing_EndOfYear( void){
 	GrpIndex rg;
@@ -426,6 +432,8 @@ void grazing_EndOfYear( void){
  * 
  * \sa Species_Proportion_Recovery() which is called by this function to determine
  *                                   how much biomass should be recovered.
+ * 
+ * \ingroup STEPPE
  */
 void proportion_Recovery(void) {
     GrpIndex rg;
@@ -483,6 +491,8 @@ void proportion_Recovery(void) {
  *             killed.
  * 
  * \sa mort_Main() where this function is called.
+ * 
+ * \ingroup STEPPE
  */
 static void _pat( const SppIndex sp) {
     Int i, k=-1;
@@ -537,6 +547,8 @@ static void _pat( const SppIndex sp) {
  *             killed.
  * 
  * \sa mort_Main() where this function is called.
+ * 
+ * \ingroup STEPPE
  */
 static void _mound( const SppIndex sp) {
     Bool k = FALSE;
@@ -573,6 +585,8 @@ static void _mound( const SppIndex sp) {
  *             killed.
  * 
  * \sa mort_Main() where this function is called.
+ * 
+ * \ingroup STEPPE
  */
 static void _burrow( const SppIndex sp) {
     Bool k=FALSE;
@@ -606,6 +620,8 @@ static void _burrow( const SppIndex sp) {
  * \sa indiv_Kill_Partial(), which is called to reduce biomass (but not kill).
  * \sa indiv_Kill_Complete(), which is called to kill individuals.
  * \sa mort_Main() where this function is called.
+ * 
+ * \ingroup STEPPE
  */
 static void _succulents( const SppIndex sp) {
   IndivType *p,
@@ -661,6 +677,8 @@ static void _succulents( const SppIndex sp) {
  *                  is killed.
  * 
  * \sa mort_Main() where this function is called.
+ * 
+ * \ingroup STEPPE
  */
 static void _slow_growth( const SppIndex sp) {
   Int n, k=-1;
@@ -713,6 +731,8 @@ static void _slow_growth( const SppIndex sp) {
  *             _SomeKillage will be set to TRUE is an individual is killed.
  * 
  * \sa mort_Main() where this function is called.
+ * 
+ * \ingroup STEPPE
  */
 static void _age_independent( const SppIndex sp) {
   Int n, k=-1;
@@ -779,6 +799,8 @@ static void _age_independent( const SppIndex sp) {
  * 
  * \sa _stretched_clonal() which is called to perfom additional mortality.
  * \sa mort_Main() where _no_resources() is called.
+ * 
+ * \ingroup STEPPE
  */
 static void _no_resources( GrpIndex rg) {
   IntS i,
@@ -830,6 +852,8 @@ static void _no_resources( GrpIndex rg) {
  *             _SomeKillage set to TRUE if an individual is killed.
  * 
  * \sa _no_resources() where this function is called.
+ * 
+ * \ingroup STEPPE
  */
 static void _stretched_clonal( GrpIndex rg, Int start, Int last,
                            IndivType *nlist[]) {
@@ -932,6 +956,8 @@ static void _stretched_clonal( GrpIndex rg, Int start, Int last,
  * 
  * \sideeffect All individuals in all annual species will
  *             be deleted.
+ * 
+ * \ingroup STEPPE
  */
 void _kill_annuals( void) {
   GrpIndex rg;
@@ -959,6 +985,8 @@ void _kill_annuals( void) {
  * \sideeffect Species[sp]->extragrowth will be set to 0 for all sp.\n
  *             If This results if 0 biomass for a species it will also be
  *             dropped from the RGroup.
+ * 
+ * \ingroup STEPPE
  */
 void _kill_extra_growth(void) {
     IntU j;
@@ -1001,6 +1029,8 @@ void _kill_extra_growth(void) {
  * 
  * \sideeffect Every individual in every species that has reached it's
  *             max age will be deleted (killed).
+ * 
+ * \ingroup STEPPE
  */
 void _kill_maxage(void) {
     SppIndex s;

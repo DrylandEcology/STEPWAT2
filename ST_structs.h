@@ -9,6 +9,8 @@
  * \author Chandler Haukap
  * 
  * \date 21 August 2019
+ * 
+ * \ingroup STEPPE
  */
 
 #ifndef STEPPE_STRUCT_DEF
@@ -23,6 +25,8 @@
  * struct is found in \ref ST_indivs.c.
  * 
  * \sa indiv_ann_st
+ * 
+ * \ingroup STEPPE
  */
 struct indiv_st {
       /** \brief unique identifier for each individual. */
@@ -83,6 +87,8 @@ struct indiv_st {
  * struct is found in ST_indivs.c.
  * 
  * \sa indiv_st
+ * 
+ * \ingroup STEPPE
  */
 struct indiv_ann_st {
       /** \brief millimeters of extra resources. */
@@ -121,6 +127,8 @@ struct indiv_ann_st {
  * species. Species is a global array of these structs.
  * 
  * \sa Species
+ * 
+ * \ingroup STEPPE
  */
 struct species_st {
 
@@ -256,6 +264,8 @@ struct species_st {
  * RGroup is a global array of these structs used in STEPWAT2.
  * 
  * \sa RGroup 
+ * 
+ * \ingroup STEPPE
  */
 struct resourcegroup_st {
 
@@ -394,6 +404,8 @@ struct resourcegroup_st {
  * A global instance of this struct is Succulent.
  * 
  * \sa Succulent.
+ * 
+ * \ingroup STEPPE
  */
 struct succulent_st {
       /** \brief Growth modifier parameters for succulents (eqn 10). */
@@ -412,6 +424,8 @@ struct succulent_st {
  * This struct is instanciated by the global variable Env.
  * 
  * \sa Env_Generate()
+ * 
+ * \ingroup STEPPE
  */
 struct environs_st {
       /** \brief Is this site wet, dry, or normal?.
@@ -436,6 +450,8 @@ struct environs_st {
  * plot_st is instanciated by the global variable Plot.
  * 
  * \sa Plot
+ * 
+ * \ingroup STEPPE
  */
 struct plot_st {
   /** \brief Type of disturbance.
@@ -455,6 +471,8 @@ struct plot_st {
  * Used inside the globals_st struct.
  * 
  * \sa globals_st
+ * 
+ * \ingroup STEPPE
  */
 struct ppt_st {
       /** \brief Average precipitation. */
@@ -477,6 +495,8 @@ struct ppt_st {
  * Used in the globals_st struct.
  * 
  * \sa globals_st
+ * 
+ * \ingroup STEPPE
  */
 struct temp_st {
   RealF avg,
@@ -492,6 +512,8 @@ struct temp_st {
  * Used in the globals_st struct.
  * 
  * \sa globals_st
+ * 
+ * \ingroup STEPPE
  */
 struct fecalpats_st {
       /** \brief If TRUE fecal pats will be used. */
@@ -510,6 +532,8 @@ struct fecalpats_st {
  * Used in the globals_st struct.
  * 
  * \sa globals_st
+ * 
+ * \ingroup STEPPE
  */
 struct antmounds_st {
       /** \brief If TRUE ant mounds will be used. */ 
@@ -528,6 +552,8 @@ struct antmounds_st {
  * Used in the globals_st struct.
  * 
  * \sa globals_st
+ * 
+ * \ingroup STEPPE
  */
 struct burrows_st {
   /** \brief If TRUE burrows will be used. */
@@ -545,6 +571,8 @@ struct burrows_st {
  * Used in the globals_st struct.
  * 
  * \sa globals_st
+ * 
+ * \ingroup STEPPE
  */
 struct outfiles_st {
       /** \brief File handle for yearly output. */
@@ -563,6 +591,8 @@ struct outfiles_st {
  * This struct is instanciated by the global variable Globals.
  * 
  * \sa Globals
+ * 
+ * \ingroup STEPPE
  */
 struct globals_st {
   /** \brief Precipitation constants. \sa ppt_st */
@@ -626,6 +656,8 @@ struct globals_st {
  * They are instanciated globally by BmassFlags.
  * 
  * \sa BmassFlags
+ * 
+ * \ingroup STEPPE
  */
 struct bmassflags_st {
       /** \brief If FALSE print no biomass output. */
@@ -669,6 +701,8 @@ struct bmassflags_st {
  * the columns should contain. This struct is instanciated by the global variable MortFlags.
  * 
  * \sa MortFlags
+ * 
+ * \ingroup STEPPE
  */
 struct mortflags_st {
       /** \brief If FALSE print no mortality output. */

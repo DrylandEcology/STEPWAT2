@@ -1,15 +1,12 @@
-/********************************************************/
-/********************************************************/
-/*  Source file: sxw.c
- *  Type: module
- *  Purpose: Interface module for the STEPPE to SOILWAT
- *           data flow.  Oversees transformation of
- *           data from STEPPE to SOILWAT.
- *  Calls:  sxw2wat.c */
-/*  Application: STEPWAT - plant community dynamics simulator
- *  coupled with the  SOILWAT model. */
-/*  History */
-/*     (9-May-2002) -- INITIAL CODING - cwb
+/**
+ *  \file sxw.c
+ *  \brief Interface module for the STEPWAT2 to SOILWAT
+ *         data flow.
+ * 
+ *  Application: STEPWAT - plant community dynamics simulator
+ *  coupled with the  SOILWAT model.
+ *  History 
+ *     (9-May-2002) -- INITIAL CODING - cwb
  *     28-Feb-02 - cwb - The model runs but plants die
  *         soon after establishment in a way that suggests
  *         chronic stretching of resources.  At this time
@@ -33,9 +30,10 @@
  *         defined with double vs single precision and take
  *         appropriate casting measures.
  *	07-16-12 (DLM) - made a ton of changes to try and
- *          get it to compile with the new updated version of soilwat (version 23) */
-/********************************************************/
-/********************************************************/
+ *          get it to compile with the new updated version of soilwat (version 23)
+ * 
+ * \ingroup SXW
+ */
 
 /* =================================================== */
 /*                INCLUDES / DEFINES                   */

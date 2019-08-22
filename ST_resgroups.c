@@ -1,5 +1,5 @@
 /**  
- * \file: ST_resgroups.c
+ * \file ST_resgroups.c
  * \brief Function definitions for all resource group-specific functions.
  * 
  * Resource group functions will modify the \ref RGroup global variable
@@ -18,6 +18,8 @@
  *     Chris Bennett
  * 
  * \date 22 August 2019
+ * 
+ * \ingroup STEPPE
  */
 
 /* =================================================== *

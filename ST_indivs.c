@@ -88,6 +88,8 @@ void _delete (IndivType *ndv);
  * \sa SppIndex
  * \sa rgroup_Establish()
  * \sa Indiv_Kill_Complete()
+ * 
+ * \ingroup STEPPE
  */
 Bool indiv_New( SppIndex sp) {
   IndivType *p;
@@ -133,6 +135,8 @@ Bool indiv_New( SppIndex sp) {
  * \return pointer to the individual.
  * 
  * \sa indiv_New()
+ * 
+ * \ingroup STEPPE
  */
 static IndivType *_create ( void) {
 /* HISTORY */
@@ -166,6 +170,8 @@ static IndivType *_create ( void) {
  * 
  * \sa indiv_Kill_Complete()
  * \sa IndivType
+ * 
+ * \ingroup STEPPE
  */
 Bool indiv_Kill_Partial( MortalityType code,
                           IndivType *ndv,
@@ -197,6 +203,8 @@ Bool indiv_Kill_Partial( MortalityType code,
  * \param proportionKilled value between 0 and 1. The percent total biomass to remove.
  * 
  * \sideeffect ndv->relsize is adjusted. 
+ * 
+ * \ingroup STEPPE
  */
 void indiv_proportion_Kill(IndivType *ndv, int killType, RealF proportKilled)
 {
@@ -251,6 +259,8 @@ void indiv_proportion_Kill(IndivType *ndv, int killType, RealF proportKilled)
  * \sideeffect ndv->relsize is adjusted.
  * 
  * \sa Species_Proportion_Grazing()
+ * 
+ * \ingroup STEPPE
  */
 void indiv_proportion_Grazing( IndivType *ndv, RealF proportionGrazing)
 {
@@ -290,6 +300,8 @@ void indiv_proportion_Grazing( IndivType *ndv, RealF proportionGrazing)
  * \sideeffect ndv->relsize is modified.
  * 
  * \sa Species_Proportion_Recovery
+ * 
+ * \ingroup STEPPE
  */
 void indiv_proportion_Recovery(IndivType *ndv, int killType, RealF proportionRecovery, RealF proportionKilled) 
 {
@@ -347,6 +359,8 @@ void indiv_proportion_Recovery(IndivType *ndv, int killType, RealF proportionRec
  * \sideeffect The Species[ndv->myspecies]->IndivHead linked list is updated.\n
  *             The Species[ndv->myspecies]->est_count is updated.\n
  *             The individual is deallocated.
+ * 
+ * \ingroup STEPPE
  */
 void indiv_Kill_Complete( IndivType *ndv, int killType) 
 {
@@ -373,6 +387,8 @@ void indiv_Kill_Complete( IndivType *ndv, int killType)
  *             The Species[ndv->myspecies]->IndivHead linked list us updated.
  * 
  * \sa indiv_Kill_Complete() where this function is called.
+ * 
+ * \ingroup STEPPE
  */
 void _delete (IndivType *ndv) 
 {
@@ -427,6 +443,8 @@ void _delete (IndivType *ndv)
  * \param list an array of n pointers to individuals to be sorted.
  * 
  * \sideeffect The list is returned sorted. 
+ * 
+ * \ingroup STEPPE
  */
 void Indiv_SortSize( const byte sorttype,
                      const size_t n, IndivType **list) {
@@ -464,6 +482,8 @@ void Indiv_SortSize( const byte sorttype,
  * \return -1 if key1 < key2
  * \return 0 if key1 == key2
  * \return 1 if key1 > key2
+ * 
+ * \ingroup STEPPE
  */
 int Indiv_CompSize_A( const void *key1, const void *key2) {
   int r =0;
@@ -487,6 +507,8 @@ int Indiv_CompSize_A( const void *key1, const void *key2) {
  * \return 1 if key1 < key2
  * \return 0 if key1 == key2
  * \return -1 if key1 > key2
+ * 
+ * \ingroup STEPPE
  */
 int Indiv_CompSize_D( const void *key1, const void *key2) {
   int r =0;
