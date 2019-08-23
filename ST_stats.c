@@ -1,18 +1,22 @@
-/********************************************************/
-/********************************************************/
-//  Source file: stats.c
-//  Type: module
-//  Application: STEPPE - plant community dynamics simulator
-//  Purpose: This is where all of the statistics are kept
-//           as the model runs.
-//  History:
-//     (6/15/2000) -- INITIAL CODING - cwb
-//   1/9/01 - revised to make extensive use of malloc() */
-//	5/28/2013 (DLM) - added module level variable accumulators (grid_Stat) for the grid and functions to deal with them (stat_Load_Accumulators(), stat_Save_Accumulators() stat_Free_Accumulators(), and stat_Init_Accumulators()).  These functions are called from ST_grid.c and manage the output accumulators so that the gridded version can output correctly.  The accumulators are dynamically allocated, so be careful with them.
-// 07/30/2016 (AKT) Fixed bug at std_dev calculation
-//
-/********************************************************/
-/********************************************************/
+/**
+ * \file ST_stats.c
+ * \brief Record keeping for the entire model.
+ * 
+ * Statistics are kept for all metrics of a plant's lifecycle.
+ * These statistics are kept for [resource groups](\ref RGROUP),
+ * [species](\ref SPECIES), [individuals](\ref INDIVIDUAL), and 
+ * [mortality events](\ref MORTALITY).
+ * 
+ * \author
+ *     Kyle Palmquist\n
+ *     Chandler Haukap\n
+ *     Freddy Pierson\n 
+ *     Chris Bennett
+ * 
+ * \date 23 August 2019
+ * 
+ * \ingroup STATISTICS
+ */
 
 /* =================================================== */
 /*                INCLUDES / DEFINES                   */
@@ -126,6 +130,8 @@ static void _make_header_with_std( char *buf);
  * Note that the syntax checker is obviated, so make sure
  * you follow the this prototype:
  * static void _collect_add(struct accumulators_st *p, double v).
+ * 
+ * \ingroup STATISTICS_PRIVATE
  */
 #define _collect_add(p, v) {					\
   (p)->nobs++;							\
@@ -141,6 +147,8 @@ static void _make_header_with_std( char *buf);
  * \param v is a pointer to the \ref accumulators_st to copy to.
  * 
  * The correct usage is _copy_over(struct accumulators_st *p, struct accumulators_st *v).
+ * 
+ * \ingroup STATISTICS_PRIVATE
  */
 #define _copy_over(p, v) { \
 	(p)->ave = (v)->ave; \
@@ -166,6 +174,8 @@ static Bool firsttime = TRUE;
  * 
  * \sa Stat_Output() which is where the collected statistics are printed
  *     to CSV files.
+ * 
+ * \ingroup STATISTICS
  */
 void stat_Collect( Int year ) {
 /* fill data structures with samples to be
@@ -249,6 +259,8 @@ void stat_Collect( Int year ) {
  * 
  * \sideeffect Accumulators are allocated memory based on which statistics are requested
  *             in bmassflags.in and mortflags.in.
+ * 
+ * \ingroup STATISTICS_PRIVATE
  */
 static void _init( void) {
 /* must be called after model is initialized */
@@ -826,6 +838,8 @@ void stat_free_mem( void ) {
  * \sideeffect \ref _Gmort will be modified according to the last iteration's mortality stats.
  * 
  * \sa species_Update_Kills().
+ * 
+ * \ingroup STATISTICS
  */
 void stat_Collect_GMort ( void ) {
     IntS rg, age;
@@ -850,6 +864,8 @@ void stat_Collect_GMort ( void ) {
  * \sideeffect \ref _Smort will be modified according to the last iteration's mortality stats.
  * 
  * \sa species_Update_Kills().
+ * 
+ * \ingroup STATISTICS
  */
 void stat_Collect_SMort ( void ) {
    SppIndex sp;
@@ -871,6 +887,8 @@ void stat_Collect_SMort ( void ) {
  * 
  * This function Will create the header and all entries in the yearly mortality output
  * file. The statistics output are those specified in mortflags.in.
+ * 
+ * \ingroup STATISTICS
  */
 void stat_Output_YrMorts( void ) {
 
@@ -934,6 +952,8 @@ void stat_Output_YrMorts( void ) {
  * 
  * The file they are printed to is denoted by \ref Parm_name(F_MortAvg).
  * The statistics printed are those denoted in the mortflags.in file.
+ * 
+ * \ingroup STATISTICS
  */
 void stat_Output_AllMorts( void) {
   FILE *f;
@@ -1237,6 +1257,8 @@ void stat_Output_AllCellAvgBmass(const char * filename)
  * 
  * The file name is taken from \ref Parm_name(F_BMassAvg).
  * The statistics printed are those specified in bmassflags.in.
+ * 
+ * \ingroup STATISTICS
  */
 void stat_Output_AllBmass(void) {
 
@@ -1400,6 +1422,8 @@ void stat_Output_Seed_Dispersal(const char * filename, const char sep, Bool make
  * average directly with p->ave.
  * 
  * \param p is a pointer to the \ref accumulators_st.
+ * 
+ * \ingroup STATISTICS_PRIVATE
  */
 static RealF _get_avg( struct accumulators_st *p) 
 {
@@ -1413,6 +1437,8 @@ static RealF _get_avg( struct accumulators_st *p)
  * standard deviation directly with p->sd.
  * 
  * \param p is a pointer to the \ref accumulators_st.
+ * 
+ * \ingroup STATISTICS_PRIVATE
  */
 static RealF _get_std(struct accumulators_st *p)
 {
@@ -1462,6 +1488,8 @@ static RealF _get_gridcell_std(struct accumulators_grid_cell_st *p)
  * requested.
  * 
  * \sa _make_header()
+ * 
+ * \ingroup STATISTICS_PRIVATE
  */
 static void _make_header_with_std( char *buf) {
 
@@ -1555,6 +1583,8 @@ static void _make_header_with_std( char *buf) {
  * requested.
  * 
  * \sa _make_header_with_std()
+ * 
+ * \ingroup STATISTICS_PRIVATE
  */
 static void _make_header( char *buf) {
 

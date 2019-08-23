@@ -1,15 +1,17 @@
-/********************************************************/
-/********************************************************/
-/*  Source file: indivs.c
- *  Type: module
- *  Application: STEPPE - plant community dynamics simulator
- *  Purpose: This module manages the comings and goings of
- *           individual plants, plus a function for sorting
- *           based on size. */
-/*  History */
-/*     (6/15/2000) -- INITIAL CODING - cwb */
-/********************************************************/
-/********************************************************/
+/**
+ * \file ST_indivs.c
+ * \brief Manages the individual plant speciments.
+ * 
+ * \author
+ *     Kyle Palmquist\n
+ *     Chandler Haukap\n
+ *     Freddy Pierson\n 
+ *     Chris Bennett
+ * 
+ * \date 23 August 2019
+ * 
+ * \ingroup INDIVIDUAL
+ */
 
 /* =================================================== */
 /*                INCLUDES / DEFINES                   */
@@ -89,7 +91,7 @@ void _delete (IndivType *ndv);
  * \sa rgroup_Establish()
  * \sa Indiv_Kill_Complete()
  * 
- * \ingroup STEPPE
+ * \ingroup INDIVIDUAL
  */
 Bool indiv_New( SppIndex sp) {
   IndivType *p;
@@ -134,9 +136,9 @@ Bool indiv_New( SppIndex sp) {
  * 
  * \return pointer to the individual.
  * 
- * \sa indiv_New()
+ * \sa indiv_New() which calls this function.
  * 
- * \ingroup STEPPE
+ * \ingroup INDIVIDUAL_PRIVATE
  */
 static IndivType *_create ( void) {
 /* HISTORY */
@@ -171,7 +173,7 @@ static IndivType *_create ( void) {
  * \sa indiv_Kill_Complete()
  * \sa IndivType
  * 
- * \ingroup STEPPE
+ * \ingroup INDIVIDUAL
  */
 Bool indiv_Kill_Partial( MortalityType code,
                           IndivType *ndv,
@@ -204,7 +206,7 @@ Bool indiv_Kill_Partial( MortalityType code,
  * 
  * \sideeffect ndv->relsize is adjusted. 
  * 
- * \ingroup STEPPE
+ * \ingroup INDIVIDUAL
  */
 void indiv_proportion_Kill(IndivType *ndv, int killType, RealF proportKilled)
 {
@@ -260,7 +262,7 @@ void indiv_proportion_Kill(IndivType *ndv, int killType, RealF proportKilled)
  * 
  * \sa Species_Proportion_Grazing()
  * 
- * \ingroup STEPPE
+ * \ingroup INDIVIDUAL
  */
 void indiv_proportion_Grazing( IndivType *ndv, RealF proportionGrazing)
 {
@@ -301,7 +303,7 @@ void indiv_proportion_Grazing( IndivType *ndv, RealF proportionGrazing)
  * 
  * \sa Species_Proportion_Recovery
  * 
- * \ingroup STEPPE
+ * \ingroup INDIVIDUAL
  */
 void indiv_proportion_Recovery(IndivType *ndv, int killType, RealF proportionRecovery, RealF proportionKilled) 
 {
@@ -360,7 +362,7 @@ void indiv_proportion_Recovery(IndivType *ndv, int killType, RealF proportionRec
  *             The Species[ndv->myspecies]->est_count is updated.\n
  *             The individual is deallocated.
  * 
- * \ingroup STEPPE
+ * \ingroup INDIVIDUAL
  */
 void indiv_Kill_Complete( IndivType *ndv, int killType) 
 {
@@ -388,7 +390,7 @@ void indiv_Kill_Complete( IndivType *ndv, int killType)
  * 
  * \sa indiv_Kill_Complete() where this function is called.
  * 
- * \ingroup STEPPE
+ * \ingroup INDIVIDUAL_PRIVATE
  */
 void _delete (IndivType *ndv) 
 {
@@ -444,7 +446,7 @@ void _delete (IndivType *ndv)
  * 
  * \sideeffect The list is returned sorted. 
  * 
- * \ingroup STEPPE
+ * \ingroup INDIVIDUAL
  */
 void Indiv_SortSize( const byte sorttype,
                      const size_t n, IndivType **list) {
@@ -483,7 +485,7 @@ void Indiv_SortSize( const byte sorttype,
  * \return 0 if key1 == key2
  * \return 1 if key1 > key2
  * 
- * \ingroup STEPPE
+ * \ingroup INDIVIDUAL
  */
 int Indiv_CompSize_A( const void *key1, const void *key2) {
   int r =0;
@@ -508,7 +510,7 @@ int Indiv_CompSize_A( const void *key1, const void *key2) {
  * \return 0 if key1 == key2
  * \return -1 if key1 > key2
  * 
- * \ingroup STEPPE
+ * \ingroup INDIVIDUAL
  */
 int Indiv_CompSize_D( const void *key1, const void *key2) {
   int r =0;

@@ -11,7 +11,7 @@ This file contains the main page setup for Doxygen documentation.
  * running the program, figures generated from the program, and references for
  * works sited at our [GitHub wiki](https://github.com/DrylandEcology/STEPWAT2/wiki).
  *
- * \par Overview\n
+ * \par Overview
  * There are three components to STEPWAT2.
  * \* [STEPPE](\ref STEPPE), which refers to all program files beginning with "ST_". The functions 
  * in these files deal with the plant speciments and their environment.  
@@ -25,10 +25,4 @@ This file contains the main page setup for Doxygen documentation.
  * \author Chandler Haukap
  * \date 21 August 2019
  *
- * \defgroup SXW 
- *           \brief Interface between \ref SOILWAT2 and \ref STEPPE
- * \defgroup STEPPE 
- *           \brief Steppe plant community simulator
- * \defgroup SOILWAT2 
- *           \brief Soil water simulator
  */

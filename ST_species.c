@@ -17,7 +17,7 @@
  * 
  * \date 22 August 2019
  * 
- * \ingroup STEPPE
+ * \ingroup SPECIES
  */
 
 #include <stdlib.h>
@@ -74,7 +74,7 @@ static SpeciesType *_create(void);
  * 
  * \return A number of seedlings between 0 and \ref Species[sp]->max_seed_estab
  * 
- * \ingroup STEPPE
+ * \ingroup SPECIES
  */
 IntS Species_NumEstablish(SppIndex sp)
 {
@@ -115,7 +115,7 @@ IntS Species_NumEstablish(SppIndex sp)
  * \return The biomass of the species. The value will always be
  *         greater than or equal to 0.
  * 
- * \ingroup STEPPE
+ * \ingroup SPECIES
  */
 RealF Species_GetBiomass(SppIndex sp) {
 	if (Species[sp]->est_count == 0) return 0.0;
@@ -134,7 +134,7 @@ RealF Species_GetBiomass(SppIndex sp) {
  * \sideeffect Adds \Species to \RGroup if this species had been dropped previously.\n
  *             Modifies the linked list of individuals stored in \ref Species[ \ref sp ]
  * 
- * \ingroup STEPPE
+ * \ingroup SPECIES
  */
 void Species_Add_Indiv(SppIndex sp, Int new_indivs)
 {
@@ -181,7 +181,7 @@ void Species_Add_Indiv(SppIndex sp, Int new_indivs)
  * \sideeffect \ref Species[sp]->kills[age] is updated.\n
  *             \ref RGroup[Species[sp]->res_grp]->kills[age] is updated.
  * 
- * \ingroup STEPPE
+ * \ingroup SPECIES
  */
 void species_Update_Kills(SppIndex sp, IntS age)
 {
@@ -206,7 +206,7 @@ void species_Update_Kills(SppIndex sp, IntS age)
  * 
  * \sideeffect \ref Species and \ref RGroup estabs are updated.
  * 
- * \ingroup STEPPE
+ * \ingroup SPECIES
  */
 void species_Update_Estabs(SppIndex sp, IntS num)
 {
@@ -224,7 +224,7 @@ void species_Update_Estabs(SppIndex sp, IntS num)
  * 
  * \sa getRGroupRelsize()
  * 
- * \ingroup STEPPE
+ * \ingroup SPECIES
  */
 RealF getSpeciesRelsize(SppIndex sp)
 {
@@ -256,7 +256,7 @@ RealF getSpeciesRelsize(SppIndex sp)
  * \sa Species
  * \sa _create()
  * 
- * \ingroup STEPPE
+ * \ingroup SPECIES
  */
 SppIndex species_New(void)
 {
@@ -285,7 +285,7 @@ SppIndex species_New(void)
  * 
  * \sideeffect A \ref SpeciesType struct is allocated.
  * 
- * \ingroup STEPPE
+ * \ingroup SPECIES_PRIVATE
  */
 static SpeciesType *_create(void)
 {
@@ -307,7 +307,7 @@ static SpeciesType *_create(void)
  * \return The index in \ref Species of the species with this name. 
  * \return -1 if the given name is not the name of any species.
  * 
- * \ingroup STEPPE
+ * \ingroup SPECIES
  */
 SppIndex Species_Name2Index(const char *name)
 {
@@ -336,7 +336,7 @@ SppIndex Species_Name2Index(const char *name)
  * 
  * \sa rgroup_DropSpecies() which is called from this function.
  * 
- * \ingroup STEPPE
+ * \ingroup SPECIES
  */
 void Species_Annual_Kill(const SppIndex sp, int killType)
 {
@@ -365,7 +365,7 @@ void Species_Annual_Kill(const SppIndex sp, int killType)
  * \sideeffect All individuals in the \ref Species[sp]->IndivHead linked list 
  *             will be reduced in size.
  * 
- * \ingroup STEPPE
+ * \ingroup SPECIES
  */
 void Species_Proportion_Kill(const SppIndex sp, int killType,
 		RealF proportionKilled)
@@ -400,7 +400,7 @@ void Species_Proportion_Kill(const SppIndex sp, int killType,
  * \sa indiv_proportion_Grazing() which is the function this function calls to 
  *                                perform grazing on each individual.
  * 
- * \ingroup STEPPE
+ * \ingroup SPECIES
  */
 void Species_Proportion_Grazing(const SppIndex sp, RealF proportionGrazing)
 {
@@ -438,7 +438,7 @@ void Species_Proportion_Grazing(const SppIndex sp, RealF proportionGrazing)
  * \sa indiv_proportion_Recovery() which is called by this function to perform
  *                                 the recovery on an individual level.
  * 
- * \ingroup STEPPE
+ * \ingroup SPECIES
  */
 void Species_Proportion_Recovery(const SppIndex sp, int killType,
         RealF proportionRecovery, RealF proportionKilled) {
@@ -470,7 +470,7 @@ void Species_Proportion_Recovery(const SppIndex sp, int killType,
  * \sa rgroup_DropSpecies() for what happens when a species is dropped.
  *     indiv_Kill_Complete() for how each individual is killed.
  * 
- * \ingroup STEPPE
+ * \ingroup SPECIES
  */
 void Species_Kill(const SppIndex sp, int killType)
 {
@@ -496,7 +496,7 @@ void Species_Kill(const SppIndex sp, int killType)
  * \sideeffect the lastyear_relsize field of \ref Species is populated for all
  *             annual species.
  * 
- * \ingroup STEPPE
+ * \ingroup SPECIES
  */
 void save_annual_species_relsize() {
     int sp = 0;

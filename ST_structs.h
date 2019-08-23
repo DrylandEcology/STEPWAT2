@@ -26,7 +26,7 @@
  * 
  * \sa indiv_ann_st
  * 
- * \ingroup STEPPE
+ * \ingroup INDIVIDUAL
  */
 struct indiv_st {
       /** \brief unique identifier for each individual. */
@@ -88,7 +88,7 @@ struct indiv_st {
  * 
  * \sa indiv_st
  * 
- * \ingroup STEPPE
+ * \ingroup INDIVIDUAL
  */
 struct indiv_ann_st {
       /** \brief millimeters of extra resources. */
@@ -128,7 +128,7 @@ struct indiv_ann_st {
  * 
  * \sa Species
  * 
- * \ingroup STEPPE
+ * \ingroup SPECIES
  */
 struct species_st {
 
@@ -265,7 +265,7 @@ struct species_st {
  * 
  * \sa RGroup 
  * 
- * \ingroup STEPPE
+ * \ingroup RGROUP
  */
 struct resourcegroup_st {
 
@@ -405,7 +405,7 @@ struct resourcegroup_st {
  * 
  * \sa Succulent.
  * 
- * \ingroup STEPPE
+ * \ingroup SUCCULENTS
  */
 struct succulent_st {
       /** \brief Growth modifier parameters for succulents (eqn 10). */
@@ -513,7 +513,7 @@ struct temp_st {
  * 
  * \sa globals_st
  * 
- * \ingroup STEPPE
+ * \ingroup MORTALITY
  */
 struct fecalpats_st {
       /** \brief If TRUE fecal pats will be used. */
@@ -533,7 +533,7 @@ struct fecalpats_st {
  * 
  * \sa globals_st
  * 
- * \ingroup STEPPE
+ * \ingroup MORTALITY
  */
 struct antmounds_st {
       /** \brief If TRUE ant mounds will be used. */ 
@@ -553,7 +553,7 @@ struct antmounds_st {
  * 
  * \sa globals_st
  * 
- * \ingroup STEPPE
+ * \ingroup MORTALITY
  */
 struct burrows_st {
   /** \brief If TRUE burrows will be used. */
@@ -702,7 +702,7 @@ struct bmassflags_st {
  * 
  * \sa MortFlags
  * 
- * \ingroup STEPPE
+ * \ingroup MORTALITY
  */
 struct mortflags_st {
       /** \brief If FALSE print no mortality output. */

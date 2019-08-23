@@ -8,8 +8,8 @@
  * 
  * These are the functions one is most likely to call from \ref main() to
  * simulate the plant community. They will handle calling the necessary
- * functions on the species level from \ref ST_species.c and on the individual
- * level from \ref ST_indivs.c
+ * functions in the [species](\ref SPECIES) module and in the 
+ * [individual](\ref INDIVIDUAL) module.
  * 
  * \author
  *     Kyle Palmquist\n
@@ -19,7 +19,7 @@
  * 
  * \date 22 August 2019
  * 
- * \ingroup STEPPE
+ * \ingroup RGROUP
  */
 
 /* =================================================== *
@@ -69,14 +69,20 @@ static RealF _add_annuals(const GrpIndex rg, const SppIndex sp, const RealF last
 
 /****************** Begin Function Code ********************/
 
-/***********************************************************/
-
+/**
+ * \brief Partition resources for this year among the resource groups.
+ * 
+ * The allocation of resources happens in three steps: 
+ *   \1 basic [group](\ref RGROUP) allocation
+ *   \2 partitioning of extra resources in _res_part_extra()
+ *   \3 further partitioning to [individuals](\ref INDIVIDUAL) in the group _ResPartIndiv().
+ * 
+ * \sideeffect \ref RGroup[rg]->res_avail and \ref RGroup[rg]->res_required will be set for all rg.\n
+ *             \ref indiv->res_avail and indiv->res_required will be set for all individuals in the group.
+ * 
+ * \ingroup RGROUP
+ */
 void rgroup_PartResources(void) {
-    /* Partition resources for this year among the resource
-    groups. The allocation happens in three steps: basic
-    group allocation, partitioning of extra resources in _res_part_extra(),
-    and further partitioning to individuals in the group _ResPartIndiv(). */
-
     GrpIndex rg;
     Bool noplants = TRUE;
     GroupType *g; /* shorthand for RGroup[rg] */
@@ -127,15 +133,30 @@ void rgroup_PartResources(void) {
     rgroup_ResPartIndiv();
 }
 
+/**
+ * \brief Establishment for annual species.
+ * 
+ * Annual establishment uses a seedbank to determine how many seedlings will 
+ * establish. The number of seedlings is a function of the number of seeds
+ * in the seedbank and a random draw from a beta distribution.
+ * 
+ * This function also calculates the number of seeds produced in the last year
+ * of the simulation and adds them to the total seedbank.
+ * 
+ * \param rg is the index in \ref RGroup of the species' RGroup.
+ * \param sp is the index in \ref Species of the species.
+ * \param lastyear_relsize is the relative size of the species in the previous year. 
+ *        Used to determine how many seeds should be added to the seedbank.
+ * 
+ * \return The number of seedlings established.
+ * 
+ * \sideeffect \ref Species[sp]->seedprod (the seedbank) will be modified.
+ * 
+ * \sa _add_annual_seedprod() which is called in this function to modify the seedbank.
+ * 
+ * \ingroup RGROUP_PRIVATE
+ */
 static RealF _add_annuals(const GrpIndex rg, const SppIndex sp, const RealF lastyear_relsize) {
-    /*======================================================*/
-    /* Establishment for annual species, which includes a function that modifies
-     * the seedbank through seed addition and deletion, a function that determines
-     * the amount of viable seed in the seedbank if regen_ok is true, a random draw
-     * from the beta distribution that is used to determine the number of seeds
-     * that will emerge as seedlings this year, and removal of those germinated
-     * seeds from the seedbank.*/
-
     IntU i, num_est; //number of individuals that will establish this year
     RealF viable_seeds; //number of viable seeds in the seedbank
     float var; //random number draw from beta distribution for calculation of num_est
@@ -180,10 +201,22 @@ static RealF _add_annuals(const GrpIndex rg, const SppIndex sp, const RealF last
         return num_est;
 }
 
+/**
+ * \brief Get the maximum number of viable seeds from the seedbank that can
+ *        establish this.
+ * 
+ * Make sure the previous year's seed production has been added to the seedbank
+ * before calling this function.
+ * 
+ * \param sp is the index in \ref Species of the species.
+ * 
+ * \return The maximum number of seedlings that can establish.
+ * 
+ * \sa _add_annual_seedprod()
+ * 
+ * \ingroup RGROUP_PRIVATE
+ */
 static RealF _get_annual_maxestab(SppIndex sp) {
-    /*======================================================*/
-    /* Get the maximum number of viable seeds from the seedbank that can
- establish this year*/
     IntU i;
     RealF sum = 0.; //sum of the viable seedbank
     SpeciesType *s = Species[sp];
@@ -191,15 +224,21 @@ static RealF _get_annual_maxestab(SppIndex sp) {
     for (i = 0; i < s->viable_yrs; i++) {
         sum += s->seedprod[i];
     }
-    //printf("sum =%f \n",sum);
 
     return sum;
 }
 
+/**
+ * \brief Increase the age of seeds and then add seeds to the seedbank.
+ * 
+ * \param sp is the index in \ref Species of the species.
+ * \param lastyear_relsize is the relsize of the species in the previous year.
+ * 
+ * \sideeffect \ref Species[sp]->seedprod (the seedbank) will be modified.
+ * 
+ * \ingroup RGROUP_PRIVATE
+ */
 static void _add_annual_seedprod(SppIndex sp, RealF lastyear_relsize) {
-    /*======================================================*/
-    /* Increase the age of seeds and then add seeds to the seedbank.*/
-
     SpeciesType *s = Species[sp];
     IntU i;
 
@@ -228,14 +267,25 @@ static void _add_annual_seedprod(SppIndex sp, RealF lastyear_relsize) {
     }
 }
 
-/***********************************************************/
+/**
+ * \brief Partitions "extra" resources to other [groups](\ref RGroup) that can use them (if any).
+ * 
+ * \ref RGroup[rg]->use_extra_res must be \ref TRUE for a group to recieve extra resources.
+ * 
+ * \param extra is the extra resources to be partitioned.
+ * \param size is an array of [RGroup relsizes](\ref getRGroupRelsize()).
+ *        size[rg] MUST correspond to \ref RGroup[rg], meaning the indexing must
+ *        match.
+ * 
+ * \sideeffect \ref RGroup[rg]->res_extra will be set for all rg that use extra resources.
+ * 
+ * \author Kyle Palmquist
+ * 
+ * \sa rgroup_ResPartIndiv() which calls this function.
+ * 
+ * \ingroup RGROUP_PRIVATE
+ */
 static void _res_part_extra(RealF extra, RealF size[]) {
-    /*======================================================*
-     * PURPOSE *
-     * Partitions "extra" resources to other groups that can use them (if any). 
-     * HISTORY *
-     * Updated by KAP 5/2018 */
-
     GrpIndex rg;
     GroupType *g; /* shorthand for RGroup[rg] */
     RealF req_prop, /* group's prop'l contrib to the total requirements */
@@ -286,19 +336,27 @@ static void _res_part_extra(RealF extra, RealF size[]) {
         //printf("res_extra = %f\n,Rgroup = %s \n",RGroup[rg]->name,g->res_extra);
 
     } /* End ForEachGroup(rg) */
-
 }
-/***********************************************************/
-void rgroup_ResPartIndiv(void) {
-    /* Resources at the functional group level are divided among individuals in 
-     * the group, largest to smallest. Species distinctions within the group are 
-     * ignored. The partitioning of resources to individuals is done proportionally 
-     * based on size so that large individuals get more resources than their 
-     * smaller competitors.
-     * HISTORY:
-     * Chris Bennett @ LTER-CSU 12/21/2000
-     * Updated by KAP 5/2018 */
 
+/**
+ * \brief Partitions \ref RGroup resources amongst the individuals in the groups.
+ * 
+ * This function iterates across all groups and individuals. Species distinctions
+ * within a group are ignored. Partitioning is proportional to the size of individuals, 
+ * so larger individuals recieve more resources.
+ * 
+ * Note that this function also partitions [extra resources](\ref _res_part_extra())
+ * 
+ * \sideeffect [indiv](\ref IndivType)->res_avail and [indiv](\ref IndivType)->res_required
+ *             will be set.
+ * 
+ * \author
+ *     Chris Bennett\n
+ *     Kyle Palmquist
+ * 
+ * \ingroup RGROUP
+ */
+void rgroup_ResPartIndiv(void) {
     GrpIndex rg;
     GroupType *g; /* shorthand for RGroup[rg] */
     SppIndex sp;
@@ -432,22 +490,24 @@ void rgroup_ResPartIndiv(void) {
     Mem_Free(size_base);
 }
 
-/***********************************************************/
+/**
+ * \brief Growth function for all [groups](\ref RGROUP), [species](\ref SPECIES), 
+ *        and [individuals](\ref INDIVIDUAL).
+ * 
+ * This function will loop though all groups in \ref RGroup, all species in \ref Species
+ * and all individuals in the linked lists.
+ * 
+ * \sideeffect  [ndv](\ref IndivType)->relsize is modified.\n
+ *              [ndv](\ref IndivType)->normal_growth is set.\n
+ *              [ndv](\ref IndivType)->growthrate is set.\n
+ * 
+ * \author
+ *    Kyle Palmquist\n
+ *    Chris Bennett
+ * 
+ * \ingroup RGROUP
+ */
 void rgroup_Grow(void) {
-    /*======================================================*
-     * PURPOSE *
-     * Main loop to allow for plant growth.
-     * HISTORY *
-     * Chris Bennett @ LTER-CSU 6/15/2000
-     *  7-Nov-03 (cwb) Annuals have a completely new method of
-     *     propogation, growth, and death.  Most notably, they
-     *     aren't subject to the growth mechanism here, so they
-     *     are now excluded from this code.  All of the annual
-     *     generation occurs in the PartResources() function.
-     *  7/13/2016 KAP: This comment by cwb is now outdated. We had added
-     * functionality so that annuals now grow on an annual basis.
-     * Updated by KAP 5/2018 */
-
     IntU j;
     GrpIndex rg;
     SppIndex sp;
@@ -515,8 +575,8 @@ void rgroup_Grow(void) {
                 ndv->relsize += growth1;
                 //printf("new ndv->relsize  = %f\n, Species = %s \n", Species[sp]->name,ndv->relsize);
 
-		// Save the increment in size due to normal resources for use in the grazing module.
-		ndv->normal_growth = growth1;
+		        // Save the increment in size due to normal resources for use in the grazing module.
+		        ndv->normal_growth = growth1;
 
                 ndv->growthrate = rate1;
 
