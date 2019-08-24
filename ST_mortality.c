@@ -148,7 +148,6 @@ void mort_Main( Bool *killed) {
 
     /* Calculate PR at the functional group level: resources required/resources available */
     g->pr = ZRO(g->res_avail) ? 0. : g->res_required / g->res_avail;
-    //printf("g->pr after = %f\n,Group = %s \n",RGroup[rg]->name,  g->pr);/* kill plants if low resources for consecutive years */
     
     /* kill plants if low resources for consecutive years */
     /* increment yrs_neg_pr if pr > 1, else zero it. */

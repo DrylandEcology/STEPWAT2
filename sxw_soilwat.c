@@ -93,8 +93,6 @@ void _sxw_sw_setup (RealF sizes[]) {
       v->veg[k].lai_conv_daily[doy] = 0.;
     }
   }
-
-	SW_VPD_init();
 }
 
 void _sxw_sw_run(void) {
