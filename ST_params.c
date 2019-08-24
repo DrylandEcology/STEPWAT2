@@ -909,10 +909,12 @@ static void _rgroup_add1( char name[], RealF space, RealF density,
   RGroup[rg]->grp_num       = rg;
   RGroup[rg]->max_stretch   = (IntS) stretch;
   RGroup[rg]->max_spp_estab = (IntS) estab;
-  RGroup[rg]->max_density   = density;
-  RGroup[rg]->max_per_sqm   = density / Globals.plotsize;
+  // input of `density` is in units of [# / m2]; convert to units of [# / plot]
+  RGroup[rg]->max_density   = density * Globals.plotsize; // density per plot
+  RGroup[rg]->max_per_sqm   = density; // density per square-meter
   RGroup[rg]->use_mort      = itob(mort);
   RGroup[rg]->slowrate      = slow;
+  RGroup[rg]->space = space;
   RGroup[rg]->min_res_req   = space;
   RGroup[rg]->est_annually  = itob(estann);
   RGroup[rg]->startyr       = styr;
@@ -1106,6 +1108,8 @@ static void _species_init( void) {
       Species[sp]->use_me = (RGroup[rg-1]->use_me) ? itob(turnon) : FALSE ;
       Species[sp]->received_prob = 0;
       Species[sp]->cohort_surv = cohort;
+      // input of `pseed` is in units of [# / m2]; convert to units of [# / plot]
+      Species[sp]->pseed = pseed * Globals.plotsize;
 /*      Species[sp]->ann_mort_prob = (age > 0)
                                          ? -log(cohort)/age
                                          : 0.0;
