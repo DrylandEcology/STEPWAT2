@@ -138,7 +138,7 @@ git submodule update --init --recursive
 STEPWAT2 uses Doxygen to automatically generate documentation for the code base.
 * To generate the documentation:
 ```
-Doxygen doxyfile
+make documentation
 ```
 * To view the documentation:
 ```
