@@ -145,6 +145,18 @@ clean:	cleanobjs cleanbin
 .PHONY : cleanall
 cleanall: clean output_clean
 
+.PHONY : documentation
+documentation: 
+		doxygen doxyfile
+		if open Documentation/html/index.html; \
+		  then echo "Success"; \
+		  else if echo "Open failed. Attempting fallback method." && xdg-open Documentation/html/index.html; \
+		    then echo "Success"; \
+		    else echo "Failed to open documentation"; \
+		  fi; \
+		fi
+
+
 #@# Dependency rules follow -----------------------------
 
 $(Bin)/stepwat: $(EXOBJS)
