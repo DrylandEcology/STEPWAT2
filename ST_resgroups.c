@@ -886,26 +886,21 @@ void RGroup_Update_GrpResProp(GrpIndex rg)
 		RGroup[rg]->est_count = 0;
 }
 
-/***********************************************************/
+/**
+ * \brief calculates the biomass of a given [resource group](\ref RGroup)
+ * 
+ * \param rp the \ref GrpIndex in \ref RGroup of the requested resource group.
+ * 
+ * \return A float. The summed sizes of all species in the resource group.
+ * 
+ * \author
+ *     \* Chris Bennett (initial programming)
+ *     \* Chandler Haukap
+ * 
+ * \ingroup RGROUP
+ */
 RealF RGroup_GetBiomass(GrpIndex rg)
 {
-	/*======================================================*/
-	/* PURPOSE */
-	/*   Convert relative size to biomass for a resource group.
-	 */
-
-	/* HISTORY */
-	/* Chris Bennett @ LTER-CSU 6/15/2000            */
-	/*   10-Apr-03 - cwb - return sum of plant sizes times density
-	 *       for the per-plot biomass.
-	 *
-	 *   8-Dec-03 (cwb) actually, what we want is the total biomass
-	 *       of the group on the plot, so multiplying by density
-	 *       doesn't make sense.  density limits the rsize
-	 *       which already scales the per-plot values.
-	 */
-
-	/*------------------------------------------------------*/
 	Int j;
 	SppIndex sp;
 	RealF biomass = 0.0;
@@ -920,22 +915,22 @@ RealF RGroup_GetBiomass(GrpIndex rg)
 	return biomass;
 }
 
-/***********************************************************/
+/**
+ * \brief Finds the index in \ref RGroup of the resource group with the given name.
+ * 
+ * \param name The name of the [resource group](\ref GroupType) to find.
+ * 
+ * \return 
+ *     The index in \ref RGroup of the resource group with that name. If the name
+ *     doesn't match any resource groups in \ref RGroup returns -1.
+ * 
+ * \author 
+ *     Chris Bennett
+ * 
+ * \ingroup RGROUP
+ */
 GrpIndex RGroup_Name2Index(const char *name)
 {
-	/*======================================================*/
-	/* PURPOSE */
-	/*   Simple utility to find the index of a group name string
-	 *
-	 *   returns group index number if name is a valid group name
-	 *   otherwise returns 0.  This works because the
-	 *   ForEachGroup macro starts at 1.
-	 */
-
-	/* HISTORY */
-	/* Chris Bennett @ LTER-CSU 6/15/2000            */
-
-	/*------------------------------------------------------*/
 	GrpIndex i, rg = -1;
 
 	ForEachGroup(i)
@@ -949,15 +944,17 @@ GrpIndex RGroup_Name2Index(const char *name)
 	return (rg);
 }
 
-/***********************************************************/
+/**
+ * \brief Creates a new [resource group](\ref GroupType) and allocates all required memory.
+ * 
+ * \return A pointer to the new \ref GroupType
+ * 
+ * \author Chris Bennett
+ * 
+ * \ingroup RGROUP_PRIVATE
+ */
 static GroupType *_create(void)
 {
-	/*======================================================*/
-
-	/* HISTORY */
-	/* Chris Bennett @ LTER-CSU 6/15/2000            */
-
-	/*------------------------------------------------------*/
 	GroupType *p;
 
 	p = (GroupType *) Mem_Calloc(1, sizeof(GroupType), "_create");
@@ -969,22 +966,20 @@ static GroupType *_create(void)
 
 }
 
-/***********************************************************/
+/**
+ * \brief Create a new [resource group](\ref GroupType) and add it to \ref RGroup.
+ * 
+ * If \ref RGroup is full prior to calling this function, it will throw an error.
+ * 
+ * \return The index in \ref RGroup of where the resource group was placed.
+ * 
+ * \author
+ *     Chris Bennett
+ * 
+ * \ingroup RGROUP
+ */
 GrpIndex RGroup_New(void)
 {
-	/*======================================================*/
-	/* PURPOSE */
-	/* Create a new resource group (life form) object and give
-	 it the next consecutive identifier.
-
-	 Initialization is performed in parm_RGroup_Init().
-
-	 */
-
-	/* HISTORY */
-	/* Chris Bennett @ LTER-CSU 6/15/2000            */
-
-	/*------------------------------------------------------*/
 	GrpIndex i = (GrpIndex) Globals.grpCount;
 
 	if (++Globals.grpCount > Globals.max_rgroups)
@@ -998,21 +993,22 @@ GrpIndex RGroup_New(void)
 	return (GrpIndex) i;
 }
 
-/***********************************************************/
+/**
+ * \brief Drops the given [species](\ref SpeciesType) from it's [resource group](\ref GroupType).
+ * 
+ * \param sp is the [index](\ref SppIndex) in \ref Species of the species to drop.
+ * 
+ * \sideeffect
+ *     \* The species will be removed from the \ref RGroup[rg]->est_spp array where rg
+ *        is the [index](\ref GrpIndex) in \ref RGroup that contains the species.
+ * 
+ * \author
+ *     Chris Bennett
+ * 
+ * \ingroup RGROUP
+ */
 void rgroup_DropSpecies(SppIndex sp)
 {
-	/*======================================================*/
-	/* PURPOSE */
-	/* When a species associated with a resource group dies
-	 out, it is dropped from the group so it will not be
-	 processed unnecessarily.
-	 */
-
-	/* HISTORY */
-	/* Chris Bennett @ LTER-CSU 6/15/2000            */
-
-	/*------------------------------------------------------*/
-
 	IntS i, j;
 	GrpIndex rg;
 	Bool f = FALSE;
@@ -1038,19 +1034,22 @@ void rgroup_DropSpecies(SppIndex sp)
 	}
 }
 
-/***********************************************************/
+/**
+ * \brief Add a [species](\ref SpeciesType) to a [resource group](\ref GroupType).
+ * 
+ * \param rg is the [index](\ref GrpIndex) in \ref RGroup of the resource group to 
+ *           add the species to. \n
+ * \param sp is the [index](\ref SppIndex) in \ref Species of the species to add to
+ *           the resource group.
+ * 
+ * \sideeffect sp will be added to the \ref RGroup[rg]->est_spp array.
+ * 
+ * \author Chris Bennett
+ * 
+ * \ingroup RGROUP
+ */
 void rgroup_AddSpecies(GrpIndex rg, SppIndex sp)
 {
-	/*======================================================*/
-	/* PURPOSE */
-	/*   When a species associated with a resource group becomes
-	 established, it is added to the list of species and
-	 otherwise linked to the group.
-	 */
-	/* HISTORY */
-	/* Chris Bennett @ LTER-CSU 6/15/2000            */
-
-	/*------------------------------------------------------*/
 	Int i;
 	Bool f = FALSE;
 
@@ -1066,25 +1065,25 @@ void rgroup_AddSpecies(GrpIndex rg, SppIndex sp)
 		RGroup[rg]->est_spp[RGroup[rg]->est_count++] = sp;
 }
 
-/**************************************************************/
+/**
+ * \brief Kill the given [resource group](\ref GroupType) and never allow it to 
+ *        grow again.
+ * 
+ * \param rg is the [index](\ref GrpIndex) in \ref RGroup of the requested resource group.
+ * 
+ * \sideeffect 
+ *     \* All individuals and species in \ref RGroup[rg] will be killed.
+ *     \* \ref RGroup[rg]->extirpated will be set to \ref TRUE.
+ *  
+ * \author 
+ *     Chris Bennett
+ * 
+ * \sa RGroup_Kill() for killing with regeneration.
+ * 
+ * \ingroup RGROUP
+ */
 void rgroup_Extirpate(GrpIndex rg)
 {
-	/*======================================================*/
-	/* PURPOSE */
-	/* Kill a group catastrophically, meaning, kill all
-	 individuals, remove their biomass (relsize), and
-	 don't let them regenerate ever again.
-	 */
-
-	/* HISTORY */
-	/* Chris Bennett @ LTER-CSU 7/10/2000
-	 cwb - 11/27/00 - rewrote the algorithm to be more
-	 efficient, ie, fixed the quick and dirty code
-	 from before.
-	 */
-
-	/*------------------------------------------------------*/
-
 	SppIndex sp, i;
 
 	ForEachGroupSpp(sp, rg, i)
@@ -1094,23 +1093,23 @@ void rgroup_Extirpate(GrpIndex rg)
 	}
 
 	RGroup[rg]->extirpated = TRUE;
-
 }
 
-/**************************************************************/
+/**
+ * \brief Kill all individuals of all species in the given group.
+ * 
+ * \param rg is the [index](\ref GrpIndex) in \ref RGroup of the group to kill.
+ * 
+ * \sideeffect Every individual in every species in the resource group will be killed.
+ * 
+ * \author Chris Bennett
+ * 
+ * \sa rgroup_Extirpate() for killing without the chance of regeneration.
+ * 
+ * \ingroup RGROUP
+ */
 void RGroup_Kill(GrpIndex rg)
 {
-	/*======================================================*/
-	/* PURPOSE */
-	/* Kill all individuals of all species in the group,
-	 but allow them to regenerate.
-	 */
-
-	/* HISTORY */
-	/* Chris Bennett @ LTER-CSU 11/27/2000            */
-
-	/*------------------------------------------------------*/
-
 	//printf("inside RGroup_Kill() rg=%d, RGroup[rg]->proportion_killed=%f \n",rg,RGroup[rg]->proportion_killed);
 	Int i;
 
@@ -1119,25 +1118,26 @@ void RGroup_Kill(GrpIndex rg)
 				RGroup[rg]->proportion_killed);
 }
 
-/**********************************************************/
+/**
+ * \brief Returns an array of all individual in all species in the given group.
+ * 
+ * \param rg in the [index](\ref GrpIndex) of the resource group.
+ * \param sort provides the option to sort the individuals based on size.
+ *             Use 'a' to sort ascending, 'b' to sort decenting, or 0 to not sort.
+ * \param num will be populated with the number of individuals in the array.
+ * 
+ * \return an array of pointers to all [individuals](\ref IndivType) in the group.
+ * 
+ * \sideeffect 
+ *     \* num will be populated with the size of the array.
+ * 
+ * \author
+ *     Chris Bennett
+ * 
+ * \ingroup RGROUP    
+ */
 IndivType **RGroup_GetIndivs(GrpIndex rg, const char sort, IntS *num)
 {
-	/*======================================================*/
-	/* PURPOSE */
-	/* put all the individuals of the group into a list
-	 and optionally sort the list.
-
-	 - Returns an allocated list of indivs; calling routine must
-	 free when appropriate.
-	 - Puts the number of individuals in *num.
-
-	 HISTORY
-	 Chris Bennett @ LTER-CSU 12/15/2000
-	 *
-	 *  2-Mar-03 - cwb - removed requirement for list to be
-	 *  pre-allocated.  Added code to allocate and return list.
-	 *------------------------------------------------------*/
-
 	IntS j, i = 0;
 	size_t i_size = sizeof(IndivType **);
 	SppIndex sp;

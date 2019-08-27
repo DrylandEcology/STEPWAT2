@@ -84,7 +84,7 @@ struct indiv_st {
  * \brief Holds information on annual plant individuals.
  * 
  * An individual is one plant specimen. Most of the code associated with this
- * struct is found in ST_indivs.c.
+ * struct is found in \ref ST_indivs.c.
  * 
  * \sa indiv_st
  * 
@@ -124,7 +124,7 @@ struct indiv_ann_st {
  * \brief Holds all species-specific information.
  * 
  * This struct contains constants and variables that differ between
- * species. Species is a global array of these structs.
+ * species. \ref Species is a global array of these structs.
  * 
  * \sa Species
  * 
@@ -261,7 +261,7 @@ struct species_st {
  * \brief Contains all resource group-specific fields. 
  * 
  * Some fields are consant and some are variable, so be careful what you are modifying. 
- * RGroup is a global array of these structs used in STEPWAT2.
+ * \ref RGroup is a global array of these structs used in STEPWAT2.
  * 
  * \sa RGroup 
  * 
