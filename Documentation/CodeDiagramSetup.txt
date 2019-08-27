@@ -1,0 +1,7 @@
+This file defines the Code Diagram page of the documentation.
+
+/**
+ * \page DIAGRAM Relational Chart
+ *
+ * This tab will contain a reference chart for interactions between files. For now it is empty.
+ */
