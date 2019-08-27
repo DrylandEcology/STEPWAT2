@@ -950,7 +950,7 @@ void stat_Output_YrMorts( void ) {
 /**
  * \brief Outputs all mortality statistics.
  * 
- * The file they are printed to is denoted by \ref Parm_name(F_MortAvg).
+ * The file they are printed to is denoted by \ref Parm_name().
  * The statistics printed are those denoted in the mortflags.in file.
  * 
  * \ingroup STATISTICS
@@ -1255,7 +1255,7 @@ void stat_Output_AllCellAvgBmass(const char * filename)
 /**
  * \brief Outputs all requested biomas statistics to a CSV file.
  * 
- * The file name is taken from \ref Parm_name(F_BMassAvg).
+ * The file name is taken from \ref Parm_name().
  * The statistics printed are those specified in bmassflags.in.
  * 
  * \ingroup STATISTICS

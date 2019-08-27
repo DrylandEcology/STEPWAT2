@@ -363,7 +363,7 @@ void mort_EndOfYear(void) {
  * function checks each RGroup individually, so any number of groups could be grazed in any
  * given year.
  * 
- * \sideefect If RGroup[rg] is grazed every individual's biomass in every species in RGroup[rg]
+ * \sideeffect If RGroup[rg] is grazed every individual's biomass in every species in RGroup[rg]
  *            will be reduced based on RGroup[rg]->proportion_grazing.
  * 
  * \sa Species_Proportion_Grazing() this function is called to modify any species that need
@@ -673,7 +673,7 @@ static void _succulents( const SppIndex sp) {
  * 
  * \param sp The index of the species in the Species array.
  * 
- * \sideeffects Calculates ndv->slow_yrs for all individuals in
+ * \sideeffect Calculates ndv->slow_yrs for all individuals in
  *                  the species.\n 
  *              If ndv->slow_yrs passes the mortality threshhold
  *                  the given individual is killed.\n

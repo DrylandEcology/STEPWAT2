@@ -131,7 +131,7 @@ RealF Species_GetBiomass(SppIndex sp) {
  * \param sp is the index in \ref Species of the species to add individuals to.
  * \param new_indivs is the number of individuals to add.
  * 
- * \sideeffect Adds \Species to \RGroup if this species had been dropped previously.\n
+ * \sideeffect Adds \ref Species to \ref RGroup if this species had been dropped previously.\n
  *             Modifies the linked list of individuals stored in \ref Species[ \ref sp ]
  * 
  * \ingroup SPECIES

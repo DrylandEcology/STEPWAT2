@@ -78,7 +78,8 @@ static RealF _add_annuals(const GrpIndex rg, const SppIndex sp, const RealF last
  *   \3 further partitioning to [individuals](\ref INDIVIDUAL) in the group _ResPartIndiv().
  * 
  * \sideeffect \ref RGroup[rg]->res_avail and \ref RGroup[rg]->res_required will be set for all rg.\n
- *             \ref indiv->res_avail and indiv->res_required will be set for all individuals in the group.
+ *             [indiv](\ref IndivType)->res_avail and [indiv](\ref IndivType)->res_required will be set 
+ *             for all individuals in the group.
  * 
  * \ingroup RGROUP
  */
@@ -889,7 +890,7 @@ void RGroup_Update_GrpResProp(GrpIndex rg)
 /**
  * \brief calculates the biomass of a given [resource group](\ref RGroup)
  * 
- * \param rp the \ref GrpIndex in \ref RGroup of the requested resource group.
+ * \param rg the \ref GrpIndex in \ref RGroup of the requested resource group.
  * 
  * \return A float. The summed sizes of all species in the resource group.
  * 

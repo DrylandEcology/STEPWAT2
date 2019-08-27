@@ -202,7 +202,7 @@ Bool indiv_Kill_Partial( MortalityType code,
  * 
  * \param ndv A pointer to the individual.
  * \param killType The MortalityType code. This parameter is currently unused.
- * \param proportionKilled value between 0 and 1. The percent total biomass to remove.
+ * \param proportKilled value between 0 and 1. The percent total biomass to remove.
  * 
  * \sideeffect ndv->relsize is adjusted. 
  * 

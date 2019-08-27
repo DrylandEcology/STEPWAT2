@@ -4,7 +4,7 @@
  * 
  * These structures include individuals, species, resource groups, succulents,
  * plots, environments, and global variables.
- * For SXW struct definitions see \f sxw.h.
+ * For SXW struct definitions see \ref sxw.h.
  *  
  * \author Chandler Haukap
  * 
