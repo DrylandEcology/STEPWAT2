@@ -594,17 +594,28 @@ void rgroup_Grow(void) {
     } /* END ForEachGroup(rg)*/
 }
 
-/***********************************************************/
+/**
+ * \brief Converts extra resources to superfluous growth.
+ * 
+ * When there are resources beyond the minimum necessary for "normal" growth, 
+ * the extra resources are converted to superfluous growth in the current year 
+ * and is removed at the end of the year in _kill_extra_growth. 
+ * 
+ * \param rg the index in \ref RGroup of the resource group.
+ * 
+ * \sideeffect 
+ *     \* \ref Species[sp]->extragrowth will be populated for all [sp](\ref SppIndex)
+ *        in the resource group.
+ *     \* All [indiv](\ref IndivType)->extragrowth will be populated for all
+ *        individuals in all species in the designated resource group.
+ * 
+ * \author
+ *     Kyle Palmquist
+ *     Chris Bennett
+ * 
+ * \ingroup RGROUP_PRIVATE
+ */
 static void _extra_growth(GrpIndex rg) {
-    /*======================================================*/
-    /* PURPOSE */
-    /* When there are resources beyond the minimum necessary for "normal" growth, 
-     * the extra resources are converted to superfluous growth in the current year 
-     * and is removed at the end of the year in _kill_extra_growth. */
-    /* HISTORY */
-    /* Chris Bennett @ LTER-CSU 11/8/2000 */
-    /* Updated by KAP 5/2018 */
-
     Int j;
     RealF extra_ndv, indivpergram;
     GroupType *g;
@@ -659,30 +670,31 @@ static void _extra_growth(GrpIndex rg) {
 }
 
 
-/***********************************************************/
+/**
+ * \brief Establishes individuals in all species in all resource groups.
+ * 
+ * Stochastically determines how many individuals establish in each species based
+ * on the fecundity of the species.
+ * 
+ * \sideeffect 
+ *     \* \ref RGroup[rg]->min_res_req will be recalculated for all [rg](\ref GrpIndex) if the number of 
+ *        established resource groups changes.
+ *     \* \ref Species and \ref RGroup estabs will be updated.
+ *     \* [Individuals](\ref IndivType) will be added to the linked lists for each species.
+ * 
+ * \author
+ *     Chris Bennett
+ *     Kyle Palmquist
+ * 
+ * \sa 
+ *     \* Species_NumEstablish() and _add_annuals() which are called in this function to calculate the 
+ *        number of individuals to establish for perenials and annuals respectively.
+ *     \* Species_Add_Indiv() and species_Update_Estabs() which are called in this function to update
+ *        the linked list and the number of established individuals respectively.
+ * 
+ * \ingroup RGROUP
+ */
 void rgroup_Establish(void) {
-    /*======================================================*/
-    /* PURPOSE */
-    /* Determines which and how many species can establish in a given year. For
-     * each species in each perennial functional group, check that a uniform
-     * random number between 0 and 1 is less than the species' establishment
-     * probability. a) If so, return a random number of individuals up to the
-     * maximum allowed to establish for the species. This is the number of individuals
-     * in this species that will establish this year. b) If not, continue with
-     * the next species. Establishment for species of annual functional groups
-     * occurs differently. See notes at the top of _add_annuals */
-
-    /* HISTORY */
-    /* Chris Bennett @ LTER-CSU 6/15/2000 */
-    /* The probability of establishment emulates the occurrence of microsite
-     * conditions that allow for establishment.
-     * 7-Nov-03 (cwb) Adding the new algorithm to handle annuals. It's more
-     * complicated than before (which didn't really work) so annuals are now added
-     * in the PartResources()function.  Only perennials are added here. Also, there's
-     * now a parameter to define the start year of establishment for perennials.
-     * KAP: Annual establishment now occurs here instead of in PartResources*/
-    /*------------------------------------------------------*/
-
     IntS i, num_est; /* number of individuals of sp. that establish*/
     RealF
       used_space = 0; /* sums up all of the space that is currently used */
@@ -764,19 +776,19 @@ void rgroup_Establish(void) {
     }
 }
 
-/***********************************************************/
+/**
+ * \brief Increment the ages of all individuals in all species in all resource groups.
+ * 
+ * \sideeffect 
+ *     \* [indiv](\ref IndivType)->age will be incremented for every individual.
+ * 
+ * \author
+ *     Chris Bennett
+ * 
+ * \ingroup RGROUP
+ */
 void rgroup_IncrAges(void)
 {
-	/*======================================================*/
-	/* PURPOSE */
-	/*  Increment ages of individuals in a resource group.
-	 */
-
-	/* HISTORY */
-	/* Chris Bennett @ LTER-CSU 6/15/2000            */
-	/*   8-Nov-03 (cwb) added check for annuals */
-
-	/*------------------------------------------------------*/
 	Int j;
 	GrpIndex rg;
 	SppIndex sp;
@@ -813,6 +825,8 @@ void rgroup_IncrAges(void)
  *         relsizes of all individuals in all species in RGroup[rg].
  * 
  * \sa getSpeciesRelsize()
+ * 
+ * \ingroup RGROUP
  */
 RealF getRGroupRelsize(GrpIndex rg){
     Int n;
@@ -830,9 +844,19 @@ RealF getRGroupRelsize(GrpIndex rg){
     }
 }
 
-/***********************************************************/
-/* Update the grp_res_prop field of every individual in the RGroup. 
-   param rg = RGroup index */
+/** 
+ * \brief Update the grp_res_prop field of every individual in \ref RGroup[rg].
+ * 
+ * grp_res_prop reflects the proportion of the groups total relative size belonging to 
+ * a given individual.
+ * 
+ * \param rg = index in \ref RGroup of the resource group.
+ * 
+ * \sideeffect
+ *     \* [indiv](\ref IndivType)->grp_res_prop will be updated.
+ * 
+ * \ingroup RGROUP
+ */
 void RGroup_Update_GrpResProp(GrpIndex rg)
 {
 	Int n;

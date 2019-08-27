@@ -103,10 +103,10 @@
 
 /*********** define types for indices to data structures *************/
 /**
- * \brief A GrpIndex is just a short int.
+ * \brief Used to iterate acros resource groups stored in the \ref RGroup global variable.
  * 
  * GrpIndex exists to clarify what a variable is meant to access.
- * Any variable of type GrpIndex is clearly meant to access RGroup.
+ * Any variable of type GrpIndex is meant to access \ref RGroup.
  * 
  * \sa RGroup
  * 
@@ -114,10 +114,10 @@
  */
 typedef IntS GrpIndex;
 /**
- * \brief An SppIndex is just a short int.
+ * \brief Used to iterate across species stored in the \ref Species global variable.
  * 
  * SppIndex exists to clarify what a variable is meant to access.
- * Any variable of type GrpIndex is clearly meant to access RGroup.
+ * Any variable of type SppIndex is meant to access \ref Species.
  * 
  * \sa Species
  * 
