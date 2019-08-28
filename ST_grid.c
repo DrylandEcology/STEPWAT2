@@ -47,18 +47,7 @@
 char sd_Sep;
 
 int grid_Cells;
-int UseDisturbances, UseSoils, sd_DoOutput, sd_MakeHeader; //these are treated like booleans
-
-// these are grids to store the SOILWAT variables... also dynamically allocated/freed
-SW_SOILWAT *grid_SW_Soilwat, *spinup_SW_Soilwat;
-SW_SITE *grid_SW_Site, *spinup_SW_Site;
-SW_VEGPROD *grid_SW_VegProd, *spinup_SW_VegProd;
-SW_MODEL *grid_SW_Model, *spinup_SW_Model;
-
-// these two variables are used to store the soil/distubance inputs for each grid cell... also dynamically allocated/freed
-SoilType *grid_Soils;
-
-Grid_SD_St **grid_SD; //for seed dispersal
+Bool UseDisturbances, UseSoils, sd_DoOutput, sd_MakeHeader; //these are treated like booleans
 
 /***************************** Externed variables **********************************/
 /* Note that in an ideal world we wouldn't need to extern any variables because 
@@ -67,8 +56,6 @@ Grid_SD_St **grid_SD; //for seed dispersal
 
 // these are SOILWAT variables that we need...
 extern SW_SOILWAT SW_Soilwat;
-extern SW_SITE SW_Site;
-extern SW_VEGPROD SW_VegProd;
 extern SW_WEATHER SW_Weather;
 
 extern pcg32_random_t grid_rng;         // Gridded mode's unique RNG.
@@ -1211,13 +1198,13 @@ static void _read_grid_setup(void)
     allocate_gridCells(grid_Rows, grid_Cols);
 
     GetALine(f, buf);
-    i = sscanf(buf, "%d", &UseDisturbances);
+    i = sscanf(buf, "%u", &UseDisturbances);
     if (i != 1)
         LogError(logfp, LOGFATAL,
                  "Invalid grid setup file (disturbances line wrong)");
 
     GetALine(f, buf);
-    i = sscanf(buf, "%d", &UseSoils);
+    i = sscanf(buf, "%u", &UseSoils);
     if (i != 1)
         LogError(logfp, LOGFATAL, "Invalid grid setup file (soils line wrong)");
 
@@ -1264,12 +1251,12 @@ static void _read_grid_setup(void)
 	}
 
 	GetALine(f, buf);
-	if (sscanf(buf, "%d", &sd_DoOutput) != 1)
+	if (sscanf(buf, "%u", &sd_DoOutput) != 1)
 		LogError(logfp, LOGFATAL,
 				"Invalid %s file: seed dispersal output line\n", grid_files[GRID_FILE_SETUP]);
 
 	GetALine(f, buf);
-	if (sscanf(buf, "%d", &sd_MakeHeader) != 1)
+	if (sscanf(buf, "%u", &sd_MakeHeader) != 1)
 		LogError(logfp, LOGFATAL,
 				"Invalid %s file: seed dispersal make header line\n",
 				grid_files[GRID_FILE_SETUP]);
