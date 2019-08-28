@@ -135,19 +135,7 @@ git submodule update --init --recursive
 <br>
 
 ## Doxygen documentation:
-STEPWAT2 uses Doxygen to automatically generate documentation for the code base.
-* To generate the documentation:
-```
-make documentation
-```
-* To view the documentation:
-```
-open Documentation/html/index.html
-```
-* If you are on Linux this might throw an error. Try
-```
-xdg-open Documentation/html/index.html
-```
+STEPWAT2 uses Doxygen to automatically generate documentation for the code base. For information on how to generate the documentation see our [GitHub wiki](https://github.com/DrylandEcology/STEPWAT2/wiki/For-Developers).
 
 <br>
 
