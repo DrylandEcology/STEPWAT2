@@ -160,7 +160,12 @@ void save_sxw_memory( RealD * grid_roots_max, RealD* grid_rootsXphen, RealD* gri
 void free_sxw_memory( void );
 
 /****************** Begin Function Code ********************/
-/***********************************************************/
+
+/**
+ * \brief Read \ref SOILWAT input files and initialize variables.
+ * 
+ * \ingroup SXW
+ */
 void SXW_Init( Bool init_SW, char *f_roots ) {
   /* read SOILWAT's input files and initialize some variables */
   /* The shorthand table dimensions are set at the point
@@ -238,8 +243,10 @@ RandSeed(Globals.randseed, &resource_rng);
 }
 
 /**
-		@brief This function initializes and allocates SOILWAT2 structures,
-		and reads SOIILWAT2 inputs.
+ * @brief This function initializes and allocates SOILWAT2 structures,
+ *		  and reads SOILWAT2 inputs.
+ *
+ * \ingroup SXW
  */
 static void SXW_Reinit(void) {
 	char *temp;
@@ -248,47 +255,49 @@ static void SXW_Reinit(void) {
 	SW_CTL_init_model(temp);
 	SW_CTL_obtain_inputs();
 	SW_OUT_set_SXWrequests();
-  free(temp);
+    free(temp);
 }
 
 
 /**
-		@brief This function resets the model to default conditions
-
-		It clears SOILWAT2-memory, initializes and allocates SOILWAT2 structures,
-		and reads SOIILWAT2 inputs.
-
-		However, it does **not** reset memory allocated by
-		`setGlobalSTEPWAT2_OutputVariables` because those variables are carrying
-		over from one STEPWAT2 iteration to the next. They are only de-allocated
-		at the end of an entire STEPWAT2 run (see `ST_main.c/main()`).
+ * @brief This function resets the model to default conditions
+ *
+ * It clears SOILWAT2-memory, initializes and allocates SOILWAT2 structures,
+ * and reads SOIILWAT2 inputs.
+ *
+ * However, it does **not** reset memory allocated by
+ * `setGlobalSTEPWAT2_OutputVariables` because those variables are carrying
+ * over from one STEPWAT2 iteration to the next. They are only de-allocated
+ * at the end of an entire STEPWAT2 run (see `ST_main.c/main()`).
+ * 
+ * \ingroup SXW
  */
 void SXW_Reset(void) {
 	SW_CTL_clear_model(FALSE); // don't reset output arrays
 	SXW_Reinit();
 }
 
-void SXW_InitPlot (void) {
-/*======================================================*/
-/* Call this from main::Plot_Init() after killing everything
- * so the sxw tables will be reset.
+/**
+ * \brief Resets the SOILWAT2 transpiration tables. This should be called 
+ *        every iteration.
+ * 
+ * \sa Plot_Init() where this function is called.
+ * 
+ * \ingroup SXW
  */
-
+void SXW_InitPlot (void) {
 	_sxw_sw_clear_transp();
 	_sxw_update_resource();
 }
-void SXW_Run_SOILWAT(void) {
-    /*======================================================*/
-    /* need to update the resource vectors and set up the
-     * ppt and temp (environs) here before calling
-     * Env_Generate() and rgroup_Establish() in main().
-     *
-     * 2/28/2003 - cwb - adding changes mentioned at top of file.
-     * 3/31/2003 - cwb - because we're always running soilwat to
-     *             emulate full-size plants, computing roots etc
-     *             gets done once during init plot.
-     */
 
+/**
+ * \brief updates the resource arrays. 
+ * 
+ * \sa Env_Generate() where this function is called.
+ * 
+ * \ingroup SXW
+ */
+void SXW_Run_SOILWAT(void) {
     GrpIndex g;
     Int j;
     SppIndex sp;
@@ -390,11 +399,14 @@ void SXW_SW_Setup_Echo(void) {
 	CloseFile(&f);
 }
 
+/**
+ * \brief Get function for transpiration.
+ * 
+ * \param rg is the [index](\ref GrpIndex) in \ref RGroup of the resource group.
+ * 
+ * \return The transpiration availible for \ref RGroup[rg].
+ */
 RealF SXW_GetTranspiration( GrpIndex rg) {
-/*======================================================*/
-/* see _sxw_update_resource() for _resource_cur[]
-*/
-	//printf("SXW_GetTranspiration _resource_cur[%d] = %.5f \n", rg, _resource_cur[rg]);
 	return _resource_cur[rg];
 }
 

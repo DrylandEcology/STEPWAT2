@@ -1,14 +1,12 @@
-/********************************************************/
-/********************************************************/
-/*  Source file: output.c
- *  Type: module
- *  Application: STEPPE - plant community dynamics simulator
- *  Purpose: All functions pertaining to producing output
- *           should go here. */
-/*  History */
-/*     (6/15/2000) -- INITIAL CODING - cwb */
-/********************************************************/
-/********************************************************/
+/**
+ * \file ST_output.c
+ * \brief Outputs mortality or biomass on a yearly time step. 
+ * 
+ * This file differs from \ref ST_stats.c because it does not accumulate values.
+ * It simply prints the values to the given year.
+ * 
+ * \ingroup OUTPUT
+ */
 
 /* =================================================== */
 /*                INCLUDES / DEFINES                   */
@@ -37,13 +35,14 @@ extern SW_MODEL SW_Model;
 
 
 
-/**************************************************************/
-/**************************************************************/
-void output_Bmass_Yearly( Int year ) {
-/*======================================================*/
-/* note that year is only printed, not used as index, so
- * we don't need to decrement to make base0
+/**
+ * \brief Outputs the current year's values to the file denoted in \ref Globals.bmass.fp_year
+ * 
+ * \param year is the year that these values are being printed. This is 1 indexed.
+ * 
+ * \ingroup OUTPUT
  */
+void output_Bmass_Yearly( Int year ) {
   char **fields;
   GrpIndex rg;
   SppIndex sp;
@@ -199,10 +198,14 @@ void output_Bmass_Yearly( Int year ) {
 }
 
 
-/***********************************************************/
+/**
+ * \brief Outputs the current year's values to the file denoted in \ref Globals.mort.fp_year
+ * 
+ * Prints mortality values. These values are indexed by age at death.
+ * 
+ * \ingroup OUTPUT
+ */
 void output_Mort_Yearly( void ) {
-/*======================================================*/
-
 	IntS age, rg, sp;
 	char filename[FILENAME_MAX];
 
