@@ -5,6 +5,7 @@ CFLAGS = \
 	-DSTEPWAT \
 	-g \
 	-O0 \
+	-pthread \
 	-Wcast-align \
 	-Wformat \
 	-Wimplicit \
