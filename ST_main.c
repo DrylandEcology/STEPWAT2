@@ -88,6 +88,7 @@ SW_FILE_STATUS SW_File_Status;
 /***********************************************************/
 void Plot_Initialize( void);
 
+#ifndef STDEBUG
 static void usage(void) {
   char *s ="STEPPE plant community dynamics (SGS-LTER Jan-04).\n"
            "   Usage : steppe [-d startdir] [-f files.in] [-q] [-e] [-o] [-g]\n"
@@ -103,8 +104,10 @@ static void usage(void) {
   fprintf(stderr,"%s", s);
   exit(0);
 }
+
 static void init_args(int argc, char **argv);
 static void check_log(void);
+#endif
 
 /* a couple of debugging routines */
 void check_sizes(const char *);
@@ -145,7 +148,7 @@ pcg32_random_t species_rng;
 pcg32_random_t grid_rng;
 extern pcg32_random_t markov_rng;
 
-#ifndef ST_TEST
+#ifndef STDEBUG
 /******************** Begin Model Code *********************/
 /***********************************************************/
 int main(int argc, char **argv) {
@@ -324,9 +327,7 @@ int main(int argc, char **argv) {
 	return 0;
 }
 /* END PROGRAM */
-#endif /* ST_TEST */
-
-
+#endif
 
 /**************************************************************/
 void Plot_Initialize(void) {
@@ -402,7 +403,7 @@ void Plot_Initialize(void) {
 	SXW_InitPlot();
 }
 
-
+#ifndef STDEBUG
 /**************************************************************/
 static void init_args(int argc, char **argv) {
   /* to add an option:
@@ -577,7 +578,6 @@ static void init_args(int argc, char **argv) {
 
 }
 
-
 static void check_log(void) {
 /* =================================================== */
 
@@ -589,6 +589,7 @@ static void check_log(void) {
   }
 
 }
+#endif
 
 void check_sizes(const char *chkpt) {
     /* =================================================== */
