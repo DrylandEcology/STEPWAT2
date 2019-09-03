@@ -91,7 +91,7 @@ obj/%.o: %.c
 	$(CC) $(CFLAGS) $(CPPFLAGS) $(INC_DIRS) -c $< -o $@
 
 obj/%.o: %.cc
-	$(CXX) $(CFLAGS) $(CPPFLAGS) $(INC_DIRS) -c $< -o $@
+	$(CXX) $(CFLAGS) $(CPPFLAGS) $(INC_DIRS) -std=gnu++11 -c $< -o $@
 
 obj/%_TEST.o: %.c
 	$(CC) $(CFLAGS) $(CPPFLAGS) $(INC_DIRS) -DSTDEBUG -c $< -o $@
