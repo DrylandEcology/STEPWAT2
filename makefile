@@ -15,10 +15,12 @@ CFLAGS = \
 	-Wunused
 
 INC_DIRS = \
+	-I. \
 	-Isqlite-amalgamation \
 	-Isw_src \
 	-Isw_src/googletest/googletest \
-	-Isw_src/googletest/googletest/include
+	-Isw_src/googletest/googletest/include \
+	-Itest
 
 LIBS = -lm
 
@@ -67,7 +69,7 @@ sources_core = \
 sources_test = \
 	sw_src/googletest/googletest/src/gtest-all.cc \
 	sw_src/googletest/googletest/src/gtest_main.cc \
-	test/test.cc
+	test/test_ST_mortality.cc
 
 objects_core = $(sources_core:%.c=obj/%.o)
 objects_core_test = $(sources_core:%.c=obj/%_TEST.o)
