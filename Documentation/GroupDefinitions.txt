@@ -45,4 +45,7 @@
  * \defgroup STATISTICS_PRIVATE Private Statistics
  *           \brief Private [statistics](\ref STATISTICS) functions and variables.
  *           \ingroup STATISTICS
+ * \defgroup SQL SQLite database generator
+ *           \brief Functions that generate structured SQLite output.
+ *           \ingroup OUTPUT
  */
