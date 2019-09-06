@@ -16,7 +16,19 @@
 #include "ST_steppe.h"
 #include "ST_globals.h"
 
+/**
+ * \brief A reference to the database object.
+ * 
+ * The database is opened or created in ST_connect(), and a reference is stored here.
+ * 
+ * \ingroup SQL
+ */
 static sqlite3 *db;
+
+/**
+ * \brief A buffer to store SQL statements.
+ * \ingroup SQL
+ */
 static char sql[1024];
 
 static void beginTransaction(void);
@@ -308,7 +320,28 @@ void insertIndiv(IndivType *ind) {
 	insertIndivRow(ind->id, Globals.currIter, Globals.currYear, ind->myspecies+1, Species[ind->myspecies]->res_grp+1);
 }
 
-
+/**
+ * \brief Insert information on a given [species](\ref SpeciesType).
+ * 
+ * \param Year is the year in which the data was collected.
+ * \param Iteration is the current iteration.
+ * \param SpeciesID is the [index](\ref SppIndex) is \ref Species of the given [species](\ref SpeciesType).
+ * \param EstabCount is the number of established [individuals](\ref IndivType) in the [species](\ref SpeciesType).
+ * \param Estabs is the number of [individuals](\ref IndivType) that established in the current year.
+ * \param RelSize is the relative size of the [species](\ref SpeciesType).
+ * \param ExtraGrowth is the amount of supurfluous growth this [species](\ref SpeciesType) experienced in the current year.
+ * \param ReceivedProb is the probability that this [species](\ref SpeciesType) recieved seeds from an adjacent plot.
+ * \param AllowGrowth is treaded as a \ref Bool. TRUE if this [species](\ref SpeciesType) was allowed to grow this year.
+ * \param sdSGerm I'm not sure what this is. It appears to be something regarding seed dispersal which is currently
+ *                an [open issue](https://github.com/DrylandEcology/STEPWAT2/issues/309) on GitHub.
+ * 
+ * \sideeffect The provided parameters will be inserted into the database.
+ * 
+ * Providing this many parameters is a waste of type. Instead call insertSpecieYearInfo() which takes an [index](\ref SppIndex)
+ * in \ref Species, exracts the information, then calls this function.
+ * 
+ * \ingroup SQL
+ */
 static void insertSpeciesYearInfoRow(int Year, int Iteration, int SpeciesID, int EstabCount, int Estabs, float RelSize, float ExtraGrowth, float ReceivedProb, int AllowGrowth, int sdSGerm) {
 	sqlite3_bind_int(stmt_SpeciesYearInfo, 1, Year);
 	sqlite3_bind_int(stmt_SpeciesYearInfo, 2, Iteration);
@@ -326,6 +359,17 @@ static void insertSpeciesYearInfoRow(int Year, int Iteration, int SpeciesID, int
 	sqlite3_reset(stmt_SpeciesYearInfo);
 }
 
+/**
+ * \brief Insert a [species](\ref SpeciesType)'s information into the database.
+ * 
+ * \param s is the [index](\ref SppIndex) in \ref Species of the [species](\ref SpeciesType) to insert.
+ * 
+ * \sideeffect Information about the species will be inserted into the database.
+ * 
+ * \sa insertSpeciesYearInfoRow() which is responsible for binding the data.
+ * 
+ * \ingroup SQL
+ */
 void insertSpecieYearInfo(SppIndex s) {
 	SpeciesType *sp = Species[s];
 	insertSpeciesYearInfoRow(Globals.currYear, Globals.currIter, s+1, sp->est_count, sp->estabs, getSpeciesRelsize(s), sp->extragrowth, sp->received_prob, sp->allow_growth, sp->sd_sgerm);
