@@ -1,6 +1,6 @@
 /** 
  * \file ST_sql.c
- * \brief A collection of functions that generage SQL database output files.
+ * \brief A collection of functions that generate an SQL database output file.
  * 
  * Using SQLite in C can be intimidating if you aren't familiar with the API. 
  * You can learn about the API [here](https://www.sqlite.org/cintro.html).
@@ -375,6 +375,33 @@ void insertSpecieYearInfo(SppIndex s) {
 	insertSpeciesYearInfoRow(Globals.currYear, Globals.currIter, s+1, sp->est_count, sp->estabs, getSpeciesRelsize(s), sp->extragrowth, sp->received_prob, sp->allow_growth, sp->sd_sgerm);
 }
 
+/**
+ * \brief Insert a [resource group](\ref GroupType)'s information into the database.
+ * 
+ * \param Year is the year in the simulation which generated the information.
+ * \param Iteration is the iteration in the simulation.
+ * \param RGroupID is the [index](\ref GrpIndex) in \ref RGroup of the given [group](\ref GroupType).
+ * \param Estabs is the number of established [individuals](\ref IndivType) in the [group](\ref GroupType).
+ * \param KillYr is the last year in the simulation that had a disturbance.
+ * \param YrsNegPR is the number of years that the [resource group](\ref GroupType) has experienced negative PR.
+ * \param mmExtraRes is the millimeters of extra resources the [resource group](\ref GroupType) has receved this year.
+ * \param ResRequired is the amound of resources required to sustain all individuals in the [resource group](\ref GroupType).
+ * \param ResAvail is the amount of resources availible to the [resource group](\ref GroupType) in the current year.
+ * \param ResExtra is the amount of extra resources availible to the [resource group](\ref GroupType) in the current year.
+ * \param PR is the ratio of resources required to resources available.
+ * \param RelSize is the relative size of the [resource group](\ref GroupType).
+ * \param EstSppCount is the number of [species](\ref SpeciesType) in the [resource group](\ref GroupType) with at least
+ *        one [individual](\ref IndivType) established.
+ * \param Extirpated is TRUE if this [resource group](\ref GroupType) has been killed and prevented from regenerating.
+ * \param RegenOk is only for annuals. TRUE if the [resource group](\ref GroupType) is allowed to regenerate.
+ * 
+ * Filling in all of these parameters would be a pain. Instead call insertRGroupYearInfo() which only takes a group pointer
+ * and extracts all of these parameters.
+ * 
+ * \sideeffect A row of resource group data will be inserted into the database.
+ * 
+ * \ingroup SQL
+ */
 static void insertRGroupYearInfoRow(int Year, int Iteration, int RGroupID, int Estabs, int KillYr, int YrsNegPR, float mmExtraRes, float ResRequired, float ResAvail, float ResExtra, float PR, float RelSize, int EstSppCount, int Extirpated, int RegenOk) {
 	sqlite3_bind_int(stmt_RGroupsYearInfo, 1, Year);
 	sqlite3_bind_int(stmt_RGroupsYearInfo, 2, Iteration);
@@ -397,11 +424,27 @@ static void insertRGroupYearInfoRow(int Year, int Iteration, int RGroupID, int E
 	sqlite3_reset(stmt_RGroupsYearInfo);
 }
 
+/**
+ * \brief Insert a row of [resource group](\ref GroupType) information into the database.
+ * 
+ * \param g is the [index](\ref GrpIndex) in \ref RGroup of the requested resource group.
+ * 
+ * \ingroup SQL
+ * 
+ * \sideeffect A row of resouce group data will be inserted into the database.
+ * 
+ * \sa insertRGroupYearInfoRow() which is called by this function to bind the data.
+ */
 void insertRGroupYearInfo(GrpIndex g) {
 	GroupType *rg = RGroup[g];
 	insertRGroupYearInfoRow(Globals.currYear, Globals.currIter, g+1, rg->estabs, rg->killyr, rg->yrs_neg_pr, rg->mm_extra_res, rg->res_required, rg->res_avail, rg->res_extra, rg->pr, getRGroupRelsize(g), rg->est_count, rg->extirpated, rg->regen_ok);
 }
 
+/**
+ * \brief Inserts all [resource groups](\ref RGroup) into the database.
+ * 
+ * \ingroup SQL
+ */
 static void insertRgroups(void) {
 	int rc;
 	GrpIndex g;
@@ -421,6 +464,11 @@ static void insertRgroups(void) {
 	endTransaction();
 }
 
+/**
+ * \brief Inserts information for all [species](\ref Species) into the database.
+ * 
+ * \ingroup SQL
+ */
 static void insertSpecies(void) {
 	int rc;
 	GrpIndex s;
@@ -452,6 +500,14 @@ static void insertSpecies(void) {
 	endTransaction();
 }
 
+/**
+ * \brief Inserts general information about the simulation.
+ * 
+ * As of 9/9/19 this information is the number of years, number of iterations, the 
+ * random seed, the number of groups, the number of species, and the plot size.
+ * 
+ * \ingroup SQL
+ */
 static void insertInfo(void) {
 	int rc;
 	char *zErrMsg = 0;
@@ -467,6 +523,14 @@ static void insertInfo(void) {
 	endTransaction();
 }
 
+/**
+ * \brief Insert the index values of the temperature classes.
+ * 
+ * These values are hard coded, and I'm not sure they are correct. This should NOT
+ * be used as a reference. Instead see the \ref TempClass enumerator.
+ * 
+ * \ingroup SQL
+ */
 static void insertTempClass(void) {
 	int rc;
 	char *zErrMsg = 0;

@@ -150,6 +150,11 @@ Bool UseSeedDispersal;
 Bool DuringSpinup;
 Bool EchoInits;
 Bool UseProgressBar;
+/**
+ * \brief If TRUE an SQL database wil be generated containing debug information.
+ * This flag can be set by adding "-STDebug" as an option when calling the program.
+ * \ingroup SQL
+ */
 Bool STdebug_requested;
 GrpIndex rg;
 SppIndex sp;
