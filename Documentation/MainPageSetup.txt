@@ -4,7 +4,7 @@ This file contains the main page setup for Doxygen documentation.
  * \mainpage Welcome to STEPWAT2
  *
  * STEPWAT2 is a steppe plant community modeling tool written in c. The model
- * has existed since the early 2000s, but has been overhauled throughtly. 
+ * has existed since the 1990s, but has been overhauled throughly. 
  *
  * This documentation is meant to provide API level understanding of the program
  * for future developers. If you are not a developer you can find information on
@@ -13,14 +13,15 @@ This file contains the main page setup for Doxygen documentation.
  *
  * \par Overview
  * There are three components to STEPWAT2.
- * \* [STEPPE](\ref STEPPE), which refers to all program files beginning with "ST_". The functions 
- * in these files deal with the plant speciments and their environment.  
+ * \* [STEPPE](\ref STEPPE), The functions in these files deal with plant functional types, 
+ * plant species, and their environment. 
  * \* [SOILWAT2](\ref SOILWAT2), which simulates the water cycle. SOILWAT2 is developed in its
  * [own repository](https://github.com/DrylandEcology/SOILWAT2) but, since it also
  * uses doxygen, you can view it's documentation at \ref sw_src.
  * \* [SXW](\ref SXW), which handles communication between SOILWAT2 and STEPPE. In general this
- * means translating soil water values from SOILWAT2 into resource values for STEPPE.
- * SXW files are denoted with the "sxw" prefix.
+ * means translating soil water values from SOILWAT2 into resource values for STEPPE and passing 
+ * STEPPE end-of-year biomass values into SOILWAT2 to rederive vegetation inputs for the next 
+ * year’s simulation. SXW files are denoted with the "sxw" prefix.
  *
  * \author Chandler Haukap
  * \date 21 August 2019

@@ -36,10 +36,30 @@ static void endTransaction(void);
 static void prepareStatements(void);
 static void finalizeStatements(void);
 
+/**
+ * \brief The [resource group](\ref GroupType) year row SQL statement.
+ * \ingroup SQL
+ */
 static sqlite3_stmt * stmt_RGroupsYearInfo;
+/**
+ * \brief The [Species](\ref SpeciesType) year row SQL statement.
+ * \ingroup SQL
+ */
 static sqlite3_stmt * stmt_SpeciesYearInfo;
+/**
+ * \brief The [individual](\ref IndivType) SQL statement.
+ * \ingroup SQL
+ */
 static sqlite3_stmt * stmt_Indiv;
+/**
+ * \brief The [individual](\ref IndivType) year row SQL statement.
+ * \ingroup SQL
+ */
 static sqlite3_stmt * stmt_IndivYearInfo;
+/**
+ * \brief The [individual](\ref IndivType) mortality SQL statement.
+ * \ingroup SQL
+ */
 static sqlite3_stmt * stmt_IndivKill;
 
 static void createTables(void);
@@ -47,10 +67,11 @@ static void createTables(void);
 /**
  * \brief Creates a connection to the database named \p stdbName
  * 
- * \param stdbName if the name of the output file.
+ * \param stdbName is the name of the output file.
  * 
- * \sideeffect Opens the database for writting. If no database exists named
- *             \p stdbName a file will be created.
+ * \sideeffect 
+ *      Opens the database for writting. If no database exists named
+ *      \ref stdbName a file will be created.
  * 
  * \ingroup SQL
  */
@@ -549,6 +570,14 @@ static void insertTempClass(void) {
 	endTransaction();
 }
 
+/**
+ * \brief Insert the integer values assigned to each \ref DisturbClass.
+ * 
+ * This function is hard coded and does not actually reference te \ref DisturbClass enum.
+ * Therefore, I would not use it as a reference.
+ * 
+ * \ingroup SQL
+ */
 static void insertDisturbClass(void) {
 	int rc;
 	char *zErrMsg = 0;
@@ -570,6 +599,14 @@ static void insertDisturbClass(void) {
 	endTransaction();
 }
 
+/**
+ * \brief Insert the mapping of depth classes to integers.
+ * 
+ * This value is hard coded which means it could be wrong. Instead see the \ref DepthClass
+ * enumerator.
+ * 
+ * \ingroup SQL
+ */
 static void insertDepthClass(void) {
 	int rc;
 	char *zErrMsg = 0;
@@ -594,6 +631,14 @@ static void insertDepthClass(void) {
 	endTransaction();
 }
 
+/**
+ * \brief Insert the mapping of \ref MortalityType to integers.
+ * 
+ * This mapping is hard coded so do not assume it is correct. Instead reference
+ * [the enum](\ref MortalityType) directly.
+ * 
+ * \ingroup SQL
+ */
 static void insertKillTypes(void) {
 	int rc;
 	char *zErrMsg = 0;
@@ -642,6 +687,21 @@ static void insertKillTypes(void) {
 	endTransaction();
 }
 
+/**
+ * \brief Creates the various tables that comprise the database. Consider this the main function.
+ * 
+ * These include the [species](\ref SpeciesType), [resource group](\ref GroupType) and [individual](\ref IndivType) tables plus
+ * the enumerator mappings (I wouldn't trust the enumerator mappings because they are hard coded).
+ * 
+ * This function takes care of inserting everything EXCEPT the [rgroup](\ref GroupType), [species](\ref SpeciesType)
+ * and [individual](\ref IndivType) row information.
+ * 
+ * This function also assumes ST_connect() has already been called to initialize [the database](\ref db)
+ * 
+ * \sideeffect the tables are created and (with the exception of row information) populated.
+ * 
+ * \ingroup SQL
+ */
 static void createTables(void) {
 	int rc;
 	char *zErrMsg = 0;
