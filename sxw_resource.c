@@ -125,9 +125,9 @@ void _sxw_update_resource(void) {
          * (cm) to biomass that can be supported by those resources (g/cm) */
 	ForEachGroup(g)
 	{
-//printf("for groupName= %smresource_cur prior to multiplication: %f\n",RGroup[g]->name, _resource_cur[g]);
+//printf("%s: _resource_cur pre-multiplication = %f. Post multiplication = %f.\n",RGroup[g]->name, 
+                                //_resource_cur[g], SXWResources->_resource_cur[g] * SXWResources->_bvt);
 		SXWResources->_resource_cur[g] = SXWResources->_resource_cur[g] * SXWResources->_bvt;
-//printf("for groupName= %s, resource_cur post multiplication: %f\n\n",Rgroup[g]->name, _resource_cur[g]);
 	}
 
     Mem_Free(sizes);
@@ -235,7 +235,6 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
                 use_by_group[g] += (RealF) (SXWResources->_roots_active_rel[Iglp(g, l, p)] * transp[Ilp(l, p)]);
             }
         }
-        //printf("for groupName= %s, use_by_group[g] in transp= %f \n",RGroup[g]->name,use_by_group[g] );
 
         sumUsedByGroup += use_by_group[g];
         //printf(" sumUsedByGroup in transp=%f \n",sumUsedByGroup);

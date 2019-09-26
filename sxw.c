@@ -948,7 +948,6 @@ void _print_debuginfo(void) {
   /* sum actual total transpiration */
 	ForEachTrPeriod(p)
 	{
-		//ForEachTranspLayer(t) sum += SXW->transp[Ilp(t,p)];
 		for (t = 0; t < SXW->NSoLyrs; t++)
 			sum += SXW->transpTotal[Ilp(t, p)];
 	}

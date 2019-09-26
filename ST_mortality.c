@@ -374,7 +374,6 @@ void grazing_EndOfYear( void){
 		//Implement grazing if this year is a year where grazing should occur
 		if (Globals->currYear == grazingyr)
 		{
-			//printf( "currYear is equal to grazingYear so will iterate all the Species for doing grazing, RGroup[g]->est_count =%d \n",RGroup[rg]->est_count);
 			Int i;
 			ForEachEstSpp2( rg, i)
 			{
