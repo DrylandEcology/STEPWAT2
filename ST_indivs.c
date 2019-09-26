@@ -112,11 +112,8 @@ Bool indiv_New( SppIndex sp) {
   p->Prev = NULL;
   Species[sp]->IndvHead = p;
 
-  //sql for inserting new indiv
-  //if(!UseGrid)
-	//  insertIndiv(p);
   id++;
-  return( TRUE);
+  return TRUE;
 }
 
 /* Copy one individual's information to another individual. 

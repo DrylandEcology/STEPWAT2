@@ -233,8 +233,7 @@ void runGrid(void)
 			for (i = 0; i < grid_Rows; i++){
 				for (j = 0; j < grid_Cols; j++)
 				{ //for each cell
-
-					//fprintf(stderr, "year: %d", year);
+                
 					load_cell(i, j);
 
 					Globals->currYear = year;
@@ -427,7 +426,7 @@ static void _init_grid_inputs(void)
 static void _init_SXW_inputs(Bool init_SW, char *f_roots)
 {
 	SXW_Init(init_SW, f_roots);	// initializes soilwat
-	if (init_SW == TRUE)
+	if (init_SW)
 	{
 		char aString[2048];
 		sprintf(aString, "%s/%s", grid_directories[GRID_DIRECTORY_STEPWAT_INPUTS], SW_Weather.name_prefix);

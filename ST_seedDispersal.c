@@ -295,6 +295,7 @@ int _do_bulk_dispersal(SppIndex sp){
 }
 
 void _do_precise_dispersal(int leftoverSeeds, SppIndex sp){
+    /* This function is not implemented yet. */
     return;
 }
 
