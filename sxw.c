@@ -1046,7 +1046,6 @@ void _print_debuginfo(void) {
 		fprintf(f, "\n");
 		int nLyrs = getNTranspLayers(RGroup[r]->veg_prod_type);
 		for (t = 0; t < nLyrs; t++) {
-			//ForEachTranspLayer(t) {
 			fprintf(f, "%d", t + 1);
 			ForEachTrPeriod(p)
 				fprintf(f, "\t%.4f", SXWResources->_roots_active_rel[Iglp(r, t, p)]);
@@ -1055,7 +1054,6 @@ void _print_debuginfo(void) {
 	}
 
 	fprintf(f, "\n------ Transpiration Total Values -------\nPeriod:");
-	//ForEachTranspLayer(t)
 	for (t = 0; t < SXW->NSoLyrs; t++)
 		fprintf(f, "\t\tL%d", t + 1);
 	fprintf(f, "\n");
@@ -1063,7 +1061,6 @@ void _print_debuginfo(void) {
 	ForEachTrPeriod(p)
 	{
 		fprintf(f, "%d : ", p + 1);
-		//ForEachTranspLayer(t)
 		for (t = 0; t < SXW->NSoLyrs; t++)
 			fprintf(f, "\t%.4f", SXW->transpTotal[Ilp(t, p)]);
 		fprintf(f, "\n");

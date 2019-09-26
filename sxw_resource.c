@@ -115,7 +115,7 @@ void _sxw_update_resource(void) {
 		sizes[g] = RGroup_GetBiomass(g);
 	}
 
-        /* Update the active relative roots based on current biomass values */
+    /* Update the active relative roots based on current biomass values */
 	_sxw_update_root_tables(sizes);
 
 	/* Assign transpiration (resource availability) to each STEPPE functional group */
@@ -129,9 +129,8 @@ void _sxw_update_resource(void) {
 		SXWResources->_resource_cur[g] = SXWResources->_resource_cur[g] * SXWResources->_bvt;
 //printf("for groupName= %s, resource_cur post multiplication: %f\n\n",Rgroup[g]->name, _resource_cur[g]);
 	}
-/* _print_debuginfo(); */
 
-        Mem_Free(sizes);
+    Mem_Free(sizes);
 }
 
 void _sxw_update_root_tables( RealF sizes[] ) {
@@ -320,8 +319,6 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
 
     // If this year's transpiration is notably low (1 sd below the mean), add additional transpired water
     if (transp_ratio < (transp_window->ratio_average - 1 * transp_ratio_sd)) {
-        //printf("Year %d below 1 sd: ratio = %f, average = %f, sd = %f\n", Globals->currYear,transp_ratio,
-                                                          //transp_window->ratio_average, transp_ratio_sd);
             RealF min = transp_window->ratio_average - transp_ratio_sd;
             RealF max = transp_window->ratio_average + transp_ratio_sd;
 
@@ -331,7 +328,6 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
                 LogError(logfp, LOGNOTE, "sxw_resource: Added transpiration less than 0.\n");
             }
             //printf("Year %d:\tTranspiration to add: %f\n",Globals->currYear,add_transp);
-            //printf("TranspRemaining: %f\tTranspRemaining+add_transp: %f\n",TranspRemaining,add_transp+TranspRemaining);
 
             /* -------------------- Recalculate the window including added_transp in the current year -------------------- */
             RealF added_transp_ratio = transp_window->added_transp / SXW->ppt;
