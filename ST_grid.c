@@ -26,11 +26,8 @@
 /*                INCLUDES / DEFINES                   */
 /* --------------------------------------------------- */
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-#include <math.h>
 #include <ctype.h>
-#include <errno.h>
 #include "ST_grid.h"
 #include "ST_steppe.h"
 #include "generic.h"
@@ -439,7 +436,7 @@ static void _init_SXW_inputs(Bool init_SW, char *f_roots)
 }
 
 /* Read in the STEPWAT2 files and populate the grid. This only needs to be called once. 
-   DEPENDENCYS: gridCells must be allocated first. */
+   DEPENDENCIES: gridCells must be allocated first. */
 static void _init_stepwat_inputs(void)
 {
 	int i, j; 							// Used as indices in gridCells

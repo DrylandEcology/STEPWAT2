@@ -18,18 +18,14 @@
 /*                INCLUDES / DEFINES                   */
 /* --------------------------------------------------- */
 
-#include <stdlib.h>
 #include <string.h>
 #include <math.h>
 #include "ST_steppe.h"
 #include "filefuncs.h"
 #include "myMemory.h"
-#include "sw_src/SW_Site.h"
 #include "ST_structs.h"
 #include "ST_stats.h" // Contains most of the function declarations.
-#include "ST_initialization.h"
 #include "ST_seedDispersal.h"
-#include "sxw.h"
 #include "ST_globals.h"
 
 /* ----------------- Local Variables --------------------- */
