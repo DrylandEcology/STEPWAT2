@@ -217,6 +217,8 @@ int main(int argc, char **argv) {
                 logProgress(iter, year, SIMULATION);
             }
 
+			//printf("------------------------Repetition/year = %d / %d\n", iter, year);
+
 			Globals->currYear = year;
 
 			rgroup_Establish();
