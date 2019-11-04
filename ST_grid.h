@@ -48,7 +48,7 @@ struct Soil_st
 }typedef SoilType;
 
 /* Initialization information. */
-struct _grid_init_species_st
+struct grid_init_species_st
 {
 	/* TRUE if at least one species has requested initialization */
 	int useInitialization;

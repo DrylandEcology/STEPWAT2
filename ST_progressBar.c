@@ -12,7 +12,7 @@
 
 /*************** Local Function(s). Treat these as private. ***************/
 
-double _calculateProgress(int year, int iteration, Status status);
+double _calculateProgress(int innerLoopIteration, int outerLoopIteration, Status status);
 double _calculateInitializationProgress(int year);
 double _calculateSimulationProgress(int year, int iteration);
 
@@ -21,11 +21,11 @@ double _calculateSimulationProgress(int year, int iteration);
 /* Log the program's progress using a progress bar.
 	Param iteration: integer greater than 0. Input 0 iff the program is not currently in an iteration loop.
 	Param year: integer greater than 0. Input 0 iff the program is not currently in a years loop.
-	Param status: Use the "status" enum to choose a value.  */
+	Param status: Use the "Status" enum to choose a value.  */
 void logProgress(int iteration, int year, Status status){
 	static char progressString[256];
 	int index = 0;					// Where we are in progressString
-	Bool needsProgressBar = FALSE;	// By default we donot need a progress bar
+	Bool needsProgressBar = FALSE;	// By default we do not need a progress bar
 	progressString[0] = '\0';		// Empty the string
 	iteration--;					// iteration loops are 1 indexed, but we need 0 indexing.
 
@@ -84,15 +84,17 @@ void logProgress(int iteration, int year, Status status){
 }
 
 /* Returns a double between 0 and 100 representing how close the program is to completing a given loop.
-     Param year: Current year in the loop.
-	 Param iteration: Current iteration in the loop.
-	 Param status: Use the "status" enumerator. Valid options are SPINUP or SIMULATION. */
-double _calculateProgress(int year, int iteration, Status status){
+ *
+ * \param innerLoopIteration is the iteration of the inner loop. Most likely this is the "year" loop.
+ * \param outerLoopIteration is the iteration of the outer loop. Most likely this is the "iteration" loop.
+ * \param status: Use the "status" enumerator. Valid options are SPINUP or SIMULATION. 
+ */
+double _calculateProgress(int innerLoopIteration, int outerLoopIteration, Status status){
 	double percentComplete;
 	if(status == INITIALIZATION){
-		percentComplete = _calculateInitializationProgress(year);
+		percentComplete = _calculateInitializationProgress(innerLoopIteration);
 	} else if(status == SIMULATION) {
-		percentComplete = _calculateSimulationProgress(year, iteration);
+		percentComplete = _calculateSimulationProgress(innerLoopIteration, outerLoopIteration);
 	} else {
 		return 0;	// No other Status has defined how to calculate progress.
 	}
