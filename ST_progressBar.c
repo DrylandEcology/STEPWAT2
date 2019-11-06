@@ -85,9 +85,12 @@ void logProgress(int iteration, int year, Status status){
 
 /* Returns a double between 0 and 100 representing how close the program is to completing a given loop.
  *
- * \param innerLoopIteration is the iteration of the inner loop. Most likely this is the "year" loop.
- * \param outerLoopIteration is the iteration of the outer loop. Most likely this is the "iteration" loop.
+ * \param innerLoopIteration is the iteration of the inner loop.
+ * \param outerLoopIteration is the iteration of the outer loop.
  * \param status: Use the "status" enumerator. Valid options are SPINUP or SIMULATION. 
+ * 
+ * Example usage for a loop with the structure "For iterations { for years {...} }":
+ * _calculateProgress(<current year>, <current iteration>, SIMULATION);
  */
 double _calculateProgress(int innerLoopIteration, int outerLoopIteration, Status status){
 	double percentComplete;

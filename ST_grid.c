@@ -900,7 +900,7 @@ static void _read_disturbances_in(void)
  * 
  * \param s is a char* array.
  * \param separator is the character used as a separator, for example tab or space.
- * \param nSeparators is the nuber of separators to read.
+ * \param nSeparators is the number of separators to read.
  * 
  * \return index of the character following the last separator. */
 static int _get_value_index(char* s, char seperator, int nSeperators)
