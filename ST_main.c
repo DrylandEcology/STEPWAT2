@@ -130,7 +130,7 @@ FILE *progfp;
 int logged;
 /** \brief Global struct holding species-specific variables. */
 SpeciesType  **Species;
-/** \brief Global struct holding resgroup-specific variables. */
+/** \brief Global struct holding rgroup-specific variables. */
 GroupType    **RGroup;
 /** \brief Global struct holding succulent-specific constants. */
 SucculentType  Succulent;
@@ -354,7 +354,7 @@ int main(int argc, char **argv) {
 /** \brief (re)initializes the plot.
  * 
  * Zeros out Species and RGroup and kills all individuals.
- * Finally this function calls resets sxw.
+ * Finally this function resets sxw.
  * 
  * \sa SXW_InitPlot(void)
  */

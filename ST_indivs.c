@@ -1,12 +1,13 @@
 /**
  * \file ST_indivs.c
- * \brief Manages the individual plant speciments.
+ * \brief Manages plant individuals.
  * 
  * \author
  *     Kyle Palmquist\n
  *     Chandler Haukap\n
  *     Freddy Pierson\n 
- *     Chris Bennett
+ *     Chris Bennett\n
+ *     Ashish Tiwari
  * 
  * \date 23 August 2019
  * 
@@ -295,7 +296,7 @@ void indiv_proportion_Grazing( IndivType *ndv, RealF proportionGrazing)
  * 
  * \param ndv Pointer to the individual.
  * \param killType The MortalityType code of what killed the individual.
- * \param proportionRecovery Value between 0 and 1. The proportion of biomass to recover.
+ * \param proportionRecovery Value between 0 and 1. The proportion of individual relsize to recover.
  * \param proportionKilled Value between 0 and 1. The proportion of the individual killed
  *                         by the disturbance event.
  * 

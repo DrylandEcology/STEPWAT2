@@ -142,7 +142,8 @@ void rgroup_PartResources(void) {
  * in the seedbank and a random draw from a beta distribution.
  * 
  * This function also calculates the number of seeds produced in the last year
- * of the simulation and adds them to the total seedbank.
+ * of the simulation, adds them to the total seedbank, and removes seeds from
+ * the seedbank that were added as seedlings this year.
  * 
  * \param rg is the index in \ref RGroup of the species' RGroup.
  * \param sp is the index in \ref Species of the species.
@@ -204,7 +205,7 @@ static RealF _add_annuals(const GrpIndex rg, const SppIndex sp, const RealF last
 
 /**
  * \brief Get the maximum number of viable seeds from the seedbank that can
- *        establish this.
+ *        establish this year.
  * 
  * Make sure the previous year's seed production has been added to the seedbank
  * before calling this function.
@@ -344,7 +345,7 @@ static void _res_part_extra(RealF extra, RealF size[]) {
  * 
  * This function iterates across all groups and individuals. Species distinctions
  * within a group are ignored. Partitioning is proportional to the size of individuals, 
- * so larger individuals recieve more resources.
+ * so larger individuals receive more resources.
  * 
  * Note that this function also partitions [extra resources](\ref _res_part_extra())
  * 
@@ -827,6 +828,8 @@ void rgroup_IncrAges(void)
  * 
  * \sa getSpeciesRelsize()
  * 
+ * \author Chandler Haukap
+ * 
  * \ingroup RGROUP
  */
 RealF getRGroupRelsize(GrpIndex rg){
@@ -1068,7 +1071,7 @@ void rgroup_AddSpecies(GrpIndex rg, SppIndex sp)
 
 /**
  * \brief Kill the given [resource group](\ref GroupType) and never allow it to 
- *        grow again.
+ *        establish again.
  * 
  * \param rg is the [index](\ref GrpIndex) in \ref RGroup of the requested resource group.
  * 

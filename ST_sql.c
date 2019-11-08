@@ -70,7 +70,7 @@ static void createTables(void);
  * \param stdbName is the name of the output file.
  * 
  * \sideeffect 
- *      Opens the database for writting. If no database exists named
+ *      Opens the database for writing. If no database exists named
  *      \ref stdbName a file will be created.
  * 
  * \ingroup SQL
@@ -168,7 +168,7 @@ static void sqlcheck(int rc, char *zErrMsg) {
 }
 
 /**
- * \brief Prepares the database to recieve \ref RGROUP, \ref SPECIES, \ref INDIVIDUAL and \ref MORTALITY information.
+ * \brief Prepares the database to receive \ref RGROUP, \ref SPECIES, \ref INDIVIDUAL and \ref MORTALITY information.
  * 
  * This must be called before the actual data is inserted.
  * 
@@ -286,7 +286,7 @@ static void insertIndivYearInfoRow(int Year, int IndivID, int MortalityTypeID, i
  * 
  * \param ind is a pointer to an [individual](\ref IndivType).
  * 
- * \sideeffect The [individual](\ref IndivType)'s informatinon will be inserted into the database.
+ * \sideeffect The [individual](\ref IndivType)'s information will be inserted into the database.
  * 
  * \sa insertIndivYearInfoRow() which is called in this function to bind the data.
  * 
@@ -333,7 +333,7 @@ static void insertIndivRow(int IndivID, int Iteration, int CreatedYear, int Spec
  * 
  * \sideeffect Information about the [individual](\ref IndivType) will be inserted into the database.
  * 
- * \sa insertIndivRow() which is called by this function to bing the SQL data.
+ * \sa insertIndivRow() which is called by this function to bind the SQL data.
  * 
  * \ingroup SQL
  */
@@ -350,8 +350,8 @@ void insertIndiv(IndivType *ind) {
  * \param EstabCount is the number of established [individuals](\ref IndivType) in the [species](\ref SpeciesType).
  * \param Estabs is the number of [individuals](\ref IndivType) that established in the current year.
  * \param RelSize is the relative size of the [species](\ref SpeciesType).
- * \param ExtraGrowth is the amount of supurfluous growth this [species](\ref SpeciesType) experienced in the current year.
- * \param ReceivedProb is the probability that this [species](\ref SpeciesType) recieved seeds from an adjacent plot.
+ * \param ExtraGrowth is the amount of superfluous growth this [species](\ref SpeciesType) experienced in the current year.
+ * \param ReceivedProb is the probability that this [species](\ref SpeciesType) received seeds from an adjacent plot.
  * \param AllowGrowth is treaded as a \ref Bool. TRUE if this [species](\ref SpeciesType) was allowed to grow this year.
  * \param sdSGerm I'm not sure what this is. It appears to be something regarding seed dispersal which is currently
  *                an [open issue](https://github.com/DrylandEcology/STEPWAT2/issues/309) on GitHub.
@@ -405,10 +405,10 @@ void insertSpecieYearInfo(SppIndex s) {
  * \param Estabs is the number of established [individuals](\ref IndivType) in the [group](\ref GroupType).
  * \param KillYr is the last year in the simulation that had a disturbance.
  * \param YrsNegPR is the number of years that the [resource group](\ref GroupType) has experienced negative PR.
- * \param mmExtraRes is the millimeters of extra resources the [resource group](\ref GroupType) has receved this year.
- * \param ResRequired is the amound of resources required to sustain all individuals in the [resource group](\ref GroupType).
- * \param ResAvail is the amount of resources availible to the [resource group](\ref GroupType) in the current year.
- * \param ResExtra is the amount of extra resources availible to the [resource group](\ref GroupType) in the current year.
+ * \param mmExtraRes is the millimeters of extra resources the [resource group](\ref GroupType) has received this year.
+ * \param ResRequired is the amount of resources required to sustain all individuals in the [resource group](\ref GroupType).
+ * \param ResAvail is the amount of resources available to the [resource group](\ref GroupType) in the current year.
+ * \param ResExtra is the amount of extra resources available to the [resource group](\ref GroupType) in the current year.
  * \param PR is the ratio of resources required to resources available.
  * \param RelSize is the relative size of the [resource group](\ref GroupType).
  * \param EstSppCount is the number of [species](\ref SpeciesType) in the [resource group](\ref GroupType) with at least
@@ -573,7 +573,7 @@ static void insertTempClass(void) {
 /**
  * \brief Insert the integer values assigned to each \ref DisturbClass.
  * 
- * This function is hard coded and does not actually reference te \ref DisturbClass enum.
+ * This function is hard coded and does not actually reference the \ref DisturbClass enum.
  * Therefore, I would not use it as a reference.
  * 
  * \ingroup SQL

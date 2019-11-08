@@ -3,8 +3,8 @@
  *  \brief Interface module for the STEPWAT2 to SOILWAT
  *         data flow.
  * 
- *  Application: STEPWAT - plant community dynamics simulator
- *  coupled with the  SOILWAT model.
+ *  Application: STEPWAT2 - plant community dynamics simulator
+ *  coupled with the  SOILWAT2 model.
  *  History 
  *     (9-May-2002) -- INITIAL CODING - cwb
  *     28-Feb-02 - cwb - The model runs but plants die
@@ -30,7 +30,7 @@
  *         defined with double vs single precision and take
  *         appropriate casting measures.
  *	07-16-12 (DLM) - made a ton of changes to try and
- *          get it to compile with the new updated version of soilwat (version 23)
+ *          get it to compile with the new updated version of SOILWAT2
  * 
  * \ingroup SXW
  */
@@ -162,12 +162,12 @@ void free_sxw_memory( void );
 /****************** Begin Function Code ********************/
 
 /**
- * \brief Read \ref SOILWAT input files and initialize variables.
+ * \brief Read \ref SOILWAT2 input files and initialize variables.
  * 
  * \ingroup SXW
  */
 void SXW_Init( Bool init_SW, char *f_roots ) {
-  /* read SOILWAT's input files and initialize some variables */
+  /* read SOILWAT2's input files and initialize some variables */
   /* The shorthand table dimensions are set at the point
    * at which they become defined in _read_files().
    *
@@ -291,7 +291,8 @@ void SXW_InitPlot (void) {
 }
 
 /**
- * \brief updates the resource arrays. 
+ * \brief Executes SOILWAT2 which generates soil water resources for plants to 
+ *        utilize this year. 
  * 
  * \sa Env_Generate() where this function is called.
  * 
@@ -400,7 +401,7 @@ void SXW_SW_Setup_Echo(void) {
 }
 
 /**
- * \brief Get function for transpiration.
+ * \brief Obtain transpiration (resource availability) for each resource group.
  * 
  * \param rg is the [index](\ref GrpIndex) in \ref RGroup of the resource group.
  * 

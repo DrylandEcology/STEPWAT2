@@ -5,6 +5,13 @@
  * These structures include individuals, species, resource groups, succulents,
  * plots, environments, and global variables.
  * For SXW struct definitions see \ref sxw.h.
+ * 
+ * A note on annuals:
+ * Basically, the number of individuals is determined by the available resources 
+ * and a seedbank mechanism, and the growth rate is simply the proportion of max
+ * size (1.0) each individual can achieve in the current year, computed by
+ * maxbio * irate / PR. This is not the current implementation, but annuals are
+ * currently being reevaluated so keep it in mind when modifying the code.
  *  
  * \author Chandler Haukap
  * 
@@ -19,10 +26,9 @@
 #include "generic.h"
 
 /**
- * \brief Holds information on perenial plant individuals. 
+ * \brief Holds information on perennial plant individuals. 
  * 
- * An individual is one plant specimen. Most of the code associated with this
- * struct is found in \ref ST_indivs.c.
+ * Most of the code associated with this struct is found in \ref ST_indivs.c.
  * 
  * \sa indiv_ann_st
  * 
@@ -59,7 +65,7 @@ struct indiv_st {
        res_required,
        /** \brief Resources available. */
        res_avail,
-       /** \brief Resources applied to superficial growth. */
+       /** \brief Resources applied to superfluous growth. */
        res_extra,
        /** \brief Ratio of resources required to amount available. */
        pr,
@@ -83,8 +89,7 @@ struct indiv_st {
 /** 
  * \brief Holds information on annual plant individuals.
  * 
- * An individual is one plant specimen. Most of the code associated with this
- * struct is found in \ref ST_indivs.c.
+ * Most of the code associated with this struct is found in \ref ST_indivs.c.
  * 
  * \sa indiv_st
  * 
@@ -105,7 +110,7 @@ struct indiv_ann_st {
        res_required,
        /** \brief Resources available. */
        res_avail,
-       /** \brief Resources applied to superficial growth. */
+       /** \brief Resources applied to superfluous growth. */
        res_extra,
        /** \brief Ratio of resources required to amt available. */
        pr,
@@ -162,7 +167,7 @@ struct species_st {
       /** \brief Beta parameter for random number draw from beta distribution in establishment of annual species.
        * \sa _add_annuals() */
         beta;
-      /** \brief Variance parameter of the beta distribution for establishment. */
+      /** \brief Variance parameter of the beta distribution for establishment of annual species. */
   float var;
       /** \brief Head of a doubly-linked list of all individuals of this species. 
        * \sa indiv_st*/
@@ -200,9 +205,9 @@ struct species_st {
         intrin_rate,
       /** \brief Starting size of a new individual of this species, relative to an adult plant. */
         relseedlingsize,
-      /** \brief Starting biomass in grams of a new individual of this species. */
+      /** \brief Seedling biomass in grams of an individual of this species. */
         seedling_biomass,
-      /** \brief Biomass in grams of a mature individual. */
+      /** \brief Maximum biomass in grams an individual of this species can achieve. */
         mature_biomass,
       /** \brief Holds seedling establishment probability directly from inputs. 
        * \sa seedling_estab_prob */
@@ -234,10 +239,10 @@ struct species_st {
       /** \brief Seed dispersal parameter read from inputs.
        * \sa ST_seedDispersal.c */
   	    sd_Pmax,
-      /** \brief Seed dispersal parameter read from inputs.
+      /** \brief Average release height of the inflorescences in cm.
        * \sa ST_seedDispersal.c */
 	      sd_H,
-      /** \brief Seed dispersal parameter read from inputs.
+      /** \brief Average sinking velocity of seeds (cm/sec).
        * \sa ST_seedDispersal.c */
       	sd_VT;
       /** \brief Temperature class for this species.
@@ -260,7 +265,7 @@ struct species_st {
 /** 
  * \brief Contains all resource group-specific fields. 
  * 
- * Some fields are consant and some are variable, so be careful what you are modifying. 
+ * Some fields are constant and some are variable, so be careful what you are modifying. 
  * \ref RGroup is a global array of these structs used in STEPWAT2.
  * 
  * \sa RGroup 
@@ -287,7 +292,7 @@ struct resourcegroup_st {
       /** \brief Treated as a Bool. If TRUE there was a prescribed fire in the current year. 
        * \sa mort_EndOfYear() */
         prescribedfire,
-      /** \brief Xxtra resources in millimeters */
+      /** \brief Extra resources in millimeters */
         mm_extra_res;
       /** \brief Resources required for current biomass of resgroup. */
   RealF res_required,
@@ -312,7 +317,7 @@ struct resourcegroup_st {
 
   /**** Quantities that DO NOT change during model runs *****/
 
-      /** \brief Number of yers resources can be stretched without killing the group. */
+      /** \brief Number of years resources can be stretched without killing the group. */
   IntUS max_stretch,
       /** \brief Max number of species that can add new plants per year*/
         max_spp_estab,
@@ -348,14 +353,14 @@ struct resourcegroup_st {
       /** \brief density of mature plants in units of plants / m^2 */
         max_per_sqm,
       /** \brief Perform grazing on this group at this frequency. */
-		    grazingfrq,
+		grazingfrq,
       /** \brief Number of mature plants allowed per plot. */
         max_density,
       /** \brief Max biomass of group. */
         max_bmass,
       /** \brief Kill group at this frequency.
        * Values < 1 result in probablistic fires
-       * values > 1 result in fires ever killfreq years. 
+       * values > 1 result in fires at a return interval = killfreq. 
        * \sa mort_EndOfYear() */
         killfreq,
       /** \brief Cheatgrass biomass (g/m2) that triggers potential ignition of a wildfire.
@@ -538,7 +543,7 @@ struct fecalpats_st {
 struct antmounds_st {
       /** \brief If TRUE ant mounds will be used. */ 
   Bool use;
-      /** \brief The probability of ant mound occurance. Between 0 and 1. */
+      /** \brief The probability of ant mound occurrence. Between 0 and 1. */
   RealF occur;
       /** \brief The minimum number of ant mounds to generate in a year. */
   IntUS minyr,
@@ -610,7 +615,7 @@ struct globals_st {
   RealF plotsize,
       /** \brief Proportion of ppt during growing season. */
         gsppt_prop,
-      /** \brief Three parameters for Warm/Cool growth modifiers. */
+      /** \brief warm-season/cool-season species growth modifiers. */
         tempparm[2][3];
       /** \brief Number of years to run the model. */
   IntUS runModelYears,
@@ -676,7 +681,7 @@ struct bmassflags_st {
        pclass,
       /** \brief If TRUE output the yearly average temperature. */
        tmp,
-      /** \brief If TRUE output the grou biomasses. */
+      /** \brief If TRUE output the group biomasses. */
        grpb,
       /** \brief If TRUE output relsize. */
        pr,

@@ -65,8 +65,9 @@ static SpeciesType *_create(void);
 /**
  * \brief Calculates the number of individuals of a species to establish.
  * 
- * This function stochastically determines the number of seedlings based on
- * The maximum number of seedlings the given species can produce.
+ * This function stochastically determines for each species, the number of 
+ * seedlings that will establish this year based on the maximum number of 
+ * seedlings that can establish in any year.
  * 
  * Initial programming by Chris Bennett @ LTER-CSU 6/15/2000.
  * 
@@ -200,7 +201,7 @@ void species_Update_Kills(SppIndex sp, IntS age)
  * 
  * Initial programming by Chris Bennett @ LTER-CSU 5/21/2001.
  * 
- * \param sp is the index in \ref Species of the species ot update.
+ * \param sp is the index in \ref Species of the species to update.
  * \param num is the number of individuals established since the last time this function
  *            was called.
  * 
@@ -324,7 +325,7 @@ SppIndex Species_Name2Index(const char *name)
 }
 
 /**
- * \brief Kills all individuals in the gievn species.
+ * \brief Kills all individuals in the given species.
  * 
  * This is meant to be called for annual species only.
  * 
@@ -490,8 +491,9 @@ void Species_Kill(const SppIndex sp, int killType)
  * \brief Records the relative size of all annual species.
  * 
  * Loops through all species and if the species is an annual it's relative size is
- * saved to Species[sp]->lastyear_relsize. This function is usefull for determining
- * proportion recovery in Species_Proportion_Recovery().
+ * saved to Species[sp]->lastyear_relsize. This function is useful for determining
+ * what proportion of relative size was killed due to disturbances as well as 
+ * determining annual establishment.
  * 
  * \sideeffect the lastyear_relsize field of \ref Species is populated for all
  *             annual species.

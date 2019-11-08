@@ -1253,7 +1253,7 @@ void stat_Output_AllCellAvgBmass(const char * filename)
 
 
 /**
- * \brief Outputs all requested biomas statistics to a CSV file.
+ * \brief Outputs all requested biomass statistics to a CSV file.
  * 
  * The file name is taken from \ref Parm_name().
  * The statistics printed are those specified in bmassflags.in.

@@ -8,7 +8,8 @@
  * \author
  *     Chandler Haukap\n
  *     Kyle Palmquist\n
- *     Chris Bennett
+ *     Chris Bennett\n
+ *     Ashish Tiwari
  * 
  * \date 23 August 2019
  * 
@@ -84,9 +85,9 @@ extern
  * \brief Performs mortality that occurs during the growing season.
  * 
  *  This function reduces "plant-space" according to
- *  resource availability, age, growth rate, and disturbance
- *  conditions.  Also, succulents are "mortified" if it's a wet
- *  year.
+ *  resource availability, age, growth rate, and fecal pats, 
+ *  ant mounds, and animal burrows. Also, succulents are 
+ *  killed if it's a wet year.
  * 
  *  This function is not to be confused with mort_EndOfYear().
  *
@@ -99,12 +100,13 @@ extern
  *  arrays, the age-related arrays are indexed from 0.  Thus,
  *  age is base1 but the arrays are base0.
  * 
- *  The outline for this function is:
- *    1) Death by limited resources.
- *    2) Age independent mortality.
- *    3) Slow growth mortality.
- *    4) Succulent wet season mortality.
- *    5) Death by pats, mounds or burrows.
+ *  The outline for this function is:\n
+ *    1) Death by limited resources using eqns 7, 8, 9.\n
+ *    2) Age independent mortality using eqn 14.\n
+ *    3) Slow growth mortality.\n
+ *    4) Succulent wet season mortality.\n
+ *    5) Mortality due to fecal pats, ant mounds or animal burrows.\n
+ *  With all equations from Coffin and Lauenroth 1990.
  *
  *  More specifically:
  *  - Process each group separately.
@@ -123,7 +125,11 @@ extern
  *    eqn 16.  The parameters are defined in the group-parms and
  *    the reduction amount is computed in the Env module based
  *    on precipitation.
- *  - execute disturbance effects, if any.
+ *  - Execute disturbances from fecal pats, ant mounds, and animal 
+ *    burrows, if any.
+ * 
+ *  Note that other disturbances (i.e. fire and grazing) are implemented 
+ *  elsewhere.
  * 
  * \param killed Reference to a boolean. Set to TRUE if one or more
  *               individuals were killed in any species. FALSE otherwise.
@@ -218,9 +224,9 @@ void mort_Main( Bool *killed) {
  * that would result in mortality in single year (killyr) or
  * extirpation (extirp) where plants are killed and do not return.
  * 
- * If wildfire is simulated it will affect all individuals in all species in all groups.
+ * If wildfire is simulated it will affect all individuals in all species in all rgroups.
  * If prescribed fire is simulated it is possible to specify inputs such that fire will 
- * only affect one group.
+ * only affect one rgroup.
  * 
  * \sideeffect If fire is simulated RGroup[rg]->killyr will be set to the current year.\n
  *             If fire is simulated all individuals in RGroup[rg] will be killed.\n
@@ -426,7 +432,7 @@ void grazing_EndOfYear( void){
 }
 
 /**
- * \brief Recovers biomall that represents re-sprouting after a fire.
+ * \brief Recovers biomass that represents re-sprouting after a fire.
  * 
  * This is controlled by proportion_recovered, specified in inputs and can be turned
  * on or off for each functional group, depending on their capacity to resprout.
@@ -541,7 +547,8 @@ static void _pat( const SppIndex sp) {
  * \brief Implements mortality by ant mounds.
  * 
  * This function is called my mort_Main(). If there is a mound on the plot
- * it kills most species
+ * it kills most species with the exception of succulents (Coffin and 
+ * Lauenroth 1990).
  * 
  * \param sp The index of the species to potentially kill.
  * 
@@ -610,7 +617,8 @@ static void _burrow( const SppIndex sp) {
 
 
 /**
- * \brief Reduces succulent biomass based on reduction specified in inputs.
+ * \brief Reduces succulent biomass based on reduction specified in inputs 
+ *        due to precipitation.
  * 
  * This function will remove the same amount of biomass from all individuals 
  * in Species[sp]. If the removal removes all biomass the individual is killed.
@@ -655,27 +663,26 @@ static void _succulents( const SppIndex sp) {
 /**
  * \brief Implements slow growth mortality.
  * 
- * Kill plants based on a probability if the growth rate
- * is less than the "slow rate" which is defined by the
- * user in the group-level parameters (max_slow) and in
- * the species-level parameters (max_rate). The slow rate
- * is growthrate <= max_slow * max_rate.
+ * Kill plants if the growth rate is less than the "slow rate" which is 
+ * defined by the user in the group-level parameters (max_slow) and in
+ * the species-level parameters (max_rate). The slow rate is 
+ * growthrate <= max_slow * max_rate.
  *
  * Increment the counter for number of years of slow growth.
  * If the number of years of slow growth is greater than
  * max_slow (defined in species.in), draw a random number
- * and test it against the probability of mortality.  C&L'90
+ * and compare it to the probability of mortality.  C&L'90
  * defines this value as a constant, but it might be better
  * to define it in the groups or species parameters.
  *
  * Of course, annuals aren't subject to this mortality,
- * nor are new plants.
+ * nor are 1 year old plants.
  * 
  * \param sp The index of the species in the Species array.
  * 
  * \sideeffect Calculates ndv->slow_yrs for all individuals in
  *                  the species.\n 
- *              If ndv->slow_yrs passes the mortality threshhold
+ *              If ndv->slow_yrs passes the mortality threshold
  *                  the given individual is killed.\n
  *              _SomeKillage is set to TRUE is at least on individual
  *                  is killed.
@@ -720,18 +727,18 @@ static void _slow_growth( const SppIndex sp) {
 /**
  * \brief Implements age-independent mortality.
  * 
- * Kills individuals in a species by the age-independent function (eqn 14) in C&L'90
- * assuming that AGEMAX was defined.
+ * Kills individuals in a species by the age-independent function (eqn 14) in 
+ * C&L'90 assuming that AGEMAX was defined.
  * 
- * Annuals are NOT killed here. Also, if Species[sp]->max_age == 0 this function 
- * does nothing.
+ * Annuals are NOT killed here. Also, if Species[sp]->max_age == 0 (a species 
+ * can live indefinitely) this function does nothing.
  * 
  * Initial programming by Chris Bennett @ LTER-CSU 6/15/2000  
  * 
  * \param sp The index of the species in the Species array.
  * 
- * \sideeffect The Species[sp]->IndivHead linked list might lose some individuals
- *             if this function decides to kill them.\n
+ * \sideeffect Some individuals from the Species[sp]->IndivHead linked list 
+ *             might be removed if this function kills them.\n
  *             _SomeKillage will be set to TRUE is an individual is killed.
  * 
  * \sa mort_Main() where this function is called.
@@ -792,13 +799,15 @@ static void _age_independent( const SppIndex sp) {
  * _stretched_clonal() to kill additional amounts of clonal plants due 
  * to insufficient resources.
  * 
+ * Note that to make it here, the rgroup's PR MUST BE > 1.0., which is 
+ * checked in \ref mort_Main().
+ * 
  * Initial programming by Chris Bennett @ LTER-CSU 6/15/2000.
  * 
  * \param rg The Index in RGroup of the group to kill.
  * 
- * \sideeffect If this function decided to kill any individuals, which
- *             it most likely will, the individual linked lists of every
- *             species in RGroup[rg] will be modified.\n
+ * \sideeffect Individuals killed by this function will be removed from
+ *             the corresponding individual linked list.\n
  *             _SomeKillage set to TRUE if an individual was killed.
  * 
  * \sa _stretched_clonal() which is called to perfom additional mortality.
@@ -844,7 +853,7 @@ static void _no_resources( GrpIndex rg) {
 /**
  * \brief Kill portions of clonal individuals when resources are limited.
  * 
- * Killing is based on equations 8 and 9 of Coffin and Lauenroth (1990).
+ * Mortality is based on equations 8 and 9 of Coffin and Lauenroth (1990).
  * 
  * \param rg The group to perform mortality on.
  * \param start Index in nlist to start considering killing individuals.
@@ -946,7 +955,7 @@ static void _stretched_clonal( GrpIndex rg, Int start, Int last,
 }
 
 /**
- * \brief Kill all annuals.
+ * \brief Kill all individuals belonging to annual species
  * 
  * Loop through all species and kill the annual species.  This
  * routine should be called at the end of the year after
@@ -987,7 +996,7 @@ void _kill_annuals( void) {
  * Updated by KAP 5/2018.
  * 
  * \sideeffect Species[sp]->extragrowth will be set to 0 for all sp.\n
- *             If This results if 0 biomass for a species it will also be
+ *             If this results in 0 biomass for a species it will also be
  *             dropped from the RGroup.
  * 
  * \ingroup MORTALITY_PRIVATE

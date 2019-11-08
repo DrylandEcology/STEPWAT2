@@ -4,7 +4,7 @@
  *        etc required to interface STEPPE with SOILWAT.
  * 
  * The structs, functions, variables, and macros defined in this file
- * facilitate the conversion of SOILWAT output into STEPWAT input. 
+ * facilitate the conversion of SOILWAT2 output into STEPWAT2 input. 
  * 
  * \author
  *     Kyle Palmquist\n

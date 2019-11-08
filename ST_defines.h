@@ -103,7 +103,7 @@
 
 /*********** define types for indices to data structures *************/
 /**
- * \brief Used to iterate acros resource groups stored in the \ref RGroup global variable.
+ * \brief Used to iterate across resource groups stored in the \ref RGroup global variable.
  * 
  * GrpIndex exists to clarify what a variable is meant to access.
  * Any variable of type GrpIndex is meant to access \ref RGroup.
@@ -137,7 +137,7 @@ typedef IntS SppIndex;
 /**
  * \brief Enumerator for temperature class.
  * 
- * Each species has a temperatuce class.
+ * Each species has a temperature class.
  * 
  * \sa species_st which instanciates this enumerator.
  * 
@@ -185,7 +185,8 @@ typedef enum {VerySensitive, Sensitive, Insensitive, VeryInsensitive}
 /**
  * \brief All possible precipitation classes.
  * 
- * Used to determine how much precipitation an environment gets.
+ * Used to determine whether this year's precipitation is above average, 
+ * average, or below average.
  * 
  * \sa environs_st which instanciates this enumerator.
  * 
@@ -212,7 +213,7 @@ typedef enum {Intcpt, Slope, P0=0, P1, P2, P3, P4}
 /**
  * \brief How deep a group's roots penetrate.
  * 
- * Defined at the resgroup level.
+ * Defined at the rgroup level.
  * 
  * \sa resourcegroup_st which instanciates this enumerator.
  * 
@@ -278,7 +279,7 @@ typedef enum {F_First, F_Log, F_Model, F_Env, F_Plot, F_RGroup, F_Species,
 /**
  * \brief Loop through all species regardless of group.
  * 
- * This function is usefull for performing an operation on every
+ * This function is useful for performing an operation on every
  * species.
  * 
  * \param s will increment every iteration of the loop. Use it to
