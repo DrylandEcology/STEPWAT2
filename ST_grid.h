@@ -4,7 +4,7 @@
     enumerators from ST_grid.c. If you are looking for the functions 
     that this module exports check the bottom of the file.
 
-    Initial programming by Chandler Haukap. */
+    Initial programming by Chandler Haukap in August 2019. */
 /******************************************************************/
 
 #ifndef GRID_H
@@ -24,7 +24,7 @@
 
 /*********************** Grid Structures ****************************/
 
-//represents the input data for all the soil layers of a cell
+// Contains the input data for all the soil layers of a cell
 struct Soil_st
 {
 	// Number of soil layers (size of lyr array)
@@ -60,7 +60,7 @@ struct grid_init_species_st
 /* Holds all plot-specific parameters */
 struct grid_cell_st
 {
-	/* RGroup coresponding to this cell */
+	/* RGroup corresponding to this cell */
 	GroupType **myGroup;
 	/* Species corresponding to this cell */
 	SpeciesType **mySpecies;
@@ -154,7 +154,7 @@ int grid_Cols;
 char *grid_files[N_GRID_FILES];
 /* Array of directory names. Use the Directory_Indices enum to pick the correct index. */
 char *grid_directories[N_GRID_DIRECTORIES];
-/* TRUE if every cell should write its own summary file. */
+/* TRUE if every cell should write its own output file. */
 Bool writeIndividualFiles;
 
 /**************************** Exported Functions **********************************/

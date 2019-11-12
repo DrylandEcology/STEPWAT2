@@ -22,16 +22,16 @@ pcg32_random_t dispersal_rng;
    results of this function can be accessed using 
    gridCells[a][b].mySeedDispersal[s].dispersalProb[c][d] 
    where (a,b) are the coordinates of the sender,
-   (b, c) are the coordinates of the reciever,
+   (b, c) are the coordinates of the receiver,
    and s is the species. */
 void initDispersalParameters(void)
 {
-	int senderRow, senderCol, recieverRow, recieverCol;
+	int senderRow, senderCol, receiverRow, receiverCol;
 	SppIndex sp;
 	double MAXD; /* maximum seed dispersal distance for a given species */
 	double maxRate; /* Dispersability of the seeds */
 	double plotWidth; /* width of the plots (all plots are equal and square) */
-	double distanceBetweenPlots; /* distance between the sender and the reciever */
+	double distanceBetweenPlots; /* distance between the sender and the receiver */
     CellType* sender;
 
     RandSeed(SuperGlobals.randseed, &dispersal_rng);
@@ -39,7 +39,8 @@ void initDispersalParameters(void)
 	/* sender denotes that these loops refer to the cell distributing seeds */
 	for(senderRow = 0; senderCol < grid_Rows; ++senderRow){
 		for(senderCol = 0; senderCol < grid_Cols; ++senderCol){
-			/* Cell is loaded to ensure the ForEachSpecies loop works */
+			/* Cell is loaded to ensure the global Species pointer points to a valid SpeciesType so the
+               ForEachSpecies loop is able to iterate. */
 			load_cell(senderRow, senderCol);
             sender = &gridCells[senderRow][senderCol];
 
@@ -51,7 +52,8 @@ void initDispersalParameters(void)
 					continue;
 				}
 
-				/* These are the three values we need to calculate the probability of dispersal */
+				/* These are the three values we need to calculate the probability of dispersal
+                 * according to EQ 5 in Coffin & Lauenroth 1989. */
 				MAXD = ((Species[sp]->sd_H * Species[sp]->sd_VW) / Species[sp]->sd_VT) / 100.0; // divided by 100 to convert from cm to m.
 				maxRate = -(log(0.005) / MAXD);
 				plotWidth = sqrt(Globals->plotsize);
@@ -59,22 +61,23 @@ void initDispersalParameters(void)
 				/* Allocate the dispersalProb 2d array */
 				sender->mySeedDispersal[sp].dispersalProb = Mem_Calloc(grid_Rows, 
 							sizeof(double*), "initDispersalParameters: dispersalProb");
-				for(recieverRow = 0; recieverRow < grid_Rows; ++recieverRow){
-					sender->mySeedDispersal[sp].dispersalProb[recieverRow] = 
+				for(receiverRow = 0; receiverRow < grid_Rows; ++receiverRow){
+					sender->mySeedDispersal[sp].dispersalProb[receiverRow] = 
 								Mem_Calloc(grid_Cols, sizeof(double), "initDispersalParameters: dispersalProb[i]");
 				}
 
 				/* Loop through all possible recipients of seeds. */
-				for(recieverRow = 0; recieverRow < grid_Rows; ++recieverRow){
-					for(recieverCol = 0; recieverCol < grid_Cols; ++recieverCol){
-						if(senderRow == recieverRow && senderCol == recieverCol){
+				for(receiverRow = 0; receiverRow < grid_Rows; ++receiverRow){
+					for(receiverCol = 0; receiverCol < grid_Cols; ++receiverCol){
+						if(senderRow == receiverRow && senderCol == receiverCol){
 							continue; // No need to calculate a probability for dispersal to itself
 						}
                         
-						distanceBetweenPlots = _cell_dist(senderRow, recieverRow, senderCol, recieverCol, plotWidth);
+						distanceBetweenPlots = _cell_dist(senderRow, receiverRow, senderCol, receiverCol, plotWidth);
 
-                        /* The value that we are after should be saved to the sender cell. */
-						sender->mySeedDispersal[sp].dispersalProb[recieverRow][recieverCol]
+                        /* The value that we are after should be saved to the sender cell.
+                         * this equation comes directly from equation 4 in Coffin and Lauenroth 1989. */
+						sender->mySeedDispersal[sp].dispersalProb[receiverRow][receiverCol]
                                     = (distanceBetweenPlots > MAXD) ? (0.0) : (exp(-maxRate * distanceBetweenPlots));
 					}
 				}
@@ -84,7 +87,7 @@ void initDispersalParameters(void)
 	unload_cell();
 }
 
-/* Perform seed dispersal durring the simulation. This is NOT functional yet. */
+/* Perform seed dispersal during the simulation. This is NOT functional yet. */
 void disperseSeeds(void)
 {
 	/************ TODO: overhaul seed dispersal. This block prevents seed dispersal from running. **************/

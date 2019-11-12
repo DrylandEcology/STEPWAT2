@@ -112,6 +112,11 @@ Bool indiv_New( SppIndex sp) {
   p->Prev = NULL;
   Species[sp]->IndvHead = p;
 
+  // This functionality is unused, but it might be useful in the future.
+  //sql for inserting new indiv
+  //if(!UseGrid)
+	//  insertIndiv(p);
+
   id++;
   return TRUE;
 }

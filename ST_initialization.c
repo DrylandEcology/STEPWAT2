@@ -2,9 +2,10 @@
 // ST_initialization.c 
 //      Contains definitions of all functions related to initialization.
 //      The current initialization methods are _run_seed_initialization
-//      and _run_spinup. This file uses the "_" prefix to function names
-//      to denote private functions that should NEVER be called outside
-//      of this file.
+//      and _run_spinup. Note that _run_seed_initialization is non-functional 
+//      as of 12/11/19, but the logic is in place to call the function. This 
+//      file uses the "_" prefix in function names to denote private 
+//      functions that should NEVER be called outside of this file.
 //
 // TO ADD AN INITIALIZATION METHOD:
 //      Adding a method is simple. runInitialization() takes care of memory 
@@ -40,7 +41,7 @@ static void _saveAsInitializationConditions(void);
 
 /***************************** Externed variables **********************************/
 /* Note that in an ideal world we wouldn't need to extern any variables because 
-   every module would declate them in a header file. Hopefully we can get this
+   every module would declare them in a header file. Hopefully we can get this
    cleaned up soon! -CH */
 
 // these are SOILWAT variables that we need...
@@ -118,8 +119,9 @@ void runInitialization(void){
     }
     unload_cell(); // Reset the global variables
 
+    /* Iterate through the number of years requested in inputs. */
     for (year = 1; year <= SuperGlobals.runInitializationYears; year++)
-    { //for each year
+    {
         if(UseProgressBar){
             logProgress(0, year, INITIALIZATION); // iter = 0 because we are not actually in an iterations loop.
         }
@@ -216,8 +218,10 @@ static void _endInitialization(void){
 	DuringInitialization = FALSE;
 }
 
-/* Save the current state of the program as spinup conditions. This is low level function. If you have already called
-   _endInitialization() there is no need to call this function. */
+/* Save the current state of the program as spinup conditions.
+ *  
+ * This is low level function. If you have already called
+ * _endInitialization() there is no need to call this function. */
 static void _saveAsInitializationConditions(){
 	// Save gridCells as initializationCells
 	initializationCells = gridCells;
@@ -256,7 +260,9 @@ void loadInitializationConditions(){
 
 }
 
-/* "Spinup" the model by running without stat collection. */
+/* "Spinup" the model by running without stat collection, fire, or grazing.
+ * 
+ * Fire and grazing will potentially be added to spinup as a future feature. */
 static void _run_spinup(void)
 {
 	Bool killedany;             // killedany for mortality functions
@@ -273,7 +279,19 @@ static void _run_spinup(void)
     _kill_extra_growth(); 		// Kill superfluous growth			
 }
 
-/* TODO: This is a dummy method. It needs to be implemented once seed dispersal is fully planned. */
+/* TODO: This is a dummy method. It needs to be implemented once seed dispersal is fully planned.
+ *
+ * Note on implementing: The logic behind calling this function already exists. You can view the 
+ *     function call inside runInitialization, but the important thing to note is that this 
+ *     function is called inside the following structure:
+ *     
+ *     for each year
+ *         for each grid cell
+ *             _run_seed_initialization
+ * 
+ *     You can assume that prior to this function being called the correct grid cell has been loaded
+ *     into the global variables (RGroup, Species, Env, ect.) and that this function must
+ *     operate on a yearly time step. */
 static void _run_seed_initialization(void){
     if(Globals->currYear == 1){
 	    printf("\nYou have attempted to initialize with seed dispersal.\n" 

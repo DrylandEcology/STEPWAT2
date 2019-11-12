@@ -4,7 +4,7 @@
     Initialization is currently only availible when running gridded 
     mode. 
     
-    Initial programming by Chandler Haukap. */
+    Initial programming by Chandler Haukap in August of 2019. */
 /***********************************************************************/
 
 #ifndef INITIALIZATION_H

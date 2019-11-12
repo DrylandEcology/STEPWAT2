@@ -1,8 +1,11 @@
-/* Chandler Haukap- This file defines all structs used in ST_stats.c.
- * It was created to allow the gridded code to instanciate accumulators
+/* \file ST_stats.h 
+ * \author Chandler Haukap in August 2019
+ * 
+ * This file defines all structs used in ST_stats.c.
+ * It was created to allow the gridded code to instantiate accumulators
  * without including ST_stats.c. 
  * 
- * To read the documentation related to creating this struct see issues
+ * To read the documentation related to creating this file see issues
  * #259 and #266 on GitHub */
 
 #ifndef STATS_STRUCT_DEF

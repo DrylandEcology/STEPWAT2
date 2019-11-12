@@ -231,7 +231,6 @@ static void _env_init( void) {
             nitems = 8;
             break;
         case 2:
-            nitems = 5;
             x=sscanf( inbuf, "%f %f %f %f %f",
                       &Globals->temp.avg, &Globals->temp.std,
                       &Globals->temp.min, &Globals->temp.max,
@@ -1024,8 +1023,8 @@ static void _species_init( void) {
        viable,
        pseed;
    RealF irate, ratep, estab, minb, maxb, cohort, xdecay,
-         p1, p2, p3, p4, p5, p6, p7;
-   float var, VW;
+         p1, p2, p3, p4, p5, p6, p7, p8;
+   float var;
    char clonal[5];
 
    MyFileName = Parm_name( F_Species);
@@ -1203,7 +1202,7 @@ static void _species_init( void) {
     }
 
     x = sscanf( inbuf, "%s %hd %f %f %f %f %f %f %f %f",
-                name, &turnondispersal, &p1, &p2, &p3, &p4, &p5, &p6, &p7, &VW); 
+                name, &turnondispersal, &p1, &p2, &p3, &p4, &p5, &p6, &p7, &p8); 
     if(x < 10) {
       LogError(logfp, LOGFATAL, "%s: Too few columns in species seed dispersal inputs", MyFileName);
     }
@@ -1224,7 +1223,7 @@ static void _species_init( void) {
     Species[sp]->sd_Pmax = p5;
     Species[sp]->sd_H = p6;
     Species[sp]->sd_VT = p7;
-    Species[sp]->sd_VW = VW;
+    Species[sp]->sd_VW = p8;
   }
   if(!sppok) {
 	  LogError(logfp, LOGFATAL, "%s: Incorrect/incomplete input in species seed dispersal input", MyFileName);

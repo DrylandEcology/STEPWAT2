@@ -2,6 +2,8 @@
 /* ST_progressBar.c
     Function definitions for a progress bar printed to the terminal.
     See ST_progressBar.h for a description of how to add a new Status.
+
+    \author Chandler Haukap in August 2019
  */
 /**************************************************************************/
 
@@ -19,8 +21,10 @@ double _calculateSimulationProgress(int year, int iteration);
 /*********************** Function Definitions *****************************/
 
 /* Log the program's progress using a progress bar.
-	Param iteration: integer greater than 0. Input 0 iff the program is not currently in an iteration loop.
-	Param year: integer greater than 0. Input 0 iff the program is not currently in a years loop.
+	Param iteration: integer greater than 0. Input 0 if and only if the program
+                     is not currently in an iteration loop.
+	Param year: integer greater than 0. Input 0 if and only if the program is
+                not currently in a years loop.
 	Param status: Use the "Status" enum to choose a value.  */
 void logProgress(int iteration, int year, Status status){
 	static char progressString[256];

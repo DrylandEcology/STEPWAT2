@@ -10,6 +10,8 @@
         progress bar, create a function for calculating progress
         in ST_progressBar.c then add your function to 
         _calculateProgress().
+
+    \author Chandler Haukap in August 2019
 */
 /******************************************************************/
 
@@ -18,7 +20,7 @@
 
 /*********************** Enumerator(s) ****************************/
 
-/* States of the program that the progress bar recognises. */
+/* States of the program that the progress bar recognizes. */
 typedef enum 
 {
 	INITIALIZATION,

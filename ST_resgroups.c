@@ -993,10 +993,22 @@ void rgroup_Extirpate(GrpIndex rg)
 
 }
 
+/* Copy one GroupType's variables to another GroupType. Both GroupTypes must be
+ * allocated before calling this function. 
+ * 
+ * \param src is the source of the data to be copied over.
+ * \param dest is destination to recieve the data.
+ * 
+ * \sideeffect dest will be reallocated to the size of src, and all fields of
+ *             dest will be overwritten with src's data. 
+ */
 void copy_rgroup(const GroupType* src, GroupType* dest){
     int i;
 
-    // This would be very bad.
+    /* The first step of this algorithm is to deallocate dest's memory so it
+     * can be reallocated to the size of src. If dest and src are the same
+     * the net sum of this function would be to deallocate all of the fields
+     * of the GroupType. */
     if(src == dest){
         return;
     }

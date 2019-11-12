@@ -109,7 +109,7 @@ static void _make_ppt( void) {
 /* If not running SOILWAT,take a random number from normal distribution with*/
 /* mean, stddev that is between min & max from */
 /* the Globals->ppt structure.*/
-/* Also set the growing season precip. */
+/* Also determine growing season precipitation. */
 
 /* HISTORY */
 /* Chris Bennett @ LTER-CSU 6/15/2000            */
@@ -117,13 +117,10 @@ static void _make_ppt( void) {
  *       The ppt and gsppt are set in _sxw_set_environs()
  *       but we still pass through this code to set the
  *       Dry/Wet/Normal state.
- * KAP 1/26/2017 The above note by CB is not correct. Env->ppt
- *      is set in _sxw_set_environs, but gsppt is not, it is
- *      set below. When using SOILWAT or not, the gsspt, ppt.dry,
- *      and ppt.wet is currently fixed each year and read from env.in
- *      We should consider calculating gsspt in the _sxw_set_environs
- *      function when running SOILWAT (so it is not fixed), and allowing
- *      what constitutes a wet and dry year to vary across sites. */
+ * KAP 1/26/2017 We should consider calculating amount of growing-season 
+ *      precipitation this year in the _sxw_set_environs function when 
+ *      running SOILWAT (so it is not fixed), and allowing what constitutes 
+ *      a wet and dry year to vary across sites. */
 
 /*------------------------------------------------------*/
 
