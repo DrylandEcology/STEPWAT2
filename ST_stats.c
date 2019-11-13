@@ -8,8 +8,12 @@
 //  History:
 //     (6/15/2000) -- INITIAL CODING - cwb
 //   1/9/01 - revised to make extensive use of malloc() */
-//	5/28/2013 (DLM) - added module level variable accumulators (grid_Stat) for the grid and functions to deal with them (stat_Load_Accumulators(), stat_Save_Accumulators() stat_Free_Accumulators(), and stat_Init_Accumulators()).  These functions are called from ST_grid.c and manage the output accumulators so that the gridded version can output correctly.  The accumulators are dynamically allocated, so be careful with them.
+//	5/28/2013 (DLM) - added module level variable accumulators (grid_Stat) for the grid and functions.
 // 07/30/2016 (AKT) Fixed bug at std_dev calculation
+//  8/30/2019 (Chandler Haukap) - Removed grid_Stat accumulators and functionality.
+//            Gridded mode accumulators are now stored in the Celltype struct in 
+//            ST_grid.h and swapped into this module using a call to 
+//            stat_Copy_Accumulators().
 //
 /********************************************************/
 /********************************************************/

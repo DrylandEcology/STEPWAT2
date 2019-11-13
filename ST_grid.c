@@ -201,11 +201,6 @@ void runGrid(void)
 		 */
 		sprintf(SW_Weather.name_prefix, "%s", SW_prefix_permanent); //updates the directory of the weather files so SOILWAT2 can find them
 
-		if (BmassFlags.yearly || MortFlags.yearly){
-			parm_Initialize();
-			_init_grid_inputs();
-		}
-
 		// Initialize the plot for each grid cell
 		for (i = 0; i < grid_Rows; i++){
 			for (j = 0; j < grid_Cols; j++){

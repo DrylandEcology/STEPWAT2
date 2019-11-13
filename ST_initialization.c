@@ -106,9 +106,6 @@ void runInitialization(void){
     RandSeed(SuperGlobals.randseed, &grid_rng);
     RandSeed(SuperGlobals.randseed, &markov_rng);
 
-    if (BmassFlags.yearly || MortFlags.yearly)
-        parm_Initialize();
-
     // Initialize the plot for each grid cell
     for (i = 0; i < grid_Rows; i++){
         for (j = 0; j < grid_Cols; j++){
@@ -275,7 +272,6 @@ static void _run_spinup(void)
     rgroup_IncrAges(); 			// Increment ages of all plants
     _kill_annuals(); 			// Kill annuals
     _kill_maxage();             // Kill plants that reach max age
-    proportion_Recovery(); 		// Recover from any disturbances
     _kill_extra_growth(); 		// Kill superfluous growth			
 }
 
