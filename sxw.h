@@ -119,21 +119,24 @@ struct transp_data {
 struct temp_SXW_st{
   /* ----- 3d arrays ------- */
   RealD * _rootsXphen, /* relative roots X phen in each lyr,grp,pd */
-        * _roots_active, /* "active" in terms of size and phenology */
+        * _roots_active, // "active" in terms of size and phenology 
+                         // relative to the total roots_phen_lyr_group
         * _roots_active_rel;
 
 
   /* ----- 2D arrays ------- */
   /* rgroup by layer, ie, group-level values */
-  RealD * _roots_max,     /* read from root distr. file */
-        * _roots_active_sum, /* used in sxw_resource */
+  RealD * _roots_max,     // root distribution with depth for STEPPE functional
+                          // groups, read from input.
+        * _roots_active_sum, // active roots in each month and soil layer for 
+                             // STEPPE functional groups in the current year.
         /* rgroup by period */
-        * _phen;          /* phenology read from file */
+        * _phen;          // phenological activity for each month for STEPPE 
+                          // functional groups, read from input.
 
   /* simple vectors hold the resource information for each group */
   /* curr/equ gives the available/required ratio */
-  RealF *_resource_cur,  /* current resource availability for each STEPPE functional type */
-        *_resource_pr;   /* resource convertable to PR */
+  RealF *_resource_cur;  /* current resource availability for each STEPPE functional type */
 
   /* one vector for the production constants */
   RealD _prod_litter[MAX_MONTHS];

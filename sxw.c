@@ -1173,7 +1173,6 @@ void free_all_sxw_memory( void ) {
 	Mem_Free(SXWResources->_prod_bmass);
 	Mem_Free(SXWResources->_prod_pctlive);
 	Mem_Free(SXWResources->_resource_cur);
-	Mem_Free(SXWResources->_resource_pr);
 	Mem_Free(SXWResources->_roots_active);
 	Mem_Free(SXWResources->_roots_active_rel);
 	Mem_Free(SXWResources->_roots_active_sum);

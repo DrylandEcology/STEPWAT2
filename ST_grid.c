@@ -2,7 +2,7 @@
 // Source file: ST_grid.c
 // Type: module
 // Application: STEPPE - plant community dynamics simulator
-// Purpose: This module handles the grid.
+// Purpose: This module performs gridded mode simulations.
 // History:
 //  (5/24/2013) -- INITIAL CODING - DLM
 //  (March - July 2019) -- Overhauled by Chandler Haukap with Fredrick Pierson
@@ -232,6 +232,7 @@ void runGrid(void)
 				for (j = 0; j < grid_Cols; j++)
 				{ //for each cell
                 
+                    /* Ensure that all global variables reference the specific cell */
 					load_cell(i, j);
 
 					Globals->currYear = year;
@@ -242,14 +243,14 @@ void runGrid(void)
 						gridCells[i][j].mySeedDispersal->lyppt = gridCells[i][j].myEnvironment.ppt;
 					}
 
-					/* The following functions mimic ST_main.c. load_cell(i, j) ensures that all global variables reference the specific cell */
+					/* The following functions mimic ST_main.c. */
 
-					rgroup_Establish(); 		// Establish individuals. Excludes annuals.
+					rgroup_Establish(); 		// Establish individuals.
 
-					Env_Generate();				// Generated the SOILWAT environment
+					Env_Generate();				// Run SOILWAT2 to generate resources.
 
 					rgroup_PartResources();		// Distribute resources
-					rgroup_Grow(); 				// Grow
+					rgroup_Grow(); 				// Implement plant growth
 
 					mort_Main(&killedany); 		// Mortality that occurs during the growing season
 
@@ -313,7 +314,7 @@ void runGrid(void)
 	for (i = 0; i < grid_Rows; i++){
 		for (j = 0; j < grid_Cols; j++)
 		{
-			int cell = (j + 1) + (i * grid_Cols) - 1;
+			int cell = j + (i * grid_Cols);
 			load_cell(i, j);
 			char fileMort[1024], fileBMass[1024], fileReceivedProb[1024];
 
@@ -458,7 +459,7 @@ static void _init_stepwat_inputs(void)
 
 			// Set mySXW to the location of the newly allocated SXW
 			gridCells[i][j].mySXW = getSXW();	
-			// Set myTanspWindow to the location of the newly allocated transp window
+			// Set myTranspWindow to the location of the newly allocated transp window
 			gridCells[i][j].myTranspWindow = getTranspWindow(); 
 			// Set mySXWResources to the location of the newly allocated SXW resources
 			gridCells[i][j].mySXWResources = getSXWResources();
@@ -565,6 +566,7 @@ static void _allocate_accumulators(void){
                         							"_allocate_accumulators(GSize[rg].s)");
 					}
     			}
+
     			if (BmassFlags.pr) {
       				gridCells[i][j]._Gpr = (struct stat_st *)
              				Mem_Calloc( Globals->grpCount,
@@ -598,7 +600,7 @@ static void _allocate_accumulators(void){
                       										   "_allocate_accumulators(Gwf->prescribedFire)");
       				}
     			}
-  			}
+    		}
 
   			if (MortFlags.group) {
     			gridCells[i][j]._Gestab = (struct stat_st *)
@@ -645,7 +647,7 @@ static void _allocate_accumulators(void){
                           						"_allocate_accumulators(Indv[sp].s)");
 					}
     			}
-  			}
+    		}
   			if (MortFlags.species) {
     			gridCells[i][j]._Sestab = (struct stat_st *)
            					Mem_Calloc( Globals->sppCount,
@@ -826,11 +828,13 @@ void unload_cell(){
 	copy_sxw_variables(NULL,NULL,NULL);
 }
 
-/**************************************************************/
+/* 
+ * \brief Similar to the getaline function in filefuncs.c, except this one 
+ * checks for carriage return characters and doesn't deal with whitespace.
+ * It treats '\r', '\n', and '\r\n' all like they are valid line feeds.
+ */
 static Bool GetALine2(FILE *f, char buf[], int limit)
 {
-	//this is similar to the getaline function in filefuncs.c, except this one checks for carriage return characters and doesn't deal with whitespace/... (since excel writes them into .csv files for some aggravating reason)... this one is probably less efficient overall though.
-	//this is treating '\r', '\n', and '\r\n' all like they are valid line feed characters... in reality '\r' by itself should never be, but it's not like I can stop excel from outputting .csv files however the heck it feels like...
 	//only read limit characters
 	int i = 0, aChar;
 	aChar = getc(f);

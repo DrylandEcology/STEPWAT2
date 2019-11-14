@@ -104,7 +104,6 @@ struct grid_cell_st
 	/* ------------------ End Soils --------------------- */
 } typedef CellType;
 
-
 /**************************** Enumerators *********************************/
 /* Indices for grid_directories go here */
 typedef enum

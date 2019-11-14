@@ -26,7 +26,7 @@ pcg32_random_t dispersal_rng;
    and s is the species. */
 void initDispersalParameters(void)
 {
-	int senderRow, senderCol, receiverRow, receiverCol;
+	int senderRow, senderCol, receiverRow, receiverCol, MAXDP, maxCells;
 	SppIndex sp;
 	double MAXD; /* maximum seed dispersal distance for a given species */
 	double maxRate; /* Dispersability of the seeds */
@@ -57,6 +57,8 @@ void initDispersalParameters(void)
 				MAXD = ((Species[sp]->sd_H * Species[sp]->sd_VW) / Species[sp]->sd_VT) / 100.0; // divided by 100 to convert from cm to m.
 				maxRate = -(log(0.005) / MAXD);
 				plotWidth = sqrt(Globals->plotsize);
+                MAXDP = (int) ceil(MAXD / plotWidth); //MAXD in terms of plots... rounds up to the nearest integer
+                maxCells = (int) pow((MAXDP * 2) + 1.0, 2.0);
 
 				/* Allocate the dispersalProb 2d array */
 				sender->mySeedDispersal[sp].dispersalProb = Mem_Calloc(grid_Rows, 
