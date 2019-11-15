@@ -47,7 +47,7 @@
 char sd_Sep;
 
 int grid_Cells;
-Bool UseDisturbances, UseSoils, sd_DoOutput, sd_MakeHeader; //these are treated like booleans
+Bool UseDisturbances, UseSoils, sd_DoOutput; //these are treated like booleans
 
 /***************************** Externed variables **********************************/
 /* Note that in an ideal world we wouldn't need to extern any variables because 
@@ -331,7 +331,7 @@ void runGrid(void)
 				stat_Output_AllBmass();
 			}
 			if (UseSeedDispersal && sd_DoOutput && writeIndividualFiles){
-				stat_Output_Seed_Dispersal(fileReceivedProb, sd_Sep, sd_MakeHeader);
+				stat_Output_Seed_Dispersal(fileReceivedProb, sd_Sep);
 			}
 		}
 	}
@@ -1262,12 +1262,6 @@ static void _read_grid_setup(void)
 	if (sscanf(buf, "%u", &sd_DoOutput) != 1)
 		LogError(logfp, LOGFATAL,
 				"Invalid %s file: seed dispersal output line\n", grid_files[GRID_FILE_SETUP]);
-
-	GetALine(f, buf);
-	if (sscanf(buf, "%u", &sd_MakeHeader) != 1)
-		LogError(logfp, LOGFATAL,
-				"Invalid %s file: seed dispersal make header line\n",
-				grid_files[GRID_FILE_SETUP]);
 
 	GetALine(f, buf);
 	if (sscanf(buf, "%c", &sd_Sep) != 1)

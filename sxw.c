@@ -33,7 +33,10 @@
  *         defined with double vs single precision and take
  *         appropriate casting measures.
  *	07-16-12 (DLM) - made a ton of changes to try and
- *          get it to compile with the new updated version of soilwat (version 23) */
+ *          get it to compile with the new updated version of soilwat (version 23) 
+ *  11-15-19 - Chandler Haukap - The functionality described by cwb on February
+ *         28 2002 has been entirely deprecated. I removed the last reference
+ *         to SXW_BYMAXSIZE and _Grp_BMass today. */
 /********************************************************/
 /********************************************************/
 
@@ -92,11 +95,6 @@ extern Bool storeAllIterations;
 transp_t* transp_window;
 pcg32_random_t resource_rng; //rng for swx_resource.c functions.
 SXW_resourceType* SXWResources;
-
-#ifdef SXW_BYMAXSIZE
-/* addition to meet changes specified at the top of the file */
-RealF _Grp_BMass[MAX_RGROUPS];
-#endif
 
 /* and one vector for the production constants */
 RealD _prod_litter[MAX_MONTHS];

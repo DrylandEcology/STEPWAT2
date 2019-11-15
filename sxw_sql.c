@@ -337,7 +337,6 @@ void insertOutputVars(RealF * _resource_cur, RealF added_transp) {
 
 	ForEachTrPeriod(p)
 	{
-		//ForEachTranspLayer(t) sum += SXW->transp[Ilp(t,p)];
 		for (t = 0; t < SXW->NSoLyrs; t++)
 			sum += SXW->transpTotal[Ilp(t, p)];
 	}

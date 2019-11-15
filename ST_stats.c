@@ -706,7 +706,7 @@ void stat_Output_AllBmass(void) {
 
 
 /***********************************************************/
-void stat_Output_Seed_Dispersal(const char * filename, const char sep, Bool makeHeader) {
+void stat_Output_Seed_Dispersal(const char * filename, const char sep) {
 	//do stuff...
 	char buf[1024], tbuf[80];
 	IntS yr;
@@ -715,14 +715,14 @@ void stat_Output_Seed_Dispersal(const char * filename, const char sep, Bool make
 
 	f = OpenFile(filename, "w");
 
-	if(makeHeader) {
-		fprintf(f,"Year");
-		ForEachSpecies(sp) {
-			fprintf(f, "%c%s_prob", sep, Species[sp]->name);
-			fprintf(f, "%c%s_std", sep, Species[sp]->name);
-		}
-		fprintf(f,"\n");
+  /* ---------- Make a header for the file --------- */
+	fprintf(f,"Year");
+	ForEachSpecies(sp) {
+		fprintf(f, "%c%s_prob", sep, Species[sp]->name);
+		fprintf(f, "%c%s_std", sep, Species[sp]->name);
 	}
+	fprintf(f,"\n");
+  /* ------------------ END header ----------------- */
 
 	for( yr=1; yr<= SuperGlobals.runModelYears; yr++) {
 		*buf = '\0';

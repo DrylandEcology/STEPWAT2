@@ -10,5 +10,4 @@ spinup  	# Initialization method. Options are "spinup", "seeds", or "none"
 
 #SEED DISPERSAL OUTPUTS
 1		# output seed dispersal summary file?  1 means yes, 0 means no
-1		# output header?  1 means yes, 0 means no.
 ,		# output seperator. Valid options are: t = tab, s = space, or any single character such as , | : etc (excluding '#','t', and 's').  Suggested: tab.
