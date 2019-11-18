@@ -116,12 +116,7 @@ static void _make_ppt( void) {
 /* cwb - 6-Dec-02 -- added code to interface with STEPWAT.
  *       The ppt and gsppt are set in _sxw_set_environs()
  *       but we still pass through this code to set the
- *       Dry/Wet/Normal state.
- * KAP 1/26/2017 We should consider calculating amount of growing-season 
- *      precipitation this year in the _sxw_set_environs function when 
- *      running SOILWAT (so it is not fixed), and allowing what constitutes 
- *      a wet and dry year to vary across sites. */
-
+ *       Dry/Wet/Normal state. */
 /*------------------------------------------------------*/
 
   IntS i;

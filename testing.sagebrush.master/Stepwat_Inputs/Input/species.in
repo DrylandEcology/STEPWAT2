@@ -173,7 +173,7 @@
 # Pmax = probability of producing seeds in a wet year
 # H = the average release height of the inflorescences (cm) 
 # VT = the average sinking velocity of the seeds (cm/sec)
-# VW - the mean horizontal wind speed (500 cm/sec in the paper)
+# VW - the mean horizontal wind speed (500 cm/sec in Coffin and Lauenroth 1989)
 #
 # name 	dispersal	param1	PPTdry	PPTwet	Pmin	Pmax	H	VT  VW
  artr	1	    0.5	105	520	0.01	0.55	30.0	100.0   500.0
