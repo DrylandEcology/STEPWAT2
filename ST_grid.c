@@ -180,8 +180,9 @@ void runGrid(void)
 	if(initializationMethod != INIT_WITH_NOTHING){
 		runInitialization();
 	} else {
-		/* If no spinup is requested we still need to reset SXW to set the historical weather
-		   file names. */
+		/* SXW expects to be run from the testing.sagebrush.master/Stepwat_Inputs directory.
+        However, we are running from the testing.sagebrush.master directory. To find the 
+        location of the SOILWAT input files we need to manually set SXW->f_watin. */
 		ChDir(grid_directories[GRID_DIRECTORY_STEPWAT_INPUTS]);
 		SXW_Reset(gridCells[0][0].mySXW->f_watin);
 		ChDir("..");
