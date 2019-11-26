@@ -1147,7 +1147,7 @@ static void _species_init( void) {
      Species[sp]->exp_decay  = xdecay;
      Species[sp]->seedprod = (IntUS *) Mem_Calloc( viable, sizeof(IntUS), "species_init()");
      Species[sp]->var = var;
-     Species[sp]->pseed = pseed / Globals.plotsize;
+     Species[sp]->pseed = pseed / Globals->plotsize;
 
    } /* end while readspp*/
 
