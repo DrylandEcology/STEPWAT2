@@ -1059,10 +1059,10 @@ static void _species_init( void) {
       }
 
 		x = sscanf(inbuf,
-				"%s %hd %hd %f %f %hd %hd %f %hd %f %f %s %hd %hd %f %hd %f %hd",
-				name, &rg, &age, &irate, &ratep, &slow, &dist, &estab, &eind,
-				&minb, &maxb, clonal, &vegi, &temp, &cohort, &turnon, &var, &pseed);
-      if (x != 18) {
+				"%s %hd %hd %hd %hd %hd %hd %hd %hd %s %f %f %f %f %f %f",
+				name, &rg, &turnon, &age, &slow, &dist, &eind, &vegi, &temp, clonal, &irate, &ratep,  &estab,
+				&minb, &maxb, &cohort);
+      if (x != 16) {
         LogError(logfp, LOGFATAL, "%s: Wrong number of columns in species",
                 MyFileName);
       }
@@ -1108,7 +1108,6 @@ static void _species_init( void) {
       Species[sp]->use_me = (RGroup[rg-1]->use_me) ? itob(turnon) : FALSE ;
       Species[sp]->received_prob = 0;
       Species[sp]->cohort_surv = cohort;
-      Species[sp]->var = var;
       // input of `pseed` is in units of [# / m2]; convert to units of [# / plot]
       Species[sp]->pseed = pseed * Globals.plotsize;
 /*      Species[sp]->ann_mort_prob = (age > 0)
@@ -1149,9 +1148,9 @@ static void _species_init( void) {
         continue;
      }
 
-     x=sscanf( inbuf, "%s %hd %f",
-               name, &viable, &xdecay);
-     if (x < 3) {
+     x=sscanf( inbuf, "%s %hd %f %hd %f",
+               name, &viable, &xdecay, &pseed, &var);
+     if (x < 5) {
        LogError(logfp, LOGFATAL, "%s: Too few columns in annual estab parms",
                MyFileName);
      }
@@ -1165,6 +1164,8 @@ static void _species_init( void) {
      Species[sp]->viable_yrs = viable;
      Species[sp]->exp_decay  = xdecay;
      Species[sp]->seedprod = (IntUS *) Mem_Calloc( viable, sizeof(IntUS), "species_init()");
+     Species[sp]->var = var;
+     Species[sp]->pseed = pseed / Globals.plotsize;
 
    } /* end while readspp*/
 
