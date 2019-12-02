@@ -20,4 +20,4 @@
 
 # niter nyrs  seed
 # 100 300 0 # recommended settings for production runs
-3 300 7 # settings for testing purposes
+1 300 7 # settings for testing purposes
