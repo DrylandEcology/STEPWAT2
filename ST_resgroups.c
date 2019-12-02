@@ -44,6 +44,7 @@ void rgroup_ResPartIndiv(void);
 void rgroup_DropSpecies(SppIndex sp);
 void rgroup_AddSpecies(GrpIndex rg, SppIndex sp);
 void rgroup_Extirpate(GrpIndex rg);
+void copy_rgroup(const GroupType* src, GroupType* dest);
 
 /*********** Locally Used Function Declarations ************/
 /***********************************************************/
@@ -205,13 +206,13 @@ static void _add_annual_seedprod(SppIndex sp, RealF lastyear_relsize) {
      * that can establish. Otherwise, this year's seed production is a function
      * of the number of seeds produced per unit biomass multiplied by species biomass
      * (maximum species biomass * last year's species relative size). */
-    if (Globals.currYear == 1) {
+    if (Globals->currYear == 1) {
         s->seedprod[0] = RandUniIntRange(1, s->max_seed_estab, &resgroups_rng);
         //printf("Species name=%s ,currYear =1 so new calculated value s->seedprod[%u]= %hu , s->max_seed_estab =%hu\n", s->name, i, s->seedprod[i], s->max_seed_estab);
 
     } else {
         s->seedprod[0] = (IntU) (s->pseed * s->mature_biomass * lastyear_relsize);
-        //printf("Species name=%s ,currYear=%hu  so new calculated value s->seedprod[%u]= %hu , s->max_seed_estab =%hu, lastyear_relsize=%.5f\n", s->name, Globals.currYear, i, s->seedprod[i], s->max_seed_estab, lastyear_relsize);
+        //printf("Species name=%s ,currYear=%hu  so new calculated value s->seedprod[%u]= %hu , s->max_seed_estab =%hu, lastyear_relsize=%.5f\n", s->name, Globals->currYear, i, s->seedprod[i], s->max_seed_estab, lastyear_relsize);
     }
 }
 
@@ -298,8 +299,8 @@ void rgroup_ResPartIndiv(void) {
             *size_base, /* biomass of the functional group */
     		*size_obase; /* biomass of functional groups that can use extra resources */
 
-    size_base = (RealF *)Mem_Calloc(Globals.max_rgroups, sizeof(RealF), "rgroup_ResPartIndiv");
-    size_obase = (RealF *)Mem_Calloc(Globals.max_rgroups, sizeof(RealF), "rgroup_ResPartIndiv");
+    size_base = (RealF *)Mem_Calloc(SuperGlobals.max_rgroups, sizeof(RealF), "rgroup_ResPartIndiv");
+    size_obase = (RealF *)Mem_Calloc(SuperGlobals.max_rgroups, sizeof(RealF), "rgroup_ResPartIndiv");
     
     /* Divide each group's normal resources to individuals */
     ForEachGroup(rg) {
@@ -455,7 +456,7 @@ void rgroup_Grow(void) {
             continue;
 
         /* Succulents don't grow if conditions are wet */
-        if (g->succulent && Env.wet_dry == Ppt_Wet)
+        if (g->succulent && Env->wet_dry == Ppt_Wet)
             continue;
 
         /* Increment size of each individual in response to normal resources */
@@ -467,7 +468,7 @@ void rgroup_Grow(void) {
                 continue;
 
             /* Modify growth rate by temperature calculated in Env_Generate() */
-            tgmod = (s->tempclass == NoSeason) ? 1. : Env.temp_reduction[s->tempclass];
+            tgmod = (s->tempclass == NoSeason) ? 1. : Env->temp_reduction[s->tempclass];
 
             /* Now increase size of the individual plants of current species */
             ForEachIndiv(ndv, s) {
@@ -618,7 +619,7 @@ void rgroup_Establish(void) {
     GroupType *g;
 
     /* Cannot establish if plot is still in disturbed state*/
-    if (Plot.disturbed > 0) {
+    if (Plot->disturbed > 0) {
         ForEachGroup(rg)
         RGroup[rg]->regen_ok = FALSE;
         return; /* skip regen for all */
@@ -633,7 +634,7 @@ void rgroup_Establish(void) {
         g->regen_ok = TRUE; /* default */
         g->min_res_req = g->space; /* reset min_res_req, if it was modified last year */
 
-        if (Globals.currYear < RGroup[rg]->startyr) {
+        if (Globals->currYear < RGroup[rg]->startyr) {
             g->regen_ok = FALSE;
 
         } else {
@@ -648,7 +649,6 @@ void rgroup_Establish(void) {
 
                 /* Establishment for species that belong to annual functional groups*/
                 if (Species[sp]->max_age == 1) {
-                    //printf("Globals.currYear = %hu, call to _add_annuals sp=%d Species[sp]->lastyear_relsize : %.5f \n", Globals.currYear, sp, Species[sp]->lastyear_relsize);
                     num_est = _add_annuals(rg, sp, Species[sp]->lastyear_relsize);
                 }
 
@@ -658,9 +658,6 @@ void rgroup_Establish(void) {
                 }
 
                 if (num_est) {
-                    /* printf("%d %d %d %d\n",
-                     Globals.currIter, Globals.currYear, sp, num_est); */
-
                     Species_Add_Indiv(sp, num_est);
                     species_Update_Estabs(sp, num_est);
                 }
@@ -724,8 +721,8 @@ void rgroup_IncrAges(void)
 					LogError(logfp, LOGWARN,
 							"%s grown older than max_age (%d > %d). Iter=%d, Year=%d\n",
 							Species[ndv->myspecies]->name, ndv->age,
-							Species[ndv->myspecies]->max_age, Globals.currIter,
-							Globals.currYear);
+							Species[ndv->myspecies]->max_age, Globals->currIter,
+							Globals->currYear);
 				}
 			}
 		}
@@ -860,9 +857,9 @@ static GroupType *_create(void)
 	GroupType *p;
 
 	p = (GroupType *) Mem_Calloc(1, sizeof(GroupType), "_create");
-        p->name = (char *) Mem_Calloc(Globals.max_groupnamelen + 1, sizeof(char), "_create");
-        p->est_spp = (SppIndex *) Mem_Calloc(Globals.max_spp_per_grp, sizeof(SppIndex), "_create");
-        p->species = (SppIndex *) Mem_Calloc(Globals.max_spp_per_grp, sizeof(SppIndex), "_create");
+        p->name = (char *) Mem_Calloc(SuperGlobals.max_groupnamelen + 1, sizeof(char), "_create");
+        p->est_spp = (SppIndex *) Mem_Calloc(SuperGlobals.max_spp_per_grp, sizeof(SppIndex), "_create");
+        p->species = (SppIndex *) Mem_Calloc(SuperGlobals.max_spp_per_grp, sizeof(SppIndex), "_create");
         
 	return (p);
 
@@ -884,13 +881,13 @@ GrpIndex RGroup_New(void)
 	/* Chris Bennett @ LTER-CSU 6/15/2000            */
 
 	/*------------------------------------------------------*/
-	GrpIndex i = (GrpIndex) Globals.grpCount;
+	GrpIndex i = (GrpIndex) Globals->grpCount;
 
-	if (++Globals.grpCount > Globals.max_rgroups)
+	if (++Globals->grpCount > SuperGlobals.max_rgroups)
 	{
 		LogError(logfp, LOGFATAL, "Too many groups specified (>%d)!\n"
 				"You must adjust MAX_RGROUPS in maxrgroupspecies.in!",
-		Globals.max_rgroups);
+		SuperGlobals.max_rgroups);
 	}
 
 	RGroup[i] = _create();
@@ -994,6 +991,100 @@ void rgroup_Extirpate(GrpIndex rg)
 
 	RGroup[rg]->extirpated = TRUE;
 
+}
+
+/* Copy one GroupType's variables to another GroupType. Both GroupTypes must be
+ * allocated before calling this function. 
+ * 
+ * \param src is the source of the data to be copied over.
+ * \param dest is destination to recieve the data.
+ * 
+ * \sideeffect dest will be reallocated to the size of src, and all fields of
+ *             dest will be overwritten with src's data. 
+ */
+void copy_rgroup(const GroupType* src, GroupType* dest){
+    int i;
+
+    /* The first step of this algorithm is to deallocate dest's memory so it
+     * can be reallocated to the size of src. If dest and src are the same
+     * the net sum of this function would be to deallocate all of the fields
+     * of the GroupType. */
+    if(src == dest){
+        return;
+    }
+
+    /* -------------- Copy any arrays -------------- */
+    if(MortFlags.summary){
+        Mem_Free(dest->kills);
+        dest->kills = (IntUS*) Mem_Calloc(GrpMaxAge(src->grp_num), sizeof(IntUS), "copy_rgroup: kills");
+        for(i = 0; i < GrpMaxAge(src->grp_num); ++i){
+            dest->kills[i] = src->kills[i];
+        }
+    }
+
+    Mem_Free(dest->est_spp);
+    dest->est_spp = (SppIndex*) Mem_Calloc(src->est_count, sizeof(SppIndex), "copy_rgroup: est_spp");
+    for(i = 0; i < src->est_count; ++i){
+        dest->est_spp[i] = src->est_spp[i];
+    }
+
+    /* ------------- Copy all fields --------------- */
+    dest->cheatgrass_coefficient = src->cheatgrass_coefficient;
+    dest->depth = src->depth;
+    dest->est_annually = src->est_annually;
+    dest->est_count = src->est_count;
+    dest->estabs = src->estabs;
+    dest->extirp = src->extirp;
+    dest->extirpated = src->extirpated;
+    dest->grazingfreq_startyr = src->grazingfreq_startyr;
+    dest->grazingfrq = src->grazingfrq;
+    dest->grp_num = src->grp_num;
+    dest->ignition = src->ignition;
+    dest->killfreq = src->killfreq;
+    dest->killfreq_startyr = src->killfreq_startyr;
+    dest->killyr= src->killyr;
+    dest->max_age = src->max_age;
+    dest->max_bmass = src->max_bmass;
+    dest->max_density = src->max_density;
+    dest->max_per_sqm = src->max_per_sqm;
+    dest->max_spp = src->max_spp;
+    dest->max_spp_estab = src->max_spp_estab;
+    dest->max_stretch = src->max_stretch;
+    dest->min_res_req = src->min_res_req;
+    dest->mm_extra_res = src->mm_extra_res;
+    strcpy(dest->name, src->name);
+    dest->ppt_intcpt[0] = src->ppt_intcpt[0];
+    dest->ppt_intcpt[1] = src->ppt_intcpt[1];
+    dest->ppt_intcpt[2] = src->ppt_intcpt[2];
+    dest->ppt_slope[0] = src->ppt_slope[0];
+    dest->ppt_slope[1] = src->ppt_slope[1];
+    dest->ppt_slope[2] = src->ppt_slope[2];
+    dest->pr = src->pr;
+    dest->prescribedfire = src->prescribedfire;
+    dest->proportion_grazing = src->proportion_grazing;
+    dest->proportion_killed = src->proportion_killed;
+    dest->proportion_recovered = src->proportion_recovered;
+    dest->regen_ok = src->regen_ok;
+    dest->res_avail = src->res_avail;
+    dest->res_extra = src->res_extra;
+    dest->res_required = src->res_required;
+    dest->rgroupFractionOfVegTypeBiomass = src->rgroupFractionOfVegTypeBiomass;
+    dest->slowrate = src->slowrate;
+    dest->startyr = src->startyr;
+    dest->succulent = src->succulent;
+    dest->use_extra_res = src->use_extra_res;
+    dest->use_me = src->use_me;
+    dest->use_mort = src->use_mort;
+    dest->veg_prod_type = src->veg_prod_type;
+    dest->wild_fire_slope = src->wild_fire_slope;
+    dest->wildfire = src->wildfire;
+    dest->xgrow = src->xgrow;
+    dest->yrs_neg_pr = src->yrs_neg_pr;
+
+    /* ---------------- Copy Species Array ----------------- */
+    for(i = 0; i < SuperGlobals.max_spp_per_grp; ++i){
+        dest->species[i] = src->species[i];
+    }
 }
 
 /**************************************************************/

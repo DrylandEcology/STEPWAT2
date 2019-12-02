@@ -26,15 +26,15 @@
 /***************************************************
  * Basic definitions
  ***************************************************/
-#define MAX_SPECIES (Globals.max_spp_per_grp * Globals.max_rgroups)
+#define MAX_SPECIES (SuperGlobals.max_spp_per_grp * SuperGlobals.max_rgroups)
 #define MAX_SPECIESNAMELEN   4 /* keep around for SOILWAT for now */
 
 /* output_Bmass_Yearly of ST_output.c and _make_header and _make_header_with_std
  * of ST_stats.c output different numbers of fields. Set MAX_OUTFIELDS to the
  * maximum number of fields these three functions are capable of outputting. */
-#define MAX_OUTFIELDS ((MAX_SPECIES * 2) + (Globals.max_rgroups * 6) + 8)
+#define MAX_OUTFIELDS ((MAX_SPECIES * 2) + (SuperGlobals.max_rgroups * 6) + 8)
 
-#define MAX_FIELDLEN (Globals.max_groupnamelen + 6)  /* +6 for xtra chars like _RSize, etc */
+#define MAX_FIELDLEN (SuperGlobals.max_groupnamelen + 6)  /* +6 for xtra chars like _RSize, etc */
 #define MAX_CELLS 10000 // defines the maximum number of cells in the grid option
 
 /* Constants for flagging whether a sort is
@@ -114,12 +114,12 @@ typedef enum {F_First, F_Log, F_Model, F_Env, F_Plot, F_RGroup, F_Species,
  * preferably as GrpIndex, but note that it gets changed, so it
  * can only be an lvalue.  */
 /* void ForEachGroup(GrpIndex) */
-#define ForEachGroup(c)    for((c)=0; (c)< Globals.grpCount; (c)++)
+#define ForEachGroup(c)    for((c)=0; (c)< Globals->grpCount; (c)++)
 
 /* Generate an SppIndex to access Species[] to loop over each
  * defined species, irrespective of group.   */
 /* void ForEachSpecies(SppIndex) */
-#define ForEachSpecies(s)    for((s)=0; (s)< Globals.sppCount; (s)++)
+#define ForEachSpecies(s)    for((s)=0; (s)< Globals->sppCount; (s)++)
 
 /* Same for individuals within a species. Traverses a species'
  * linked list of IndivType objects.  i is a pointer to
@@ -179,6 +179,7 @@ typedef struct plot_st PlotType;
 typedef struct globals_st ModelType;
 typedef struct bmassflags_st BmassFlagsType;
 typedef struct mortflags_st MortFlagsType;
+typedef struct superglobals_st GlobalType;
 
 
 #endif

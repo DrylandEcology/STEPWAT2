@@ -55,8 +55,10 @@ SRCS	=\
 	$(Src)/ST_species.c\
 	$(Src)/ST_stats.c\
 	$(Src)/ST_grid.c\
-	$(Src)/ST_sql.c
-	#$(Src)/sxw_tester.c
+	$(Src)/ST_sql.c\
+	$(Src)/ST_initialization.c\
+	$(Src)/ST_progressBar.c\
+	$(Src)/ST_seedDispersal.c
 
 EXOBJS	=\
 	$(oDir)/sqlite-amalgamation/sqlite3.o\
@@ -98,8 +100,10 @@ EXOBJS	=\
 	$(oDir)/ST_stats.o\
 	$(oDir)/sxw_environs.o\
 	$(oDir)/ST_grid.o\
-	$(oDir)/ST_sql.o
-	#$(oDir)/sxw_tester.o
+	$(oDir)/ST_sql.o\
+	$(oDir)/ST_initialization.o\
+	$(oDir)/ST_progressBar.o\
+	$(oDir)/ST_seedDispersal.o
 
 ALLOBJS	=	$(EXOBJS)
 ALLBIN	=	$(Bin)/stepwat
@@ -349,9 +353,17 @@ $(oDir)/sw_src/SW_VegEstab.o: sw_src/SW_VegEstab.c sw_src/generic.h sw_src/filef
 	sw_src/SW_Model.h sw_src/SW_SoilWater.h sw_src/SW_Weather.h sw_src/SW_VegEstab.h
 		$(CC) $(C_FLAGS) $(CPPFLAGS) $(incDirs) -c -o $@ $<
 
-$(oDir)/ST_grid.o: ST_grid.c ST_steppe.h ST_defines.h sw_src/generic.h \
- ST_globals.h sw_src/myMemory.h ST_globals.h sw_src/pcg/pcg_basic.h
+$(oDir)/ST_grid.o: ST_grid.c 
 	$(CC) $(C_FLAGS) $(CPPFLAGS) $(incDirs) -c -o $@ $<
 
 $(oDir)/ST_sql.o: ST_sql.c ST_steppe.h ST_globals.h
+	$(CC) $(C_FLAGS) $(CPPFLAGS) $(incDirs) -c -o $@ $<
+
+$(oDir)/ST_initialization.o: ST_initialization.c
+	$(CC) $(C_FLAGS) $(CPPFLAGS) $(incDirs) -c -o $@ $<
+
+$(oDir)/ST_progressBar.o: ST_progressBar.c
+	$(CC) $(C_FLAGS) $(CPPFLAGS) $(incDirs) -c -o $@ $<
+
+$(oDir)/ST_seedDispersal.o: ST_seedDispersal.c
 	$(CC) $(C_FLAGS) $(CPPFLAGS) $(incDirs) -c -o $@ $<

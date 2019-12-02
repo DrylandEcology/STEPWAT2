@@ -123,13 +123,14 @@ struct species_st {
         cohort_surv,
         exp_decay,        /* annuals: exponent for viability decay function */
         prob_veggrow[4],  /* 1 value for each mortality type, if clonal*/
-  	sd_Param1,	  /* for seed dispersal */
-  	sd_PPTdry,
-	sd_PPTwet,
-	sd_Pmin,
-	sd_Pmax,
-	sd_H,
-	sd_VT;
+  	    sd_Param1,	  /* for seed dispersal */
+  	    sd_PPTdry,    /* for seed dispersal */
+	      sd_PPTwet,    /* for seed dispersal */
+      	sd_Pmin,      /* for seed dispersal */
+        sd_Pmax,      /* for seed dispersal */
+        sd_H,         /* for seed dispersal */
+        sd_VT,        /* for seed dispersal */
+        sd_VW;        /* for seed dispersal */
   TempClass tempclass;
   DisturbClass disturbclass;
   Bool isclonal,
@@ -284,21 +285,12 @@ struct globals_st {
   RealF plotsize,   /* size of plot in square meters */
         gsppt_prop, /* proportion of ppt during growing season*/
         tempparm[2][3]; /* three parms for Warm/Cool growth mod*/
-  IntUS runModelYears,  /* number of years to run the model*/
-      Max_Age,        /* oldest plant; same as runModelYears for now */
+  IntUS Max_Age,        /* oldest plant; same as runModelYears for now */
       currYear,
-      runModelIterations, /* run model this many times for statistics */
       currIter,
       grpCount,     /* number of groups defined*/
       sppCount,     /* number of species defined*/
-      transp_window, /* Number of years for which transpiration data is kept*/
-      nCells;		/* number of cells to use in Grid, only applicable if grid function is being used */
-  IntL randseed;     /* random seed from input file */
-  size_t max_rgroups, /* Maximum resource groups allowed. */
-         max_groupnamelen, /* Maximum resource group name length. */
-         max_spp_per_grp, /* Maximum species allowed per resource group. */
-         max_indivs_per_spp, /* Maximum individuals allowed per species. */
-         max_speciesnamelen; /* Maximum species name length. */
+      transp_window; /* Number of years for which transpiration data is kept*/
 
   struct outfiles_st bmass, mort;
 };
@@ -331,7 +323,19 @@ struct mortflags_st {
   char sep;
 };
 
+struct superglobals_st {
+    size_t max_rgroups, /* Maximum resource groups allowed. */
+           max_groupnamelen, /* Maximum resource group name length. */
+           max_spp_per_grp, /* Maximum species allowed per resource group. */
+           max_indivs_per_spp, /* Maximum individuals allowed per species. */
+           max_speciesnamelen; /* Maximum species name length. */
+    
+    IntUS runModelIterations,
+          runInitializationYears,
+          runModelYears,
+          nCells;		/* number of cells to use in Grid, only applicable if grid function is being used */
 
-
+    IntL randseed;
+};
 
 #endif

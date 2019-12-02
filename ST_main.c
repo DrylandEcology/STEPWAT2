@@ -33,13 +33,17 @@
 #include "sw_src/SW_Output_outtext.h"
 #include "sw_src/SW_Output_outarray.h"
 #include "sw_src/rands.h"
-extern SXW_t SXW;
+#include "ST_stats.h"
+#include "ST_initialization.h"
+#include "ST_progressBar.h"
+#include "ST_seedDispersal.h"
 
 extern Bool prepare_IterationSummary; // defined in `SOILWAT2/SW_Output.c`
 extern Bool print_IterationSummary; // defined in `SOILWAT2/SW_Output_outtext.c`
 extern Bool storeAllIterations; // defined in `SOILWAT2/SW_Output.c`
 extern SW_VEGPROD SW_VegProd;
 SW_FILE_STATUS SW_File_Status;
+extern Bool* _SomeKillage;
 
 /************* External Function Declarations **************/
 /***********************************************************/
@@ -60,19 +64,13 @@ SW_FILE_STATUS SW_File_Status;
   void output_Bmass_Yearly( Int year );
   void output_Mort_Yearly( void );
 
-  void stat_Collect( Int year ) ;
-  void stat_Collect_GMort ( void ) ;
-  void stat_Collect_SMort ( void ) ;
-
-  void stat_Output_AllMorts( void) ;
-  void stat_Output_AllBmass(void) ;
-
-  /* void runGrid( void ); //for the grid... declared in ST_grid.c */
-
   void _kill_annuals(void);
   void _kill_extra_growth(void);
   void _kill_maxage(void);
   void save_annual_species_relsize(void);
+
+  void files_init(void);
+  void maxrgroupspecies_init(void);
 
 #ifdef DEBUG_MEM
   #define chkmem_f CheckMemoryIntegrity(FALSE);
@@ -87,6 +85,8 @@ SW_FILE_STATUS SW_File_Status;
 /*************** Local Function Declarations ***************/
 /***********************************************************/
 void Plot_Initialize( void);
+void allocate_Globals(void);
+void deallocate_Globals(Bool isGriddedMode);
 
 static void usage(void) {
   char *s ="STEPPE plant community dynamics (SGS-LTER Jan-04).\n"
@@ -121,16 +121,15 @@ FILE *logfp,   /* used everywhere by LogError */
 int logged;  /* indicator that err file was written to */
 SpeciesType  **Species;
 GroupType    **RGroup;
-SucculentType  Succulent;
-EnvType        Env;
-PlotType       Plot;
-ModelType      Globals;
+SucculentType  *Succulent;
+EnvType        *Env;
+PlotType       *Plot;
+ModelType      *Globals;
+GlobalType     SuperGlobals;
 BmassFlagsType BmassFlags;
 MortFlagsType  MortFlags;
 
 Bool UseGrid;
-Bool UseSeedDispersal;
-Bool DuringSpinup;
 Bool EchoInits;
 Bool UseProgressBar;
 Bool STdebug_requested;
@@ -148,7 +147,7 @@ extern pcg32_random_t markov_rng;
 /******************** Begin Model Code *********************/
 /***********************************************************/
 int main(int argc, char **argv) {
-  IntS year, iter, incr;
+  IntS year, iter;
 	Bool killedany;
 
 	logged = FALSE;
@@ -164,12 +163,16 @@ int main(int argc, char **argv) {
 
 	printf("STEPWAT  init_args() executed successfully \n");
 
-        /*
-	if (UseGrid == TRUE) {
+	if (UseGrid) {
 		runGrid();
 		return 0;
 	}
-        */
+
+    /* Read files.in and maxrgroupspecies.in before everything else */
+    files_init();
+    maxrgroupspecies_init();
+
+	allocate_Globals();
 
 	parm_Initialize();
         
@@ -187,43 +190,36 @@ int main(int argc, char **argv) {
 	    ST_connect("Output/stdebug");
 	}
 
-	incr = (IntS) ((float) Globals.runModelIterations / 10);
-	if (incr == 0)
-		incr = 1;
-
 	/* --- Begin a new iteration ------ */
-	for (iter = 1; iter <= Globals.runModelIterations; iter++) {
-		if (progfp == stderr) {
-			if (iter % incr == 0)
-				fprintf(progfp, ".");
-		} else {
-			fprintf(progfp, "%d\n", iter);
-		}
-
+	for (iter = 1; iter <= SuperGlobals.runModelIterations; iter++) {
 		Plot_Initialize();
-		RandSeed(Globals.randseed, &environs_rng);
-		RandSeed(Globals.randseed, &mortality_rng);
-		RandSeed(Globals.randseed, &resgroups_rng);
-		RandSeed(Globals.randseed, &species_rng);
-		RandSeed(Globals.randseed, &grid_rng);
-		RandSeed(Globals.randseed, &markov_rng);
 
-		Globals.currIter = iter;
+		RandSeed(SuperGlobals.randseed, &environs_rng);
+		RandSeed(SuperGlobals.randseed, &mortality_rng);
+		RandSeed(SuperGlobals.randseed, &resgroups_rng);
+		RandSeed(SuperGlobals.randseed, &species_rng);
+		RandSeed(SuperGlobals.randseed, &grid_rng);
+		RandSeed(SuperGlobals.randseed, &markov_rng);
+
+		Globals->currIter = iter;
                 
 		if (storeAllIterations) {
-			SW_OUT_create_iteration_files(Globals.currIter);
+			SW_OUT_create_iteration_files(Globals->currIter);
 		}
 
 		if (prepare_IterationSummary) {
-			print_IterationSummary = (Bool) (Globals.currIter == Globals.runModelIterations);
+			print_IterationSummary = (Bool) (Globals->currIter == SuperGlobals.runModelIterations);
 		}
 
 		/* ------  Begin running the model ------ */
-		for (year = 1; year <= Globals.runModelYears; year++) {
+		for (year = 1; year <= SuperGlobals.runModelYears; year++) {
+            if(UseProgressBar){
+                logProgress(iter, year, SIMULATION);
+            }
 
-      //printf("------------------------Repetition/year = %d / %d\n", iter, year);
+			//printf("------------------------Repetition/year = %d / %d\n", iter, year);
 
-			Globals.currYear = year;
+			Globals->currYear = year;
 
 			rgroup_Establish();
 
@@ -231,7 +227,7 @@ int main(int argc, char **argv) {
 
 			rgroup_PartResources();
 
-			if (!isnull(SXW.debugfile) ) SXW_PrintDebug(0);
+			if (!isnull(SXW->debugfile) ) SXW_PrintDebug(0);
 
 			rgroup_Grow();
 
@@ -289,13 +285,17 @@ int main(int argc, char **argv) {
 
 		// dont need to restart if last iteration finished
 		// this keeps it from re-writing the output folder and overwriting output files
-		if (Globals.currIter != Globals.runModelIterations)
+		if (Globals->currIter != SuperGlobals.runModelIterations)
 		{
 			// don't reset in last iteration because we need to close files
 			// before clearing/de-allocated SOILWAT2-memory
-			SXW_Reset();
+			SXW_Reset(SXW->f_watin);
 		}
 	} /* end model run for this iteration*/
+
+    if(UseProgressBar){
+        logProgress(0, 0, OUTPUT);
+    }
 
 	/*------------------------------------------------------*/
 	if (MortFlags.summary)
@@ -308,7 +308,7 @@ int main(int argc, char **argv) {
 		ST_disconnect();
 	}
 
-  if (!isnull(SXW.debugfile)){
+  if (!isnull(SXW->debugfile)){
     printf("entering debugfile\n");
     SXW_PrintDebug(1);
   }
@@ -317,8 +317,11 @@ int main(int argc, char **argv) {
   SW_CTL_clear_model(TRUE); // de-allocate all memory
   free_all_sxw_memory();
 
-  printf("\nend program\n");
-	fprintf(progfp, "\n");
+	deallocate_Globals(FALSE);
+
+    // This isn't wrapped in an if statement on purpose. 
+    // We should print "Done" either way.
+    logProgress(0, 0, DONE);
 
 	return 0;
 }
@@ -400,6 +403,60 @@ void Plot_Initialize(void) {
 	SXW_InitPlot();
 }
 
+/* Allocates memory for any global variables defined as pointers */
+void allocate_Globals(void){
+	Env = (EnvType*) Mem_Calloc(1, sizeof(EnvType), "allocate_Globals: Env");
+	Succulent = (SucculentType*) Mem_Calloc(1, sizeof(SucculentType), "allocate_Globals: Succulent");
+	Globals = (ModelType*) Mem_Calloc(1, sizeof(ModelType), "allocate_Globals: Globals");
+	Plot = (PlotType*) Mem_Calloc(1, sizeof(PlotType), "allocate_Globals: Plot");
+	_SomeKillage = (Bool*) Mem_Calloc(1, sizeof(Bool), "allocate_Globals: _SomeKillage");
+}
+
+/* Deallocates the global variables */
+void deallocate_Globals(Bool isGriddedMode){
+	GrpIndex rg;
+	SppIndex sp;
+
+	if(!isGriddedMode){
+		Mem_Free(Env);
+		Mem_Free(Succulent);
+		Mem_Free(Globals);
+		Mem_Free(Plot);
+		Mem_Free(_SomeKillage);
+	}
+	
+	/* Free Species */
+	ForEachSpecies(sp){
+		/* Start by freeing any pointers in the Species struct */
+		Mem_Free(Species[sp]->kills);
+		Mem_Free(Species[sp]->seedprod);
+		Mem_Free(Species[sp]->name);
+		IndivType *indv = Species[sp]->IndvHead, *next;
+		/* Next free the linked list of individuals */
+		while(indv){
+			next = indv->Next;
+			Mem_Free(indv);
+			indv = next;
+		}
+		Mem_Free(indv);
+		/* Finally free the actual species */
+		Mem_Free(Species[sp]);
+	}
+	/* Then free the entire array */
+	Mem_Free(Species); 
+
+	/* Free RGroup */
+	ForEachGroup(rg){
+		/* Free all pointers in the RGroup struct */
+		Mem_Free(RGroup[rg]->est_spp);
+		Mem_Free(RGroup[rg]->kills);
+		Mem_Free(RGroup[rg]->name);
+		Mem_Free(RGroup[rg]->species);
+		Mem_Free(RGroup[rg]);
+	}
+	/* Then free the entire array */
+	Mem_Free(RGroup);
+}
 
 /**************************************************************/
 static void init_args(int argc, char **argv) {
@@ -440,7 +497,6 @@ static void init_args(int argc, char **argv) {
   /* Defaults */
   parm_SetFirstName( DFLT_FIRSTFILE);
   QuietMode = EchoInits = UseSeedDispersal = FALSE;
-  SXW.debugfile = NULL;
   progfp = stderr;
 
 
@@ -549,7 +605,7 @@ static void init_args(int argc, char **argv) {
 		case 8: // -s
 			if (strlen(argv[a]) > 1){
 				printf("Generating SXW debug file\n");
-				SXW.debugfile = Str_Dup(&argv[a][1]);
+				SXW->debugfile = Str_Dup(&argv[a][1]);
 			}
 			break;
 	  
@@ -615,7 +671,7 @@ void check_sizes(const char *chkpt) {
             if (LT(diff, fabs(spsize - getSpeciesRelsize(sp)))) {
                 LogError(stdout, LOGWARN, "%s (%d:%d): SP: \"%s\" size error: "
                         "SP=%.7f, ndv=%.7f",
-                        chkpt, Globals.currIter, Globals.currYear,
+                        chkpt, Globals->currIter, Globals->currYear,
                         Species[sp]->name, getSpeciesRelsize(sp), spsize);
             }
         }
@@ -623,7 +679,7 @@ void check_sizes(const char *chkpt) {
         if (LT(diff, fabs(rgsize - getRGroupRelsize(rg)))) {
             LogError(stdout, LOGWARN, "%s (%d:%d): RG \"%s\" size error: "
                     "RG=%.7f, ndv=%.7f",
-                    chkpt, Globals.currIter, Globals.currYear,
+                    chkpt, Globals->currIter, Globals->currYear,
                     RGroup[rg]->name, getRGroupRelsize(rg), rgsize);
         }
     }
