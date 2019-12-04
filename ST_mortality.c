@@ -219,7 +219,7 @@ void mort_Main( Bool *killed) {
 }
 
 static void _simulatePrescribedFire(GrpIndex rg, RealF random_number) {
-    if(Globals->currYear >= RGroup[rg]->killfreq_startyr && RGroup[rg]->killfreq_startyr != 0) { // Otherwise simulate prescribed fire
+    if(Globals->currYear >= RGroup[rg]->killfreq_startyr && RGroup[rg]->killfreq_startyr != 0) {
         if (RGroup[rg]->killfreq < 1) {
             /* --------------------- STOCHASTIC PRESCRIBED FIRE -------------------- */
             if (random_number <= RGroup[rg]->killfreq) {
