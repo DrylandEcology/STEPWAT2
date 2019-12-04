@@ -19,7 +19,7 @@
 #include "generic.h"
 
 
-extern SXW_t SXW;
+extern SXW_t* SXW;
 
 
 #endif

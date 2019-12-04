@@ -1,15 +1,18 @@
-/********************************************************/
-/********************************************************/
-/*  Source file: ST_defines.h
- *  Type: header
- *  Application: STEPPE - plant community dynamics simulator
- *  Purpose: Generic model definitions such as constants,
- *           enums, and looping contructs.
- *  History:
- *     (6/15/2000) -- INITIAL CODING - cwb
+/**
+ * \file ST_defines.h
+ * \brief Generic model definitions such as constants,
+ *        enums, and looping contructs.
+ * 
+ * \author
+ *     Kyle Palmquist\n
+ *     Chandler Haukap\n
+ *     Freddy Pierson\n 
+ *     Chris Bennett
+ * 
+ * \date 23 August 2019
+ * 
+ * \ingroup STEPPE
  */
-/********************************************************/
-/********************************************************/
 
 #ifndef STEPPE_DEF_H
 #define STEPPE_DEF_H
@@ -18,65 +21,216 @@
 
 /* see #include "ST_structs.h" below */
 
-
-// TRUE / FALSE
+/**
+ * \brief STEPWAT2's version of true. Can be used with any Bool or int.
+ * \ingroup STEPPE
+ */
 #define TRUE 1
+/**
+ * \brief STEPWAT2's version of false. Can be used with any Bool or int.
+ * \ingroup STEPPE
+ */
 #define FALSE 0
 
 /***************************************************
  * Basic definitions
  ***************************************************/
-#define MAX_SPECIES (Globals.max_spp_per_grp * Globals.max_rgroups)
+/**
+ * \brief Macro for the maximum number of species allowed in the simulation.
+ * 
+ * Replaced by (SuperGlobals.max_spp_per_grp * SuperGlobals.max_rgroups) which are both
+ * read from inputs.
+ * 
+ * \ingroup SPECIES
+ */
+#define MAX_SPECIES (SuperGlobals.max_spp_per_grp * SuperGlobals.max_rgroups)
+/**
+ * \brief how long the name of a species can be.
+ * 
+ * \ingroup SPECIES
+ */
 #define MAX_SPECIESNAMELEN   4 /* keep around for SOILWAT for now */
 
-/* output_Bmass_Yearly of ST_output.c and _make_header and _make_header_with_std
- * of ST_stats.c output different numbers of fields. Set MAX_OUTFIELDS to the
- * maximum number of fields these three functions are capable of outputting. */
-#define MAX_OUTFIELDS ((MAX_SPECIES * 2) + (Globals.max_rgroups * 6) + 8)
+/**
+ * \brief MAX_OUTFIELDS The maximum number of fields our output functions are 
+ *                      capable of outputting.
+ * \ingroup STEPPE 
+ */
+#define MAX_OUTFIELDS ((MAX_SPECIES * 2) + (SuperGlobals.max_rgroups * 6) + 8)
 
-#define MAX_FIELDLEN (Globals.max_groupnamelen + 6)  /* +6 for xtra chars like _RSize, etc */
-#define MAX_CELLS 10000 // defines the maximum number of cells in the grid option
+/**
+ * \brief Maximum size of an output field.
+ * 
+ * For numbers this isn't very important, but for header strings, like "sagebrush_bmass",
+ * it is important to leave enough room for long names.
+ * 
+ * This is defined as Globals.max_groupnamelen + 6 currently, but can be increased
+ * as needed.
+ * 
+ * \ingroup STEPPE
+ */
+#define MAX_FIELDLEN (SuperGlobals.max_groupnamelen + 6)  /* +6 for xtra chars like _RSize, etc */
+/**
+ * \brief defines the maximum number of cells in gridded mode.
+ * \ingroup GRIDDED
+ */
+#define MAX_CELLS 10000
 
-/* Constants for flagging whether a sort is
-   ascending or descending or none */
+/**
+ * \brief Means "sort this array in ascending order".
+ * 
+ * \sa Indiv_SortSize() is one function that could take this
+ *                      as a parameter.
+ * 
+ * \ingroup STEPPE
+ */
 #define SORT_A 'a'
+/**
+ * \brief Means "sort this array in descending order".
+ * 
+ * \sa Indiv_SortSize() is one function that could take this
+ *                      as a parameter.
+ * 
+ * \ingroup STEPPE
+ */
 #define SORT_D 'd'
+/**
+ * \brief Means "don't sort this array".
+ * 
+ * \ingroup STEPPE
+ */
 #define SORT_0 '\0'
 
-/* define types for indices to data structures.
- * they're defined this way so they might be changed
- * (say to object pointers) in the future
+/*********** define types for indices to data structures *************/
+/**
+ * \brief Used to iterate across resource groups stored in the \ref RGroup global variable.
+ * 
+ * GrpIndex exists to clarify what a variable is meant to access.
+ * Any variable of type GrpIndex is meant to access \ref RGroup.
+ * 
+ * \sa RGroup
+ * 
+ * \ingroup RGROUP
  */
 typedef IntS GrpIndex;
+/**
+ * \brief Used to iterate across species stored in the \ref Species global variable.
+ * 
+ * SppIndex exists to clarify what a variable is meant to access.
+ * Any variable of type SppIndex is meant to access \ref Species.
+ * 
+ * \sa Species
+ * 
+ * \ingroup SPECIES
+ */
 typedef IntS SppIndex;
 
-/* FYI, enums start at 0 by default*/
-/* I put a few "firsts" and "lasts" in here to allow
+
+/********************** Define enumerators ***************************/
+/* FYI, enums start at 0 by default.
+ * I put a few "firsts" and "lasts" in here to allow
  * variable length enums where the code doesn't have
  * to know in advance, but I haven't used them much
  * yet.
  */
+
+/**
+ * \brief Enumerator for temperature class.
+ * 
+ * Each species has a temperature class.
+ * 
+ * \sa species_st which instanciates this enumerator.
+ * 
+ * \ingroup STEPPE
+ */
 typedef enum {NoSeason=-1, CoolSeason, WarmSeason}
   TempClass;
 
+/**
+ * \brief All types of mortality.
+ * 
+ * Used to record what killed an individual.
+ * 
+ * \sa indiv_st which instanciates this enumerator.
+ * 
+ * \ingroup MORTALITY
+ */
 typedef enum {Slow, NoResources, Intrinsic, Disturbance, LastMort}
   MortalityType;
 
+/**
+ * \brief All types of disturbances.
+ * 
+ * Used to determine what type of disturbance is on the plot.
+ * 
+ * \sa plot_st which instanciates this enumerator.
+ * 
+ * \ingroup MORTALITY
+ */
 typedef enum {NoDisturb, FecalPat, AntMound, Burrow, LastDisturb}
   DisturbEvent;
 
+/**
+ * \brief All sensitivity levels to disturbances.
+ * 
+ * Used to determine how severely a disturbance will affect a species.
+ * 
+ * \sa species_st which instanciates this enumerator.
+ * 
+ * \ingroup MORTALITY
+ */
 typedef enum {VerySensitive, Sensitive, Insensitive, VeryInsensitive}
   DisturbClass;
 
+/**
+ * \brief All possible precipitation classes.
+ * 
+ * Used to determine whether this year's precipitation is above average, 
+ * average, or below average.
+ * 
+ * \sa environs_st which instanciates this enumerator.
+ * 
+ * \ingroup STEPPE
+ */
 typedef enum {Ppt_Wet, Ppt_Norm, Ppt_Dry}
   PPTClass;
 
+/**
+ * \brief It is unclear why this was created.
+ * 
+ * It is used in ST_environs.c to access Succulent arrays
+ * and Globals arrays, but only Intcpt and Slope are used.
+ * Also, This enumerator is never explicitly instanciated.
+ * 
+ * \sa _make_disturbance() which is an example of a function
+ *                         that uses Slope.
+ * 
+ * \ingroup STEPPE
+ */
 typedef enum {Intcpt, Slope, P0=0, P1, P2, P3, P4}
   Params;
 
+/**
+ * \brief How deep a group's roots penetrate.
+ * 
+ * Defined at the rgroup level.
+ * 
+ * \sa resourcegroup_st which instanciates this enumerator.
+ * 
+ * \ingroup STEPPE
+ */
 typedef enum {DepthNonComp, DepthShallow, DepthMedium, DepthDeep, DepthLast}
   DepthClass;
 
+/**
+ * \brief Enumerates all of the different input files.
+ * 
+ * ST_params.c stores the file names according to this convention.
+ * 
+ * \sa ST_params.c for its usage.
+ * 
+ * \ingroup STEPPE
+ */
 typedef enum {F_First, F_Log, F_Model, F_Env, F_Plot, F_RGroup, F_Species,
               F_BMassFlag, F_BMassPre, F_BMassAvg,
               F_MortFlag,  F_MortPre,  F_MortAvg,
@@ -108,59 +262,131 @@ typedef enum {F_First, F_Log, F_Model, F_Env, F_Plot, F_RGroup, F_Species,
  * to start at 0.  I'm glad I had all the loops coded as these
  * macros, because that helped quite a bit.
  */
+/**************************************************************/
 
-/* Basic loop through each group.  Generates a GrpIndex to use
- * when accessing RGroup (usually). 'c' must already be declared
- * preferably as GrpIndex, but note that it gets changed, so it
- * can only be an lvalue.  */
-/* void ForEachGroup(GrpIndex) */
-#define ForEachGroup(c)    for((c)=0; (c)< Globals.grpCount; (c)++)
+/**
+ * \brief Loop through each group.  
+ * 
+ * Generates a GrpIndex to use when accessing RGroup (usually). 
+ * 
+ * \param c is a GrpIndex. Use it to access each element in RGroup
+ *          like RGroup[c]
+ * 
+ * \ingroup RGROUP
+ */
+#define ForEachGroup(c)    for((c)=0; (c)< Globals->grpCount; (c)++)
 
-/* Generate an SppIndex to access Species[] to loop over each
- * defined species, irrespective of group.   */
-/* void ForEachSpecies(SppIndex) */
-#define ForEachSpecies(s)    for((s)=0; (s)< Globals.sppCount; (s)++)
+/**
+ * \brief Loop through all species regardless of group.
+ * 
+ * This function is useful for performing an operation on every
+ * species.
+ * 
+ * \param s will increment every iteration of the loop. Use it to
+ *          access every element in Species like Species[s].
+ * 
+ * \sa Species
+ * 
+ * \ingroup SPECIES
+ */
+#define ForEachSpecies(s)    for((s)=0; (s)< Globals->sppCount; (s)++)
 
-/* Same for individuals within a species. Traverses a species'
- * linked list of IndivType objects.  i is a pointer to
- * IndivType, s is a pointer to SpeciesType.  See the Indiv_*()
- * functions for more details. */
-/* void ForEachIndiv(IndivType*, SpeciesType*) */
+/**
+ * \brief Traverses a species' linked list of individuals.
+ * 
+ * \param i is a IndivType* which will point to a different
+ *          individual every iteration of the loop.
+ * \param s is a SpeciesType* which points to the desired
+ *          SpeciesType. Must be set before calling this macro.
+ * 
+ * \ingroup INDIVIDUAL 
+ */
 #define ForEachIndiv(i,s)  for((i)=(s)->IndvHead; (i)!=NULL; (i)=(i)->Next)
 
-/* Established species are a bit more complicated because we
+/**
+ * \brief Macro that loops through all established species in
+ *        the designated rgroup.
+ * 
+ * Established species are a bit complicated because we
  * have to pull the species number from the RGroup->est_spp
- * array so we need three parameters.  s is SppIndex, g is
- * GrpIndex, i is int. Note that s and i are changed.
+ * array so we need three parameters.  
+ * 
+ * \param s is an SppIndex
+ * \param g is a GrpIndex
+ * \param i is an int. 
+ * 
+ * Note that s and i are changed.
  * s becomes the species number of each established species
  * but isn't required to be used in the code (and this can
  * give compiler warnings to that effect--ignore them).
  * i must be a declared lvalue but is only used internally to
  * the loop.  it is the index into the list of all species
- * that is actually established. */
-/* void ForEachEstSpp(SppIndex, GrpIndex, int) */
+ * that are actually established.
+ * 
+ * \ingroup SPECIES
+ */
 #define ForEachEstSpp(s,g,i) for((i)=0,(s)=RGroup[g]->est_spp[i];\
                                   (i) < RGroup[g]->est_count;    \
                                   (s)=RGroup[g]->est_spp[++(i)])
+
+/**
+ * \brief Macro that loops n times where n is the number of
+ *        established species.
+ * 
+ * \param g is a GrpIndex that should be set to the desired
+ *          group.
+ * \param i is an int that will increment by 1 every loop of
+ *          the program.
+ * 
+ * \ingroup SPECIES
+ */
 #define ForEachEstSpp2(g,i) for((i)=0; (i) < RGroup[g]->est_count; (i)++)
 
-/* loop over each possible species in the group established or not.
+/**
+ * \brief Loop over each possible species in the group established or not.
+ * 
+ * \param s should be a SppIndex. This is the value that is modified. it
+ *          does not have to be predefined.
+ * \param g should be a GrpIndex. This should be set to the desired group
+ *          BEFORE calling the macro.
+ * \param i should be an int. This does not have to be predefined.
+ * 
  * Works exactly like ForEachEstSpp() but looks up a group's
- * possible species instead of established species.  */
-/* void ForEachGroupSpp(SppIndex, GrpIndex, IntU) */
+ * possible species instead of established species.
+ * 
+ * \sa ForEachEstSpp() 
+ * 
+ * \ingroup RGROUP
+ */
 #define ForEachGroupSpp(s,g,i) for((i)=0,(s)=RGroup[g]->species[i];\
                                    (i) < RGroup[g]->max_spp;    \
                                    (s) = RGroup[g]->species[++(i)])
 
-/* shorthand moniker.  used to be more complicated but now
- * it's just a convenience.  See parms_Check_Species() to
- * see how the max ages get set.  */
-/* IntS SppMaxAge(SppIndex) */
+/**
+ * \brief A compatability macro left behind from a time when STEPWAT2
+ *        didn't explicitly store max age.
+ * 
+ * \param s should be a SppIndex
+ * 
+ * This is not to be used by future developers. Instead use Species[s]->max_age
+ * 
+ * \sa SppIndex
+ * 
+ * \ingroup SPECIES
+ */
 #define SppMaxAge(s)      (Species[s]->max_age)
 
-/* Another convenience mostly for consistency, but also in case
- * it seems better to make it more complicated in some future
- * version.
+/**
+ * \brief A compatability macro left behind from a time when STEPWAT2
+ *        didn't explicitly store max age.
+ * 
+ * \param g should be a GrpIndex.
+ * 
+ * This is not to be used by future developers. Instead use RGroup[g]->max_age.
+ * 
+ * \sa GrpIndex
+ * 
+ * \ingroup RGROUP
  */
 #define GrpMaxAge(g)      (RGroup[g]->max_age)
 /**************************************************************/
@@ -179,6 +405,7 @@ typedef struct plot_st PlotType;
 typedef struct globals_st ModelType;
 typedef struct bmassflags_st BmassFlagsType;
 typedef struct mortflags_st MortFlagsType;
+typedef struct superglobals_st GlobalType;
 
 
 #endif

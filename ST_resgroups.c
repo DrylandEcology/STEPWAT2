@@ -1,17 +1,30 @@
-/********************************************************/
-/*  Source file: resgroups.c
-    Type: module
-    Application: STEPPE - plant community dynamics simulator
-    Purpose: This is the module that executes the growth
-            functions and otherwise manages the bookkeeping
-            at the group level.
-   History:
-      (6/15/2000) -- INITIAL CODING - cwb
+/**  
+ * \file ST_resgroups.c
+ * \brief Function definitions for all resource group-specific functions.
+ * 
+ * Resource group functions will modify the \ref RGroup global variable
+ * and it's corresponding entries in \ref Species. This includes the linked
+ * list of [IndivTypes](\ref IndivType) stored in \ref Species.
+ * 
+ * These are the functions one is most likely to call from \ref main() to
+ * simulate the plant community. They will handle calling the necessary
+ * functions in the [species](\ref SPECIES) module and in the 
+ * [individual](\ref INDIVIDUAL) module.
+ * 
+ * \author
+ *     Kyle Palmquist\n
+ *     Chandler Haukap\n
+ *     Freddy Pierson\n 
+ *     Chris Bennett
+ * 
+ * \date 22 August 2019
+ * 
+ * \ingroup RGROUP
+ */
 
-* =================================================== *
-*                INCLUDES / DEFINES                   *
-* --------------------------------------------------- */
-
+/* =================================================== *
+ *                INCLUDES / DEFINES                   *
+ * --------------------------------------------------- */
 #include <math.h>
 #include <string.h>
 #include <stdio.h>
@@ -44,6 +57,7 @@ void rgroup_ResPartIndiv(void);
 void rgroup_DropSpecies(SppIndex sp);
 void rgroup_AddSpecies(GrpIndex rg, SppIndex sp);
 void rgroup_Extirpate(GrpIndex rg);
+void copy_rgroup(const GroupType* src, GroupType* dest);
 
 /*********** Locally Used Function Declarations ************/
 /***********************************************************/
@@ -56,14 +70,21 @@ static RealF _add_annuals(const GrpIndex rg, const SppIndex sp, const RealF last
 
 /****************** Begin Function Code ********************/
 
-/***********************************************************/
-
+/**
+ * \brief Partition resources for this year among the resource groups.
+ * 
+ * The allocation of resources happens in three steps: 
+ *   \1 basic [group](\ref RGROUP) allocation
+ *   \2 partitioning of extra resources in _res_part_extra()
+ *   \3 further partitioning to [individuals](\ref INDIVIDUAL) in the group _ResPartIndiv().
+ * 
+ * \sideeffect \ref RGroup[rg]->res_avail and \ref RGroup[rg]->res_required will be set for all rg.\n
+ *             [indiv](\ref IndivType)->res_avail and [indiv](\ref IndivType)->res_required will be set 
+ *             for all individuals in the group.
+ * 
+ * \ingroup RGROUP
+ */
 void rgroup_PartResources(void) {
-    /* Partition resources for this year among the resource
-    groups. The allocation happens in three steps: basic
-    group allocation, partitioning of extra resources in _res_part_extra(),
-    and further partitioning to individuals in the group _ResPartIndiv(). */
-
     GrpIndex rg;
     Bool noplants = TRUE;
     GroupType *g; /* shorthand for RGroup[rg] */
@@ -114,15 +135,31 @@ void rgroup_PartResources(void) {
     rgroup_ResPartIndiv();
 }
 
+/**
+ * \brief Establishment for annual species.
+ * 
+ * Annual establishment uses a seedbank to determine how many seedlings will 
+ * establish. The number of seedlings is a function of the number of seeds
+ * in the seedbank and a random draw from a beta distribution.
+ * 
+ * This function also calculates the number of seeds produced in the last year
+ * of the simulation, adds them to the total seedbank, and removes seeds from
+ * the seedbank that were added as seedlings this year.
+ * 
+ * \param rg is the index in \ref RGroup of the species' RGroup.
+ * \param sp is the index in \ref Species of the species.
+ * \param lastyear_relsize is the relative size of the species in the previous year. 
+ *        Used to determine how many seeds should be added to the seedbank.
+ * 
+ * \return The number of seedlings established.
+ * 
+ * \sideeffect \ref Species[sp]->seedprod (the seedbank) will be modified.
+ * 
+ * \sa _add_annual_seedprod() which is called in this function to modify the seedbank.
+ * 
+ * \ingroup RGROUP_PRIVATE
+ */
 static RealF _add_annuals(const GrpIndex rg, const SppIndex sp, const RealF lastyear_relsize) {
-    /*======================================================*/
-    /* Establishment for annual species, which includes a function that modifies
-     * the seedbank through seed addition and deletion, a function that determines
-     * the amount of viable seed in the seedbank if regen_ok is true, a random draw
-     * from the beta distribution that is used to determine the number of seeds
-     * that will emerge as seedlings this year, and removal of those germinated
-     * seeds from the seedbank.*/
-
     IntU i, num_est; //number of individuals that will establish this year
     RealF viable_seeds; //number of viable seeds in the seedbank
     float var; //random number draw from beta distribution for calculation of num_est
@@ -167,10 +204,22 @@ static RealF _add_annuals(const GrpIndex rg, const SppIndex sp, const RealF last
         return num_est;
 }
 
+/**
+ * \brief Get the maximum number of viable seeds from the seedbank that can
+ *        establish this year.
+ * 
+ * Make sure the previous year's seed production has been added to the seedbank
+ * before calling this function.
+ * 
+ * \param sp is the index in \ref Species of the species.
+ * 
+ * \return The maximum number of seedlings that can establish.
+ * 
+ * \sa _add_annual_seedprod()
+ * 
+ * \ingroup RGROUP_PRIVATE
+ */
 static RealF _get_annual_maxestab(SppIndex sp) {
-    /*======================================================*/
-    /* Get the maximum number of viable seeds from the seedbank that can
- establish this year*/
     IntU i;
     RealF sum = 0.; //sum of the viable seedbank
     SpeciesType *s = Species[sp];
@@ -178,15 +227,21 @@ static RealF _get_annual_maxestab(SppIndex sp) {
     for (i = 0; i < s->viable_yrs; i++) {
         sum += s->seedprod[i];
     }
-    //printf("sum =%f \n",sum);
 
     return sum;
 }
 
+/**
+ * \brief Increase the age of seeds and then add seeds to the seedbank.
+ * 
+ * \param sp is the index in \ref Species of the species.
+ * \param lastyear_relsize is the relsize of the species in the previous year.
+ * 
+ * \sideeffect \ref Species[sp]->seedprod (the seedbank) will be modified.
+ * 
+ * \ingroup RGROUP_PRIVATE
+ */
 static void _add_annual_seedprod(SppIndex sp, RealF lastyear_relsize) {
-    /*======================================================*/
-    /* Increase the age of seeds and then add seeds to the seedbank.*/
-
     SpeciesType *s = Species[sp];
     IntU i;
 
@@ -205,24 +260,35 @@ static void _add_annual_seedprod(SppIndex sp, RealF lastyear_relsize) {
      * that can establish. Otherwise, this year's seed production is a function
      * of the number of seeds produced per unit biomass multiplied by species biomass
      * (maximum species biomass * last year's species relative size). */
-    if (Globals.currYear == 1) {
+    if (Globals->currYear == 1) {
         s->seedprod[0] = RandUniIntRange(1, s->max_seed_estab, &resgroups_rng);
         //printf("Species name=%s ,currYear =1 so new calculated value s->seedprod[%u]= %hu , s->max_seed_estab =%hu\n", s->name, i, s->seedprod[i], s->max_seed_estab);
 
     } else {
         s->seedprod[0] = (IntU) (s->pseed * s->mature_biomass * lastyear_relsize);
-        //printf("Species name=%s ,currYear=%hu  so new calculated value s->seedprod[%u]= %hu , s->max_seed_estab =%hu, lastyear_relsize=%.5f\n", s->name, Globals.currYear, i, s->seedprod[i], s->max_seed_estab, lastyear_relsize);
+        //printf("Species name=%s ,currYear=%hu  so new calculated value s->seedprod[%u]= %hu , s->max_seed_estab =%hu, lastyear_relsize=%.5f\n", s->name, Globals->currYear, i, s->seedprod[i], s->max_seed_estab, lastyear_relsize);
     }
 }
 
-/***********************************************************/
+/**
+ * \brief Partitions "extra" resources to other [groups](\ref RGroup) that can use them (if any).
+ * 
+ * \ref RGroup[rg]->use_extra_res must be \ref TRUE for a group to recieve extra resources.
+ * 
+ * \param extra is the extra resources to be partitioned.
+ * \param size is an array of [RGroup relsizes](\ref getRGroupRelsize()).
+ *        size[rg] MUST correspond to \ref RGroup[rg], meaning the indexing must
+ *        match.
+ * 
+ * \sideeffect \ref RGroup[rg]->res_extra will be set for all rg that use extra resources.
+ * 
+ * \author Kyle Palmquist
+ * 
+ * \sa rgroup_ResPartIndiv() which calls this function.
+ * 
+ * \ingroup RGROUP_PRIVATE
+ */
 static void _res_part_extra(RealF extra, RealF size[]) {
-    /*======================================================*
-     * PURPOSE *
-     * Partitions "extra" resources to other groups that can use them (if any). 
-     * HISTORY *
-     * Updated by KAP 5/2018 */
-
     GrpIndex rg;
     GroupType *g; /* shorthand for RGroup[rg] */
     RealF req_prop, /* group's prop'l contrib to the total requirements */
@@ -273,19 +339,27 @@ static void _res_part_extra(RealF extra, RealF size[]) {
         //printf("res_extra = %f\n,Rgroup = %s \n",RGroup[rg]->name,g->res_extra);
 
     } /* End ForEachGroup(rg) */
-
 }
-/***********************************************************/
-void rgroup_ResPartIndiv(void) {
-    /* Resources at the functional group level are divided among individuals in 
-     * the group, largest to smallest. Species distinctions within the group are 
-     * ignored. The partitioning of resources to individuals is done proportionally 
-     * based on size so that large individuals get more resources than their 
-     * smaller competitors.
-     * HISTORY:
-     * Chris Bennett @ LTER-CSU 12/21/2000
-     * Updated by KAP 5/2018 */
 
+/**
+ * \brief Partitions \ref RGroup resources amongst the individuals in the groups.
+ * 
+ * This function iterates across all groups and individuals. Species distinctions
+ * within a group are ignored. Partitioning is proportional to the size of individuals, 
+ * so larger individuals receive more resources.
+ * 
+ * Note that this function also partitions [extra resources](\ref _res_part_extra())
+ * 
+ * \sideeffect [indiv](\ref IndivType)->res_avail and [indiv](\ref IndivType)->res_required
+ *             will be set.
+ * 
+ * \author
+ *     Chris Bennett\n
+ *     Kyle Palmquist
+ * 
+ * \ingroup RGROUP
+ */
+void rgroup_ResPartIndiv(void) {
     GrpIndex rg;
     GroupType *g; /* shorthand for RGroup[rg] */
     SppIndex sp;
@@ -298,8 +372,8 @@ void rgroup_ResPartIndiv(void) {
             *size_base, /* biomass of the functional group */
     		*size_obase; /* biomass of functional groups that can use extra resources */
 
-    size_base = (RealF *)Mem_Calloc(Globals.max_rgroups, sizeof(RealF), "rgroup_ResPartIndiv");
-    size_obase = (RealF *)Mem_Calloc(Globals.max_rgroups, sizeof(RealF), "rgroup_ResPartIndiv");
+    size_base = (RealF *)Mem_Calloc(SuperGlobals.max_rgroups, sizeof(RealF), "rgroup_ResPartIndiv");
+    size_obase = (RealF *)Mem_Calloc(SuperGlobals.max_rgroups, sizeof(RealF), "rgroup_ResPartIndiv");
     
     /* Divide each group's normal resources to individuals */
     ForEachGroup(rg) {
@@ -419,22 +493,24 @@ void rgroup_ResPartIndiv(void) {
     Mem_Free(size_base);
 }
 
-/***********************************************************/
+/**
+ * \brief Growth function for all [groups](\ref RGROUP), [species](\ref SPECIES), 
+ *        and [individuals](\ref INDIVIDUAL).
+ * 
+ * This function will loop though all groups in \ref RGroup, all species in \ref Species
+ * and all individuals in the linked lists.
+ * 
+ * \sideeffect  [ndv](\ref IndivType)->relsize is modified.\n
+ *              [ndv](\ref IndivType)->normal_growth is set.\n
+ *              [ndv](\ref IndivType)->growthrate is set.\n
+ * 
+ * \author
+ *    Kyle Palmquist\n
+ *    Chris Bennett
+ * 
+ * \ingroup RGROUP
+ */
 void rgroup_Grow(void) {
-    /*======================================================*
-     * PURPOSE *
-     * Main loop to allow for plant growth.
-     * HISTORY *
-     * Chris Bennett @ LTER-CSU 6/15/2000
-     *  7-Nov-03 (cwb) Annuals have a completely new method of
-     *     propogation, growth, and death.  Most notably, they
-     *     aren't subject to the growth mechanism here, so they
-     *     are now excluded from this code.  All of the annual
-     *     generation occurs in the PartResources() function.
-     *  7/13/2016 KAP: This comment by cwb is now outdated. We had added
-     * functionality so that annuals now grow on an annual basis.
-     * Updated by KAP 5/2018 */
-
     IntU j;
     GrpIndex rg;
     SppIndex sp;
@@ -455,7 +531,7 @@ void rgroup_Grow(void) {
             continue;
 
         /* Succulents don't grow if conditions are wet */
-        if (g->succulent && Env.wet_dry == Ppt_Wet)
+        if (g->succulent && Env->wet_dry == Ppt_Wet)
             continue;
 
         /* Increment size of each individual in response to normal resources */
@@ -467,7 +543,7 @@ void rgroup_Grow(void) {
                 continue;
 
             /* Modify growth rate by temperature calculated in Env_Generate() */
-            tgmod = (s->tempclass == NoSeason) ? 1. : Env.temp_reduction[s->tempclass];
+            tgmod = (s->tempclass == NoSeason) ? 1. : Env->temp_reduction[s->tempclass];
 
             /* Now increase size of the individual plants of current species */
             ForEachIndiv(ndv, s) {
@@ -502,8 +578,8 @@ void rgroup_Grow(void) {
                 ndv->relsize += growth1;
                 //printf("new ndv->relsize  = %f\n, Species = %s \n", Species[sp]->name,ndv->relsize);
 
-		// Save the increment in size due to normal resources for use in the grazing module.
-		ndv->normal_growth = growth1;
+		        // Save the increment in size due to normal resources for use in the grazing module.
+		        ndv->normal_growth = growth1;
 
                 ndv->growthrate = rate1;
 
@@ -521,17 +597,28 @@ void rgroup_Grow(void) {
     } /* END ForEachGroup(rg)*/
 }
 
-/***********************************************************/
+/**
+ * \brief Converts extra resources to superfluous growth.
+ * 
+ * When there are resources beyond the minimum necessary for "normal" growth, 
+ * the extra resources are converted to superfluous growth in the current year 
+ * and is removed at the end of the year in _kill_extra_growth. 
+ * 
+ * \param rg the index in \ref RGroup of the resource group.
+ * 
+ * \sideeffect 
+ *     \* \ref Species[sp]->extragrowth will be populated for all [sp](\ref SppIndex)
+ *        in the resource group.
+ *     \* All [indiv](\ref IndivType)->extragrowth will be populated for all
+ *        individuals in all species in the designated resource group.
+ * 
+ * \author
+ *     Kyle Palmquist
+ *     Chris Bennett
+ * 
+ * \ingroup RGROUP_PRIVATE
+ */
 static void _extra_growth(GrpIndex rg) {
-    /*======================================================*/
-    /* PURPOSE */
-    /* When there are resources beyond the minimum necessary for "normal" growth, 
-     * the extra resources are converted to superfluous growth in the current year 
-     * and is removed at the end of the year in _kill_extra_growth. */
-    /* HISTORY */
-    /* Chris Bennett @ LTER-CSU 11/8/2000 */
-    /* Updated by KAP 5/2018 */
-
     Int j;
     RealF extra_ndv, indivpergram;
     GroupType *g;
@@ -586,30 +673,31 @@ static void _extra_growth(GrpIndex rg) {
 }
 
 
-/***********************************************************/
+/**
+ * \brief Establishes individuals in all species in all resource groups.
+ * 
+ * Stochastically determines how many individuals establish in each species based
+ * on the fecundity of the species.
+ * 
+ * \sideeffect 
+ *     \* \ref RGroup[rg]->min_res_req will be recalculated for all [rg](\ref GrpIndex) if the number of 
+ *        established resource groups changes.
+ *     \* \ref Species and \ref RGroup estabs will be updated.
+ *     \* [Individuals](\ref IndivType) will be added to the linked lists for each species.
+ * 
+ * \author
+ *     Chris Bennett
+ *     Kyle Palmquist
+ * 
+ * \sa 
+ *     \* Species_NumEstablish() and _add_annuals() which are called in this function to calculate the 
+ *        number of individuals to establish for perenials and annuals respectively.
+ *     \* Species_Add_Indiv() and species_Update_Estabs() which are called in this function to update
+ *        the linked list and the number of established individuals respectively.
+ * 
+ * \ingroup RGROUP
+ */
 void rgroup_Establish(void) {
-    /*======================================================*/
-    /* PURPOSE */
-    /* Determines which and how many species can establish in a given year. For
-     * each species in each perennial functional group, check that a uniform
-     * random number between 0 and 1 is less than the species' establishment
-     * probability. a) If so, return a random number of individuals up to the
-     * maximum allowed to establish for the species. This is the number of individuals
-     * in this species that will establish this year. b) If not, continue with
-     * the next species. Establishment for species of annual functional groups
-     * occurs differently. See notes at the top of _add_annuals */
-
-    /* HISTORY */
-    /* Chris Bennett @ LTER-CSU 6/15/2000 */
-    /* The probability of establishment emulates the occurrence of microsite
-     * conditions that allow for establishment.
-     * 7-Nov-03 (cwb) Adding the new algorithm to handle annuals. It's more
-     * complicated than before (which didn't really work) so annuals are now added
-     * in the PartResources()function.  Only perennials are added here. Also, there's
-     * now a parameter to define the start year of establishment for perennials.
-     * KAP: Annual establishment now occurs here instead of in PartResources*/
-    /*------------------------------------------------------*/
-
     IntS i, num_est; /* number of individuals of sp. that establish*/
     RealF
       used_space = 0; /* sums up all of the space that is currently used */
@@ -618,7 +706,7 @@ void rgroup_Establish(void) {
     GroupType *g;
 
     /* Cannot establish if plot is still in disturbed state*/
-    if (Plot.disturbed > 0) {
+    if (Plot->disturbed > 0) {
         ForEachGroup(rg)
         RGroup[rg]->regen_ok = FALSE;
         return; /* skip regen for all */
@@ -633,7 +721,7 @@ void rgroup_Establish(void) {
         g->regen_ok = TRUE; /* default */
         g->min_res_req = g->space; /* reset min_res_req, if it was modified last year */
 
-        if (Globals.currYear < RGroup[rg]->startyr) {
+        if (Globals->currYear < RGroup[rg]->startyr) {
             g->regen_ok = FALSE;
 
         } else {
@@ -648,7 +736,6 @@ void rgroup_Establish(void) {
 
                 /* Establishment for species that belong to annual functional groups*/
                 if (Species[sp]->max_age == 1) {
-                    //printf("Globals.currYear = %hu, call to _add_annuals sp=%d Species[sp]->lastyear_relsize : %.5f \n", Globals.currYear, sp, Species[sp]->lastyear_relsize);
                     num_est = _add_annuals(rg, sp, Species[sp]->lastyear_relsize);
                 }
 
@@ -658,9 +745,6 @@ void rgroup_Establish(void) {
                 }
 
                 if (num_est) {
-                    /* printf("%d %d %d %d\n",
-                     Globals.currIter, Globals.currYear, sp, num_est); */
-
                     Species_Add_Indiv(sp, num_est);
                     species_Update_Estabs(sp, num_est);
                 }
@@ -691,19 +775,19 @@ void rgroup_Establish(void) {
     }
 }
 
-/***********************************************************/
+/**
+ * \brief Increment the ages of all individuals in all species in all resource groups.
+ * 
+ * \sideeffect 
+ *     \* [indiv](\ref IndivType)->age will be incremented for every individual.
+ * 
+ * \author
+ *     Chris Bennett
+ * 
+ * \ingroup RGROUP
+ */
 void rgroup_IncrAges(void)
 {
-	/*======================================================*/
-	/* PURPOSE */
-	/*  Increment ages of individuals in a resource group.
-	 */
-
-	/* HISTORY */
-	/* Chris Bennett @ LTER-CSU 6/15/2000            */
-	/*   8-Nov-03 (cwb) added check for annuals */
-
-	/*------------------------------------------------------*/
 	Int j;
 	GrpIndex rg;
 	SppIndex sp;
@@ -724,19 +808,27 @@ void rgroup_IncrAges(void)
 					LogError(logfp, LOGWARN,
 							"%s grown older than max_age (%d > %d). Iter=%d, Year=%d\n",
 							Species[ndv->myspecies]->name, ndv->age,
-							Species[ndv->myspecies]->max_age, Globals.currIter,
-							Globals.currYear);
+							Species[ndv->myspecies]->max_age, Globals->currIter,
+							Globals->currYear);
 				}
 			}
 		}
 	}
 }
 
-/************************************************************/
-/* Sums relsize for all individuals in all species in RGroup rg.
-   param rg = RGroup index.
-   Return: RGroup relsize. */
-
+/** \brief Returns the relative size of RGroup[rg]
+ * 
+ * \param rg index of the RGroup array you want to measure.
+ * 
+ * \return RealF greater than or equal to 0 representing the summed 
+ *         relsizes of all individuals in all species in RGroup[rg].
+ * 
+ * \sa getSpeciesRelsize()
+ * 
+ * \author Chandler Haukap
+ * 
+ * \ingroup RGROUP
+ */
 RealF getRGroupRelsize(GrpIndex rg){
     Int n;
 	SppIndex sp;
@@ -753,9 +845,19 @@ RealF getRGroupRelsize(GrpIndex rg){
     }
 }
 
-/***********************************************************/
-/* Update the grp_res_prop field of every individual in the RGroup. 
-   param rg = RGroup index */
+/** 
+ * \brief Update the grp_res_prop field of every individual in \ref RGroup[rg].
+ * 
+ * grp_res_prop reflects the proportion of the groups total relative size belonging to 
+ * a given individual.
+ * 
+ * \param rg = index in \ref RGroup of the resource group.
+ * 
+ * \sideeffect
+ *     \* [indiv](\ref IndivType)->grp_res_prop will be updated.
+ * 
+ * \ingroup RGROUP
+ */
 void RGroup_Update_GrpResProp(GrpIndex rg)
 {
 	Int n;
@@ -785,26 +887,21 @@ void RGroup_Update_GrpResProp(GrpIndex rg)
 		RGroup[rg]->est_count = 0;
 }
 
-/***********************************************************/
+/**
+ * \brief calculates the biomass of a given [resource group](\ref RGroup)
+ * 
+ * \param rg the \ref GrpIndex in \ref RGroup of the requested resource group.
+ * 
+ * \return A float. The summed sizes of all species in the resource group.
+ * 
+ * \author
+ *     \* Chris Bennett (initial programming)
+ *     \* Chandler Haukap
+ * 
+ * \ingroup RGROUP
+ */
 RealF RGroup_GetBiomass(GrpIndex rg)
 {
-	/*======================================================*/
-	/* PURPOSE */
-	/*   Convert relative size to biomass for a resource group.
-	 */
-
-	/* HISTORY */
-	/* Chris Bennett @ LTER-CSU 6/15/2000            */
-	/*   10-Apr-03 - cwb - return sum of plant sizes times density
-	 *       for the per-plot biomass.
-	 *
-	 *   8-Dec-03 (cwb) actually, what we want is the total biomass
-	 *       of the group on the plot, so multiplying by density
-	 *       doesn't make sense.  density limits the rsize
-	 *       which already scales the per-plot values.
-	 */
-
-	/*------------------------------------------------------*/
 	Int j;
 	SppIndex sp;
 	RealF biomass = 0.0;
@@ -819,22 +916,22 @@ RealF RGroup_GetBiomass(GrpIndex rg)
 	return biomass;
 }
 
-/***********************************************************/
+/**
+ * \brief Finds the index in \ref RGroup of the resource group with the given name.
+ * 
+ * \param name The name of the [resource group](\ref GroupType) to find.
+ * 
+ * \return 
+ *     The index in \ref RGroup of the resource group with that name. If the name
+ *     doesn't match any resource groups in \ref RGroup returns -1.
+ * 
+ * \author 
+ *     Chris Bennett
+ * 
+ * \ingroup RGROUP
+ */
 GrpIndex RGroup_Name2Index(const char *name)
 {
-	/*======================================================*/
-	/* PURPOSE */
-	/*   Simple utility to find the index of a group name string
-	 *
-	 *   returns group index number if name is a valid group name
-	 *   otherwise returns 0.  This works because the
-	 *   ForEachGroup macro starts at 1.
-	 */
-
-	/* HISTORY */
-	/* Chris Bennett @ LTER-CSU 6/15/2000            */
-
-	/*------------------------------------------------------*/
 	GrpIndex i, rg = -1;
 
 	ForEachGroup(i)
@@ -848,70 +945,71 @@ GrpIndex RGroup_Name2Index(const char *name)
 	return (rg);
 }
 
-/***********************************************************/
+/**
+ * \brief Creates a new [resource group](\ref GroupType) and allocates all required memory.
+ * 
+ * \return A pointer to the new \ref GroupType
+ * 
+ * \author Chris Bennett
+ * 
+ * \ingroup RGROUP_PRIVATE
+ */
 static GroupType *_create(void)
 {
-	/*======================================================*/
-
-	/* HISTORY */
-	/* Chris Bennett @ LTER-CSU 6/15/2000            */
-
-	/*------------------------------------------------------*/
 	GroupType *p;
 
 	p = (GroupType *) Mem_Calloc(1, sizeof(GroupType), "_create");
-        p->name = (char *) Mem_Calloc(Globals.max_groupnamelen + 1, sizeof(char), "_create");
-        p->est_spp = (SppIndex *) Mem_Calloc(Globals.max_spp_per_grp, sizeof(SppIndex), "_create");
-        p->species = (SppIndex *) Mem_Calloc(Globals.max_spp_per_grp, sizeof(SppIndex), "_create");
+        p->name = (char *) Mem_Calloc(SuperGlobals.max_groupnamelen + 1, sizeof(char), "_create");
+        p->est_spp = (SppIndex *) Mem_Calloc(SuperGlobals.max_spp_per_grp, sizeof(SppIndex), "_create");
+        p->species = (SppIndex *) Mem_Calloc(SuperGlobals.max_spp_per_grp, sizeof(SppIndex), "_create");
         
 	return (p);
 
 }
 
-/***********************************************************/
+/**
+ * \brief Create a new [resource group](\ref GroupType) and add it to \ref RGroup.
+ * 
+ * If \ref RGroup is full prior to calling this function, it will throw an error.
+ * 
+ * \return The index in \ref RGroup of where the resource group was placed.
+ * 
+ * \author
+ *     Chris Bennett
+ * 
+ * \ingroup RGROUP
+ */
 GrpIndex RGroup_New(void)
 {
-	/*======================================================*/
-	/* PURPOSE */
-	/* Create a new resource group (life form) object and give
-	 it the next consecutive identifier.
+	GrpIndex i = (GrpIndex) Globals->grpCount;
 
-	 Initialization is performed in parm_RGroup_Init().
-
-	 */
-
-	/* HISTORY */
-	/* Chris Bennett @ LTER-CSU 6/15/2000            */
-
-	/*------------------------------------------------------*/
-	GrpIndex i = (GrpIndex) Globals.grpCount;
-
-	if (++Globals.grpCount > Globals.max_rgroups)
+	if (++Globals->grpCount > SuperGlobals.max_rgroups)
 	{
 		LogError(logfp, LOGFATAL, "Too many groups specified (>%d)!\n"
 				"You must adjust MAX_RGROUPS in maxrgroupspecies.in!",
-		Globals.max_rgroups);
+		SuperGlobals.max_rgroups);
 	}
 
 	RGroup[i] = _create();
 	return (GrpIndex) i;
 }
 
-/***********************************************************/
+/**
+ * \brief Drops the given [species](\ref SpeciesType) from it's [resource group](\ref GroupType).
+ * 
+ * \param sp is the [index](\ref SppIndex) in \ref Species of the species to drop.
+ * 
+ * \sideeffect
+ *     \* The species will be removed from the \ref RGroup[rg]->est_spp array where rg
+ *        is the [index](\ref GrpIndex) in \ref RGroup that contains the species.
+ * 
+ * \author
+ *     Chris Bennett
+ * 
+ * \ingroup RGROUP
+ */
 void rgroup_DropSpecies(SppIndex sp)
 {
-	/*======================================================*/
-	/* PURPOSE */
-	/* When a species associated with a resource group dies
-	 out, it is dropped from the group so it will not be
-	 processed unnecessarily.
-	 */
-
-	/* HISTORY */
-	/* Chris Bennett @ LTER-CSU 6/15/2000            */
-
-	/*------------------------------------------------------*/
-
 	IntS i, j;
 	GrpIndex rg;
 	Bool f = FALSE;
@@ -937,19 +1035,22 @@ void rgroup_DropSpecies(SppIndex sp)
 	}
 }
 
-/***********************************************************/
+/**
+ * \brief Add a [species](\ref SpeciesType) to a [resource group](\ref GroupType).
+ * 
+ * \param rg is the [index](\ref GrpIndex) in \ref RGroup of the resource group to 
+ *           add the species to. \n
+ * \param sp is the [index](\ref SppIndex) in \ref Species of the species to add to
+ *           the resource group.
+ * 
+ * \sideeffect sp will be added to the \ref RGroup[rg]->est_spp array.
+ * 
+ * \author Chris Bennett
+ * 
+ * \ingroup RGROUP
+ */
 void rgroup_AddSpecies(GrpIndex rg, SppIndex sp)
 {
-	/*======================================================*/
-	/* PURPOSE */
-	/*   When a species associated with a resource group becomes
-	 established, it is added to the list of species and
-	 otherwise linked to the group.
-	 */
-	/* HISTORY */
-	/* Chris Bennett @ LTER-CSU 6/15/2000            */
-
-	/*------------------------------------------------------*/
 	Int i;
 	Bool f = FALSE;
 
@@ -965,25 +1066,25 @@ void rgroup_AddSpecies(GrpIndex rg, SppIndex sp)
 		RGroup[rg]->est_spp[RGroup[rg]->est_count++] = sp;
 }
 
-/**************************************************************/
+/**
+ * \brief Kill the given [resource group](\ref GroupType) and never allow it to 
+ *        establish again.
+ * 
+ * \param rg is the [index](\ref GrpIndex) in \ref RGroup of the requested resource group.
+ * 
+ * \sideeffect 
+ *     \* All individuals and species in \ref RGroup[rg] will be killed.
+ *     \* \ref RGroup[rg]->extirpated will be set to \ref TRUE.
+ *  
+ * \author 
+ *     Chris Bennett
+ * 
+ * \sa RGroup_Kill() for killing with regeneration.
+ * 
+ * \ingroup RGROUP
+ */
 void rgroup_Extirpate(GrpIndex rg)
 {
-	/*======================================================*/
-	/* PURPOSE */
-	/* Kill a group catastrophically, meaning, kill all
-	 individuals, remove their biomass (relsize), and
-	 don't let them regenerate ever again.
-	 */
-
-	/* HISTORY */
-	/* Chris Bennett @ LTER-CSU 7/10/2000
-	 cwb - 11/27/00 - rewrote the algorithm to be more
-	 efficient, ie, fixed the quick and dirty code
-	 from before.
-	 */
-
-	/*------------------------------------------------------*/
-
 	SppIndex sp, i;
 
 	ForEachGroupSpp(sp, rg, i)
@@ -993,23 +1094,117 @@ void rgroup_Extirpate(GrpIndex rg)
 	}
 
 	RGroup[rg]->extirpated = TRUE;
-
 }
 
-/**************************************************************/
+/* Copy one GroupType's variables to another GroupType. Both GroupTypes must be
+ * allocated before calling this function. 
+ * 
+ * \param src is the source of the data to be copied over.
+ * \param dest is destination to recieve the data.
+ * 
+ * \sideeffect dest will be reallocated to the size of src, and all fields of
+ *             dest will be overwritten with src's data. 
+ */
+void copy_rgroup(const GroupType* src, GroupType* dest){
+    int i;
+
+    /* The first step of this algorithm is to deallocate dest's memory so it
+     * can be reallocated to the size of src. If dest and src are the same
+     * the net sum of this function would be to deallocate all of the fields
+     * of the GroupType. */
+    if(src == dest){
+        return;
+    }
+
+    /* -------------- Copy any arrays -------------- */
+    if(MortFlags.summary){
+        Mem_Free(dest->kills);
+        dest->kills = (IntUS*) Mem_Calloc(GrpMaxAge(src->grp_num), sizeof(IntUS), "copy_rgroup: kills");
+        for(i = 0; i < GrpMaxAge(src->grp_num); ++i){
+            dest->kills[i] = src->kills[i];
+        }
+    }
+
+    Mem_Free(dest->est_spp);
+    dest->est_spp = (SppIndex*) Mem_Calloc(src->est_count, sizeof(SppIndex), "copy_rgroup: est_spp");
+    for(i = 0; i < src->est_count; ++i){
+        dest->est_spp[i] = src->est_spp[i];
+    }
+
+    /* ------------- Copy all fields --------------- */
+    dest->cheatgrass_coefficient = src->cheatgrass_coefficient;
+    dest->depth = src->depth;
+    dest->est_annually = src->est_annually;
+    dest->est_count = src->est_count;
+    dest->estabs = src->estabs;
+    dest->extirp = src->extirp;
+    dest->extirpated = src->extirpated;
+    dest->grazingfreq_startyr = src->grazingfreq_startyr;
+    dest->grazingfrq = src->grazingfrq;
+    dest->grp_num = src->grp_num;
+    dest->ignition = src->ignition;
+    dest->killfreq = src->killfreq;
+    dest->killfreq_startyr = src->killfreq_startyr;
+    dest->killyr= src->killyr;
+    dest->max_age = src->max_age;
+    dest->max_bmass = src->max_bmass;
+    dest->max_density = src->max_density;
+    dest->max_per_sqm = src->max_per_sqm;
+    dest->max_spp = src->max_spp;
+    dest->max_spp_estab = src->max_spp_estab;
+    dest->max_stretch = src->max_stretch;
+    dest->min_res_req = src->min_res_req;
+    dest->mm_extra_res = src->mm_extra_res;
+    strcpy(dest->name, src->name);
+    dest->ppt_intcpt[0] = src->ppt_intcpt[0];
+    dest->ppt_intcpt[1] = src->ppt_intcpt[1];
+    dest->ppt_intcpt[2] = src->ppt_intcpt[2];
+    dest->ppt_slope[0] = src->ppt_slope[0];
+    dest->ppt_slope[1] = src->ppt_slope[1];
+    dest->ppt_slope[2] = src->ppt_slope[2];
+    dest->pr = src->pr;
+    dest->prescribedfire = src->prescribedfire;
+    dest->proportion_grazing = src->proportion_grazing;
+    dest->proportion_killed = src->proportion_killed;
+    dest->proportion_recovered = src->proportion_recovered;
+    dest->regen_ok = src->regen_ok;
+    dest->res_avail = src->res_avail;
+    dest->res_extra = src->res_extra;
+    dest->res_required = src->res_required;
+    dest->rgroupFractionOfVegTypeBiomass = src->rgroupFractionOfVegTypeBiomass;
+    dest->slowrate = src->slowrate;
+    dest->startyr = src->startyr;
+    dest->succulent = src->succulent;
+    dest->use_extra_res = src->use_extra_res;
+    dest->use_me = src->use_me;
+    dest->use_mort = src->use_mort;
+    dest->veg_prod_type = src->veg_prod_type;
+    dest->wild_fire_slope = src->wild_fire_slope;
+    dest->wildfire = src->wildfire;
+    dest->xgrow = src->xgrow;
+    dest->yrs_neg_pr = src->yrs_neg_pr;
+
+    /* ---------------- Copy Species Array ----------------- */
+    for(i = 0; i < SuperGlobals.max_spp_per_grp; ++i){
+        dest->species[i] = src->species[i];
+    }
+}
+
+/**
+ * \brief Kill all individuals of all species in the given group.
+ * 
+ * \param rg is the [index](\ref GrpIndex) in \ref RGroup of the group to kill.
+ * 
+ * \sideeffect Every individual in every species in the resource group will be killed.
+ * 
+ * \author Chris Bennett
+ * 
+ * \sa rgroup_Extirpate() for killing without the chance of regeneration.
+ * 
+ * \ingroup RGROUP
+ */
 void RGroup_Kill(GrpIndex rg)
 {
-	/*======================================================*/
-	/* PURPOSE */
-	/* Kill all individuals of all species in the group,
-	 but allow them to regenerate.
-	 */
-
-	/* HISTORY */
-	/* Chris Bennett @ LTER-CSU 11/27/2000            */
-
-	/*------------------------------------------------------*/
-
 	//printf("inside RGroup_Kill() rg=%d, RGroup[rg]->proportion_killed=%f \n",rg,RGroup[rg]->proportion_killed);
 	Int i;
 
@@ -1018,25 +1213,26 @@ void RGroup_Kill(GrpIndex rg)
 				RGroup[rg]->proportion_killed);
 }
 
-/**********************************************************/
+/**
+ * \brief Returns an array of all individual in all species in the given group.
+ * 
+ * \param rg in the [index](\ref GrpIndex) of the resource group.
+ * \param sort provides the option to sort the individuals based on size.
+ *             Use 'a' to sort ascending, 'b' to sort decenting, or 0 to not sort.
+ * \param num will be populated with the number of individuals in the array.
+ * 
+ * \return an array of pointers to all [individuals](\ref IndivType) in the group.
+ * 
+ * \sideeffect 
+ *     \* num will be populated with the size of the array.
+ * 
+ * \author
+ *     Chris Bennett
+ * 
+ * \ingroup RGROUP    
+ */
 IndivType **RGroup_GetIndivs(GrpIndex rg, const char sort, IntS *num)
 {
-	/*======================================================*/
-	/* PURPOSE */
-	/* put all the individuals of the group into a list
-	 and optionally sort the list.
-
-	 - Returns an allocated list of indivs; calling routine must
-	 free when appropriate.
-	 - Puts the number of individuals in *num.
-
-	 HISTORY
-	 Chris Bennett @ LTER-CSU 12/15/2000
-	 *
-	 *  2-Mar-03 - cwb - removed requirement for list to be
-	 *  pre-allocated.  Added code to allocate and return list.
-	 *------------------------------------------------------*/
-
 	IntS j, i = 0;
 	size_t i_size = sizeof(IndivType **);
 	SppIndex sp;

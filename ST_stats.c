@@ -1,127 +1,70 @@
-/********************************************************/
-/********************************************************/
-//  Source file: stats.c
-//  Type: module
-//  Application: STEPPE - plant community dynamics simulator
-//  Purpose: This is where all of the statistics are kept
-//           as the model runs.
-//  History:
-//     (6/15/2000) -- INITIAL CODING - cwb
-//   1/9/01 - revised to make extensive use of malloc() */
-//	5/28/2013 (DLM) - added module level variable accumulators (grid_Stat) for the grid and functions to deal with them (stat_Load_Accumulators(), stat_Save_Accumulators() stat_Free_Accumulators(), and stat_Init_Accumulators()).  These functions are called from ST_grid.c and manage the output accumulators so that the gridded version can output correctly.  The accumulators are dynamically allocated, so be careful with them.
-// 07/30/2016 (AKT) Fixed bug at std_dev calculation
-//
-/********************************************************/
-/********************************************************/
+/**
+ * \file ST_stats.c
+ * \brief Record keeping for the entire model.
+ * 
+ * Statistics are kept for all metrics of a plant's lifecycle.
+ * These statistics are kept for [resource groups](\ref RGROUP),
+ * [species](\ref SPECIES), [individuals](\ref INDIVIDUAL), and 
+ * [mortality events](\ref MORTALITY).
+ * 
+ * \author
+ *     Kyle Palmquist\n
+ *     Chandler Haukap\n
+ *     Freddy Pierson\n 
+ *     Chris Bennett
+ * 
+ *  History:
+ *    (6/15/2000) -- INITIAL CODING - cwb
+ *    1/9/01 - revised to make extensive use of malloc()
+ *	  5/28/2013 (DLM) - added module level variable accumulators (grid_Stat) for the grid and functions.
+ *    07/30/2016 (AKT) Fixed bug at std_dev calculation
+ *    8/30/2019 (Chandler Haukap) - Removed grid_Stat accumulators and 
+ *           functionality. Gridded mode accumulators are now stored in the
+ *           Celltype struct in ST_grid.h and swapped into this module using 
+ *           a call to stat_Copy_Accumulators().
+ * 
+ * \date 23 August 2019
+ * 
+ * \ingroup STATISTICS
+ */
 
 /* =================================================== */
 /*                INCLUDES / DEFINES                   */
 /* --------------------------------------------------- */
 
-#include <stdlib.h>
 #include <string.h>
 #include <math.h>
 #include "ST_steppe.h"
 #include "filefuncs.h"
 #include "myMemory.h"
-#include "sw_src/SW_Site.h"
 #include "ST_structs.h"
-#include "sxw.h"
-  extern SXW_t SXW;
-  extern SW_SITE SW_Site;
-
-/************ External Variable Declarations ***************/
-/***********************************************************/
+#include "ST_stats.h" // Contains most of the function declarations.
+#include "ST_seedDispersal.h"
 #include "ST_globals.h"
 
-/******** Modular External Function Declarations ***********/
-/* -- truly global functions are declared in functions.h --*/
-/***********************************************************/
-
-
-/*------------------------------------------------------*/
-/* Modular functions only used on one or two specific   */
-/* places; that is, they are not generally useful       */
-/* (like C++ friend functions) but have to be declared. */
-  void stat_Collect( Int year ) ;
-  void stat_Collect_GMort ( void ) ;
-  void stat_Collect_SMort ( void ) ;
-  void stat_Output_YrMorts( void ) ;
-  void stat_Output_AllMorts( void) ;
-  void stat_Output_AllBmass(void) ;
-
-  //Adding below two functions for creating grid cells avg values output file
-  void stat_Output_AllBmassAvg(void);
-  void stat_Output_AllCellAvgBmass(const char * filename);
-  void stat_Output_Seed_Dispersal(const char * filename, const char sep, Bool makeHeader);
-  void stat_free_mem( void );
-
-  void stat_Load_Accumulators( int cell, int year ); //these accumulators were added to use in the gridded option... there overall purpose is to save/load data to allow steppe to output correctly when running multiple grid cells
-  void stat_Save_Accumulators( int cell, int year );
-  void stat_Free_Accumulators( void );
-  void stat_Init_Accumulators( void );
-
-/************************ Local Structure Defs *************/
-/***********************************************************/
-struct accumulators_st {
-  double ave, sum_dif_sqr, sd;
-  unsigned long nobs;
-};
-
-struct stat_st {
-  char *name; /* array of ptrs to names in RGroup & Species */
-  struct accumulators_st *s;
-} _Dist, _Ppt, _Temp,
+/* ----------------- Local Variables --------------------- */
+StatType *_Dist, *_Ppt, *_Temp,
   *_Grp, *_Gsize, *_Gpr, *_Gmort, *_Gestab,
   *_Spp, *_Indv, *_Smort, *_Sestab, *_Sreceived;
 
-typedef struct  {
-  struct accumulators_st *dist, *temp, *ppt, **grp1, **gsize, **gpr2,  **gwf2,  **gpf2, 
-  							**gmort, **gestab, **spp, **indv, **smort, **sestab, **sreceived;
-} accumulators_grid_st;
-
-accumulators_grid_st *grid_Stat;
-
-struct fire_st {
-  int *wildfire;
-  int **prescribedFire;
-} *_Gwf;
-
-
-// Local Structure for holding sum values of all the grid cells
-
-struct accumulators_grid_cell_st {
-  double sum, sum_std;
-  unsigned long nobs;
-};
-
-struct stat_grid_cell_st {
-  char *name; /* array of ptrs to names in RGroup & Species */
-  struct accumulators_grid_cell_st *s;    /* array of holding all the years values */
-} _Dist_grid_cell, _Ppt_grid_cell, _Temp_grid_cell,
-  *_Grp_grid_cell, *_Gsize_grid_cell, *_Gpr_grid_cell,*_Gwf_grid_cell,*_Gpf_grid_cell, *_Gmort_grid_cell, *_Gestab_grid_cell,
-  *_Spp_grid_cell, *_Indv_grid_cell, *_Smort_grid_cell, *_Sestab_grid_cell, *_Sreceived_grid_cell;
-
-
-
+FireStatsType *_Gwf;
 
 /*************** Local Function Declarations ***************/
-/***********************************************************/
 static void _init( void);
 static RealF _get_avg( struct accumulators_st *p);
 static RealF _get_std( struct accumulators_st *p);
-//Adding below three functions for copying grid cell values,calculating avg and SD,these values will be used in grid cells avg output file
-static void copyStruct(RealF val,RealF std_val,struct accumulators_grid_cell_st *p );
-static RealF _get_gridcell_avg( struct accumulators_grid_cell_st *p);
-static int _get_gridcell_sum( struct accumulators_grid_cell_st *p);
-static RealF _get_gridcell_std( struct accumulators_grid_cell_st *p);
-static void _make_header( char *buf);
-static void _make_header_with_std( char *buf);
 
-/* I'm making this a macro because it gets called a lot, but
- * note that the syntax checker is obviated, so make sure
+/** \brief A macro for collecting statistics.
+ * 
+ * \param p is a pointer to the \ref accumulators_st which is collecting the data.
+ * \param v is a double which will be collected.
+ * 
+ * Note that the syntax checker is obviated, so make sure
  * you follow the this prototype:
- * static void _collect_add(struct accumulators_st *p, double v) */
+ * static void _collect_add(struct accumulators_st *p, double v).
+ * 
+ * \ingroup STATISTICS_PRIVATE
+ */
 #define _collect_add(p, v) {					\
   (p)->nobs++;							\
   RealF old_ave = (p)->ave;					\
@@ -130,8 +73,15 @@ static void _make_header_with_std( char *buf);
   (p)->sd = final_running_sd((p)->nobs, (p)->sum_dif_sqr);	\
 }
 
-// quick macro to make life easier in the load/save accumulators functions... it just copies the data of p into v
-// static void _copy_over(struct accumulators_st *p, struct accumulators_st *v)
+/** \brief A macro that copies the data of p into v.
+ * 
+ * \param p is a pointer to the \ref accumulators_st to copy from.
+ * \param v is a pointer to the \ref accumulators_st to copy to.
+ * 
+ * The correct usage is _copy_over(struct accumulators_st *p, struct accumulators_st *v).
+ * 
+ * \ingroup STATISTICS_PRIVATE
+ */
 #define _copy_over(p, v) { \
 	(p)->ave = (v)->ave; \
 	(p)->sum_dif_sqr = (v)->sum_dif_sqr; \
@@ -146,7 +96,19 @@ static Bool firsttime = TRUE;
 /*              BEGIN FUNCTIONS                            */
 /***********************************************************/
 
-/***********************************************************/
+/**
+ * \brief Collects the requested statistics.
+ * 
+ * \param year is the year you are collecting. year should be base 1.
+ * 
+ * Statistics are collected for every metric specified in bmassflags.in
+ * and mortflags.in.
+ * 
+ * \sa Stat_Output() which is where the collected statistics are printed
+ *     to CSV files.
+ * 
+ * \ingroup STATISTICS
+ */
 void stat_Collect( Int year ) {
 /* fill data structures with samples to be
    computed later in Stat_Output().
@@ -164,14 +126,14 @@ void stat_Collect( Int year ) {
   }
 
   year--;
-  if (BmassFlags.dist && Plot.disturbed)
-    _Dist.s[year].nobs++;
+  if (BmassFlags.dist && Plot->disturbed)
+    _Dist->s[year].nobs++;
 
   if (BmassFlags.ppt)
-    _collect_add( &_Ppt.s[year], Env.ppt);
+    _collect_add( &_Ppt->s[year], Env->ppt);
 
   if (BmassFlags.tmp)
-    _collect_add( &_Temp.s[year], Env.temp);
+    _collect_add( &_Temp->s[year], Env->temp);
 
   if (BmassFlags.grpb) {
     if (BmassFlags.wildfire) {
@@ -221,139 +183,73 @@ void stat_Collect( Int year ) {
 }
 
 
-/***********************************************************/
+/**
+ * \brief initialize the statistics accumulators.
+ * 
+ * The function will allocate the accumulators. Note that this function only has to be
+ * called once per simulation.
+ * 
+ * \sideeffect Accumulators are allocated memory based on which statistics are requested
+ *             in bmassflags.in and mortflags.in.
+ * 
+ * \ingroup STATISTICS_PRIVATE
+ */
 static void _init( void) {
 /* must be called after model is initialized */
   SppIndex sp;
   GrpIndex rg;
 
-// Memory allocation for local structures that will hold grid cells values for calculating avg
-  if (UseGrid)
-   {
-
-	  if (BmassFlags.dist)
-	      _Dist_grid_cell.s = (struct accumulators_grid_cell_st *)
-	                 Mem_Calloc( Globals.runModelYears,
-	                             sizeof(struct accumulators_grid_cell_st),
-	                            "_stat_init(Dist)");
-	    if (BmassFlags.ppt)
-	      _Ppt_grid_cell.s = (struct accumulators_grid_cell_st *)
-	                 Mem_Calloc( Globals.runModelYears,
-	                             sizeof(struct accumulators_grid_cell_st),
-	                            "_stat_init(PPT)");
-	    if (BmassFlags.tmp)
-	      _Temp_grid_cell.s = (struct accumulators_grid_cell_st *)
-	                 Mem_Calloc( Globals.runModelYears,
-	                             sizeof(struct accumulators_grid_cell_st),
-	                            "_stat_init(Temp)");
-
-		if (BmassFlags.grpb)
-		{
-			_Grp_grid_cell = (struct stat_grid_cell_st *)
-					 Mem_Calloc( Globals.grpCount, sizeof(struct stat_grid_cell_st), "_stat_init(Grp)");
-			ForEachGroup(rg)
-				_Grp_grid_cell[rg].s = (struct accumulators_grid_cell_st *)
-					 Mem_Calloc( Globals.runModelYears, sizeof(struct accumulators_grid_cell_st), "_stat_init(Grp[rg].s)");
-
-			if (BmassFlags.size)
-			{
-				_Gsize_grid_cell = (struct stat_grid_cell_st *)
-						Mem_Calloc( Globals.grpCount, sizeof(struct stat_grid_cell_st), "_stat_init(GSize)");
-				ForEachGroup(rg)
-					_Gsize_grid_cell[rg].s = (struct accumulators_grid_cell_st *)
-					    Mem_Calloc( Globals.runModelYears, sizeof(struct accumulators_grid_cell_st), "_stat_init(GSize[rg].s)");
-			}
-			if (BmassFlags.pr)
-			{
-				_Gpr_grid_cell = (struct stat_grid_cell_st *)
-						Mem_Calloc( Globals.grpCount, sizeof(struct stat_grid_cell_st), "_stat_init(Gpr)");
-				ForEachGroup(rg)
-					_Gpr_grid_cell[rg].s = (struct accumulators_grid_cell_st *)
-					    Mem_Calloc( Globals.runModelYears, sizeof(struct accumulators_grid_cell_st), "_stat_init(Gpr[rg].s)");
-			}
-                        if (BmassFlags.wildfire)
-			{
-				_Gpr_grid_cell = (struct stat_grid_cell_st *)
-						Mem_Calloc( Globals.grpCount, sizeof(struct stat_grid_cell_st), "_stat_init(Gwf)");
-				ForEachGroup(rg)
-					_Gpr_grid_cell[rg].s = (struct accumulators_grid_cell_st *)
-					    Mem_Calloc( Globals.runModelYears, sizeof(struct accumulators_grid_cell_st), "_stat_init(Gwf[rg].s)");
-			}
-                        if (BmassFlags.prescribedfire)
-			{
-				_Gpr_grid_cell = (struct stat_grid_cell_st *)
-						Mem_Calloc( Globals.grpCount, sizeof(struct stat_grid_cell_st), "_stat_init(Gpf)");
-				ForEachGroup(rg)
-					_Gpr_grid_cell[rg].s = (struct accumulators_grid_cell_st *)
-					    Mem_Calloc( Globals.runModelYears, sizeof(struct accumulators_grid_cell_st), "_stat_init(Gpf[rg].s)");
-			}
-		}
-
-		 if (BmassFlags.sppb)
-		{
-			_Spp_grid_cell = (struct stat_grid_cell_st *)
-					Mem_Calloc( Globals.sppCount, sizeof(struct stat_grid_cell_st), "_stat_init(Spp)");
-			ForEachSpecies(sp)
-				_Spp_grid_cell[sp].s = (struct accumulators_grid_cell_st *)
-				    Mem_Calloc( Globals.runModelYears, sizeof(struct accumulators_grid_cell_st), "_stat_init(Spp[sp].s)");
-
-			if (BmassFlags.indv)
-			{
-				_Indv_grid_cell = (struct stat_grid_cell_st *)
-						Mem_Calloc( Globals.sppCount, sizeof(struct stat_grid_cell_st), "_stat_init(Indv)");
-				ForEachSpecies(sp)
-					_Indv_grid_cell[sp].s = (struct accumulators_grid_cell_st *)
-					    Mem_Calloc( Globals.runModelYears, sizeof(struct accumulators_grid_cell_st), "_stat_init(Indv[sp].s)");
-			}
-		}
-
-  }
-
-  if (BmassFlags.dist)
-    _Dist.s = (struct accumulators_st *)
-               Mem_Calloc( Globals.runModelYears,
+  if (BmassFlags.dist) {
+    _Dist = (StatType*) Mem_Calloc(1, sizeof(StatType), "_stat_init(Dist)");
+    _Dist->s = (struct accumulators_st *)
+               Mem_Calloc( SuperGlobals.runModelYears,
                            sizeof(struct accumulators_st),
                           "_stat_init(Dist)");
-  if (BmassFlags.ppt)
-    _Ppt.s  = (struct accumulators_st *)
-               Mem_Calloc( Globals.runModelYears,
+  }
+  if (BmassFlags.ppt) {
+    _Ppt = (StatType*) Mem_Calloc(1, sizeof(StatType), "_stat_init(PPT");
+    _Ppt->s  = (struct accumulators_st *)
+               Mem_Calloc( SuperGlobals.runModelYears,
                            sizeof(struct accumulators_st),
                           "_stat_init(PPT)");
-  if (BmassFlags.tmp)
-    _Temp.s = (struct accumulators_st *)
-               Mem_Calloc( Globals.runModelYears,
+  }
+  if (BmassFlags.tmp) {
+    _Temp = (StatType*) Mem_Calloc(1, sizeof(StatType), "_stat_init(Temp)");
+    _Temp->s = (struct accumulators_st *)
+               Mem_Calloc( SuperGlobals.runModelYears,
                            sizeof(struct accumulators_st),
                           "_stat_init(Temp)");
+  }
   if (BmassFlags.grpb) {
     _Grp = (struct stat_st *)
-           Mem_Calloc( Globals.grpCount,
+           Mem_Calloc( Globals->grpCount,
                        sizeof(struct stat_st),
                       "_stat_init(Grp)");
     ForEachGroup(rg)
       _Grp[rg].s = (struct accumulators_st *)
-             Mem_Calloc( Globals.runModelYears,
+             Mem_Calloc( SuperGlobals.runModelYears,
                          sizeof(struct accumulators_st),
                         "_stat_init(Grp[rg].s)");
 
     if (BmassFlags.size) {
       _Gsize = (struct stat_st *)
-             Mem_Calloc( Globals.grpCount,
+             Mem_Calloc( Globals->grpCount,
                          sizeof(struct stat_st),
                         "_stat_init(GSize)");
       ForEachGroup(rg)
           _Gsize[rg].s = (struct accumulators_st *)
-             Mem_Calloc( Globals.runModelYears,
+             Mem_Calloc( SuperGlobals.runModelYears,
                          sizeof(struct accumulators_st),
                         "_stat_init(GSize[rg].s)");
     }
     if (BmassFlags.pr) {
       _Gpr = (struct stat_st *)
-             Mem_Calloc( Globals.grpCount,
+             Mem_Calloc( Globals->grpCount,
                          sizeof(struct stat_st),
                         "_stat_init(Gpr)");
       ForEachGroup(rg)
           _Gpr[rg].s = (struct accumulators_st *)
-             Mem_Calloc( Globals.runModelYears,
+             Mem_Calloc( SuperGlobals.runModelYears,
                          sizeof(struct accumulators_st),
                         "_stat_init(Gpr[rg].s)");
     }
@@ -366,18 +262,18 @@ static void _init( void) {
 
       _Gwf->wildfire = (int *)
           Mem_Calloc( 1,
-                      sizeof(int) * Globals.runModelYears,
+                      sizeof(int) * SuperGlobals.runModelYears,
                       "_stat_init(Gwf->wildfire)");
       
       _Gwf->prescribedFire = (int **)
           Mem_Calloc( 1,
-                      sizeof(int **) * Globals.max_rgroups,
+                      sizeof(int **) * SuperGlobals.max_rgroups,
                       "_stat_init(Gwf->prescribedfire");
 
       ForEachGroup(rg){
         _Gwf->prescribedFire[rg] = (int *)
-          Mem_Calloc( Globals.runModelYears,
-                      sizeof(int) * Globals.runModelYears,
+          Mem_Calloc( SuperGlobals.runModelYears,
+                      sizeof(int) * SuperGlobals.runModelYears,
                       "_stat_init(Gwf->prescribedFire)");
       }
     }
@@ -386,7 +282,7 @@ static void _init( void) {
   if (MortFlags.group) {
 
     _Gestab = (struct stat_st *)
-             Mem_Calloc( Globals.grpCount,
+             Mem_Calloc( Globals->grpCount,
                          sizeof(struct stat_st),
                          "_stat_init(Gestab)");
     ForEachGroup(rg)
@@ -395,7 +291,7 @@ static void _init( void) {
                                 "_stat_init(Gestab[rg].s)");
 
     _Gmort = (struct stat_st *)
-           Mem_Calloc( Globals.grpCount,
+           Mem_Calloc( Globals->grpCount,
                        sizeof(struct stat_st),
                       "_stat_init(Gmort)");
     ForEachGroup(rg)
@@ -407,30 +303,30 @@ static void _init( void) {
 
   if (BmassFlags.sppb) {
       _Spp = (struct stat_st *)
-               Mem_Calloc( Globals.sppCount,
+               Mem_Calloc( Globals->sppCount,
                            sizeof(struct stat_st),
                           "_stat_init(Spp)");
       ForEachSpecies(sp)
         _Spp[sp].s = (struct accumulators_st *)
-               Mem_Calloc( Globals.runModelYears,
+               Mem_Calloc( SuperGlobals.runModelYears,
                            sizeof(struct accumulators_st),
                           "_stat_init(Spp[sp].s)");
 
       if (BmassFlags.indv) {
         _Indv = (struct stat_st *)
-               Mem_Calloc( Globals.sppCount,
+               Mem_Calloc( Globals->sppCount,
                            sizeof(struct stat_st),
                           "_stat_init(Indv)");
         ForEachSpecies(sp)
           _Indv[sp].s = (struct accumulators_st *)
-               Mem_Calloc( Globals.runModelYears,
+               Mem_Calloc( SuperGlobals.runModelYears,
                            sizeof(struct accumulators_st),
                           "_stat_init(Indv[sp].s)");
     }
   }
   if (MortFlags.species) {
     _Sestab = (struct stat_st *)
-           Mem_Calloc( Globals.sppCount,
+           Mem_Calloc( Globals->sppCount,
                        sizeof(struct stat_st),
                       "_stat_init(Sestab)");
     ForEachSpecies(sp)
@@ -439,7 +335,7 @@ static void _init( void) {
                                 "_stat_init(Sestab[sp].s)");
 
     _Smort = (struct stat_st *)
-           Mem_Calloc( Globals.sppCount,
+           Mem_Calloc( Globals->sppCount,
                        sizeof(struct stat_st),
                       "_stat_init(Smort)");
     ForEachSpecies(sp)
@@ -450,9 +346,9 @@ static void _init( void) {
   }
 
   if (UseSeedDispersal && UseGrid) {
-	  _Sreceived = Mem_Calloc( Globals.sppCount, sizeof(struct stat_st), "_stat_init(Sreceived)");
+	  _Sreceived = Mem_Calloc( Globals->sppCount, sizeof(struct stat_st), "_stat_init(Sreceived)");
 	  ForEachSpecies(sp) {
-		  _Sreceived[sp].s = (struct accumulators_st *)Mem_Calloc( Globals.runModelYears, sizeof(struct accumulators_st), "_stat_init(Sreceived[sp].s)");
+		  _Sreceived[sp].s = (struct accumulators_st *)Mem_Calloc( SuperGlobals.runModelYears, sizeof(struct accumulators_st), "_stat_init(Sreceived[sp].s)");
 		  _Sreceived[sp].name = &Species[sp]->name[0];
 	  }
   }
@@ -476,251 +372,28 @@ static void _init( void) {
   }
 }
 
-/***********************************************************/
-void stat_Init_Accumulators( void ) {
-	//allocates memory for all of the grid accumulators
-	grid_Stat = Mem_Calloc(Globals.nCells, sizeof(accumulators_grid_st), "stat_Init_Accumulators()");
+/* Shallow copies StatType and FireStatsType pointers to the local pointers.
+   This is intended to be used with gridded mode to load in a given cell */
+void stat_Copy_Accumulators(StatType* newDist, StatType* newPpt, StatType* newTemp, StatType* newGrp, StatType* newGsize, 
+                            StatType* newGpr, StatType* newGmort, StatType* newGestab, StatType* newSpp, StatType* newIndv,
+                            StatType* newSmort, StatType* newSestab, StatType* newSrecieved, FireStatsType* newGwf, Bool firstTime){
 
-  	int i, j;
-  	for( i = 0; i < Globals.nCells; i++) {
-  		if (BmassFlags.dist) grid_Stat[i].dist = Mem_Calloc(Globals.runModelYears, sizeof(struct accumulators_st), "stat_Init_Accumulators()");
-  		if (BmassFlags.ppt) grid_Stat[i].ppt = Mem_Calloc(Globals.runModelYears, sizeof(struct accumulators_st), "stat_Init_Accumulators()");
-  		if (BmassFlags.tmp) grid_Stat[i].temp = Mem_Calloc(Globals.runModelYears, sizeof(struct accumulators_st), "stat_Init_Accumulators()");
-
-  		if (BmassFlags.grpb) {
-  			grid_Stat[i].grp1 = Mem_Calloc(Globals.runModelYears, sizeof(struct accumulators_st*), "stat_Init_Accumulators()"); // gave grp and gpr numbers attached to them so I wouldn't mix them up lol... bad (confusing) variable names on part of the original creator.
-  			if (BmassFlags.size) grid_Stat[i].gsize = Mem_Calloc(Globals.runModelYears, sizeof(struct accumulators_st), "stat_Init_Accumulators()");
-  			if (BmassFlags.pr) grid_Stat[i].gpr2 = Mem_Calloc(Globals.runModelYears, sizeof(struct accumulators_st*), "stat_Init_Accumulators()");
-                        if (BmassFlags.wildfire) grid_Stat[i].gwf2 = Mem_Calloc(Globals.runModelYears, sizeof(struct accumulators_st*), "stat_Init_Accumulators()");
-                        if (BmassFlags.prescribedfire) grid_Stat[i].gpf2 = Mem_Calloc(Globals.runModelYears, sizeof(struct accumulators_st*), "stat_Init_Accumulators()");
-  		}
-  		if (MortFlags.group) {
-  			grid_Stat[i].gmort = Mem_Calloc(Globals.grpCount, sizeof(struct accumulators_st*), "stat_Init_Accumulators()");
-  			grid_Stat[i].gestab = Mem_Calloc(Globals.grpCount, sizeof(struct accumulators_st*), "stat_Init_Accumulators()");
-  			GrpIndex gp;
-  			ForEachGroup(gp) {
-  				grid_Stat[i].gmort[gp] = Mem_Calloc(GrpMaxAge(gp), sizeof(struct accumulators_st), "stat_Init_Accumulators()");
-  				grid_Stat[i].gestab[gp] = Mem_Calloc(1, sizeof(struct accumulators_st), "stat_Init_Accumulators()");
-  			}
-  		}
-  		if(BmassFlags.sppb) {
-  			grid_Stat[i].spp = Mem_Calloc(Globals.runModelYears, sizeof(struct accumulators_st*), "stat_Init_Accumulators()");
-  			if(BmassFlags.indv) grid_Stat[i].indv = Mem_Calloc(Globals.runModelYears, sizeof(struct accumulators_st*), "stat_Init_Accumulators()");
-  		}
-  		if (MortFlags.species) {
-  			grid_Stat[i].smort = Mem_Calloc(Globals.sppCount, sizeof(struct accumulators_st*), "stat_Init_Accumulators()");
-  			grid_Stat[i].sestab = Mem_Calloc(Globals.sppCount, sizeof(struct accumulators_st*), "stat_Init_Accumulators()");
-			SppIndex sp;
-			ForEachSpecies(sp) {
-				grid_Stat[i].smort[sp] = Mem_Calloc(SppMaxAge(sp), sizeof(struct accumulators_st), "stat_Init_Accumulators()");
-				grid_Stat[i].sestab[sp] = Mem_Calloc(1, sizeof(struct accumulators_st), "stat_Init_Accumulators()");
-			}
-		}
-
-		if(UseSeedDispersal && UseGrid)
-			grid_Stat[i].sreceived = Mem_Calloc(Globals.runModelYears, sizeof(struct accumulators_st*), "stat_Init_Accumulators()");
-
-
-  		for( j = 0; j < Globals.runModelYears; j++) {
-  			if (BmassFlags.grpb) {
-  				grid_Stat[i].grp1[j] = Mem_Calloc(Globals.grpCount, sizeof(struct accumulators_st), "stat_Init_Accumulators()");
-  				if (BmassFlags.size) grid_Stat[i].gsize[j] = Mem_Calloc(Globals.grpCount, sizeof(struct accumulators_st), "stat_Init_Accumulators()");
-  				if (BmassFlags.pr) grid_Stat[i].gpr2[j] = Mem_Calloc(Globals.grpCount, sizeof(struct accumulators_st), "stat_Init_Accumulators()");
-                                if (BmassFlags.wildfire) grid_Stat[i].gwf2[j] = Mem_Calloc(Globals.grpCount, sizeof(struct accumulators_st), "stat_Init_Accumulators()");
-                                if (BmassFlags.prescribedfire) grid_Stat[i].gpf2[j] = Mem_Calloc(Globals.grpCount, sizeof(struct accumulators_st), "stat_Init_Accumulators()");
-  			}
-  			if(BmassFlags.sppb) {
-  				grid_Stat[i].spp[j] = Mem_Calloc(Globals.sppCount, sizeof(struct accumulators_st), "stat_Init_Accumulators()");
-  				if(BmassFlags.indv) grid_Stat[i].indv[j] = Mem_Calloc(Globals.sppCount, sizeof(struct accumulators_st), "stat_Init_Accumulators()");
-  			}
-			if(UseSeedDispersal && UseGrid)
-				grid_Stat[i].sreceived[j] = Mem_Calloc(Globals.sppCount, sizeof(struct accumulators_st), "stat_Init_Accumulators()");
-  		}
-  	}
-}
-
-/***********************************************************/
-void stat_Load_Accumulators(int cell, int year) {
-	//loads the accumulators for the cell at the given year
-
-	if (firsttime) {
-		firsttime = FALSE;
-		_init();
-	}
-	IntS age;
-	int yr;
-	yr = year - 1;
-
-	if(MortFlags.species) {
-		SppIndex sp;
-
-		ForEachSpecies(sp) {
-			if ( !Species[sp]->use_me) continue;
-			_copy_over(&_Sestab[sp].s[0], &grid_Stat[cell].sestab[sp][0]);
-			IntS age;
-			for (age=0; age < SppMaxAge(sp); age++)
-				_copy_over(&_Smort[sp].s[age], &grid_Stat[cell].smort[sp][age]);
-		}
-  	}
-  	if(MortFlags.group) {
-  		GrpIndex rg;
-
-    	ForEachGroup(rg) {
-      		if (!RGroup[rg]->use_me) continue;
-      		_copy_over(&_Gestab[rg].s[0], &grid_Stat[cell].gestab[rg][0]);
-      		for (age=0; age < GrpMaxAge(rg); age++)
-        		_copy_over(&_Gmort[rg].s[age], &grid_Stat[cell].gmort[rg][age]);
-    	}
-  	}
-
-	if (BmassFlags.tmp) _copy_over(&_Temp.s[yr], &grid_Stat[cell].temp[yr]);
-	if (BmassFlags.ppt) _copy_over(&_Ppt.s[yr], &grid_Stat[cell].ppt[yr]);
-	if (BmassFlags.dist) _copy_over(&_Dist.s[yr], &grid_Stat[cell].dist[yr]);
-
-	if(BmassFlags.grpb) {
-		GrpIndex c;
-		ForEachGroup(c) {
-			_copy_over(&_Grp[c].s[yr], &grid_Stat[cell].grp1[yr][c]);
-			if (BmassFlags.size) _copy_over(&_Gsize[c].s[yr], &grid_Stat[cell].gsize[yr][c]);
-			if (BmassFlags.pr)	_copy_over(&_Gpr[c].s[yr], &grid_Stat[cell].gpr2[yr][c]);
-		}
-	}
-
-  	if(BmassFlags.sppb) {
-  		SppIndex s;
-  		ForEachSpecies(s) {
-  			_copy_over(&_Spp[s].s[yr], &grid_Stat[cell].spp[yr][s]);
-  			if (BmassFlags.indv) _copy_over(&_Indv[s].s[yr], &grid_Stat[cell].indv[yr][s]);
-  		}
-  	}
-
-	if(UseGrid && UseSeedDispersal) {
-		SppIndex s;
-		ForEachSpecies(s)
-			_copy_over(&_Sreceived[s].s[yr], &grid_Stat[cell].sreceived[yr][s]);
-	}
-}
-
-/***********************************************************/
-void stat_Save_Accumulators(int cell, int year) {
-	//saves the accumulators for the cell at the given year
-
-	if (firsttime) {
-		firsttime = FALSE;
-		_init();
-	}
-	IntS age;
-  	int yr;
-  	yr = year - 1;
-
-	if(MortFlags.species) {
-		SppIndex sp;
-
-		ForEachSpecies(sp) {
-			if ( !Species[sp]->use_me) continue;
-			_copy_over(&grid_Stat[cell].sestab[sp][0], &_Sestab[sp].s[0]);
-			for (age=0; age < SppMaxAge(sp); age++)
-				_copy_over(&grid_Stat[cell].smort[sp][age], &_Smort[sp].s[age]);
-		}
-  	}
-	if(MortFlags.group) {
-		GrpIndex rg;
-
-		ForEachGroup(rg) {
-			if (!RGroup[rg]->use_me) continue;
-			_copy_over(&grid_Stat[cell].gestab[rg][0], &_Gestab[rg].s[0]);
-			for (age=0; age < GrpMaxAge(rg); age++)
-				_copy_over(&grid_Stat[cell].gmort[rg][age], &_Gmort[rg].s[age]);
-		}
-	}
-
-	if (BmassFlags.tmp) _copy_over(&grid_Stat[cell].temp[yr], &_Temp.s[yr]);
-	if (BmassFlags.ppt) _copy_over(&grid_Stat[cell].ppt[yr], &_Ppt.s[yr]);
-	if (BmassFlags.dist) _copy_over(&grid_Stat[cell].dist[yr], &_Dist.s[yr]);
-
-	if(BmassFlags.grpb) {
-		GrpIndex c;
-		ForEachGroup(c) {
-			_copy_over(&grid_Stat[cell].grp1[yr][c], &_Grp[c].s[yr]);
-			if (BmassFlags.size) _copy_over(&grid_Stat[cell].gsize[yr][c], &_Gsize[c].s[yr]);
-			if (BmassFlags.pr)	_copy_over(&grid_Stat[cell].gpr2[yr][c], &_Gpr[c].s[yr]);
-		}
-	}
-
-  	if(BmassFlags.sppb) {
-  		SppIndex s;
-  		ForEachSpecies(s) {
-  			_copy_over(&grid_Stat[cell].spp[yr][s], &_Spp[s].s[yr]);
-  			if (BmassFlags.indv) _copy_over(&grid_Stat[cell].indv[yr][s], &_Indv[s].s[yr]);
-  		}
-  	}
-
-	if(UseGrid && UseSeedDispersal) {
-		SppIndex s;
-		ForEachSpecies(s)
-			_copy_over(&grid_Stat[cell].sreceived[yr][s], &_Sreceived[s].s[yr]);
-	}
-
-}
-
-/***********************************************************/
-void stat_Free_Accumulators( void ) {
-	//frees all the memory allocated in stat_init_Accumulators()
-
-  	int i, j;
-  	for( i = 0; i < Globals.nCells; i++) {
-  		for( j = 0; j < Globals.runModelYears; j++) {
-  			if(BmassFlags.grpb) {
-  				Mem_Free(grid_Stat[i].grp1[j]);
-  				if (BmassFlags.size) Mem_Free(grid_Stat[i].gsize[j]);
-  				if (BmassFlags.pr) Mem_Free(grid_Stat[i].gpr2[j]);
-                                if (BmassFlags.wildfire) Mem_Free(grid_Stat[i].gwf2[j]);
-                                if (BmassFlags.prescribedfire) Mem_Free(grid_Stat[i].gpf2[j]);
-  			}
-  			if(BmassFlags.sppb) {
-  				Mem_Free(grid_Stat[i].spp[j]);
-  				if(BmassFlags.indv) Mem_Free(grid_Stat[i].indv[j]);
-  			}
-			if(UseSeedDispersal && UseGrid)
-				Mem_Free(grid_Stat[i].sreceived[j]);
-  		}
-
-  		if (BmassFlags.dist) Mem_Free(grid_Stat[i].dist);
-  		if (BmassFlags.ppt) Mem_Free(grid_Stat[i].ppt);
-  		if (BmassFlags.tmp) Mem_Free(grid_Stat[i].temp);
-
-  		if(BmassFlags.grpb) {
-  			Mem_Free(grid_Stat[i].grp1);// gave grp and gpr numbers attached to them so I wouldn't mix them up lol... bad (confusing) variable names on part of the original creator.
-  			if (BmassFlags.size) Mem_Free(grid_Stat[i].gsize);
-  			if (BmassFlags.size) Mem_Free(grid_Stat[i].gpr2);
-  		}
-  		if (MortFlags.group) {
-  			GrpIndex gp;
-  			ForEachGroup(gp) {
-  				Mem_Free(grid_Stat[i].gmort[gp]);
-  				Mem_Free(grid_Stat[i].gestab[gp]);
-  			}
-  			Mem_Free(grid_Stat[i].gmort);
-  			Mem_Free(grid_Stat[i].gestab);
-  		}
-  		if(BmassFlags.sppb) {
-  			Mem_Free(grid_Stat[i].spp);
-  			if(BmassFlags.indv) Mem_Free(grid_Stat[i].indv);
-  		}
-  		if (MortFlags.species) {
-  			SppIndex sp;
-  			ForEachSpecies(sp) {
-  				Mem_Free(grid_Stat[i].smort[sp]);
-  				Mem_Free(grid_Stat[i].sestab[sp]);
-  			}
-  			Mem_Free(grid_Stat[i].smort);
-  			Mem_Free(grid_Stat[i].sestab);
-  		}
-		if(UseSeedDispersal && UseGrid)
-			Mem_Free(grid_Stat[i].sreceived);
-  	}
-  	Mem_Free(grid_Stat);
-  	stat_free_mem();
+  /* Move the local pointers to the location of the given pointers */
+  _Dist = newDist;
+  _Ppt = newPpt;
+  _Temp = newTemp;
+  _Grp = newGrp;
+  _Gsize = newGsize;
+  _Gpr = newGpr;
+  _Gmort = newGmort;
+  _Gestab = newGestab;
+  _Spp = newSpp;
+  _Indv = newIndv;
+  _Smort = newSmort;
+  _Sestab = newSestab;
+  _Sreceived = newSrecieved;
+  _Gwf = newGwf;
+  firsttime = firstTime;
 }
 
 /***********************************************************/
@@ -749,9 +422,18 @@ void stat_free_mem( void ) {
       Mem_Free(_Gwf->prescribedFire);
     }
 
-  	if (BmassFlags.dist) Mem_Free(_Dist.s);
-  	if (BmassFlags.ppt) Mem_Free(_Ppt.s);
-  	if (BmassFlags.tmp) Mem_Free(_Temp.s);
+  	if (BmassFlags.dist) {
+      Mem_Free(_Dist->s);
+      Mem_Free(_Dist);
+    }
+  	if (BmassFlags.ppt) {
+      Mem_Free(_Ppt->s);
+      Mem_Free(_Ppt);
+    }
+  	if (BmassFlags.tmp) {
+      Mem_Free(_Temp->s);
+      Mem_Free(_Temp);
+    }
 
   	if(BmassFlags.grpb) {
   		Mem_Free(_Grp);
@@ -789,14 +471,19 @@ void stat_free_mem( void ) {
 
 }
 
-/***********************************************************/
+/**
+ * \brief Collects mortality statistics across iterations for all entries in \ref RGroup.
+ * 
+ * Mortality statistics are accumulated in species_Update_Kills(). stat_Collect_GMort should 
+ * be called after every iteration to add the iteration to the simulation statistics.
+ * 
+ * \sideeffect \ref _Gmort will be modified according to the last iteration's mortality stats.
+ * 
+ * \sa species_Update_Kills().
+ * 
+ * \ingroup STATISTICS
+ */
 void stat_Collect_GMort ( void ) {
-/* accumulated for the entire model run within
-   Species_Update_Kills(), then collected
-   here to compare among iterations.
-
-   5/20/01
-*/
     IntS rg, age;
 
     ForEachGroup(rg) {
@@ -810,15 +497,19 @@ void stat_Collect_GMort ( void ) {
 
 }
 
-/***********************************************************/
+/**
+ * \brief Collects mortality statistics across iterations for all entries in \ref Species.
+ * 
+ * Mortality statistics are accumulated in species_Update_Kills(). stat_Collect_SMort should 
+ * be called after every iteration to add the iteration to the simulation statistics.
+ * 
+ * \sideeffect \ref _Smort will be modified according to the last iteration's mortality stats.
+ * 
+ * \sa species_Update_Kills().
+ * 
+ * \ingroup STATISTICS
+ */
 void stat_Collect_SMort ( void ) {
-/* accumulated for the entire model run within
-   Species_Update_Kills(), then collected
-   here to compare among iterations.
-
-   5/20/01
-
-*/
    SppIndex sp;
    IntS age;
 
@@ -833,10 +524,17 @@ void stat_Collect_SMort ( void ) {
 
 }
 
-/***********************************************************/
+/**
+ * \brief Prints mortality statistics to the file specified in Globals.mort.fp_year.
+ * 
+ * This function Will create the header and all entries in the yearly mortality output
+ * file. The statistics output are those specified in mortflags.in.
+ * 
+ * \ingroup STATISTICS
+ */
 void stat_Output_YrMorts( void ) {
 
-  FILE *f = Globals.mort.fp_year;
+  FILE *f = Globals->mort.fp_year;
   IntS age;
   GrpIndex rg;
   SppIndex sp;
@@ -867,7 +565,7 @@ void stat_Output_YrMorts( void ) {
   fprintf(f,"\n");
 
   /* print one line of kill frequencies per age */
-  for(age=0; age < Globals.Max_Age; age++) {
+  for(age=0; age < Globals->Max_Age; age++) {
     fprintf(f,"%d", age+1);
     if (MortFlags.group) {
       ForEachGroup(rg){
@@ -891,7 +589,14 @@ void stat_Output_YrMorts( void ) {
   CloseFile(&f);
 }
 
-/***********************************************************/
+/**
+ * \brief Outputs all mortality statistics.
+ * 
+ * The file they are printed to is denoted by \ref Parm_name().
+ * The statistics printed are those denoted in the mortflags.in file.
+ * 
+ * \ingroup STATISTICS
+ */
 void stat_Output_AllMorts( void) {
   FILE *f;
   IntS age;
@@ -927,7 +632,7 @@ void stat_Output_AllMorts( void) {
   fprintf(f,"\n");
 
   /* print one line of kill frequencies per age */
-  for(age=0; age < Globals.Max_Age; age++) {
+  for(age=0; age < Globals->Max_Age; age++) {
   fprintf(f,"%d", age+1);
   if (MortFlags.group) {
       ForEachGroup(rg)
@@ -948,247 +653,6 @@ void stat_Output_AllMorts( void) {
   CloseFile(&f);
 }
 
-
-//This function will create individual grid cell output file and copy values to calculate for calculating grid cell avg values
-/***********************************************************/
-void stat_Output_AllBmassAvg() {
-	  char buf[1024], tbuf[80], sep = BmassFlags.sep;
-	  IntS yr;
-	  GrpIndex rg;
-	  SppIndex sp;
-	  FILE *f;
-
-	  if (!BmassFlags.summary) return;
-
-	  f = OpenFile( Parm_name( F_BMassAvg), "w");
-
-	  buf[0]='\0';
-
-	  if (BmassFlags.header) {
-	    _make_header(buf);
-	    fprintf(f, "%s", buf);
-	  }
-
-	  for( yr=1; yr<= Globals.runModelYears; yr++) {
-	    *buf = '\0';
-	    if (BmassFlags.yr)
-	      sprintf(buf, "%d%c", yr, sep);
-
-	    if (BmassFlags.dist) {
-	      sprintf(tbuf, "%ld%c", _Dist.s[yr-1].nobs, sep);
-	      _Dist_grid_cell.s[yr-1].nobs = _Dist.s[yr-1].nobs;
-	      strcat(buf, tbuf);
-	    }
-
-		if (BmassFlags.ppt)
-		{
-			RealF avg = _get_avg(&_Ppt.s[yr - 1]);
-			RealF std = _get_std(&_Ppt.s[yr - 1]);
-			sprintf(tbuf, "%f%c%f%c", avg, sep, std, sep);
-			copyStruct(avg, std, &_Ppt_grid_cell.s[yr - 1]);
-			strcat(buf, tbuf);
-		}
-
-		if (BmassFlags.pclass)
-		{
-			sprintf(tbuf, "\"NA\"%c", sep);
-			strcat(buf, tbuf);
-		}
-
-		if (BmassFlags.tmp)
-		{
-			RealF avg = _get_avg(&_Temp.s[yr - 1]);
-			RealF std = _get_std(&_Temp.s[yr - 1]);
-			sprintf(tbuf, "%f%c%f%c", avg, sep, std, sep);
-			copyStruct(avg,std, &_Temp_grid_cell.s[yr - 1]);
-			strcat(buf, tbuf);
-		}
-
-		if (BmassFlags.grpb)
-		{
-			ForEachGroup(rg)
-			{
-				RealF avg = _get_avg(&_Grp[rg].s[yr - 1]);
-				sprintf(tbuf, "%f%c", avg, sep);
-				copyStruct(avg,0.0, &_Grp_grid_cell[rg].s[yr - 1]);
-				strcat(buf, tbuf);
-
-				if (BmassFlags.size)
-				{
-					RealF sizeAvg = _get_avg(&_Gsize[rg].s[yr - 1]);
-					sprintf(tbuf, "%f%c",sizeAvg , sep);
-					copyStruct(sizeAvg,0.0,&_Gsize_grid_cell[rg].s[yr - 1]);
-					strcat(buf, tbuf);
-				}
-
-				if (BmassFlags.pr)
-				{
-					RealF prAvg = _get_avg(&_Gpr[rg].s[yr - 1]);
-					RealF std = _get_std(&_Gpr[rg].s[yr - 1]);
-					sprintf(tbuf, "%f%c%f%c", prAvg, sep,std , sep);
-					copyStruct(prAvg,std,&_Gpr_grid_cell[rg].s[yr - 1]);
-					strcat(buf, tbuf);
-				}
-        if (BmassFlags.wildfire)
-				{
-					double wfsum = _Gwf->wildfire[yr-1];
-					sprintf(tbuf, "%f%c", wfsum, sep);
-					strcat(buf, tbuf);
-				}
-        if (BmassFlags.prescribedfire)
-				{
-					double pfsum = _Gwf->prescribedFire[rg][yr-1];
-					sprintf(tbuf, "%f%c", pfsum, sep);
-					strcat(buf, tbuf);
-				}
-			}
-		}
-
-
-		if (BmassFlags.sppb)
-		{
-			ForEachSpecies(sp)
-			{
-				RealF spAvg = _get_avg(&_Spp[sp].s[yr - 1]);
-				sprintf(tbuf, "%f%c", spAvg, sep);
-				copyStruct(spAvg,0.0,&_Spp_grid_cell[sp].s[yr - 1]);
-				strcat(buf, tbuf);
-
-				if (BmassFlags.indv)
-				{
-					RealF indvAvg = _get_avg(&_Indv[sp].s[yr - 1]);
-					sprintf(tbuf, "%f%c", indvAvg, sep);
-					copyStruct(indvAvg,0.0,&_Indv_grid_cell[sp].s[yr - 1]);
-					strcat(buf, tbuf);
-				}
-
-			}
-		}
-
-	    fprintf( f, "%s\n", buf);
-	  }  /* end of foreach year */
-	  CloseFile(&f);
-
-}
-
-//This function will create grid cell avg values output file
-void stat_Output_AllCellAvgBmass(const char * filename)
-{
-
-	char buf[1024], tbuf[80], sep = BmassFlags.sep;
-	IntS yr;
-	GrpIndex rg;
-	SppIndex sp;
-	FILE *f;
-
-	if (!BmassFlags.summary)
-		return;
-
-	f = OpenFile(filename, "w");
-
-	buf[0] = '\0';
-
-	if (BmassFlags.header)
-	{
-		_make_header(buf);
-		fprintf(f, "%s", buf);
-	}
-
-	for (yr = 1; yr <= Globals.runModelYears; yr++)
-	{
-
-		*buf = '\0';
-		if (BmassFlags.yr)
-			sprintf(buf, "%d%c", yr, sep);
-
-		if (BmassFlags.dist)
-		{
-			sprintf(tbuf, "%ld%c", _Dist_grid_cell.s[yr - 1].nobs, sep);
-			strcat(buf, tbuf);
-		}
-
-		if (BmassFlags.ppt)
-		{
-			sprintf(tbuf, "%f%c%f%c",
-					_get_gridcell_avg(&_Ppt_grid_cell.s[yr - 1]), sep,
-					_get_gridcell_std(&_Ppt_grid_cell.s[yr - 1]), sep);
-			strcat(buf, tbuf);
-		}
-
-		if (BmassFlags.pclass)
-		{
-			sprintf(tbuf, "\"NA\"%c", sep);
-			strcat(buf, tbuf);
-		}
-
-		if (BmassFlags.tmp)
-		{
-			sprintf(tbuf, "%f%c%f%c",
-					_get_gridcell_avg(&_Temp_grid_cell.s[yr - 1]), sep,
-					_get_gridcell_std(&_Temp_grid_cell.s[yr - 1]), sep);
-			strcat(buf, tbuf);
-		}
-
-		if (BmassFlags.grpb)
-		{
-			ForEachGroup(rg)
-			{
-				sprintf(tbuf, "%f%c", _get_gridcell_avg(&_Grp_grid_cell[rg].s[yr - 1]), sep);
-				strcat(buf, tbuf);
-
-				if (BmassFlags.size)
-				{
-					sprintf(tbuf, "%f%c", _get_gridcell_avg(&_Gsize_grid_cell[rg].s[yr - 1]), sep);
-					strcat(buf, tbuf);
-				}
-
-				if (BmassFlags.pr)
-				{
-					sprintf(tbuf, "%f%c%f%c",
-							_get_gridcell_avg(&_Gpr_grid_cell[rg].s[yr - 1]), sep,
-							_get_gridcell_std(&_Gpr_grid_cell[rg].s[yr - 1]), sep);
-					strcat(buf, tbuf);
-				}
-                                if (BmassFlags.wildfire)
-				{
-					sprintf(tbuf, "%d%c", _get_gridcell_sum(&_Gsize_grid_cell[rg].s[yr - 1]), sep);
-					strcat(buf, tbuf);
-				}
-                                if (BmassFlags.prescribedfire)
-				{
-					sprintf(tbuf, "%f%c", _get_gridcell_avg(&_Gsize_grid_cell[rg].s[yr - 1]), sep);
-					strcat(buf, tbuf);
-				}
-			}
-		}
-
-		if (BmassFlags.sppb)
-		{
-			ForEachSpecies(sp)
-			{
-		        sprintf(tbuf, "%f%c",_get_gridcell_avg( &_Spp_grid_cell[sp].s[yr-1]), sep);
-		        strcat( buf, tbuf);
-
-				if (BmassFlags.indv)
-				{
-		          sprintf(tbuf, "%f%c", _get_gridcell_avg( &_Indv_grid_cell[sp].s[yr-1]), sep);
-		          strcat( buf, tbuf);
-				}
-
-			}
-		}
-
-		fprintf(f, "%s\n", buf);
-	} /* end of foreach year */
-	CloseFile(&f);
-
-}
-
-
-
-
-
-
 /***********************************************************/
 void stat_Output_AllBmass(void) {
 
@@ -1205,25 +669,25 @@ void stat_Output_AllBmass(void) {
   buf[0]='\0';
 
   if (BmassFlags.header) {
-	_make_header_with_std(buf);
+	make_header_with_std(buf);
     fprintf(f, "%s", buf);
   }
 
-  for( yr=1; yr<= Globals.runModelYears; yr++) {
+  for( yr=1; yr<= SuperGlobals.runModelYears; yr++) {
     *buf = '\0';
     if (BmassFlags.yr)
       sprintf(buf, "%d%c", yr, sep);
 
     if (BmassFlags.dist) {
-      sprintf(tbuf, "%ld%c", _Dist.s[yr-1].nobs,
+      sprintf(tbuf, "%ld%c", _Dist->s[yr-1].nobs,
               sep);
       strcat(buf, tbuf);
     }
 
     if (BmassFlags.ppt) {
       sprintf(tbuf, "%f%c%f%c",
-              _get_avg(&_Ppt.s[yr-1]), sep,
-              _get_std(&_Ppt.s[yr-1]), sep);
+              _get_avg(&_Ppt->s[yr-1]), sep,
+              _get_std(&_Ppt->s[yr-1]), sep);
       strcat( buf, tbuf);
     }
 
@@ -1234,8 +698,8 @@ void stat_Output_AllBmass(void) {
 
     if (BmassFlags.tmp) {
       sprintf(tbuf, "%f%c%f%c",
-              _get_avg(&_Temp.s[yr-1]), sep,
-              _get_std(&_Temp.s[yr-1]), sep);
+              _get_avg(&_Temp->s[yr-1]), sep,
+              _get_std(&_Temp->s[yr-1]), sep);
       strcat( buf, tbuf);
     }
 
@@ -1275,7 +739,7 @@ void stat_Output_AllBmass(void) {
 
 		if (BmassFlags.sppb)
 		{
-			for ((sp) = 0; (sp) < Globals.sppCount - 1; (sp)++)
+			for ((sp) = 0; (sp) < Globals->sppCount - 1; (sp)++)
 			{
 				sprintf(tbuf, "%f%c", _get_avg(&_Spp[sp].s[yr - 1]), sep);
 				strcat(buf, tbuf);
@@ -1311,7 +775,7 @@ void stat_Output_AllBmass(void) {
 
 
 /***********************************************************/
-void stat_Output_Seed_Dispersal(const char * filename, const char sep, Bool makeHeader) {
+void stat_Output_Seed_Dispersal(const char * filename, const char sep) {
 	//do stuff...
 	char buf[1024], tbuf[80];
 	IntS yr;
@@ -1320,16 +784,16 @@ void stat_Output_Seed_Dispersal(const char * filename, const char sep, Bool make
 
 	f = OpenFile(filename, "w");
 
-	if(makeHeader) {
-		fprintf(f,"Year");
-		ForEachSpecies(sp) {
-			fprintf(f, "%c%s_prob", sep, Species[sp]->name);
-			fprintf(f, "%c%s_std", sep, Species[sp]->name);
-		}
-		fprintf(f,"\n");
+  /* ---------- Make a header for the file --------- */
+	fprintf(f,"Year");
+	ForEachSpecies(sp) {
+		fprintf(f, "%c%s_prob", sep, Species[sp]->name);
+		fprintf(f, "%c%s_std", sep, Species[sp]->name);
 	}
+	fprintf(f,"\n");
+  /* ------------------ END header ----------------- */
 
-	for( yr=1; yr<= Globals.runModelYears; yr++) {
+	for( yr=1; yr<= SuperGlobals.runModelYears; yr++) {
 		*buf = '\0';
 
 		sprintf(buf, "%d%c", yr, sep);
@@ -1345,57 +809,48 @@ void stat_Output_Seed_Dispersal(const char * filename, const char sep, Bool make
 }
 
 
-/***********************************************************/
+/**
+ * \brief returns the average value of an accumulator.
+ * 
+ * This function works, but is deprecated. You can reference the
+ * average directly with p->ave.
+ * 
+ * \param p is a pointer to the \ref accumulators_st.
+ * 
+ * \ingroup STATISTICS_PRIVATE
+ */
 static RealF _get_avg( struct accumulators_st *p) 
 {
 	return p->ave;
 }
 
-/***********************************************************/
+/**
+ * \brief returns the standard deviation of an accumulator.
+ * 
+ * This function works, but is deprecated. You can reference the
+ * standard deviation directly with p->sd.
+ * 
+ * \param p is a pointer to the \ref accumulators_st.
+ * 
+ * \ingroup STATISTICS_PRIVATE
+ */
 static RealF _get_std(struct accumulators_st *p)
 {
 	return p->sd;
 }
 
-
-
-static void copyStruct(RealF val,RealF std_val,struct accumulators_grid_cell_st *p)
-{
-	p->sum = p->sum + val;
-	p->sum_std = p->sum_std + std_val;
-}
-
-/***********************************************************/
-static RealF _get_gridcell_avg(struct accumulators_grid_cell_st *p)
-{
-
-	if (Globals.nCells == 0)
-		return 0.0;
-	RealF avg = (RealF) (p->sum / (double) Globals.nCells);
-	return avg;
-}
-static int _get_gridcell_sum(struct accumulators_grid_cell_st *p)
-{
-
-	if (Globals.nCells == 0)
-		return 0;
-	int sum = (RealF) (p->sum);
-	return sum;
-}
-
-
-/***********************************************************/
-static RealF _get_gridcell_std(struct accumulators_grid_cell_st *p)
-{
-	if (Globals.nCells == 0)
-			return 0.0;
-		RealF avg = (RealF) (p->sum_std / (double) Globals.nCells);
-		return avg;
-}
-
-
-/***********************************************************/
-static void _make_header_with_std( char *buf) {
+/**
+ * \brief prints the header for biomass statistics with standard deviations.
+ * 
+ * This function is called when a header is requested in bmassflags.in.
+ * stat_Output_AllBmass() takes care of calling this function when
+ * requested.
+ * 
+ * \sa _make_header()
+ * 
+ * \ingroup STATISTICS_PRIVATE
+ */
+void make_header_with_std( char *buf) {
 
   char **fields;
   char tbuf[80];
@@ -1403,10 +858,10 @@ static void _make_header_with_std( char *buf) {
   SppIndex sp;
   Int i, fc=0;
   
-  fields = (char **)Mem_Calloc(MAX_OUTFIELDS * 2, sizeof(char *), "_make_header_with_std");
+  fields = (char **)Mem_Calloc(MAX_OUTFIELDS * 2, sizeof(char *), "make_header_with_std");
   
   for (i = 0; i < MAX_OUTFIELDS * 2; i++) {
-      fields[i] = (char *)Mem_Calloc(MAX_FIELDLEN + 1, sizeof(char), "_make_header_with_std");
+      fields[i] = (char *)Mem_Calloc(MAX_FIELDLEN + 1, sizeof(char), "make_header_with_std");
   }
 
   /* Set up headers */
@@ -1479,8 +934,18 @@ static void _make_header_with_std( char *buf) {
     Mem_Free(fields);
 }
 
-/***********************************************************/
-static void _make_header( char *buf) {
+/**
+ * \brief prints the header for biomass statistics without standard deviations.
+ * 
+ * This function is called when a header is requested in bmassflags.in.
+ * stat_Output_AllBmass() takes care of calling this function when
+ * requested.
+ * 
+ * \sa _make_header_with_std()
+ * 
+ * \ingroup STATISTICS_PRIVATE
+ */
+void make_header( char *buf) {
 
   char **fields;
   char tbuf[80];
@@ -1488,10 +953,10 @@ static void _make_header( char *buf) {
   SppIndex sp;
   Int i, fc=0;
 
-  fields = (char **)Mem_Calloc(MAX_OUTFIELDS * 2, sizeof(char *), "_make_header");
+  fields = (char **)Mem_Calloc(MAX_OUTFIELDS * 2, sizeof(char *), "make_header");
   
   for (i = 0; i < MAX_OUTFIELDS * 2; i++) {
-      fields[i] = (char *)Mem_Calloc(MAX_FIELDLEN + 1, sizeof(char), "_make_header");
+      fields[i] = (char *)Mem_Calloc(MAX_FIELDLEN + 1, sizeof(char), "make_header");
   }
   
   /* Set up headers */
