@@ -1,14 +1,12 @@
-/********************************************************/
-/********************************************************/
-/*  Source file: output.c
- *  Type: module
- *  Application: STEPPE - plant community dynamics simulator
- *  Purpose: All functions pertaining to producing output
- *           should go here. */
-/*  History */
-/*     (6/15/2000) -- INITIAL CODING - cwb */
-/********************************************************/
-/********************************************************/
+/**
+ * \file ST_output.c
+ * \brief Outputs mortality or biomass on a yearly time step. 
+ * 
+ * This file differs from \ref ST_stats.c because it does not accumulate values.
+ * It simply prints the values to the given year.
+ * 
+ * \ingroup OUTPUT
+ */
 
 /* =================================================== */
 /*                INCLUDES / DEFINES                   */
@@ -37,13 +35,14 @@ extern SW_MODEL SW_Model;
 
 
 
-/**************************************************************/
-/**************************************************************/
-void output_Bmass_Yearly( Int year ) {
-/*======================================================*/
-/* note that year is only printed, not used as index, so
- * we don't need to decrement to make base0
+/**
+ * \brief Outputs the current year's values to the file denoted in \ref Globals.bmass.fp_year
+ * 
+ * \param year is the year that these values are being printed. This is 1 indexed.
+ * 
+ * \ingroup OUTPUT
  */
+void output_Bmass_Yearly( Int year ) {
   char **fields;
   GrpIndex rg;
   SppIndex sp;
@@ -60,7 +59,7 @@ void output_Bmass_Yearly( Int year ) {
       fields[i] = (char *)Mem_Calloc(MAX_FIELDLEN + 1, sizeof(char), "output_Bmass_Yearly");
   }
   
-  if(Globals.currYear == 1) // At year one we need a header.
+  if(Globals->currYear == 1) // At year one we need a header.
   {
   /* --------- Begin setting up header ------- */
 
@@ -107,18 +106,18 @@ void output_Bmass_Yearly( Int year ) {
       }
     }
     sprintf(filename, "%s%0*d.csv", Parm_name(F_BMassPre),
-                                 Globals.bmass.suffixwidth,
-                                 Globals.currIter);
-    Globals.bmass.fp_year = OpenFile(filename, "a");
+                                 Globals->bmass.suffixwidth,
+                                 Globals->currIter);
+    Globals->bmass.fp_year = OpenFile(filename, "a");
 
     /* Write data line to already opened file */
     for (i=0; i< fc-1; i++) {
-      fprintf(Globals.bmass.fp_year,"%s%c", fields[i], BmassFlags.sep);
+      fprintf(Globals->bmass.fp_year,"%s%c", fields[i], BmassFlags.sep);
     }
 
-    if (i) fprintf(Globals.bmass.fp_year,"%s\n", fields[i]);
-    fflush(Globals.bmass.fp_year);
-    CloseFile(&Globals.bmass.fp_year);
+    if (i) fprintf(Globals->bmass.fp_year,"%s\n", fields[i]);
+    fflush(Globals->bmass.fp_year);
+    CloseFile(&Globals->bmass.fp_year);
 
     fc = 0; //reset fc for first line of data.
   }
@@ -129,7 +128,7 @@ void output_Bmass_Yearly( Int year ) {
   }
 
   if (BmassFlags.dist) {
-    switch (Plot.disturbance) {
+    switch (Plot->disturbance) {
       case NoDisturb: strcpy(s, "None"); break;
       case FecalPat: strcpy(s, "Pat"); break;
       case AntMound: strcpy(s, "Mound"); break;
@@ -140,10 +139,10 @@ void output_Bmass_Yearly( Int year ) {
   }
 
   if (BmassFlags.ppt)
-    sprintf(fields[fc++], "%d", Env.ppt);
+    sprintf(fields[fc++], "%d", Env->ppt);
 
   if (BmassFlags.pclass) {
-    switch (Env.wet_dry) {
+    switch (Env->wet_dry) {
       case Ppt_Norm: strcpy(s, "Normal"); break;
       case Ppt_Wet: strcpy(s, "Wet"); break;
       case Ppt_Dry: strcpy(s, "Dry"); break;
@@ -153,7 +152,7 @@ void output_Bmass_Yearly( Int year ) {
   }
 
   if (BmassFlags.tmp)
-    sprintf(fields[fc++], "%0.1f", Env.temp);
+    sprintf(fields[fc++], "%0.1f", Env->temp);
 
   if (BmassFlags.grpb) {
     if (BmassFlags.wildfire)
@@ -177,18 +176,18 @@ void output_Bmass_Yearly( Int year ) {
     }
   }
   sprintf(filename, "%s%0*d.csv", Parm_name(F_BMassPre),
-                                 Globals.bmass.suffixwidth,
-                                 Globals.currIter);
-  Globals.bmass.fp_year = OpenFile(filename, "a");
+                                 Globals->bmass.suffixwidth,
+                                 Globals->currIter);
+  Globals->bmass.fp_year = OpenFile(filename, "a");
 
   /* Write data line to already opened file */
   for (i=0; i< fc-1; i++) {
-	  fprintf(Globals.bmass.fp_year,"%s%c", fields[i], BmassFlags.sep);
+	  fprintf(Globals->bmass.fp_year,"%s%c", fields[i], BmassFlags.sep);
   }
 
-  if (i) fprintf(Globals.bmass.fp_year,"%s\n", fields[i]);
-  fflush(Globals.bmass.fp_year);
-  CloseFile(&Globals.bmass.fp_year);
+  if (i) fprintf(Globals->bmass.fp_year,"%s\n", fields[i]);
+  fflush(Globals->bmass.fp_year);
+  CloseFile(&Globals->bmass.fp_year);
   
   for (i = 0; i < MAX_OUTFIELDS; i++) {
       Mem_Free(fields[i]);
@@ -199,16 +198,20 @@ void output_Bmass_Yearly( Int year ) {
 }
 
 
-/***********************************************************/
+/**
+ * \brief Outputs the current year's values to the file denoted in \ref Globals.mort.fp_year
+ * 
+ * Prints mortality values. These values are indexed by age at death.
+ * 
+ * \ingroup OUTPUT
+ */
 void output_Mort_Yearly( void ) {
-/*======================================================*/
-
 	IntS age, rg, sp;
 	char filename[FILENAME_MAX];
 
-	sprintf(filename, "%s%0*d.csv", Parm_name(F_MortPre), Globals.mort.suffixwidth, Globals.currIter);
-	Globals.mort.fp_year = OpenFile(filename, "a");
-	FILE *f = Globals.mort.fp_year;
+	sprintf(filename, "%s%0*d.csv", Parm_name(F_MortPre), Globals->mort.suffixwidth, Globals->currIter);
+	Globals->mort.fp_year = OpenFile(filename, "a");
+	FILE *f = Globals->mort.fp_year;
 
 	if (!MortFlags.yearly)
 		return;
@@ -231,7 +234,7 @@ void output_Mort_Yearly( void ) {
 	fprintf(f, "(Estabs)");
 	if (MortFlags.group) {
 		ForEachGroup(rg)
-			fprintf(Globals.mort.fp_year, "%c%d", MortFlags.sep, RGroup[rg]->estabs);
+			fprintf(Globals->mort.fp_year, "%c%d", MortFlags.sep, RGroup[rg]->estabs);
 	}
 	if (MortFlags.species) {
 		ForEachSpecies(sp)
@@ -241,7 +244,7 @@ void output_Mort_Yearly( void ) {
 
 
   /* now print the kill data */
-	for (age = 0; age < Globals.Max_Age; age++) {
+	for (age = 0; age < Globals->Max_Age; age++) {
 		fprintf(f, "%d", age + 1);
 		if (MortFlags.group) {
 			ForEachGroup(rg)
@@ -268,5 +271,5 @@ void output_Mort_Yearly( void ) {
 		fprintf(f, "\n");
 	}
 
-	CloseFile(&Globals.mort.fp_year);
+	CloseFile(&Globals->mort.fp_year);
 }

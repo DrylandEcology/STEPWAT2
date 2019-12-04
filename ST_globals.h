@@ -21,13 +21,12 @@
 
 extern SpeciesType  **Species;
 extern GroupType    **RGroup;
-extern SucculentType  Succulent;
-extern EnvType        Env;
-extern PlotType       Plot;
-extern ModelType      Globals;
+extern SucculentType  *Succulent;
+extern EnvType        *Env;
+extern PlotType       *Plot;
+extern ModelType      *Globals;
 extern BmassFlagsType BmassFlags;
 extern MortFlagsType  MortFlags;
+extern GlobalType     SuperGlobals;
 
-extern Bool UseSeedDispersal;
 extern Bool UseGrid;
-extern Bool DuringSpinup;

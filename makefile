@@ -1,3 +1,5 @@
+CC  	=	gcc
+
 CFLAGS = \
 	-DSQLITE_OMIT_LOAD_EXTENSION \
 	-DSQLITE_THREADSAFE=0 \
@@ -64,7 +66,10 @@ sources_core = \
 	sxw_environs.c \
 	sxw_resource.c \
 	sxw_soilwat.c \
-	sxw_sql.c
+	sxw_sql.c \
+	ST_initialization.c \
+	ST_progressBar.c \
+	ST_seedDispersal.c
 
 sources_test = \
 	sw_src/googletest/googletest/src/gtest-all.cc \
@@ -108,7 +113,7 @@ bint_testing_gridded: stepwat stepwat_test
 cleanall: clean output_clean
 
 .PHONY: clean
-clean: cleanobjs cleanbin
+clean: cleanobjs cleanbin documentation_clean
 
 .PHONY: cleanobjs
 cleanobjs:
@@ -127,3 +132,18 @@ cleanbin:
 output_clean:
 	-@rm -rf testing.sagebrush.master/Output/*
 	-@rm -rf testing.sagebrush.master/Stepwat_Inputs/Output/*
+
+.PHONY : documentation_clean
+documentation_clean : 
+		@rm -rf Documentation/html
+
+.PHONY : documentation
+documentation: 
+		@doxygen doxyfile
+		@if open Documentation/html/index.html; \
+		  then echo "Success"; \
+		  else if echo "Open failed. Attempting fallback method." && xdg-open Documentation/html/index.html; \
+		    then echo "Success"; \
+		    else echo "Failed to open documentation"; \
+		  fi; \
+		fi
