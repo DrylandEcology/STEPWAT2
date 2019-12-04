@@ -1,10 +1,14 @@
-/*
- * ST_sql.c
- *
- *  Created on: Feb 18, 2015
- *      Author: Ryan J. Murphy
+/** 
+ * \file ST_sql.c
+ * \brief A collection of functions that generate an SQL database output file.
+ * 
+ * Using SQLite in C can be intimidating if you aren't familiar with the API. 
+ * You can learn about the API [here](https://www.sqlite.org/cintro.html).
+ * 
+ * \ingroup SQL
+ * \date 18 February 2015
+ * \author Ryan J. Murphy
  */
-
 
 #include <stdio.h>
 #include <string.h>
@@ -12,7 +16,19 @@
 #include "ST_steppe.h"
 #include "ST_globals.h"
 
+/**
+ * \brief A reference to the database object.
+ * 
+ * The database is opened or created in ST_connect(), and a reference is stored here.
+ * 
+ * \ingroup SQL
+ */
 static sqlite3 *db;
+
+/**
+ * \brief A buffer to store SQL statements.
+ * \ingroup SQL
+ */
 static char sql[1024];
 
 static void beginTransaction(void);
@@ -20,14 +36,45 @@ static void endTransaction(void);
 static void prepareStatements(void);
 static void finalizeStatements(void);
 
+/**
+ * \brief The [resource group](\ref GroupType) year row SQL statement.
+ * \ingroup SQL
+ */
 static sqlite3_stmt * stmt_RGroupsYearInfo;
+/**
+ * \brief The [Species](\ref SpeciesType) year row SQL statement.
+ * \ingroup SQL
+ */
 static sqlite3_stmt * stmt_SpeciesYearInfo;
+/**
+ * \brief The [individual](\ref IndivType) SQL statement.
+ * \ingroup SQL
+ */
 static sqlite3_stmt * stmt_Indiv;
+/**
+ * \brief The [individual](\ref IndivType) year row SQL statement.
+ * \ingroup SQL
+ */
 static sqlite3_stmt * stmt_IndivYearInfo;
+/**
+ * \brief The [individual](\ref IndivType) mortality SQL statement.
+ * \ingroup SQL
+ */
 static sqlite3_stmt * stmt_IndivKill;
 
 static void createTables(void);
 
+/**
+ * \brief Creates a connection to the database named \p stdbName
+ * 
+ * \param stdbName is the name of the output file.
+ * 
+ * \sideeffect 
+ *      Opens the database for writing. If no database exists named
+ *      \ref stdbName a file will be created.
+ * 
+ * \ingroup SQL
+ */
 void ST_connect(char *stdbName) {
 	int rc;
 	char name[256] = { 0 };
@@ -49,16 +96,43 @@ void ST_connect(char *stdbName) {
 	createTables();
 }
 
+/**
+ * \brief Disconnects from the database opened in ST_connect()
+ * 
+ * \sideeffect Finalizes the database and closes the reference.
+ * 
+ * \ingroup SQL
+ */
 void ST_disconnect() {
 	finalizeStatements();
 	sqlite3_close(db);
 }
 
+/**
+ * \brief Prepares the database to recieve information.
+ * 
+ * This is equivalent to the `BEGIN TRANSACTION` command in SQL.
+ * This function is called inside of the insertion functions so there
+ * is no need to call in explicitly unless you are writting a new
+ * insertion function.
+ * 
+ * \ingroup SQL
+ */
 static void beginTransaction() {
 	char * sErrMsg = 0;
 	sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, &sErrMsg);
 }
 
+/**
+ * \brief Ends a transaction with the database
+ * 
+ * This is equivalent to the `END TRANSACTION` command in SQL.
+ * This function is called inside of the insertion functions so there
+ * is no need to call in explicitly unless you are writting a new
+ * insertion function.
+ * 
+ * \ingroup SQL
+ */
 static void endTransaction() {
 	char * sErrMsg = 0;
 	sqlite3_exec(db, "END TRANSACTION", NULL, NULL, &sErrMsg);
@@ -73,6 +147,17 @@ static int callback(void *NotUsed, int argc, char **argv, char **azColName) {
 	return 0;
 }
 
+/**
+ * \brief Determines if an SQL interaction was successfull.
+ * 
+ * \param rc is the code returned when executing an SQL instruction.
+ * \param zErrMsg is the string to print if \p rc indicates that there
+ *                was an error
+ * 
+ * \sideeffect If an error occured \p zErrMsg is printed to stdout.
+ * 
+ * \ingroup SQL
+ */
 static void sqlcheck(int rc, char *zErrMsg) {
 	if (rc != SQLITE_OK) {
 		fprintf(stderr, "SQL error: %s\n", zErrMsg);
@@ -82,6 +167,15 @@ static void sqlcheck(int rc, char *zErrMsg) {
 	}
 }
 
+/**
+ * \brief Prepares the database to receive \ref RGROUP, \ref SPECIES, \ref INDIVIDUAL and \ref MORTALITY information.
+ * 
+ * This must be called before the actual data is inserted.
+ * 
+ * \ingroup SQL
+ * 
+ * \sa finalizeStatements() which is the sister function to prepareStatements()
+ */
 static void prepareStatements() {
 	sql[0] = 0;
 
@@ -101,6 +195,15 @@ static void prepareStatements() {
 	sqlite3_prepare_v2(db, sql, 1024, &stmt_IndivKill, NULL);
 }
 
+/**
+ * \brief finalizes the insertion of \ref RGROUP, \ref SPECIES, \ref INDIVIDUAL, and \ref MORTALITY data.
+ * 
+ * This must be called following the insertion of data.
+ * 
+ * \ingroup SQL
+ * 
+ * \sa prepareStatements() which is the sister function to finalizeStatements()
+ */
 static void finalizeStatements() {
 	sqlite3_finalize(stmt_RGroupsYearInfo);
 	sqlite3_finalize(stmt_SpeciesYearInfo);
@@ -108,8 +211,18 @@ static void finalizeStatements() {
 	sqlite3_finalize(stmt_IndivKill);
 }
 
+/** 
+ * \brief Inserts \ref MORTALITY information pertaining to a single \ref INDIVIDIAL into the database.
+ * 
+ * \param IndivID the unique ID of the [individual](\ref IndivType).
+ * \param KillTypeID the \ref MortalityType code that killed the [individual](\ref IndivType).
+ * 
+ * \sideeffect The database is populated with the given data.
+ * 
+ * \ingroup SQL
+ */
 void insertIndivKill(int IndivID, int KillTypeID) {
-	sqlite3_bind_int(stmt_IndivKill, 1, Globals.currYear);
+	sqlite3_bind_int(stmt_IndivKill, 1, Globals->currYear);
 	sqlite3_bind_int(stmt_IndivKill, 2, KillTypeID);
 	sqlite3_bind_int(stmt_IndivKill, 3, IndivID);
 
@@ -118,6 +231,34 @@ void insertIndivKill(int IndivID, int KillTypeID) {
 	sqlite3_reset(stmt_IndivKill);
 }
 
+/**
+ * \brief Insert a row into the database for a given [individual](\ref IndivType).
+ * 
+ * \param Year is the year that this data was collected.
+ * \param IndivID is the unique ID of the [individual](\ref IndivType).
+ * \param MortalityTypeID is the \ref MortalityType code that killed the [individual](\ref IndivType).
+ * \param age is the age of the [individual](\ref IndivType).
+ * \param mmExtraRes is the amount of extra resources, in millimeters, that the [individual](\ref IndivType) recieved.
+ * \param SlowYrs are the number of years that the [individual](\ref IndivType) has been experiencing slow growth.
+ * \param YrsNegPR are the number of years that the [individual](\ref IndivType)'s PR has been negative.
+ * \param Killed is treated as a bool. TRUE if the [individual](\ref IndivType) was killed this year.
+ * \param RelSize is the relative size of the [individual](\ref IndivType).
+ * \param GrpResProp is the proportion of the [group](\ref RGROUP)'s total resources used by this [individual](\ref IndivType).
+ * \param ResRequired is the amount of resources this [individual](\ref IndivType) requires to grow.
+ * \param ResAvail is the amount to resources availible to this [individual](\ref IndivType).
+ * \param ResExtra is the amount of resources that this [individual](\ref IndivType) recieved which it did not require.
+ * \param PR is the PR of this [individual](\ref IndivType).
+ * \param GrowthRate is the intrinsic growth rate of this [individual](\ref IndivType).
+ * \param ProbVeggrow is the probability that this [individual](\ref IndivType) produces vegetative growth.
+ * 
+ * \sideeffect The database will be populated with this information.
+ * 
+ * \ingroup SQL
+ * 
+ * It would be a pain to pull out this much information from an [individual](\ref IndivType) every time, so instead use
+ * insertIndivYearInfo() which takes a pointer to an individual and and pulls the necessary information then calls this 
+ * function.
+ */
 static void insertIndivYearInfoRow(int Year, int IndivID, int MortalityTypeID, int age, int mmExtraRes, int SlowYrs, int YrsNegPR, int Killed, float RelSize, float GrpResProp, float ResRequired, float ResAvail, float ResExtra, float PR, float GrowthRate, float ProbVeggrow) {
 	sqlite3_bind_int(stmt_IndivYearInfo, 1, Year);
 	sqlite3_bind_int(stmt_IndivYearInfo, 2, IndivID);
@@ -140,11 +281,40 @@ static void insertIndivYearInfoRow(int Year, int IndivID, int MortalityTypeID, i
 	sqlite3_reset(stmt_IndivYearInfo);
 }
 
+/**
+ * \brief Inserts an [individual](\ref IndivType)'s information into the database.
+ * 
+ * \param ind is a pointer to an [individual](\ref IndivType).
+ * 
+ * \sideeffect The [individual](\ref IndivType)'s information will be inserted into the database.
+ * 
+ * \sa insertIndivYearInfoRow() which is called in this function to bind the data.
+ * 
+ * \ingroup SQL
+ */
 void insertIndivYearInfo(IndivType *ind) {
 	//Take off of age because this happens after rgroup_IncrAges remove if you put before.
-	insertIndivYearInfoRow(Globals.currYear, ind->id, ind->killedby, (ind->age - 1), ind->mm_extra_res, ind->slow_yrs, ind->yrs_neg_pr, ind->killed, ind->relsize, ind->grp_res_prop, ind->res_required, ind->res_avail, ind->res_extra, ind->pr, ind->growthrate, ind->prob_veggrow);
+	insertIndivYearInfoRow(Globals->currYear, ind->id, ind->killedby, (ind->age - 1), ind->mm_extra_res, ind->slow_yrs, ind->yrs_neg_pr, ind->killed, ind->relsize, ind->grp_res_prop, ind->res_required, ind->res_avail, ind->res_extra, ind->pr, ind->growthrate, ind->prob_veggrow);
 }
 
+/**
+ * \brief Inserts big-picture information about an [individual](\ref IndivType) as a new row.
+ * 
+ * \param IndivID is the unique ID of the [individual](\ref IndivType).
+ * \param CreatedYear is the year in which the [individual](\ref IndivType) established.
+ * \param SpeciesID is the [index](\ref SppIndex) in \ref Species of the species to which this [individual](\ref IndivType)
+ *                  belongs.
+ * \param RGroupID is the [index](\ref GrpIndex) in \ref RGroup of the resource group to which this 
+ *                 [individual](\ref IndivType) belongs.
+ * \param Iteration is the simulation's current iteration.
+ * 
+ * \sideeffect The given information is inserted into the database.
+ * 
+ * Calling a function with this many parameters would be a pain. Instead, call insertIndiv() which takes
+ * a pointer to an [individual](\ref IndivType), extracts the parameters, then calls this function.
+ * 
+ * \ingroup SQL
+ */
 static void insertIndivRow(int IndivID, int Iteration, int CreatedYear, int SpeciesID, int RGroupID) {
 	sqlite3_bind_int(stmt_Indiv, 1, IndivID);
 	sqlite3_bind_int(stmt_Indiv, 2, Iteration);
@@ -156,10 +326,43 @@ static void insertIndivRow(int IndivID, int Iteration, int CreatedYear, int Spec
 	sqlite3_reset(stmt_Indiv);
 }
 
+/**
+ * \brief Inserts big-picture information about an [individual](\ref IndivType) as a row in the database.
+ * 
+ * \param ind is a pointer to an \ref IndivType.
+ * 
+ * \sideeffect Information about the [individual](\ref IndivType) will be inserted into the database.
+ * 
+ * \sa insertIndivRow() which is called by this function to bind the SQL data.
+ * 
+ * \ingroup SQL
+ */
 void insertIndiv(IndivType *ind) {
-	insertIndivRow(ind->id, Globals.currIter, Globals.currYear, ind->myspecies+1, Species[ind->myspecies]->res_grp+1);
+	insertIndivRow(ind->id, Globals->currIter, Globals->currYear, ind->myspecies+1, Species[ind->myspecies]->res_grp+1);
 }
 
+/**
+ * \brief Insert information on a given [species](\ref SpeciesType).
+ * 
+ * \param Year is the year in which the data was collected.
+ * \param Iteration is the current iteration.
+ * \param SpeciesID is the [index](\ref SppIndex) is \ref Species of the given [species](\ref SpeciesType).
+ * \param EstabCount is the number of established [individuals](\ref IndivType) in the [species](\ref SpeciesType).
+ * \param Estabs is the number of [individuals](\ref IndivType) that established in the current year.
+ * \param RelSize is the relative size of the [species](\ref SpeciesType).
+ * \param ExtraGrowth is the amount of superfluous growth this [species](\ref SpeciesType) experienced in the current year.
+ * \param ReceivedProb is the probability that this [species](\ref SpeciesType) received seeds from an adjacent plot.
+ * \param AllowGrowth is treaded as a \ref Bool. TRUE if this [species](\ref SpeciesType) was allowed to grow this year.
+ * \param sdSGerm I'm not sure what this is. It appears to be something regarding seed dispersal which is currently
+ *                an [open issue](https://github.com/DrylandEcology/STEPWAT2/issues/309) on GitHub.
+ * 
+ * \sideeffect The provided parameters will be inserted into the database.
+ * 
+ * Providing this many parameters is a waste of type. Instead call insertSpecieYearInfo() which takes an [index](\ref SppIndex)
+ * in \ref Species, exracts the information, then calls this function.
+ * 
+ * \ingroup SQL
+ */
 static void insertSpeciesYearInfoRow(int Year, int Iteration, int SpeciesID, int EstabCount, int Estabs, float RelSize, float ExtraGrowth, float ReceivedProb, int AllowGrowth, int sdSGerm) {
 	sqlite3_bind_int(stmt_SpeciesYearInfo, 1, Year);
 	sqlite3_bind_int(stmt_SpeciesYearInfo, 2, Iteration);
@@ -177,11 +380,49 @@ static void insertSpeciesYearInfoRow(int Year, int Iteration, int SpeciesID, int
 	sqlite3_reset(stmt_SpeciesYearInfo);
 }
 
+/**
+ * \brief Insert a [species](\ref SpeciesType)'s information into the database.
+ * 
+ * \param s is the [index](\ref SppIndex) in \ref Species of the [species](\ref SpeciesType) to insert.
+ * 
+ * \sideeffect Information about the species will be inserted into the database.
+ * 
+ * \sa insertSpeciesYearInfoRow() which is responsible for binding the data.
+ * 
+ * \ingroup SQL
+ */
 void insertSpecieYearInfo(SppIndex s) {
 	SpeciesType *sp = Species[s];
-	insertSpeciesYearInfoRow(Globals.currYear, Globals.currIter, s+1, sp->est_count, sp->estabs, getSpeciesRelsize(s), sp->extragrowth, sp->received_prob, sp->allow_growth, sp->sd_sgerm);
+	insertSpeciesYearInfoRow(Globals->currYear, Globals->currIter, s+1, sp->est_count, sp->estabs, getSpeciesRelsize(s), sp->extragrowth, sp->received_prob, sp->allow_growth, sp->sd_sgerm);
 }
 
+/**
+ * \brief Insert a [resource group](\ref GroupType)'s information into the database.
+ * 
+ * \param Year is the year in the simulation which generated the information.
+ * \param Iteration is the iteration in the simulation.
+ * \param RGroupID is the [index](\ref GrpIndex) in \ref RGroup of the given [group](\ref GroupType).
+ * \param Estabs is the number of established [individuals](\ref IndivType) in the [group](\ref GroupType).
+ * \param KillYr is the last year in the simulation that had a disturbance.
+ * \param YrsNegPR is the number of years that the [resource group](\ref GroupType) has experienced negative PR.
+ * \param mmExtraRes is the millimeters of extra resources the [resource group](\ref GroupType) has received this year.
+ * \param ResRequired is the amount of resources required to sustain all individuals in the [resource group](\ref GroupType).
+ * \param ResAvail is the amount of resources available to the [resource group](\ref GroupType) in the current year.
+ * \param ResExtra is the amount of extra resources available to the [resource group](\ref GroupType) in the current year.
+ * \param PR is the ratio of resources required to resources available.
+ * \param RelSize is the relative size of the [resource group](\ref GroupType).
+ * \param EstSppCount is the number of [species](\ref SpeciesType) in the [resource group](\ref GroupType) with at least
+ *        one [individual](\ref IndivType) established.
+ * \param Extirpated is TRUE if this [resource group](\ref GroupType) has been killed and prevented from regenerating.
+ * \param RegenOk is only for annuals. TRUE if the [resource group](\ref GroupType) is allowed to regenerate.
+ * 
+ * Filling in all of these parameters would be a pain. Instead call insertRGroupYearInfo() which only takes a group pointer
+ * and extracts all of these parameters.
+ * 
+ * \sideeffect A row of resource group data will be inserted into the database.
+ * 
+ * \ingroup SQL
+ */
 static void insertRGroupYearInfoRow(int Year, int Iteration, int RGroupID, int Estabs, int KillYr, int YrsNegPR, float mmExtraRes, float ResRequired, float ResAvail, float ResExtra, float PR, float RelSize, int EstSppCount, int Extirpated, int RegenOk) {
 	sqlite3_bind_int(stmt_RGroupsYearInfo, 1, Year);
 	sqlite3_bind_int(stmt_RGroupsYearInfo, 2, Iteration);
@@ -204,11 +445,27 @@ static void insertRGroupYearInfoRow(int Year, int Iteration, int RGroupID, int E
 	sqlite3_reset(stmt_RGroupsYearInfo);
 }
 
+/**
+ * \brief Insert a row of [resource group](\ref GroupType) information into the database.
+ * 
+ * \param g is the [index](\ref GrpIndex) in \ref RGroup of the requested resource group.
+ * 
+ * \ingroup SQL
+ * 
+ * \sideeffect A row of resouce group data will be inserted into the database.
+ * 
+ * \sa insertRGroupYearInfoRow() which is called by this function to bind the data.
+ */
 void insertRGroupYearInfo(GrpIndex g) {
 	GroupType *rg = RGroup[g];
-	insertRGroupYearInfoRow(Globals.currYear, Globals.currIter, g+1, rg->estabs, rg->killyr, rg->yrs_neg_pr, rg->mm_extra_res, rg->res_required, rg->res_avail, rg->res_extra, rg->pr, getRGroupRelsize(g), rg->est_count, rg->extirpated, rg->regen_ok);
+	insertRGroupYearInfoRow(Globals->currYear, Globals->currIter, g+1, rg->estabs, rg->killyr, rg->yrs_neg_pr, rg->mm_extra_res, rg->res_required, rg->res_avail, rg->res_extra, rg->pr, getRGroupRelsize(g), rg->est_count, rg->extirpated, rg->regen_ok);
 }
 
+/**
+ * \brief Inserts all [resource groups](\ref RGroup) into the database.
+ * 
+ * \ingroup SQL
+ */
 static void insertRgroups(void) {
 	int rc;
 	GrpIndex g;
@@ -228,6 +485,11 @@ static void insertRgroups(void) {
 	endTransaction();
 }
 
+/**
+ * \brief Inserts information for all [species](\ref Species) into the database.
+ * 
+ * \ingroup SQL
+ */
 static void insertSpecies(void) {
 	int rc;
 	GrpIndex s;
@@ -259,6 +521,14 @@ static void insertSpecies(void) {
 	endTransaction();
 }
 
+/**
+ * \brief Inserts general information about the simulation.
+ * 
+ * As of 9/9/19 this information is the number of years, number of iterations, the 
+ * random seed, the number of groups, the number of species, and the plot size.
+ * 
+ * \ingroup SQL
+ */
 static void insertInfo(void) {
 	int rc;
 	char *zErrMsg = 0;
@@ -267,13 +537,21 @@ static void insertInfo(void) {
 	beginTransaction();
 	sprintf(sql,
 			"INSERT INTO info (Years, Iterations, Seed, RGroups, Species,  PlotSize) VALUES (%d, %d, %d, %d, %d, %f);",
-			Globals.runModelYears, Globals.runModelIterations, (int) Globals.randseed,
-			Globals.grpCount, Globals.sppCount, Globals.plotsize);
+			SuperGlobals.runModelYears, SuperGlobals.runModelIterations, (int) SuperGlobals.randseed,
+			Globals->grpCount, Globals->sppCount, Globals->plotsize);
 	rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
 	sqlcheck(rc, zErrMsg);
 	endTransaction();
 }
 
+/**
+ * \brief Insert the index values of the temperature classes.
+ * 
+ * These values are hard coded, and I'm not sure they are correct. This should NOT
+ * be used as a reference. Instead see the \ref TempClass enumerator.
+ * 
+ * \ingroup SQL
+ */
 static void insertTempClass(void) {
 	int rc;
 	char *zErrMsg = 0;
@@ -292,6 +570,14 @@ static void insertTempClass(void) {
 	endTransaction();
 }
 
+/**
+ * \brief Insert the integer values assigned to each \ref DisturbClass.
+ * 
+ * This function is hard coded and does not actually reference the \ref DisturbClass enum.
+ * Therefore, I would not use it as a reference.
+ * 
+ * \ingroup SQL
+ */
 static void insertDisturbClass(void) {
 	int rc;
 	char *zErrMsg = 0;
@@ -313,6 +599,14 @@ static void insertDisturbClass(void) {
 	endTransaction();
 }
 
+/**
+ * \brief Insert the mapping of depth classes to integers.
+ * 
+ * This value is hard coded which means it could be wrong. Instead see the \ref DepthClass
+ * enumerator.
+ * 
+ * \ingroup SQL
+ */
 static void insertDepthClass(void) {
 	int rc;
 	char *zErrMsg = 0;
@@ -337,6 +631,14 @@ static void insertDepthClass(void) {
 	endTransaction();
 }
 
+/**
+ * \brief Insert the mapping of \ref MortalityType to integers.
+ * 
+ * This mapping is hard coded so do not assume it is correct. Instead reference
+ * [the enum](\ref MortalityType) directly.
+ * 
+ * \ingroup SQL
+ */
 static void insertKillTypes(void) {
 	int rc;
 	char *zErrMsg = 0;
@@ -385,6 +687,21 @@ static void insertKillTypes(void) {
 	endTransaction();
 }
 
+/**
+ * \brief Creates the various tables that comprise the database. Consider this the main function.
+ * 
+ * These include the [species](\ref SpeciesType), [resource group](\ref GroupType) and [individual](\ref IndivType) tables plus
+ * the enumerator mappings (I wouldn't trust the enumerator mappings because they are hard coded).
+ * 
+ * This function takes care of inserting everything EXCEPT the [rgroup](\ref GroupType), [species](\ref SpeciesType)
+ * and [individual](\ref IndivType) row information.
+ * 
+ * This function also assumes ST_connect() has already been called to initialize [the database](\ref db)
+ * 
+ * \sideeffect the tables are created and (with the exception of row information) populated.
+ * 
+ * \ingroup SQL
+ */
 static void createTables(void) {
 	int rc;
 	char *zErrMsg = 0;

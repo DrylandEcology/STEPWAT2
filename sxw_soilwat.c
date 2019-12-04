@@ -60,13 +60,7 @@
 extern SW_SITE SW_Site;
 extern SW_MODEL SW_Model;
 extern SW_VEGPROD SW_VegProd;
-
-/*********** Local/Module Variable Declarations ************/
-/***********************************************************/
-extern RealD *_roots_max;
-extern RealD _prod_litter[MAX_MONTHS];
-extern RealD * _prod_bmass;
-extern RealD * _prod_pctlive;
+extern SXW_resourceType* SXWResources;
 
 /*************** Local Function Declarations ***************/
 /***********************************************************/
@@ -97,7 +91,7 @@ void _sxw_sw_setup (RealF sizes[]) {
 
 void _sxw_sw_run(void) {
 /*======================================================*/
-	SW_Model.year = SW_Model.startyr + Globals.currYear-1;
+	SW_Model.year = SW_Model.startyr + Globals->currYear-1;
 	SW_CTL_run_current_year();
 }
 
@@ -105,9 +99,9 @@ void _sxw_sw_clear_transp(void) {
 /*======================================================*/
 	int k;
 
-	Mem_Set(SXW.transpTotal, 0, SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
+	Mem_Set(SXW->transpTotal, 0, SXW->NPds * SXW->NSoLyrs * sizeof(RealD));
 	ForEachVegType(k) {
-		Mem_Set(SXW.transpVeg[k], 0, SXW.NPds * SXW.NSoLyrs * sizeof(RealD));
+		Mem_Set(SXW->transpVeg[k], 0, SXW->NPds * SXW->NSoLyrs * sizeof(RealD));
 	}
 }
 
@@ -130,7 +124,7 @@ static void _update_transp_coeff(void) {
         ForEachGroup(g) {
           if (RGroup[g]->veg_prod_type == SW_TREES)
               if (getNTranspLayers(SW_TREES))
-                  y->transp_coeff[SW_TREES] += (RealF) _roots_max[Ilg(l, g)] * RGroup[g]->rgroupFractionOfVegTypeBiomass;
+                  y->transp_coeff[SW_TREES] += (RealF) SXWResources->_roots_max[Ilg(l, g)] * RGroup[g]->rgroupFractionOfVegTypeBiomass;
         }
         sum[SW_TREES] += y->transp_coeff[SW_TREES];
     }
@@ -141,11 +135,11 @@ static void _update_transp_coeff(void) {
         ForEachGroup(g)
         if (RGroup[g]->veg_prod_type == SW_SHRUB) {
             if (getNTranspLayers(SW_SHRUB))
-                y->transp_coeff[SW_SHRUB] += (RealF) _roots_max[Ilg(l, g)] * RGroup[g]->rgroupFractionOfVegTypeBiomass;
+                y->transp_coeff[SW_SHRUB] += (RealF) SXWResources->_roots_max[Ilg(l, g)] * RGroup[g]->rgroupFractionOfVegTypeBiomass;
 
             /*printf("* lyr=%d, group=%s(%d), type=%d, tl=%d, rootmax=%f, relsize2=%f, trco=%f\n",
               l, RGroup[g]->name, g, RGroup[g]->veg_prod_type, getNTranspLayers(RGroup[g]->veg_prod_type),
-              _roots_max[Ilg(l, g)], RGroup[g]->relsize, y->transp_coeff[SW_SHRUB]);
+              SXWResources->_roots_max[Ilg(l, g)], getRGroupRelsize(g), y->transp_coeff[SW_SHRUB]);
              */
         }
         sum[SW_SHRUB] += y->transp_coeff[SW_SHRUB];
@@ -157,7 +151,7 @@ static void _update_transp_coeff(void) {
         ForEachGroup(g) {
           if (RGroup[g]->veg_prod_type == SW_GRASS)
               if (getNTranspLayers(SW_GRASS))
-                  y->transp_coeff[SW_GRASS] += (RealF) _roots_max[Ilg(l, g)] * RGroup[g]->rgroupFractionOfVegTypeBiomass;
+                  y->transp_coeff[SW_GRASS] += (RealF) SXWResources->_roots_max[Ilg(l, g)] * RGroup[g]->rgroupFractionOfVegTypeBiomass;
         }
         sum[SW_GRASS] += y->transp_coeff[SW_GRASS];
     }
@@ -168,7 +162,7 @@ static void _update_transp_coeff(void) {
         ForEachGroup(g) {
           if (RGroup[g]->veg_prod_type == SW_FORBS)
               if (getNTranspLayers(SW_FORBS))
-                  y->transp_coeff[SW_FORBS] += (RealF) _roots_max[Ilg(l, g)] * RGroup[g]->rgroupFractionOfVegTypeBiomass;
+                  y->transp_coeff[SW_FORBS] += (RealF) SXWResources->_roots_max[Ilg(l, g)] * RGroup[g]->rgroupFractionOfVegTypeBiomass;
         }
         sum[SW_FORBS] += y->transp_coeff[SW_FORBS];
     }
@@ -207,13 +201,13 @@ static void _update_productivity(RealF sizes[]) {
             *bmassg,
     vegTypeBiomass[NVEGTYPES] = {0.};
 
-    bmassg = (RealF *)Mem_Calloc(Globals.max_rgroups, sizeof(RealF), "_update_productivity");
+    bmassg = (RealF *)Mem_Calloc(SuperGlobals.max_rgroups, sizeof(RealF), "_update_productivity");
 
 
     // totbmass: total biomass in g/m2
     // vegTypeBiomass: biomass for each of the SOILWAT2 vegetation types in g/m2
     ForEachGroup(g) {
-        bmassg[g] = sizes[g] / Globals.plotsize; // gram per plot -> gram per m2
+        bmassg[g] = sizes[g] / Globals->plotsize; // gram per plot -> gram per m2
         totbmass += bmassg[g];
 
         // Sum biomass of resource groups per SOILWAT2 vegetation type
@@ -262,12 +256,12 @@ static void _update_productivity(RealF sizes[]) {
         if (GT(totbmass, 0.)) {
             ForEachGroup(g) {
               k = RGroup[g]->veg_prod_type;
-              v->veg[k].pct_live[m] += _prod_pctlive[Igp(g, m)] * RGroup[g]->rgroupFractionOfVegTypeBiomass;
-              v->veg[k].biomass[m] += _prod_bmass[Igp(g, m)] * bmassg[g] / v->veg[k].cov.fCover;
+              v->veg[k].pct_live[m] += SXWResources->_prod_pctlive[Igp(g, m)] * RGroup[g]->rgroupFractionOfVegTypeBiomass;
+              v->veg[k].biomass[m] += SXWResources->_prod_bmass[Igp(g, m)] * bmassg[g] / v->veg[k].cov.fCover;
             }
 
             ForEachVegType(k) {
-                v->veg[k].litter[m] = v->veg[k].biomass[m] * _prod_litter[m];
+                v->veg[k].litter[m] = v->veg[k].biomass[m] * SXWResources->_prod_litter[m];
             }
         }
     }
