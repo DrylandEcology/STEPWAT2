@@ -28,6 +28,8 @@
 #include "myMemory.h"
 #include "rands.h"
 #include "sw_src/pcg/pcg_basic.h"
+#include "ST_initialization.h"
+#include "ST_seedDispersal.h"
 
 extern
   pcg32_random_t species_rng;
@@ -46,6 +48,7 @@ void indiv_proportion_Grazing(IndivType *ndv, RealF proportionGrazing);
 
 void _delete(IndivType *ndv);
 void save_annual_species_relsize(void);
+void copy_individual(const IndivType* src, IndivType* dest);
 
 /*------------------------------------------------------*/
 /* Modular functions only used on one or two specific   */
@@ -54,6 +57,7 @@ void save_annual_species_relsize(void);
 void species_Update_Kills(SppIndex sp, IntS age);
 void species_Update_Estabs(SppIndex sp, IntS num);
 SppIndex species_New(void);
+void copy_species(const SpeciesType* src, SpeciesType* dest);
 
 /*********** Locally Used Function Declarations ************/
 /***********************************************************/
@@ -80,7 +84,7 @@ static SpeciesType *_create(void);
 IntS Species_NumEstablish(SppIndex sp)
 {
 	//special conditions if we're using the grid and seed dispersal options (as long as its not during the spinup, because we dont use seed dispersal during spinup)
-	if (UseGrid && UseSeedDispersal && !DuringSpinup) {
+	if (UseGrid && UseSeedDispersal && !DuringInitialization) {
 		if (Species[sp]->sd_sgerm)
 		{
 			if (Species[sp]->max_seed_estab <= 1) {
@@ -261,9 +265,9 @@ RealF getSpeciesRelsize(SppIndex sp)
  */
 SppIndex species_New(void)
 {
-	SppIndex i = (SppIndex) Globals.sppCount;
+	SppIndex i = (SppIndex) Globals->sppCount;
 
-	if (++Globals.sppCount > MAX_SPECIES)
+	if (++Globals->sppCount > MAX_SPECIES)
 	{
 		LogError(logfp, LOGFATAL, "Too many species specified (>%d)!\n"
 				"You must adjust MAX_SPECIES and recompile!\n",
@@ -273,6 +277,119 @@ SppIndex species_New(void)
 	Species[i] = _create();
 	Species[i]->IndvHead = NULL;
 	return i;
+}
+
+/* Copy one Species' information to another Species. Note that both Species MUST be allocated. */
+void copy_species(const SpeciesType* src, SpeciesType* dest){
+	int i;
+	IndivType *srcIndv, *destIndv, *next;
+
+	// Error checking. If src == dest we would just end up loosing the linked list and some other variables.
+	if(!src || src == dest){
+		return;
+	}
+
+	/* ---- Reallocate and copy any arrays ---- */
+	// kills: Note that this array is allocated if and only if MortFlags.summary.
+	if(src->max_age > 1 && src->use_me && MortFlags.summary){
+		Mem_Free(dest->kills);
+		dest->kills = (IntUS*) Mem_Calloc(src->max_age, sizeof(IntUS), "copy_species: kills");
+		for(i = 0; i < src->max_age; ++i){
+			dest->kills[i] = src->kills[i];
+		}
+	}
+	// seedprod
+	Mem_Free(dest->seedprod);
+	dest->seedprod = (IntUS*) Mem_Calloc(src->viable_yrs, sizeof(IntUS), "copy_species: seedprod");
+	for(i = 0; i < src->viable_yrs; ++i){
+		dest->seedprod[i] = src->seedprod[i];
+	}
+
+	/* ----------- Copy all fields ----------- */
+	dest->allow_growth = src->allow_growth;
+	dest->alpha = src->alpha;
+	dest->ann_mort_prob = src->ann_mort_prob;
+	dest->beta = src->beta;
+	dest->cohort_surv = src->cohort_surv;
+	dest->disturbclass = src->disturbclass;
+	dest->est_count = src->est_count;
+	dest->estabs = src->estabs;
+	dest->exp_decay = src->exp_decay;
+	dest->extragrowth = src->extragrowth;
+	dest->intrin_rate = src->intrin_rate;
+	dest->isclonal = src->isclonal;
+	dest->lastyear_relsize = src->lastyear_relsize;
+	dest->mature_biomass = src->mature_biomass;
+	dest->max_age = src->max_age;
+	dest->max_rate = src->max_rate;
+	dest->max_seed_estab = src->max_seed_estab;
+	dest->max_slow = src->max_slow;
+	dest->max_vegunits = src->max_vegunits;
+	strcpy(dest->name, src->name);
+	dest->prob_veggrow[0] = src->prob_veggrow[0];
+	dest->prob_veggrow[1] = src->prob_veggrow[1];
+	dest->prob_veggrow[2] = src->prob_veggrow[2];
+	dest->prob_veggrow[3] = src->prob_veggrow[3];
+	dest->pseed = src->pseed;
+	dest->received_prob = src->received_prob;
+	dest->relseedlingsize = src->relseedlingsize;
+	dest->res_grp = src->res_grp;
+	dest->sd_H = src->sd_H;
+	dest->sd_Param1 = src->sd_Param1;
+	dest->sd_Pmax = src->sd_Pmax;
+	dest->sd_Pmin = src->sd_Pmin;
+	dest->sd_PPTdry = src->sd_PPTdry;
+	dest->sd_PPTwet = src->sd_PPTwet;
+	dest->sd_sgerm = src->sd_sgerm;
+	dest->sd_VT = src->sd_VT;
+	dest->seedbank = src->seedbank;
+	dest->seedling_biomass = src->seedling_biomass;
+	dest->seedling_estab_prob = src->seedling_estab_prob;
+	dest->seedling_estab_prob_old = src->seedling_estab_prob_old;
+	dest->sp_num = src->sp_num;
+	dest->tempclass = src->tempclass;
+	dest->use_dispersal = src->use_dispersal;
+	dest->use_me = src->use_me;
+	dest->use_temp_response = src->use_temp_response;
+	dest->var = src->var;
+	dest->viable_yrs = src->viable_yrs;
+
+	/* ------------- DEEP Copy linked list ---------------- */
+	// Destroy the old linked list
+	destIndv = dest->IndvHead;
+	while(destIndv){
+		next = destIndv->Next;
+		Mem_Free(destIndv);
+		destIndv = next;
+	}
+
+	srcIndv = src->IndvHead;
+	// If there is a list at all.
+	if(srcIndv){
+		// Allocate a new individual
+		destIndv = (IndivType*) Mem_Calloc(1, sizeof(IndivType), "copy_species: individual");
+		// This individual is the head of the list
+		dest->IndvHead = destIndv;
+		// Copy the individual information across
+		copy_individual(srcIndv, destIndv);
+		// Since this is the head there is nothing behind it.
+		destIndv->Prev = NULL;
+		// While there are more individuals
+		while(srcIndv->Next){
+			// Move to the next individual in src
+			srcIndv = srcIndv->Next;
+			// Allocate the next entry in dest.
+			destIndv->Next = (IndivType*) Mem_Calloc(1, sizeof(IndivType), "copy_species: individual");
+			// Doubly link the list before moving on.
+			destIndv->Next->Prev = destIndv;
+			// Move to the new entry
+			destIndv = destIndv->Next;
+			// copy the individual information across
+			copy_individual(srcIndv, destIndv);
+		}
+		// srcIndv->Next is false: we are at the end of the list.
+		destIndv->Next = NULL;
+	}
 }
 
 /**
@@ -293,7 +410,7 @@ static SpeciesType *_create(void)
 	SpeciesType *p;
 
 	p = (SpeciesType *) Mem_Calloc(1, sizeof(SpeciesType), "Species_Create");
-        p->name = Mem_Calloc(Globals.max_speciesnamelen + 1, sizeof(char), "Species_Create");
+        p->name = Mem_Calloc(SuperGlobals.max_speciesnamelen + 1, sizeof(char), "Species_Create");
 
 	return (p);
 }
@@ -505,10 +622,7 @@ void save_annual_species_relsize() {
 
     ForEachSpecies(sp) {
         if (Species[sp]->max_age == 1) {
-            //printf("Globals.currYear = %d, sp=%d , Species[sp]->relsize=%.5f ,old value lastyear_relsize : %.5f \n", Globals.currYear, sp, Species[sp]->relsize, Species[sp]->lastyear_relsize);
             Species[sp]->lastyear_relsize = getSpeciesRelsize(sp);
-            //Species[sp]->lastyear_relsize = 2;
-            //printf("Globals.currYear = %d, sp=%d new updated value lastyear_relsize : %.5f \n", Globals.currYear, sp, Species[sp]->lastyear_relsize);
         }
     }
 }

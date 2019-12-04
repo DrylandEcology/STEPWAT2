@@ -38,12 +38,12 @@
 /**
  * \brief Macro for the maximum number of species allowed in the simulation.
  * 
- * Replaced by (Globals.max_spp_per_grp * Globals.max_rgroups) which are both
+ * Replaced by (SuperGlobals.max_spp_per_grp * SuperGlobals.max_rgroups) which are both
  * read from inputs.
  * 
  * \ingroup SPECIES
  */
-#define MAX_SPECIES (Globals.max_spp_per_grp * Globals.max_rgroups)
+#define MAX_SPECIES (SuperGlobals.max_spp_per_grp * SuperGlobals.max_rgroups)
 /**
  * \brief how long the name of a species can be.
  * 
@@ -56,7 +56,7 @@
  *                      capable of outputting.
  * \ingroup STEPPE 
  */
-#define MAX_OUTFIELDS ((MAX_SPECIES * 2) + (Globals.max_rgroups * 6) + 8)
+#define MAX_OUTFIELDS ((MAX_SPECIES * 2) + (SuperGlobals.max_rgroups * 6) + 8)
 
 /**
  * \brief Maximum size of an output field.
@@ -69,7 +69,7 @@
  * 
  * \ingroup STEPPE
  */
-#define MAX_FIELDLEN (Globals.max_groupnamelen + 6)
+#define MAX_FIELDLEN (SuperGlobals.max_groupnamelen + 6)  /* +6 for xtra chars like _RSize, etc */
 /**
  * \brief defines the maximum number of cells in gridded mode.
  * \ingroup GRIDDED
@@ -274,7 +274,7 @@ typedef enum {F_First, F_Log, F_Model, F_Env, F_Plot, F_RGroup, F_Species,
  * 
  * \ingroup RGROUP
  */
-#define ForEachGroup(c)    for((c)=0; (c)< Globals.grpCount; (c)++)
+#define ForEachGroup(c)    for((c)=0; (c)< Globals->grpCount; (c)++)
 
 /**
  * \brief Loop through all species regardless of group.
@@ -289,7 +289,7 @@ typedef enum {F_First, F_Log, F_Model, F_Env, F_Plot, F_RGroup, F_Species,
  * 
  * \ingroup SPECIES
  */
-#define ForEachSpecies(s)    for((s)=0; (s)< Globals.sppCount; (s)++)
+#define ForEachSpecies(s)    for((s)=0; (s)< Globals->sppCount; (s)++)
 
 /**
  * \brief Traverses a species' linked list of individuals.
@@ -405,6 +405,7 @@ typedef struct plot_st PlotType;
 typedef struct globals_st ModelType;
 typedef struct bmassflags_st BmassFlagsType;
 typedef struct mortflags_st MortFlagsType;
+typedef struct superglobals_st GlobalType;
 
 
 #endif

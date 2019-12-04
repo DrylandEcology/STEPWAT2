@@ -18,6 +18,9 @@
 #include "ST_defines.h"
 
 void Env_Generate( void );
+void copy_environment(const EnvType* src, EnvType* dest);
+void copy_plot(const PlotType* src, PlotType* dest);
+void copy_succulent(const SucculentType* src, SucculentType* dest);
 
 /* See steppe_main.c for declarations of the following
 

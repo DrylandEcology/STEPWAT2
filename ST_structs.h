@@ -244,7 +244,11 @@ struct species_st {
 	      sd_H,
       /** \brief Average sinking velocity of seeds (cm/sec).
        * \sa ST_seedDispersal.c */
-      	sd_VT;
+      	sd_VT,
+      /** \brief This variable is used for seed dispersal, but it needs better
+       *         documentation
+       *  \sa ST_seedDispersal.c */ 
+        sd_VW;
       /** \brief Temperature class for this species.
        * \sa TempClass */
   TempClass tempclass;
@@ -724,7 +728,19 @@ struct mortflags_st {
   char sep;
 };
 
+struct superglobals_st {
+    size_t max_rgroups, /* Maximum resource groups allowed. */
+           max_groupnamelen, /* Maximum resource group name length. */
+           max_spp_per_grp, /* Maximum species allowed per resource group. */
+           max_indivs_per_spp, /* Maximum individuals allowed per species. */
+           max_speciesnamelen; /* Maximum species name length. */
+    
+    IntUS runModelIterations,
+          runInitializationYears,
+          runModelYears,
+          nCells;		/* number of cells to use in Grid, only applicable if grid function is being used */
 
-
+    IntL randseed;
+};
 
 #endif

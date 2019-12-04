@@ -75,6 +75,10 @@ nbproject/private/launcher.properties
 nbproject/private/private.xml
 nbproject/project.xml
 
+# VScode project files
+######################
+.vscode
+
 # CLion project files
 cmake-build-debug/*
 .idea/*

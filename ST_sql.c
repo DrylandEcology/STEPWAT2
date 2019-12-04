@@ -222,7 +222,7 @@ static void finalizeStatements() {
  * \ingroup SQL
  */
 void insertIndivKill(int IndivID, int KillTypeID) {
-	sqlite3_bind_int(stmt_IndivKill, 1, Globals.currYear);
+	sqlite3_bind_int(stmt_IndivKill, 1, Globals->currYear);
 	sqlite3_bind_int(stmt_IndivKill, 2, KillTypeID);
 	sqlite3_bind_int(stmt_IndivKill, 3, IndivID);
 
@@ -294,7 +294,7 @@ static void insertIndivYearInfoRow(int Year, int IndivID, int MortalityTypeID, i
  */
 void insertIndivYearInfo(IndivType *ind) {
 	//Take off of age because this happens after rgroup_IncrAges remove if you put before.
-	insertIndivYearInfoRow(Globals.currYear, ind->id, ind->killedby, (ind->age - 1), ind->mm_extra_res, ind->slow_yrs, ind->yrs_neg_pr, ind->killed, ind->relsize, ind->grp_res_prop, ind->res_required, ind->res_avail, ind->res_extra, ind->pr, ind->growthrate, ind->prob_veggrow);
+	insertIndivYearInfoRow(Globals->currYear, ind->id, ind->killedby, (ind->age - 1), ind->mm_extra_res, ind->slow_yrs, ind->yrs_neg_pr, ind->killed, ind->relsize, ind->grp_res_prop, ind->res_required, ind->res_avail, ind->res_extra, ind->pr, ind->growthrate, ind->prob_veggrow);
 }
 
 /**
@@ -338,7 +338,7 @@ static void insertIndivRow(int IndivID, int Iteration, int CreatedYear, int Spec
  * \ingroup SQL
  */
 void insertIndiv(IndivType *ind) {
-	insertIndivRow(ind->id, Globals.currIter, Globals.currYear, ind->myspecies+1, Species[ind->myspecies]->res_grp+1);
+	insertIndivRow(ind->id, Globals->currIter, Globals->currYear, ind->myspecies+1, Species[ind->myspecies]->res_grp+1);
 }
 
 /**
@@ -393,7 +393,7 @@ static void insertSpeciesYearInfoRow(int Year, int Iteration, int SpeciesID, int
  */
 void insertSpecieYearInfo(SppIndex s) {
 	SpeciesType *sp = Species[s];
-	insertSpeciesYearInfoRow(Globals.currYear, Globals.currIter, s+1, sp->est_count, sp->estabs, getSpeciesRelsize(s), sp->extragrowth, sp->received_prob, sp->allow_growth, sp->sd_sgerm);
+	insertSpeciesYearInfoRow(Globals->currYear, Globals->currIter, s+1, sp->est_count, sp->estabs, getSpeciesRelsize(s), sp->extragrowth, sp->received_prob, sp->allow_growth, sp->sd_sgerm);
 }
 
 /**
@@ -458,7 +458,7 @@ static void insertRGroupYearInfoRow(int Year, int Iteration, int RGroupID, int E
  */
 void insertRGroupYearInfo(GrpIndex g) {
 	GroupType *rg = RGroup[g];
-	insertRGroupYearInfoRow(Globals.currYear, Globals.currIter, g+1, rg->estabs, rg->killyr, rg->yrs_neg_pr, rg->mm_extra_res, rg->res_required, rg->res_avail, rg->res_extra, rg->pr, getRGroupRelsize(g), rg->est_count, rg->extirpated, rg->regen_ok);
+	insertRGroupYearInfoRow(Globals->currYear, Globals->currIter, g+1, rg->estabs, rg->killyr, rg->yrs_neg_pr, rg->mm_extra_res, rg->res_required, rg->res_avail, rg->res_extra, rg->pr, getRGroupRelsize(g), rg->est_count, rg->extirpated, rg->regen_ok);
 }
 
 /**
@@ -537,8 +537,8 @@ static void insertInfo(void) {
 	beginTransaction();
 	sprintf(sql,
 			"INSERT INTO info (Years, Iterations, Seed, RGroups, Species,  PlotSize) VALUES (%d, %d, %d, %d, %d, %f);",
-			Globals.runModelYears, Globals.runModelIterations, (int) Globals.randseed,
-			Globals.grpCount, Globals.sppCount, Globals.plotsize);
+			SuperGlobals.runModelYears, SuperGlobals.runModelIterations, (int) SuperGlobals.randseed,
+			Globals->grpCount, Globals->sppCount, Globals->plotsize);
 	rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
 	sqlcheck(rc, zErrMsg);
 	endTransaction();

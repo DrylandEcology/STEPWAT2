@@ -48,17 +48,16 @@ SppIndex species_New(void);
   void parm_SetFirstName( char *s);
   void parm_SetName( char *s, int which);
   void parm_free_memory( void );
+  void maxrgroupspecies_init(void);
+  void files_init(void);
 
 /*********** Locally Used Function Declarations ************/
 /***********************************************************/
-static void _globals_init( void);
 static void _env_init( void);
 static void _plot_init( void);
 static void _setNameLen(char *dest, char *src, Int len);
-static void _maxrgroupspecies_init( void);
 static void _rgroup_init( void);
 static void _species_init( void);
-static void _files_init( void );
 static void _check_species( void);
 static void _bmassflags_init( void);
 static void _mortflags_init( void);
@@ -95,14 +94,11 @@ char *MyFileName;
 /**************************************************************/
 void parm_Initialize() {
 /*======================================================*/
-  _globals_init();
-  _files_init();
   _model_init();
   _env_init();
   _plot_init();
   _bmassflags_init();
   _mortflags_init();
-  _maxrgroupspecies_init();
   _rgroup_init();
   _species_init();
   _check_species();
@@ -136,21 +132,8 @@ void parm_SetName( char *s, int which) {
 
 }
 
-
 /**************************************************************/
-static void _globals_init( void) {
-/*======================================================*/
-/* this memset() goes against the mymemory model, but I'm not
- * sure of the best approach to take for static vars */
-  memset ( &Globals, 0, sizeof(struct globals_st));
-  /*Globals.outf = NULL; */
-
-
-
-}
-
-/**************************************************************/
-static void _files_init( void ) {
+void files_init( void ) {
 /*======================================================*/
   /* 7-May-02 (cwb) added code to interface with SOILWAT */
 
@@ -187,34 +170,33 @@ static void _files_init( void ) {
 /**************************************************************/
 static void _model_init( void) {
 /*======================================================*/
-
    FILE *f;
-   int seed;
+   int seed, years;
    char tmp[80];
 
    MyFileName = Parm_name(F_Model);
    f = OpenFile(MyFileName, "r");
-
    /* ----------------------------------------------------*/
    /* scan for the first line*/
    if (!GetALine(f, inbuf)) {
      LogError(logfp, LOGFATAL, "%s: No data found!\n", MyFileName);
    } else {
-     sscanf( inbuf, "%s %hu %d",
+     sscanf( inbuf, "%s %d %d",
              tmp,
-             &Globals.runModelYears,
+             &years,
              &seed);
 
-     Globals.Max_Age = Globals.runModelYears;
-     Globals.runModelIterations = atoi(tmp);
-     if (Globals.runModelIterations < 1 ||
-         Globals.runModelYears < 1 ) {
+     SuperGlobals.runModelYears = years;
+     Globals->Max_Age = SuperGlobals.runModelYears;
+     SuperGlobals.runModelIterations = atoi(tmp);
+     if (SuperGlobals.runModelIterations < 1 ||
+         SuperGlobals.runModelYears < 1 ) {
        LogError(logfp, LOGFATAL,"Invalid parameters for RunModelIterations "
                "or RunModelYears (%s)",
                MyFileName);
      }
-     Globals.bmass.suffixwidth = Globals.mort.suffixwidth = strlen(tmp);
-     Globals.randseed = (IntL) ((seed) ? -abs(seed) : 0);
+     Globals->bmass.suffixwidth = Globals->mort.suffixwidth = strlen(tmp);
+     SuperGlobals.randseed = (IntL) ((seed) ? -abs(seed) : 0);
    }
    
    CloseFile(&f);
@@ -242,47 +224,47 @@ static void _env_init( void) {
       switch(++index) {
         case 1:
             x=sscanf( inbuf, "%f %f %hu %hu %hu %hu %f %hu",
-                      &Globals.ppt.avg, &Globals.ppt.std,
-                      &Globals.ppt.min, &Globals.ppt.max,
-                      &Globals.ppt.dry, &Globals.ppt.wet,
-                      &Globals.gsppt_prop, &Globals.transp_window);
+                      &Globals->ppt.avg, &Globals->ppt.std,
+                      &Globals->ppt.min, &Globals->ppt.max,
+                      &Globals->ppt.dry, &Globals->ppt.wet,
+                      &Globals->gsppt_prop, &Globals->transp_window);
             nitems = 8;
             break;
         case 2:
             x=sscanf( inbuf, "%f %f %f %f %f",
-                      &Globals.temp.avg, &Globals.temp.std,
-                      &Globals.temp.min, &Globals.temp.max,
-                      &Globals.temp.gstemp);
+                      &Globals->temp.avg, &Globals->temp.std,
+                      &Globals->temp.min, &Globals->temp.max,
+                      &Globals->temp.gstemp);
             nitems = 5;
             break;
         case 3:
             x=sscanf( inbuf, "%d %f %f %f %f ", &use[0],
-                      &Globals.pat.occur, &Globals.pat.removal,
-                      &Globals.pat.recol[Slope],
-                      &Globals.pat.recol[Intcpt]);
+                      &Globals->pat.occur, &Globals->pat.removal,
+                      &Globals->pat.recol[Slope],
+                      &Globals->pat.recol[Intcpt]);
             nitems = 4;
             break;
         case 4:
             x=sscanf( inbuf, "%d %f %hu %hu", &use[1],
-                      &Globals.mound.occur,
-                      &Globals.mound.minyr,
-                      &Globals.mound.maxyr);
+                      &Globals->mound.occur,
+                      &Globals->mound.minyr,
+                      &Globals->mound.maxyr);
             nitems = 3;
             break;
         case 5:
             x=sscanf( inbuf, "%d %f %hu", &use[2],
-                      &Globals.burrow.occur,
-                      &Globals.burrow.minyr);
+                      &Globals->burrow.occur,
+                      &Globals->burrow.minyr);
             nitems = 2;
             break;
         case 6:
             x=sscanf( inbuf, "%f %f %f %f %f %f",
-                      &Globals.tempparm[CoolSeason][0],
-                      &Globals.tempparm[CoolSeason][1],
-                      &Globals.tempparm[CoolSeason][2],
-                      &Globals.tempparm[WarmSeason][0],
-                      &Globals.tempparm[WarmSeason][1],
-                      &Globals.tempparm[WarmSeason][2]);
+                      &Globals->tempparm[CoolSeason][0],
+                      &Globals->tempparm[CoolSeason][1],
+                      &Globals->tempparm[CoolSeason][2],
+                      &Globals->tempparm[WarmSeason][0],
+                      &Globals->tempparm[WarmSeason][1],
+                      &Globals->tempparm[WarmSeason][2]);
             nitems = 6;
             break;
       }
@@ -293,9 +275,9 @@ static void _env_init( void) {
 
    } /* end while*/
 
-   Globals.pat.use    = itob(use[0]);
-   Globals.mound.use  = itob(use[1]);
-   Globals.burrow.use = itob(use[2]);
+   Globals->pat.use    = itob(use[0]);
+   Globals->mound.use  = itob(use[1]);
+   Globals->burrow.use = itob(use[2]);
 
    CloseFile(&f);
 }
@@ -317,7 +299,7 @@ static void _plot_init( void) {
      LogError(logfp, LOGFATAL, "%s: No data found!\n", MyFileName);
    }
 
-   x = sscanf( inbuf, " %f", &Globals.plotsize);
+   x = sscanf( inbuf, " %f", &Globals->plotsize);
    if (x < nitems) {
      LogError(logfp, LOGFATAL, "%s: Incorrect number of fields",
                      MyFileName);
@@ -343,7 +325,7 @@ static void _check_species( void) {
    */
   IntS i, cnt,
        maxage, minage, /* placeholders */
-       runyrs = Globals.runModelYears;  /* shorthand */
+       runyrs = SuperGlobals.runModelYears;  /* shorthand */
   SppIndex sp;
   GrpIndex rg;
   Bool tripped = FALSE;
@@ -427,7 +409,7 @@ static void _check_species( void) {
           RGroup[rg]->max_age = (Species[sp]->max_age)
                                 ? max(Species[sp]->max_age,
                                       RGroup[rg]->max_age)
-                                : Globals.Max_Age;
+                                : Globals->Max_Age;
         }
         RGroup[rg]->kills = (IntUS *) Mem_Calloc(GrpMaxAge(rg),
                                                 sizeof(IntUS),
@@ -702,7 +684,7 @@ static void _setNameLen(char *dest, char *src, Int len) {
 }
 
 /**************************************************************/
-static void _maxrgroupspecies_init( void) {
+void maxrgroupspecies_init( void) {
 /*======================================================*/
     FILE *f;
     
@@ -718,7 +700,7 @@ static void _maxrgroupspecies_init( void) {
        LogError(logfp, LOGFATAL, "%s: Could not read maximum resource groups allowed.", MyFileName);
     }
 
-    if (sscanf(inbuf, "%zu", &Globals.max_rgroups) != 1) {
+    if (sscanf(inbuf, "%zu", &SuperGlobals.max_rgroups) != 1) {
        LogError(logfp, LOGFATAL, "%s: Could not read maximum resource groups allowed.", MyFileName);
     }
 
@@ -726,7 +708,7 @@ static void _maxrgroupspecies_init( void) {
        LogError(logfp, LOGFATAL, "%s: Could not read maximum resource group name length.", MyFileName);
     }
 
-    if (sscanf(inbuf, "%zu", &Globals.max_groupnamelen) != 1) {
+    if (sscanf(inbuf, "%zu", &SuperGlobals.max_groupnamelen) != 1) {
        LogError(logfp, LOGFATAL, "%s: Could not read maximum resource group name length.", MyFileName);
     }
 
@@ -736,7 +718,7 @@ static void _maxrgroupspecies_init( void) {
        LogError(logfp, LOGFATAL, "%s: Could not read maximum species allowed per resource group.", MyFileName);
     }
 
-    if (sscanf(inbuf, "%zu", &Globals.max_spp_per_grp) != 1) {
+    if (sscanf(inbuf, "%zu", &SuperGlobals.max_spp_per_grp) != 1) {
        LogError(logfp, LOGFATAL, "%s: Could not read maximum species allowed per resource group.", MyFileName);
     }
 
@@ -744,7 +726,7 @@ static void _maxrgroupspecies_init( void) {
        LogError(logfp, LOGFATAL, "%s: Could not read maximum individuals allowed per species.", MyFileName);
     }
 
-    if (sscanf(inbuf, "%zu", &Globals.max_indivs_per_spp) != 1) {
+    if (sscanf(inbuf, "%zu", &SuperGlobals.max_indivs_per_spp) != 1) {
        LogError(logfp, LOGFATAL, "%s: Could not read maximum individuals allowed per species.", MyFileName);
     }
 
@@ -752,7 +734,7 @@ static void _maxrgroupspecies_init( void) {
        LogError(logfp, LOGFATAL, "%s: Could not read maximum species name length.", MyFileName);
     }
 
-    if (sscanf(inbuf, "%zu", &Globals.max_speciesnamelen) != 1) {
+    if (sscanf(inbuf, "%zu", &SuperGlobals.max_speciesnamelen) != 1) {
        LogError(logfp, LOGFATAL, "%s: Could not read maximum species name length.", MyFileName);
     }
     
@@ -792,8 +774,8 @@ static void _rgroup_init( void) {
    MyFileName = Parm_name(F_RGroup);
    f = OpenFile(MyFileName, "r");
    
-   name = (char *)Mem_Calloc(Globals.max_groupnamelen + 1, sizeof(char), "_rgroup_init");
-   RGroup = (GroupType **)Mem_Calloc(Globals.max_rgroups, sizeof(GroupType *), "_rgroup_init");
+   name = (char *)Mem_Calloc(SuperGlobals.max_groupnamelen + 1, sizeof(char), "_rgroup_init");
+   RGroup = (GroupType **)Mem_Calloc(SuperGlobals.max_rgroups, sizeof(GroupType *), "_rgroup_init");
 
    /* ------------------------------------------------------------*/
    /* Install all the defined groups, except for dry/wet/norm parms */
@@ -910,7 +892,7 @@ static void _rgroup_add1( char name[], RealF space, RealF density,
   RGroup[rg]->max_stretch   = (IntS) stretch;
   RGroup[rg]->max_spp_estab = (IntS) estab;
   // input of `density` is in units of [# / m2]; convert to units of [# / plot]
-  RGroup[rg]->max_density   = density * Globals.plotsize; // density per plot
+  RGroup[rg]->max_density   = density * Globals->plotsize; // density per plot
   RGroup[rg]->max_per_sqm   = density; // density per square-meter
   RGroup[rg]->use_mort      = itob(mort);
   RGroup[rg]->slowrate      = slow;
@@ -1003,10 +985,10 @@ static void _rgroup_addsucculent( char name[],
              MyFileName, name);
    }
    RGroup[rg]->succulent = TRUE;
-   Succulent.growth[Slope]  = wslope;
-   Succulent.growth[Intcpt] = wint;
-   Succulent.mort[Slope]  = dslope;
-   Succulent.mort[Intcpt] = dint;
+   Succulent->growth[Slope]  = wslope;
+   Succulent->growth[Intcpt] = wint;
+   Succulent->mort[Slope]  = dslope;
+   Succulent->mort[Intcpt] = dint;
 }
 
 /**************************************************************/
@@ -1041,14 +1023,14 @@ static void _species_init( void) {
        viable,
        pseed;
    RealF irate, ratep, estab, minb, maxb, cohort, xdecay,
-         p1, p2, p3, p4, p5, p6, p7;
+         p1, p2, p3, p4, p5, p6, p7, p8;
    float var;
    char clonal[5];
 
    MyFileName = Parm_name( F_Species);
    f = OpenFile(MyFileName, "r");
 
-   name = (char *)Mem_Calloc(Globals.max_speciesnamelen + 1, sizeof(char), "_species_init");
+   name = (char *)Mem_Calloc(SuperGlobals.max_speciesnamelen + 1, sizeof(char), "_species_init");
    Species = (SpeciesType **)Mem_Calloc(MAX_SPECIES, sizeof(SpeciesType *), "_species_init");
 
    while( readspp) {
@@ -1059,10 +1041,10 @@ static void _species_init( void) {
       }
 
 		x = sscanf(inbuf,
-				"%s %hd %hd %f %f %hd %hd %f %hd %f %f %s %hd %hd %f %hd %f %hd",
-				name, &rg, &age, &irate, &ratep, &slow, &dist, &estab, &eind,
-				&minb, &maxb, clonal, &vegi, &temp, &cohort, &turnon, &var, &pseed);
-      if (x != 18) {
+				"%s %hd %hd %hd %hd %hd %hd %hd %hd %s %f %f %f %f %f %f",
+				name, &rg, &turnon, &age, &slow, &dist, &eind, &vegi, &temp, clonal, &irate, &ratep,  &estab,
+				&minb, &maxb, &cohort);
+      if (x != 16) {
         LogError(logfp, LOGFATAL, "%s: Wrong number of columns in species",
                 MyFileName);
       }
@@ -1108,9 +1090,8 @@ static void _species_init( void) {
       Species[sp]->use_me = (RGroup[rg-1]->use_me) ? itob(turnon) : FALSE ;
       Species[sp]->received_prob = 0;
       Species[sp]->cohort_surv = cohort;
-      Species[sp]->var = var;
       // input of `pseed` is in units of [# / m2]; convert to units of [# / plot]
-      Species[sp]->pseed = pseed * Globals.plotsize;
+      Species[sp]->pseed = pseed * Globals->plotsize;
 /*      Species[sp]->ann_mort_prob = (age > 0)
                                          ? -log(cohort)/age
                                          : 0.0;
@@ -1149,9 +1130,9 @@ static void _species_init( void) {
         continue;
      }
 
-     x=sscanf( inbuf, "%s %hd %f",
-               name, &viable, &xdecay);
-     if (x < 3) {
+     x=sscanf( inbuf, "%s %hd %f %hd %f",
+               name, &viable, &xdecay, &pseed, &var);
+     if (x < 5) {
        LogError(logfp, LOGFATAL, "%s: Too few columns in annual estab parms",
                MyFileName);
      }
@@ -1165,6 +1146,8 @@ static void _species_init( void) {
      Species[sp]->viable_yrs = viable;
      Species[sp]->exp_decay  = xdecay;
      Species[sp]->seedprod = (IntUS *) Mem_Calloc( viable, sizeof(IntUS), "species_init()");
+     Species[sp]->var = var;
+     Species[sp]->pseed = pseed / Globals->plotsize;
 
    } /* end while readspp*/
 
@@ -1207,39 +1190,45 @@ static void _species_init( void) {
               MyFileName);
    }
 
-   /* ------------------------------------------------- */
-   /* ------- read the seed dispersal parameters ------ */
-   sppok = readspp = TRUE;
-   while( readspp ) {
-	if( !GetALine(f, inbuf) ) {sppok=FALSE; break;}
-	if( !isnull(strstr(inbuf,"[end]")) ) {
-		readspp=FALSE;
-		continue;
-	}
+  /* ------------------------------------------------- */
+  /* ------- read the seed dispersal parameters ------ */
+  sppok = readspp = TRUE;
+  while( readspp ) {
+    if( !GetALine(f, inbuf) ) {
+      sppok=FALSE; break;
+    }
+    if( !isnull(strstr(inbuf,"[end]")) ) {
+      readspp=FALSE;
+      continue;
+    }
 
-	x = sscanf( inbuf, "%s %hd %f %f %f %f %f %f %f",
-		    name, &turnondispersal, &p1, &p2, &p3, &p4, &p5, &p6, &p7);
-	if(x < 9)
-		LogError(logfp, LOGFATAL, "%s: Too few columns in species seed dispersal inputs", MyFileName);
+    x = sscanf( inbuf, "%s %hd %f %f %f %f %f %f %f %f",
+                name, &turnondispersal, &p1, &p2, &p3, &p4, &p5, &p6, &p7, &p8); 
+    if(x < 10) {
+      LogError(logfp, LOGFATAL, "%s: Too few columns in species seed dispersal inputs", MyFileName);
+    }
 
-	sp = Species_Name2Index(name);
-	if(sp < 0)
-		LogError(logfp, LOGFATAL, "%s: Mismatched name (%s) for species seed dispersal inputs", MyFileName, name);
+    sp = Species_Name2Index(name);
+    if(sp < 0){
+      LogError(logfp, LOGFATAL, "%s: Mismatched name (%s) for species seed dispersal inputs", MyFileName, name);
+    }
 
-        Species[sp]->use_dispersal = itob(turnondispersal);
-        Species[sp]->allow_growth = TRUE;
-	Species[sp]->sd_sgerm = FALSE;
+    Species[sp]->use_dispersal = itob(turnondispersal);
+    Species[sp]->allow_growth = TRUE;
+    Species[sp]->sd_sgerm = FALSE;
 
-	Species[sp]->sd_Param1 = p1;
-	Species[sp]->sd_PPTdry = p2;
-	Species[sp]->sd_PPTwet = p3;
-	Species[sp]->sd_Pmin = p4;
-	Species[sp]->sd_Pmax = p5;
-	Species[sp]->sd_H = p6;
-	Species[sp]->sd_VT = p7;
-   }
-   if(!sppok)
+    Species[sp]->sd_Param1 = p1;
+    Species[sp]->sd_PPTdry = p2;
+    Species[sp]->sd_PPTwet = p3;
+    Species[sp]->sd_Pmin = p4;
+    Species[sp]->sd_Pmax = p5;
+    Species[sp]->sd_H = p6;
+    Species[sp]->sd_VT = p7;
+    Species[sp]->sd_VW = p8;
+  }
+  if(!sppok) {
 	  LogError(logfp, LOGFATAL, "%s: Incorrect/incomplete input in species seed dispersal input", MyFileName);
+  }
    
    Mem_Free(name);
 
