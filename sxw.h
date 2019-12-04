@@ -20,7 +20,7 @@
 #ifndef SXW_DEF
 #define SXW_DEF
 
-#define SXW_NFILES 5
+#define SXW_NFILES 4
 // The number of transpiration values retained by transp_data
 #define MAX_WINDOW 100
 
@@ -62,7 +62,6 @@ struct stepwat_st {
   char  *f_files,  /* list of input files for sxw */
         *f_roots,  /* root distributions */
         *f_phen,   /* phenology */
-        *f_bvt,    /* biomass vs transpiration 12/29/03 */
         *f_prod,   /* biomass to prod. conv. nos. */
         *f_watin;  /* soilwat's input file */
 
@@ -153,8 +152,6 @@ struct temp_SXW_st{
   RealD _prod_litter[MAX_MONTHS];
   RealD * _prod_bmass;
   RealD * _prod_pctlive;
-
-  RealF _bvt;  /* ratio of biomass/m2 / transp/m2 */
 
 } typedef SXW_resourceType;
 

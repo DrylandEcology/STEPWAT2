@@ -99,8 +99,6 @@ RealD _prod_litter[MAX_MONTHS];
 RealD * _prod_bmass;
 RealD * _prod_pctlive;
 
-RealF _bvt;  /* ratio of biomass/m2 / transp/m2 */
-
 /* These are only used here so they are static.  */
 // static char inbuf[FILENAME_MAX];   /* reusable input buffer */
 static char _swOutDefName[FILENAME_MAX];
@@ -118,7 +116,6 @@ static void _read_files( void );
 static void _read_roots_max(void);
 static void _read_phen(void);
 static void _read_prod(void);
-static void _read_bvt(void);
 static void _read_watin(void);
 static void _make_arrays(void);
 static void _make_roots_arrays(void);
@@ -166,9 +163,8 @@ void SXW_Init( Bool init_SW, char *f_roots ) {
 
    _sxwfiles[0] = &SXW->f_roots;
    _sxwfiles[1] = &SXW->f_phen;
-   _sxwfiles[3] = &SXW->f_prod;
-   _sxwfiles[2] = &SXW->f_bvt;
-   _sxwfiles[4] = &SXW->f_watin;
+   _sxwfiles[2] = &SXW->f_prod;
+   _sxwfiles[3] = &SXW->f_watin;
 
   SXW->debugfile = NULL;
   SXW->NGrps = Globals->grpCount;
@@ -216,7 +212,6 @@ void SXW_Init( Bool init_SW, char *f_roots ) {
   _read_roots_max();
   _read_phen();
   _read_prod();
-  _read_bvt();    /* 12/29/03 */
 
   _sxw_root_phen();
 
@@ -586,34 +581,6 @@ static void _read_phen(void) {
 
 }
 
-static void _read_bvt(void) {
-/*======================================================*/
-/* read two numbers, biomass (g/m2) and
- * transpiration (cm/m2) for that biomass to construct a
- * simple linear relationship that gives g biomass / cm transp
- * per m2.
- */
-
-  FILE *fp;
-  RealF bmass, transp;
-
-  MyFileName = SXW->f_bvt;
-  fp = OpenFile(MyFileName,"r");
-
-  GetALine(fp, inbuf);
-  bmass = atof(inbuf);
-
-  GetALine(fp, inbuf);
-  transp = atof(inbuf);
-
-
-  CloseFile(&fp);
-
-  SXWResources->_bvt = bmass / transp;
-
-}
-
-
 static void _read_prod(void) {
 	int x;
 	FILE *fp;
@@ -970,10 +937,10 @@ void _print_debuginfo(void) {
 		sum1 += getRGroupRelsize(r);
 		sum2 += RGroup[r]->pr;
 		sum3 += SXWResources->_resource_cur[r];
-		fprintf(f, "%s\t%.4f\t%.4f\t%.4f\t\t%.4f\n", RGroup[r]->name, getRGroupRelsize(r), RGroup[r]->pr, SXWResources->_resource_cur[r]/_bvt, SXWResources->_resource_cur[r]);
+		fprintf(f, "%s\t%.4f\t%.4f\t%.4f\t\t%.4f\n", RGroup[r]->name, getRGroupRelsize(r),
+                RGroup[r]->pr, SXWResources->_resource_cur[r]/RGroup[r]->_bvt, 
+                SXWResources->_resource_cur[r]);
 	}
-	fprintf(f, "-----     \t-------\t-----\t-----\t\t-----\n");
-	fprintf(f, "%s\t\t%.4f\t%.4f\t%.4f\t\t%.4f\n", "Total", sum1, sum2, sum3/SXWResources->_bvt, sum3);
 
 	fprintf(f, "\n------ Production Values Daily Summed Across Types Monthly Averaged -------\n");
 	fprintf(f, "Month\tBMass\tPctLive\tLAIlive\tLAItotal\tTotAGB\n");
@@ -1168,7 +1135,6 @@ void free_all_sxw_memory( void ) {
 	/* Free SXW */
 	Mem_Free(SXW->f_roots);
 	Mem_Free(SXW->f_phen);
-	Mem_Free(SXW->f_bvt);
 	Mem_Free(SXW->f_prod);
 	Mem_Free(SXW->f_watin);
 	Mem_Free(SXW->transpTotal);

@@ -153,8 +153,8 @@ void insertInfo() {
 	sql[0] = 0;
 
 	beginTransaction();
-	sprintf(sql, "INSERT INTO info (StartYear, Years, Iterations, RGroups, TranspirationLayers, SoilLayers, PlotSize, BVT) VALUES (%d, %d, %d, %d, %d, %d, %f, %f);", 
-				  SW_Model.startyr, SuperGlobals.runModelYears, SuperGlobals.runModelIterations, Globals->grpCount, SXW->NTrLyrs, SXW->NSoLyrs, Globals->plotsize, SXWResources->_bvt);
+	sprintf(sql, "INSERT INTO info (StartYear, Years, Iterations, RGroups, TranspirationLayers, SoilLayers, PlotSize) VALUES (%d, %d, %d, %d, %d, %d, %f);", 
+				  SW_Model.startyr, SuperGlobals.runModelYears, SuperGlobals.runModelIterations, Globals->grpCount, SXW->NTrLyrs, SXW->NSoLyrs, Globals->plotsize);
 	rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
 	sqlcheck(rc, zErrMsg);
 	endTransaction();
@@ -381,7 +381,7 @@ void insertRgroupInfo(RealF * _resource_cur) {
 
 	beginTransaction();
 	ForEachGroup(r) {
-		insertSXWoutputRgroupRow(Year, Iteration, r+1, RGroup_GetBiomass(r),getRGroupRelsize(r), RGroup[r]->pr, SXWResources->_resource_cur[r]/SXWResources->_bvt, _resource_cur[r]);
+		insertSXWoutputRgroupRow(Year, Iteration, r+1, RGroup_GetBiomass(r),getRGroupRelsize(r), RGroup[r]->pr, SXWResources->_resource_cur[r]/RGroup[r]->_bvt, _resource_cur[r]);
 	}
 	endTransaction();
 }
