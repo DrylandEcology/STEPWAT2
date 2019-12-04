@@ -134,6 +134,11 @@ git submodule update --init --recursive
 
 <br>
 
+## Doxygen documentation:
+STEPWAT2 uses Doxygen to automatically generate documentation for the code base. For information on how to generate the documentation see our [GitHub wiki](https://github.com/DrylandEcology/STEPWAT2/wiki/For-Developers).
+
+<br>
+
 ## Note: repository renamed from StepWat to STEPWAT2 on Feb 23, 2017
 
 All existing information should [automatically be redirected](https://help.github.com/articles/renaming-a-repository/) to the new name.

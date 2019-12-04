@@ -1,22 +1,32 @@
-/********************************************************/
-/********************************************************/
-//  Source file: stats.c
-//  Type: module
-//  Application: STEPPE - plant community dynamics simulator
-//  Purpose: This is where all of the statistics are kept
-//           as the model runs.
-//  History:
-//     (6/15/2000) -- INITIAL CODING - cwb
-//   1/9/01 - revised to make extensive use of malloc() */
-//	5/28/2013 (DLM) - added module level variable accumulators (grid_Stat) for the grid and functions.
-// 07/30/2016 (AKT) Fixed bug at std_dev calculation
-//  8/30/2019 (Chandler Haukap) - Removed grid_Stat accumulators and functionality.
-//            Gridded mode accumulators are now stored in the Celltype struct in 
-//            ST_grid.h and swapped into this module using a call to 
-//            stat_Copy_Accumulators().
-//
-/********************************************************/
-/********************************************************/
+/**
+ * \file ST_stats.c
+ * \brief Record keeping for the entire model.
+ * 
+ * Statistics are kept for all metrics of a plant's lifecycle.
+ * These statistics are kept for [resource groups](\ref RGROUP),
+ * [species](\ref SPECIES), [individuals](\ref INDIVIDUAL), and 
+ * [mortality events](\ref MORTALITY).
+ * 
+ * \author
+ *     Kyle Palmquist\n
+ *     Chandler Haukap\n
+ *     Freddy Pierson\n 
+ *     Chris Bennett
+ * 
+ *  History:
+ *    (6/15/2000) -- INITIAL CODING - cwb
+ *    1/9/01 - revised to make extensive use of malloc()
+ *	  5/28/2013 (DLM) - added module level variable accumulators (grid_Stat) for the grid and functions.
+ *    07/30/2016 (AKT) Fixed bug at std_dev calculation
+ *    8/30/2019 (Chandler Haukap) - Removed grid_Stat accumulators and 
+ *           functionality. Gridded mode accumulators are now stored in the
+ *           Celltype struct in ST_grid.h and swapped into this module using 
+ *           a call to stat_Copy_Accumulators().
+ * 
+ * \date 23 August 2019
+ * 
+ * \ingroup STATISTICS
+ */
 
 /* =================================================== */
 /*                INCLUDES / DEFINES                   */
@@ -44,10 +54,17 @@ static void _init( void);
 static RealF _get_avg( struct accumulators_st *p);
 static RealF _get_std( struct accumulators_st *p);
 
-/* I'm making this a macro because it gets called a lot, but
- * note that the syntax checker is obviated, so make sure
+/** \brief A macro for collecting statistics.
+ * 
+ * \param p is a pointer to the \ref accumulators_st which is collecting the data.
+ * \param v is a double which will be collected.
+ * 
+ * Note that the syntax checker is obviated, so make sure
  * you follow the this prototype:
- * static void _collect_add(struct accumulators_st *p, double v) */
+ * static void _collect_add(struct accumulators_st *p, double v).
+ * 
+ * \ingroup STATISTICS_PRIVATE
+ */
 #define _collect_add(p, v) {					\
   (p)->nobs++;							\
   RealF old_ave = (p)->ave;					\
@@ -56,8 +73,15 @@ static RealF _get_std( struct accumulators_st *p);
   (p)->sd = final_running_sd((p)->nobs, (p)->sum_dif_sqr);	\
 }
 
-// quick macro to make life easier in the load/save accumulators functions... it just copies the data of p into v
-// static void _copy_over(struct accumulators_st *p, struct accumulators_st *v)
+/** \brief A macro that copies the data of p into v.
+ * 
+ * \param p is a pointer to the \ref accumulators_st to copy from.
+ * \param v is a pointer to the \ref accumulators_st to copy to.
+ * 
+ * The correct usage is _copy_over(struct accumulators_st *p, struct accumulators_st *v).
+ * 
+ * \ingroup STATISTICS_PRIVATE
+ */
 #define _copy_over(p, v) { \
 	(p)->ave = (v)->ave; \
 	(p)->sum_dif_sqr = (v)->sum_dif_sqr; \
@@ -72,7 +96,19 @@ static Bool firsttime = TRUE;
 /*              BEGIN FUNCTIONS                            */
 /***********************************************************/
 
-/***********************************************************/
+/**
+ * \brief Collects the requested statistics.
+ * 
+ * \param year is the year you are collecting. year should be base 1.
+ * 
+ * Statistics are collected for every metric specified in bmassflags.in
+ * and mortflags.in.
+ * 
+ * \sa Stat_Output() which is where the collected statistics are printed
+ *     to CSV files.
+ * 
+ * \ingroup STATISTICS
+ */
 void stat_Collect( Int year ) {
 /* fill data structures with samples to be
    computed later in Stat_Output().
@@ -147,7 +183,17 @@ void stat_Collect( Int year ) {
 }
 
 
-/***********************************************************/
+/**
+ * \brief initialize the statistics accumulators.
+ * 
+ * The function will allocate the accumulators. Note that this function only has to be
+ * called once per simulation.
+ * 
+ * \sideeffect Accumulators are allocated memory based on which statistics are requested
+ *             in bmassflags.in and mortflags.in.
+ * 
+ * \ingroup STATISTICS_PRIVATE
+ */
 static void _init( void) {
 /* must be called after model is initialized */
   SppIndex sp;
@@ -425,14 +471,19 @@ void stat_free_mem( void ) {
 
 }
 
-/***********************************************************/
+/**
+ * \brief Collects mortality statistics across iterations for all entries in \ref RGroup.
+ * 
+ * Mortality statistics are accumulated in species_Update_Kills(). stat_Collect_GMort should 
+ * be called after every iteration to add the iteration to the simulation statistics.
+ * 
+ * \sideeffect \ref _Gmort will be modified according to the last iteration's mortality stats.
+ * 
+ * \sa species_Update_Kills().
+ * 
+ * \ingroup STATISTICS
+ */
 void stat_Collect_GMort ( void ) {
-/* accumulated for the entire model run within
-   Species_Update_Kills(), then collected
-   here to compare among iterations.
-
-   5/20/01
-*/
     IntS rg, age;
 
     ForEachGroup(rg) {
@@ -446,15 +497,19 @@ void stat_Collect_GMort ( void ) {
 
 }
 
-/***********************************************************/
+/**
+ * \brief Collects mortality statistics across iterations for all entries in \ref Species.
+ * 
+ * Mortality statistics are accumulated in species_Update_Kills(). stat_Collect_SMort should 
+ * be called after every iteration to add the iteration to the simulation statistics.
+ * 
+ * \sideeffect \ref _Smort will be modified according to the last iteration's mortality stats.
+ * 
+ * \sa species_Update_Kills().
+ * 
+ * \ingroup STATISTICS
+ */
 void stat_Collect_SMort ( void ) {
-/* accumulated for the entire model run within
-   Species_Update_Kills(), then collected
-   here to compare among iterations.
-
-   5/20/01
-
-*/
    SppIndex sp;
    IntS age;
 
@@ -469,7 +524,14 @@ void stat_Collect_SMort ( void ) {
 
 }
 
-/***********************************************************/
+/**
+ * \brief Prints mortality statistics to the file specified in Globals.mort.fp_year.
+ * 
+ * This function Will create the header and all entries in the yearly mortality output
+ * file. The statistics output are those specified in mortflags.in.
+ * 
+ * \ingroup STATISTICS
+ */
 void stat_Output_YrMorts( void ) {
 
   FILE *f = Globals->mort.fp_year;
@@ -527,7 +589,14 @@ void stat_Output_YrMorts( void ) {
   CloseFile(&f);
 }
 
-/***********************************************************/
+/**
+ * \brief Outputs all mortality statistics.
+ * 
+ * The file they are printed to is denoted by \ref Parm_name().
+ * The statistics printed are those denoted in the mortflags.in file.
+ * 
+ * \ingroup STATISTICS
+ */
 void stat_Output_AllMorts( void) {
   FILE *f;
   IntS age;
@@ -740,19 +809,47 @@ void stat_Output_Seed_Dispersal(const char * filename, const char sep) {
 }
 
 
-/***********************************************************/
+/**
+ * \brief returns the average value of an accumulator.
+ * 
+ * This function works, but is deprecated. You can reference the
+ * average directly with p->ave.
+ * 
+ * \param p is a pointer to the \ref accumulators_st.
+ * 
+ * \ingroup STATISTICS_PRIVATE
+ */
 static RealF _get_avg( struct accumulators_st *p) 
 {
 	return p->ave;
 }
 
-/***********************************************************/
+/**
+ * \brief returns the standard deviation of an accumulator.
+ * 
+ * This function works, but is deprecated. You can reference the
+ * standard deviation directly with p->sd.
+ * 
+ * \param p is a pointer to the \ref accumulators_st.
+ * 
+ * \ingroup STATISTICS_PRIVATE
+ */
 static RealF _get_std(struct accumulators_st *p)
 {
 	return p->sd;
 }
 
-/***********************************************************/
+/**
+ * \brief prints the header for biomass statistics with standard deviations.
+ * 
+ * This function is called when a header is requested in bmassflags.in.
+ * stat_Output_AllBmass() takes care of calling this function when
+ * requested.
+ * 
+ * \sa _make_header()
+ * 
+ * \ingroup STATISTICS_PRIVATE
+ */
 void make_header_with_std( char *buf) {
 
   char **fields;
@@ -837,7 +934,17 @@ void make_header_with_std( char *buf) {
     Mem_Free(fields);
 }
 
-/***********************************************************/
+/**
+ * \brief prints the header for biomass statistics without standard deviations.
+ * 
+ * This function is called when a header is requested in bmassflags.in.
+ * stat_Output_AllBmass() takes care of calling this function when
+ * requested.
+ * 
+ * \sa _make_header_with_std()
+ * 
+ * \ingroup STATISTICS_PRIVATE
+ */
 void make_header( char *buf) {
 
   char **fields;

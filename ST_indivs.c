@@ -1,15 +1,18 @@
-/********************************************************/
-/********************************************************/
-/*  Source file: indivs.c
- *  Type: module
- *  Application: STEPPE - plant community dynamics simulator
- *  Purpose: This module manages the comings and goings of
- *           individual plants, plus a function for sorting
- *           based on size. */
-/*  History */
-/*     (6/15/2000) -- INITIAL CODING - cwb */
-/********************************************************/
-/********************************************************/
+/**
+ * \file ST_indivs.c
+ * \brief Manages plant individuals.
+ * 
+ * \author
+ *     Kyle Palmquist\n
+ *     Chandler Haukap\n
+ *     Freddy Pierson\n 
+ *     Chris Bennett\n
+ *     Ashish Tiwari
+ * 
+ * \date 23 August 2019
+ * 
+ * \ingroup INDIVIDUAL
+ */
 
 /* =================================================== */
 /*                INCLUDES / DEFINES                   */
@@ -46,19 +49,17 @@ void indiv_proportion_Grazing( IndivType *ndv, RealF proportionGrazing);
 /*********** Locally Used Function Declarations ************/
 /***********************************************************/
 static IndivType *_create ( void);
-
-//_delete function also called from ST_species.c
 void _delete (IndivType *ndv);
 
 /***********************************************************/
 /****************** Begin Function Code ********************/
 
-
-/***********************************************************/
-Bool indiv_New( SppIndex sp) {
-/*======================================================*/
-/* PURPOSE */
-/* Use this routine to when a new plant is established.
+/**
+ * \brief Add an individual to the Species->IndivHead linked list.
+ * 
+ * \param sp The SppIndex of the species that this individual belongs to.
+ * 
+ * Use this routine to when a new plant is established.
  * Calls _create() to allocate the object, then the
  * individuals parameters are initialized. The Species
  * "object" contains a list of its individuals which is
@@ -79,13 +80,22 @@ Bool indiv_New( SppIndex sp) {
  * The Species obj keeps an array of pointers to allocated
  * indiv objects for normal access to the individuals. The
  * Head pointer is set to null in Species_New().
-*/
-/* HISTORY */
-/* Chris Bennett @ LTER-CSU 6/15/2000            */
-
-/*------------------------------------------------------*/
-
-
+ * 
+ * Initial programming by Chris Bennett @ LTER-CSU 6/15/2000.
+ * 
+ * \return TRUE
+ * 
+ * \sideeffect The new individual becomes the first individual in
+ *             the Species linked list.
+ * 
+ * \sa Species
+ * \sa SppIndex
+ * \sa rgroup_Establish()
+ * \sa Indiv_Kill_Complete()
+ * 
+ * \ingroup INDIVIDUAL
+ */
+Bool indiv_New( SppIndex sp) {
   IndivType *p;
   static int id=0;
 
@@ -145,21 +155,22 @@ void copy_individual(const IndivType* src, IndivType* dest){
   dest->myspecies = src->myspecies;
 }
 
-/**************************************************************/
-static IndivType *_create ( void) {
-/*======================================================*/
-/* PURPOSE */
-/* Local routine creates object, initializes to zero and
- * returns a pointer to it.  Returned indiv has no identity
+/**
+ * \brief Creates a new IndivType object.
+ * 
+ * Local routine creates object, initializes to zero and
+ * returns a pointer to it. Returned indiv has no identity
  * until called by Indiv_New().
- *
- * Guarantees the creation of a valid object or it fails.
-*/
+ * 
+ * \return pointer to the individual.
+ * 
+ * \sa indiv_New() which calls this function.
+ * 
+ * \ingroup INDIVIDUAL_PRIVATE
+ */
+static IndivType *_create ( void) {
 /* HISTORY */
 /* Chris Bennett @ LTER-CSU 6/15/2000            */
-
-/*------------------------------------------------------*/
-
   IndivType *p;
 
   p = (IndivType *) Mem_Calloc( 1, sizeof(IndivType),
@@ -168,39 +179,33 @@ static IndivType *_create ( void) {
 
 }
 
-/**************************************************************/
+/**
+ * \brief Partially kills a single individual.
+ * 
+ * Clonal plants can be partially killed. If so, the type
+ * of mortality must be recorded as it determines when or
+ * if the plant can vegetatively propogate.  Amount of
+ * damage/killage/shrinkage is subtracted from size.
+ * 
+ * \param code The type of mortality causing size to be reduced.
+ * \param ndv A pointer to the individual.
+ * \param killamt The amount of relative size to remove.
+ * 
+ * \return TRUE if relative size was reduced. FALSE if killamt
+ *         is greater than or equal to the relative size of the
+ *         plant (which requires indiv_Kill_Complete()), or if
+ *         the individual isn't clonal.
+ * 
+ * \sideeffect The size of ndv is reduced and it's growth rate is modified.
+ * 
+ * \sa indiv_Kill_Complete()
+ * \sa IndivType
+ * 
+ * \ingroup INDIVIDUAL
+ */
 Bool indiv_Kill_Partial( MortalityType code,
                           IndivType *ndv,
                           RealF killamt) {
-/*======================================================*/
-/* PURPOSE */
-/* Clonal plants can be partially killed. If so, the type
- * of mortality must be recorded as it determines when or
- * if the plant can vegetatively propogate.  Amount of
- * damage/killage/shrinkage is subtracted from size and
- * RGroup and Species sizes are updated.
- *
- * code - stored in indiv to control vegetative propogation
- *        (see rgroup_Grow() for prop., see mort_Main() for
- *         vegetative reduction).
- * ndv  - pointer to the individual to be shrunken.
- * killamt - relative amount of the plant to be removed
- *           from the relative size variable.
-*/
-/* HISTORY */
-/*   Chris Bennett @ LTER-CSU 6/15/2000            */
-/*   cwb - 2-Dec-02 -- Another bug became apparent while
- *       adding SOILWAT code and this exists in the old
- *       model as well.  The problem is in the list
- *       processing: partial kills don't remove the
- *       indiv object whereas if killamt > relsize the
- *       object was removed from the list though the caller
- *       may not be able to know this.  My solution is
- *       to return TRUE if killamt < relsize (and relsize
- *       etc is updated) or FALSE otherwise which allows
- *       the caller to kill completely and handle the
- *       removal properly. */
-/*------------------------------------------------------*/
   SppIndex sp;
   Bool result = FALSE;
 
@@ -217,22 +222,22 @@ Bool indiv_Kill_Partial( MortalityType code,
   return( result);
 }
 
+/**
+ * \brief Kill a portion of an individual plant.
+ * 
+ * Remove individual proportionally and adjust relative size.
+ * Also keep up with survivorship data.
+ * 
+ * \param ndv A pointer to the individual.
+ * \param killType The MortalityType code. This parameter is currently unused.
+ * \param proportKilled value between 0 and 1. The percent total biomass to remove.
+ * 
+ * \sideeffect ndv->relsize is adjusted. 
+ * 
+ * \ingroup INDIVIDUAL
+ */
 void indiv_proportion_Kill(IndivType *ndv, int killType, RealF proportKilled)
 {
-	/*======================================================*/
-	/* PURPOSE */
-	/* Remove individual proportionally and adjust relative sizes of the
-	 * RGroup and Species downward proportionally by the size of the indiv.
-	 * Also keep up with survivorship data.
-	 */
-	/* HISTORY */
-	/* Chris Bennett @ LTER-CSU 6/15/2000
-	 *  09/23/15 -AT  -Added proportionKilled
-	 *  Nov 4 2015- AT - Modified code for doing proportional kill for annual as well and not deleting species
-	 *  and indi from memory only adjusting their real size  */
-
-	/*------------------------------------------------------*/
-
     #define xF_DELTA (20*F_DELTA)
 	#define xD_DELTA (20*D_DELTA)
 	#define ZERO(x) \
@@ -272,18 +277,23 @@ void indiv_proportion_Kill(IndivType *ndv, int killType, RealF proportKilled)
 	#undef xD_DELTA
 	#undef ZERO
 }
+
+/**
+ * \brief Reduces biomass of an individual proportionally
+ * 
+ * Implement grazing for each individual. Also keep up with survivorship data.
+ * 
+ * \param ndv A pointer to the individual.
+ * \param proportionGrazing Value between 0 and 1. The proportion of biomass to remove.
+ * 
+ * \sideeffect ndv->relsize is adjusted.
+ * 
+ * \sa Species_Proportion_Grazing()
+ * 
+ * \ingroup INDIVIDUAL
+ */
 void indiv_proportion_Grazing( IndivType *ndv, RealF proportionGrazing)
 {
-    /*======================================================*/
-    /* PURPOSE */
-    /* Implement grazing for each individual and adjust relative sizes of the
-     * RGroup and Species downward proportionally by amount of growth the 
-     * individual experienced this year. Also keep up with survivorship data.*/
-    /* HISTORY */
-    /* 1st Nov 2015- AT */
-    /* 14th Aug 2018 - CH */
-    /*------------------------------------------------------*/
-
 #define xF_DELTA (20*F_DELTA)
 #define xD_DELTA (20*D_DELTA)
 #define ZERO(x) \
@@ -305,16 +315,26 @@ void indiv_proportion_Grazing( IndivType *ndv, RealF proportionGrazing)
 #undef ZERO
 }
 
-void indiv_proportion_Recovery(IndivType *ndv, int killType, RealF proportionRecovery, RealF proportionKilled) {
-    /*======================================================*/
-    /* PURPOSE */
-    /* Recover individuals proportionally after fire and adjust relative sizes 
-     * of the RGroup and Species upward proportionally by the size of the indiv.
-     * Also keep up with survivorship data. */
-    /* HISTORY */
-    /* 1st Nov 2015- AT */
-    /*------------------------------------------------------*/
-
+/**
+ * \brief Recover some biomass proportionally after a disturbance event.
+ * 
+ * Recover individuals proportionally after fire.
+ * Also keep up with survivorship data. 
+ * 
+ * \param ndv Pointer to the individual.
+ * \param killType The MortalityType code of what killed the individual.
+ * \param proportionRecovery Value between 0 and 1. The proportion of individual relsize to recover.
+ * \param proportionKilled Value between 0 and 1. The proportion of the individual killed
+ *                         by the disturbance event.
+ * 
+ * \sideeffect ndv->relsize is modified.
+ * 
+ * \sa Species_Proportion_Recovery
+ * 
+ * \ingroup INDIVIDUAL
+ */
+void indiv_proportion_Recovery(IndivType *ndv, int killType, RealF proportionRecovery, RealF proportionKilled) 
+{
 #define xF_DELTA (20*F_DELTA)
 #define xD_DELTA (20*D_DELTA)
 #define ZERO(x) \
@@ -355,19 +375,25 @@ void indiv_proportion_Recovery(IndivType *ndv, int killType, RealF proportionRec
 #undef ZERO
 }
 
-/**************************************************************/
-void indiv_Kill_Complete( IndivType *ndv, int killType) {
-/*======================================================*/
-/* PURPOSE */
-/* Remove individual and adjust relative sizes of the
- * RGroup and Species downward by the size of the indiv.
- * Also keep up with survivorship data.
-*/
-/* HISTORY */
-/* Chris Bennett @ LTER-CSU 6/15/2000            */
-
-/*------------------------------------------------------*/
-
+/**
+ * \brief Completely kill an individual.
+ * 
+ * Kills the individual, deallocates it, and removes it from the linked
+ * list of individuals stored in Species.
+ * 
+ * Initial programming by Chris Bennett @ LTER-CSU 6/15/2000.
+ * 
+ * \param ndv Pointer to the individual to kill.
+ * \param killType MortalityType code. This parameter is currently unused.
+ * 
+ * \sideeffect The Species[ndv->myspecies]->IndivHead linked list is updated.\n
+ *             The Species[ndv->myspecies]->est_count is updated.\n
+ *             The individual is deallocated.
+ * 
+ * \ingroup INDIVIDUAL
+ */
+void indiv_Kill_Complete( IndivType *ndv, int killType) 
+{
   if( ndv->age > Species[ndv->myspecies]->max_age ) {
     LogError(logfp, LOGWARN, "%s dies older than max_age (%d > %d). Iter=%d, Year=%d\n",
                     Species[ndv->myspecies]->name,
@@ -382,21 +408,20 @@ void indiv_Kill_Complete( IndivType *ndv, int killType) {
 
 }
 
-/**************************************************************/
-void _delete (IndivType *ndv) {
-/*======================================================*/
-/* PURPOSE */
-/* Local routine to remove the data object of an individual and update
- * the number of individuals `Species[ndv->myspecies]->est_count`
- * Called from indiv_Kill_Complete().*/
-/* HISTORY */
-/* Chris Bennett @ LTER-CSU 6/15/2000
- *   a species' list of indivs is kept as a doubly linked list.
- *   although a singly linked list would work, I implemented
- *   the double just in case it might be useful in the future.
- *   as of 12/02 it hasn't been, but who knows? */
-
-/*------------------------------------------------------*/
+/**
+ * \brief Deletes an individual.
+ * 
+ * \param ndv A pointer to the individual.
+ * 
+ * \sideeffect Species[ndv->myspecies]->est_count is updated.\n
+ *             The Species[ndv->myspecies]->IndivHead linked list us updated.
+ * 
+ * \sa indiv_Kill_Complete() where this function is called.
+ * 
+ * \ingroup INDIVIDUAL_PRIVATE
+ */
+void _delete (IndivType *ndv) 
+{
   SppIndex sp;
   SpeciesType *s;
 
@@ -437,20 +462,22 @@ void _delete (IndivType *ndv) {
   Mem_Free(ndv);
 }
 
-/**********************************************************/
+/**
+ * \brief Sort a list of pointers to individuals according to the
+ *             size of the individuals.
+ * 
+ * This function is irrespective of species, age, etc.
+ * 
+ * \param sorttype indicates whether ascending or descending
+ * \param n number of individuals to be sorted
+ * \param list an array of n pointers to individuals to be sorted.
+ * 
+ * \sideeffect The list is returned sorted. 
+ * 
+ * \ingroup INDIVIDUAL
+ */
 void Indiv_SortSize( const byte sorttype,
                      const size_t n, IndivType **list) {
-/*======================================================*/
-/* Sort a list of pointers to individuals according to the
- * size of the individuals irrespective of species, age, etc.
- * sorttype - indicates whether ascending or descending
- * n - number of individuals to be sorted
- * list[]  - an array of n pointers to individuals to be sorted.
- * the list is returned sorted. */
-/* HISTORY */
-/* Chris Bennett @ LTER-CSU 12/15/2000            */
-/*     8/2/01 - cwb - replaced shell sort with qsort(). */
-/*------------------------------------------------------*/
   int (*cmpfunc)(const void*, const void*);
 
   if ( n < 1) return;  /* shouldn't happen */
@@ -474,20 +501,21 @@ void Indiv_SortSize( const byte sorttype,
 }
 
 
-/**********************************************************/
-int Indiv_CompSize_A( const void *key1, const void *key2) {
-/*======================================================*/
-/* Comparison function for qsort, ascending order.
- * compare key1->relsize with key2->relsize.
- * if key1 < key2, return -1
- * if key1 == key2, return 0
- * if key1 > key2, return 1
+/**
+ * \brief Comparison function for qsort, ascending order
+ * 
+ * Initial programming by Chris Bennett @ LTER-CSU 8/2/01.
+ * 
+ * \param key1 Pointer to first IndivType to compare.
+ * \param key2 Pointer to first IndivType to compare.
+ * 
+ * \return -1 if key1 < key2
+ * \return 0 if key1 == key2
+ * \return 1 if key1 > key2
+ * 
+ * \ingroup INDIVIDUAL
  */
-
-/* HISTORY */
-/* Chris Bennett @ LTER-CSU 8/2/01            */
-
-/*------------------------------------------------------*/
+int Indiv_CompSize_A( const void *key1, const void *key2) {
   int r =0;
   IndivType **p1=((IndivType **)(key1)),
             **p2=((IndivType **)(key2));
@@ -498,20 +526,21 @@ int Indiv_CompSize_A( const void *key1, const void *key2) {
   return r;
 }
 
-/**********************************************************/
-int Indiv_CompSize_D( const void *key1, const void *key2) {
-/*======================================================*/
-/* Comparison function for qsort, descending order.
- * compare key1->relsize with key2->relsize.
- * if key1 < key2, return 1
- * if key1 == key2, return 0
- * if key1 > key2, return -1
+/**
+ * \brief Comparison function for qsort, descending order
+ * 
+ * Initial programming by Chris Bennett @ LTER-CSU 8/2/01.
+ * 
+ * \param key1 Pointer to first IndivType to compare.
+ * \param key2 Pointer to first IndivType to compare.
+ * 
+ * \return 1 if key1 < key2
+ * \return 0 if key1 == key2
+ * \return -1 if key1 > key2
+ * 
+ * \ingroup INDIVIDUAL
  */
-
-/* HISTORY */
-/* Chris Bennett @ LTER-CSU 8/2/01            */
-
-/*------------------------------------------------------*/
+int Indiv_CompSize_D( const void *key1, const void *key2) {
   int r =0;
   IndivType **p1=((IndivType **)(key1)),
             **p2=((IndivType **)(key2));

@@ -876,7 +876,7 @@ static void _read_disturbances_in(void)
 			break;
 
         ForEachGroup(rg) {
-            num = sscanf(buf, "%d,%u,%u,%u,%hu,%hu,%f,%hu,%hu,%hu,%f", &cell,
+            num = sscanf(buf, "%d,%u,%u,%u,%hu,%hu,%f,%hu,%f,%hu,%f", &cell,
                 &Globals->pat.use, &Globals->mound.use, &Globals->burrow.use, &RGroup[rg]->killyr, 
 				&RGroup[rg]->killfreq_startyr, &RGroup[rg]->killfreq, &RGroup[rg]->extirp, 
 				&RGroup[rg]->grazingfrq, &RGroup[rg]->grazingfreq_startyr, &RGroup[rg]->ignition);

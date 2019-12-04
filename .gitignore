@@ -83,3 +83,7 @@ nbproject/project.xml
 cmake-build-debug/*
 .idea/*
 CMakeLists.txt
+
+# Doxygen output
+Documentation/html
+Documentation/latex

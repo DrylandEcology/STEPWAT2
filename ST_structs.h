@@ -1,249 +1,512 @@
-/********************************************************/
-/********************************************************/
-/*  Source file: ST_structs.h
- *  Type: header
- *  Application: STEPPE - plant community dynamics simulator
- *  Purpose: This is the most interesting header file where
- *           all of the "objects" are defined as structures.
- *           You can think of this as the object dictionary
- *           insofar as you would want to have this file
- *           handy to refer to when perusing the code.
- *  History
- *  History:
- *     6/15/2000 -- INITIAL CODING - cwb
- *     4-Nov-03 (cwb) Added code to handle annuals.
- *        Annuals are different because they complete all the
- *        dynamics of their life cycle in a single time step. Thus the
- *        mechanism for establishing and growing individuals and
- *        associated variables must be different from perennials. For
- *        example, there are no clonal annuals, no multi-year variables
- *        (eg max_slow), annualized probability of mortality, etc.
- *        Basically, the number of individuals is determined by the
- *        available resources and a seedbank mechanism, and the growth
- *        rate is simply the proportion of max size (1.0) each indiv
- *        can achieve in the current year, computed by maxbio * irate /
- *        PR. And of course they all die at the end of the time step.
- *
- *        The method of establishing annuals is based on the number of
- *        viable seeds produced in the previous year and in all years
- *        previous up to some limit of age-related viability (eg 10
- *        years).  Production of viable seeds is related to this year's
- *        resource availability for the group (recall PR is inverse of
- *        resource availability). Viability decreases with age
- *        (=1/age), so an array is kept with the last X year's seed
- *        production.  Maximum possible establishment is the sum of the
-          past years' production, weighted by 1/(seed_age^xdecay). */
-/********************************************************/
-/********************************************************/
-
+/** 
+ * \file ST_structs.h
+ * \brief Contains the definitions of STEPWAT structures.
+ * 
+ * These structures include individuals, species, resource groups, succulents,
+ * plots, environments, and global variables.
+ * For SXW struct definitions see \ref sxw.h.
+ * 
+ * A note on annuals:
+ * Basically, the number of individuals is determined by the available resources 
+ * and a seedbank mechanism, and the growth rate is simply the proportion of max
+ * size (1.0) each individual can achieve in the current year, computed by
+ * maxbio * irate / PR. This is not the current implementation, but annuals are
+ * currently being reevaluated so keep it in mind when modifying the code.
+ *  
+ * \author Chandler Haukap
+ * 
+ * \date 21 August 2019
+ * 
+ * \ingroup STEPPE
+ */
 
 #ifndef STEPPE_STRUCT_DEF
 #define STEPPE_STRUCT_DEF
 
 #include "generic.h"
 
-/* structure for indiv of perennial species */
+/**
+ * \brief Holds information on perennial plant individuals. 
+ * 
+ * Most of the code associated with this struct is found in \ref ST_indivs.c.
+ * 
+ * \sa indiv_ann_st
+ * 
+ * \ingroup INDIVIDUAL
+ */
 struct indiv_st {
+      /** \brief unique identifier for each individual. */
   IntUS id,
+      /** \brief age in years of this individual. */
   	  age,
+      /** \brief millimeters of extra resources. */
       mm_extra_res,
-      slow_yrs,  /* number of years this individual has slow growth */
+      /** \brief number of years this individual has slow growth */
+      slow_yrs,
+      /** \brief Species[indv->myspecies] is the species this individual belongs to.
+       * \sa Species  */
       myspecies,
-      yrs_neg_pr;     /* num yrs pr > 1 (stretched resources) */
+      /** \brief num yrs pr > 1 (stretched resources) */
+      yrs_neg_pr;
+      /** \brief What killed this individual.
+       * \sa MortalityType */
   MortalityType killedby;
-  Bool killed;        /* only for clonal plants, means veggrow possible*/
-  RealF relsize,      /* relative to full-sized individual -- 0-1.0) */
-       prv_yr_relsize, /*previous year relsize relative to full-sized individual, saving before killing, used for proportional recovery calculation) */
-       grp_res_prop,  /* prop'l contribution this indiv makes to group relsize */
-       res_required, /* resources required, biomass of the individual */
-       res_avail,    /* resource available */
-       res_extra,    /* resource applied to superficial growth */
-       pr,           /* ratio of resources required to amt available */
-       growthrate,   /* actual growth rate*/
-       normal_growth, /* biomass the plant gained this year excluding superfluous biomass. Used for grazing.*/
-       prob_veggrow; /* set when killed; 0 if not clonal*/
-  struct indiv_st *Next, *Prev;  /* facility for linked list 8/3/01 */
+      /** \brief only for clonal plants, means veggrow possible. */
+  Bool killed;
+      /** \brief Size relative to a full-sized individual. */
+  RealF relsize,
+       /** \brief Previous year's relsize. Used for proportional recovery calculation.
+        * \sa proportion_Recovery() */
+       prv_yr_relsize,
+       /** \brief proportion of total group relsize belonging to this individual. */
+       grp_res_prop,
+       /** \brief resources required, biomass of the individual. 
+        * \sa rgroup_ResPartIndiv */
+       res_required,
+       /** \brief Resources available. */
+       res_avail,
+       /** \brief Resources applied to superfluous growth. */
+       res_extra,
+       /** \brief Ratio of resources required to amount available. */
+       pr,
+       /** \brief Actual growth rate .
+        * \sa rgroup_Grow() */
+       growthrate,
+       /** \brief biomass the plant gained this year excluding superfluous biomass. Used for grazing. 
+        * \sa grazing_EndOfYear() */
+       normal_growth,
+       /** \brief set when killed; 0 if not clonal.
+        * \sa indiv_Kill_Partial() */
+       prob_veggrow;
+       /** \brief Allows for a doubly-linked list of individuals. Implemented in \ref Species.
+        * \sa Species */
+  struct indiv_st *Next, 
+       /** \brief Allows for a doubly-linked list of individuals. Implemented in \ref Species.
+        * \sa Species */
+                  *Prev;
 };
 
-/* structure for indiv of annual species */
+/** 
+ * \brief Holds information on annual plant individuals.
+ * 
+ * Most of the code associated with this struct is found in \ref ST_indivs.c.
+ * 
+ * \sa indiv_st
+ * 
+ * \ingroup INDIVIDUAL
+ */
 struct indiv_ann_st {
-	 // (DLM) - 6/5/2013 - this struct was defined when I got steppe, but now that I've been analyzing the individuals file (and it's linked list) I don't actually see it being used anywhere... it seems like it's just a relic of some older version of steppe that was never removed.  Will leave it in the code for now though in case someone else knows.
+      /** \brief millimeters of extra resources. */
   IntUS mm_extra_res,
+      /** \brief Species[indv->myspecies] is the species this individual belongs to.
+       * \sa Species  */
       myspecies;
-  RealF relsize,      /* relative to full-sized individual -- 0-1.0) */
-       grp_res_prop,  /* prop'l contribution this indiv makes to group relsize */
-       res_required, /* resources required, biomass of the individual */
-       res_avail,    /* resource available */
-       res_extra,    /* resource applied to superficial growth */
-       pr,           /* ratio of resources required to amt available */
-       growthrate;   /* actual growth rate*/
-  struct indiv_ann_st *Next, *Prev;  /* facility for linked list 8/3/01 */
+      /** \brief Size relative to a full-sized individual. */
+  RealF relsize,
+       /** \brief proportion of total group relsize belonging to this individual. */
+       grp_res_prop,
+       /** \brief resources required, biomass of the individual. 
+        * \sa rgroup_ResPartIndiv */
+       res_required,
+       /** \brief Resources available. */
+       res_avail,
+       /** \brief Resources applied to superfluous growth. */
+       res_extra,
+       /** \brief Ratio of resources required to amt available. */
+       pr,
+       /** \brief Actual growth rate .
+        * \sa rgroup_Grow() */
+       growthrate;
+        /** \brief Allows for a doubly-linked list of individuals. Implemented in Species.
+         * \sa Species */
+  struct indiv_ann_st *Next, 
+        /** \brief Allows for a doubly-linked list of individuals. Implemented in Species.
+         * \sa Species */
+                  *Prev;
 };
 
-/* structure for species with some annuals-only variables thrown in */
+/** 
+ * \brief Holds all species-specific information.
+ * 
+ * This struct contains constants and variables that differ between
+ * species. \ref Species is a global array of these structs.
+ * 
+ * \sa Species
+ * 
+ * \ingroup SPECIES
+ */
 struct species_st {
 
   /**** Quantities that can change during model runs *****/
 
-  SppIndex est_count;  /* number of individuals established (growing)*/
-  IntUS *kills,        /* ptr to array of # indivs killed by age. index=age. */
-        estabs,        /* number of individuals established in iter */
-        *seedprod,    /* annuals: array of previous years' seed production (size = viable_yrs)*/
+      /** \brief Number of individuals established (growing) */
+  SppIndex est_count;
+      /** \brief Pointer to array of individuals killed, indexed by age at death. */
+  IntUS *kills,
+      /** \brief Number of individuals established in current iteration. */
+        estabs,
+      /** \brief Specific to annuals. Array of seeds produced indexed by year. 
+       * \sa ST_seedDispersal.c */
+        *seedprod,
+      /** \brief not sure what this does yet.
+       * \sa ST_seedDispersal.c */
          seedbank,
-         pseed;       /* average number of seeds produced by annual species per 1g of biomass, per 1m^2 and per year (internally re-calculated as seeds per 1 g biomass per plot and per year) */
-  RealF lastyear_relsize,    /* relsize from the previous year, used for annual establishment */
-        extragrowth,   /* amt of superfluous growth from extra resources */
-	received_prob,	//the chance that this species received seeds this year... only applicable if using seed dispersal and gridded option
-        alpha,         /* species-specific alpha parameter used for random number draw from beta distribution in establishment of annual species */
-        beta;           /* species-specific beta parameter used for random number draw from beta distribution in establishment of annual species */
-  float       var;    /* the variance parameter of the beta distribution for establishment..*/
-  struct indiv_st *IndvHead;    /* facility for linked list 8/3/01; top of list */
-  Bool allow_growth, //whether to allow growth this year... only applicable if using seed dispersal and gridded option
-	sd_sgerm;	//whether seeds where produced/received and germinated this year... only applicable if using seed dispersal and gridded option
+      /** \brief Average number of seeds produced by annual species per 1g of biomass, per 1m^2 and per year.
+       * internally re-calculated as seeds per 1 g biomass per plot and per year. */
+         pseed;
+      /** \brief relsize from the previous year, used for annual establishment. 
+       * \sa rgroup_Establish() */
+  RealF lastyear_relsize,
+      /** \brief Amount of superfluous growth from extra resources. */
+        extragrowth,
+      /** \brief Probability that this species received seeds this year. */
+	      received_prob,
+      /** \brief Alpha parameter for random number draw from beta distribution in establishment of annual species. 
+       * \sa _add_annuals() */
+        alpha,
+      /** \brief Beta parameter for random number draw from beta distribution in establishment of annual species.
+       * \sa _add_annuals() */
+        beta;
+      /** \brief Variance parameter of the beta distribution for establishment of annual species. */
+  float var;
+      /** \brief Head of a doubly-linked list of all individuals of this species. 
+       * \sa indiv_st*/
+  struct indiv_st *IndvHead;
+      /** \brief Seed dispersal only- whether to allow growth for the current year.
+       * \sa ST_seedDispersal.c */
+  Bool allow_growth,
+      /** \brief Whether seeds where produced/received and germinated this year. 
+       * \sa ST_seedDispersal.c */
+	     sd_sgerm;
 
   /**** Quantities that DO NOT change during model runs *****/
 
-    /* 4-letter code (plus \0) for genus and species*/
+      /** \brief 4-letter code (plus \0) for genus and species. */
   char* name;
-  IntUS max_age,         /* max age of mature plant, also flag for annual */
-        viable_yrs,      /* annuals: max years of viability of seeds */
-        max_seed_estab,  /* max seedlings that can estab in 1 yr*/
-        max_vegunits,    /* max vegetative regrowth units (eg tillers)*/
-        max_slow,        /* years slow growth allowed before mortality */
-        sp_num,          /* index number of this species */
-        res_grp;         /* this sp. belongs to this res_grp*/
-  RealF max_rate,      /* intrin_rate * proportion*/
+      /** \brief Max age of mature plant. Also used to determine annual species. */
+  IntUS max_age,
+      /** \brief Annuals: max years of viability of seeds. */
+        viable_yrs,
+      /** \brief Max seedlings that can establish in 1 year. */
+        max_seed_estab,
+      /** \brief Max vegetative regrowth units, for example tillers. */
+        max_vegunits,
+      /** \brief Years slow growth is allowed before mortality. */
+        max_slow,
+      /** \brief Index of this species in the Species variable.
+       * \sa Species */
+        sp_num,
+      /** \brief Resource group that this species belongs to. 
+       * \sa RGroup */
+        res_grp;
+      /** \brief Max growth rate. Defined as intrin_rate * proportion. */
+  RealF max_rate,
+      /** \brief Intrinsic growth rate. */
         intrin_rate,
+      /** \brief Starting size of a new individual of this species, relative to an adult plant. */
         relseedlingsize,
+      /** \brief Seedling biomass in grams of an individual of this species. */
         seedling_biomass,
-        mature_biomass,    /* biomass of mature_size individual */
-        seedling_estab_prob_old,  /* supports Extirpate() and Kill() */
+      /** \brief Maximum biomass in grams an individual of this species can achieve. */
+        mature_biomass,
+      /** \brief Holds seedling establishment probability directly from inputs. 
+       * \sa seedling_estab_prob */
+        seedling_estab_prob_old,
+      /** \brief Seedling establishment probability.
+       * \sa seedling_estab_prob_old */
         seedling_estab_prob,
+      /** \brief Annual mortality probability. This variable is currently unused. */
         ann_mort_prob,
+      /** \brief Used in age-independent mortality.
+       * \sa _age_independent() */
         cohort_surv,
-        exp_decay,        /* annuals: exponent for viability decay function */
-        prob_veggrow[4],  /* 1 value for each mortality type, if clonal*/
-  	    sd_Param1,	  /* for seed dispersal */
-  	    sd_PPTdry,    /* for seed dispersal */
-	      sd_PPTwet,    /* for seed dispersal */
-      	sd_Pmin,      /* for seed dispersal */
-        sd_Pmax,      /* for seed dispersal */
-        sd_H,         /* for seed dispersal */
-        sd_VT,        /* for seed dispersal */
-        sd_VW;        /* for seed dispersal */
+      /** \brief Annuals-specific exponent for viability decay function. */
+        exp_decay,
+      /** \brief 1 value for each mortality type, if clonal*/
+        prob_veggrow[4],
+      /** \brief Seed dispersal parameter read from inputs.
+       * \sa ST_seedDispersal.c */
+  	    sd_Param1,
+      /** \brief Seed dispersal parameter read from inputs.
+       * \sa ST_seedDispersal.c */
+  	    sd_PPTdry,
+      /** \brief Seed dispersal parameter read from inputs.
+       * \sa ST_seedDispersal.c */
+	      sd_PPTwet,
+      /** \brief Seed dispersal parameter read from inputs.
+       * \sa ST_seedDispersal.c */
+	      sd_Pmin,
+      /** \brief Seed dispersal parameter read from inputs.
+       * \sa ST_seedDispersal.c */
+  	    sd_Pmax,
+      /** \brief Average release height of the inflorescences in cm.
+       * \sa ST_seedDispersal.c */
+	      sd_H,
+      /** \brief Average sinking velocity of seeds (cm/sec).
+       * \sa ST_seedDispersal.c */
+      	sd_VT,
+      /** \brief This variable is used for seed dispersal, but it needs better
+       *         documentation
+       *  \sa ST_seedDispersal.c */ 
+        sd_VW;
+      /** \brief Temperature class for this species.
+       * \sa TempClass */
   TempClass tempclass;
+      /** \brief Disturbance class for this species.
+       * \sa DisturbClass */
   DisturbClass disturbclass;
+      /** \brief TRUE if this species is clonal. */
   Bool isclonal,
+      /** \brief TRUE if this species should respond to temperature. Not currently implemented. */
        use_temp_response,
-       use_me,           /* do not establish if this is false */
-       use_dispersal;	//whether to use seed dispersal... only applicable if using gridded option
+      /** \brief If FALSE do not establish this species. */
+       use_me,
+      /** \brief TRUE if the user has requested seed dispersal for this species.
+       * \sa ST_seedDispersal.c */
+       use_dispersal;
 };
 
+/** 
+ * \brief Contains all resource group-specific fields. 
+ * 
+ * Some fields are constant and some are variable, so be careful what you are modifying. 
+ * \ref RGroup is a global array of these structs used in STEPWAT2.
+ * 
+ * \sa RGroup 
+ * 
+ * \ingroup RGROUP
+ */
 struct resourcegroup_st {
 
   /**** Quantities that can change during model runs *****/
 
-  IntUS *kills,        /* indivs in group killed. index by age killed. */
-        estabs,         /* total indivs in group established during iter */
-        killyr,         /* kill the group in this year; if 0, don't kill, but see killfreq */
-        yrs_neg_pr,     /* counter for consecutive years low resources */
-        wildfire, 	/* number of wildfires during all iterations in this year */
-        prescribedfire, /* number of prescribed fires during all iterations in this year */
-        mm_extra_res;   /* extra resource converted back to mm */
-  RealF res_required, /* resource required for current size */
-        res_avail,    /* resource available from environment X competition */
-        res_extra,    /* resource applied to superficial growth */
-        pr,           /* resources required / resources available */
-        rgroupFractionOfVegTypeBiomass; /*proportional biomass of the STEPPE functional group out of the SOILWAT2 functional type biomass */
-  SppIndex est_count, /* number of species actually established in group*/
-           *est_spp; /*list of spp actually estab in grp*/
-  Bool extirpated,    /* group extirpated, no more regen */
-       regen_ok;      /* annuals: startyr; TM this is a flag for annuals.  When
-                       * you set the start year for the group this will flag all
-                       * species within that group that establishment will start.
-                       * EG start year = 96 I will have 5 flags for one annual species
-                       * for year 96,97,98,99,100. BUT extirpate will not un-flag this*/
+      /** \brief individuals in group killed. Index by age at death. */
+  IntUS *kills,
+      /** \brief Total indivs in group established during current iteration. */
+        estabs,
+      /** \brief If killyr equals the current year there will be a fire.
+       * \sa killfreq
+       * \sa mort_EndOfYear() */
+        killyr,
+      /** \brief Accumulator for consecutive years of low resources. */
+        yrs_neg_pr,
+      /** \brief Treated as a Bool. If TRUE there was a wildfire in the current year. 
+       * \sa mort_EndOfYear() */
+        wildfire,
+      /** \brief Treated as a Bool. If TRUE there was a prescribed fire in the current year. 
+       * \sa mort_EndOfYear() */
+        prescribedfire,
+      /** \brief Extra resources in millimeters */
+        mm_extra_res;
+      /** \brief Resources required for current biomass of resgroup. */
+  RealF res_required,
+      /** \brief Resources available adjusted to account for competition. */
+        res_avail,
+      /** \brief Resource applied to superficial growth. */
+        res_extra,
+      /** \brief Ratio of resources required to resources available */
+        pr,
+      /** \brief Fraction of the total biomass for this vegtype contributed by this resgroup.
+       * \sa veg_prod_type */
+        rgroupFractionOfVegTypeBiomass;
+      /** \brief Number of species established in group. */
+  SppIndex est_count,
+      /** \brief Array of indexes of species established in this resgroup. 
+       * \sa Species */
+           *est_spp;
+      /** \brief If TRUE this group is extirpated, no more regeneration. */
+  Bool extirpated,
+      /** \brief For annuals: If TRUE this group can regenerate. */
+       regen_ok;
 
   /**** Quantities that DO NOT change during model runs *****/
 
-  IntUS max_stretch,    /* num yrs resources can be stretched w/o killing*/
-        max_spp_estab,  /* max # species that can add new plants per year*/
-        max_spp,        /* number of species in the group*/
-        max_age,        /* longest lifespan in group. used to malloc kills[] */
-        startyr,        /* don't start trying to grow until this year */
-	killfreq_startyr,/* start year for kill frequency*/
-
-        extirp,         /* year in which group is extirpated (0==ignore) */
-        grp_num,        /* index number of this group */
-        veg_prod_type, /* type of SOILWAT2 vegetation type:
-          STEPWAT2 inputs via "rgroup.in" are defined as: 1 for tree, 2 for shrub, 3 for grass, 4 for forb;
-          however, the inputs get translated by get_SW2_veg_index() to SOILWAT2 values immediately upon reading the inputs (see SW_Defines.h) */
-		grazingfrq,     /* grazing effect on group at this frequency: <1=prob, >1=# years */
-        grazingfreq_startyr;/* start year for grazing frequency*/
-  SppIndex *species; /*list of spp belonging to this grp*/
-  RealF space,  /* input from table */
-        min_res_req,  /* input space from table, rescaled if one or more rgroups is not established */ 
-        max_density,  /* number of mature plants per plot allowed */
-        max_per_sqm,  /* density of mature plants in units of plants / m^2 */
-        max_bmass,    /* sum of mature biomass for all species in group */
-        killfreq,       /* kill group at this frequency: <1=prob, >1=# years */
-        ignition,       /* cheatgrass biomass (g/m2) that triggers potential ignition of a wildfire */
-        cheatgrass_coefficient,   /* intercept of the cheatgrass biomass-wildfire probability relationship */
-        wild_fire_slope,  /* slope of the cheatgrass biomass-wildfire probability relationship */	
-        xgrow,        /* ephemeral growth = mm extra ppt * xgrow */
-        slowrate,     /* user-defined growthrate that triggers mortality */
-        ppt_slope[3], /* res. space eqn: slope for wet/dry/norm yrs*/
-        ppt_intcpt[3],/* res. space eqn: intercept for "" ""*/
-		proportion_killed,      /* proportion killing  */
-		proportion_recovered,   /* proportion recovery after killing year */
-        proportion_grazing;     /* proportion grazing on grazing year */
+      /** \brief Number of years resources can be stretched without killing the group. */
+  IntUS max_stretch,
+      /** \brief Max number of species that can add new plants per year*/
+        max_spp_estab,
+      /** \brief Number of species in the group*/
+        max_spp,
+      /** \brief Longest lifespan in resgroup. Used to malloc kills[] */
+        max_age,
+      /** \brief Don't start trying to grow until this year. */
+        startyr,
+      /** \brief Start year for kill frequency. 
+       * \sa killfreq */
+	      killfreq_startyr,
+      /** \brief Year in which group is extirpated. Setting to 0 turns off extirpation. */
+        extirp,
+      /** \brief Index number of this group in the RGroup array.
+       * \sa RGroup */
+        grp_num,
+      /** \brief SOILWAT2 vegetation type:
+       * STEPWAT2 inputs via "rgroup.in" are defined as: 1 for tree, 2 for shrub, 3 for grass, 4 for forb;
+       * however, the inputs get translated by get_SW2_veg_index() to SOILWAT2 values immediately upon reading the inputs. 
+       * \sa SW_Defines.h */
+        veg_prod_type,
+      /** \brief Start year for grazing frequency.
+       * \sa grazingfrq */
+        grazingfreq_startyr;
+      /** \brief Array of species indexes belonging to this group.
+       * \sa Species */
+  SppIndex *species;
+      /** \brief Input from table. */
+  RealF space,
+      /** \brief input space from table, rescaled if one or more rgroups is not established. */ 
+        min_res_req,
+      /** \brief density of mature plants in units of plants / m^2 */
+        max_per_sqm,
+      /** \brief Perform grazing on this group at this frequency. */
+		grazingfrq,
+      /** \brief Number of mature plants allowed per plot. */
+        max_density,
+      /** \brief Max biomass of group. */
+        max_bmass,
+      /** \brief Kill group at this frequency.
+       * Values < 1 result in probablistic fires
+       * values > 1 result in fires at a return interval = killfreq. 
+       * \sa mort_EndOfYear() */
+        killfreq,
+      /** \brief Cheatgrass biomass (g/m2) that triggers potential ignition of a wildfire.
+       * If ignition == 0 wildfire is turned off. 
+       * \sa mort_EndOfYear() */
+        ignition,
+      /** \brief Intercept of the cheatgrass biomass-wildfire probability relationship. */
+        cheatgrass_coefficient,
+      /** \brief Slope of the cheatgrass biomass-wildfire probability relationship. */	
+        wild_fire_slope,
+      /** \brief Ephemeral growth. Used to calculate superficial growth when precipitation is high. */
+        xgrow,
+      /** \brief Growthrate that triggers mortality. Defined in inputs. */
+        slowrate,
+      /** \brief Space equation: slope for wet/dry/normal years */
+        ppt_slope[3],
+      /** \brief Space equation: intercept for wet/dry/normal years*/
+        ppt_intcpt[3],
+      /** \brief Proportion of group killed. */
+		    proportion_killed,
+      /** \brief Proportion recovery after killing year */
+		    proportion_recovered,
+      /** \brief Proportion of biomass removed during grazing year.
+       * \sa grazingfrq */
+        proportion_grazing;
+      /** \brief TRUE if this group is comprised of succulents. */
   Bool succulent,
-       use_extra_res, /* responds to other groups' unused resources */
-       use_me,        /* establish no species of this group if false; TMartyn5.26.15 - this
-                       * is 0 of the onoff in species.in and of the on in rgroup.in */
-       use_mort,      /* use age-independent+slowgrowth mortality?  */
-       est_annually;  /* establish this group every year if true  */
-  DepthClass depth;  /* rooting depth class */
+      /** \brief IF TRUE this group responds to other group's unused resources. */
+       use_extra_res,
+      /** \brief If FALSE establish no species of this group. */
+       use_me,
+      /** \brief If TRUE use age-independent and slowgrowth mortality. */
+       use_mort,
+      /** \brief Establish this group every year if TRUE. */
+       est_annually;
+      /** \brief Rooting depth class.
+       * \sa DepthClass */
+  DepthClass depth;
+      /** \brief name of this group, specified in inputs. */
   char *name;
 };
 
+/** 
+ * \brief Succulent specific constants read from or derived from inputs.
+ * 
+ * A global instance of this struct is Succulent.
+ * 
+ * \sa Succulent.
+ * 
+ * \ingroup SUCCULENTS
+ */
 struct succulent_st {
-  RealF growth[2], /* growth modifier eqn parms for succulents (eqn 10)*/
-        mort[2],   /* mortality eqn parms for succulents (eqn 16)*/
-        reduction, /* if not killed, reduce by eqn 10*/
-        prob_death;  /* calculated from eqn 16*/
+      /** \brief Growth modifier parameters for succulents (eqn 10). */
+  RealF growth[2],
+      /** \brief Mortality modifier parameters for succulents (eqn 16). */
+        mort[2],
+      /** \brief If not killed, reduce by eqn 10. */
+        reduction,
+      /** \brief Calculated from eqn 16. */
+        prob_death;
 };
 
+/**
+ * \brief Contains variables used in generating the environment.
+ * 
+ * This struct is instanciated by the global variable Env.
+ * 
+ * \sa Env_Generate()
+ * 
+ * \ingroup STEPPE
+ */
 struct environs_st {
+      /** \brief Is this site wet, dry, or normal?.
+       * \sa PPTClass */
   PPTClass wet_dry;
-  IntS ppt,  /* precip for the year (mm)*/
-       lyppt, /* precip for the previous (last) year (mm)*/
-       gsppt;  /* precip during growing season (mm)*/
-  RealF temp,  /* average daily temp for the year (C)*/
-       temp_reduction[2]; /* amt to reduce growth by temp */
-                           /*(eqns 12,13), one for each tempclass*/
+      /** \brief Precipitation for the year in millimeters. */
+  IntS ppt,
+      /** \brief Precipitation for the previous (last) year in millimeters. */
+       lyppt,
+      /** \brief Precipitation during the growing season in millimeters. */
+       gsppt;
+      /** \brief Average daily temp for the year in celsius. */
+  RealF temp,
+      /** \brief Amount to reduce growth by temperature.
+       * (eqns 12,13), one for each tempclass. */
+       temp_reduction[2];
 };
 
-struct plot_st {  /* plot-level things */
+/**
+ * \brief Contains variables used in generating the plot.
+ * 
+ * plot_st is instanciated by the global variable Plot.
+ * 
+ * \sa Plot
+ * 
+ * \ingroup STEPPE
+ */
+struct plot_st {
+  /** \brief Type of disturbance.
+   * \sa DisturbanceEvent */
   DisturbEvent disturbance;
-  Bool pat_removed;  /* fecalpats can be removed which only*/
-                     /* kills seedlings and not other plants*/
-  IntUS disturbed;  /* years remaining before recolonization*/
-                  /* (ie, new establishments) can begin again,*/
-                  /* or, if disturbance is fecalpat, number of*/
-                  /* years it has been ongoing.  Set to 0*/
-                  /* when the disturbance effect is expired.*/
+  /** \brief If TRUE fecal pats can be removed. */
+  Bool pat_removed;
+  /** \brief Years remaining before recolonization (ie, new establishments) can begin again.
+   * Otherwise, if disturbance is fecalpat, number of years it has been ongoing. Set to 0
+   * when the disturbance effect is expired. */
+  IntUS disturbed;
 };
 
-
+/**
+ * \brief Stores precipitation information.
+ * 
+ * Used inside the globals_st struct.
+ * 
+ * \sa globals_st
+ * 
+ * \ingroup STEPPE
+ */
 struct ppt_st {
+      /** \brief Average precipitation. */
   RealF avg,
+      /** \brief Standard deviation of precipitation. */
        std;
+      /** \brief Minimum precipitation. */
   IntUS  min,
+      /** \brief Maximum precipitation. */
        max,
+      /** \brief Number of dry days. */
        dry,
+      /** \brief Number of wet days. */
        wet;
 };
+
+/**
+ * \brief Stores temperature information.
+ * 
+ * Used in the globals_st struct.
+ * 
+ * \sa globals_st
+ * 
+ * \ingroup STEPPE
+ */
 struct temp_st {
   RealF avg,
         std,
@@ -251,75 +514,217 @@ struct temp_st {
         max,
         gstemp;
 };
+
+/** 
+ * \brief Fecal pat information.
+ * 
+ * Used in the globals_st struct.
+ * 
+ * \sa globals_st
+ * 
+ * \ingroup MORTALITY
+ */
 struct fecalpats_st {
+      /** \brief If TRUE fecal pats will be used. */
   Bool use;
+      /** \brief Between 0 and 1. How often pats occur. */
   RealF occur,
+      /** \brief Between 0 and 1. How likely pats are removed. */
         removal,
-        recol[2]; /* 1 elem. for slope and intercept*/
+      /** \brief 1 elem. for slope and intercept. */
+        recol[2];
 };
+
+/**
+ * \brief Ant mound information.
+ * 
+ * Used in the globals_st struct.
+ * 
+ * \sa globals_st
+ * 
+ * \ingroup MORTALITY
+ */
 struct antmounds_st {
+      /** \brief If TRUE ant mounds will be used. */ 
   Bool use;
+      /** \brief The probability of ant mound occurrence. Between 0 and 1. */
   RealF occur;
+      /** \brief The minimum number of ant mounds to generate in a year. */
   IntUS minyr,
+      /** \brief The maximum number of ant mounds to generate in a year. */
        maxyr;
 };
+
+/**
+ * \brief Holds information on animal burrows.
+ * 
+ * Used in the globals_st struct.
+ * 
+ * \sa globals_st
+ * 
+ * \ingroup MORTALITY
+ */
 struct burrows_st {
+  /** \brief If TRUE burrows will be used. */
   Bool use;
+  /** \brief Value between 0 and 1. The probability that a burrow will occur. */
   RealF occur;
+  /** \brief Minimum number of burrows in a year. */
   IntUS minyr;
 };
 
+/**
+ * \brief Stores file names for output.
+ * 
+ * The struct contains the name of the yearly and summary output files.
+ * Used in the globals_st struct.
+ * 
+ * \sa globals_st
+ * 
+ * \ingroup STEPPE
+ */
 struct outfiles_st {
-  FILE *fp_year,  /* file handle for yearly so it can stay open*/
-       *fp_sumry; /* file handle for averages output */
-  IntUS suffixwidth; /* max width of outfile suffix if printing yearly */
+      /** \brief File handle for yearly output. */
+  FILE *fp_year,
+      /**\brief File handle for averages output. */
+       *fp_sumry;
+      /** \brief max width of outfile suffix if printing yearly. */
+  IntUS suffixwidth;
 };
 
+/**
+ * \brief Stores global information that is independent of any species or group.
+ * 
+ * globals_st deals mainly with structural variables like year and iteration. It also
+ * contains information on file names, precipitation, temperature, mounds, pats and burrows.
+ * This struct is instanciated by the global variable Globals.
+ * 
+ * \sa Globals
+ * 
+ * \ingroup STEPPE
+ */
 struct globals_st {
+  /** \brief Precipitation constants. \sa ppt_st */
   struct ppt_st ppt;
+  /** \brief Temperature constants. \sa temp_st */
   struct temp_st temp;
+  /** \brief Fecal pat constants. \sa fecalpats_st */
   struct fecalpats_st pat;
+  /** \brief Ant mound constants. \sa antmounds_st */
   struct antmounds_st mound;
+  /** \brief Animal burrow constants. \sa burrows_st */
   struct burrows_st burrow;
 
-  RealF plotsize,   /* size of plot in square meters */
-        gsppt_prop, /* proportion of ppt during growing season*/
-        tempparm[2][3]; /* three parms for Warm/Cool growth mod*/
-  IntUS Max_Age,        /* oldest plant; same as runModelYears for now */
+      /** \brief Size of the plot in square meters */
+  RealF plotsize,
+      /** \brief Proportion of ppt during growing season. */
+        gsppt_prop,
+      /** \brief warm-season/cool-season species growth modifiers. */
+        tempparm[2][3];
+      /** \brief Number of years to run the model. */
+  IntUS runModelYears,
+      /** \brief Oldest plant; same as runModelYears for now. \sa runModelYears. */
+      Max_Age,
+      /** \brief The year that the simulation is currently in. */
       currYear,
+      /** \brief Number of iterations to run the simulation. */
+      runModelIterations,
+      /** \brief The iteration that the simulation is currently in. */
       currIter,
-      grpCount,     /* number of groups defined*/
-      sppCount,     /* number of species defined*/
-      transp_window; /* Number of years for which transpiration data is kept*/
+      /** \brief Number of groups defined. */
+      grpCount,
+      /** \brief Number of species defined*/
+      sppCount,
+      /** \brief Number of years for which transpiration data is kept. \sa _transp_contribution_by_group() */
+      transp_window,
+      /** \brief Number of cells to use in Grid, only applicable if gridded mode is being used. */
+      nCells;
+      /** \brief Random seed from input file. Used to seed the PCG32 RNGs. */
+  IntL randseed;
+      /** \brief Maximum resource groups allowed. */
+  size_t max_rgroups,
+      /** \brief Maximum resource group name length. */
+         max_groupnamelen,
+      /** \brief Maximum species allowed per resource group. */
+         max_spp_per_grp,
+      /** \brief Maximum individuals allowed per species. */
+         max_indivs_per_spp,
+      /** \brief Maximum species name length. */
+         max_speciesnamelen;
 
-  struct outfiles_st bmass, mort;
+                    /** \brief Output file names for bmass files. */
+  struct outfiles_st bmass, 
+                    /** \brief Output file names for mort files. */
+                     mort;
 };
 
+/**
+ * \brief Flags for what biomass files we would like output.
+ * 
+ * These flags are specified in inputs and used heavily in ST_stats.c.
+ * They are instanciated globally by BmassFlags.
+ * 
+ * \sa BmassFlags
+ * 
+ * \ingroup STEPPE
+ */
 struct bmassflags_st {
-  Bool summary,  /* if FALSE, print no biomass output */
-       yearly, /* print individual yearly runs as well as average */
+      /** \brief If FALSE print no biomass output. */
+  Bool summary,
+      /** \brief If TRUE print biomass output for each year of the simulation. */
+       yearly,
+      /** \brief If TRUE the output files need a header. */
        header,
+      /** \brief If TRUE the output files will contain a year column. */
        yr,
+      /** \brief If TRUE Output disturbance information. */
        dist,
+      /** \brief If TRUE Output precipitation information. */
        ppt,
+      /** \brief If TRUE Output precipitation class information. */
        pclass,
+      /** \brief If TRUE output the yearly average temperature. */
        tmp,
+      /** \brief If TRUE output the group biomasses. */
        grpb,
+      /** \brief If TRUE output relsize. */
        pr,
+      /** \brief If TRUE output biomass. */
        size,
+      /** \brief If TRUE output species information. */
        sppb,
-       wildfire,/* print wild fires count during all the iterations */
-       prescribedfire,/* print prescribed fires count during all the iterations */
+      /** \brief Print total wild fire count across all iterations. */
+       wildfire,
+      /** \brief Print prescribed fire count across all the iterations */
+       prescribedfire,
+      /** \brief print individual information like number of establishments by year. */
        indv;
+      /** \brief the character used to separate values in the output files. */
   char sep;
 };
 
+/**
+ * \brief Defines which mortality output files we would like, and what they should contain.
+ * 
+ * These flags, all from inputs, determine how many files should be printed as well as what 
+ * the columns should contain. This struct is instanciated by the global variable MortFlags.
+ * 
+ * \sa MortFlags
+ * 
+ * \ingroup MORTALITY
+ */
 struct mortflags_st {
-  Bool summary,  /* if FALSE, print no mortality output */
-       yearly, /* print individual yearly data as well as summary */
-       header, /* print a header line of names in each file */
-       group,  /* print data summarized by group */
-       species; /* print data for species */
+      /** \brief If FALSE print no mortality output. */
+  Bool summary,
+      /** \brief Print individual yearly data as well as a summary. */
+       yearly,
+      /** \brief Print a header line of names in each file. */
+       header,
+      /** \brief Print mortality data for each group. */
+       group,
+      /** \brief Print mortality data for each species. */
+       species;
+      /** \brief The separator between values in the output files. */
   char sep;
 };
 

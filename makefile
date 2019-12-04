@@ -143,11 +143,27 @@ output_clean :
 		@rm -fr testing.sagebrush.master/Output/*
 		@rm -fr testing.sagebrush.master/Stepwat_Inputs/Output/*
 
+.PHONY : documentation_clean
+documentation_clean : 
+		@rm -rf Documentation/html
+
 .PHONY : clean
-clean:	cleanobjs cleanbin
+clean:	cleanobjs cleanbin documentation_clean
 
 .PHONY : cleanall
 cleanall: clean output_clean
+
+.PHONY : documentation
+documentation: 
+		@doxygen doxyfile
+		@if open Documentation/html/index.html; \
+		  then echo "Success"; \
+		  else if echo "Open failed. Attempting fallback method." && xdg-open Documentation/html/index.html; \
+		    then echo "Success"; \
+		    else echo "Failed to open documentation"; \
+		  fi; \
+		fi
+
 
 #@# Dependency rules follow -----------------------------
 
