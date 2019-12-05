@@ -85,9 +85,8 @@ extern Bool* _SomeKillage;
 /*************** Local Function Declarations ***************/
 /***********************************************************/
 void Plot_Initialize( void);
-void allocate_Globals(void);
-void deallocate_Globals(Bool isGriddedMode);
 
+#ifndef STDEBUG
 /** \brief Prints a description of flags then exits the program.
  *  
  * Meant to be used when the user inputs an undefined flag.
@@ -109,8 +108,13 @@ static void usage(void) {
   fprintf(stderr,"%s", s);
   exit(0);
 }
+
 static void init_args(int argc, char **argv);
 static void check_log(void);
+
+void allocate_Globals(void);
+void deallocate_Globals(Bool isGriddedMode);
+#endif
 
 /* a couple of debugging routines */
 void check_sizes(const char *);
@@ -166,6 +170,8 @@ pcg32_random_t resgroups_rng;
 pcg32_random_t species_rng;
 pcg32_random_t grid_rng;
 extern pcg32_random_t markov_rng;
+
+#ifndef STDEBUG
 
 /** \brief Runs the program.
  * 
@@ -352,8 +358,7 @@ int main(int argc, char **argv) {
 	return 0;
 }
 /* END PROGRAM */
-
-
+#endif
 
 /** \brief (re)initializes the plot.
  * 
@@ -435,6 +440,9 @@ void Plot_Initialize(void) {
 	SXW_InitPlot();
 }
 
+#ifndef STDEBUG
+
+/**************************************************************/
 /* Allocates memory for any global variables defined as pointers */
 void allocate_Globals(void){
 	Env = (EnvType*) Mem_Calloc(1, sizeof(EnvType), "allocate_Globals: Env");
@@ -669,7 +677,6 @@ static void init_args(int argc, char **argv) {
 
 }
 
-
 /** \brief Prints a warning if there is an entry in the logfile
  * 
  * The warning is printed to the progress file, which is usually the 
@@ -688,6 +695,7 @@ static void check_log(void) {
   }
 
 }
+#endif
 
 /** \brief Compares the getRelsize funcitons to calculated values.
  * 
