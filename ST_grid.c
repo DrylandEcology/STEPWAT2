@@ -718,7 +718,9 @@ void free_grid_memory(void)
 			/* Use deallocate_Globals from ST_main to deallocate global variables,
 			   and free_all_sxw_memory from sxw to deallocate SXW variables. */
 			load_cell(i,j);
+            #ifndef STDEBUG
 			deallocate_Globals(TRUE);
+            #endif
 			free_all_sxw_memory();
 			stat_free_mem();
 			// If seed dispersal is on we allocated additional memory
