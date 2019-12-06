@@ -149,9 +149,9 @@ struct temp_SXW_st{
   RealF *_resource_cur;  /* current resource availability for each STEPPE functional type */
 
   /* one vector for the production constants */
-  RealD _prod_litter[MAX_MONTHS];
-  RealD * _prod_bmass;
-  RealD * _prod_pctlive;
+  RealD** _prod_litter;
+  RealD* _prod_bmass;
+  RealD* _prod_pctlive;
 
 } typedef SXW_resourceType;
 

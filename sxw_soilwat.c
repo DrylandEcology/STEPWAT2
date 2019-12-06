@@ -258,10 +258,7 @@ static void _update_productivity(RealF sizes[]) {
               k = RGroup[g]->veg_prod_type;
               v->veg[k].pct_live[m] += SXWResources->_prod_pctlive[Igp(g, m)] * RGroup[g]->rgroupFractionOfVegTypeBiomass;
               v->veg[k].biomass[m] += SXWResources->_prod_bmass[Igp(g, m)] * bmassg[g] / v->veg[k].cov.fCover;
-            }
-
-            ForEachVegType(k) {
-                v->veg[k].litter[m] = v->veg[k].biomass[m] * SXWResources->_prod_litter[m];
+              v->veg[k].litter[m] = v->veg[k].biomass[m] * SXWResources->_prod_litter[g][m];
             }
         }
     }

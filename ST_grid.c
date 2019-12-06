@@ -831,7 +831,7 @@ void unload_cell(){
 	copy_sxw_variables(NULL,NULL,NULL);
 }
 
-/* 
+/** 
  * \brief Similar to the getaline function in filefuncs.c, except this one 
  * checks for carriage return characters and doesn't deal with whitespace.
  * It treats '\r', '\n', and '\r\n' all like they are valid line feeds.

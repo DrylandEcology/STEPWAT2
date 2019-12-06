@@ -3,6 +3,9 @@
 /**
  * \defgroup SXW SXW
  *           \brief Interface between \ref SOILWAT2 and \ref STEPPE
+ * \defgroup SXW_private SXW_private
+ *           \brief Private functions and data in the \ref SXW module
+ *           \ingroup SXW
  * \defgroup STEPPE Steppe
  *           \brief Steppe plant community simulator
  * \defgroup SOILWAT2 SOILWAT2

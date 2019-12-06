@@ -94,11 +94,6 @@ transp_t* transp_window;
 pcg32_random_t resource_rng; //rng for swx_resource.c functions.
 SXW_resourceType* SXWResources;
 
-/* and one vector for the production constants */
-RealD _prod_litter[MAX_MONTHS];
-RealD * _prod_bmass;
-RealD * _prod_pctlive;
-
 /* These are only used here so they are static.  */
 // static char inbuf[FILENAME_MAX];   /* reusable input buffer */
 static char _swOutDefName[FILENAME_MAX];
@@ -106,7 +101,6 @@ static char *MyFileName;
 static char **_sxwfiles[SXW_NFILES];
 static char _debugout[256];
 static TimeInt _debugyrs[100], _debugyrs_cnt;
-
 
 /*************** Local Function Declarations ***************/
 /***********************************************************/
@@ -425,7 +419,17 @@ void SXW_PrintDebug(Bool cleanup) {
 	}
 }
 
-/* Allocate memory for sxw local variables. This should only be called once per simulation. */
+/** \brief Allocate memory for sxw local variables. 
+ * 
+ * Local variables allocated are SXW, transp_window, and SXWResources.
+ * However, memory allocation in SXW is not modularized well. Check
+ * \ref _make_arrays(), \ref _make_roots_arrays(),
+ * \ref _make_phen_arrays(), \ref _make_prod_arrays(),
+ * \ref _make_transp_arrays(), and \ref _make_swc_array() before assuming that
+ * something isn't allocated.
+ * 
+ * \ingroup SXW_private
+ */
 static void _allocate_memory(void){
 	transp_window = (transp_t*) Mem_Calloc(1, sizeof(transp_t), "_allocate_memory: transp_window");
 
@@ -581,98 +585,126 @@ static void _read_phen(void) {
 
 }
 
+/** \brief Read the values from the SXW prod file.
+ * 
+ * These values are LITTER, BIOMASS, and PCTLIVE. All three values are input
+ * for each group for each month in separate two dimensional tables. If a table
+ * if poorly formated, i.e. incorrect \ref RGroup names, incorrect number of
+ * months, or incorrect number of \ref RGroups, this function will throw a 
+ * fatal error.
+ * 
+ * \sideeffect
+ *         Populates multiple one dimensional and two dimensional arrays.
+ * 
+ * \ingroup SXW_private
+ */
 static void _read_prod(void) {
-	int x;
 	FILE *fp;
-	TimeInt mon = Jan;
+	TimeInt month = Jan;
 
 	GrpIndex g;
-	IntUS cnt = 0;
+	IntUS count = 0;
 	char *p;
 	char * pch;
 	MyFileName = SXW->f_prod;
 	fp = OpenFile(MyFileName, "r");
 
+    /* Read LITTER values for each group for each month */
 	while (GetALine(fp, inbuf)) {
-		x = sscanf(inbuf, "%lf", &SXWResources->_prod_litter[mon]);
-		if (x < 1) {
-			LogError(logfp, LOGFATAL, "%s: invalid record for litter %d.", MyFileName,
-					mon + 1);
+		pch = strstr(inbuf, "[end]");
+		if(pch != NULL) break;
+
+		p = strtok(inbuf, " \t"); /* guaranteed to work via GetALine() */
+		if ((g = RGroup_Name2Index(p)) < 0) {
+			LogError(logfp, LOGFATAL, "%s: Invalid group name for LITTER (%s).",
+					MyFileName, p);
 		}
 
-		if (++mon > Dec)
+		month = Jan;
+		while ((p = strtok(NULL, " \t"))) {
+			if (month > Dec) {
+				LogError(logfp, LOGFATAL,
+						"%s: More than 12 months of data found for LITTER.", MyFileName);
+			}
+			SXWResources->_prod_litter[g][month] = atof(p);
+			month++;
+		}
+
+		count++;
+		if(count == SXW->NGrps)
 			break;
 	}
 
-	if (mon <= Dec) {
-		LogError(logfp, LOGWARN,
-				"%s: No Veg Production values found after month %d", MyFileName,
-				mon + 1);
+	if (count < Globals->grpCount) {
+		LogError(logfp, LOGFATAL, "%s: Not enough valid groups found for LITTER values.",
+				 MyFileName);
 	}
 
+    /* Read BIOMASS values for each group for each month */
 	GetALine(fp,inbuf); /* toss [end] keyword */
-	mon = Jan;
+	month = Jan;
+    count = 0;
 
 	while (GetALine(fp, inbuf)) {
 		pch = strstr(inbuf, "[end]");
 		if(pch != NULL)
 			break;
-		p = strtok(inbuf, " \t"); /* g'teed to work via GetALine() */
+		p = strtok(inbuf, " \t"); /* guaranteed to work via GetALine() */
 
 		if ((g = RGroup_Name2Index(p)) < 0) {
 			LogError(logfp, LOGFATAL, "%s: Invalid group name for biomass (%s) found.",
 					MyFileName, p);
 		}
-		mon = Jan;
+		month = Jan;
 		while ((p = strtok(NULL, " \t"))) {
-			if (mon > Dec) {
+			if (month > Dec) {
 				LogError(logfp, LOGFATAL,
 						"%s: More than 12 months of data found.", MyFileName);
 			}
-			SXWResources->_prod_bmass[Igp(g, mon)] = atof(p);
-			mon++;
+			SXWResources->_prod_bmass[Igp(g, month)] = atof(p);
+			month++;
 		}
-		cnt++;
-		if(cnt == SXW->NGrps)
+		count++;
+		if(count == SXW->NGrps)
 			break;
 	}
 
-	if (cnt < Globals->grpCount) {
+	if (count < Globals->grpCount) {
 		LogError(logfp, LOGFATAL, "%s: Not enough valid groups found.",
 				MyFileName);
 	}
 
-
+    /* Read PCTLIVE values for each group for each month */
 	GetALine(fp, inbuf); /* toss [end] keyword */
-	mon = Jan;
-	cnt=0;
+	month = Jan;
+	count=0;
 
 	while (GetALine(fp, inbuf)) {
 		pch = strstr(inbuf, "[end]");
 		if (pch != NULL)
 			break;
-		p = strtok(inbuf, " \t"); /* g'teed to work via GetALine() */
+		p = strtok(inbuf, " \t"); /* guaranteed to work via GetALine() */
 
 		if ((g = RGroup_Name2Index(p)) < 0) {
 			LogError(logfp, LOGFATAL,
 					"%s: Invalid group name for pctlive (%s) found.",
 					MyFileName, p);
 		}
-		mon = Jan;
+		month = Jan;
 		while ((p = strtok(NULL, " \t"))) {
-			if (mon > Dec) {
+			if (month > Dec) {
 				LogError(logfp, LOGFATAL,
 						"%s: More than 12 months of data found.", MyFileName);
 			}
-			SXWResources->_prod_pctlive[Igp(g, mon)] = atof(p);
-			mon++;
+			SXWResources->_prod_pctlive[Igp(g, month)] = atof(p);
+			month++;
 		}
-		cnt++;
-		if (cnt == SXW->NGrps)
+		count++;
+		if (count == SXW->NGrps)
 			break;
 	}
 
-	if (cnt < Globals->grpCount) {
+	if (count < Globals->grpCount) {
 		LogError(logfp, LOGFATAL, "%s: Not enough valid groups found.",
 				MyFileName);
 	}
@@ -758,13 +790,28 @@ static void _make_phen_arrays(void) {
 
 }
 
+/** \brief Allocate the "prod" arrays. 
+ * 
+ * _prod_bmass, _prod_pctlive, and _prod_litter from the \ref SXWResources
+ * struct are all allocated here.
+ * 
+ * \sideeffect two arrays and one 2D array will be allocated.
+ * 
+ * \ingroup
+ */
 static void _make_prod_arrays(void) {
-	int size;
+	int size, i;
 	char *fstr = "_make_phen_arrays()";
 
 	size = SXW->NGrps * MAX_MONTHS;
 	SXWResources->_prod_bmass = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
 	SXWResources->_prod_pctlive = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
+
+    /* Allocate the _prod_litter 2D array, where rows are rgroups and columns are months. */
+    SXWResources->_prod_litter = (RealD**) Mem_Calloc(SXW->NGrps, sizeof(RealD*), fstr);
+    for(i = 0; i < SXW->NGrps; ++i){
+        SXWResources->_prod_litter[i] = (RealD*) Mem_Calloc(MAX_MONTHS, sizeof(RealD), fstr);
+    }
 }
 
 static void _make_transp_arrays(void) {
@@ -1122,7 +1169,21 @@ int getNTranspLayers(int veg_prod_type) {
   return SW_Site.n_transp_lyrs[veg_prod_type];
 }
 
-/***********************************************************/
+/** 
+ * \brief Free the memory allocated to the SXW, transp_window, and 
+ *         SXWResources structs.
+ * 
+ * This function will free the memory of all pointers in the structs
+ * then free the structs themselves. This function should always be preceded
+ * by a call to \ref SXW_Init().
+ * 
+ * \sideeffect 
+ *         All three variables mentioned will be completely deallocated.
+ * 
+ * \author Chandler Haukap
+ * 
+ * \ingroup SXW
+ */
 void free_all_sxw_memory( void ) {
 	int k;
 
@@ -1131,6 +1192,22 @@ void free_all_sxw_memory( void ) {
 	Mem_Free(transp_window->transp);
 	Mem_Free(transp_window->SoS_array);
 	Mem_Free(transp_window);
+
+    /* Free SXWResources */
+	Mem_Free(SXWResources->_phen);
+	Mem_Free(SXWResources->_prod_bmass);
+	Mem_Free(SXWResources->_prod_pctlive);
+	Mem_Free(SXWResources->_resource_cur);
+	Mem_Free(SXWResources->_roots_active);
+	Mem_Free(SXWResources->_roots_active_rel);
+	Mem_Free(SXWResources->_roots_active_sum);
+	Mem_Free(SXWResources->_roots_max);
+	Mem_Free(SXWResources->_rootsXphen);
+    for(k = 0; k < SXW->NGrps; ++k){
+        Mem_Free(SXWResources->_prod_litter[k]);
+    }
+    Mem_Free(SXWResources->_prod_litter);
+	Mem_Free(SXWResources);
 
 	/* Free SXW */
 	Mem_Free(SXW->f_roots);
@@ -1143,28 +1220,4 @@ void free_all_sxw_memory( void ) {
 	}
 	Mem_Free(SXW->swc);
 	Mem_Free(SXW);
-
-	Mem_Free(SXWResources->_phen);
-	Mem_Free(SXWResources->_prod_bmass);
-	Mem_Free(SXWResources->_prod_pctlive);
-	Mem_Free(SXWResources->_resource_cur);
-	Mem_Free(SXWResources->_roots_active);
-	Mem_Free(SXWResources->_roots_active_rel);
-	Mem_Free(SXWResources->_roots_active_sum);
-	Mem_Free(SXWResources->_roots_max);
-	Mem_Free(SXWResources->_rootsXphen);
-	Mem_Free(SXWResources);
-}
-
-/***********************************************************/
-void save_sxw_memory( RealD * grid_roots_max, RealD* grid_rootsXphen, RealD* grid_roots_active, RealD* grid_roots_active_rel, RealD* grid_roots_active_sum, RealD* grid_phen, RealD* grid_prod_bmass, RealD* grid_prod_pctlive ) {
-	//save memory to the grid
-	memcpy(grid_roots_max, SXWResources->_roots_max, SXW->NGrps * SXW->NTrLyrs * sizeof(RealD));
-	memcpy(grid_rootsXphen, SXWResources->_rootsXphen, SXW->NGrps * SXW->NPds * SXW->NTrLyrs * sizeof(RealD));
-	memcpy(grid_roots_active, SXWResources->_roots_active, SXW->NGrps * SXW->NPds * SXW->NTrLyrs * sizeof(RealD));
-	memcpy(grid_roots_active_rel, SXWResources->_roots_active_rel, SXW->NGrps * SXW->NPds * SXW->NTrLyrs * sizeof(RealD));
-	memcpy(grid_roots_active_sum, SXWResources->_roots_active_sum, NVEGTYPES * SXW->NPds * SXW->NTrLyrs * sizeof(RealD));
-	memcpy(grid_phen, SXWResources->_phen, SXW->NGrps * MAX_MONTHS * sizeof(RealD));
-	memcpy(grid_prod_bmass, SXWResources->_prod_bmass, SXW->NGrps * MAX_MONTHS * sizeof(RealD));
-	memcpy(grid_prod_pctlive, SXWResources->_prod_pctlive, SXW->NGrps * MAX_MONTHS * sizeof(RealD));
 }

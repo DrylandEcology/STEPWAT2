@@ -139,7 +139,7 @@ void insertSXWProd(void) {
 	for(m=0;m<12;m++) {
 		sql[0] = 0;
 		sprintf(sql, "INSERT INTO sxwprod (RGroupID, Month, BMASS, LITTER, PCTLIVE) VALUES (%d, %d, %f, %f, %f);", 
-					  g+1, m+1, SXWResources->_prod_bmass[Igp(g,m)], SXWResources->_prod_litter[m], SXWResources->_prod_pctlive[Igp(g,m)]);
+					  g+1, m+1, SXWResources->_prod_bmass[Igp(g,m)], SXWResources->_prod_litter[g][m], SXWResources->_prod_pctlive[Igp(g,m)]);
 		rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
 		sqlcheck(rc, zErrMsg);
 	}
