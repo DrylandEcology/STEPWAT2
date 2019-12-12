@@ -169,32 +169,31 @@
 # PPTwet = ppt of a wet year (in mm)
 # Pmin = probability of producing seeds in a dry year
 # Pmax = probability of producing seeds in a wet year
-# H = the average release height of the inflorescences (cm) 
-# VT = the average sinking velocity of the seeds (cm/sec)
-# VW - the mean horizontal wind speed (500 cm/sec in Coffin and Lauenroth 1989)
+# H = the average release height of the inflorescences (cm)
+# MAXD = The maximum distance, in meters, a seed can travel.
 #
-# name 	dispersal	param1	PPTdry	PPTwet	Pmin	Pmax	H	VT  VW
- artr	1	    0.5	105	520	0.01	0.55	30.0	100.0   500.0
- trdu 	1		0.5	105	520	0.01	0.55	30.0	100.0   500.0		
- cryp 	1		0.5	105	520	0.01	0.55	30.0	100.0   500.0
- amre 	1		0.5	105	520	0.01	0.55	30.0	100.0   500.0
- chen 	1		0.5	105	520	0.01	0.55	30.0	100.0   500.0
- acmi 	1		0.5	105	520	0.01	0.55	30.0	100.0   500.0
- phho 	1		0.5	105	520	0.01	0.55	30.0	100.0   500.0
- arfr 	1		0.5	105	520	0.01	0.55	30.0	100.0   500.0
- lipu 	1		0.5	105	520	0.01	0.55	30.0	100.0   500.0
- brte 	1		0.5	105	520	0.01	0.55	30.0	100.0   500.0
- vuoc 	1		0.5	105	520	0.01	0.55	30.0	100.0   500.0
- pssp 	1		0.5	105	520	0.01	0.55	30.0	100.0   500.0
- koma 	1		0.5	105	520	0.01	0.55	30.0	100.0   500.0
- bogr 	1		0.5	105	520	0.01	0.55	30.0	100.0   500.0
- spcr 	1		0.5	105	520	0.01	0.55	30.0	100.0   500.0
- gusa 	1		0.5	105	520	0.01	0.55	30.0	100.0   500.0
- chvi 	1		0.5	105	520	0.01	0.55	30.0	100.0   500.0
- oppo 	1		0.5	105	520	0.01	0.55	30.0	100.0   500.0
+# name 	dispersal	param1	PPTdry	PPTwet	Pmin	Pmax	H	MAXD
+ artr	1	    0.5	105	520	0.01	0.55	30.0	3.0
+ trdu 	1		0.5	105	520	0.01	0.55	30.0	3.0
+ cryp 	1		0.5	105	520	0.01	0.55	30.0	3.0
+ amre 	1		0.5	105	520	0.01	0.55	30.0	3.0
+ chen 	1		0.5	105	520	0.01	0.55	30.0	3.0
+ acmi 	1		0.5	105	520	0.01	0.55	30.0	3.0
+ phho 	1		0.5	105	520	0.01	0.55	30.0	3.0
+ arfr 	1		0.5	105	520	0.01	0.55	30.0	3.0
+ lipu 	1		0.5	105	520	0.01	0.55	30.0	3.0
+ brte 	1		0.5	105	520	0.01	0.55	30.0	3.0
+ vuoc 	1		0.5	105	520	0.01	0.55	30.0	3.0
+ pssp 	1		0.5	105	520	0.01	0.55	30.0	3.0
+ koma 	1		0.5	105	520	0.01	0.55	30.0	3.0
+ bogr 	1		0.5	105	520	0.01	0.55	30.0	3.0
+ spcr 	1		0.5	105	520	0.01	0.55	30.0	3.0
+ gusa 	1		0.5	105	520	0.01	0.55	30.0	3.0
+ chvi 	1		0.5	105	520	0.01	0.55	30.0	3.0
+ oppo 	1		0.5	105	520	0.01	0.55	30.0	3.0
 
-#spp1 	1		0.5	105	520	0.01	0.55	30.0	100.0   500.0
-#spp2 	1		0.5	105	520	0.01	0.55	30.0	100.0   500.0
+#spp1 	1		0.5	105	520	0.01	0.55	30.0	3.0
+#spp2 	1		0.5	105	520	0.01	0.55	30.0	3.0
 
 [end]	# this marks the end of the seed-dispersal parameters
 

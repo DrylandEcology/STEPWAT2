@@ -238,17 +238,13 @@ struct species_st {
 	      sd_Pmin,
       /** \brief Seed dispersal parameter read from inputs.
        * \sa ST_seedDispersal.c */
-  	    sd_Pmax,
+          sd_Pmax,
       /** \brief Average release height of the inflorescences in cm.
        * \sa ST_seedDispersal.c */
 	      sd_H,
-      /** \brief Average sinking velocity of seeds (cm/sec).
-       * \sa ST_seedDispersal.c */
-      	sd_VT,
-      /** \brief This variable is used for seed dispersal, but it needs better
-       *         documentation
-       *  \sa ST_seedDispersal.c */ 
-        sd_VW;
+      /** \brief Maximum distance a seed can travel in meters. 
+       * \ingroup SEED_DISPERSAL */
+          maxDispersalDistance;
       /** \brief Temperature class for this species.
        * \sa TempClass */
   TempClass tempclass;

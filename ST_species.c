@@ -341,7 +341,7 @@ void copy_species(const SpeciesType* src, SpeciesType* dest){
 	dest->sd_PPTdry = src->sd_PPTdry;
 	dest->sd_PPTwet = src->sd_PPTwet;
 	dest->sd_sgerm = src->sd_sgerm;
-	dest->sd_VT = src->sd_VT;
+	dest->maxDispersalDistance = src->maxDispersalDistance;
 	dest->seedbank = src->seedbank;
 	dest->seedling_biomass = src->seedling_biomass;
 	dest->seedling_estab_prob = src->seedling_estab_prob;

@@ -54,7 +54,8 @@ void initDispersalParameters(void)
 
 				/* These are the three values we need to calculate the probability of dispersal
                  * according to EQ 5 in Coffin & Lauenroth 1989. */
-				MAXD = ((Species[sp]->sd_H * Species[sp]->sd_VW) / Species[sp]->sd_VT) / 100.0; // divided by 100 to convert from cm to m.
+                // 
+				//MAXD = ((Species[sp]->sd_H * Species[sp]->sd_VW) / Species[sp]->sd_VT) / 100.0; // divided by 100 to convert from cm to m.
 				maxRate = -(log(0.005) / MAXD);
 				plotWidth = sqrt(Globals->plotsize);
                 MAXDP = (int) ceil(MAXD / plotWidth); //MAXD in terms of plots... rounds up to the nearest integer
