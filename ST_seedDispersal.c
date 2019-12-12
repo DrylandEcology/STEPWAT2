@@ -28,7 +28,6 @@ void initDispersalParameters(void)
 {
 	int senderRow, senderCol, receiverRow, receiverCol, MAXDP, maxCells;
 	SppIndex sp;
-	double MAXD; /* maximum seed dispersal distance for a given species */
 	double maxRate; /* Dispersability of the seeds */
 	double plotWidth; /* width of the plots (all plots are equal and square) */
 	double distanceBetweenPlots; /* distance between the sender and the receiver */
@@ -56,9 +55,9 @@ void initDispersalParameters(void)
                  * according to EQ 5 in Coffin & Lauenroth 1989. */
                 // 
 				//MAXD = ((Species[sp]->sd_H * Species[sp]->sd_VW) / Species[sp]->sd_VT) / 100.0; // divided by 100 to convert from cm to m.
-				maxRate = -(log(0.005) / MAXD);
+				maxRate = -(log(Species[sp]->maxDispersalProbability) / Species[sp]->maxDispersalDistance);
 				plotWidth = sqrt(Globals->plotsize);
-                MAXDP = (int) ceil(MAXD / plotWidth); //MAXD in terms of plots... rounds up to the nearest integer
+                MAXDP = (int) ceil(Species[sp]->maxDispersalDistance / plotWidth); //MAXD in terms of plots... rounds up to the nearest integer
                 maxCells = (int) pow((MAXDP * 2) + 1.0, 2.0);
 
 				/* Allocate the dispersalProb 2d array */
@@ -81,7 +80,7 @@ void initDispersalParameters(void)
                         /* The value that we are after should be saved to the sender cell.
                          * this equation comes directly from equation 4 in Coffin and Lauenroth 1989. */
 						sender->mySeedDispersal[sp].dispersalProb[receiverRow][receiverCol]
-                                    = (distanceBetweenPlots > MAXD) ? (0.0) : (exp(-maxRate * distanceBetweenPlots));
+                                    = (distanceBetweenPlots > Species[sp]->maxDispersalDistance) ? (0.0) : (exp(-maxRate * distanceBetweenPlots));
 					}
 				}
 			}
@@ -90,7 +89,13 @@ void initDispersalParameters(void)
 	unload_cell();
 }
 
-/* Perform seed dispersal during the simulation. This is NOT functional yet. */
+/** 
+ * \brief Disperse seeds between plots. NOT FUNCTIONAL YET.
+ * 
+ * \author Chandler Haukap
+ * 
+ * \ingroup SEED_DISPERSAL
+ */
 void disperseSeeds(void)
 {
 	/************ TODO: overhaul seed dispersal. This block prevents seed dispersal from running. **************/
@@ -305,9 +310,19 @@ void _do_precise_dispersal(int leftoverSeeds, SppIndex sp){
     return;
 }
 
-/* Returns the distance in meters between two cells. 
-   To calculate the distance between cells (a,b) and (c,d) with plot width w,
-   input _cell_dist(a, c, b, d, w) */
+/** 
+ * \brief Calculates the distance betwen two 2-dimensional points.
+ * 
+ * \param row1 The row of the first cell, i.e. it's x coordinate.
+ * \param row2 The row of the second cell, i.e. it's x coordinate.
+ * \param col1 The column of the first cell, i.e. it's y coordinate.
+ * \param col1 The column of the first cell, i.e. it's y coordinate.
+ * \param cellLen The length of the square cells.
+ * 
+ * \return A float. The distance between the cells.
+ * 
+ * \ingroup SEED_DISPERSAL_PRIVATE
+ */
 float _cell_dist(int row1, int row2, int col1, int col2, float cellLen)
 {
     double rowDist = row1 - row2;

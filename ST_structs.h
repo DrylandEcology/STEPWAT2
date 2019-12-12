@@ -244,7 +244,11 @@ struct species_st {
 	      sd_H,
       /** \brief Maximum distance a seed can travel in meters. 
        * \ingroup SEED_DISPERSAL */
-          maxDispersalDistance;
+          maxDispersalDistance,
+      /** \brief The probability that a species disperses seeds 
+       *         \ref maxDispersalDistance meters away. 
+       *  \ingroup SEED_DISPERSAL */
+          maxDispersalProbability;
       /** \brief Temperature class for this species.
        * \sa TempClass */
   TempClass tempclass;
