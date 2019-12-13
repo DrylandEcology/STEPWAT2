@@ -14,6 +14,7 @@
 int _do_bulk_dispersal(SppIndex sp);
 void _do_precise_dispersal(int leftoverSeeds, SppIndex sp);
 float _cell_dist(int row1, int row2, int col1, int col2, float cellLen);
+Bool _shouldProduceSeeds(SppIndex sp);
 
 /* RNG unique to seed dispersal. */
 pcg32_random_t dispersal_rng;
@@ -343,4 +344,31 @@ float _cell_dist(int row1, int row2, int col1, int col2, float cellLen)
 		//using the pythagorean theorem: c = sqrt(a^2 + b^2)... c (the hypotenuse) represents the distance that we need.  a is the distance between columns and b is the distance between rows.
 		return sqrt(pow(abs(colDist)*cellLen, 2.0) + pow(abs(rowDist)*cellLen, 2.0));
 	}
+}
+
+/** 
+ * \brief Determines if a given species in the [loaded cell](\ref load_cell)
+ *        is capable of producing seeds.
+ * 
+ * Note that a cell must be loaded for this function to work.
+ * 
+ * \param sp the index in the \ref Species array of the species to test.
+ * 
+ * \return TRUE if there is a sexually mature individual of the given species.\n
+ *         FALSE if there is not.
+ * 
+ * \ingroup SEED_DISPERSAL_PRIVATE
+ */
+Bool _shouldProduceSeeds(SppIndex sp)
+{
+    IndivType* thisIndiv;
+    SpeciesType* thisSpecies = Species[sp];
+
+    ForEachIndiv(thisIndiv, thisSpecies){
+        if(thisIndiv->relsize >= thisSpecies->minReproductiveSize){
+            return TRUE;
+        }
+    }
+
+    return FALSE;
 }

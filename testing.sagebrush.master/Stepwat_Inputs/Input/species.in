@@ -164,7 +164,8 @@
 #
 # name = 4 char name exactly as above (although order is not important)
 # dispersal = flag to turn seed dispersal on/off for this species(0 is off, 1 is on)
-# param1 = % of maximum biomass required for an individual to produce seeds
+# MRS = Minimum reproductive size. The minimum percent of maximum biomass at which an
+#       individual can produce seeds.
 # PPTdry = ppt of a dry year (in mm)
 # PPTwet = ppt of a wet year (in mm)
 # Pmin = probability of producing seeds in a dry year
@@ -173,7 +174,7 @@
 # MAXD = The maximum distance, in meters, a seed can travel.
 # PMD = Probability of Maximum Dispersal. The probability that a seed disperses MAXD meters
 #
-# name 	dispersal	param1	PPTdry	PPTwet	Pmin	Pmax	H	MAXD	PMD
+# name 	dispersal	MRS	PPTdry	PPTwet	Pmin	Pmax	H	MAXD	PMD
  artr	1	    0.5	105	520	0.01	0.55	30.0	30.0	0.005
  trdu 	1		0.5	105	520	0.01	0.55	30.0	3.0	0.005
  cryp 	1		0.5	105	520	0.01	0.55	30.0	3.0	0.005

@@ -1217,7 +1217,7 @@ static void _species_init( void) {
     Species[sp]->allow_growth = TRUE;
     Species[sp]->sd_sgerm = FALSE;
 
-    Species[sp]->sd_Param1 = p1;
+    Species[sp]->minReproductiveSize = p1;
     Species[sp]->sd_PPTdry = p2;
     Species[sp]->sd_PPTwet = p3;
     Species[sp]->sd_Pmin = p4;

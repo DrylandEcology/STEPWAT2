@@ -224,23 +224,23 @@ struct species_st {
         exp_decay,
       /** \brief 1 value for each mortality type, if clonal*/
         prob_veggrow[4],
+      /** \brief Minimum relsize at which an individual can produce seeds.
+       * \ingroup SEED_DISPERSAL */
+  	    minReproductiveSize,
       /** \brief Seed dispersal parameter read from inputs.
-       * \sa ST_seedDispersal.c */
-  	    sd_Param1,
-      /** \brief Seed dispersal parameter read from inputs.
-       * \sa ST_seedDispersal.c */
+       * \ingroup SEED_DISPERSAL */
   	    sd_PPTdry,
       /** \brief Seed dispersal parameter read from inputs.
-       * \sa ST_seedDispersal.c */
+       * \ingroup SEED_DISPERSAL */
 	      sd_PPTwet,
       /** \brief Seed dispersal parameter read from inputs.
-       * \sa ST_seedDispersal.c */
+       * \ingroup SEED_DISPERSAL */
 	      sd_Pmin,
       /** \brief Seed dispersal parameter read from inputs.
-       * \sa ST_seedDispersal.c */
+       * \ingroup SEED_DISPERSAL */
           sd_Pmax,
       /** \brief Average release height of the inflorescences in cm.
-       * \sa ST_seedDispersal.c */
+       * \ingroup SEED_DISPERSAL */
 	      sd_H,
       /** \brief Maximum distance a seed can travel in meters. 
        * \ingroup SEED_DISPERSAL */

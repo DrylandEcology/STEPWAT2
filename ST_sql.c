@@ -503,7 +503,7 @@ static void insertSpecies(void) {
 		sp = Species[s];
 		sql[0] = 0;
 		sprintf(sql,
-				"INSERT INTO Species (SpeciesID, RGroupID, NAME, MaxAge, ViableYrs, MaxSeedEstab, MaxVegUnits, MaxSlow, SPnum, MaxRate, IntrinRate, RelSeedlingsSize, SeedlingBiomass, MatureBiomass, SeedlingEstabProbOld, SeedlingEstabProb, AnnMortProb, CohortSurv, ExpDecay, ProbVeggrow1, ProbVeggrow2, ProbVeggrow3, ProbVeggrow4, sdParam1, sdPPTdry, sdPPTwet, sdPmin, sdPmax, sdH, TempClassID, DisturbClassID, isClonal, UseTempResponse, UseMe, UseDispersal) VALUES (%d, %d, '%s', %d, %d, %d, %d, %d, %d, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %d, %d, %d, %d, %d, %d);",
+				"INSERT INTO Species (SpeciesID, RGroupID, NAME, MaxAge, ViableYrs, MaxSeedEstab, MaxVegUnits, MaxSlow, SPnum, MaxRate, IntrinRate, RelSeedlingsSize, SeedlingBiomass, MatureBiomass, SeedlingEstabProbOld, SeedlingEstabProb, AnnMortProb, CohortSurv, ExpDecay, ProbVeggrow1, ProbVeggrow2, ProbVeggrow3, ProbVeggrow4, minReproductiveSize, sdPPTdry, sdPPTwet, sdPmin, sdPmax, sdH, TempClassID, DisturbClassID, isClonal, UseTempResponse, UseMe, UseDispersal) VALUES (%d, %d, '%s', %d, %d, %d, %d, %d, %d, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %d, %d, %d, %d, %d, %d);",
 				s + 1, sp->res_grp + 1, sp->name, sp->max_age, sp->viable_yrs,
 				sp->max_seed_estab, sp->max_vegunits, sp->max_slow, sp->sp_num,
 				sp->max_rate, sp->intrin_rate, sp->relseedlingsize,
@@ -511,7 +511,7 @@ static void insertSpecies(void) {
 				sp->seedling_estab_prob_old, sp->seedling_estab_prob,
 				sp->ann_mort_prob, sp->cohort_surv, sp->exp_decay,
 				sp->prob_veggrow[0], sp->prob_veggrow[1], sp->prob_veggrow[2],
-				sp->prob_veggrow[3], sp->sd_Param1, sp->sd_PPTdry,
+				sp->prob_veggrow[3], sp->minReproductiveSize, sp->sd_PPTdry,
 				sp->sd_PPTwet, sp->sd_Pmin, sp->sd_Pmax, sp->sd_H,
 				sp->tempclass, sp->disturbclass, sp->isclonal,
 				sp->use_temp_response, sp->use_me, sp->use_dispersal);
@@ -715,7 +715,7 @@ static void createTables(void) {
 	char *table_rgroups = "CREATE TABLE RGroups(RGroupID INT PRIMARY KEY NOT NULL, NAME TEXT NOT NULL, MaxStretch INT, MaxSppEstab INT, MaxSpp INT, MaxAge INT, StartYr INT, KillFreq REAL, Extirp INT, GrpNum INT, VegProdType INT, MinResReq REAL, MaxDensity REAL, MaxPerSqm REAL, MaxBmass REAL, XGrow REAL, SlowRate REAL, PptSlope1 REAL, PptSlope2 REAL, PptSlope3 REAL, PptIntcpt1 REAL, PptIntcpt2 REAL, PptIntcpt3 REAL, Succulent INT, UseExtraRes INT, UseMe INT, UseMort INT, EstAnnually INT, DepthClassID INT );";
 	char *table_rgroupsYearInfo = "CREATE TABLE RGroupsYearInfo(Year INT NOT NULL, Iteration INT NOT NULL, RGroupID INT NOT NULL, Estabs INT, KillYr INT, YrsNegPR INT, mmExtraRes INT, ResRequired REAL, ResAvail REAL, ResExtra REAL, PR REAL, RelSize REAL, EstSppCount REAL, Extirpated INT, RegenOk INT, PRIMARY KEY(Year, Iteration, RGroupID));";
 
-	char *table_species = "CREATE TABLE Species(SpeciesID INT PRIMARY KEY NOT NULL, RGroupID INT NOT NULL, NAME TEXT NOT NULL, MaxAge INT, ViableYrs INT, MaxSeedEstab INT, MaxVegUnits INT, MaxSlow INT, SPnum INT, MaxRate REAL, IntrinRate REAL, RelSeedlingsSize REAL, SeedlingBiomass REAL, MatureBiomass REAL, SeedlingEstabProbOld REAL, SeedlingEstabProb REAL, AnnMortProb REAL, CohortSurv REAL, ExpDecay REAL, ProbVeggrow1 REAL, ProbVeggrow2 REAL, ProbVeggrow3 REAL, ProbVeggrow4 REAL, sdParam1 REAL, sdPPTdry REAL, sdPPTwet REAL, sdPmin REAL, sdPmax REAL, sdH REAL, sdVT REAL, TempClassID INT, DisturbClassID INT, isClonal INT, UseTempResponse INT, UseMe INT, UseDispersal INT);";
+	char *table_species = "CREATE TABLE Species(SpeciesID INT PRIMARY KEY NOT NULL, RGroupID INT NOT NULL, NAME TEXT NOT NULL, MaxAge INT, ViableYrs INT, MaxSeedEstab INT, MaxVegUnits INT, MaxSlow INT, SPnum INT, MaxRate REAL, IntrinRate REAL, RelSeedlingsSize REAL, SeedlingBiomass REAL, MatureBiomass REAL, SeedlingEstabProbOld REAL, SeedlingEstabProb REAL, AnnMortProb REAL, CohortSurv REAL, ExpDecay REAL, ProbVeggrow1 REAL, ProbVeggrow2 REAL, ProbVeggrow3 REAL, ProbVeggrow4 REAL, minReproductiveSize REAL, sdPPTdry REAL, sdPPTwet REAL, sdPmin REAL, sdPmax REAL, sdH REAL, sdVT REAL, TempClassID INT, DisturbClassID INT, isClonal INT, UseTempResponse INT, UseMe INT, UseDispersal INT);";
 	char *table_speciesYearInfo = "CREATE TABLE SpeciesYearInfo(Year INT NOT NULL, Iteration INT NOT NULL, SpeciesID INT NOT NULL, EstabCount INT, Estabs INT, RelSize REAL, ExtraGrowth REAL, ReceivedProb REAL, AllowGrowth INT, sdSGerm INT, PRIMARY KEY(Year, Iteration, SpeciesID));";
 
 	char *table_indiv = "CREATE TABLE Indiv(IndivID INT NOT NULL, Iteration INT NOT NULL, CreatedYear INT NOT NULL, SpeciesID INT NOT NULL, RGroupID INT NOT NULL, KilledYear INT, KillTypeID INT, PRIMARY KEY(IndivID, Iteration, CreatedYear, SpeciesID));";

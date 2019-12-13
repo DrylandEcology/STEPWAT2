@@ -279,12 +279,31 @@ SppIndex species_New(void)
 	return i;
 }
 
-/* Copy one Species' information to another Species. Note that both Species MUST be allocated. */
+/**
+ * \brief Copy one species to another species.
+ * 
+ * Copies every field of the source \ref SpeciesType struct to the destination
+ * \ref SpeciesType struct. This function also deallocates the destination's
+ * \ref IndivType linked list then allocates a new \ref IndivType linked list.
+ * 
+ * \param src Is a pointer to the \ref SpeciesType struct to copy information 
+ *            FROM.
+ * \param dest Is a pointer to the \ref SpeciesType struct to copy information
+ *             TO.
+ * 
+ * \sideeffect 
+ *     The \ref IndivType linked list of the destination will be reallocated to
+ *     the size of the source. And, of course, all fields of the destination 
+ *     will be overwritten.
+ * 
+ * \ingroup SPECIES
+ */
 void copy_species(const SpeciesType* src, SpeciesType* dest){
 	int i;
 	IndivType *srcIndv, *destIndv, *next;
 
-	// Error checking. If src == dest we would just end up loosing the linked list and some other variables.
+	// Error checking. If src == dest we would just end up loosing the linked 
+    // list and some other variables.
 	if(!src || src == dest){
 		return;
 	}
@@ -335,13 +354,14 @@ void copy_species(const SpeciesType* src, SpeciesType* dest){
 	dest->relseedlingsize = src->relseedlingsize;
 	dest->res_grp = src->res_grp;
 	dest->sd_H = src->sd_H;
-	dest->sd_Param1 = src->sd_Param1;
+	dest->minReproductiveSize = src->minReproductiveSize;
 	dest->sd_Pmax = src->sd_Pmax;
 	dest->sd_Pmin = src->sd_Pmin;
 	dest->sd_PPTdry = src->sd_PPTdry;
 	dest->sd_PPTwet = src->sd_PPTwet;
 	dest->sd_sgerm = src->sd_sgerm;
 	dest->maxDispersalDistance = src->maxDispersalDistance;
+    dest->maxDispersalProbability = src->maxDispersalProbability;
 	dest->seedbank = src->seedbank;
 	dest->seedling_biomass = src->seedling_biomass;
 	dest->seedling_estab_prob = src->seedling_estab_prob;
