@@ -46,6 +46,7 @@ RealF RGroup_GetBiomass( GrpIndex rg) ;
 RealF Species_GetBiomass (SppIndex sp);
 void Species_Add_Indiv( SppIndex sp, Int new_indivs);
 RealF getSpeciesRelsize(SppIndex sp);
+RealF getSpeciesHeight(SpeciesType* sp);
 SppIndex Species_Name2Index (const char *name);
 void Species_Kill (const SppIndex sp, int killType);
 void Species_Proportion_Kill (const SppIndex sp, int killType, RealF proportionKilled );

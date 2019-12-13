@@ -239,9 +239,12 @@ struct species_st {
       /** \brief Seed dispersal parameter read from inputs.
        * \ingroup SEED_DISPERSAL */
           sd_Pmax,
-      /** \brief Average release height of the inflorescences in cm.
+      /** \brief Average height of an individual of this species.
        * \ingroup SEED_DISPERSAL */
-	      sd_H,
+	      meanHeight,
+      /** \brief The maximum height of an individual of this species.
+       * \ingroup SEED_DISPERSAL */
+          maxHeight,
       /** \brief Maximum distance a seed can travel in meters. 
        * \ingroup SEED_DISPERSAL */
           maxDispersalDistance,

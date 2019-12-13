@@ -249,6 +249,26 @@ RealF getSpeciesRelsize(SppIndex sp)
 }
 
 /**
+ * \brief Get the height of the tallest individual of this species.
+ * 
+ * NOTE: This function is not complete! For now it only returns the mean height
+ *       of the species.
+ * 
+ * \param sp A pointer to the \ref SpeciesType.
+ * 
+ * \return A float. The height of the tallest individual of the species in 
+ *         centimeters.
+ * 
+ * \author Chandler Haukap
+ * 
+ * \ingroup SPECIES
+ */
+RealF getSpeciesHeight(SpeciesType* sp)
+{
+    return sp->meanHeight;
+}
+
+/**
  * \brief Create a new species and integrate it into \ref Species.
  * 
  * Initial programming by Chris Bennett @ LTER-CSU 6/15/2000.
@@ -353,7 +373,8 @@ void copy_species(const SpeciesType* src, SpeciesType* dest){
 	dest->received_prob = src->received_prob;
 	dest->relseedlingsize = src->relseedlingsize;
 	dest->res_grp = src->res_grp;
-	dest->sd_H = src->sd_H;
+	dest->meanHeight = src->meanHeight;
+    dest->maxHeight = src->maxHeight;
 	dest->minReproductiveSize = src->minReproductiveSize;
 	dest->sd_Pmax = src->sd_Pmax;
 	dest->sd_Pmin = src->sd_Pmin;
