@@ -991,18 +991,22 @@ static void _rgroup_addsucculent( char name[],
    Succulent->mort[Intcpt] = dint;
 }
 
-/**************************************************************/
-/**************************************************************/
-/*****************************************************
- * The *_Species_* functions read the input from the user
- * file for species-level information.
- *
- *****************************************************/
-
+/** 
+ * \brief Read the species-specific inputs and initialize the \ref Species
+ *        array.
+ * 
+ * This function will read the species.in files and allocate enough memory
+ * for the number of species requested. It then adds the species to the
+ * \ref Species array and initializes all variables in the corresponding 
+ * \ref SpeciesType struct.
+ * 
+ * \sideeffect Memory will be allocated for multiple \ref SpeciesType structs
+ *             and the memory will be populated according to the input
+ *             parameters.
+ * 
+ * \ingroup SPECIES_PRIVATE
+ */
 static void _species_init( void) {
-/*======================================================*/
-/* Read parameters for each species
-*/
    FILE *f;
    Bool readspp = TRUE, sppok = TRUE;
 
@@ -1023,7 +1027,7 @@ static void _species_init( void) {
        viable,
        pseed;
    RealF irate, ratep, estab, minb, maxb, cohort, xdecay,
-         p1, p2, p3, p4, p5, p6, HMAX, MAXD, PMD;
+         p1, p2, p3, p4, p5, p6, HMAX, MAXD, PMD, HSlope;
    float var;
    char clonal[5];
 
@@ -1202,9 +1206,9 @@ static void _species_init( void) {
       continue;
     }
 
-    x = sscanf( inbuf, "%s %hd %f %f %f %f %f %f %f %f %f",
-                name, &turnondispersal, &p1, &p2, &p3, &p4, &p5, &p6, &HMAX, &MAXD, &PMD); 
-    if(x < 9) {
+    x = sscanf( inbuf, "%s %hd %f %f %f %f %f %f %f %f %f %f",
+                name, &turnondispersal, &p1, &p2, &p3, &p4, &p5, &p6, &HMAX, &MAXD, &PMD, &HSlope); 
+    if(x < 12) {
       LogError(logfp, LOGFATAL, "%s: Too few columns in species seed dispersal inputs", MyFileName);
     }
 
@@ -1226,6 +1230,7 @@ static void _species_init( void) {
     Species[sp]->maxHeight = HMAX;
     Species[sp]->maxDispersalDistance = MAXD;
     Species[sp]->maxDispersalProbability = PMD;
+    Species[sp]->heightSlope = HSlope;
   }
   if(!sppok) {
 	  LogError(logfp, LOGFATAL, "%s: Incorrect/incomplete input in species seed dispersal input", MyFileName);

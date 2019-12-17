@@ -163,7 +163,7 @@
 # NOTE: Seed dispersal requires running with gridded option.
 #
 # name = 4 char name exactly as above (although order is not important)
-# dispersal = flag to turn seed dispersal on/off for this species(0 is off, 1 is on)
+# Use = flag to turn seed dispersal on/off for this species(0 is off, 1 is on)
 # MRS = Minimum reproductive size. The minimum percent of maximum biomass at which an
 #       individual can produce seeds.
 # PPTdry = ppt of a dry year (in mm)
@@ -172,31 +172,32 @@
 # Pmax = probability of producing seeds in a wet year
 # HBar = The average height of an individual (centimeters).
 # HMax = The maximum height of an individual (centimeters).
+# HSlope = The slope of the allometric relationship between height and biomass (centimeters / gram).
 # MAXD = The maximum distance, in meters, a seed can travel.
 # PMD = Probability of Maximum Dispersal. The probability that a seed disperses MAXD meters
 #
-# name 	dispersal	MRS	PPTdry	PPTwet	Pmin	Pmax	HBar	HMax	MAXD	PMD
- artr	1	    	0.5	105	520	0.01	0.55	30.0	40.0	30.0	0.005
- trdu 	1		0.5	105	520	0.01	0.55	30.0	40.0	3.0	0.005
- cryp 	1		0.5	105	520	0.01	0.55	30.0	40.0	3.0	0.005
- amre 	1		0.5	105	520	0.01	0.55	30.0	40.0	3.0	0.005
- chen 	1		0.5	105	520	0.01	0.55	30.0	40.0	3.0	0.005
- acmi 	1		0.5	105	520	0.01	0.55	30.0	40.0	3.0	0.005
- phho 	1		0.5	105	520	0.01	0.55	30.0	40.0	3.0	0.005
- arfr 	1		0.5	105	520	0.01	0.55	30.0	40.0	3.0	0.005
- lipu 	1		0.5	105	520	0.01	0.55	30.0	40.0	3.0	0.005
- brte 	1		0.5	105	520	0.01	0.55	30.0	40.0	3.0	0.005
- vuoc 	1		0.5	105	520	0.01	0.55	30.0	40.0	3.0	0.005
- pssp 	1		0.5	105	520	0.01	0.55	30.0	40.0	3.0	0.005
- koma 	1		0.5	105	520	0.01	0.55	30.0	40.0	3.0	0.005
- bogr 	1		0.5	105	520	0.01	0.55	30.0	40.0	3.0	0.005
- spcr 	1		0.5	105	520	0.01	0.55	30.0	40.0	3.0	0.005
- gusa 	1		0.5	105	520	0.01	0.55	30.0	40.0	3.0	0.005
- chvi 	1		0.5	105	520	0.01	0.55	30.0	40.0	3.0	0.005
- oppo 	1		0.5	105	520	0.01	0.55	30.0	40.0	3.0	0.005
+# name 	Use	MRS	PPTdry	PPTwet	Pmin	Pmax	HBar	HMax	MAXD	PMD	HSlope
+ artr	1	0.5	105	520	0.01	0.55	30.0	40.0	30.0	0.005	0.5
+ trdu 	1	0.5	105	520	0.01	0.55	30.0	40.0	3.0	0.005	0.5
+ cryp 	1	0.5	105	520	0.01	0.55	30.0	40.0	3.0	0.005	0.5
+ amre 	1	0.5	105	520	0.01	0.55	30.0	40.0	3.0	0.005	0.5
+ chen 	1	0.5	105	520	0.01	0.55	30.0	40.0	3.0	0.005	0.5
+ acmi 	1	0.5	105	520	0.01	0.55	30.0	40.0	3.0	0.005	0.5
+ phho 	1	0.5	105	520	0.01	0.55	30.0	40.0	3.0	0.005	0.5
+ arfr 	1	0.5	105	520	0.01	0.55	30.0	40.0	3.0	0.005	0.5
+ lipu 	1	0.5	105	520	0.01	0.55	30.0	40.0	3.0	0.005	0.5
+ brte 	1	0.5	105	520	0.01	0.55	30.0	40.0	3.0	0.005	0.5
+ vuoc 	1	0.5	105	520	0.01	0.55	30.0	40.0	3.0	0.005	0.5
+ pssp 	1	0.5	105	520	0.01	0.55	30.0	40.0	3.0	0.005	0.5
+ koma 	1	0.5	105	520	0.01	0.55	30.0	40.0	3.0	0.005	0.5
+ bogr 	1	0.5	105	520	0.01	0.55	30.0	40.0	3.0	0.005	0.5
+ spcr 	1	0.5	105	520	0.01	0.55	30.0	40.0	3.0	0.005	0.5
+ gusa 	1	0.5	105	520	0.01	0.55	30.0	40.0	3.0	0.005	0.5
+ chvi 	1	0.5	105	520	0.01	0.55	30.0	40.0	3.0	0.005	0.5
+ oppo 	1	0.5	105	520	0.01	0.55	30.0	40.0	3.0	0.005	0.5
 
-#spp1 	1		0.5	105	520	0.01	0.55	30.0	40.0	3.0	0.005
-#spp2 	1		0.5	105	520	0.01	0.55	30.0	40.0	3.0	0.005
+#spp1 	1	0.5	105	520	0.01	0.55	30.0	40.0	3.0	0.005	0.5
+#spp2 	1	0.5	105	520	0.01	0.55	30.0	40.0	3.0	0.005	0.5
 
 [end]	# this marks the end of the seed-dispersal parameters
 

@@ -245,6 +245,10 @@ struct species_st {
       /** \brief The maximum height of an individual of this species.
        * \ingroup SEED_DISPERSAL */
           maxHeight,
+      /** \brief The slope of the allometric relationship between height and 
+       *         biomass. Constant read in from inputs.
+       * \ingroup SEED_DISPERSAL */
+          heightSlope,
       /** \brief Maximum distance a seed can travel in meters. 
        * \ingroup SEED_DISPERSAL */
           maxDispersalDistance,
