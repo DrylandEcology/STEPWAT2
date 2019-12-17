@@ -15,6 +15,8 @@ int _do_bulk_dispersal(SppIndex sp);
 void _do_precise_dispersal(int leftoverSeeds, SppIndex sp);
 float _cell_dist(int row1, int row2, int col1, int col2, float cellLen);
 Bool _shouldProduceSeeds(SppIndex sp);
+float _rateOfDispersal(float PMD, float meanHeight, float maxHeight);
+float _probabilityOfDispersal(float rate, float height, float distance);
 
 /* RNG unique to seed dispersal. */
 pcg32_random_t dispersal_rng;
@@ -371,4 +373,42 @@ Bool _shouldProduceSeeds(SppIndex sp)
     }
 
     return FALSE;
+}
+
+/**
+ * \brief Returns the rate of dispersal.
+ * 
+ * \param PMD is the probability of maximum dispersal.
+ * \param meanHeight is the average height of an individual of the given 
+ *                   species.
+ * \param maxHeight is the maximum height of an individual of the given 
+ *                  species.
+ * 
+ * \return A float.
+ * 
+ * \author Chandler Haukap
+ * \date 17 December 2019
+ * \ingroup SEED_DISPERSAL_PRIVATE
+ */
+float _rateOfDispersal(float PMD, float meanHeight, float maxHeight)
+{
+    return log(PMD) * meanHeight / maxHeight;
+}
+
+/**
+ * \brief Returns the probability that seeds will disperse a given distance.
+ * 
+ * \param rate is the rate of seed dispersal.
+ * \param height is the height of the tallest individual of the species.
+ * \param distance is the distance the seeds must travel.
+ * 
+ * \return A float.
+ * 
+ * \author Chandler Haukap
+ * \date 17 December 2019
+ * \ingroup SEED_DISPERSAL_PRIVATE
+ */
+float _probabilityOfDispersal(float rate, float height, float distance)
+{
+    return exp(rate / sqrt(height)) * distance;
 }
