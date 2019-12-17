@@ -251,9 +251,6 @@ RealF getSpeciesRelsize(SppIndex sp)
 /**
  * \brief Get the height of the tallest individual of this species.
  * 
- * NOTE: This function is not complete! For now it only returns the mean height
- *       of the species.
- * 
  * \param sp A pointer to the \ref SpeciesType.
  * 
  * \return A float. The height of the tallest individual of the species in 
@@ -265,7 +262,24 @@ RealF getSpeciesRelsize(SppIndex sp)
  */
 RealF getSpeciesHeight(SpeciesType* sp)
 {
-    return sp->meanHeight;
+    IndivType* indiv;
+    RealF maxrelsize = 0;
+    
+    // Find the biggest individual.
+    ForEachIndiv(indiv, sp){
+        if(indiv->relsize > maxrelsize){
+            maxrelsize = indiv->relsize;
+        }
+    }
+
+    // If there are no individuals established.
+    if(maxrelsize == 0){
+        return 0;
+    }
+
+    // (maxrelsize * sp->mature_biomass) is the biomass of the individual.
+    return sp->maxHeight * (1 - exp(
+        -(sp->heightSlope * maxrelsize * sp->mature_biomass)));
 }
 
 /**
