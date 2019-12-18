@@ -393,7 +393,7 @@ static void insertSpeciesYearInfoRow(int Year, int Iteration, int SpeciesID, int
  */
 void insertSpecieYearInfo(SppIndex s) {
 	SpeciesType *sp = Species[s];
-	insertSpeciesYearInfoRow(Globals->currYear, Globals->currIter, s+1, sp->est_count, sp->estabs, getSpeciesRelsize(s), sp->extragrowth, sp->received_prob, sp->allow_growth, sp->sd_sgerm);
+	insertSpeciesYearInfoRow(Globals->currYear, Globals->currIter, s+1, sp->est_count, sp->estabs, getSpeciesRelsize(s), sp->extragrowth, sp->received_prob, sp->allow_growth, sp->seedsPresent);
 }
 
 /**

@@ -173,11 +173,13 @@ struct species_st {
        * \sa indiv_st*/
   struct indiv_st *IndvHead;
       /** \brief Seed dispersal only- whether to allow growth for the current year.
-       * \sa ST_seedDispersal.c */
+       * \sa ST_seedDispersal.c 
+       * \ingroup SEED_DISPERSAL */
   Bool allow_growth,
       /** \brief Whether seeds where produced/received and germinated this year. 
-       * \sa ST_seedDispersal.c */
-	     sd_sgerm;
+       * \sa ST_seedDispersal.c 
+       * \ingroup SEED_DISPERSAL */
+	     seedsPresent;
 
   /**** Quantities that DO NOT change during model runs *****/
 

@@ -1219,7 +1219,6 @@ static void _species_init( void) {
 
     Species[sp]->use_dispersal = itob(turnondispersal);
     Species[sp]->allow_growth = TRUE;
-    Species[sp]->sd_sgerm = FALSE;
 
     Species[sp]->minReproductiveSize = p1;
     Species[sp]->sd_Pmin = p4;

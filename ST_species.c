@@ -85,7 +85,7 @@ IntS Species_NumEstablish(SppIndex sp)
 {
 	//special conditions if we're using the grid and seed dispersal options (as long as its not during the spinup, because we dont use seed dispersal during spinup)
 	if (UseGrid && UseSeedDispersal && !DuringInitialization) {
-		if (Species[sp]->sd_sgerm)
+		if (Species[sp]->seedsPresent)
 		{
 			if (Species[sp]->max_seed_estab <= 1) {
 				return 1;
@@ -100,7 +100,7 @@ IntS Species_NumEstablish(SppIndex sp)
 	//float biomass = Species[sp]->relsize * Species[sp]->mature_biomass; //This line does nothing!
 	if (RGroup[Species[sp]->res_grp]->est_annually
 			|| LE(RandUni(&species_rng), Species[sp]->seedling_estab_prob)
-			|| (Species[sp]->sd_sgerm)) {
+			|| (Species[sp]->seedsPresent)) {
 		if (Species[sp]->max_seed_estab <= 1) {
 			return 1;
 		} else {
@@ -393,7 +393,7 @@ void copy_species(const SpeciesType* src, SpeciesType* dest){
 	dest->minReproductiveSize = src->minReproductiveSize;
 	dest->sd_Pmax = src->sd_Pmax;
 	dest->sd_Pmin = src->sd_Pmin;
-	dest->sd_sgerm = src->sd_sgerm;
+	dest->seedsPresent = src->seedsPresent;
 	dest->maxDispersalDistance = src->maxDispersalDistance;
     dest->maxDispersalProbability = src->maxDispersalProbability;
 	dest->seedbank = src->seedbank;
