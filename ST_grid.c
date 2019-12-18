@@ -238,12 +238,6 @@ void runGrid(void)
 
 					Globals->currYear = year;
 
-					/* Seed dispersal needs to take into account last year's precipitation, 
-					   so we'll record it before calling Env_Generate(). */
-					if (year > 1 && UseSeedDispersal){
-						gridCells[i][j].mySeedDispersal->lyppt = gridCells[i][j].myEnvironment.ppt;
-					}
-
 					/* The following functions mimic ST_main.c. */
 
 					rgroup_Establish(); 		// Establish individuals.

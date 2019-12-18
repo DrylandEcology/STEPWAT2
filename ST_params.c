@@ -1206,9 +1206,9 @@ static void _species_init( void) {
       continue;
     }
 
-    x = sscanf( inbuf, "%s %hd %f %f %f %f %f %f %f %f %f %f",
-                name, &turnondispersal, &p1, &p2, &p3, &p4, &p5, &p6, &HMAX, &MAXD, &PMD, &HSlope); 
-    if(x < 12) {
+    x = sscanf( inbuf, "%s %hd %f %f %f %f %f %f %f %f",
+                name, &turnondispersal, &p1, &p4, &p5, &p6, &HMAX, &MAXD, &PMD, &HSlope); 
+    if(x < 10) {
       LogError(logfp, LOGFATAL, "%s: Too few columns in species seed dispersal inputs", MyFileName);
     }
 
@@ -1222,8 +1222,6 @@ static void _species_init( void) {
     Species[sp]->sd_sgerm = FALSE;
 
     Species[sp]->minReproductiveSize = p1;
-    Species[sp]->sd_PPTdry = p2;
-    Species[sp]->sd_PPTwet = p3;
     Species[sp]->sd_Pmin = p4;
     Species[sp]->sd_Pmax = p5;
     Species[sp]->meanHeight = p6;

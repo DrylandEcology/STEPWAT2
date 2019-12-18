@@ -229,12 +229,6 @@ struct species_st {
   	    minReproductiveSize,
       /** \brief Seed dispersal parameter read from inputs.
        * \ingroup SEED_DISPERSAL */
-  	    sd_PPTdry,
-      /** \brief Seed dispersal parameter read from inputs.
-       * \ingroup SEED_DISPERSAL */
-	      sd_PPTwet,
-      /** \brief Seed dispersal parameter read from inputs.
-       * \ingroup SEED_DISPERSAL */
 	      sd_Pmin,
       /** \brief Seed dispersal parameter read from inputs.
        * \ingroup SEED_DISPERSAL */

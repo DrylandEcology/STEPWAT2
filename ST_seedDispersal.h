@@ -18,8 +18,6 @@ struct _grid_sd_struct
 	Bool seeds_received;
 	/* dispersalProb[row][col] = the probability that this cell will disperse seeds to cell (row,col). */
 	double **dispersalProb;
-	/* Last year's precipitation. */
-	double lyppt;
 }typedef Grid_SD_St;
 
 /* TRUE if we should run seed dispersal between years during the main simulation. */

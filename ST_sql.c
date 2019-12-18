@@ -503,7 +503,7 @@ static void insertSpecies(void) {
 		sp = Species[s];
 		sql[0] = 0;
 		sprintf(sql,
-				"INSERT INTO Species (SpeciesID, RGroupID, NAME, MaxAge, ViableYrs, MaxSeedEstab, MaxVegUnits, MaxSlow, SPnum, MaxRate, IntrinRate, RelSeedlingsSize, SeedlingBiomass, MatureBiomass, SeedlingEstabProbOld, SeedlingEstabProb, AnnMortProb, CohortSurv, ExpDecay, ProbVeggrow1, ProbVeggrow2, ProbVeggrow3, ProbVeggrow4, minReproductiveSize, sdPPTdry, sdPPTwet, sdPmin, sdPmax, Height, TempClassID, DisturbClassID, isClonal, UseTempResponse, UseMe, UseDispersal) VALUES (%d, %d, '%s', %d, %d, %d, %d, %d, %d, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %d, %d, %d, %d, %d, %d);",
+				"INSERT INTO Species (SpeciesID, RGroupID, NAME, MaxAge, ViableYrs, MaxSeedEstab, MaxVegUnits, MaxSlow, SPnum, MaxRate, IntrinRate, RelSeedlingsSize, SeedlingBiomass, MatureBiomass, SeedlingEstabProbOld, SeedlingEstabProb, AnnMortProb, CohortSurv, ExpDecay, ProbVeggrow1, ProbVeggrow2, ProbVeggrow3, ProbVeggrow4, minReproductiveSize, sdPmin, sdPmax, Height, TempClassID, DisturbClassID, isClonal, UseTempResponse, UseMe, UseDispersal) VALUES (%d, %d, '%s', %d, %d, %d, %d, %d, %d, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %d, %d, %d, %d, %d, %d);",
 				s + 1, sp->res_grp + 1, sp->name, sp->max_age, sp->viable_yrs,
 				sp->max_seed_estab, sp->max_vegunits, sp->max_slow, sp->sp_num,
 				sp->max_rate, sp->intrin_rate, sp->relseedlingsize,
@@ -511,8 +511,8 @@ static void insertSpecies(void) {
 				sp->seedling_estab_prob_old, sp->seedling_estab_prob,
 				sp->ann_mort_prob, sp->cohort_surv, sp->exp_decay,
 				sp->prob_veggrow[0], sp->prob_veggrow[1], sp->prob_veggrow[2],
-				sp->prob_veggrow[3], sp->minReproductiveSize, sp->sd_PPTdry,
-				sp->sd_PPTwet, sp->sd_Pmin, sp->sd_Pmax, getSpeciesHeight(sp),
+				sp->prob_veggrow[3], sp->minReproductiveSize,
+				sp->sd_Pmin, sp->sd_Pmax, getSpeciesHeight(sp),
 				sp->tempclass, sp->disturbclass, sp->isclonal,
 				sp->use_temp_response, sp->use_me, sp->use_dispersal);
 		rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);

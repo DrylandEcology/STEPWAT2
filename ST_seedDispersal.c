@@ -108,14 +108,6 @@ void disperseSeeds(void)
 	return;
 	/***********************************************************************************************************/
 
-/* TODO: discuss this implementation:
-    SppIndex sp;
-    ForEachSpecies(sp){
-        int leftovers = _do_bulk_dispersal(sp);
-        _do_precise_dispersal(leftovers, sp);
-    }
-*/
-
 /* 
 	float biomass, randomN, LYPPT, presentProb, receivedProb;
 	int i, j, germ, sgerm, year, row, col;
@@ -322,7 +314,7 @@ void _do_precise_dispersal(int leftoverSeeds, SppIndex sp){
  * \param col1 The column of the first cell, i.e. it's y coordinate.
  * \param cellLen The length of the square cells.
  * 
- * \return A float. The distance between the cells.
+ * \return A Double. The distance between the cells.
  * 
  * \ingroup SEED_DISPERSAL_PRIVATE
  */
@@ -342,8 +334,7 @@ float _cell_dist(int row1, int row2, int col1, int col2, float cellLen)
 	}
 	else
 	{ // row1 != row2 && col1 != col2
-		//the problem can be thought of in terms of a right triangle...
-		//using the pythagorean theorem: c = sqrt(a^2 + b^2)... c (the hypotenuse) represents the distance that we need.  a is the distance between columns and b is the distance between rows.
+		// Pythagorean theorem:
 		return sqrt(pow(abs(colDist)*cellLen, 2.0) + pow(abs(rowDist)*cellLen, 2.0));
 	}
 }
