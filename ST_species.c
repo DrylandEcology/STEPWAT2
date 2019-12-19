@@ -83,33 +83,28 @@ static SpeciesType *_create(void);
  */
 IntS Species_NumEstablish(SppIndex sp)
 {
-	//special conditions if we're using the grid and seed dispersal options (as long as its not during the spinup, because we dont use seed dispersal during spinup)
-	if (UseGrid && UseSeedDispersal && !DuringInitialization) {
-		if (Species[sp]->seedsPresent)
-		{
-			if (Species[sp]->max_seed_estab <= 1) {
-				return 1;
-			} else {
-				return (IntS) RandUniIntRange(1, Species[sp]->max_seed_estab, &species_rng);
-			}
-		} else {
-			return 0;
-		}
-	}
+    // If we are using seed dispersal
+    if(UseSeedDispersal){
+        if(Species[sp]->seedsPresent){
+            return (IntS) RandUniIntRange(1, Species[sp]->max_seed_estab, &species_rng);
+        } else {
+            return 0;
+        }
+    }
 
-	//float biomass = Species[sp]->relsize * Species[sp]->mature_biomass; //This line does nothing!
-	if (RGroup[Species[sp]->res_grp]->est_annually
-			|| LE(RandUni(&species_rng), Species[sp]->seedling_estab_prob)
-			|| (Species[sp]->seedsPresent)) {
-		if (Species[sp]->max_seed_estab <= 1) {
-			return 1;
-		} else {
-			return (IntS) RandUniIntRange(1, Species[sp]->max_seed_estab, &species_rng);
-		    //return Species[sp]->max_seed_estab;
-		}
-	} else {
-		return 0;
-	}
+    // If we are forcing this species to establish every year
+    if(RGroup[Species[sp]->res_grp]->est_annually){
+        return (IntS) RandUniIntRange(1, Species[sp]->max_seed_estab, &species_rng);
+    }
+
+    // Otherwise, run normal establishment
+    if(RandUni(&species_rng) <= Species[sp]->seedling_estab_prob){
+        return (IntS) RandUniIntRange(1, Species[sp]->max_seed_estab, &species_rng);
+    }
+
+    // If we didn't get caught by any of the three "if" statements above then
+    // This species will not establish.
+    return 0;
 }
 
 /**
