@@ -400,10 +400,6 @@ static void _init_grid_inputs(void)
 	if (UseDisturbances){
 		_read_disturbances_in();
 	}
-	if (UseSeedDispersal || initializationMethod == INIT_WITH_SEEDS)
-	{
-		initDispersalParameters();
-	}
 	if(initializationMethod != INIT_WITH_NOTHING){
 		_read_init_species();
 	}
@@ -703,8 +699,7 @@ static void _allocate_accumulators(void){
 void free_grid_memory(void)
 {
 	//frees all the memory allocated in this file ST_Grid.c (most of it is dynamically allocated in _init_grid_globals() & _load_grid_globals() functions)
-	int i, j, sd_i;
-	SppIndex s;
+	int i, j;
 
 	/* Free memory that we have allocated in ST_grid.c */
 	for(i = 0; i < grid_Rows; ++i){
@@ -717,19 +712,9 @@ void free_grid_memory(void)
             #endif
 			free_all_sxw_memory();
 			stat_free_mem();
-			// If seed dispersal is on we allocated additional memory
-			if(UseSeedDispersal) {
-				ForEachSpecies(s) {
-					for(sd_i = 0; sd_i < grid_Rows; ++sd_i){
-						Mem_Free(gridCells[i][j].mySeedDispersal[s].dispersalProb[sd_i]);
-					}
-					Mem_Free(gridCells[i][j].mySeedDispersal[s].dispersalProb);
-				}
-			}
 			unload_cell();
 
 			Mem_Free(gridCells[i][j].mySpeciesInit.shouldBeInitialized);
-			Mem_Free(gridCells[i][j].mySeedDispersal);
 			Mem_Free(gridCells[i][j].someKillage);
 
 			Mem_Free(gridCells[i][j].mySoils.depth);

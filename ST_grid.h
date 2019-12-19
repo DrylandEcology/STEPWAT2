@@ -79,8 +79,6 @@ struct grid_cell_st
 	Bool DuringInitialization;
 	/* species spinup information */
 	Grid_Init_Species_St mySpeciesInit;
-	/* seed dispersal information corresponding to this cell */
-	Grid_SD_St *mySeedDispersal;
 
 	Bool* someKillage;
 	

@@ -2,7 +2,6 @@
  * \file ST_seedDispersal.c
  * \brief Function definitions for all seed dispersal specific functions.
  * 
- * 
  * \author Chandler Haukap
  * \date 17 December 2019
  * 
@@ -21,97 +20,22 @@ Bool _shouldProduceSeeds(SppIndex sp);
 float _rateOfDispersal(float PMD, float meanHeight, float maxHeight);
 float _probabilityOfDispersal(float rate, float height, float distance);
 
-/* RNG unique to seed dispersal. */
+/**
+ * \brief The random number generator for the seed dispersal module.
+ * \ingroup SEED_DISPERSAL_PRIVATE
+ */
 pcg32_random_t dispersal_rng;
 
 /**
- * \brief Allocates any memory necessary for gridded mode.
- * 
- * \ingroup SEED_DISPERSAL
+ * \brief TRUE if \ref dispersal_rng has already been seeded.
+ * \ingroup SEED_DISPERSAL_PRIVATE
  */
-void initDispersalParameters(void) {
-  int senderRow, senderCol, receiverRow, receiverCol, MAXDP, maxCells;
-  SppIndex sp;
-  double maxRate;   /* Dispersability of the seeds */
-  double plotWidth; /* width of the plots (all plots are equal and square) */
-  double
-      distanceBetweenPlots; /* distance between the sender and the receiver */
-  CellType *sender;
-
-  RandSeed(SuperGlobals.randseed, &dispersal_rng);
-
-  /* sender denotes that these loops refer to the cell distributing seeds */
-  for (senderRow = 0; senderCol < grid_Rows; ++senderRow) {
-    for (senderCol = 0; senderCol < grid_Cols; ++senderCol) {
-      /* Cell is loaded to ensure the global Species pointer points to a valid
-         SpeciesType so the ForEachSpecies loop is able to iterate. */
-      load_cell(senderRow, senderCol);
-      sender = &gridCells[senderRow][senderCol];
-
-      /* Allocate seed dispersal information. */
-      sender->mySeedDispersal = Mem_Calloc(MAX_SPECIES, sizeof(Grid_SD_St),
-                                           "initDispersalParameters");
-
-      ForEachSpecies(sp) {
-        if (!(Species[sp]->use_me && Species[sp]->use_dispersal)) {
-          continue;
-        }
-
-        /* These are the three values we need to calculate the probability of
-         * dispersal according to EQ 5 in Coffin & Lauenroth 1989. */
-        //
-        // MAXD = ((Species[sp]->sd_H * Species[sp]->sd_VW) /
-        // Species[sp]->sd_VT) / 100.0; // divided by 100 to convert from cm to
-        // m.
-        maxRate = -(log(Species[sp]->maxDispersalProbability) /
-                    Species[sp]->maxDispersalDistance);
-        plotWidth = sqrt(Globals->plotsize);
-        MAXDP = (int)ceil(Species[sp]->maxDispersalDistance /
-                          plotWidth); // MAXD in terms of plots... rounds up to
-                                      // the nearest integer
-        maxCells = (int)pow((MAXDP * 2) + 1.0, 2.0);
-
-        /* Allocate the dispersalProb 2d array */
-        sender->mySeedDispersal[sp].dispersalProb =
-            Mem_Calloc(grid_Rows, sizeof(double *),
-                       "initDispersalParameters: dispersalProb");
-        for (receiverRow = 0; receiverRow < grid_Rows; ++receiverRow) {
-          sender->mySeedDispersal[sp].dispersalProb[receiverRow] =
-              Mem_Calloc(grid_Cols, sizeof(double),
-                         "initDispersalParameters: dispersalProb[i]");
-        }
-
-        /* Loop through all possible recipients of seeds. */
-        for (receiverRow = 0; receiverRow < grid_Rows; ++receiverRow) {
-          for (receiverCol = 0; receiverCol < grid_Cols; ++receiverCol) {
-            if (senderRow == receiverRow && senderCol == receiverCol) {
-              continue; // No need to calculate a probability for dispersal to
-                        // itself
-            }
-
-            distanceBetweenPlots = _distance(senderRow, receiverRow, senderCol,
-                                              receiverCol, plotWidth);
-
-            /* The value that we are after should be saved to the sender cell.
-             * this equation comes directly from equation 4 in Coffin and
-             * Lauenroth 1989. */
-            sender->mySeedDispersal[sp]
-                .dispersalProb[receiverRow][receiverCol] =
-                (distanceBetweenPlots > Species[sp]->maxDispersalDistance)
-                    ? (0.0)
-                    : (exp(-maxRate * distanceBetweenPlots));
-          }
-        }
-      }
-    }
-  }
-  unload_cell();
-}
+Bool isRNGSeeded = FALSE;
 
 /**
  * \brief Disperse seeds between cells.
  * 
- * Iterates through all senders and recipients and deterimes which plots 
+ * Iterates through all senders and recipients and determines which plots 
  * received seeds. If a cell does receive seeds for a given species,
  * Species[sp]->seedsPresent will be set to TRUE.
  * 
@@ -121,7 +45,6 @@ void initDispersalParameters(void) {
  *
  * \author Chandler Haukap
  * \date 18 December 2019
- *
  * \ingroup SEED_DISPERSAL
  */
 void disperseSeeds(void) {
@@ -134,6 +57,10 @@ void disperseSeeds(void) {
   double rate;
   double height;
   double distance;
+
+  if(!isRNGSeeded){
+      RandSeed(SuperGlobals.randseed, &dispersal_rng);
+  }
 
   // Before we do anything we need to reset seedsPresent.
   for (row = 0; row < grid_Rows; ++row) {
@@ -155,9 +82,8 @@ void disperseSeeds(void) {
           continue;
         // Running this algorithm on Species that didn't request dispersal
         // wouldn't hurt, but it would be a waste of time.
-        if (!Species[sp]->use_dispersal){
+        if (!Species[sp]->use_dispersal)
           continue;
-        }
 
         // These variables are independent of recipient.
         height = getSpeciesHeight(Species[sp]);
