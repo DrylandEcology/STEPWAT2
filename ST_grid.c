@@ -229,6 +229,11 @@ void runGrid(void)
 			if(UseProgressBar){
 				logProgress(iter, year, SIMULATION);
 			}
+
+            if (UseSeedDispersal){
+				disperseSeeds();
+            }
+            
 			for (i = 0; i < grid_Rows; i++){
 				for (j = 0; j < grid_Cols; j++)
 				{ //for each cell
@@ -266,9 +271,6 @@ void runGrid(void)
 
 				} /* end model run for this cell*/
 			} /* end model run for this row */
-			if (UseSeedDispersal){
-				disperseSeeds();
-            }
 			
 			unload_cell(); // Reset the global variables
 		}/* end model run for this year*/
@@ -1204,13 +1206,6 @@ static void _read_grid_setup(void)
         LogError(logfp, LOGFATAL,
                  "Invalid grid setup file (seed dispersal line wrong)");
     UseSeedDispersal = itob(j);
-
-	// TODO: Remove this block once seed dispersal works.
-	if(UseSeedDispersal){
-		printf("\nSeed dispersal during the simulation is not yet functional.\n"
-		    "Check out GitHub for updates on this feature.\n");
-		UseSeedDispersal = FALSE;
-	}
 
 	GetALine(f, buf);
 	i = sscanf(buf, "%s", initializationType);

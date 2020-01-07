@@ -4,7 +4,7 @@
  *        dispersal module.
  * 
  * The seed dispersal module is intended to run in gridded mode. It offers
- * an alternative to traditional establishment by allowing growth only when 
+ * an alternative to traditional establishment by allowing establishment only when 
  * seeds reach a cell from a nearby cell.
  * 
  * \author Chandler Haukap

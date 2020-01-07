@@ -54,12 +54,16 @@ void disperseSeeds(void) {
   int receiverRow, receiverCol;
   // The probability of dispersal
   double Pd;
+  // The rate of dispersal
   double rate;
+  // The height of the tallest individual
   double height;
+  // The distance between a potential sender and recipient
   double distance;
 
   if(!isRNGSeeded){
       RandSeed(SuperGlobals.randseed, &dispersal_rng);
+      isRNGSeeded = TRUE;
   }
 
   // Before we do anything we need to reset seedsPresent.
@@ -77,30 +81,33 @@ void disperseSeeds(void) {
 
       // This loop refers to the Species array of the SENDER.
       ForEachSpecies(sp) {
-        // If this species can't produce we are done.
-        if (!_shouldProduceSeeds(sp))
-          continue;
         // Running this algorithm on Species that didn't request dispersal
         // wouldn't hurt, but it would be a waste of time.
         if (!Species[sp]->use_dispersal)
+          continue;
+        
+        // If there are no individuals of this species that are of reproductive
+        // age continue.
+        if (!_shouldProduceSeeds(sp))
           continue;
 
         // These variables are independent of recipient.
         height = getSpeciesHeight(Species[sp]);
         rate = _rateOfDispersal(Species[sp]->maxDispersalProbability,
                                 Species[sp]->meanHeight, 
-                                Species[sp]->maxHeight);
+                                Species[sp]->maxDispersalDistance);
 
         // Iterate through all possible recipients of seeds.
         for (receiverRow = 0; receiverRow < grid_Rows; ++receiverRow) {
           for (receiverCol = 0; receiverCol < grid_Cols; ++receiverCol) {
             receiverCell = &gridCells[receiverRow][receiverCol];
+
             // This algorithm wouldn't hurt anything but it would waste time.
             if (!receiverCell->mySpecies[sp]->use_dispersal){
               continue;
             }
 
-            // If this cell already has seeds theres no point continuing.
+            // If this cell already has seeds there is no point in continuing
             if(receiverCell->mySpecies[sp]->seedsPresent){
               continue;
             }
@@ -125,12 +132,12 @@ void disperseSeeds(void) {
 }
 
 /**
- * \brief Calculates the distance betwen two 2-dimensional points.
+ * \brief Calculates the distance between two 2-dimensional points.
  *
- * \param row1 The row of the first cell, i.e. it's x coordinate.
- * \param row2 The row of the second cell, i.e. it's x coordinate.
- * \param col1 The column of the first cell, i.e. it's y coordinate.
- * \param col1 The column of the first cell, i.e. it's y coordinate.
+ * \param row1 The row of the first cell, i.e. its x coordinate.
+ * \param row2 The row of the second cell, i.e. its x coordinate.
+ * \param col1 The column of the first cell, i.e. its y coordinate.
+ * \param col1 The column of the first cell, i.e. its y coordinate.
  * \param cellLen The length of the square cells.
  *
  * \return A Double. The distance between the cells.
@@ -194,8 +201,8 @@ Bool _shouldProduceSeeds(SppIndex sp) {
  * \date 17 December 2019
  * \ingroup SEED_DISPERSAL_PRIVATE
  */
-float _rateOfDispersal(float PMD, float meanHeight, float maxHeight) {
-  return log(PMD) * meanHeight / maxHeight;
+float _rateOfDispersal(float PMD, float meanHeight, float maxDistance) {
+  return log(PMD) * meanHeight / maxDistance;
 }
 
 /**

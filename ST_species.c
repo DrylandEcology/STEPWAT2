@@ -73,32 +73,41 @@ static SpeciesType *_create(void);
  * seedlings that will establish this year based on the maximum number of 
  * seedlings that can establish in any year.
  * 
- * Initial programming by Chris Bennett @ LTER-CSU 6/15/2000.
+ * Initial programming by Chris Bennett @ LTER-CSU 6/15/2000. 
+ * Overhauled by Chandler Haukap.
  * 
  * \param sp the index in \ref Species of the species to establish
  * 
  * \return A number of seedlings between 0 and \ref Species[sp]->max_seed_estab
  * 
+ * \author Chandler Haukap
+ * \date 19 December 2019
  * \ingroup SPECIES
  */
 IntS Species_NumEstablish(SppIndex sp)
 {
     // If we are using seed dispersal
-    if(UseSeedDispersal){
-        if(Species[sp]->seedsPresent){
-            return (IntS) RandUniIntRange(1, Species[sp]->max_seed_estab, &species_rng);
+    if(UseSeedDispersal && Species[sp]->use_dispersal){
+        if(Species[sp]->seedsPresent && 
+           RandUni(&species_rng) <= Species[sp]->seedling_estab_prob){
+			// printf("** %s used dispersal **\n", Species[sp]->name);
+            return (IntS) RandUniIntRange(1, Species[sp]->max_seed_estab, 
+										  &species_rng);
         } else {
+			// printf("%s tried dispersal but was unsuccessfull\n", Species[sp]->name);
             return 0;
         }
     }
 
     // If we are forcing this species to establish every year
     if(RGroup[Species[sp]->res_grp]->est_annually){
+		// printf("%s forced establishment\n", Species[sp]->name);
         return (IntS) RandUniIntRange(1, Species[sp]->max_seed_estab, &species_rng);
     }
 
     // Otherwise, run normal establishment
     if(RandUni(&species_rng) <= Species[sp]->seedling_estab_prob){
+		// printf("%s used traditional establishment\n", Species[sp]->name);
         return (IntS) RandUniIntRange(1, Species[sp]->max_seed_estab, &species_rng);
     }
 
@@ -259,17 +268,17 @@ RealF getSpeciesHeight(SpeciesType* sp)
 {
     IndivType* indiv;
     RealF maxrelsize = 0;
+
+    // If there are no individuals established.
+    if(sp->est_count < 1){
+        return 0;
+    }
     
     // Find the biggest individual.
     ForEachIndiv(indiv, sp){
         if(indiv->relsize > maxrelsize){
             maxrelsize = indiv->relsize;
         }
-    }
-
-    // If there are no individuals established.
-    if(maxrelsize == 0){
-        return 0;
     }
 
     // (maxrelsize * sp->mature_biomass) is the biomass of the individual.

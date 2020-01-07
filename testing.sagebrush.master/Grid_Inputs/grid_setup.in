@@ -3,11 +3,11 @@
 2 2		# rows cols
 1		# use disturbances csv file (0 or 1)... 0 means no, 1 means yes
 1		# use soils csv file (0 or 1)... 0 means no, 1 means yes
-0		# use seed dispersal (0 or 1)... 0 means no, 1 means yes
+1		# use seed dispersal (0 or 1)... 0 means no, 1 means yes
 spinup  	# Initialization method. Options are "spinup", "seeds", or "none"
 300     # Number of years to perform initialization (whichever method you choose). 
 1       # Write separate output files for each cell.
 
 #SEED DISPERSAL OUTPUTS
-1		# output seed dispersal summary file?  1 means yes, 0 means no
-,		# output seperator. Valid options are: t = tab, s = space, or any single character such as , | : etc (excluding '#','t', and 's').  Suggested: tab.
+0		# output seed dispersal summary file?  1 means yes, 0 means no
+,		# output separator. Valid options are: t = tab, s = space, or any single character such as , | : etc (excluding '#','t', and 's').  Suggested: tab.

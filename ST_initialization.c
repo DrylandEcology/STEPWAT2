@@ -262,6 +262,11 @@ void loadInitializationConditions(){
  * Fire and grazing will potentially be added to spinup as a future feature. */
 static void _run_spinup(void)
 {
+    // We don't want seed dispersal durring spinup, so we'll store it here,
+    // turn it off, then turn it back on afterwards.
+    Bool myUseSeedDispersal = UseSeedDispersal;
+    UseSeedDispersal = FALSE;
+
 	Bool killedany;             // killedany for mortality functions
 
     rgroup_Establish(); 		// Establish individuals. Excludes annuals.
@@ -272,7 +277,10 @@ static void _run_spinup(void)
     rgroup_IncrAges(); 			// Increment ages of all plants
     _kill_annuals(); 			// Kill annuals
     _kill_maxage();             // Kill plants that reach max age
-    _kill_extra_growth(); 		// Kill superfluous growth			
+    _kill_extra_growth(); 		// Kill superfluous growth	
+
+    // Turn UseSeedDispersal back on (if it was ever on)
+    UseSeedDispersal = myUseSeedDispersal;		
 }
 
 /* TODO: This is a dummy method. It needs to be implemented once seed dispersal is fully planned.
