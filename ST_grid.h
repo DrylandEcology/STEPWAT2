@@ -57,7 +57,7 @@ struct grid_init_species_st
 	int *shouldBeInitialized;
 }typedef Grid_Init_Species_St;
 
-/* Holds all plot-specific parameters */
+/* Holds all cell-specific parameters */
 struct grid_cell_st
 {
 	/* RGroup corresponding to this cell */

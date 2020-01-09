@@ -35,7 +35,7 @@ Bool isRNGSeeded = FALSE;
 /**
  * \brief Disperse seeds between cells.
  * 
- * Iterates through all senders and recipients and determines which plots 
+ * Iterates through all senders and recipients and determines which cells
  * received seeds. If a cell does receive seeds for a given species,
  * Species[sp]->seedsPresent will be set to TRUE.
  * 
