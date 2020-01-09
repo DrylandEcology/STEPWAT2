@@ -1027,7 +1027,7 @@ static void _species_init( void) {
        viable,
        pseed;
    RealF irate, ratep, estab, minb, maxb, cohort, xdecay,
-         p1, p2, p3, p4, p5, p6, HMAX, MAXD, PMD, HSlope;
+         p1, p2, p3, p4, p6, HMAX, MAXD, PMD, HSlope;
    float var;
    char clonal[5];
 
@@ -1206,9 +1206,9 @@ static void _species_init( void) {
       continue;
     }
 
-    x = sscanf( inbuf, "%s %hd %f %f %f %f %f %f %f %f",
-                name, &turnondispersal, &p1, &p4, &p5, &p6, &HMAX, &MAXD, &PMD, &HSlope); 
-    if(x < 10) {
+    x = sscanf( inbuf, "%s %hd %f %f %f %f %f %f",
+                name, &turnondispersal, &p1, &p6, &HMAX, &MAXD, &PMD, &HSlope); 
+    if(x < 8) {
       LogError(logfp, LOGFATAL, "%s: Too few columns in species seed dispersal inputs", MyFileName);
     }
 
@@ -1221,8 +1221,6 @@ static void _species_init( void) {
     Species[sp]->allow_growth = TRUE;
 
     Species[sp]->minReproductiveSize = p1;
-    Species[sp]->sd_Pmin = p4;
-    Species[sp]->sd_Pmax = p5;
     Species[sp]->meanHeight = p6;
     Species[sp]->maxHeight = HMAX;
     Species[sp]->maxDispersalDistance = MAXD;

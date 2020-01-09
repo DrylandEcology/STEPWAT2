@@ -395,8 +395,6 @@ void copy_species(const SpeciesType* src, SpeciesType* dest){
     dest->maxHeight = src->maxHeight;
     dest->heightSlope = src->heightSlope;
 	dest->minReproductiveSize = src->minReproductiveSize;
-	dest->sd_Pmax = src->sd_Pmax;
-	dest->sd_Pmin = src->sd_Pmin;
 	dest->seedsPresent = src->seedsPresent;
 	dest->maxDispersalDistance = src->maxDispersalDistance;
     dest->maxDispersalProbability = src->maxDispersalProbability;
