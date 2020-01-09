@@ -229,29 +229,23 @@ struct species_st {
       /** \brief Minimum relsize at which an individual can produce seeds.
        * \ingroup SEED_DISPERSAL */
   	    minReproductiveSize,
-      /** \brief Seed dispersal parameter read from inputs.
-       * \ingroup SEED_DISPERSAL */
-	      sd_Pmin,
-      /** \brief Seed dispersal parameter read from inputs.
-       * \ingroup SEED_DISPERSAL */
-          sd_Pmax,
       /** \brief Average height of an individual of this species.
        * \ingroup SEED_DISPERSAL */
 	      meanHeight,
       /** \brief The maximum height of an individual of this species.
        * \ingroup SEED_DISPERSAL */
-          maxHeight,
+        maxHeight,
       /** \brief The slope of the allometric relationship between height and 
        *         biomass. Constant read in from inputs.
        * \ingroup SEED_DISPERSAL */
-          heightSlope,
+        heightSlope,
       /** \brief Maximum distance a seed can travel in meters. 
        * \ingroup SEED_DISPERSAL */
-          maxDispersalDistance,
+        maxDispersalDistance,
       /** \brief The probability that a species disperses seeds 
        *         \ref maxDispersalDistance meters away. 
        *  \ingroup SEED_DISPERSAL */
-          maxDispersalProbability;
+        maxDispersalProbability;
       /** \brief Temperature class for this species.
        * \sa TempClass */
   TempClass tempclass;
