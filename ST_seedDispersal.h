@@ -3,7 +3,7 @@
  * \brief Declarations for all functions and structures exported from the seed
  *        dispersal module.
  * 
- * The seed dispersal module is intended to run in gridded mode. It offers
+ * The seed dispersal module is intended to run in [gridded mode](\ref GRID). It offers
  * an alternative to traditional establishment by allowing establishment only when 
  * seeds reach a cell from a nearby cell.
  * 
