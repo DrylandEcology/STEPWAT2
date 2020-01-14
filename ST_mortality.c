@@ -52,7 +52,6 @@ void mort_Main( Bool *killed);
 void mort_EndOfYear( void);
 void proportion_Recovery(void);
 void grazing_EndOfYear( void);
-void setCheatgrassPrecip(CheatgrassPrecip* newCheatgrassPrecip);
 void rgroup_DropSpecies(SppIndex sp);
 
 /*********** Locally Used Function Declarations ************/
@@ -528,6 +527,21 @@ void freeMortalityMemory(void) {
  */
 void setCheatgrassPrecip(CheatgrassPrecip* newCheatgrassPrecip) {
   cheatgrassPrecip = newCheatgrassPrecip;
+}
+
+/**
+ * \brief Returns a pointer to \ref cheatgrassPrecip.
+ * 
+ * This is necessary in [gridded mode](\ref GRID) in order to allocate more
+ * than 1 \ref cheatgrassPrecip.
+ * 
+ * \sa setCheatgrassPrecip
+ * \author Chandler Haukap
+ * \date 14 January 2020
+ * \ingroup MORTALITY
+ */
+CheatgrassPrecip* getCheatgrassPrecip(void) {
+  return cheatgrassPrecip;
 }
 
 /**

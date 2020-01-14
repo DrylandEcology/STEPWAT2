@@ -503,6 +503,11 @@ static void _allocate_gridCells(int rows, int cols){
 				Mem_Calloc(MAX_SPECIES, sizeof(int), "_allocate_gridCells: mySpeciesInit");
 
 			gridCells[i][j].someKillage = (Bool*) Mem_Calloc(1, sizeof(Bool), "_allocate_gridCells: someKillage");
+			
+			// Allocate the cheatgrassPrecip variable for the Mortality module
+			setCheatgrassPrecip(0);
+			initCheatgrassPrecip();
+			gridCells[i][j].myCheatgrassPrecip = getCheatgrassPrecip();
 		}
 	}
 }
@@ -721,6 +726,7 @@ void free_grid_memory(void)
             #ifndef STDEBUG
 			deallocate_Globals(TRUE);
             #endif
+			freeMortalityMemory();
 			free_all_sxw_memory();
 			stat_free_mem();
 			// If seed dispersal is on we allocated additional memory
@@ -783,6 +789,9 @@ void load_cell(int row, int col){
 
 	/* TRUE if this cell is in spinup mode */
 	DuringInitialization = gridCells[row][col].DuringInitialization;
+
+	/* This cell's cheatgrass-wildfire parameters */
+	setCheatgrassPrecip(gridCells[row][col].myCheatgrassPrecip);
 
 	_SomeKillage = gridCells[row][col].someKillage;
 

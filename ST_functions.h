@@ -62,6 +62,9 @@ int Indiv_CompSize_D( const void *key1, const void *key2);
 /* Functions from ST_mortality.c */
 void initCheatgrassPrecip(void);
 void freeMortalityMemory(void);
+void setCheatgrassPrecip(CheatgrassPrecip* newCheatgrassPrecip);
+CheatgrassPrecip* getCheatgrassPrecip(void);
+
 
 #ifdef DEBUG_MEM
   void RGroup_SetMemoryRefs(void);
