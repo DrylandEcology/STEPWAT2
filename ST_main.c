@@ -348,6 +348,7 @@ int main(int argc, char **argv) {
   SW_OUT_close_files();
   SW_CTL_clear_model(TRUE); // de-allocate all memory
   free_all_sxw_memory();
+  freeMortalityMemory();
 
 	deallocate_Globals(FALSE);
 
@@ -437,6 +438,7 @@ void Plot_Initialize(void) {
 		RGroup[rg]->extirpated = FALSE;
 	}
 
+	initCheatgrassPrecip();
 	SXW_InitPlot();
 }
 

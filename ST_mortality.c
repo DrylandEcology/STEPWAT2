@@ -31,6 +31,7 @@
 #include "ST_steppe.h"
 #include "ST_globals.h"
 #include "sw_src/pcg/pcg_basic.h"
+#include "sxw_vars.h"
 
 /******** Modular External Function Declarations ***********/
 /* -- truly global functions are declared in functions.h --*/
@@ -51,6 +52,7 @@ void mort_Main( Bool *killed);
 void mort_EndOfYear( void);
 void proportion_Recovery(void);
 void grazing_EndOfYear( void);
+void setCheatgrassPrecip(CheatgrassPrecip* newCheatgrassPrecip);
 void rgroup_DropSpecies(SppIndex sp);
 
 /*********** Locally Used Function Declarations ************/
@@ -68,6 +70,7 @@ static void _stretched_clonal( GrpIndex rg, Int start, Int last,
 void _kill_annuals(void);
 void _kill_extra_growth(void);
 void _kill_maxage(void);
+void _updateCheatgrassPrecip(int year);
 
 
 /************ File-Level Variable Declarations *************/
@@ -78,6 +81,16 @@ void _kill_maxage(void);
  * \ingroup MORTALITY_PRIVATE
  */
 Bool *_SomeKillage;
+
+/************************* Mortality struct(s) *******************************/
+/**
+ * \brief [Mortality](\ref MORTALITY)'s private precipitation information.
+ * 
+ * \author Chandler Haukap
+ * \date 13 January 2020
+ * \ingroup MORTALITY_PRIVATE
+ */
+CheatgrassPrecip* cheatgrassPrecip = 0;
 
 extern
   pcg32_random_t mortality_rng; //declared in ST_main.c
@@ -287,6 +300,11 @@ void mort_EndOfYear(void) {
         }
     }
 
+    _updateCheatgrassPrecip(Globals->currYear);
+    /* printf("%d:\tMeanSpring = %f\t ThisSpring = %f\t MeanWinter = %f\t LastWinter = %f\n", 
+           Globals->currYear, cheatgrassPrecip->springMean, cheatgrassPrecip->currentSpring, 
+           cheatgrassPrecip->winterMean, cheatgrassPrecip->lastWinter); */
+
     /* Set a random number outside of the loop to make sure the kill probability for each functional group is the same */
     random_number = RandUni(&mortality_rng);
 
@@ -311,6 +329,7 @@ void mort_EndOfYear(void) {
       // If these conditions are true we want to simulate wildfire based on cheatgrass abundance
       if(!prescribed_fire_on && g != NULL){
         /* ------------------------- WILDFIRE BASED ON CHEATGRASS BIOMASS------------------------- */
+
         // Calculate fire_possibility
         if (g->ignition == 0) {
           /* If ignition == 0, no wildfire occurs */
@@ -436,6 +455,151 @@ void grazing_EndOfYear( void){
 			}
 		}
 	}
+}
+
+/**
+ * \brief Initialize the variables necessary for cheatgrass-driven wildfire.
+ * 
+ * This function can be called multiple times, and should be called before
+ * every iteration of the program. It will allocate memory the first time it is
+ * run, then every subsequent time it will reset the fields to 0.
+ * 
+ * \sideeffect
+ *     This function will allocate memory the first time it is run.
+ * 
+ * \sa CheatgrassPrecip
+ * \author Chandler Haukap
+ * \date 13 January 2020
+ * \ingroup MORTALITY
+ */
+void initCheatgrassPrecip(void) {
+  /* If cheatgrassPrecip hasn't been allocated */
+  if(!cheatgrassPrecip){
+    cheatgrassPrecip = Mem_Calloc(1, sizeof(CheatgrassPrecip),
+                                  "initCheatgrassPrecip: cheatgrassPrecip");
+  }
+
+  /* Reset all fields to 0 */
+  cheatgrassPrecip->currentSpring = 0;
+  cheatgrassPrecip->lastWinter = 0;
+  cheatgrassPrecip->prevSprings[0] = 0;
+  cheatgrassPrecip->prevSprings[1] = 0;
+  cheatgrassPrecip->prevSprings[2] = 0;
+  cheatgrassPrecip->currentSpring = 0;
+  cheatgrassPrecip->springMean = 0;
+  cheatgrassPrecip->winterMean = 0;
+  cheatgrassPrecip->lastOctThruDec = 0;
+  cheatgrassPrecip->thisOctThruDec = 0;
+  cheatgrassPrecip->thisJanThruMar = 0;
+}
+
+/**
+ * \brief Free all memory allocated inside the 
+ *        [mortality module](\ref MORTALITY).
+ * 
+ * \sideeffect
+ *     All local variables that have been dynamically allocated will be 
+ *    deallocated.
+ * 
+ * \author Chandler Haukap
+ * \date 14 January 2020
+ * \ingroup MORTALITY
+ */
+void freeMortalityMemory(void) {
+  if(cheatgrassPrecip){
+    Mem_Free(cheatgrassPrecip);
+  }
+}
+
+/**
+ * \brief Load a different CheatgrassPrecip struct into the 
+ *        [mortality](\ref MORTALITY) module.
+ * 
+ * This is particularly useful in [gridded mode](\ref GRID) where each 
+ * [cell](\ref CellType) has it's own precipitation information.
+ * 
+ * As far as allocation goes, you can either allocate the new 
+ * \ref CheatgrassPrecip struct yourself, or, call this function then
+ * call \ref initCheatgrassPrecip.
+ * 
+ * \author Chandler Haukap
+ * \date 13 January 2020
+ * \ingroup MORTALITY
+ */
+void setCheatgrassPrecip(CheatgrassPrecip* newCheatgrassPrecip) {
+  cheatgrassPrecip = newCheatgrassPrecip;
+}
+
+/**
+ * \brief Updates \ref cheatgrassPrecip with the current year's precipitation.
+ * 
+ * Call this function before determining if a cheatgrass-driven wildfire should
+ * occur for the given year.
+ * 
+ * Note that \ref cheatgrassPrecip must be allocated before calling this
+ * function, either by calling \ref initCheatgrassPrecip or by allocating a new
+ * \ref CheatgrassPrecip variable then calling \ref setCheatgrassPrecip.
+ * 
+ * \sideeffect
+ *     Every field in \ref cheatgrassPrecip will be updated to reflect this
+ *     year's values.
+ * 
+ * \author Chandler Haukap
+ * \date 13 January 2020
+ * \ingroup MORTALITY_PRIVATE
+ */
+void _updateCheatgrassPrecip(int year) {
+  int i;
+  /* Note that arrays are 0 indexed in C. Therefore, when I say
+   * SXW->ppt_monthly[0] I am refering to January's precipitation. */
+
+  /* --------------------- Update the running averages --------------------- */
+  if(year > 1) {
+    // We only have a data point for the spring after year 1.
+    cheatgrassPrecip->springMean = 
+        get_running_mean(year - 1, cheatgrassPrecip->springMean, 
+                         cheatgrassPrecip->currentSpring);
+
+    if(year > 2) {
+      // We only have a data point for the winter after year 2 because we need
+      // The Oct - Dec values from 2 years previously
+      cheatgrassPrecip->winterMean = 
+          get_running_mean(year - 2, cheatgrassPrecip->winterMean,
+                           cheatgrassPrecip->lastWinter);
+    }
+  }
+
+  /* --------------- Shift the Spring values back one place ---------------- */
+  cheatgrassPrecip->prevSprings[2] = cheatgrassPrecip->prevSprings[1];
+  cheatgrassPrecip->prevSprings[1] = cheatgrassPrecip->prevSprings[0];
+  cheatgrassPrecip->prevSprings[0] = cheatgrassPrecip->currentSpring;
+
+  /* ----------------- Calculate mean Spring precipitation ----------------- */
+  cheatgrassPrecip->currentSpring = 0;
+  for(i = 3; i < 6; ++i){
+    cheatgrassPrecip->currentSpring += SXW->ppt_monthly[i];
+  }
+  cheatgrassPrecip->currentSpring /= 3;
+
+  /* ----------------- Calculate mean Winter precipitation ----------------- */
+  cheatgrassPrecip->lastWinter = 0;
+  cheatgrassPrecip->lastWinter += cheatgrassPrecip->lastOctThruDec;
+  cheatgrassPrecip->lastWinter += cheatgrassPrecip->thisJanThruMar;
+  cheatgrassPrecip->lastWinter /= 6;
+
+  /* --------------- Shift the Winter values back one place ---------------- */
+  // October - December
+  cheatgrassPrecip->lastOctThruDec = cheatgrassPrecip->thisOctThruDec;
+  cheatgrassPrecip->thisOctThruDec = 0;
+  for(i = 9; i < 12; ++i){
+    cheatgrassPrecip->thisOctThruDec += SXW->ppt_monthly[i];
+  }
+
+  // January - March
+  cheatgrassPrecip->thisJanThruMar = 0;
+  for(i = 0; i < 3; ++i){
+    cheatgrassPrecip->thisJanThruMar += SXW->ppt_monthly[i];
+  }
 }
 
 /**

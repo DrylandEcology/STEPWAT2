@@ -59,6 +59,10 @@ void Indiv_SortSize( const byte sorttype,
 int Indiv_CompSize_A( const void *key1, const void *key2);
 int Indiv_CompSize_D( const void *key1, const void *key2);
 
+/* Functions from ST_mortality.c */
+void initCheatgrassPrecip(void);
+void freeMortalityMemory(void);
+
 #ifdef DEBUG_MEM
   void RGroup_SetMemoryRefs(void);
   void Species_SetMemoryRefs(void);
