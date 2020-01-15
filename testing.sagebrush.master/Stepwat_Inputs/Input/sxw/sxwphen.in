@@ -2,16 +2,11 @@
 
 # Monthly phenological activity values for each resource
 # group in the STEPWAT model in percent.  Activity is defined as the 
-# growth activity for that month as a proportion of the total.  
-# For example, if half of a plant group's yearly growth occurs 
-# in one month, that month's value for that group would be 0.50.
-# Metabolic activity doesn't count
-#
-# First column is the group name as defined in the 
-# group parameters file for STEPPE.  The name must be
+# growth activity for that month. Values do not need to sum to 100 percent.
+# First column is the rgroup name as defined in the 
+# rgroup parameters file for STEPPE.  The name must be
 # spelled exactly the same.
 # Remaining columns are monthly activity values.  
-# All the activity values for a group must sum to 100
 
 # Group     	Jan   Feb   Mar  Apr  May  Jun  Jul  Aug  Sep   Oct   Nov   Dec
 sagebrush	   	.0125 .0125 .10  .125 .15  .25  .15  .10  .0625 .0125 .0125 .0125
