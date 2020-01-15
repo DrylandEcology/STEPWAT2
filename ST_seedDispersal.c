@@ -192,8 +192,8 @@ Bool _shouldProduceSeeds(SppIndex sp) {
  * \param PMD is the probability of maximum dispersal.
  * \param meanHeight is the average height of an individual of the given
  *                   species.
- * \param maxHeight is the maximum height of an individual of the given
- *                  species.
+ * \param maxDistance is the maximum distance an individual of this species can
+ *                    disperse seeds.
  *
  * \return A float.
  *

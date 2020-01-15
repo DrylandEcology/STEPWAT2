@@ -1,29 +1,30 @@
-/*****************************************************************************/
-// Source file: ST_grid.c
-// Type: module
-// Application: STEPPE - plant community dynamics simulator
-// Purpose: This module performs gridded mode simulations.
-// History:
-//  (5/24/2013) -- INITIAL CODING - DLM
-//  (March - July 2019) -- Overhauled by Chandler Haukap with Fredrick Pierson
-//                         See issue #262 and pull request #375 on GitHub
-/*****************************************************************************/
-/*
- Summary:
-    This module handles the gridded mode of STEPWAT2. To accomplish this we use
-    a grid of cells represented by the CellType struct. The entire grid of
-    cells can be referenced by the gridCells variable which is a 2d array of
-    CellTypes. To allow this module to use the same functions as non-gridded
-    mode the CellType structs must be loaded into the global variables using
-    the load_cell function. As long as a cell is loaded in you can be sure that
-    all functions will work as expected.
-
-    In addition to all of the functionality of non-gridded mode, gridded mode
-    has two additional features: initialization and seed dispersal.
-    Initialization allows vegetation to establish before the simulation
-    experiments begin. Seed dispersal allows each cell to disperse seeds to
-    nearby cells.
-*/
+/** 
+ * \file ST_grid.c
+ * \brief Function definitions for the gridded mode.
+ * \author DLM (initial programming)
+ * \author Fredrick Pierson
+ * \author Chandler Haukap
+ * \date March through July 2019
+ *
+ * This module handles the gridded mode of STEPWAT2. To accomplish this we use
+ * a grid of cells represented by the CellType struct. The entire grid of
+ * cells can be referenced by the gridCells variable which is a 2d array of
+ * CellTypes. To allow this module to use the same functions as non-gridded
+ * mode the CellType structs must be loaded into the global variables using
+ * the load_cell function. As long as a cell is loaded in you can be sure that
+ * all functions will work as expected.
+ *
+ * In addition to all of the functionality of non-gridded mode, gridded mode
+ * has two additional features: initialization and seed dispersal.
+ * Initialization allows vegetation to establish before the simulation
+ * experiments begin. Seed dispersal allows each cell to disperse seeds to
+ * nearby cells.
+ * 
+ * See issue #262 and pull request #375 on GitHub for a discussion of the 
+ * overhaul of this module.
+ * 
+ * \ingroup GRID_PRIVATE
+ */
 
 /*******************************************************/
 /* -------------- INCLUDES / DEFINES ----------------- */

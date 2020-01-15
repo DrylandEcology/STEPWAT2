@@ -1,11 +1,15 @@
-/******************************************************************/
-/* ST_grid.h
-    This header defines global functions, variables, structs and 
-    enumerators from ST_grid.c. If you are looking for the functions 
-    that this module exports check the bottom of the file.
-
-    Initial programming by Chandler Haukap in August 2019. */
-/******************************************************************/
+/**
+ * \file ST_grid.h
+ * \brief All exported functions, variables, ect. from the [grid](\ref GRID) 
+ *        module
+ * 
+ * The gridded mode exports many things including enumerators, functions,
+ * variables and structs. 
+ * 
+ * \author Chandler Haukap
+ * \date August 2019. 
+ * \ingroup GRID
+ */
 
 #ifndef GRID_H
 #define GRID_H
@@ -24,138 +28,304 @@
 
 /*********************** Grid Structures ****************************/
 
-// Contains the input data for all the soil layers of a cell
+/** 
+ * \brief Soil layer information for a single [cell](\ref CellType)
+ * 
+ * This struct requires dynamic memory allocation, so be carefull when
+ * instanciating it.
+ * 
+ * \ingroup GRID
+ */
 struct Soil_st
 {
-	// Number of soil layers (size of lyr array)
+	/** \brief Number of soil layers. */
 	int num_layers;
-	// Name of the roots file belonging to this cell
+	/** Name of the roots file associated with this cell. */
 	char rootsFile[20];
-	// Specific layer's information. The size of these arrays is the
-    // same as num_layers.
-    RealF *depth;       /* Each Layer's max depth */
-    RealF *matricd;     /* Each Layer's matricx */
-    RealF *gravel;      /* Each Layer's gravel content */
-    RealF *evco;        /* Each Layer's evco */
-    RealF *trco_grass;  /* Each Layer's trco for grass */
-    RealF *trco_shrub;  /* Each Layer's trco for shrubs */
-    RealF *trco_tree;   /* Each Layer's trco for tree */
-    RealF *trco_forb;   /* Each Layer's trco for forbs */
-    RealF *psand;       /* Each Layer's sand content */
-    RealF *pclay;       /* Each Layer's clay content */
-    RealF *imperm;      /* Each layer's impermiability */
-    RealF *soiltemp;    /* Each Layer's temperature */
+	/** \brief Depth in cm of each soil layer. Size of array defined by 
+	 *         num_layers.  */
+    RealF *depth;
+    /** \brief matricd of each soil layer. Size of array defined by 
+	 *         num_layers.  */
+    RealF *matricd;
+	/** \brief Percent gravel for each soil layer. Size of array defined by 
+	 *         num_layers.  */
+    RealF *gravel;
+	/** \brief evco of each soil layer. Size of array defined by 
+	 *         num_layers.  */
+    RealF *evco;
+	/** \brief trco for grass of each soil layer. Size of array defined by 
+	 *         num_layers.  */
+    RealF *trco_grass;
+	/** \brief trco for shrubs of each soil layer. Size of array defined by 
+	 *         num_layers.  */
+    RealF *trco_shrub;
+	/** \brief trco for trees of each soil layer. Size of array defined by 
+	 *         num_layers.  */
+    RealF *trco_tree;
+	/** \brief trco for forbs of each soil layer. Size of array defined by 
+	 *         num_layers.  */
+    RealF *trco_forb;
+	/** \brief Percent sand for each soil layer. Size of array defined by 
+	 *         num_layers.  */
+    RealF *psand;
+	/** \brief Percent clay for each soil layer. size of array defined by 
+	 *         num_layers.  */
+    RealF *pclay;
+	/** \brief impermiability of each soil layer. size of array defined by 
+	 *         num_layers.  */
+    RealF *imperm;
+	/** \brief temperature of each soil layer. size of array defined by 
+	 *         num_layers.  */
+    RealF *soiltemp;
 }typedef SoilType;
 
-/* Initialization information. */
+/** 
+ * \brief [Initialization](\ref INITIALIZATION) information for a given [cell](\ref CellType).
+ * 
+ * \ingroup GRID
+ */
 struct grid_init_species_st
 {
-	/* TRUE if at least one species has requested initialization */
+	/** \brief TRUE if at least one species has requested initialization in
+	 *         this cell. */
 	int useInitialization;
-	/* Array of Boolean values. TRUE if given species
-	   should be included in spinup */
+	/** 
+	 * \brief Array of boolean values that correspond to this
+	 *         [cell](\ref CellType)'s [species](\ref Secies) array.
+	 * 
+	 *  TRUE if Species[sp] should use initialization.
+	 */
 	int *shouldBeInitialized;
 }typedef Grid_Init_Species_St;
 
-/* Holds all cell-specific parameters */
+/** 
+ * \brief All information specific to a cell.
+ * 
+ * This struct is basically the cell. It holds all information specific to one
+ * cell, and a 2d array of these structs makes up a gridded mode simulation.
+ * 
+ * \sa gridCells
+ * \ingroup GRID
+ */
 struct grid_cell_st
 {
-	/* RGroup corresponding to this cell */
+	/** \brief RGroup corresponding to this cell */
 	GroupType **myGroup;
-	/* Species corresponding to this cell */
+	/** \brief Species corresponding to this cell */
 	SpeciesType **mySpecies;
-	/* Succulents corresponding to this cell */
+	/** \brief Succulents corresponding to this cell */
 	SucculentType mySucculent;
-	/* This cell's environment. We expect each cell to
-	 * have slightly different weather each year */
+	/** \brief This cell's environment. We expect each cell to
+	 *         have slightly different weather each year */
 	EnvType myEnvironment;
-	/* Cell's plot data */
+	/** \brief Cell's plot data */
 	PlotType myPlot;
-	/* Global variables corresponding to this cell */ 
+	/** \brief Global variables corresponding to this cell */ 
 	ModelType myGlobals;
-	/* If TRUE this cell should use seed dispersal */
+	/** \brief If TRUE this cell should use seed dispersal */
 	Bool useSeedDispersal;
-	/* TRUE if this cell is in spinup mode */
+	/** \brief TRUE if this cell is in spinup mode */
 	Bool DuringInitialization;
-	/* species spinup information */
+	/** \brief Species' [initialization](\ref INITIALIZATION) information. */
 	Grid_Init_Species_St mySpeciesInit;
 
+	/** \brief TRUE if an individual was killed this year. */
 	Bool* someKillage;
 	
 	/* ---------------- accumulators -------------------- */
-	StatType *_Dist, *_Ppt, *_Temp,
-  		*_Grp, *_Gsize, *_Gpr, *_Gmort, *_Gestab,
-  		*_Spp, *_Indv, *_Smort, *_Sestab, *_Sreceived;
+
+	/** \brief The disturbance event statistics accumulator. */
+	StatType *_Dist;
+	/** \brief The precipitation statistics accumulator. */
+	StatType *_Ppt;
+	/** \brief The temperature statistics accumulator. */
+	StatType *_Temp;	
+	/** \brief The [rgroup](\ref GroupType) biomass statistics accumulator. */
+  	StatType *_Grp;
+	/** \brief The [rgroup](\ref GroupType) size statistics accumulator. */
+	StatType *_Gsize;
+	/** \brief The [rgroup](\ref GroupType) PR statistics accumulator. */ 
+	StatType *_Gpr;
+	/** \brief The [rgroup](\ref GroupType) mortality statistics
+	 *         accumulator. */
+	StatType *_Gmort; 
+	/** \brief The [rgroup](\ref GroupType) establishment statistics 
+	 *         accumulator. */ 
+	StatType*_Gestab;
+	/** \brief The [species](\ref SpeciesType) biomass statistics 
+	 *         accumulator. */ 
+  	StatType *_Spp;
+	/** \brief The [individual](\ref IndivType) statistics accumulator. */ 
+	StatType *_Indv;
+	/** \brief The [species](\ref SpeciesType) mortality statistics 
+	 *         accumulator. */ 
+	StatType *_Smort;
+	/** \brief The [species](\ref SpeciesType) establishment statistics 
+	 *         accumulator. */
+	StatType *_Sestab;
+	/** \brief The [species](\ref SpeciesType) 
+	 *         [seed dispersal](\ref SEED_DISPERSAL) statistics accumulator. */ 
+	StatType *_Sreceived;
+	/** \brief The [rgroup](\ref GroupType) wildfire statistics accumulator. */
 	FireStatsType *_Gwf;
+
+	/**
+	 * \brief TRUE if this cell has initialized its statistics accumulators.
+	 */
 	Bool stats_init;
 	/* -------------- end accumulators ------------------ */
 
 	/* -------------------- SXW ------------------------- */
+	/**
+	 * \brief The transpiration window struct specific to this cell.
+	 * 
+	 * Intended to be swapped into the [SXW private](\ref SXW_PRIVATE) variable
+	 * \ref transp_window.
+	 * 
+	 * \sa copy_sxw_variables
+	 */
 	transp_t* myTranspWindow;
+	/**
+	 * \brief The SXW struct specific to this cell. 
+	 * 
+	 * Intended to be swapped into the [SXW private](\ref SXW_PRIVATE) variable
+	 * \ref SXW.
+	 * 
+	 * \sa copy_sxw_variables
+	 */
 	SXW_t* mySXW;
+	/**
+	 * \brief The SXW resource struct specific to this cell.
+	 * 
+	 * Intended to be swapped into the [SXW private](\ref SXW_PRIVATE) varable
+	 * \ref SXWResources
+	 * 
+	 * \sa copy_sxw_variables
+	 */
 	SXW_resourceType* mySXWResources;
 	/* ------------------ End SXW ----------------------- */
 
 	/* ------------------- Soils ------------------------ */
-	// Soil layer information for this cell.
+	/** \brief  Soil layer information specific to this cell. */
 	SoilType mySoils;
 	/* ------------------ End Soils --------------------- */
 } typedef CellType;
 
 /**************************** Enumerators *********************************/
-/* Indices for grid_directories go here */
+/** 
+ * \brief Indices for the \ref grid_directories array.
+ * \ingroup GRID
+ */
 typedef enum
 {
+	/** \brief The index in \ref grid_directories of the STEPWAT directory. */
     GRID_DIRECTORY_STEPWAT_INPUTS,
 
-    /* Automatically generate number of directories since enums start at 0 */
+    /** \brief The number of directories in \ref grid_directories. 
+	 * Automatically generate number of directories because enums start at 0 */
     N_GRID_DIRECTORIES
 } Directory_Indices;
 
-/* Indices for grid_files go here */
+/** 
+ * \brief Indices for the \ref grid_files array.
+ * \ingroup GRID
+ */
 typedef enum
 {
+	/** \brief Location in \ref grid_files of the logfile name. */
     GRID_FILE_LOGFILE,
+	/** \brief Location in \ref grid_files of the setup file name. */
     GRID_FILE_SETUP,
+	/** \brief Location in \ref grid_files of the disturbance file name. */
     GRID_FILE_DISTURBANCES,
+	/** \brief Location in \ref grid_files of the soil file name. */
     GRID_FILE_SOILS,
+	/** \brief Location in \ref grid_files of the species initialization file
+	 *         name. */
     GRID_FILE_INIT_SPECIES,
+	/** \brief Location in \ref grid_files of the STEPWAT2 input file name. */
     GRID_FILE_FILES,
+	/** \brief Location in \ref grid_files of the max rgroup and species file
+	 *         name. */
     GRID_FILE_MAXRGROUPSPECIES,
 
+	/** \brief Location in \ref grid_files of the biomass output file name. */
     GRID_FILE_PREFIX_BMASSAVG,
+	/** \brief Location in \ref grid_files of the mortality output file 
+	 *         name. */
     GRID_FILE_PREFIX_MORTAVG,
+	/** \brief Location in \ref grid_files of the 
+	 *         [seed dispersal](\ref SEED_DISPERSAL) output file name. */
     GRID_FILE_PREFIX_RECEIVEDPROB,
+	/** \brief Location in \ref grid_files of the average biomass output file
+	 *         name. */
     GRID_FILE_PREFIX_BMASSCELLAVG,
+	/** \brief Location in \ref grid_files of the average mortality file
+	 *         name. */
     GRID_FILE_PREFIX_MORTCELLAVG,
 
     /* Automatically generate number of files since enums start at 0 */
     N_GRID_FILES
 } File_Indices;
 
+/**
+ * \brief Enumerator for reading soil input parameters.
+ * 
+ * \ingroup GRID
+ */
 typedef enum
 {
+	/** \brief Successfully read soil input parameters. */
 	SOIL_READ_SUCCESS = -2,
+	/** \brief Failed to read soil input parameters. */
 	SOIL_READ_FAILURE = -1,
 } Soil_Read_Return_Values;
 
 /************************ Exported Variable Declarations **************************/
 
-/* gridCells[i][j] denotes the cell at position (i,j) */
+/** 
+ * \brief The main struct of the gridded mode module.
+ * 
+ * gridCells[i][j] denotes the cell at position (i,j)
+ * 
+ * \author Chandler Haukap
+ * \ingroup GRID
+ */
 CellType** gridCells;
-/* Rows in the grid */
+
+/** 
+ * \brief Rows in the [grid](\ref gridCells).
+ * \ingroup GRID
+ */
 int grid_Rows;
-/* Columns in the grid */
+
+/** 
+ * \brief Columns in the [grid](\ref GridCells).
+ * \ingroup GRID
+ */
 int grid_Cols;
-/* Array of file names. Use the File_Indices enum to pick the correct index. */
+
+/** 
+ * \brief Array of file names. Use the \ref File_Indices enum to pick the 
+ *         correct index. 
+ * \ingroup GRID
+ */
 char *grid_files[N_GRID_FILES];
-/* Array of directory names. Use the Directory_Indices enum to pick the correct index. */
+
+/** \brief Array of directory names. Use the \ref Directory_Indices enum to 
+ *         pick the correct index.
+ * \ingroup GRID
+ */
 char *grid_directories[N_GRID_DIRECTORIES];
-/* TRUE if every cell should write its own output file. */
+/** 
+ * \brief TRUE if every cell should write its own output file.
+ * \ingroup GRID
+ */
 Bool writeIndividualFiles;
 
 /**************************** Exported Functions **********************************/
-
+/* See ST_grid.c for documentation of these functions. */
 void runGrid(void);
 void load_cell(int row, int col);
 void unload_cell(void);
