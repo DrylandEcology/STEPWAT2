@@ -18,25 +18,17 @@
 
 #include <string.h>
 #include <stdlib.h>
-#include <stdio.h>
 #include "ST_steppe.h"
-#include "generic.h"
 #include "filefuncs.h"
 #include "myMemory.h"
-#include "SW_VegProd.h"
 #include "SW_Control.h"
-#include "sw_src/pcg/pcg_basic.h"
-
 #include "sxw_funcs.h"
-#include "sxw.h"
 #include "sw_src/SW_Output.h"
 #include "sw_src/SW_Output_outtext.h"
 #include "sw_src/SW_Output_outarray.h"
 #include "sw_src/rands.h"
-#include "ST_stats.h"
 #include "ST_initialization.h"
 #include "ST_progressBar.h"
-#include "ST_seedDispersal.h"
 
 extern Bool prepare_IterationSummary; // defined in `SOILWAT2/SW_Output.c`
 extern Bool print_IterationSummary; // defined in `SOILWAT2/SW_Output_outtext.c`

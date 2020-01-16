@@ -27,7 +27,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "ST_steppe.h"
-#include "generic.h"
 #include "filefuncs.h"
 #include "myMemory.h"
 #include "sxw_funcs.h"

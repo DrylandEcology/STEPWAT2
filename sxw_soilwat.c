@@ -35,27 +35,15 @@
 /*                INCLUDES / DEFINES                   */
 /* --------------------------------------------------- */
 
-#include <stdio.h>
-#include "generic.h"
 #include "filefuncs.h"
 #include "myMemory.h"
-#include "Times.h"
 #include "ST_steppe.h"
 #include "ST_globals.h"
-#include "SW_Defines.h"
-#include "sxw.h"
 #include "sxw_module.h"
-#include "SW_Control.h"
-#include "SW_Model.h"
-#include "SW_Site.h"
-#include "SW_SoilWater.h"
-#include "SW_VegProd.h"
-#include "SW_Files.h"
-
+#include "sxw_vars.h"
 
 /*************** Global Variable Declarations ***************/
 /***********************************************************/
-#include "sxw_vars.h"
 
 extern SW_SITE SW_Site;
 extern SW_MODEL SW_Model;

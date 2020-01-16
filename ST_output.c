@@ -12,7 +12,6 @@
 /*                INCLUDES / DEFINES                   */
 /* --------------------------------------------------- */
 
-#include <stdio.h>
 #include <string.h>
 #include "ST_steppe.h"
 #include "ST_globals.h"

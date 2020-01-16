@@ -16,16 +16,9 @@
 /*                INCLUDES / DEFINES                   */
 /* --------------------------------------------------- */
 
-#include <stdio.h>
-#include "generic.h"
 #include "ST_steppe.h"
-/*#include "ST_globals.h"*/
-#include "SW_Defines.h"
 #include "sxw.h"
 #include "sxw_module.h"
-#include "SW_Model.h"
-#include "SW_Site.h"
-#include "SW_SoilWater.h"
 #include "SW_Weather.h"
 
 /*************** Global Variable Declarations ***************/

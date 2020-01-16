@@ -19,7 +19,6 @@
 /* --------------------------------------------------- */
 
 #include <stdlib.h>
-#include <memory.h>
 #include "ST_steppe.h"
 #include "ST_globals.h"
 #include "filefuncs.h"

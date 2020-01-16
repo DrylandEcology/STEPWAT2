@@ -15,14 +15,12 @@
 /*                INCLUDES / DEFINES                   */
 /* --------------------------------------------------- */
 
-#include <math.h>
 #include "ST_steppe.h"
 #include "ST_globals.h"
 #include "sw_src/pcg/pcg_basic.h"
 #include "rands.h"
 #include "sxw_funcs.h"
 #include "sw_src/filefuncs.h"
-#include "sw_src/Times.h"
 extern SXW_t* SXW;
 
 /*********** Locally Used Function Declarations ************/

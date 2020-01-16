@@ -27,14 +27,11 @@
  * --------------------------------------------------- */
 #include <math.h>
 #include <string.h>
-#include <stdio.h>
 #include "ST_steppe.h"
 #include "ST_globals.h"
 #include "myMemory.h"
 #include "rands.h"
-#include "generic.h"
 #include "sw_src/filefuncs.h"
-#include "ST_functions.h"
 #include "sxw_funcs.h"
 
 extern

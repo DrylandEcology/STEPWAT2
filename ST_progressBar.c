@@ -11,7 +11,6 @@
  */
 
 #include "ST_progressBar.h"
-#include "ST_defines.h"
 #include "ST_globals.h"
 #include<string.h>
 

@@ -16,10 +16,8 @@
 
 /******** These modules are necessary to compile ST_grid.c ********/
 #include "ST_stats.h"
-#include "ST_defines.h"
 #include "sw_src/pcg/pcg_basic.h"
 #include "sxw_vars.h"
-#include "SW_Site.h"
 #include "SW_SoilWater.h"
 #include "SW_VegProd.h"
 #include "SW_Model.h"

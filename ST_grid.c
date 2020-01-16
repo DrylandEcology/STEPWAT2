@@ -29,21 +29,17 @@
 /*******************************************************/
 /* -------------- INCLUDES / DEFINES ----------------- */
 /*******************************************************/
-#include <stdio.h>
 #include <string.h>
 #include <ctype.h>
 #include "ST_grid.h"
 #include "ST_steppe.h"
-#include "generic.h"
 #include "filefuncs.h"
 #include "myMemory.h"
 #include "ST_globals.h"
-#include "ST_stats.h"
 #include "rands.h"
 #include "sxw_funcs.h"
 #include "ST_initialization.h"
 #include "ST_progressBar.h"
-#include "ST_seedDispersal.h"
 
 char sd_Sep;
 

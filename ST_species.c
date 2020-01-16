@@ -27,7 +27,6 @@
 #include "sw_src/filefuncs.h"
 #include "myMemory.h"
 #include "rands.h"
-#include "sw_src/pcg/pcg_basic.h"
 #include "ST_initialization.h"
 #include "ST_seedDispersal.h"
 

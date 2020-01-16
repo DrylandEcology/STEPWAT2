@@ -15,6 +15,8 @@
 #ifndef SEEDDISPERSAL_H
 #define SEEDDISPERSAL_H
 
+#include "ST_defines.h"
+
 /** 
  * \brief If TRUE then seed dispersal will be used. 
  * \ingroup SEED_DISPERSAL

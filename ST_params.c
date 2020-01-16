@@ -16,22 +16,15 @@
 /*                INCLUDES / DEFINES                   */
 /* --------------------------------------------------- */
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <math.h>
 #include <ctype.h>
 #include <errno.h>
 #include "ST_steppe.h"
-#include "generic.h"
 #include "filefuncs.h"
 #include "myMemory.h"
 #include "rands.h"
 #include "sxw_funcs.h"
-
-
-/************ External Variable Declarations ***************/
-/***********************************************************/
 #include "ST_globals.h"
 #include "sxw_vars.h"
 

@@ -8,12 +8,11 @@
  * \ingroup SEED_DISPERSAL_PRIVATE
  */
 
-#include "ST_globals.h"
-#include "ST_defines.h"
-#include "ST_grid.h"
 #include "ST_seedDispersal.h"
-#include "rands.h"
+#include "ST_globals.h"
+#include "ST_grid.h"
 #include "myMemory.h"
+#include "rands.h"
 
 float _distance(int row1, int row2, int col1, int col2, float cellLen);
 Bool _shouldProduceSeeds(SppIndex sp);
@@ -158,8 +157,8 @@ void initSeedDispersal(void) {
           Species[sp]->seedsPresent = TRUE;
         }
       } // END For Each Species
-    } // END For Each Column
-  } // END For Each Row
+    }   // END For Each Column
+  }     // END For Each Row
   unload_cell();
 }
 

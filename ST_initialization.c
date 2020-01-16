@@ -19,18 +19,14 @@
 /***********************************************************************/
 
 // ST_initialization.h contains declarations for runInitialization and loadInitializationConditions 
-#include "ST_initialization.h" 
-#include "ST_grid.h"
+#include "ST_initialization.h"
 #include "ST_stats.h"
 #include "ST_globals.h"
-#include "ST_defines.h"
-#include "sw_src/pcg/pcg_basic.h"
 #include "sw_src/rands.h"
 #include "sxw_funcs.h"
 #include "myMemory.h"
 #include "filefuncs.h"
 #include "ST_progressBar.h"
-#include "ST_stats.h"
 
 /********** Local functions. These should all be treated as private. *************/
 static void _run_spinup(void);

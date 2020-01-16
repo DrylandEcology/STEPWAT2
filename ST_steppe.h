@@ -11,11 +11,7 @@
 /********************************************************/
 /********************************************************/
 
-
-#include "ST_defines.h"
 #include "ST_functions.h"
-
-#include "generic.h"
 
 #define DFLT_FIRSTFILE "files.in"
 

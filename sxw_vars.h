@@ -16,10 +16,7 @@
 #define SXW_VARS_DEF
 
 #include "sxw.h"
-#include "generic.h"
-
 
 extern SXW_t* SXW;
-
 
 #endif

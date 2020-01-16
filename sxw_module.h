@@ -18,7 +18,6 @@
 #include "sw_src/SW_Control.h"
 #include "sw_src/SW_Model.h"
 #include "sw_src/SW_VegProd.h"
-#include "sw_src/SW_Site.h"
 #include "sw_src/SW_SoilWater.h"
 #include "sw_src/SW_Files.h"
 

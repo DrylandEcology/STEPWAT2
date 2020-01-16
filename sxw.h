@@ -24,7 +24,6 @@
 // The number of transpiration values retained by transp_data
 #define MAX_WINDOW 100
 
-#include "generic.h"
 #include "SW_Times.h"
 #include "ST_defines.h"
 #include "sw_src/SW_Defines.h"
