@@ -1,22 +1,13 @@
-/********************************************************/
-/********************************************************/
-/*  Source file: sxw_tester.c
+/**
+ * \file sxw_tester.c
+ * \brief A deprecated testing file.
  *
-/*  Type: testing module
+ * This file exists only as a reference. It is not compilable and should be
+ * removed at some point.
  *
-/*  Purpose: Contains support code to test
- *           the sxw module.
- *
-/*  Calls:
- *
-/*  Application: STEPWAT - plant community dynamics simulator
- *               coupled with the  SOILWAT model.
- *
-/*  History:
-/*     (25-Oct-2002) -- INITIAL CODING - cwb
-/*
-/********************************************************/
-/********************************************************/
+ * \author CWB (initial programming)
+ * \date 25 October 2002
+ */
 
 /* =================================================== */
 /*                INCLUDES / DEFINES                   */

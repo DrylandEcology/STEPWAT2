@@ -14,9 +14,7 @@
  *     Chris Bennett\n
  *     Chandler Haukap\n
  *     Freddy Pierson
- * 
  * \date 22 August 2019
- * 
  * \ingroup SPECIES
  */
 

@@ -4,7 +4,6 @@
  *
  * \author Chandler Haukap
  * \date 17 December 2019
- *
  * \ingroup SEED_DISPERSAL_PRIVATE
  */
 

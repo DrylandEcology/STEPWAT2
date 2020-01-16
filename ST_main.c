@@ -1,16 +1,20 @@
-/********************************************************/
-/********************************************************/
-/*  Source file: ST_main.c
- *  Type: module
- *  Application: STEPPE - plant community dynamics simulator
- *  Purpose: Main program loop and initializations. */
-/*  History:
+/**
+ * \file ST_main.c
+ * \brief Main program loop and initialization functions
+ * .
+ *  History:
  *     (6/15/2000) -- INITIAL CODING - cwb
  *     15-Apr-02 (cwb) -- added code to interface with SOILWAT
  *	   5-24-2013 (DLM) -- added gridded option to program... see ST_grid.c
- * source file for the rest of the gridded code */
-/********************************************************/
-/********************************************************/
+ *               source file for the rest of the gridded code 
+ * 
+ * \author CWB (initial programming)
+ * \author DLM (added gridded mode option)
+ * \author Kyle Palmquist
+ * \author Chandler Haukap
+ * \date 15 April 2000 (initial programming)
+ * \ingroup STEPPE
+ */
 
 /* =================================================== */
 /*                INCLUDES / DEFINES                   */

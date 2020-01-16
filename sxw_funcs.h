@@ -1,15 +1,16 @@
-/********************************************************/
-/********************************************************/
-/*  Source file: sxw_funcs.h
- *  Type: header
- *  Application: STEPWAT - plant community dynamics simulator
- *               coupled with the  SOILWAT model.
- *  Purpose: Separates the declarations of the STEPWAT
- *           function declarations. */
-/*  History:
- *     (14-Apr-2002) -- INITIAL CODING - cwb */
-/********************************************************/
-/********************************************************/
+/**
+ * \file sxw_funcs.h
+ * \brief Declares some of the \ref SXW functions. 
+ * 
+ * Ideally this file would be merged into \ref sxw.h to put all exported 
+ * functions in one place.
+ * 
+ * \author CWB (initial programming)
+ * \date 14 April 2002
+ * \author Chandler Haukap (author of this documentation)
+ * \date 16 January 2020
+ * \ingroup SXW
+ */
 
 #ifndef SXW_FUNCS_DEF
 #define SXW_FUNCS_DEF

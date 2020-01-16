@@ -1,22 +1,28 @@
-/***********************************************************************/
-// ST_initialization.c 
-//      Contains definitions of all functions related to initialization.
-//      The current initialization methods are _run_seed_initialization
-//      and _run_spinup. Note that _run_seed_initialization is non-functional 
-//      as of 12/11/19, but the logic is in place to call the function. This 
-//      file uses the "_" prefix in function names to denote private 
-//      functions that should NEVER be called outside of this file.
-//
-// TO ADD AN INITIALIZATION METHOD:
-//      Adding a method is simple. runInitialization() takes care of memory 
-//      management, iterating, and loading cells. All you need to do in your 
-//      new function is define what the program should do for ONE year and 
-//      for ONE cell. Once you have your function written, add an entry for 
-//      it to the InitializationMethod enumerator in ST_initialization.h, 
-//      add your method to _read_grid_setup() of ST_grid.c, then add your 
-//      function to the switch statement in runInitialization(). To see
-//      an example initialization function check out _run_spinup().
-/***********************************************************************/
+/**
+ * \file ST_initialization.c 
+ * \brief Definitions of all [initialization](\ref INITIALIZATION) functions.
+ * 
+ * Contains definitions of all functions related to initialization.
+ * The current initialization methods are _run_seed_initialization
+ * and _run_spinup. Note that _run_seed_initialization is non-functional
+ * as of 12/11/19, but the logic is in place to call the function. This
+ * file uses the "_" prefix in function names to denote private
+ * functions that should NEVER be called outside of this file.
+ *
+ * TO ADD AN INITIALIZATION METHOD:\n
+ * Adding a method is simple. \ref runInitialization() takes care of memory
+ * management, iterating, and loading cells. All you need to do in your
+ * new function is define what the program should do for ONE year and
+ * for ONE cell. Once you have your function written, add an entry for
+ * it to the \ref InitializationMethod enumerator in \ref ST_initialization.h,
+ * add your method to \ref _read_grid_setup() of ST_grid.c, then add your
+ * function to the switch statement in \ref runInitialization(). To see
+ * an example initialization function check out \ref _run_spinup().
+ * 
+ * \author Chandler Haukap
+ * \date September 2019
+ * \ingroup INITIALIZATION_PRIVATE
+ */
 
 // ST_initialization.h contains declarations for runInitialization and loadInitializationConditions 
 #include "ST_initialization.h"

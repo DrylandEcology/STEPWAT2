@@ -1,15 +1,12 @@
-/********************************************************/
-/********************************************************/
-/*  Source file: environs.c
- *  Type: module
- *  Application: STEPPE - plant community dynamics simulator
- *  Purpose: Controls all environmental phenomenon from
- *           creating ppt and temp to creating the
- *           disturbances. */
-/*  History:
- *     (6/15/2000) -- INITIAL CODING - cwb */
-/********************************************************/
-/********************************************************/
+/** 
+ * \file ST_environs.c
+ * \brief Controls all environmental phenomenon from creating ppt and temp to 
+ *        creating the disturbances.
+ * 
+ * \author CWB (initial coding)
+ * \date 15 June 2000
+ * \ingroup ENVIRONMENT
+ */
 
 /* =================================================== */
 /*                INCLUDES / DEFINES                   */

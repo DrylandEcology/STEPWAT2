@@ -7,12 +7,6 @@
  * [species](\ref SPECIES), [individuals](\ref INDIVIDUAL), and 
  * [mortality events](\ref MORTALITY).
  * 
- * \author
- *     Kyle Palmquist\n
- *     Chandler Haukap\n
- *     Freddy Pierson\n 
- *     Chris Bennett
- * 
  *  History:
  *    (6/15/2000) -- INITIAL CODING - cwb
  *    1/9/01 - revised to make extensive use of malloc()
@@ -23,6 +17,18 @@
  *           Celltype struct in ST_grid.h and swapped into this module using 
  *           a call to stat_Copy_Accumulators().
  * 
+ * \author Chris Bennett (initial coding)
+ * \date 15 June 2000
+ * 
+ * \author DLM (added gridded mode variables and functions)
+ * \date 28 May 2016
+ * 
+ * \author AKT (fixed bug in std_dev calculation)
+ * \date 30 July 2016
+ * 
+ * \author Chandler Haukap (overhauled all changes made by DLM)
+ * \author Kyle Palmquist
+ * \author Freddy Pierson
  * \date 23 August 2019
  * 
  * \ingroup STATISTICS

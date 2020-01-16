@@ -1,11 +1,14 @@
-/***********************************************************************/
-/* ST_initialization.h
-    This header defines the functions exported from ST_initialization.c. 
-    Initialization is currently only availible when running gridded 
-    mode. 
-    
-    Initial programming by Chandler Haukap in August of 2019. */
-/***********************************************************************/
+/** 
+ * \file ST_initialization.h
+ * \brief Defines the exported functions from the 
+ *        [initialization](\ref INITIALIZATION) module.
+ * 
+ * Initialization is currently only available for [gridded mode](\ref GRID).
+ * 
+ * \author Chandler Haukap
+ * \date August 2019
+ * \ingroup INITIALIZATION
+ */
 
 #ifndef INITIALIZATION_H
 #define INITIALIZATION_H

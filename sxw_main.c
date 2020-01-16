@@ -1,27 +1,17 @@
-/********************************************************/
-/********************************************************/
-/*  Source file: sxw_main.c
+/**
+ * \file sxw_main.c
+ * \brief A deprecated testing file.
  *
-/*  Type: testing module
+ * This file exists only for reference. It is completely deprecated and will
+ * not compile. At some point it should be removed.
  *
-/*  Purpose: Contains main() for suite of code to test
- *           the sxw module.
- *
-/*  Calls:
- *
-/*  Application: STEPWAT - plant community dynamics simulator
- *               coupled with the  SOILWAT model.
- *
-/*  History:
-/*     (25-Oct-2002) -- INITIAL CODING - cwb
-/*
-/********************************************************/
-/********************************************************/
+ * \author CWB (initial coding)
+ * \date 25 October 2002
+ */
 
 /* =================================================== */
 /*                INCLUDES / DEFINES                   */
 /* --------------------------------------------------- */
-
 
 #include <string.h>
 #include <stdlib.h>

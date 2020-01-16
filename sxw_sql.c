@@ -1,8 +1,11 @@
-/*
- * sxw_sql.c
- *
- *  Created on: Jan 15, 2015
- *      Author: Ryan J. Murphy
+/**
+ * \file sxw_sql.c
+ * \brief Outputs \ref SXW information to an SQL database.
+ * 
+ * \author Ryan J. Murphy
+ * \date 15 January 2015
+ * \ingroup SQL
+ * \ingroup SXW_PRIVATE
  */
 
 #include <string.h>

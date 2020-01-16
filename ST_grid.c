@@ -1,10 +1,6 @@
 /** 
  * \file ST_grid.c
  * \brief Function definitions for the gridded mode.
- * \author DLM (initial programming)
- * \author Fredrick Pierson
- * \author Chandler Haukap
- * \date March through July 2019
  *
  * This module handles the gridded mode of STEPWAT2. To accomplish this we use
  * a grid of cells represented by the CellType struct. The entire grid of
@@ -23,6 +19,10 @@
  * See issue #262 and pull request #375 on GitHub for a discussion of the 
  * overhaul of this module.
  * 
+ * \author DLM (initial programming)
+ * \author Fredrick Pierson
+ * \author Chandler Haukap
+ * \date March through July 2019
  * \ingroup GRID_PRIVATE
  */
 
