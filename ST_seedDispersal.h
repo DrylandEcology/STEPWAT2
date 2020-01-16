@@ -23,5 +23,6 @@ Bool UseSeedDispersal;
 
 // See ST_seedDispersal.c for documentation of these functions.
 void disperseSeeds(void);
+void initSeedDispersal(void);
 
 #endif

@@ -1,11 +1,11 @@
 /**
  * \file ST_seedDispersal.c
  * \brief Function definitions for all seed dispersal specific functions.
- * 
+ *
  * \author Chandler Haukap
  * \date 17 December 2019
- * 
- * \ingroup SEED_DISPERSAL_PRIVATE 
+ *
+ * \ingroup SEED_DISPERSAL_PRIVATE
  */
 
 #include "ST_globals.h"
@@ -34,13 +34,13 @@ Bool isRNGSeeded = FALSE;
 
 /**
  * \brief Disperse seeds between cells.
- * 
+ *
  * Iterates through all senders and recipients and determines which cells
  * received seeds. If a cell does receive seeds for a given species,
  * Species[sp]->seedsPresent will be set to TRUE.
- * 
- * \sideeffect 
- *    For all cells and all species Species[sp]->seedsPresent will be set to 
+ *
+ * \sideeffect
+ *    For all cells and all species Species[sp]->seedsPresent will be set to
  *    TRUE if a seed reached the cell and FALSE if no seeds reached the cell.
  *
  * \author Chandler Haukap
@@ -61,9 +61,9 @@ void disperseSeeds(void) {
   // The distance between a potential sender and recipient
   double distance;
 
-  if(!isRNGSeeded){
-      RandSeed(SuperGlobals.randseed, &dispersal_rng);
-      isRNGSeeded = TRUE;
+  if (!isRNGSeeded) {
+    RandSeed(SuperGlobals.randseed, &dispersal_rng);
+    isRNGSeeded = TRUE;
   }
 
   // Before we do anything we need to reset seedsPresent.
@@ -85,7 +85,7 @@ void disperseSeeds(void) {
         // wouldn't hurt, but it would be a waste of time.
         if (!Species[sp]->use_dispersal)
           continue;
-        
+
         // If there are no individuals of this species that are of reproductive
         // age continue.
         if (!_shouldProduceSeeds(sp))
@@ -94,7 +94,7 @@ void disperseSeeds(void) {
         // These variables are independent of recipient.
         height = getSpeciesHeight(Species[sp]);
         rate = _rateOfDispersal(Species[sp]->maxDispersalProbability,
-                                Species[sp]->meanHeight, 
+                                Species[sp]->meanHeight,
                                 Species[sp]->maxDispersalDistance);
 
         // Iterate through all possible recipients of seeds.
@@ -103,12 +103,12 @@ void disperseSeeds(void) {
             receiverCell = &gridCells[receiverRow][receiverCol];
 
             // This algorithm wouldn't hurt anything but it would waste time.
-            if (!receiverCell->mySpecies[sp]->use_dispersal){
+            if (!receiverCell->mySpecies[sp]->use_dispersal) {
               continue;
             }
 
             // If this cell already has seeds there is no point in continuing
-            if(receiverCell->mySpecies[sp]->seedsPresent){
+            if (receiverCell->mySpecies[sp]->seedsPresent) {
               continue;
             }
 
@@ -124,11 +124,43 @@ void disperseSeeds(void) {
               receiverCell->mySpecies[sp]->seedsPresent = TRUE;
             }
           } // END for each receiverCol
-        } // END for each receiverRow
-      } // END ForEachSpecies(sp)
+        }   // END for each receiverRow
+      }     // END ForEachSpecies(sp)
       unload_cell();
     } // END for each col
-  } // END for each row
+  }   // END for each row
+}
+
+/**
+ * \brief Seed dispersal initialization.
+ *
+ * This function allows species that requested seed dispersal establishment to
+ * establish without requiring a mature specimen to distribute seeds.
+ * Basically, calling this function simulates a seed bank for every species in
+ * every cell that requested seed dispersal.
+ *
+ * This function should be called in place of \ref disperseSeeds when you want
+ * to give every species that requested seed dispersal a chance to establish.
+ *
+ * \author Chandler Haukap
+ * \date 16 January 2020
+ * \ingroup SEED_DISPERSAL
+ */
+void initSeedDispersal(void) {
+  int row, col;
+  SppIndex sp;
+
+  for (row = 0; row < grid_Rows; ++row) {
+    for (col = 0; col < grid_Cols; ++col) {
+      load_cell(row, col);
+      ForEachSpecies(sp) {
+        if (Species[sp]->use_dispersal) {
+          Species[sp]->seedsPresent = TRUE;
+        }
+      } // END For Each Species
+    } // END For Each Column
+  } // END For Each Row
+  unload_cell();
 }
 
 /**
