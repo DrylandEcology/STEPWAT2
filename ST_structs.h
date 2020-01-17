@@ -751,12 +751,15 @@ struct superglobals_st {
  * values from previous Spring and Winter precipitation as well as the running
  * averages of both.
  * 
+ * \sa _updateCheatgrassPrecip, where this struct is updated each year.
  * \author Chandler Haukap
  * \date 13 January 2020
  * \ingroup MORTALITY
  */
 struct CheatgrassPrecip_st {
-  /** \brief The Spring precipitation in the previous 3 years. */
+  /** \brief The Spring precipitation in the previous 3 years.
+   * The array is indexed from newest to oldest, meaning prevSpring[0] is the 
+   * most recent value. */
   double prevSprings[3];
   /** \brief The precipitation in the last Winter. */
   double lastWinter;
