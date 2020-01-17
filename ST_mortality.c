@@ -289,25 +289,30 @@ void mort_EndOfYear(void) {
     int i = 0;
     Bool prescribed_fire_on = FALSE;
 
-    /* Check species index number from the beginning to all the species in
-     *  species.in , if the species name == checkname then get the biomass and stop the loop*/
-    for (i = 0; i < Globals->sppCount; i++) { /* if species name = checkname = brte then get the biomass of brte(cheatgrass)*/
+    /* Loop through all species. If the species name == checkname then get the
+     * biomass and break the loop */
+    for (i = 0; i < Globals->sppCount; i++) { 
+        /* if this species is cheatgrass then get the biomass */
         if (strcmp(cheatgrass_name, Species[i]->name) == 0) {
-            biomass_cheatgrass = Species_GetBiomass(i); /* calculate biomass of cheatgrass*/
+            biomass_cheatgrass = Species_GetBiomass(i);
             g = RGroup[Species[i]->res_grp];
             break;
         }
     }
 
+    /* Update the precipitation parameters that determine cheatgrass-driven
+     * wildfire. */
     _updateCheatgrassPrecip(Globals->currYear);
-    /* printf("%d:\tMeanSpring = %f\t ThisSpring = %f\t MeanWinter = %f\t LastWinter = %f\n", 
+    /* printf("%d:\tMeanSpring = %f\t ThisSpring = %f\t MeanWinter = %f\t LastWinter = %f\n",
            Globals->currYear, cheatgrassPrecip->springMean, cheatgrassPrecip->currentSpring, 
            cheatgrassPrecip->winterMean, cheatgrassPrecip->lastWinter); */
 
-    /* Set a random number outside of the loop to make sure the kill probability for each functional group is the same */
+    /* Set a random number outside of the loop to make sure the kill 
+     * probability for each functional group is the same */
     random_number = RandUni(&mortality_rng);
 
-    //determine if prescribed fire is on for any group. If TRUE, we do NOT want to simulate cheatgrass wildfire.
+    /* Determine if prescribed fire is on for any group. If TRUE, we do NOT 
+     * want to simulate cheatgrass wildfire. */
     ForEachGroup(rg){
       if(RGroup[rg]->killfreq > 0){
         prescribed_fire_on = TRUE;
@@ -553,6 +558,9 @@ CheatgrassPrecip* getCheatgrassPrecip(void) {
  * Note that \ref cheatgrassPrecip must be allocated before calling this
  * function, either by calling \ref initCheatgrassPrecip or by allocating a new
  * \ref CheatgrassPrecip variable then calling \ref setCheatgrassPrecip.
+ * 
+ * \param year is the year in which this function is being called. It is
+ *             necessary when calculating the running precipitation averages.
  * 
  * \sideeffect
  *     Every field in \ref cheatgrassPrecip will be updated to reflect this
