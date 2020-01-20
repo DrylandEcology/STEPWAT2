@@ -132,7 +132,13 @@ static void _init_grid_inputs(void);
 /******************** Begin Model Code *********************/
 /***********************************************************/
 
-/* Print information about the simulation to stdout. */
+/**
+ * \brief Print information about the simulation to stdout.
+ * 
+ * \author Chandler Haukap
+ * \date August 2019 
+ * \ingroup GRID 
+ */
 static void printGeneralInfo(void){
 	/* ------------------- Print some general information to stdout ----------------------- */
     printf("Number of iterations: %d\n", SuperGlobals.runModelIterations);
@@ -155,7 +161,21 @@ static void printGeneralInfo(void){
 	/* --------------------------- END printing general info -------------------------------- */
 }
 
-/* Run gridded mode. */
+/**
+ * \brief Run gridded mode.
+ * 
+ * This function is responsible for initializing the [cells](\ref CellType), 
+ * running the simulation on all of them, Then printing output.
+ * 
+ * \sideeffect
+ *     In theory this function will have no side effects, but memory leaks are
+ *     possible due to the massive amount of allocations associated with
+ *     gridded mode.
+ * 
+ * \author Chandler Haukap
+ * \date August 2019
+ * \ingroup GRID
+ */
 void runGrid(void)
 {
 	int i, j;
@@ -350,8 +370,17 @@ void runGrid(void)
 	logProgress(0, 0, DONE);
 }
 
-/* Read the files.in file which was supplied to the program as an argument.
-   This function saves the file names it reads to grid_files and grid_directories. */
+/**
+ * \brief Read the files.in file.
+ * 
+ * The files.in file specifies the locations of the other input files.
+ * 
+ * \sideeffect
+ *     This function saves the file names it reads to \ref grid_files and 
+ *     \ref grid_directories. 
+ * 
+ * \ingroup GRID_PRIVATE
+ */
 static void _init_grid_files(void)
 {
 	// reads the files.in file
@@ -390,8 +419,18 @@ static void _init_grid_files(void)
 	CloseFile(&f);
 }
 
-/* Read all gridded mode files excluding grid_setup.in. This function overrided values specified in non-gridded 
-   mode files, so make sure you have read the non-gridded mode files before calling this function.*/
+/**
+ * \brief Read all gridded mode files excluding grid_setup.in. 
+ * 
+ * All associated fields will be populated with the values read.
+ * 
+ * \sideeffect
+ *     This function overrides values in the \ref RGroup and \ref Species
+ *     arrays so make sure you have read the non-gridded mode files before
+ *     calling this function.
+ * 
+ * \ingroup GRID_PRIVATE
+ */
 static void _init_grid_inputs(void)
 {
     int i, j;
@@ -415,7 +454,11 @@ static void _init_grid_inputs(void)
     unload_cell();
 }
 
-/* Read SXW input files */
+/**
+ * \brief Read \ref SXW input files
+ * 
+ * \ingroup GRID
+ */
 static void _init_SXW_inputs(Bool init_SW, char *f_roots)
 {
 	SXW_Init(init_SW, f_roots);	// initializes soilwat
@@ -427,8 +470,16 @@ static void _init_SXW_inputs(Bool init_SW, char *f_roots)
 	}
 }
 
-/* Read in the STEPWAT2 files and populate the grid. This only needs to be called once. 
-   DEPENDENCIES: gridCells must be allocated first. */
+/**
+ * \brief Read in the STEPWAT2 files and populate the grid. This only needs to be called once.
+ * 
+ * Note that \ref gridCells must be allocated first.
+ * 
+ * \sideeffect
+ *     Many fields in the \ref gridCells array will be assigned values.
+ * 
+ * \ingroup GRID_PRIVATE 
+ */
 static void _init_stepwat_inputs(void)
 {
 	int i, j; 							// Used as indices in gridCells
@@ -466,8 +517,21 @@ static void _init_stepwat_inputs(void)
 	ChDir("..");						// go back to the folder we started in
 }
 
-/* Reread input files. Be careful because this function reallocates the grid.
-   Make sure you call free_grid_memory before calling this function. */
+/**
+ * \brief Reread input files.
+ * 
+ * This is useful when transitioning from [initialization](\ref INITIALIZATION)
+ * to the regular simulation. It is a quick way to reset everything
+ * 
+ * Be careful because this function reallocates [the grid](\ref gridCells).
+ * Make sure you call \ref free_grid_memory before calling this function. 
+ * 
+ * \sideeffect
+ *     The grid will be reallocated and all fields will be assigned the values
+ *     from inputs.
+ * 
+ * \ingroup GRID
+ */
 void rereadInputs(void){
     _read_grid_setup();
     _read_files();
@@ -475,7 +539,17 @@ void rereadInputs(void){
     _init_grid_inputs();
 }
 
-/* Allocates memory for the grid cells. This only needs to be called once. */
+/**
+ * \brief Allocates memory for the grid cells.
+ * 
+ * This function only needs to be called once.
+ * 
+ * \sideeffect 
+ *     \ref grid_Rows * \ref grid_Cols worth of [cells](\ref CellType)
+ *     will be allocated.
+ * 
+ * \ingroup GRID_PRIVATE
+ */
 static void _allocate_gridCells(int rows, int cols){
 	int i, j;
 	gridCells = (CellType**) Mem_Calloc(rows, sizeof(CellType*), "_allocate_gridCells: rows");
@@ -496,8 +570,19 @@ static void _allocate_gridCells(int rows, int cols){
 	}
 }
 
-/* Initialize each gridCell's accumulators. 
-   Must be called after STEPWAT inputs have been read. */
+/**
+ * \brief Initialize each gridCell's accumulators. 
+ * 
+ * Must be called after STEPWAT inputs have been read so the program knows
+ * which accumulators are necessary.
+ * 
+ * \sideeffect 
+ *     Multiple [accumulators](\ref StatType) will be allocated to each 
+ *     [cell](\ref CellType). Of course, this means \ref gridCells must be
+ *     allocated first.
+ * 
+ * \ingroup GRID_PRIVATE
+ */
 static void _allocate_accumulators(void){
 	int i, j;
 	SppIndex sp;
@@ -694,7 +779,17 @@ static void _allocate_accumulators(void){
 	unload_cell(); // Unload the cell to protect the last cell from unintended modification.
 }
 
-/* Free all memory allocated to the gridded mode during initialization. */
+/**
+ * \brief Free all memory allocated to the gridded mode.
+ * 
+ * This includes not only the [cells](\ref gridCells) but also the fields
+ * inside those cells.
+ * 
+ * \sideeffect 
+ *     \ref gridCells will be completely deallocated.
+ * 
+ * \ingroup GRID
+ */
 void free_grid_memory(void)
 {
 	//frees all the memory allocated in this file ST_Grid.c (most of it is dynamically allocated in _init_grid_globals() & _load_grid_globals() functions)
@@ -737,8 +832,25 @@ void free_grid_memory(void)
 	Mem_Free(gridCells);
 }
 
-/* Load gridCells[row][col] into the globals variables.
-   Any call to this function should have an accompanying call to unload_cell(). */
+/**
+ * \brief Load \ref gridCells[row][col] into the 
+ *        [global variables](\ref ST_globals.h).
+ * 
+ * \param row the row in the \ref gridCells 2d array.
+ * \param col the column in the \ref gridCells 2d array.
+ * 
+ * After calling this function all variables like \ref Species, \ref RGroup,
+ * and \ref Env will point to a specific cell. It will also pass along the 
+ * cell-specific structs like \ref SXWResources to their specific modules.
+ * 
+ * Any call to this function should have an accompanying call to 
+ * \ref unload_cell().
+ * 
+ * \sideeffect
+ *     All global variables will point to the specified cell.
+ * 
+ * \ingroup GRID
+ */
 void load_cell(int row, int col){
     /* RGroup for this cell */
 	RGroup = gridCells[row][col].myGroup;
@@ -786,16 +898,17 @@ void load_cell(int row, int col){
 	}
 }
 
-/* Nullify all global variables. This function should appear after every call 
-   to load_cell to prevent accidental modification of a grid cell.
-   Example usage:
-   for i in rows{
-       for j in columns{
-	       load_cell(i, j)
-		   //additional functions
-	   }
-   }
-   unload_cell() */
+/**
+ * \brief Nullify all global variables. Prevents accidental modification of
+ *        [cells](\ref CellType).
+ * 
+ * Any call to \ref load_cell should be followed by a call to this function.
+ * 
+ * \sideeffect
+ *     All global variables will be nullified, i.e. point to 0.
+ * 
+ * \ingroup GRID
+ */
 void unload_cell(){
 	Species = NULL;
 	RGroup = NULL;
@@ -809,10 +922,14 @@ void unload_cell(){
 	copy_sxw_variables(NULL,NULL,NULL);
 }
 
-/* 
- * \brief Similar to the getaline function in filefuncs.c, except this one 
- * checks for carriage return characters and doesn't deal with whitespace.
+/** 
+ * \brief Similar to the \ref getaline function in \ref filefuncs.c, except 
+ *        this one checks for carriage return characters and doesn't deal with
+ *        whitespace.
+ * 
  * It treats '\r', '\n', and '\r\n' all like they are valid line feeds.
+ * 
+ * \ingroup GRID_PRIVATE
  */
 static Bool GetALine2(FILE *f, char buf[], int limit)
 {
@@ -834,7 +951,13 @@ static Bool GetALine2(FILE *f, char buf[], int limit)
 	return TRUE;
 }
 
-/* Reads the grid disturbance CSV. This function will override disturbance inputs from non-gridded mode. */
+/**
+ * \brief Reads the grid disturbance CSV. 
+ * 
+ * This function will override disturbance inputs from non-gridded mode.
+ * 
+ * \ingroup GRID_PRIVATE
+ */
 static void _read_disturbances_in(void)
 {
 	FILE *f;
@@ -874,7 +997,8 @@ static void _read_disturbances_in(void)
 	CloseFile(&f);
 }
 
-/* Iterates through s until it find nSeperators worth of seperators
+/**
+ * \brief Iterates through s until it find nSeperators worth of seperators
  * 
  * Used to do most of the parsing in the \ref _read_soils_in() function
  * 
@@ -882,7 +1006,10 @@ static void _read_disturbances_in(void)
  * \param separator is the character used as a separator, for example tab or space.
  * \param nSeparators is the number of separators to read.
  * 
- * \return index of the character following the last separator. */
+ * \return index of the character following the last separator. 
+ * 
+ * \ingroup GRID_PRIVATE
+ */
 static int _get_value_index(char* s, char seperator, int nSeperators)
 {
 	int i = 0, sep = 0;
@@ -980,15 +1107,19 @@ static void _read_soils_in(void){
 	Mem_Free(tempSoil.psand);
 }
 
-/* Reads a line of soil input from buf into destination. 
-
-   Param buf: line of soil input.
-   Param destination: SoilType struct to fill.
-   Param layer: layer number of destination to fill (0 indexed).
-
-   Return: SOIL_READ_FAILURE if buf is incorrectly formatted.
-           SOIL_READ_SUCCESS if destination is populated correctly.
-		   Otherwise returns the cell number that destination should copy. */
+/**
+ * \brief Reads a line of soil input from buf into destination.
+ * 
+ * \param buf line of soil input to parse.
+ * \param destination \ref SoilType struct to fill.
+ * \param layer layer number of destination to fill (0 indexed).
+ * 
+ * \return SOIL_READ_FAILURE if buf is incorrectly formatted.
+ * \return SOIL_READ_SUCCESS if destination is populated correctly.
+ * \return Otherwise returns the cell number that destination should copy.
+ * 
+ * \ingroup GRID_PRIVATE
+ */
 static int _read_soil_line(char* buf, SoilType* destination, int layer){
 	int entriesRead, cellToCopy, cellNum, layerRead;
 	entriesRead = sscanf(buf, "%d,,%d,%d,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%s",
@@ -1022,12 +1153,18 @@ static int _read_soil_line(char* buf, SoilType* destination, int layer){
 	}
 }
 
-/* Copy one SoilType variable to another. 
-     param src: An allocated and assigned SoilType
-	 param dest: An unallocated SoilType
-	 
-	 note: dest will be allocated memory, so do not call this function
-	       if dest is already allocated. */
+/**
+ * \brief Copy one SoilType variable to another.
+ * 
+ * \param src: An allocated and assigned SoilType
+ * \param dest: An unallocated SoilType
+ * 
+ * \sideeffect
+ *     dest will be allocated memory, so do not call this function if dest is
+ *     already allocated. 
+ * 
+ * \ingroup GRID_PRIVATE
+ */
 void _copy_soils(SoilType* src, SoilType* dest){
 	int i;
 
@@ -1061,7 +1198,17 @@ void _copy_soils(SoilType* src, SoilType* dest){
 	}
 }
 
-/* Read the species initialization CSV. This function only needs to be called if the user requests initialization.*/
+/**
+ * \brief Read the species initialization CSV. 
+ * 
+ * This function only needs to be called if the user requests initialization.
+ * 
+ * \sideeffect
+ *     The species initialization information of each [cell](\ref gridCells)
+ *     will be populated.
+ * 
+ * \ingroup GRID_PRIVATE
+ */
 static void _read_init_species(void)
 {
 	FILE *f;
@@ -1145,7 +1292,14 @@ static void _read_init_species(void)
 	CloseFile(&f);
 }
 
-/* Read the maxrgroupspecies file. */
+/**
+ * \brief Read the maxrgroupspecies file.
+ * 
+ * This will populate the max [RGroup](\ref RGROUP) and [Species](\ref SPECIES)
+ * information in the \ref SuperGlobals struct.
+ * 
+ * \ingroup GRID_PRIVATE
+ */
 static void _read_maxrgroupspecies(void)
 {
     ChDir(grid_directories[GRID_DIRECTORY_STEPWAT_INPUTS]);
@@ -1154,7 +1308,11 @@ static void _read_maxrgroupspecies(void)
     ChDir("..");
 }
 
-/* Read the non-gridded mode files.in file. */
+/**
+ * \brief Read the non-gridded mode files.in file.
+ * 
+ * \ingroup GRID_PRIVATE
+ */
 static void _read_files(void)
 {
     ChDir(grid_directories[GRID_DIRECTORY_STEPWAT_INPUTS]);
@@ -1162,7 +1320,11 @@ static void _read_files(void)
     ChDir("..");
 }
 
-/* Reads the grid setup file and allocates gridCells.*/
+/**
+ * \brief Reads the grid setup file and allocates \ref gridCells. 
+ * 
+ * \ingroup GRID_PRIVATE
+ */
 static void _read_grid_setup(void)
 {
     FILE *f;
@@ -1251,7 +1413,11 @@ static void _read_grid_setup(void)
     CloseFile(&f);
 }
 
-/* Output a master .csv file containing the averages across all cells. */
+/**
+ * \brief Output a master .csv file containing the averages across all cells. 
+ * 
+ * \ingroup GRID_PRIVATE
+ */
 void _Output_AllCellAvgBmass(const char * filename){
 	int i, j, year, nobs = 0;	//for iterating
 	GrpIndex rg;	//for iterating
@@ -1437,7 +1603,11 @@ void _Output_AllCellAvgBmass(const char * filename){
 	fclose(file); // Close the file
 }
 
-/* Output the average mortality across cells. */
+/**
+ * \brief Output the average mortality across cells. 
+ * 
+ * \ingroup GRID_PRIVATE
+ */
 void _Output_AllCellAvgMort(const char* fileName){
     if (!MortFlags.summary) return;
 
