@@ -242,6 +242,8 @@ typedef enum
 	/** \brief Location in \ref grid_files of the species initialization file
 	 *         name. */
     GRID_FILE_INIT_SPECIES,
+	/** \brief Location in \ref grid_files of the colonization file name. */
+	GRID_FILE_COLONIZATION,
 	/** \brief Location in \ref grid_files of the STEPWAT2 input file name. */
     GRID_FILE_FILES,
 	/** \brief Location in \ref grid_files of the max rgroup and species file

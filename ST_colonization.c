@@ -42,6 +42,11 @@ int _numberOfEvents = 0;
  * supposed to occur in the given year it will provides seeds for the requested
  * species in the requested cell.
  * 
+ * \param year is the current year. I chose to input year as a perameter,
+ *             rather than infer it from a cell, to make sure that there is no
+ *             descrepency between the current year of any 
+ *             [cell](\ref CellType)
+ * 
  * \return TRUE if colonization ocurred in any cell.
  * \return FALSE if nothing colonized in any cell.
  * 
@@ -52,20 +57,21 @@ int _numberOfEvents = 0;
  * \date January 2020
  * \ingroup COLONIZATION
  */
-Bool colonize(void) {
+Bool colonize(int year) {
   Bool somethingColonized = FALSE;
   int i = 0;
-
+  
   // While the startYear is earlier than the current year.
-  while(_numberOfEvents > i && _allEvents[i].startYear <= Globals->currYear) {
+  while(i < _numberOfEvents && _allEvents[i].startYear <= year) {
     // If the event is occuring this year
-    if(_allEvents[i].startYear + _allEvents[i].duration > Globals->currYear) {
-      CellType* cell = &gridCells[_allEvents[i].row][_allEvents[i].column];
+    if(_allEvents[i].startYear + _allEvents[i].duration > year) {
+      load_cell(_allEvents[i].row, _allEvents[i].column);
       // Setting both of these things to TRUE should ensure the species has a
       // chance to establish.
-      cell->mySpecies[_allEvents[i].species]->seedsPresent = TRUE;
-      cell->mySpecies[_allEvents[i].species]->use_me = TRUE;
+      Species[_allEvents[i].species]->seedsPresent = TRUE;
+      Species[_allEvents[i].species]->use_me = TRUE;
       somethingColonized = TRUE;
+      unload_cell();
     }
     ++i;
   }
@@ -95,7 +101,7 @@ void initColonization(char* fileName) {
   char name[5];
   int valuesRead;
   int numOfEvents = 0;
-  int cell;
+  int cell, row, column;
   int startYear;
   int duration;
   int i, j;
@@ -117,7 +123,11 @@ void initColonization(char* fileName) {
 
   // Read the entire file.
   while(GetALine(file, inbuf)) {
-    valuesRead = sscanf(inbuf, "%d,%s,%d,%d", &cell, name, &startYear, &duration);
+    valuesRead = sscanf(inbuf, "%d,%d,%d,%s", &cell, &startYear, &duration,
+                        name);
+
+    row = cell / grid_Cols;
+	  column = cell % grid_Cols;
         
     /* ----------------------- Input Validation ------------------------ */
     if(numOfEvents >= MAX_COLONIZATION_EVENTS) {
@@ -145,6 +155,8 @@ void initColonization(char* fileName) {
                "\n\tInvalid start year (%d) specified.", startYear);
       return;
     }
+    // For the species info we need to have the cell loaded.
+    load_cell(row, column);
     if(Species_Name2Index(name) == -1) {
       Mem_Free(tempEvents);
       LogError(logfp, LOGFATAL, "Error reading colonization file:"
@@ -153,12 +165,13 @@ void initColonization(char* fileName) {
     }
 
     /* ------------- Add the event to our temporary array -------------- */
-    tempEvents[numOfEvents].row = cell / grid_Cols;
-	  tempEvents[numOfEvents].column = cell % grid_Cols;
+    tempEvents[numOfEvents].row = row;
+	  tempEvents[numOfEvents].column = column;
     tempEvents[numOfEvents].duration = duration;
     tempEvents[numOfEvents].species = Species_Name2Index(name);
     tempEvents[numOfEvents].startYear = startYear;
     numOfEvents++;
+    unload_cell();
   }
 
   // Ensure we never leak memory
@@ -171,7 +184,7 @@ void initColonization(char* fileName) {
   // This algorithm sorts the events by startYear as is copies them over.
   // Sorting the entries now will save time later.
   int lowestYear, lowestYearIndex;
-  Mem_Calloc(numOfEvents, sizeof(ColonizationEvent), "initColonization");
+  _allEvents = Mem_Calloc(numOfEvents, sizeof(ColonizationEvent), "initColonization");
   for(i = 0; i < numOfEvents; ++i) {
     // I set the default to 32,767 meaning if the simulation is run for
     // 32,768 years there could be a bug. However, I doubt that would ever

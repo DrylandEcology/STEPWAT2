@@ -16,7 +16,7 @@
 
 /* ------------------------------- Functions ------------------------------- */
 // See ST_colonization.c for a description of these functions.
-Bool colonize(void);
+Bool colonize(int year);
 void initColonization(char* fileName);
 void freeColonizationMemory(void);
 

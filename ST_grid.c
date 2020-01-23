@@ -40,6 +40,7 @@
 #include "sxw_funcs.h"
 #include "ST_initialization.h"
 #include "ST_progressBar.h"
+#include "ST_colonization.h"
 
 char sd_Sep;
 
@@ -188,6 +189,7 @@ void runGrid(void)
     _read_files();                  // reads in Stepwat_Inputs/files.in file
     _init_stepwat_inputs();			// reads the stepwat inputs in
 	_init_grid_inputs();			// reads the grid inputs in & initializes the global grid variables
+	initColonization(grid_files[GRID_FILE_COLONIZATION]);
 	//SWC hist file prefix needs to be cleared
 	Mem_Free(SW_Soilwat.hist.file_prefix);
 	SW_Soilwat.hist.file_prefix = NULL;
@@ -250,6 +252,11 @@ void runGrid(void)
             if (UseSeedDispersal){
 				disperseSeeds();
             }
+
+			// Allow the colonization module to run. This function MUST be
+			// Called after disperseSeeds() because it modifies the
+			// seedsPresent variable of each Species.
+			colonize(year);
             
 			for (i = 0; i < grid_Rows; i++){
 				for (j = 0; j < grid_Cols; j++)
@@ -364,6 +371,7 @@ void runGrid(void)
 
 	free_grid_memory();	// Free our allocated memory since we do not need it anymore
 	parm_free_memory();		// Free memory allocated to the _files array in ST_params.c
+	freeColonizationMemory();
 	if(initializationMethod == INIT_WITH_SPINUP) {
 		freeInitializationMemory();
 	}
