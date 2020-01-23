@@ -69,7 +69,8 @@ sources_core = \
 	sxw_sql.c \
 	ST_initialization.c \
 	ST_progressBar.c \
-	ST_seedDispersal.c
+	ST_seedDispersal.c \
+	ST_colonization.c
 
 sources_test = \
 	sw_src/googletest/googletest/src/gtest-all.cc \

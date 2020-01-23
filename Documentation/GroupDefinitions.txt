@@ -2,7 +2,7 @@
 
 /**
  * \defgroup SXW SXW
- *           \brief Interface between \ref SOILWAT2 and \ref STEPPE
+ *           \brief Interface between [SOILWAT2](\ref sw_src) and \ref STEPPE
  *
  * \defgroup SXW_PRIVATE Private SXW
  *           \brief Private functions and variables of the \ref SXW module.
@@ -70,6 +70,14 @@
  * \defgroup INITIALIZATION_PRIVATE Private Initialization
  *           \brief functions and variables private to initialization.
  *           \ingroup INITIALIZATION
+ *
+ * \defgroup COLONIZATION Colonization
+ *           \brief Colonization of species during the simulation.
+ *           \ingroup GRID
+ *
+ * \defgroup COLONIZATION_PRIVATE Private Colonization
+ *           \brief Functions and data private to the colonization module.
+ *           \ingroup COLONIZATION
  *
  * \defgroup PROGRESS_BAR Progress Bar
  *           \brief A command-line progress bar.
