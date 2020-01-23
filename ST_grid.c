@@ -931,11 +931,11 @@ void unload_cell(){
 }
 
 /** 
- * \brief Similar to the \ref getaline function in \ref filefuncs.c, except 
+ * \brief Similar to the \ref GetALine function in \ref filefuncs.c, except 
  *        this one checks for carriage return characters and doesn't deal with
  *        whitespace.
  * 
- * It treats '\r', '\n', and '\r\n' all like they are valid line feeds.
+ * It treats '\\r', '\\n', and '\\r\\n' all like they are valid line feeds.
  * 
  * \ingroup GRID_PRIVATE
  */
@@ -1011,8 +1011,8 @@ static void _read_disturbances_in(void)
  * Used to do most of the parsing in the \ref _read_soils_in() function
  * 
  * \param s is a char* array.
- * \param separator is the character used as a separator, for example tab or space.
- * \param nSeparators is the number of separators to read.
+ * \param seperator is the character used as a separator, for example tab or space.
+ * \param nSeperators is the number of separators to read.
  * 
  * \return index of the character following the last separator. 
  * 

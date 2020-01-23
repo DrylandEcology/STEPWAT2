@@ -69,8 +69,8 @@ static void createTables(void);
  * \param stdbName is the name of the output file.
  * 
  * \sideeffect 
- *      Opens the database for writing. If no database exists named
- *      \ref stdbName a file will be created.
+ *      Opens the database for writing. If no database exists named stdbName a
+ *      file will be created.
  * 
  * \ingroup SQL
  */
@@ -211,7 +211,8 @@ static void finalizeStatements() {
 }
 
 /** 
- * \brief Inserts \ref MORTALITY information pertaining to a single \ref INDIVIDIAL into the database.
+ * \brief Inserts \ref MORTALITY information pertaining to a single 
+ *        \ref INDIVIDUAL into the database.
  * 
  * \param IndivID the unique ID of the [individual](\ref IndivType).
  * \param KillTypeID the \ref MortalityType code that killed the [individual](\ref IndivType).

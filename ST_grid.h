@@ -90,7 +90,7 @@ struct grid_init_species_st
 	int useInitialization;
 	/** 
 	 * \brief Array of boolean values that correspond to this
-	 *         [cell](\ref CellType)'s [species](\ref Secies) array.
+	 *         [cell](\ref CellType)'s [species](\ref Species) array.
 	 * 
 	 *  TRUE if Species[sp] should use initialization.
 	 */
@@ -301,7 +301,7 @@ CellType** gridCells;
 int grid_Rows;
 
 /** 
- * \brief Columns in the [grid](\ref GridCells).
+ * \brief Columns in the [grid](\ref gridCells).
  * \ingroup GRID
  */
 int grid_Cols;

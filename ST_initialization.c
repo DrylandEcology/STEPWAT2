@@ -6,7 +6,7 @@
  * The current initialization methods are _run_seed_initialization
  * and _run_spinup. Note that _run_seed_initialization is non-functional
  * as of 12/11/19, but the logic is in place to call the function. This
- * file uses the "_" prefix in function names to denote private
+ * file uses the underscore prefix in function names to denote private
  * functions that should NEVER be called outside of this file.
  *
  * TO ADD AN INITIALIZATION METHOD:\n
@@ -15,7 +15,7 @@
  * new function is define what the program should do for ONE year and
  * for ONE cell. Once you have your function written, add an entry for
  * it to the \ref InitializationMethod enumerator in \ref ST_initialization.h,
- * add your method to \ref _read_grid_setup() of ST_grid.c, then add your
+ * add your method to \ref _read_grid_setup() of \ref ST_grid.c, then add your
  * function to the switch statement in \ref runInitialization(). To see
  * an example initialization function check out \ref _run_spinup().
  * 
@@ -24,7 +24,8 @@
  * \ingroup INITIALIZATION_PRIVATE
  */
 
-// ST_initialization.h contains declarations for runInitialization and loadInitializationConditions 
+// ST_initialization.h contains declarations for runInitialization and 
+// loadInitializationConditions 
 #include "ST_initialization.h"
 #include "ST_stats.h"
 #include "ST_globals.h"
@@ -34,15 +35,15 @@
 #include "filefuncs.h"
 #include "ST_progressBar.h"
 
-/********** Local functions. These should all be treated as private. *************/
+/******** Local functions. These should all be treated as private. ***********/
 static void _run_spinup(void);
 static void _run_seed_initialization(void);
 static void _beginInitialization(void);
 static void _endInitialization(void);
 static void _saveAsInitializationConditions(void);
 
-/***************************** Externed variables **********************************/
-/* Note that in an ideal world we wouldn't need to extern any variables because 
+/************************** Externed variables *******************************/
+/* Note that in an ideal world we wouldn't need to extern any variables because
    every module would declare them in a header file. Hopefully we can get this
    cleaned up soon! -CH */
 
@@ -54,7 +55,8 @@ extern SW_WEATHER SW_Weather;
 
 extern pcg32_random_t grid_rng;         // Gridded mode's unique RNG.
 
-/* We need to seed these RNGs when using the gridded mode but do not use them in this file. */
+/* We need to seed these RNGs when using the gridded mode but do not use them
+ * in this file. */
 extern pcg32_random_t environs_rng;     // Used exclusively in ST_environs.c
 extern pcg32_random_t mortality_rng;    // Used exclusively in ST_mortality.c
 extern pcg32_random_t resgroups_rng;    // Used exclusively in ST_resgroups.c

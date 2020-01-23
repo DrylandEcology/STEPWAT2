@@ -35,7 +35,8 @@ extern SW_MODEL SW_Model;
 
 
 /**
- * \brief Outputs the current year's values to the file denoted in \ref Globals.bmass.fp_year
+ * \brief Outputs the current year's values to the file denoted in 
+ *        [Globals.bmass.fp_year](\ref Globals)
  * 
  * \param year is the year that these values are being printed. This is 1 indexed.
  * 
@@ -198,7 +199,8 @@ void output_Bmass_Yearly( Int year ) {
 
 
 /**
- * \brief Outputs the current year's values to the file denoted in \ref Globals.mort.fp_year
+ * \brief Outputs the current year's values to the file specified in
+ *        [Globals->mort.fp_year](\ref Globals)
  * 
  * Prints mortality values. These values are indexed by age at death.
  * 

@@ -165,8 +165,9 @@ double _calculateInitializationProgress(int year){
  * 
  * The main simulation is expected to use 2 nested for loops: one for the
  * iteration and one for the year. This function therefore takes two parameters
- * and uses \ref SuperGlobals.runModelYears and 
- * \ref SuperGlobals.runModelIterations to determine a percentage.
+ * and uses [SuperGlobals.runModelYears](\ref SuperGlobals) and 
+ * [SuperGlobals.runModelIterations](\ref SuperGlobals) to determine a 
+ * percentage.
  * 
  * \param year The current year of the inner loop
  * \param iteration The current iteration of the outer loop.

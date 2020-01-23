@@ -145,7 +145,7 @@ void copy_sxw_variables(SXW_t* newSXW, SXW_resourceType* newSXWResources, transp
 /****************** Begin Function Code ********************/
 
 /**
- * \brief Read \ref SOILWAT2 input files and initialize variables.
+ * \brief Read [SOILWAT2](\ref sw_src) input files and initialize variables.
  * 
  * \ingroup SXW
  */

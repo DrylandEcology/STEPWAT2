@@ -167,7 +167,7 @@ void initSeedDispersal(void) {
  * \param row1 The row of the first cell, i.e. its x coordinate.
  * \param row2 The row of the second cell, i.e. its x coordinate.
  * \param col1 The column of the first cell, i.e. its y coordinate.
- * \param col1 The column of the first cell, i.e. its y coordinate.
+ * \param col2 The column of the second cell, i.e. its y coordinate.
  * \param cellLen The length of the square cells.
  *
  * \return A Double. The distance between the cells.

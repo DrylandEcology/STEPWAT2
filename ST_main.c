@@ -1,7 +1,7 @@
 /**
  * \file ST_main.c
  * \brief Main program loop and initialization functions
- * .
+ * 
  *  History:
  *     (6/15/2000) -- INITIAL CODING - cwb
  *     15-Apr-02 (cwb) -- added code to interface with SOILWAT
