@@ -1096,21 +1096,6 @@ static void _species_init( void) {
                                          ? -log(cohort)/age
                                          : 0.0;
          */
-        /*Calculate alpha and beta for each species based on mean (pestab) and variance (var)*/
-        Species[sp]->alpha = ((pow(Species[sp]->seedling_estab_prob, 2) - pow(Species[sp]->seedling_estab_prob, 3)) / Species[sp]->var) - Species[sp]->seedling_estab_prob;
-        Species[sp]->beta = (Species[sp]->alpha / Species[sp]->seedling_estab_prob) - Species[sp]->alpha;
-
-        /*If the following two conditions are met, the beta distribution is bimodal or nearly bimodal,
-         * which is not the desired outcome. The variance (s->var) and mean (pestab) should be adjusted
-         * to obtain an unimodal beta-distribution with density > 0 */
-        if (Species[sp]->alpha < 1) {
-            LogError(logfp, LOGWARN, "Species %s, alpha less than 1: %f \n", Species[sp]->name,
-                    Species[sp]->alpha);
-        }
-        if (Species[sp]->beta < 1) {
-            LogError(logfp, LOGWARN, "Species %s, beta less than 1: %f \n", Species[sp]->name,
-                    Species[sp]->beta);
-        }
     }/* end while*/
 
    if (!sppok) {
@@ -1149,6 +1134,25 @@ static void _species_init( void) {
      Species[sp]->var = var;
      Species[sp]->pseed = pseed / Globals->plotsize;
 
+     /*Calculate alpha and beta for each species based on mean (pestab) and variance (var)*/
+     Species[sp]->alpha = ((pow(Species[sp]->seedling_estab_prob, 2)
+                            - pow(Species[sp]->seedling_estab_prob, 3))
+                           / Species[sp]->var)
+                          - Species[sp]->seedling_estab_prob;
+     Species[sp]->beta = (Species[sp]->alpha / Species[sp]->seedling_estab_prob)
+                          - Species[sp]->alpha;
+
+     /*If the following two conditions are met, the beta distribution is bimodal or nearly bimodal,
+      * which is not the desired outcome. The variance (s->var) and mean (pestab) should be adjusted
+      * to obtain an unimodal beta-distribution with density > 0 */
+     if (Species[sp]->alpha < 1) {
+        LogError(logfp, LOGWARN, "Species %s, alpha less than 1: %f \n", 
+                 Species[sp]->name, Species[sp]->alpha);
+     }
+     if (Species[sp]->beta < 1) {
+        LogError(logfp, LOGWARN, "Species %s, beta less than 1: %f \n", 
+                 Species[sp]->name, Species[sp]->beta);
+     }
    } /* end while readspp*/
 
    if (!sppok) {
