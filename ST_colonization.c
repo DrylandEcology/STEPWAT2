@@ -59,23 +59,27 @@ int _numberOfEvents = 0;
  */
 Bool colonize(int year) {
   Bool somethingColonized = FALSE;
-  int i = 0;
+  ColonizationEvent* event;
+  int i = 0, cell;
   
   // While the startYear is earlier than the current year.
   while(i < _numberOfEvents && _allEvents[i].startYear <= year) {
     // If the event is occuring this year
     if(_allEvents[i].startYear + _allEvents[i].duration > year) {
-      load_cell(_allEvents[i].row, _allEvents[i].column);
-      // Setting both of these things to TRUE should ensure the species has a
-      // chance to establish.
-      Species[_allEvents[i].species]->seedsPresent = TRUE;
-      Species[_allEvents[i].species]->use_me = TRUE;
+      event = &_allEvents[i];
+
+      for(cell = event->fromCell; cell <= event->toCell; ++cell){
+          load_cell(cell / grid_Cols, cell % grid_Cols);
+          // Setting both of these things to TRUE should ensure the species has a
+          // chance to establish.
+          Species[event->species]->seedsPresent = TRUE;
+          Species[event->species]->use_me = TRUE;
+          unload_cell();
+      }
       somethingColonized = TRUE;
-      unload_cell();
     }
     ++i;
   }
-
   return somethingColonized;
 }
 
@@ -101,7 +105,7 @@ void initColonization(char* fileName) {
   char name[5];
   int valuesRead;
   int numOfEvents = 0;
-  int cell, row, column;
+  int fromCell, toCell;
   int startYear;
   int duration;
   int i, j;
@@ -123,11 +127,30 @@ void initColonization(char* fileName) {
 
   // Read the entire file.
   while(GetALine(file, inbuf)) {
-    valuesRead = sscanf(inbuf, "%d,%d,%d,%s", &cell, &startYear, &duration,
-                        name);
+    // Assume the event includes multiple cells.
+    valuesRead = sscanf(inbuf, "%d-%d,%d,%d,%s", &fromCell, &toCell,&startYear,
+                        &duration, name);
+    if(valuesRead == 5) {
+      // if fromCell > toCell, we will swap them. For example "8-4" --> "4-8".
+      if(toCell < fromCell) {
+        int temp = toCell;
+        toCell = fromCell;
+        fromCell = temp;
+      }
+    } else {
+      // If the event only occurs in a single cell.
+      valuesRead = sscanf(inbuf, "%d,%d,%d,%s", &fromCell, &startYear, 
+                          &duration, name);
+      // -1 means all cells.
+      if(fromCell == -1){
+        fromCell = 0;
+        toCell = (grid_Rows * grid_Cols) - 1;
 
-    row = cell / grid_Cols;
-	  column = cell % grid_Cols;
+      // Otherwise this event must occur in only 1 cell.
+      } else {
+        toCell = fromCell;
+      }
+    }
         
     /* ----------------------- Input Validation ------------------------ */
     if(numOfEvents >= MAX_COLONIZATION_EVENTS) {
@@ -137,16 +160,17 @@ void initColonization(char* fileName) {
                MAX_COLONIZATION_EVENTS);
       break;
     }
-    if(valuesRead != 4) {
+    if(valuesRead != 4 && valuesRead != 5) {
       Mem_Free(tempEvents);
-      LogError(logfp, LOGFATAL, "Error reading colonization file:"
-               "\n\tIncorrect number of input arguments.");
+      LogError(logfp, LOGFATAL, "Error reading colonization file:\n\tIncorrect"
+               " number of input arguments.\n\tIs it possible you put a space"
+               " somewhere? Remember this file cannot contain spaces.");
       return;
     }
-    if(cell < 0 || cell > (grid_Rows * grid_Cols)) {
+    if(fromCell < 0 || toCell > ((grid_Rows * grid_Cols) - 1)) {
       Mem_Free(tempEvents);
       LogError(logfp, LOGFATAL, "Error reading colonization file:"
-               "\n\tInvalid cell (%d) specified.", cell);
+               "\n\tInvalid cell range ( %d - %d ) specified.", fromCell, toCell);
       return;
     }
     if(startYear < 1 || startYear > SuperGlobals.runModelYears) {
@@ -155,8 +179,8 @@ void initColonization(char* fileName) {
                "\n\tInvalid start year (%d) specified.", startYear);
       return;
     }
-    // For the species info we need to have the cell loaded.
-    load_cell(row, column);
+    // For the species info we need to have a cell loaded.
+    load_cell(toCell / grid_Cols, toCell % grid_Cols);
     if(Species_Name2Index(name) == -1) {
       Mem_Free(tempEvents);
       LogError(logfp, LOGFATAL, "Error reading colonization file:"
@@ -165,8 +189,8 @@ void initColonization(char* fileName) {
     }
 
     /* ------------- Add the event to our temporary array -------------- */
-    tempEvents[numOfEvents].row = row;
-	  tempEvents[numOfEvents].column = column;
+    tempEvents[numOfEvents].fromCell = fromCell;
+    tempEvents[numOfEvents].toCell = toCell;
     tempEvents[numOfEvents].duration = duration;
     tempEvents[numOfEvents].species = Species_Name2Index(name);
     tempEvents[numOfEvents].startYear = startYear;
@@ -238,8 +262,8 @@ void freeColonizationMemory(void) {
  * \ingroup COLONIZATION_PRIVATE
  */
 void _copyEvent(ColonizationEvent* dest, ColonizationEvent* src) {
-  dest->row = src->row;
-  dest->column = src->column;
+  dest->fromCell = src->fromCell;
+  dest->toCell = src->toCell;
   dest->duration = src->duration;
   dest->species = src->species;
   dest->startYear = src->startYear;

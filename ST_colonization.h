@@ -27,10 +27,10 @@ void freeColonizationMemory(void);
  * \ingroup COLONIZATION
  */
 struct colonizationEvent_st {
-    /** \brief Row to be colonized. */
-    int row;
-    /** \brief Column to be colonized. */
-    int column;
+    /** \brief Number of the first [cell](\ref CellType) to be colonized. */
+    int fromCell;
+    /** \brief Number of the last [cell](\ref CellType) to be colonized. */
+    int toCell;
     /** \brief Year to begin colonization. */
     int startYear;
     /** \brief How many years colonization lasts. */
