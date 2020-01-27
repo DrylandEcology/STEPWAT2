@@ -751,6 +751,9 @@ struct superglobals_st {
  * values from previous Spring and Winter precipitation as well as the running
  * averages of both.
  * 
+ * Note that "year" in this context refers to the water year, which runs from
+ * October to September.
+ * 
  * \sa _updateCheatgrassPrecip, where this struct is updated each year.
  * \author Chandler Haukap
  * \date 13 January 2020
@@ -761,9 +764,11 @@ struct CheatgrassPrecip_st {
    * The array is indexed from newest to oldest, meaning prevSpring[0] is the 
    * most recent value. */
   double prevSprings[3];
-  /** \brief The precipitation in the last Winter. */
+  /** \brief The precipitation in the last Winter, meaning the Oct-Dec
+   * precipitation from 2 years ago and the Jan-Mar precipitation from last 
+   * year. */
   double lastWinter;
-  /** \brief The current year's Spring precipitation */
+  /** \brief The current year's Spring precipitation. */
   double currentSpring;
 
   /** \brief The running average of Spring precipitation. */

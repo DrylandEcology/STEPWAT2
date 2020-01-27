@@ -596,20 +596,22 @@ void _updateCheatgrassPrecip(int year) {
   cheatgrassPrecip->prevSprings[1] = cheatgrassPrecip->prevSprings[0];
   cheatgrassPrecip->prevSprings[0] = cheatgrassPrecip->currentSpring;
 
-  /* ----------------- Calculate mean Spring precipitation ----------------- */
+  /* ----------- Calculate this year's mean Spring precipitation ----------- */
   cheatgrassPrecip->currentSpring = 0;
   for(i = 3; i < 6; ++i){
     cheatgrassPrecip->currentSpring += SXW->ppt_monthly[i];
   }
   cheatgrassPrecip->currentSpring /= 3;
 
-  /* ----------------- Calculate mean Winter precipitation ----------------- */
+  /* ------------- Calculate last year's Winter precipitation -------------- */
   cheatgrassPrecip->lastWinter = 0;
   cheatgrassPrecip->lastWinter += cheatgrassPrecip->lastOctThruDec;
   cheatgrassPrecip->lastWinter += cheatgrassPrecip->thisJanThruMar;
   cheatgrassPrecip->lastWinter /= 6;
 
   /* --------------- Shift the Winter values back one place ---------------- */
+  // For the same reason we shift the Spring values back one position we need
+  // to shift the winter values to keep them current.
   // October - December
   cheatgrassPrecip->lastOctThruDec = cheatgrassPrecip->thisOctThruDec;
   cheatgrassPrecip->thisOctThruDec = 0;
@@ -617,7 +619,7 @@ void _updateCheatgrassPrecip(int year) {
     cheatgrassPrecip->thisOctThruDec += SXW->ppt_monthly[i];
   }
 
-  // January - March
+  // January - March (this one isn't really a shift; its just a rewrite)
   cheatgrassPrecip->thisJanThruMar = 0;
   for(i = 0; i < 3; ++i){
     cheatgrassPrecip->thisJanThruMar += SXW->ppt_monthly[i];
