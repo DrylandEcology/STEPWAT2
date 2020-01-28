@@ -146,10 +146,10 @@ struct species_st {
       /** \brief Number of individuals established in current iteration. */
         estabs,
       /** \brief Specific to annuals. Array of seeds produced indexed by year. 
-       * \sa ST_seedDispersal.c */
+       * Not to be confused with [seed dispersal](\ref SEED_DISPERSAL) */
         *seedprod,
       /** \brief not sure what this does yet.
-       * \sa ST_seedDispersal.c */
+       * This is NOT a part of [seed dispersal](\ref SEED_DISPERSAL) */
          seedbank,
       /** \brief Average number of seeds produced by annual species per 1g of biomass, per 1m^2 and per year.
        * internally re-calculated as seeds per 1 g biomass per plot and per year. */
@@ -255,7 +255,8 @@ struct species_st {
       /** \brief If FALSE do not establish this species. */
        use_me,
       /** \brief TRUE if the user has requested seed dispersal for this species.
-       * \sa ST_seedDispersal.c */
+       * \sa ST_seedDispersal.c 
+       * \ingroup SEED_DISPERSAL */
        use_dispersal;
 };
 
