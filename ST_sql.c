@@ -363,7 +363,7 @@ void insertIndiv(IndivType *ind) {
  * 
  * \ingroup SQL
  */
-static void insertSpeciesYearInfoRow(int Year, int Iteration, int SpeciesID, int EstabCount, int Estabs, float RelSize, float ExtraGrowth, float ReceivedProb, int AllowGrowth, int sdSGerm) {
+static void insertSpeciesYearInfoRow(int Year, int Iteration, int SpeciesID, int EstabCount, int Estabs, float RelSize, float ExtraGrowth, float ReceivedProb, int sdSGerm) {
 	sqlite3_bind_int(stmt_SpeciesYearInfo, 1, Year);
 	sqlite3_bind_int(stmt_SpeciesYearInfo, 2, Iteration);
 	sqlite3_bind_int(stmt_SpeciesYearInfo, 3, SpeciesID);
@@ -372,8 +372,7 @@ static void insertSpeciesYearInfoRow(int Year, int Iteration, int SpeciesID, int
 	sqlite3_bind_double(stmt_SpeciesYearInfo, 6, RelSize);
 	sqlite3_bind_double(stmt_SpeciesYearInfo, 7, ExtraGrowth);
 	sqlite3_bind_double(stmt_SpeciesYearInfo, 8, ReceivedProb);
-	sqlite3_bind_int(stmt_SpeciesYearInfo, 9, AllowGrowth);
-	sqlite3_bind_int(stmt_SpeciesYearInfo, 10, sdSGerm);
+	sqlite3_bind_int(stmt_SpeciesYearInfo, 9, sdSGerm);
 
 	sqlite3_step(stmt_SpeciesYearInfo);
 	sqlite3_clear_bindings(stmt_SpeciesYearInfo);
@@ -393,7 +392,7 @@ static void insertSpeciesYearInfoRow(int Year, int Iteration, int SpeciesID, int
  */
 void insertSpecieYearInfo(SppIndex s) {
 	SpeciesType *sp = Species[s];
-	insertSpeciesYearInfoRow(Globals->currYear, Globals->currIter, s+1, sp->est_count, sp->estabs, getSpeciesRelsize(s), sp->extragrowth, sp->received_prob, sp->allow_growth, sp->seedsPresent);
+	insertSpeciesYearInfoRow(Globals->currYear, Globals->currIter, s+1, sp->est_count, sp->estabs, getSpeciesRelsize(s), sp->extragrowth, sp->received_prob, sp->seedsPresent);
 }
 
 /**

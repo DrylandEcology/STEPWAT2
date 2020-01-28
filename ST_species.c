@@ -360,7 +360,6 @@ void copy_species(const SpeciesType* src, SpeciesType* dest){
 	}
 
 	/* ----------- Copy all fields ----------- */
-	dest->allow_growth = src->allow_growth;
 	dest->alpha = src->alpha;
 	dest->ann_mort_prob = src->ann_mort_prob;
 	dest->beta = src->beta;

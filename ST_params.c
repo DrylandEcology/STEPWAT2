@@ -1217,8 +1217,6 @@ static void _species_init( void) {
     }
 
     Species[sp]->use_dispersal = itob(turnondispersal);
-    Species[sp]->allow_growth = TRUE;
-
     Species[sp]->minReproductiveSize = p1;
     Species[sp]->meanHeight = p6;
     Species[sp]->maxHeight = HMAX;

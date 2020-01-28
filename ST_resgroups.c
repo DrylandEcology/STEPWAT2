@@ -536,8 +536,6 @@ void rgroup_Grow(void) {
             s = Species[sp];
 
             sppgrowth = 0.0;
-            if (!Species[sp]->allow_growth)
-                continue;
 
             /* Modify growth rate by temperature calculated in Env_Generate() */
             tgmod = (s->tempclass == NoSeason) ? 1. : Env->temp_reduction[s->tempclass];
@@ -728,9 +726,7 @@ void rgroup_Establish(void) {
                 /* If the species is turned off, continue */
                 if (!Species[sp]->use_me)
                     continue;
-                if (!Species[sp]->allow_growth)
-                    continue;
-
+                    
                 /* Establishment for species that belong to annual functional groups*/
                 if (Species[sp]->max_age == 1) {
                     num_est = _add_annuals(rg, sp, Species[sp]->lastyear_relsize);
