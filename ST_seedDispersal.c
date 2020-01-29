@@ -17,6 +17,39 @@ float _distance(int row1, int row2, int col1, int col2, float cellLen);
 Bool _shouldProduceSeeds(SppIndex sp);
 float _rateOfDispersal(float PMD, float meanHeight, float maxHeight);
 float _probabilityOfDispersal(float rate, float height, float distance);
+void _recordDispersalEvent(int year, int iteration, int fromCell, int toCell, 
+                           const char* name);
+
+/**
+ * \brief A struct for a single dispersal event. 
+ * 
+ * A linked list of these events can be used to output any statistics you could
+ * want about seed dispersal.
+ * 
+ * \author Chandler Haukap
+ * \date 28 January 2020
+ * \ingroup SEED_DISPERSAL_PRIVATE
+ */
+struct dispersal_event_st {
+    int year;
+    int iteration;
+    int fromCell;
+    int toCell;
+    char name[5];
+    struct dispersal_event_st* next;
+} typedef DispersalEvent;
+
+/**
+ * \brief A module level variable pointing to the first \ref DispersalEvent.
+ * \ingroup SEED_DISPERSAL_PRIVATE
+ */
+DispersalEvent* _firstEvent = NULL;
+
+/**
+ * \brief A module level variable pointing to the last \ref DispersalEvent.
+ * \ingroup SEED_DISPERSAL_PRIVATE
+ */
+DispersalEvent* _lastEvent = NULL;
 
 /**
  * \brief The random number generator for the seed dispersal module.
@@ -36,6 +69,10 @@ Bool isRNGSeeded = FALSE;
  * Iterates through all senders and recipients and determines which cells
  * received seeds. If a cell does receive seeds for a given species,
  * Species[sp]->seedsPresent will be set to TRUE.
+ * 
+ * \param year the year of the simulation. This is input as a parameter because
+ *             disperseSeeds() is typically called before the gridded mode
+ *             updates the year for each cell.
  *
  * \sideeffect
  *    For all cells and all species Species[sp]->seedsPresent will be set to
@@ -45,7 +82,7 @@ Bool isRNGSeeded = FALSE;
  * \date 18 December 2019
  * \ingroup SEED_DISPERSAL
  */
-void disperseSeeds(void) {
+void disperseSeeds(int year) {
   SppIndex sp;
   CellType *receiverCell;
   int row, col;
@@ -120,6 +157,14 @@ void disperseSeeds(void) {
               // Remember that Species[sp] refers to the sender, but in this
               // case we are refering to the receiver.
               receiverCell->mySpecies[sp]->seedsPresent = TRUE;
+
+              // If the user requested statistics.
+              if(recordDispersalEvents) {
+                _recordDispersalEvent(year, Globals->currIter, 
+                                      (row * grid_Cols) + col, (receiverRow *
+                                      grid_Cols) + receiverCol, 
+                                      Species[sp]->name);
+              }
             }
           } // END for each receiverCol
         }   // END for each receiverRow
@@ -129,36 +174,34 @@ void disperseSeeds(void) {
   }   // END for each row
 }
 
-/**
- * \brief Seed dispersal initialization.
- *
- * This function allows species that requested seed dispersal establishment to
- * establish without requiring a mature specimen to distribute seeds.
- * Basically, calling this function simulates a seed bank for every species in
- * every cell that requested seed dispersal.
- *
- * This function should be called in place of \ref disperseSeeds when you want
- * to give every species that requested seed dispersal a chance to establish.
- *
- * \author Chandler Haukap
- * \date 16 January 2020
- * \ingroup SEED_DISPERSAL
- */
-void initSeedDispersal(void) {
-  int row, col;
-  SppIndex sp;
+void outputDispersalEvents(char* filePrefix) {
+    char fileName[1024];
+    DispersalEvent* thisEvent = _firstEvent;
 
-  for (row = 0; row < grid_Rows; ++row) {
-    for (col = 0; col < grid_Cols; ++col) {
-      load_cell(row, col);
-      ForEachSpecies(sp) {
-        if (Species[sp]->use_dispersal) {
-          Species[sp]->seedsPresent = TRUE;
-        }
-      } // END For Each Species
-    }   // END For Each Column
-  }     // END For Each Row
-  unload_cell();
+    sprintf(fileName, "%s.csv", filePrefix);
+    FILE* file = fopen(fileName, "w");
+    fprintf(file, "Iteration,Year,From Cell,Species,To Cell\n");
+
+    while(thisEvent) {
+        fprintf(file, "%d,%d,%d,%s,%d\n", thisEvent->iteration, 
+                thisEvent->year, thisEvent->fromCell, thisEvent->name,
+                thisEvent->toCell);
+        
+        thisEvent = thisEvent->next;
+    }
+
+    fclose(file);
+}
+
+void freeDispersalMemory(void) {
+    DispersalEvent* thisEvent = _firstEvent;
+    DispersalEvent* nextEvent;
+
+    while(thisEvent != NULL){
+        nextEvent = thisEvent->next;
+        Mem_Free(thisEvent);
+        thisEvent = nextEvent;
+    }
 }
 
 /**
@@ -250,4 +293,48 @@ float _rateOfDispersal(float PMD, float meanHeight, float maxDistance) {
  */
 float _probabilityOfDispersal(float rate, float height, float distance) {
   return exp(rate / sqrt(height)) * distance;
+}
+
+/**
+ * \brief Add a [dispersal event](\ref DispersalEvent) to the linked list of
+ *        dispersal events.
+ * 
+ * \param year is the year of the simulation when this event occurred.
+ * \param fromCell is the origin of the seeds.
+ * \param toCell is the recipient of the seeds.
+ * \param name is the name of the species.
+ * 
+ * \sideeffect
+ *     This will allocate memory for a new DispersalEvent.
+ * 
+ * \author Chandler Haukap
+ * \date 28 January 2020
+ * \ingroup SEED_DISPERSAL_PRIVATE
+ */
+void _recordDispersalEvent(int year, int iteration, int fromCell, int toCell,
+                           const char* name) {
+  // Allocate a new event.
+  DispersalEvent* newEvent = Mem_Calloc(1, sizeof(DispersalEvent), 
+                                        "_recordDispersalEvent");
+
+  // Populate the struct that we just allocated.
+  newEvent->next = NULL;
+  newEvent->year = year;
+  newEvent->iteration = iteration;
+  newEvent->fromCell = fromCell;
+  newEvent->toCell = toCell;
+  newEvent->name[0] = name[0];
+  newEvent->name[1] = name[1];
+  newEvent->name[2] = name[2];
+  newEvent->name[3] = name[3];
+  newEvent->name[4] = '\0';
+  
+  // Add the event to the linked list.
+  if(!_firstEvent){
+    _firstEvent = newEvent;
+    _lastEvent = newEvent;
+  } else {
+    _lastEvent->next = newEvent;
+    _lastEvent = newEvent;
+  }
 }

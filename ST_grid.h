@@ -257,7 +257,7 @@ typedef enum
     GRID_FILE_PREFIX_MORTAVG,
 	/** \brief Location in \ref grid_files of the 
 	 *         [seed dispersal](\ref SEED_DISPERSAL) output file name. */
-    GRID_FILE_PREFIX_RECEIVEDPROB,
+    GRID_FILE_PREFIX_DISPERSALEVENTS,
 	/** \brief Location in \ref grid_files of the average biomass output file
 	 *         name. */
     GRID_FILE_PREFIX_BMASSCELLAVG,

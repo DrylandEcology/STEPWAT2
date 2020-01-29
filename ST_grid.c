@@ -42,10 +42,8 @@
 #include "ST_progressBar.h"
 #include "ST_colonization.h"
 
-char sd_Sep;
-
 int grid_Cells;
-Bool UseDisturbances, UseSoils, sd_DoOutput; //these are treated like booleans
+Bool UseDisturbances, UseSoils; //these are treated like booleans
 
 /***************************** Externed variables **********************************/
 /* Note that in an ideal world we wouldn't need to extern any variables because 
@@ -250,7 +248,7 @@ void runGrid(void)
 			}
 
             if (UseSeedDispersal){
-				disperseSeeds();
+				disperseSeeds(year);
             }
 
 			// Allow the colonization module to run. This function MUST be
@@ -337,9 +335,8 @@ void runGrid(void)
 		{
 			int cell = j + (i * grid_Cols);
 			load_cell(i, j);
-			char fileMort[1024], fileBMass[1024], fileReceivedProb[1024];
+			char fileMort[1024], fileBMass[1024];
 
-			sprintf(fileReceivedProb, "%s%d.csv", grid_files[GRID_FILE_PREFIX_RECEIVEDPROB], cell);
 			sprintf(fileMort, "%s%d.csv", grid_files[GRID_FILE_PREFIX_MORTAVG], cell);
 			sprintf(fileBMass, "%s%d.csv", grid_files[GRID_FILE_PREFIX_BMASSAVG], cell);
 			parm_SetName(fileMort, F_MortAvg);
@@ -351,12 +348,13 @@ void runGrid(void)
 			if (BmassFlags.summary && writeIndividualFiles){
 				stat_Output_AllBmass();
 			}
-			if (UseSeedDispersal && sd_DoOutput && writeIndividualFiles){
-				stat_Output_Seed_Dispersal(fileReceivedProb, sd_Sep);
-			}
 		}
 	}
 	unload_cell(); // Reset the global variables
+
+    if (recordDispersalEvents){
+        outputDispersalEvents(grid_files[GRID_FILE_PREFIX_DISPERSALEVENTS]);
+    }
 
 	// Output the Bmass and Mort average statistics (if requested).
 	char fileBMassCellAvg[1024], fileMortCellAvg[1024];
@@ -371,7 +369,8 @@ void runGrid(void)
 
 	free_grid_memory();	// Free our allocated memory since we do not need it anymore
 	parm_free_memory();		// Free memory allocated to the _files array in ST_params.c
-	freeColonizationMemory();
+	freeColonizationMemory(); // Free memory allocated to the Colonization module.
+    freeDispersalMemory(); // Free memory allocated to the Seed Dispersal module.
 	if(initializationMethod == INIT_WITH_SPINUP) {
 		freeInitializationMemory();
 	}
@@ -1403,20 +1402,10 @@ static void _read_grid_setup(void)
 	}
 
 	GetALine(f, buf);
-	if (sscanf(buf, "%u", &sd_DoOutput) != 1)
+	if (sscanf(buf, "%u", &recordDispersalEvents) != 1) {
 		LogError(logfp, LOGFATAL,
-				"Invalid %s file: seed dispersal output line\n", grid_files[GRID_FILE_SETUP]);
-
-	GetALine(f, buf);
-	if (sscanf(buf, "%c", &sd_Sep) != 1)
-		LogError(logfp, LOGFATAL,
-				"Invalid %s file: seed dispersal seperator line\n",
-				grid_files[GRID_FILE_SETUP]);
-
-	if (sd_Sep == 't') //dealing with tab and space special cases...
-		sd_Sep = '\t';
-	else if (sd_Sep == 's')
-		sd_Sep = ' ';
+				"Invalid %s file: seed dispersal events output line\n", grid_files[GRID_FILE_SETUP]);
+    }
 
     CloseFile(&f);
 }

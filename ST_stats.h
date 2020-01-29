@@ -46,7 +46,6 @@ void stat_Collect_SMort ( void ) ;
 void stat_Output_YrMorts( void ) ;
 void stat_Output_AllMorts( void) ;
 void stat_Output_AllBmass(void) ;
-void stat_Output_Seed_Dispersal(const char * filename, const char sep);
 void stat_free_mem( void );
 void stat_Copy_Accumulators(StatType* newDist, StatType* newPpt, StatType* newTemp, StatType* newGrp, 
                             StatType* newGsize, StatType* newGpr, StatType* newGmort, StatType* newGestab, 

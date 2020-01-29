@@ -23,8 +23,18 @@
  */
 Bool UseSeedDispersal;
 
+/**
+ * \brief If TRUE this module will record information about when and where
+ *        seeds are being dispersed.
+ * 
+ * \ingroup SEED_DISPERSAL
+ */
+Bool recordDispersalEvents;
+
 // See ST_seedDispersal.c for documentation of these functions.
-void disperseSeeds(void);
-void initSeedDispersal(void);
+void initDispersal(void);
+void disperseSeeds(int year);
+void outputDispersalEvents(char* filePrefix);
+void freeDispersalMemory(void);
 
 #endif

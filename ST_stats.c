@@ -777,42 +777,6 @@ void stat_Output_AllBmass(void) {
 
 }
 
-
-/***********************************************************/
-void stat_Output_Seed_Dispersal(const char * filename, const char sep) {
-	//do stuff...
-	char buf[1024], tbuf[80];
-	IntS yr;
-	SppIndex sp;
-	FILE *f;
-
-	f = OpenFile(filename, "w");
-
-  /* ---------- Make a header for the file --------- */
-	fprintf(f,"Year");
-	ForEachSpecies(sp) {
-		fprintf(f, "%c%s_prob", sep, Species[sp]->name);
-		fprintf(f, "%c%s_std", sep, Species[sp]->name);
-	}
-	fprintf(f,"\n");
-  /* ------------------ END header ----------------- */
-
-	for( yr=1; yr<= SuperGlobals.runModelYears; yr++) {
-		*buf = '\0';
-
-		sprintf(buf, "%d%c", yr, sep);
-
-		ForEachSpecies(sp) {
-			sprintf(tbuf, "%f%c%f%c", _get_avg( &_Sreceived[sp].s[yr-1]), sep, _get_std( &_Sreceived[sp].s[yr-1]), sep);
-			strcat(buf, tbuf);
-		}
-
-		fprintf(f, "%s\n", buf);
-	}
-	CloseFile(&f);
-}
-
-
 /**
  * \brief returns the average value of an accumulator.
  * 
