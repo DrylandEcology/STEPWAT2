@@ -1,6 +1,6 @@
 /**
  * \file ST_main.c
- * \brief Main program loop and initialization functions
+ * \brief Main program loop and argument processing
  * 
  *  History:
  *     (6/15/2000) -- INITIAL CODING - cwb
@@ -31,7 +31,7 @@
 #include "sw_src/SW_Output_outtext.h"
 #include "sw_src/SW_Output_outarray.h"
 #include "sw_src/rands.h"
-#include "ST_initialization.h"
+#include "ST_spinup.h"
 #include "ST_progressBar.h"
 
 extern Bool prepare_IterationSummary; // defined in `SOILWAT2/SW_Output.c`

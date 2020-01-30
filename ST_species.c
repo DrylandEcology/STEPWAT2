@@ -25,7 +25,7 @@
 #include "sw_src/filefuncs.h"
 #include "myMemory.h"
 #include "rands.h"
-#include "ST_initialization.h"
+#include "ST_spinup.h"
 #include "ST_seedDispersal.h"
 
 extern

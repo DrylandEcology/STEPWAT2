@@ -63,13 +63,13 @@
  *           \brief Functions and variables private to the [seed dispersal](\ref SEED_DISPERSAL) module.
  *           \ingroup SEED_DISPERSAL
  *
- * \defgroup INITIALIZATION Initialization
- *           \brief Methods of initializing the simulation
+ * \defgroup SPINUP Spinup
+ *           \brief Method of spining up the simulation before collecting statistics.
  *           \ingroup GRID
  *
- * \defgroup INITIALIZATION_PRIVATE Private Initialization
- *           \brief functions and variables private to initialization.
- *           \ingroup INITIALIZATION
+ * \defgroup SPINUP_PRIVATE Private Spinup
+ *           \brief functions and variables private to spinup.
+ *           \ingroup SPINUP
  *
  * \defgroup COLONIZATION Colonization
  *           \brief Colonization of species during the simulation.

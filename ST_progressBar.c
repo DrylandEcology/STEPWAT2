@@ -17,7 +17,7 @@
 /*************** Local Function(s). Treat these as private. ***************/
 
 double _calculateProgress(int innerLoopIteration, int outerLoopIteration, Status status);
-double _calculateInitializationProgress(int year);
+double _calculateSpinupProgress(int year);
 double _calculateSimulationProgress(int year, int iteration);
 
 /*********************** Function Definitions *****************************/
@@ -32,7 +32,7 @@ double _calculateSimulationProgress(int year, int iteration);
  * iteration or year to 0. 
  * 
  * Each \ref Status parameter must define their own algorithm for processing
- * iteration and year. For example, see \ref _calculateInitializationProgress
+ * iteration and year. For example, see \ref _calculateSpinupProgress
  * or \ref _calculateSimulationProgress. For a detailed description of how to 
  * implement a new \ref Status, see \ref ST_progressBar.h.
  * 
@@ -54,9 +54,9 @@ void logProgress(int iteration, int year, Status status){
 	iteration--;					// iteration loops are 1 indexed, but we need 0 indexing.
 
 	switch(status){
-		case INITIALIZATION:
-			strcpy(progressString, "Initializing |");
-			index += 14;	// We have copied over 16 characters
+		case SPINUP:
+			strcpy(progressString, "Spinning up |");
+			index += 13;	// We have copied over 13 characters
             needsProgressBar = TRUE;
 			break;
 		case SIMULATION:
@@ -127,8 +127,8 @@ void logProgress(int iteration, int year, Status status){
  */
 double _calculateProgress(int innerLoopIteration, int outerLoopIteration, Status status){
 	double percentComplete;
-	if(status == INITIALIZATION){
-		percentComplete = _calculateInitializationProgress(innerLoopIteration);
+	if(status == SPINUP){
+		percentComplete = _calculateSpinupProgress(innerLoopIteration);
 	} else if(status == SIMULATION) {
 		percentComplete = _calculateSimulationProgress(innerLoopIteration, outerLoopIteration);
 	} else {
@@ -138,26 +138,26 @@ double _calculateProgress(int innerLoopIteration, int outerLoopIteration, Status
 }
 
 /**
- * \brief Algorithm for calculating how far along initialization is.
+ * \brief Algorithm for calculating how far along spinup is.
  * 
  * This function is intended to be called by \ref _calculateProgress when
- * the INITIALIZATION \ref Status is used. Note that while 
+ * the SPINUP \ref Status is used. Note that while 
  * \ref _calculateProgress takes two loop parameters this function only needs
- * one, because [initialization](\ref INITIALIZATION) always runs for 1
+ * one, because [spinup](\ref SPINUP) always runs for 1
  * iteration.
  * 
- * \param year The current year in the "years" loop that initialization is
+ * \param year The current year in the "years" loop that spinup is
  *             running.
  * 
- * \return A double between 0 and 100 where 100 means "Initialization 
+ * \return A double between 0 and 100 where 100 means "Spinup 
  *         complete". 
  * 
  * \author Chandler Haukap
  * \date August 2019
  * \ingroup PROGRESS_BAR_PRIVATE
  */
-double _calculateInitializationProgress(int year){
-    return (year / (double) SuperGlobals.runInitializationYears) * 100;
+double _calculateSpinupProgress(int year){
+    return (year / (double) SuperGlobals.runSpinupYears) * 100;
 }
 
 /**

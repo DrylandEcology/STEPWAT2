@@ -1,20 +1,19 @@
 /**
- * \file ST_initialization.c 
- * \brief Definitions of all [initialization](\ref INITIALIZATION) functions.
+ * \file ST_spinup.c 
+ * \brief Definitions of all [spinup](\ref SPINUP) functions.
  * 
- * Contains definitions of all functions related to initialization.
- * The current initialization method is _run_spinup. This file uses the 
+ * Contains definitions of all functions related to spinup. The
  * underscore prefix in function names to denote private functions that should
  * NEVER be called outside of this file.
  * 
  * \author Chandler Haukap
  * \date September 2019
- * \ingroup INITIALIZATION_PRIVATE
+ * \ingroup SPINUP_PRIVATE
  */
 
-// ST_initialization.h contains declarations for runInitialization and 
-// loadInitializationConditions 
-#include "ST_initialization.h"
+// ST_spinup.h contains declarations for runSpinup and 
+// loadSpinupConditions 
+#include "ST_spinup.h"
 #include "ST_stats.h"
 #include "ST_globals.h"
 #include "sw_src/rands.h"
@@ -25,9 +24,9 @@
 
 /******** Local functions. These should all be treated as private. ***********/
 static void _run_spinup(void);
-static void _beginInitialization(void);
-static void _endInitialization(void);
-static void _saveAsInitializationConditions(void);
+static void _beginSpinup(void);
+static void _endSpinup(void);
+static void _saveAsSpinupConditions(void);
 
 /************************** Externed variables *******************************/
 /* Note that in an ideal world we wouldn't need to extern any variables because
@@ -70,12 +69,12 @@ void Plot_Initialize(void);
 void copy_rgroup(const GroupType* src, GroupType* dest);
 void copy_species(const SpeciesType* src, SpeciesType* dest);
 
-/* Initializes the plot with whichever method you have specified with initializationMethod. 
-   This function takes care of EVERYTHING involved with initialization.
-   After calling this function you can load in the initialization information by calling 
-   loadInitializationConditions(). */
-void runInitialization(void){
-	_beginInitialization();
+/* Initializes the plot with whichever method you have specified with spinupMethod. 
+   This function takes care of EVERYTHING involved with spinup.
+   After calling this function you can load in the spinup information by calling 
+   loadSpinupConditions(). */
+void runSpinup(void){
+	_beginSpinup();
 
     /* Dummy accumulators to ensure we do not collect statistics */
 	StatType *dummy_Dist, *dummy_Ppt, *dummy_Temp,
@@ -89,7 +88,7 @@ void runInitialization(void){
 	/* For iterating over years */
 	IntS year;
 
-    /* Initialization is technically an iteration so we need to seed the RNGs. */
+    /* Spinup is technically an iteration so we need to seed the RNGs. */
     RandSeed(SuperGlobals.randseed, &environs_rng);
     RandSeed(SuperGlobals.randseed, &mortality_rng);
     RandSeed(SuperGlobals.randseed, &resgroups_rng);
@@ -108,17 +107,17 @@ void runInitialization(void){
     unload_cell(); // Reset the global variables
 
     /* Iterate through the number of years requested in inputs. */
-    for (year = 1; year <= SuperGlobals.runInitializationYears; year++)
+    for (year = 1; year <= SuperGlobals.runSpinupYears; year++)
     {
         if(UseProgressBar){
-            logProgress(0, year, INITIALIZATION); // iter = 0 because we are not actually in an iterations loop.
+            logProgress(0, year, SPINUP); // iter = 0 because we are not actually in an iterations loop.
         }
         for (i = 0; i < grid_Rows; ++i)
         { // for each row
             for(j = 0; j < grid_Cols; ++j)
             { // for each column
                 // If we should run spinup on this cell
-                if(gridCells[i][j].mySpeciesInit.useInitialization){
+                if(gridCells[i][j].mySpeciesInit.useSpinup){
                     // Load up a cell
                     load_cell(i, j);
                 } else {
@@ -136,14 +135,7 @@ void runInitialization(void){
                                        dummy_Sreceived, dummy_Gwf, TRUE);
 
                 Globals->currYear = year;
-
-                switch (initializationMethod){
-		            case INIT_WITH_SPINUP:
-			            _run_spinup();
-			            break;
-		            default:
-			            break;
-	            }
+			    _run_spinup();
 
             } /* end column */
         } /* end row */
@@ -157,26 +149,26 @@ void runInitialization(void){
     SW_Soilwat.hist.file_prefix = NULL;
     ChDir("..");
 
-	_endInitialization();
+	_endSpinup();
 }
 
-/* Prepares for initialization by turning on species that have requested initialization and turning off 
-   species that have not requested initialization. This function should be accompanied by a call to 
-   _endInitialization. */
-static void _beginInitialization(void){
+/* Prepares for spinup by turning on species that have requested spinup and turning off 
+   species that have not requested spinup. This function should be accompanied by a call to 
+   _endSpinup. */
+static void _beginSpinup(void){
 	int i, j; 				/* For iterating over cells */
 	SppIndex sp;			/* For iterating over species */
 	Bool temporary_storage;	/* For swapping variables */
 
-	DuringInitialization = TRUE;
+	DuringSpinup = TRUE;
 
 	/* Swap Species[sp]->use_me and mySpeciesInit.shouldBeInitialized[sp]. shouldBeInitialized is an array 
-	   of booleans that represent whether the given species should be used in initialization. use_me is a 
+	   of booleans that represent whether the given species should be used in spinup. use_me is a 
 	   boolean that represents whether the given species should be used in production. By swaping them we 
 	   save space, but we have to remember to swap them back before the production run. */
 	for(i = 0; i < grid_Rows; ++i){
 		for(j = 0; j < grid_Cols; ++j){
-			if(!gridCells[i][j].mySpeciesInit.useInitialization){
+			if(!gridCells[i][j].mySpeciesInit.useSpinup){
 				continue;
 			}
 			load_cell(i, j);	/* We could do this without loading the cell, but there would be no guarantee
@@ -187,9 +179,9 @@ static void _beginInitialization(void){
 				// Temporarily store use_me
 				temporary_storage = Species[sp]->use_me;
 				// Swap use_me
-				Species[sp]->use_me = gridCells[i][j].mySpeciesInit.shouldBeInitialized[sp]; 
+				Species[sp]->use_me = gridCells[i][j].mySpeciesInit.shouldSpinup[sp]; 
 				// Swap shouldBeInitialized[sp]
-				gridCells[i][j].mySpeciesInit.shouldBeInitialized[sp] = temporary_storage;
+				gridCells[i][j].mySpeciesInit.shouldSpinup[sp] = temporary_storage;
 			} /* End for each species */
 		} /* End for each column */
 	} /* End for each row */
@@ -197,32 +189,32 @@ static void _beginInitialization(void){
 }
 
 /* Return the program to the state it needs to be in for the main simulation. This should only be called if you
-   have called _beginInitialization. */
-static void _endInitialization(void){
+   have called _beginSpinup. */
+static void _endSpinup(void){
 	// Calling this function a second time will swap the variables back to their original state.
-	_beginInitialization();
-	// Save the state of the program as our initialization conditions.
-	_saveAsInitializationConditions();
-	// We have now exited initialization.
-	DuringInitialization = FALSE;
+	_beginSpinup();
+	// Save the state of the program as our spinup conditions.
+	_saveAsSpinupConditions();
+	// We have now exited spinup.
+	DuringSpinup = FALSE;
 }
 
 /* Save the current state of the program as spinup conditions.
  *  
  * This is low level function. If you have already called
- * _endInitialization() there is no need to call this function. */
-static void _saveAsInitializationConditions(){
-	// Save gridCells as initializationCells
-	initializationCells = gridCells;
-	// Nullify gridCells. This ensures we can no longer modify initializationCells on accident.
+ * _endSpinup() there is no need to call this function. */
+static void _saveAsSpinupConditions(){
+	// Save gridCells as spinupCells
+	spinupCells = gridCells;
+	// Nullify gridCells. This ensures we can no longer modify spinupCells on accident.
 	gridCells = NULL;
 
 	// The easiest way to reallocate gridCells is reread the files.
 	rereadInputs();
 }
 
-/* Load the state of the program right after initialization. */
-void loadInitializationConditions(){
+/* Load the state of the program right after spinup. */
+void loadSpinupConditions(){
 	int row, col;
 	GrpIndex rg;
 	SppIndex sp;
@@ -232,16 +224,16 @@ void loadInitializationConditions(){
 			load_cell(row, col);
 
 			ForEachSpecies(sp){
-				copy_species(initializationCells[row][col].mySpecies[sp], Species[sp]);
+				copy_species(spinupCells[row][col].mySpecies[sp], Species[sp]);
 			}
 
 			ForEachGroup(rg){
-				copy_rgroup(initializationCells[row][col].myGroup[rg], RGroup[rg]);
+				copy_rgroup(spinupCells[row][col].myGroup[rg], RGroup[rg]);
 			}
 
-			copy_environment(&initializationCells[row][col].myEnvironment, Env);
-			copy_plot(&initializationCells[row][col].myPlot, Plot);
-			copy_succulent(&initializationCells[row][col].mySucculent, Succulent);
+			copy_environment(&spinupCells[row][col].myEnvironment, Env);
+			copy_plot(&spinupCells[row][col].myPlot, Plot);
+			copy_succulent(&spinupCells[row][col].mySucculent, Succulent);
 
 			unload_cell();
 		}
@@ -275,16 +267,16 @@ static void _run_spinup(void)
     UseSeedDispersal = myUseSeedDispersal;		
 }
 
-/* Free memory allocated to initializationCells. This function should only be called once per simulation. */
-void freeInitializationMemory(void)
+/* Free memory allocated to spinupCells. This function should only be called once per simulation. */
+void freeSpinupMemory(void)
 {
 	// Remember where gridCells pointed.
 	CellType** locationOfGridCells = gridCells;
 
-	// If initializationCells is allocated.
-	if(initializationCells){
-		// move gridCells to point to initializationCells. This allows us to deallocate using free_grid_memory();
-		gridCells = initializationCells;
+	// If spinupCells is allocated.
+	if(spinupCells){
+		// move gridCells to point to spinupCells. This allows us to deallocate using free_grid_memory();
+		gridCells = spinupCells;
 		// Since we already have a function to deallocate gridCells we can use it.
 		free_grid_memory();
 		// And we need to reset gridCells in case it hasn't been deallocated.

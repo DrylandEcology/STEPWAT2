@@ -11,8 +11,8 @@
  * all functions will work as expected.
  *
  * In addition to all of the functionality of non-gridded mode, gridded mode
- * has two additional features: initialization and seed dispersal.
- * Initialization allows vegetation to establish before the simulation
+ * has two additional features: spinup and seed dispersal.
+ * Spinup allows vegetation to establish before the simulation
  * experiments begin. Seed dispersal allows each cell to disperse seeds to
  * nearby cells.
  * 
@@ -38,7 +38,7 @@
 #include "ST_globals.h"
 #include "rands.h"
 #include "sxw_funcs.h"
-#include "ST_initialization.h"
+#include "ST_spinup.h"
 #include "ST_progressBar.h"
 #include "ST_colonization.h"
 
@@ -121,7 +121,7 @@ static void _allocate_accumulators(void);
 static void _read_disturbances_in(void);
 static void _read_soils_in(void);
 static int _read_soil_line(char* buf, SoilType* destination, int layer);
-static void _read_init_species(void);
+static void _read_spinup_species(void);
 static void _read_maxrgroupspecies(void);
 static void _read_grid_setup(void);
 static void _read_files(void);
@@ -145,8 +145,8 @@ static void printGeneralInfo(void){
 	printf("Number of cells: %d\n\n", grid_Cells);
 	if(UseDisturbances) printf("Using grid disturbances file\n");
 	if(UseSoils) printf("Using grid soils file\n");
-	if(initializationMethod != INIT_WITH_NOTHING){
-		printf("Number of spinup years: %d\n", SuperGlobals.runInitializationYears);
+	if(shouldSpinup){
+		printf("Number of spinup years: %d\n", SuperGlobals.runSpinupYears);
 	}
 	if(UseSeedDispersal){
 		printf("Dispersing seeds between cells\n");
@@ -189,8 +189,8 @@ void runGrid(void)
 
 	printGeneralInfo();
 
-	if(initializationMethod != INIT_WITH_NOTHING){
-		runInitialization();
+	if(shouldSpinup){
+		runSpinup();
 	} else {
 		/* SXW expects to be run from the testing.sagebrush.master/Stepwat_Inputs directory.
         However, we are running from the testing.sagebrush.master directory. To find the 
@@ -225,8 +225,8 @@ void runGrid(void)
 		unload_cell(); // Reset the global variables
 
 		// If we used spinup we need to reset to the state of the program right after spinup.
-		if (initializationMethod == INIT_WITH_SPINUP){
-			loadInitializationConditions();
+		if (shouldSpinup){
+			loadSpinupConditions();
 		}
 
 		RandSeed(SuperGlobals.randseed, &environs_rng);
@@ -366,8 +366,8 @@ void runGrid(void)
 	parm_free_memory();		// Free memory allocated to the _files array in ST_params.c
 	freeColonizationMemory(); // Free memory allocated to the Colonization module.
     freeDispersalMemory(); // Free memory allocated to the Seed Dispersal module.
-	if(initializationMethod == INIT_WITH_SPINUP) {
-		freeInitializationMemory();
+	if(shouldSpinup) {
+		freeSpinupMemory();
 	}
 	logProgress(0, 0, DONE);
 }
@@ -440,8 +440,8 @@ static void _init_grid_inputs(void)
 	if (UseDisturbances){
 		_read_disturbances_in();
 	}
-	if(initializationMethod != INIT_WITH_NOTHING){
-		_read_init_species();
+	if(shouldSpinup){
+		_read_spinup_species();
 	}
 	if (UseSoils) {
 		_read_soils_in();
@@ -450,7 +450,7 @@ static void _init_grid_inputs(void)
     for(i = 0; i < grid_Rows; ++i) {
         for(j = 0; j < grid_Cols; ++j) {
             load_cell(i, j);
-            gridCells[i][j].DuringInitialization = FALSE;
+            gridCells[i][j].DuringSpinup = FALSE;
         }
     }
     unload_cell();
@@ -522,7 +522,7 @@ static void _init_stepwat_inputs(void)
 /**
  * \brief Reread input files.
  * 
- * This is useful when transitioning from [initialization](\ref INITIALIZATION)
+ * This is useful when transitioning from [spinup](\ref SPINUP)
  * to the regular simulation. It is a quick way to reset everything
  * 
  * Be careful because this function reallocates [the grid](\ref gridCells).
@@ -564,7 +564,7 @@ static void _allocate_gridCells(int rows, int cols){
 	for(i = 0; i < grid_Rows; ++i){
 		for(j = 0; j < grid_Cols; ++j){
 			// shouldBeInitialized is a dynamically allocated array
-			gridCells[i][j].mySpeciesInit.shouldBeInitialized = (int*)
+			gridCells[i][j].mySpeciesInit.shouldSpinup = (int*)
 				Mem_Calloc(MAX_SPECIES, sizeof(int), "_allocate_gridCells: mySpeciesInit");
 
 			gridCells[i][j].someKillage = (Bool*) Mem_Calloc(1, sizeof(Bool), "_allocate_gridCells: someKillage");
@@ -810,7 +810,7 @@ void free_grid_memory(void)
 			stat_free_mem();
 			unload_cell();
 
-			Mem_Free(gridCells[i][j].mySpeciesInit.shouldBeInitialized);
+			Mem_Free(gridCells[i][j].mySpeciesInit.shouldSpinup);
 			Mem_Free(gridCells[i][j].someKillage);
 
 			Mem_Free(gridCells[i][j].mySoils.depth);
@@ -874,7 +874,7 @@ void load_cell(int row, int col){
 	Globals = &gridCells[row][col].myGlobals;
 
 	/* TRUE if this cell is in spinup mode */
-	DuringInitialization = gridCells[row][col].DuringInitialization;
+	DuringSpinup = gridCells[row][col].DuringSpinup;
 
 	_SomeKillage = gridCells[row][col].someKillage;
 
@@ -1201,31 +1201,31 @@ void _copy_soils(SoilType* src, SoilType* dest){
 }
 
 /**
- * \brief Read the species initialization CSV. 
+ * \brief Read the species spinup CSV. 
  * 
- * This function only needs to be called if the user requests initialization.
+ * This function only needs to be called if the user requests spinup.
  * 
  * \sideeffect
- *     The species initialization information of each [cell](\ref gridCells)
+ *     The species spinup information of each [cell](\ref gridCells)
  *     will be populated.
  * 
  * \ingroup GRID_PRIVATE
  */
-static void _read_init_species(void)
+static void _read_spinup_species(void)
 {
 	FILE *f;
-	int i, j, num, cell, do_copy, copy_cell, useInitialization, seeds_Avail,
+	int i, j, num, cell, do_copy, copy_cell, useSpinup, seeds_Avail,
 	    row, col, copy_cell_row, copy_cell_col;
 	Bool isAnyCellOnForSpinup = FALSE;
 	char buf[4096];
 
 	//open the file/do the reading
-	f = OpenFile(grid_files[GRID_FILE_INIT_SPECIES], "r");
+	f = OpenFile(grid_files[GRID_FILE_SPINUP_SPECIES], "r");
 
 	GetALine2(f, buf, 4096); // gets rid of the first line (since it just defines the columns)... it's only there for user readability
 	for (i = 0; i < grid_Cells; i++)
 	{
-		useInitialization = FALSE;
+		useSpinup = FALSE;
 	    row = i / grid_Cols;
 	    col = i % grid_Cols;
 
@@ -1240,7 +1240,7 @@ static void _read_init_species(void)
 		copy_cell_col = copy_cell % grid_Cols;
 
 		if (num != 3)
-			LogError(logfp, LOGFATAL, "Invalid %s file", grid_files[GRID_FILE_INIT_SPECIES]);
+			LogError(logfp, LOGFATAL, "Invalid %s file", grid_files[GRID_FILE_SPINUP_SPECIES]);
 
 		int stringIndex = _get_value_index(buf, ',', 3); //gets us the index of the string that is right after what we just parsed in
 
@@ -1248,16 +1248,16 @@ static void _read_init_species(void)
 				&& cell != 0 && copy_cell < cell)
 		{ //copy this cells values from a previous cell's
 			for (j = 0; j < Globals->sppCount; j++)
-				gridCells[row][col].mySpeciesInit.shouldBeInitialized[j] =
-				    gridCells[copy_cell_row][copy_cell_col].mySpeciesInit.shouldBeInitialized[j];
-			gridCells[row][col].mySpeciesInit.useInitialization =
-			    gridCells[copy_cell_row][copy_cell_col].mySpeciesInit.useInitialization;
+				gridCells[row][col].mySpeciesInit.shouldSpinup[j] =
+				    gridCells[copy_cell_row][copy_cell_col].mySpeciesInit.shouldSpinup[j];
+			gridCells[row][col].mySpeciesInit.useSpinup =
+			    gridCells[copy_cell_row][copy_cell_col].mySpeciesInit.useSpinup;
 			continue;
 		}
 		else if (do_copy == 1)
 			LogError(logfp, LOGFATAL,
 					"Invalid %s file line %d invalid copy_cell attempt",
-					grid_files[GRID_FILE_INIT_SPECIES], i + 2);
+					grid_files[GRID_FILE_SPINUP_SPECIES], i + 2);
 
 		//going through each species
 		SppIndex s;
@@ -1266,28 +1266,28 @@ static void _read_init_species(void)
 			num = sscanf(&buf[stringIndex], "%d,", &seeds_Avail);
 			if (num != 1){
 				LogError(logfp, LOGFATAL, "Invalid %s file line %d invalid species input",
-						 grid_files[GRID_FILE_INIT_SPECIES], i + 2);
+						 grid_files[GRID_FILE_SPINUP_SPECIES], i + 2);
 			}
 
 			if(seeds_Avail){
-				useInitialization = TRUE;
+				useSpinup = TRUE;
 				isAnyCellOnForSpinup = TRUE;
 			}
 
-			gridCells[row][col].mySpeciesInit.shouldBeInitialized[s] = seeds_Avail;
+			gridCells[row][col].mySpeciesInit.shouldSpinup[s] = seeds_Avail;
 			stringIndex += _get_value_index(&buf[stringIndex], ',', 1);
 		}
 
-		gridCells[row][col].mySpeciesInit.useInitialization = useInitialization;
+		gridCells[row][col].mySpeciesInit.useSpinup = useSpinup;
 	}
 
 	if (i != grid_Cells)
 		LogError(logfp, LOGFATAL, "Invalid %s file, not enough cells",
-				grid_files[GRID_FILE_INIT_SPECIES]);
+				grid_files[GRID_FILE_SPINUP_SPECIES]);
 
 	if(!isAnyCellOnForSpinup){
-		LogError(logfp, LOGWARN, "Initialization is on, but no species are turned on for initialization inside %s.",
-				grid_files[GRID_FILE_INIT_SPECIES]);
+		LogError(logfp, LOGWARN, "Spinup is on, but no species are turned on for spinup inside %s.",
+				grid_files[GRID_FILE_SPINUP_SPECIES]);
 	}
 
     unload_cell();
@@ -1330,7 +1330,7 @@ static void _read_files(void)
 static void _read_grid_setup(void)
 {
     FILE *f;
-    char buf[1024], initializationType[1024];
+    char buf[1024];
     int i, j;
 
     f = OpenFile(grid_files[GRID_FILE_SETUP], "r");
@@ -1369,23 +1369,15 @@ static void _read_grid_setup(void)
     UseSeedDispersal = itob(j);
 
 	GetALine(f, buf);
-	i = sscanf(buf, "%s", initializationType);
+	i = sscanf(buf, "%d", &shouldSpinup);
 	if(i < 1){
-		LogError(logfp, LOGFATAL, "Invalid grid setup file (Initialization line wrong)");
-	}
-	if(!strncmp(initializationType, "spinup", 6)){
-		initializationMethod = INIT_WITH_SPINUP;
-	} else if(!strncmp(initializationType, "none", 4)){
-		initializationMethod = INIT_WITH_NOTHING;
-	} else {
-		LogError(logfp, LOGFATAL, 
-		         "Invalid grid setup file (Initialization line wrong. Valid options are \"spinup\" or \"none\")");
+		LogError(logfp, LOGFATAL, "Invalid grid setup file (Spinup line wrong)");
 	}
 
 	GetALine(f, buf);
-	i = sscanf(buf, "%hd", &SuperGlobals.runInitializationYears);
+	i = sscanf(buf, "%hd", &SuperGlobals.runSpinupYears);
 	if(i < 1){
-		LogError(logfp, LOGFATAL, "Invalid grid setup file (Initialization years line wrong)");
+		LogError(logfp, LOGFATAL, "Invalid grid setup file (Spinup years line wrong)");
 	}
 
 	GetALine(f, buf);

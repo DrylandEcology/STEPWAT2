@@ -79,22 +79,22 @@ struct Soil_st
 }typedef SoilType;
 
 /** 
- * \brief [Initialization](\ref INITIALIZATION) information for a given [cell](\ref CellType).
+ * \brief [Spinup](\ref SPINUP) information for a given [cell](\ref CellType).
  * 
  * \ingroup GRID
  */
 struct grid_init_species_st
 {
-	/** \brief TRUE if at least one species has requested initialization in
+	/** \brief TRUE if at least one species has requested spinup in
 	 *         this cell. */
-	int useInitialization;
+	int useSpinup;
 	/** 
 	 * \brief Array of boolean values that correspond to this
 	 *         [cell](\ref CellType)'s [species](\ref Species) array.
 	 * 
-	 *  TRUE if Species[sp] should use initialization.
+	 *  TRUE if Species[sp] should use spinup.
 	 */
-	int *shouldBeInitialized;
+	int *shouldSpinup;
 }typedef Grid_Init_Species_St;
 
 /** 
@@ -124,8 +124,8 @@ struct grid_cell_st
 	/** \brief If TRUE this cell should use seed dispersal */
 	Bool useSeedDispersal;
 	/** \brief TRUE if this cell is in spinup mode */
-	Bool DuringInitialization;
-	/** \brief Species' [initialization](\ref INITIALIZATION) information. */
+	Bool DuringSpinup;
+	/** \brief Species' [spinup](\ref SPINUP) information. */
 	Grid_Init_Species_St mySpeciesInit;
 
 	/** \brief TRUE if an individual was killed this year. */
@@ -239,9 +239,9 @@ typedef enum
     GRID_FILE_DISTURBANCES,
 	/** \brief Location in \ref grid_files of the soil file name. */
     GRID_FILE_SOILS,
-	/** \brief Location in \ref grid_files of the species initialization file
+	/** \brief Location in \ref grid_files of the species spinup file
 	 *         name. */
-    GRID_FILE_INIT_SPECIES,
+    GRID_FILE_SPINUP_SPECIES,
 	/** \brief Location in \ref grid_files of the colonization file name. */
 	GRID_FILE_COLONIZATION,
 	/** \brief Location in \ref grid_files of the STEPWAT2 input file name. */

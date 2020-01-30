@@ -730,7 +730,7 @@ struct superglobals_st {
            max_speciesnamelen; /* Maximum species name length. */
     
     IntUS runModelIterations,
-          runInitializationYears,
+          runSpinupYears,
           runModelYears,
           nCells;		/* number of cells to use in Grid, only applicable if grid function is being used */
 

@@ -25,7 +25,7 @@
 /* States of the program that the progress bar recognizes. */
 typedef enum 
 {
-	INITIALIZATION,
+	SPINUP,
 	SIMULATION,
 	OUTPUT,
 	DONE
