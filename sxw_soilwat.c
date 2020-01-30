@@ -191,11 +191,10 @@ static void _update_transp_coeff(void) {
 }
 
 static void _update_productivity(RealF sizes[]) {
-
+    
     GrpIndex g;
     TimeInt m;
     IntUS k;
-    RealF tmp;
 
     SW_VEGPROD *v = &SW_VegProd;
     RealF totbmass = 0.0,
@@ -259,9 +258,10 @@ static void _update_productivity(RealF sizes[]) {
               k = RGroup[g]->veg_prod_type;
               v->veg[k].pct_live[m] += SXWResources->_prod_pctlive[Igp(g, m)] * RGroup[g]->rgroupFractionOfVegTypeBiomass;
 
-              tmp = SXWResources->_prod_bmass[Igp(g, m)] * bmassg[g] / v->veg[k].cov.fCover;
-              v->veg[k].biomass[m] += tmp;
-              v->veg[k].litter[m] += tmp * SXWResources->_prod_litter[g][m];
+              v->veg[k].biomass[m] += SXWResources->_prod_bmass[Igp(g, m)] * 
+                                      bmassg[g] / v->veg[k].cov.fCover;
+
+              v->veg[k].litter[m] += vegTypeBiomass[k] * SXWResources->_prod_litter[g][m];
             }
         }
     }
