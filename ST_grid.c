@@ -159,7 +159,7 @@ static void printGeneralInfo(void){
  * \brief Run gridded mode.
  * 
  * This function is responsible for initializing the [cells](\ref CellType), 
- * running the simulation on all of them, Then printing output.
+ * running the simulation on all of them, then printing output.
  * 
  * \sideeffect
  *     In theory this function will have no side effects, but memory leaks are

@@ -69,10 +69,17 @@ void Plot_Initialize(void);
 void copy_rgroup(const GroupType* src, GroupType* dest);
 void copy_species(const SpeciesType* src, SpeciesType* dest);
 
-/* Initializes the plot with whichever method you have specified with spinupMethod. 
-   This function takes care of EVERYTHING involved with spinup.
-   After calling this function you can load in the spinup information by calling 
-   loadSpinupConditions(). */
+/**
+ * \brief Spin up \ref gridCells.
+ * 
+ * This function takes care of EVERYTHING involved with spinup. After calling
+ * this function you can load in the spinup information by calling
+ * \ref loadSpinupConditions.
+ * 
+ * \author Chandler Haukap
+ * \date August 2019
+ * \ingroup SPINUP
+ */
 void runSpinup(void){
 	_beginSpinup();
 
@@ -152,9 +159,16 @@ void runSpinup(void){
 	_endSpinup();
 }
 
-/* Prepares for spinup by turning on species that have requested spinup and turning off 
-   species that have not requested spinup. This function should be accompanied by a call to 
-   _endSpinup. */
+/**
+ * \brief Prepares for spinup by turning on species that have requested spinup
+ *        and turning off species that have not requested spinup. 
+ * 
+ * This function should be accompanied by a call to \ref _endSpinup.
+ * 
+ * \author Chandler Haukap
+ * \date August 2019 
+ * \ingroup SPINUP_PRIVATE
+ */
 static void _beginSpinup(void){
 	int i, j; 				/* For iterating over cells */
 	SppIndex sp;			/* For iterating over species */
@@ -188,8 +202,19 @@ static void _beginSpinup(void){
 	unload_cell(); // Reset the global variables
 }
 
-/* Return the program to the state it needs to be in for the main simulation. This should only be called if you
-   have called _beginSpinup. */
+/**
+ * \brief Return the program to the state it needs to be in for the main 
+ *        simulation.
+ * 
+ * \ref gridCells from gridded mode was modified heavily during spinup. Calling
+ * this function reverts it to it's original state.
+ * 
+ * This should only be called if you have called \ref _beginSpinup. 
+ * 
+ * \author Chandler Haukap
+ * \date August 2019
+ * \ingroup SPINUP_PRIVATE
+ */
 static void _endSpinup(void){
 	// Calling this function a second time will swap the variables back to their original state.
 	_beginSpinup();
@@ -199,10 +224,19 @@ static void _endSpinup(void){
 	DuringSpinup = FALSE;
 }
 
-/* Save the current state of the program as spinup conditions.
+/**
+ * \brief Save the current state of the program as spinup conditions.
  *  
- * This is low level function. If you have already called
- * _endSpinup() there is no need to call this function. */
+ * This is low level function. If you have already called \ref _endSpinup()
+ * there is no need to call this function. 
+ * 
+ * \sideeffect
+ *     This function will reread the input files.
+ * 
+ * \author Chandler Haukap
+ * \date August 2019
+ * \ingroup SPINUP_PRIVATE
+ */
 static void _saveAsSpinupConditions(){
 	// Save gridCells as spinupCells
 	spinupCells = gridCells;
@@ -213,7 +247,17 @@ static void _saveAsSpinupConditions(){
 	rereadInputs();
 }
 
-/* Load the state of the program right after spinup. */
+/**
+ * \brief Load the state of the program following spinup into \ref gridCells.
+ * 
+ * This function must be called before every iteration of 
+ * [gridded mode](\ref GRID). Of course, this function will only work after a
+ * call to \ref runSpinup.
+ * 
+ * \author Chandler Haukap
+ * \date August 2019
+ * \ingroup SPINUP
+ */
 void loadSpinupConditions(){
 	int row, col;
 	GrpIndex rg;
@@ -241,9 +285,14 @@ void loadSpinupConditions(){
 
 }
 
-/* "Spinup" the model by running without stat collection, fire, or grazing.
+/**
+ * \brief "Spinup" the model by running without stat collection, fire, or 
+ *        grazing.
  * 
- * Fire and grazing will potentially be added to spinup as a future feature. */
+ * \author Chandler Haukap
+ * \date August 2019
+ * \ingroup SPINUP_PRIVATE
+ */
 static void _run_spinup(void)
 {
     // We don't want seed dispersal durring spinup, so we'll store it here,
@@ -267,7 +316,15 @@ static void _run_spinup(void)
     UseSeedDispersal = myUseSeedDispersal;		
 }
 
-/* Free memory allocated to spinupCells. This function should only be called once per simulation. */
+/**
+ * \brief Free memory allocated to spinupCells.
+ * 
+ * This function should only be called once per simulation. 
+ * 
+ * \author Chandler Haukap
+ * \date August 2019
+ * \ingroup SPINUP
+ */
 void freeSpinupMemory(void)
 {
 	// Remember where gridCells pointed.

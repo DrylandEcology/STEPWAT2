@@ -28,11 +28,26 @@ void freeSpinupMemory(void);
 
 /************************ Exported variables ****************************/
 
-/* Stores the state of the cells following spinup. */
+/**
+ * \brief Stores the state of the cells following spinup.
+ * 
+ * This information must be stored so it can be loaded in every iteration of
+ * the spinup.
+ * 
+ * \ingroup SPINUP
+ */
 CellType** spinupCells;
-/* TRUE if spinup should be run. */
+
+/**
+ * \brief TRUE if spinup should be run.
+ * \ingroup SPINUP
+ */
 Bool shouldSpinup;
-/* TRUE if the program is currently in spinup. */
+
+/**
+ * \brief TRUE if the program is currently in spinup.
+ * \ingroup SPINUP
+ */
 Bool DuringSpinup;
 
 #endif
