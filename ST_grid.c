@@ -145,13 +145,8 @@ static void printGeneralInfo(void){
 	printf("Number of cells: %d\n\n", grid_Cells);
 	if(UseDisturbances) printf("Using grid disturbances file\n");
 	if(UseSoils) printf("Using grid soils file\n");
-	if(initializationMethod == INIT_WITH_SEEDS){
-		printf("Running seed dispersal as initialization\n");
-	} else if(initializationMethod == INIT_WITH_SPINUP) { 
-		printf("Running Spinup as initialization\n");
-	}
 	if(initializationMethod != INIT_WITH_NOTHING){
-		printf("Number of initialization years: %d\n", SuperGlobals.runInitializationYears);
+		printf("Number of spinup years: %d\n", SuperGlobals.runInitializationYears);
 	}
 	if(UseSeedDispersal){
 		printf("Dispersing seeds between cells\n");
@@ -1380,13 +1375,11 @@ static void _read_grid_setup(void)
 	}
 	if(!strncmp(initializationType, "spinup", 6)){
 		initializationMethod = INIT_WITH_SPINUP;
-	} else if(!strncmp(initializationType, "seeds", 5)){
-		initializationMethod = INIT_WITH_SEEDS;
 	} else if(!strncmp(initializationType, "none", 4)){
 		initializationMethod = INIT_WITH_NOTHING;
 	} else {
 		LogError(logfp, LOGFATAL, 
-		         "Invalid grid setup file (Initialization line wrong. Valid options are \"spinup\", \"seeds\", or \"none\")");
+		         "Invalid grid setup file (Initialization line wrong. Valid options are \"spinup\" or \"none\")");
 	}
 
 	GetALine(f, buf);

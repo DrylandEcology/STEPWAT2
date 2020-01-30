@@ -22,7 +22,6 @@
 typedef enum
 {
 	INIT_WITH_SPINUP,
-	INIT_WITH_SEEDS,
 	INIT_WITH_NOTHING
 } InitializationMethod;
 

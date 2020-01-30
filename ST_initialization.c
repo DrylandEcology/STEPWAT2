@@ -3,21 +3,9 @@
  * \brief Definitions of all [initialization](\ref INITIALIZATION) functions.
  * 
  * Contains definitions of all functions related to initialization.
- * The current initialization methods are _run_seed_initialization
- * and _run_spinup. Note that _run_seed_initialization is non-functional
- * as of 12/11/19, but the logic is in place to call the function. This
- * file uses the underscore prefix in function names to denote private
- * functions that should NEVER be called outside of this file.
- *
- * TO ADD AN INITIALIZATION METHOD:\n
- * Adding a method is simple. \ref runInitialization() takes care of memory
- * management, iterating, and loading cells. All you need to do in your
- * new function is define what the program should do for ONE year and
- * for ONE cell. Once you have your function written, add an entry for
- * it to the \ref InitializationMethod enumerator in \ref ST_initialization.h,
- * add your method to \ref _read_grid_setup() of \ref ST_grid.c, then add your
- * function to the switch statement in \ref runInitialization(). To see
- * an example initialization function check out \ref _run_spinup().
+ * The current initialization method is _run_spinup. This file uses the 
+ * underscore prefix in function names to denote private functions that should
+ * NEVER be called outside of this file.
  * 
  * \author Chandler Haukap
  * \date September 2019
@@ -37,7 +25,6 @@
 
 /******** Local functions. These should all be treated as private. ***********/
 static void _run_spinup(void);
-static void _run_seed_initialization(void);
 static void _beginInitialization(void);
 static void _endInitialization(void);
 static void _saveAsInitializationConditions(void);
@@ -138,20 +125,21 @@ void runInitialization(void){
                     continue; // No spinup requested. Move on to next cell.
                 }
 
-                /* This step is important. load_cell loaded in the actual accumulators, but we do not want
-                    to accumulate stats while in spinup. We need to load in dummy accumulators to ensure
-                    we ignore everything that happens in spinup. */
-                stat_Copy_Accumulators(dummy_Dist, dummy_Ppt, dummy_Temp, dummy_Grp, dummy_Gsize, dummy_Gpr, dummy_Gmort, dummy_Gestab,
-                                        dummy_Spp, dummy_Indv, dummy_Smort, dummy_Sestab, dummy_Sreceived, dummy_Gwf, TRUE);
+                /* This step is important. load_cell loaded in the actual 
+                   accumulators, but we do not want to accumulate stats while
+                   in spinup. We need to load in dummy accumulators to ensure
+                   we ignore everything that happens in spinup. */
+                stat_Copy_Accumulators(dummy_Dist, dummy_Ppt, dummy_Temp,
+                                       dummy_Grp, dummy_Gsize, dummy_Gpr, 
+                                       dummy_Gmort, dummy_Gestab, dummy_Spp,
+                                       dummy_Indv, dummy_Smort, dummy_Sestab,
+                                       dummy_Sreceived, dummy_Gwf, TRUE);
 
                 Globals->currYear = year;
 
                 switch (initializationMethod){
 		            case INIT_WITH_SPINUP:
 			            _run_spinup();
-			            break;
-		            case INIT_WITH_SEEDS:
-			            _run_seed_initialization();
 			            break;
 		            default:
 			            break;
@@ -285,28 +273,6 @@ static void _run_spinup(void)
 
     // Turn UseSeedDispersal back on (if it was ever on)
     UseSeedDispersal = myUseSeedDispersal;		
-}
-
-/* TODO: This is a dummy method. It needs to be implemented once seed dispersal is fully planned.
- *
- * Note on implementing: The logic behind calling this function already exists. You can view the 
- *     function call inside runInitialization, but the important thing to note is that this 
- *     function is called inside the following structure:
- *     
- *     for each year
- *         for each grid cell
- *             _run_seed_initialization
- * 
- *     You can assume that prior to this function being called the correct grid cell has been loaded
- *     into the global variables (RGroup, Species, Env, ect.) and that this function must
- *     operate on a yearly time step. */
-static void _run_seed_initialization(void){
-    if(Globals->currYear == 1){
-	    printf("\nYou have attempted to initialize with seed dispersal.\n" 
-	            "This option is currently in development and will be availible soon.\n");
-    }
-    initializationMethod = INIT_WITH_NOTHING;
-	return;
 }
 
 /* Free memory allocated to initializationCells. This function should only be called once per simulation. */

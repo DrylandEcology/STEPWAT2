@@ -32,7 +32,6 @@ Bool UseSeedDispersal;
 Bool recordDispersalEvents;
 
 // See ST_seedDispersal.c for documentation of these functions.
-void initDispersal(void);
 void disperseSeeds(int year);
 void outputDispersalEvents(char* filePrefix);
 void freeDispersalMemory(void);
