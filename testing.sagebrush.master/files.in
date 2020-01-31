@@ -15,6 +15,6 @@ Input/maxrgroupspecies.in		# name of stepwat maxrgroupspecies.in file
 
 Output/bmass				# name of the cell-specific biomass output files
 Output/mortality			# name of the cell-specific mortality output files
-Output/seedDispersalEvents		# name of the seed dispersal events output file
+Output/seedDispersalEvents		# name of the seed dispersal events output files
 Output/all_cell_average_biomass		# name of the all-cell average biomass output file
 Output/all_cell_average_mortality	# name of the all-cell average mortality output file

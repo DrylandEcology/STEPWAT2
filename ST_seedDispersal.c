@@ -1,6 +1,9 @@
 /**
  * \file ST_seedDispersal.c
  * \brief Function definitions for all seed dispersal specific functions.
+ * 
+ * Note that this module uses the underscore prefix to denote "private"
+ * functions and variables.
  *
  * \author Chandler Haukap
  * \date 17 December 2019
@@ -174,25 +177,61 @@ void disperseSeeds(int year) {
   }   // END for each row
 }
 
+/**
+ * \brief Output a summary of every [dispersal event](\ref DispersalEvent) that
+ *        has occurred.
+ * 
+ * This function will output a file for every \ref gridCell. The files will 
+ * contain one entry for every time the associated cell received seeds from 
+ * another [cell](\ref CellType).
+ * 
+ * \param filePrefix is the name all of the files should have. The actual names
+ *                   of the files will be "<filePrefix><N>.csv" where N is the
+ *                   number of the [cell](\ref CellType) associated with the 
+ *                   file.
+ * 
+ * \author Chandler Haukap
+ * \date January 28 2020
+ * \ingroup SEED_DISPERSAL
+ */
 void outputDispersalEvents(char* filePrefix) {
     char fileName[1024];
+    int i;
     DispersalEvent* thisEvent = _firstEvent;
+    FILE** files = Mem_Calloc(grid_Rows * grid_Cols, sizeof(FILE*), 
+                              "outputDispersalEvents");
 
-    sprintf(fileName, "%s.csv", filePrefix);
-    FILE* file = fopen(fileName, "w");
-    fprintf(file, "Iteration,Year,From Cell,Species,To Cell\n");
+    for(i = 0; i < grid_Rows * grid_Cols; ++i) {
+        sprintf(fileName, "%s%d.csv", filePrefix, i);
+        files[i] = fopen(fileName, "w");
+        fprintf(files[i], "Iteration,Year,From Cell,Species\n");
+    }
 
     while(thisEvent) {
-        fprintf(file, "%d,%d,%d,%s,%d\n", thisEvent->iteration, 
-                thisEvent->year, thisEvent->fromCell, thisEvent->name,
-                thisEvent->toCell);
+        fprintf(files[thisEvent->toCell], "%d,%d,%d,%s\n", 
+                thisEvent->iteration, thisEvent->year, thisEvent->fromCell,
+                thisEvent->name);
         
         thisEvent = thisEvent->next;
     }
 
-    fclose(file);
+    for(i = 0; i < grid_Rows * grid_Cols; ++i) {
+        fclose(files[i]);
+    }
+    Mem_Free(files);
 }
 
+/**
+ * \brief Free the memory allocated in the 
+ *        [seed dispersal module](\ref SEED_DISPERSAL)
+ * 
+ * This function should be called after running the colonization module to
+ * ensure that no memory leaks occur. It is safe to call multiple times.
+ * 
+ * \author Chandler Haukap
+ * \date January 28 2020
+ * \ingroup SEED_DISPERSAL
+ */
 void freeDispersalMemory(void) {
     DispersalEvent* thisEvent = _firstEvent;
     DispersalEvent* nextEvent;
@@ -202,6 +241,9 @@ void freeDispersalMemory(void) {
         Mem_Free(thisEvent);
         thisEvent = nextEvent;
     }
+
+    _firstEvent = NULL;
+    _lastEvent = NULL;
 }
 
 /**
