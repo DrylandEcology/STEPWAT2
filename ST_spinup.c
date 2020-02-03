@@ -176,7 +176,7 @@ static void _beginSpinup(void){
 
 	DuringSpinup = TRUE;
 
-	/* Swap Species[sp]->use_me and mySpeciesInit.shouldBeInitialized[sp]. shouldBeInitialized is an array 
+	/* Swap Species[sp]->use_me and mySpeciesInit.shouldSpinup[sp]. shouldSpinup is an array 
 	   of booleans that represent whether the given species should be used in spinup. use_me is a 
 	   boolean that represents whether the given species should be used in production. By swaping them we 
 	   save space, but we have to remember to swap them back before the production run. */
@@ -194,7 +194,7 @@ static void _beginSpinup(void){
 				temporary_storage = Species[sp]->use_me;
 				// Swap use_me
 				Species[sp]->use_me = gridCells[i][j].mySpeciesInit.shouldSpinup[sp]; 
-				// Swap shouldBeInitialized[sp]
+				// Swap shouldBeSpinup[sp]
 				gridCells[i][j].mySpeciesInit.shouldSpinup[sp] = temporary_storage;
 			} /* End for each species */
 		} /* End for each column */
@@ -295,7 +295,7 @@ void loadSpinupConditions(){
  */
 static void _run_spinup(void)
 {
-    // We don't want seed dispersal durring spinup, so we'll store it here,
+    // We don't want seed dispersal during spinup, so we'll store it here,
     // turn it off, then turn it back on afterwards.
     Bool myUseSeedDispersal = UseSeedDispersal;
     UseSeedDispersal = FALSE;

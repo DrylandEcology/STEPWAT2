@@ -5,6 +5,6 @@
 1	# use soils csv file? 1 means yes, 0 means no.
 1	# use seed dispersal? 1 means yes, 0 means no.
 1	# use spinup? 1 means yes, 0 means no.
-300     # Number of years to perform initialization (whichever method you choose). 
+300     # Number of years to perform spinup. 
 1       # Write separate output files for each cell.
 1	# output all seed dispersal events? 1 means yes, 0 means no.

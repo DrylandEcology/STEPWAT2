@@ -13,6 +13,9 @@
  * \ingroup SQL
  */
 
+#ifndef STEPPE_H
+#define STEPPE_H
+
 #include "ST_functions.h"
 
 #define DFLT_FIRSTFILE "files.in"
@@ -24,3 +27,5 @@ void insertIndivYearInfo(IndivType *ind);
 void insertIndiv(IndivType *ind);
 void insertSpecieYearInfo(SppIndex s);
 void insertRGroupYearInfo(GrpIndex g);
+
+#endif

@@ -204,13 +204,13 @@ void outputDispersalEvents(char* filePrefix) {
     for(i = 0; i < grid_Rows * grid_Cols; ++i) {
         sprintf(fileName, "%s%d.csv", filePrefix, i);
         files[i] = fopen(fileName, "w");
-        fprintf(files[i], "Iteration,Year,From Cell,Species\n");
+        fprintf(files[i], "Iteration,Year,From Cell,Species,To Cell\n");
     }
 
     while(thisEvent) {
-        fprintf(files[thisEvent->toCell], "%d,%d,%d,%s\n", 
+        fprintf(files[thisEvent->toCell], "%d,%d,%d,%s,%d\n", 
                 thisEvent->iteration, thisEvent->year, thisEvent->fromCell,
-                thisEvent->name);
+                thisEvent->name, thisEvent->toCell);
         
         thisEvent = thisEvent->next;
     }
