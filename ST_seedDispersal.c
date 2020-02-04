@@ -16,7 +16,7 @@
 #include "myMemory.h"
 #include "rands.h"
 
-float _distance(int row1, int row2, int col1, int col2, float cellLen);
+float _distance(int x1, int y1, int x2, int y2, float cellWidth);
 Bool _shouldProduceSeeds(SppIndex sp);
 float _rateOfDispersal(float PMD, float meanHeight, float maxHeight);
 float _probabilityOfDispersal(float rate, float height, float distance);
@@ -151,7 +151,7 @@ void disperseSeeds(int year) {
             }
 
             // These variables depend on the recipient.
-            distance = _distance(row, receiverRow, col, receiverCol,
+            distance = _distance(col, row, receiverCol, receiverRow,
                                  Globals->plotsize);
             Pd = _probabilityOfDispersal(rate, height, distance);
 
@@ -249,29 +249,32 @@ void freeDispersalMemory(void) {
 /**
  * \brief Calculates the distance between two 2-dimensional points.
  *
- * \param row1 The row of the first cell, i.e. its x coordinate.
- * \param row2 The row of the second cell, i.e. its x coordinate.
- * \param col1 The column of the first cell, i.e. its y coordinate.
- * \param col2 The column of the second cell, i.e. its y coordinate.
- * \param cellLen The length of the square cells.
+ * \param x1 The column of the first cell, i.e. it's x coordinate.
+ * \param y1 The row of the first cell, i.e. its y coordinate.
+ * \param x2 The column of the second cell, i.e. its x coordinate.
+ * \param y2 The row of the second cell, i.e. its y coordinate.
+ * \param cellWidth The length of the square cells.
  *
  * \return A Double. The distance between the cells.
  *
  * \ingroup SEED_DISPERSAL_PRIVATE
  */
-float _distance(int row1, int row2, int col1, int col2, float cellLen) {
-  double rowDist = row1 - row2;
-  double colDist = col1 - col2;
+float _distance(int x1, int y1, int x2, int y2, float cellWidth) {
+  double rowDist = abs((x1 - x2)) * cellWidth;
+  double colDist = abs((y1 - y2)) * cellWidth;
 
   // returns the distance between the two grid cells
-  if (row1 == row2) {
-    return (abs(colDist) * cellLen);
-  } else if (col1 == col2) {
-    return (abs(rowDist) * cellLen);
-  } else { // row1 != row2 && col1 != col2
+  if (rowDist == 0) {
+    // If rowdist == 0 these cells are in the same row. Might as well save some
+    // computational power.
+    return colDist;
+  } else if (colDist == 0) {
+    // If colDist == 0 these cells are in the same row. Might as well save some
+    // computational power.
+    return rowDist;
+  } else {
     // Pythagorean theorem:
-    return sqrt(pow(abs(colDist) * cellLen, 2.0) +
-                pow(abs(rowDist) * cellLen, 2.0));
+    return sqrt(pow(colDist, 2.0) + pow(rowDist, 2.0));
   }
 }
 
