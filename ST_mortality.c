@@ -70,6 +70,7 @@ void _kill_annuals(void);
 void _kill_extra_growth(void);
 void _kill_maxage(void);
 void _updateCheatgrassPrecip(int year);
+double _getCheatgrassCover(float biomass);
 
 
 /************ File-Level Variable Declarations *************/
@@ -1251,4 +1252,25 @@ void _kill_maxage(void) {
             }
         }
     }
+}
+
+/**
+ * \brief Converts the biomass of cheatgrass to the % cover of cheatgrass.
+ * 
+ * This relationship between biomass and percent cover was derived by Maggie 
+ * England.
+ * 
+ * \param biomass is the biomass of cheatgrass.
+ * 
+ * \return A double between 0 and 1 representing the percent of the plot 
+ *         covered by cheatgrass.
+ * 
+ * \author Maggie England (derived the algorithm)
+ * \author Chandler Haukap (implemented the code)
+ * \date February 5 2020
+ * \ingroup MORTALITY_PRIVATE
+ */
+double _getCheatgrassCover(float biomass) {
+  int cover = biomass / (10.296 * Globals->plotsize);
+  return (cover > 1) ? 1 : cover;
 }
