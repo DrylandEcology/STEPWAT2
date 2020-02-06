@@ -70,7 +70,8 @@ void _kill_annuals(void);
 void _kill_extra_growth(void);
 void _kill_maxage(void);
 void _updateCheatgrassPrecip(int year);
-double _getCheatgrassCover(float biomass);
+double _getCheatgrassCover(double biomass);
+double _getWildfireProbability(double percentCover);
 
 
 /************ File-Level Variable Declarations *************/
@@ -1270,7 +1271,27 @@ void _kill_maxage(void) {
  * \date February 5 2020
  * \ingroup MORTALITY_PRIVATE
  */
-double _getCheatgrassCover(float biomass) {
+double _getCheatgrassCover(double biomass) {
   int cover = biomass / (10.296 * Globals->plotsize);
   return (cover > 1) ? 1 : cover;
+}
+
+/**
+ * \brief Calculates the probability of a cheatgrass-driven wildfire occuring.
+ * 
+ * This equation was derived by Maggie England.
+ * 
+ * \param percentCover is the percent of the total plot covered in cheatgrass.
+ *                     A value between 0 and 1 is expected. I suggest using the
+ *                     \ref _getCheatgrassCover function.
+ * 
+ * \return A double between 0 and 1 representing the probability of a wildfire.
+ * 
+ * \author Maggie England (derived the equation)
+ * \author Chandler Haukap (implemented the code)
+ * \date February 5 2020
+ * \ingroup MORTALITY_PRIVATE
+ */
+double _getWildfireProbability(double percentCover) {
+  return 0.0074 * pow(percentCover, 0.0649);
 }
