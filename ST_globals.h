@@ -30,3 +30,4 @@ extern MortFlagsType  MortFlags;
 extern GlobalType     SuperGlobals;
 
 extern Bool UseGrid;
+extern Bool UseCheatgrassWildfire;

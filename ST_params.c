@@ -72,8 +72,6 @@ static void _rgroup_add2( char name[],
                       RealF dslope, RealF dint);
 static void _rgroup_add_disturbance( char name[],  Int killyr, Int killfreq_startyr,RealF killfreq,
                       Int extirp, RealF prop_killed, RealF prop_recovered,RealF grazing_frq,RealF prop_grazing,Int grazingfreq_startyr);
-static void _rgroup_add_wildfire( RealF ignition, RealF cheatgrass_coefficient, RealF wild_fire_slope);
-
 static void _rgroup_addsucculent( char name[],
                                RealF wslope, RealF wint,
                                RealF dslope, RealF dint);
@@ -768,8 +766,7 @@ static void _rgroup_init( void) {
    /* input variables related to disturbances */
    Int extirp, killyr, killfreq_startyr, 
        grazingfreq_startyr;
-   RealF  killfreq, ignition, cheatgrass_coefficient, wild_fire_slope,
-        prop_killed, prop_recovered,grazing_frq, prop_grazing ;
+   RealF  killfreq, prop_killed, prop_recovered,grazing_frq, prop_grazing;
 
    MyFileName = Parm_name(F_RGroup);
    f = OpenFile(MyFileName, "r");
@@ -858,14 +855,11 @@ static void _rgroup_init( void) {
         break;
      }
 
-     x=sscanf( inbuf, "%f %f %f",
-               &ignition, &cheatgrass_coefficient, &wild_fire_slope);
-     if (x != 3) {
-       LogError(logfp, LOGFATAL, "%s: Wrong number of columns in wild fire inputs.",
+     x=sscanf( inbuf, "%u", &UseCheatgrassWildfire);
+     if (x != 1) {
+       LogError(logfp, LOGFATAL, "%s: Cheatgrass-Wildfire flag not read.",
                MyFileName);
-     }
- 
-     _rgroup_add_wildfire( ignition, cheatgrass_coefficient, wild_fire_slope);
+     } 
    }/* end while*/
 
    Mem_Free(name);
@@ -954,18 +948,6 @@ static void _rgroup_add_disturbance( char name[], Int killyr, Int killfreq_start
   RGroup[rg]->grazingfreq_startyr  = grazingfreq_startyr;
 
   RGroup[rg]->extirpated    = FALSE;
-}
-
-static void _rgroup_add_wildfire( RealF ignition, RealF cheatgrass_coefficient, RealF wild_fire_slope) {
-/*======================================================*/
-  GrpIndex rg;
-
-  ForEachGroup(rg){
-    RGroup[rg]->ignition = ignition;
-    RGroup[rg]->cheatgrass_coefficient = cheatgrass_coefficient;
-    RGroup[rg]->wild_fire_slope = wild_fire_slope;
-  }
-  
 }
 
 /**************************************************************/

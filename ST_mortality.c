@@ -72,6 +72,9 @@ void _kill_maxage(void);
 void _updateCheatgrassPrecip(int year);
 double _getCheatgrassCover(double biomass);
 double _getWildfireProbability(double percentCover);
+Bool _simulateWildfire(double cheatgrassCover);
+Bool _simulatePrescribedFire(void);
+double _getCheatgrassBiomass(void);
 
 
 /************ File-Level Variable Declarations *************/
@@ -82,6 +85,12 @@ double _getWildfireProbability(double percentCover);
  * \ingroup MORTALITY_PRIVATE
  */
 Bool *_SomeKillage;
+
+/**
+ * \brief A flag for turning cheatgrass-driven wildfire on and off.
+ * \ingroup MORTALITY
+ */
+Bool UseCheatgrassWildfire;
 
 /************************* Mortality struct(s) *******************************/
 /**
@@ -232,30 +241,42 @@ void mort_Main( Bool *killed) {
   killed = _SomeKillage;
 }
 
-static void _simulatePrescribedFire(GrpIndex rg, RealF random_number) {
-    if(Globals->currYear >= RGroup[rg]->killfreq_startyr && RGroup[rg]->killfreq_startyr != 0) {
-        if (RGroup[rg]->killfreq < 1) {
-            /* --------------------- STOCHASTIC PRESCRIBED FIRE -------------------- */
-            if (random_number <= RGroup[rg]->killfreq) {
-                RGroup[rg]->killyr = Globals->currYear;
+Bool _simulatePrescribedFire(void) {
+  GrpIndex rg;
+  double randomNumber = RandUni(&mortality_rng);
+  Bool prescribedFireOn = FALSE;
 
-                /* Increase the number of prescribed fires that have occurred across all iterations in this year by 1 */
-                RGroup[rg]->prescribedfire = 1;
-            }
-            /* ------------------- END STOCHASTIC PRESCRIBED FIRE ----------------- */
-
-        } else if (((Globals->currYear - RGroup[rg]->killfreq_startyr) % (IntU) RGroup[rg]->killfreq) == 0) {
-            /* ------------------------ PRESCRIBED FIRE AT A FIXED RETURN INTERVAL ----------------------- */
-            RGroup[rg]->killyr = Globals->currYear;
-            /* Calculate the prescribed fire counts */
-            RGroup[rg]->prescribedfire = 1;
-            /* ------------------------ END PRESCRIBED FIRE AT A FIXED RETURN INTERVAL ------------------- */
-        }
+  ForEachGroup(rg) {
+    if((Globals->currYear < RGroup[rg]->killfreq_startyr) || 
+       (RGroup[rg]->killfreq_startyr == 0)) {
+      continue;
     }
+    
+    if (RGroup[rg]->killfreq < 1) {
+      prescribedFireOn = TRUE;
+      /* -------------------- STOCHASTIC PRESCRIBED FIRE ------------------- */
+      if (randomNumber <= RGroup[rg]->killfreq) {
+        RGroup[rg]->killyr = Globals->currYear;
+        /* Mark this year as a prescribed fire year for the statistics. */
+        RGroup[rg]->prescribedfire = 1;
+      }
+      /* ------------------ END STOCHASTIC PRESCRIBED FIRE ----------------- */
+    } else if (((Globals->currYear - RGroup[rg]->killfreq_startyr) % 
+               (IntU) RGroup[rg]->killfreq) == 0) {
+      prescribedFireOn = TRUE;
+      /* ------------ PRESCRIBED FIRE AT A FIXED RETURN INTERVAL ----------- */
+      RGroup[rg]->killyr = Globals->currYear;
+      /* Mark this year as a prescribed fire year for the statistics. */
+      RGroup[rg]->prescribedfire = 1;
+      /* --------- END PRESCRIBED FIRE AT A FIXED RETURN INTERVAL ---------- */
+    }
+  }
+
+  return prescribedFireOn;
 }
 
 #ifdef STDEBUG
-void (*simulatePrescribedFire)(GrpIndex, RealF) = _simulatePrescribedFire;
+Bool (*simulatePrescribedFire)(void) = _simulatePrescribedFire;
 #endif
 
 /***********************************************************/
@@ -282,117 +303,62 @@ void (*simulatePrescribedFire)(GrpIndex, RealF) = _simulatePrescribedFire;
  * \ingroup MORTALITY
  */
 void mort_EndOfYear(void) {
-    GrpIndex rg;
-    GroupType *g = NULL;
-    SppIndex sp;
-    IntU j;
-    RealF fire_possibility, random_number, biomass_cheatgrass;
-    char *cheatgrass_name = "brte";
-    int i = 0;
-    Bool prescribed_fire_on = FALSE;
+  GrpIndex rg;
+  SppIndex sp;
+  IntU j;
+  RealF cheatgrassBiomass;
 
-    /* Loop through all species. If the species name == checkname then get the
-     * biomass and break the loop */
-    for (i = 0; i < Globals->sppCount; i++) { 
-        /* if this species is cheatgrass then get the biomass */
-        if (strcmp(cheatgrass_name, Species[i]->name) == 0) {
-            biomass_cheatgrass = Species_GetBiomass(i);
-            g = RGroup[Species[i]->res_grp];
-            break;
-        }
+  /* Update the precipitation parameters that determine cheatgrass-driven
+   * wildfire. */
+  _updateCheatgrassPrecip(Globals->currYear);
+  /* printf("%d:\tMeanSpring = %f\t ThisSpring = %f\t MeanWinter = %f\t LastWinter = %f\n",
+         Globals->currYear, cheatgrassPrecip->springMean, cheatgrassPrecip->currentSpring, 
+         cheatgrassPrecip->winterMean, cheatgrassPrecip->lastWinter); */
+
+  /* Reset prescribedfire and wildfire for every RGroup. */
+  ForEachGroup(rg){
+    RGroup[rg]->prescribedfire = 0;
+    RGroup[rg]->wildfire = 0;
+  }
+
+  if(UseCheatgrassWildfire) {
+    cheatgrassBiomass = _getCheatgrassBiomass();
+    // If cheatgrass was found in the Species array.
+    if(cheatgrassBiomass >= 0) {
+      _simulateWildfire(cheatgrassBiomass);
+    }
+  } else {
+    _simulatePrescribedFire();
+  }
+
+  // For all RGroups determine if this year is a kill year. If it was, implement
+  // killing.
+  ForEachGroup(rg) {
+    /* Kill all individuals of the functional group and don't let them re-establish */
+    if (Globals->currYear == RGroup[rg]->extirp) {
+      rgroup_Extirpate(rg);
+    } else if (Globals->currYear == RGroup[rg]->killyr) {
+      RGroup_Kill(rg);
     }
 
-    /* Update the precipitation parameters that determine cheatgrass-driven
-     * wildfire. */
-    _updateCheatgrassPrecip(Globals->currYear);
-    /* printf("%d:\tMeanSpring = %f\t ThisSpring = %f\t MeanWinter = %f\t LastWinter = %f\n",
-           Globals->currYear, cheatgrassPrecip->springMean, cheatgrassPrecip->currentSpring, 
-           cheatgrassPrecip->winterMean, cheatgrassPrecip->lastWinter); */
-
-    /* Set a random number outside of the loop to make sure the kill 
-     * probability for each functional group is the same */
-    random_number = RandUni(&mortality_rng);
-
-    /* Determine if prescribed fire is on for any group. If TRUE, we do NOT 
-     * want to simulate cheatgrass wildfire. */
-    ForEachGroup(rg){
-      if(RGroup[rg]->killfreq > 0){
-        prescribed_fire_on = TRUE;
-        break;
-      }
-    }
-
-    // in this for loop "g" refers to the RGroup of cheatgrass. RGroup[rg] refers
-    // to the current iteration's RGroup.
-    ForEachGroup(rg) {
-      if (Globals->currYear < RGroup[rg]->startyr) {
-        continue;
-      }
-
-      RGroup[rg]->prescribedfire = 0;
-      RGroup[rg]->wildfire = 0;
-
-      // If these conditions are true we want to simulate wildfire based on cheatgrass abundance
-      if(!prescribed_fire_on && g != NULL){
-        /* ------------------------- WILDFIRE BASED ON CHEATGRASS BIOMASS------------------------- */
-
-        // Calculate fire_possibility
-        if (g->ignition == 0) {
-          /* If ignition == 0, no wildfire occurs */
-          fire_possibility = 0;
-        } else if (biomass_cheatgrass < g->ignition) {
-          /* If cheatgrass biomass is less than the biomass required for wildfire ignition, wildfire probability is very low*/
-          fire_possibility = .01;
-        } else {
-          /* Otherwise a wildfire probability is calculated, which increases with cheatgrass biomass*/
-          fire_possibility = g->cheatgrass_coefficient + g->wild_fire_slope * biomass_cheatgrass;
-
-          // Cap fire_possibility at 1. This isn't needed from an algorithmic perspective,
-          // but a value greater than 1 does not make sense as a probability.
-          if(fire_possibility > 1){
-            fire_possibility = 1;
-          }
-        }
-
-        // If a wildfire occurs this year
-        if (random_number <= fire_possibility) {
-          RGroup[rg]->killyr = Globals->currYear;
-          /* Increase the number of wildfires that have occurred across all iterations in this year by 1 */
-          RGroup[rg]->wildfire = 1;
-        }
-        /* ------------------------- END WILDFIRE BASED ON CHEATGRASS BIOMASS ------------------------- */
-        
-      } else {
-          _simulatePrescribedFire(rg, random_number);
-      }
-
-      /* Kill all individuals of the functional group and don't let them re-establish */
-      if (Globals->currYear == RGroup[rg]->extirp) {
-          rgroup_Extirpate(rg);
-          
-      /* If the current year is a kill year, implement mortality */    
-      } else if (Globals->currYear == RGroup[rg]->killyr) {
-          RGroup_Kill(rg);
-      }
-
-      /* If the current year is a fire year, then remove extra_growth here
+    /* If the current year is a fire year, then remove extra_growth here
       instead of in _kill_extra_growth called in ST_main.c. Otherwise,
       biomass will be non-zero in a fire year with complete killing */
-      if (Globals->currYear == RGroup[rg]->killyr) {
-        if (!RGroup[rg]->use_extra_res){
+    if (Globals->currYear == RGroup[rg]->killyr) {
+      if (!RGroup[rg]->use_extra_res){
+        continue;
+      }
+      
+      ForEachGroupSpp(sp, rg, j) {
+        /* If the species is turned off, continue */
+        if (!Species[sp]->use_me){
           continue;
         }
-
-        ForEachGroupSpp(sp, rg, j) {
-          /* If the species is turned off, continue */
-          if (!Species[sp]->use_me){
-            continue;
-          }
-          if (ZRO(Species[sp]->extragrowth)) continue;
-          Species[sp]->extragrowth = 0.0;
-        }
+        if (ZRO(Species[sp]->extragrowth)) continue;
+        Species[sp]->extragrowth = 0.0;
       }
     }
+  }
 }
 
 /**
@@ -1294,4 +1260,58 @@ double _getCheatgrassCover(double biomass) {
  */
 double _getWildfireProbability(double percentCover) {
   return 0.0074 * pow(percentCover, 0.0649);
+}
+
+/**
+ * \brief Returns the biomass of cheatgrass.
+ * 
+ * This function assumes that cheatgrass is present in the simulation and named
+ * "brte".
+ * 
+ * \return The biomass of cheatgrass. 
+ * \return -1 if cheatgrass cannot be found.
+ * 
+ * \author Chandler Haukap
+ * \ingroup MORTALITY_PRIVATE
+ */
+double _getCheatgrassBiomass() {
+  char *cheatgrassName = "brte";
+  SppIndex sp;
+
+  ForEachSpecies(sp) {
+    /* if this species is cheatgrass then get the biomass */
+    if (strcmp(cheatgrassName, Species[sp]->name) == 0) {
+      return Species_GetBiomass(sp);
+    }
+  }
+
+  return -1;
+}
+
+/**
+ * \brief Simulates cheatgrass-driven wildfire.
+ * 
+ * \param cheatgrassBiomass the biomass of cheatgrass.
+ * 
+ * \return TRUE if a wildfire happens.
+ * \return FALSE if no wildfire happens.
+ * 
+ * \author Chandler Haukap
+ * \date February 6 2020
+ * \ingroup MORTALITY_PRIVATE
+ */
+Bool _simulateWildfire(double cheatgrassBiomass) {
+  GrpIndex rg;
+  double percentCover = _getCheatgrassCover(cheatgrassBiomass);
+  Bool wildfireHappened = FALSE;
+
+  if(RandUni(&mortality_rng) < _getWildfireProbability(percentCover)) {
+    wildfireHappened = TRUE;
+    ForEachGroup(rg) {
+      RGroup[rg]->wildfire = 1;
+      RGroup[rg]->killyr = Globals->currYear;
+    }
+  }
+
+  return wildfireHappened;
 }

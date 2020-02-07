@@ -794,6 +794,7 @@ void load_cell(int row, int col){
 	setCheatgrassPrecip(gridCells[row][col].myCheatgrassPrecip);
 
 	_SomeKillage = gridCells[row][col].someKillage;
+	UseCheatgrassWildfire = gridCells[row][col].UseCheatgrassWildfire;
 
 	/* Copy this cell's accumulators into the local accumulators in ST_stats.c */
 	stat_Copy_Accumulators(gridCells[row][col]._Dist, gridCells[row][col]._Ppt, gridCells[row][col]._Temp,
@@ -887,10 +888,12 @@ static void _read_disturbances_in(void)
 			break;
 
         ForEachGroup(rg) {
-            num = sscanf(buf, "%d,%u,%u,%u,%hu,%hu,%f,%hu,%f,%hu,%f", &cell,
-                &Globals->pat.use, &Globals->mound.use, &Globals->burrow.use, &RGroup[rg]->killyr, 
-				&RGroup[rg]->killfreq_startyr, &RGroup[rg]->killfreq, &RGroup[rg]->extirp, 
-				&RGroup[rg]->grazingfrq, &RGroup[rg]->grazingfreq_startyr, &RGroup[rg]->ignition);
+            num = sscanf(buf, "%d,%u,%u,%u,%hu,%hu,%f,%hu,%f,%hu,%u", &cell,
+                &Globals->pat.use, &Globals->mound.use, &Globals->burrow.use,
+				&RGroup[rg]->killyr, &RGroup[rg]->killfreq_startyr, 
+				&RGroup[rg]->killfreq, &RGroup[rg]->extirp, 
+				&RGroup[rg]->grazingfrq, &RGroup[rg]->grazingfreq_startyr, 
+				&gridCells[row][col].UseCheatgrassWildfire);
 		}
 
 		if (num != 11)

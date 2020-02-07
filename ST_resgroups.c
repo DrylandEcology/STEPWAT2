@@ -1132,7 +1132,6 @@ void copy_rgroup(const GroupType* src, GroupType* dest){
     }
 
     /* ------------- Copy all fields --------------- */
-    dest->cheatgrass_coefficient = src->cheatgrass_coefficient;
     dest->depth = src->depth;
     dest->est_annually = src->est_annually;
     dest->est_count = src->est_count;
@@ -1142,7 +1141,6 @@ void copy_rgroup(const GroupType* src, GroupType* dest){
     dest->grazingfreq_startyr = src->grazingfreq_startyr;
     dest->grazingfrq = src->grazingfrq;
     dest->grp_num = src->grp_num;
-    dest->ignition = src->ignition;
     dest->killfreq = src->killfreq;
     dest->killfreq_startyr = src->killfreq_startyr;
     dest->killyr= src->killyr;
@@ -1179,7 +1177,6 @@ void copy_rgroup(const GroupType* src, GroupType* dest){
     dest->use_me = src->use_me;
     dest->use_mort = src->use_mort;
     dest->veg_prod_type = src->veg_prod_type;
-    dest->wild_fire_slope = src->wild_fire_slope;
     dest->wildfire = src->wildfire;
     dest->xgrow = src->xgrow;
     dest->yrs_neg_pr = src->yrs_neg_pr;

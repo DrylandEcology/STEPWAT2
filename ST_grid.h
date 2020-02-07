@@ -85,6 +85,10 @@ struct grid_cell_st
 	CheatgrassPrecip* myCheatgrassPrecip;
 
 	Bool* someKillage;
+
+	/** \brief this cell's version of the \ref UseCheatgrassWildfire variable
+	 *         from the \ref MORTALITY module. */
+	Bool UseCheatgrassWildfire;
 	
 	/* ---------------- accumulators -------------------- */
 	StatType *_Dist, *_Ppt, *_Temp,
