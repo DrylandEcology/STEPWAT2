@@ -42,12 +42,11 @@ int _numberOfEvents = 0;
  * supposed to occur in the given year it will provides seeds for the requested
  * species in the requested cell.
  * 
- * \param year is the current year. I chose to input year as a perameter,
- *             rather than infer it from a cell, to make sure that there is no
- *             descrepency between the current year of any 
- *             [cell](\ref CellType)
+ * \param year is the current year. Year is input as a parameter, rather than 
+ *             infered from a cell, to make sure that there is no descrepency 
+ *             between the current year of any [cell](\ref CellType).
  * 
- * \return TRUE if colonization ocurred in any cell.
+ * \return TRUE if colonization occurred in any cell.
  * \return FALSE if nothing colonized in any cell.
  * 
  * \sideeffect
@@ -64,7 +63,7 @@ Bool colonize(int year) {
   
   // While the startYear is earlier than the current year.
   while(i < _numberOfEvents && _allEvents[i].startYear <= year) {
-    // If the event is occuring this year
+    // If the event is occurring this year
     if(_allEvents[i].startYear + _allEvents[i].duration > year) {
       event = &_allEvents[i];
 
@@ -74,6 +73,9 @@ Bool colonize(int year) {
           // chance to establish.
           Species[event->species]->seedsPresent = TRUE;
           Species[event->species]->use_me = TRUE;
+          Species[event->species]->use_dispersal = TRUE;
+
+          printf("Year: %d: Colonizing cell (%d,%d) with %s.\n", year, cell / grid_Cols, cell % grid_Cols, Species[event->species]->name);
           unload_cell();
       }
       somethingColonized = TRUE;
@@ -104,11 +106,11 @@ void initColonization(char* fileName) {
   char inbuf[128];
   char name[5];
   int valuesRead;
-  int numOfEvents = 0;
   int fromCell, toCell;
   int startYear;
   int duration;
   int i, j;
+  _numberOfEvents = 0;
 
   // Open the file.
   FILE* file = fopen(fileName, "r");
@@ -153,7 +155,7 @@ void initColonization(char* fileName) {
     }
         
     /* ----------------------- Input Validation ------------------------ */
-    if(numOfEvents >= MAX_COLONIZATION_EVENTS) {
+    if(_numberOfEvents >= MAX_COLONIZATION_EVENTS) {
       LogError(logfp, LOGWARN, "Error reading colonization file:"
                "A maximum of %d colonization events can be specified. "
                "The rest of the events will be ignored.", 
@@ -189,12 +191,12 @@ void initColonization(char* fileName) {
     }
 
     /* ------------- Add the event to our temporary array -------------- */
-    tempEvents[numOfEvents].fromCell = fromCell;
-    tempEvents[numOfEvents].toCell = toCell;
-    tempEvents[numOfEvents].duration = duration;
-    tempEvents[numOfEvents].species = Species_Name2Index(name);
-    tempEvents[numOfEvents].startYear = startYear;
-    numOfEvents++;
+    tempEvents[_numberOfEvents].fromCell = fromCell;
+    tempEvents[_numberOfEvents].toCell = toCell;
+    tempEvents[_numberOfEvents].duration = duration;
+    tempEvents[_numberOfEvents].species = Species_Name2Index(name);
+    tempEvents[_numberOfEvents].startYear = startYear;
+    _numberOfEvents++;
     unload_cell();
   }
 
@@ -204,31 +206,37 @@ void initColonization(char* fileName) {
     _allEvents = 0;
   }
 
+  // If there were no events specified we are done.
+  if(_numberOfEvents == 0) {
+    Mem_Free(tempEvents);
+    fclose(file);
+    return;
+  }
+
   /* ------------ Allocate and assign the file level variables ----------- */
   // This algorithm sorts the events by startYear as is copies them over.
   // Sorting the entries now will save time later.
   int lowestYear, lowestYearIndex;
-  _allEvents = Mem_Calloc(numOfEvents, sizeof(ColonizationEvent), "initColonization");
-  for(i = 0; i < numOfEvents; ++i) {
-    // I set the default to 32,767 meaning if the simulation is run for
-    // 32,768 years there could be a bug. However, I doubt that would ever
-    // happen.
-    lowestYear = 32767;
-    lowestYearIndex = 0;
+  _allEvents = Mem_Calloc(_numberOfEvents, sizeof(ColonizationEvent), 
+                          "initColonization");
+  for(i = 0; i < _numberOfEvents; ++i) {
+    lowestYear = 0;
+    lowestYearIndex = -1;
 
     // Find the lowest start year.
-    for(j = 0; j < numOfEvents; ++j){
-      if(tempEvents[j].startYear < lowestYear) {
+    for(j = 0; j < _numberOfEvents; ++j){
+      // (If this is the lowest start year we've seen) && it hasn't been used.
+      if((tempEvents[j].startYear < lowestYear || lowestYearIndex == -1) &&
+         tempEvents[j].startYear != -1) {
         lowestYear = tempEvents[j].startYear;
         lowestYearIndex = j;
       }
     }
-
     _copyEvent(&_allEvents[i], &tempEvents[lowestYearIndex]);
-    // This ensures we never pick that index again.
-    tempEvents[lowestYearIndex].startYear = 32767;
+
+    // Mark this event as processed.
+    tempEvents[lowestYearIndex].startYear = -1;
   }
-  _numberOfEvents = numOfEvents;
 
   // Free up the memory we used.
   Mem_Free(tempEvents);
