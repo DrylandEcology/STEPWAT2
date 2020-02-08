@@ -1,12 +1,8 @@
-# phen definition file STEPPEWAT
-
-# Monthly phenological activity values for each resource
-# group in the STEPWAT model in percent.  Activity is defined as the 
-# growth activity for that month. Values do not need to sum to 100 percent.
-# First column is the rgroup name as defined in the 
-# rgroup parameters file for STEPPE.  The name must be
-# spelled exactly the same.
-# Remaining columns are monthly activity values.  
+# Monthly phenological activity values for each functional group.
+# Activity is defined as the "competitive" ability of each functional group
+# to grow in response to extracted water for each month. Values do not need to sum to 1.
+# First column is the rgroup name as defined in rgroup.in.
+# The name must be spelled exactly the same.
 
 # Group     	Jan   Feb   Mar  Apr  May  Jun  Jul  Aug  Sep   Oct   Nov   Dec
 sagebrush	   	.0125 .0125 .10  .125 .15  .25  .15  .10  .0625 .0125 .0125 .0125

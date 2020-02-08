@@ -1,3 +1,6 @@
+#These root fractions do not need to sum to 1.0.
+#They represent the “competitive” ability of a functional group to extract water from each soil layer
+
 #GrpName       %L1   %L2    %L3    %L4    %L5		%L6
 sagebrush      	.05	   .20	 .25	.25	   .20	   .05
 a.cool.forb		.40    .30	 .20	.10	   .00	   .00
