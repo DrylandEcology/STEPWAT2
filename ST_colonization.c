@@ -75,7 +75,6 @@ Bool colonize(int year) {
           Species[event->species]->use_me = TRUE;
           Species[event->species]->use_dispersal = TRUE;
 
-          printf("Year: %d: Colonizing cell (%d,%d) with %s.\n", year, cell / grid_Cols, cell % grid_Cols, Species[event->species]->name);
           unload_cell();
       }
       somethingColonized = TRUE;

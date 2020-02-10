@@ -55,18 +55,18 @@ void logProgress(int iteration, int year, Status status){
 
 	switch(status){
 		case SPINUP:
-			strcpy(progressString, "Spinning up |");
-			index += 13;	// We have copied over 13 characters
+			strcpy(progressString, "Spinning up  |");
+			index += 14;	// We have copied over 14 characters
             needsProgressBar = TRUE;
 			break;
 		case SIMULATION:
 			strcpy(progressString, "Simulating   |");
-			index += 14;	// We have copied over 12 characters
+			index += 14;	// We have copied over 14 characters
 			needsProgressBar = TRUE;
 			break;
 		case OUTPUT:
 			strcpy(progressString, "Writing files");
-			index += 13;	// We have copied over 12 characters
+			index += 13;	// We have copied over 13 characters
 			break;
 		case DONE:
 			strcpy(progressString, "Done");
