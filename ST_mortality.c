@@ -1303,15 +1303,15 @@ double _getCheatgrassBiomass() {
 Bool _simulateWildfire(double cheatgrassBiomass) {
   GrpIndex rg;
   double percentCover = _getCheatgrassCover(cheatgrassBiomass);
-  Bool wildfireHappened = FALSE;
+  Bool wildfire = FALSE;
 
   if(RandUni(&mortality_rng) < _getWildfireProbability(percentCover)) {
-    wildfireHappened = TRUE;
+    wildfire = TRUE;
     ForEachGroup(rg) {
       RGroup[rg]->wildfire = 1;
       RGroup[rg]->killyr = Globals->currYear;
     }
   }
 
-  return wildfireHappened;
+  return wildfire;
 }
