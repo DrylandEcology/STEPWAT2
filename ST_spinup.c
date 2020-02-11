@@ -38,6 +38,7 @@ extern SW_SOILWAT SW_Soilwat;
 extern SW_SITE SW_Site;
 extern SW_VEGPROD SW_VegProd;
 extern SW_WEATHER SW_Weather;
+extern Bool prepare_IterationSummary;
 
 extern pcg32_random_t grid_rng;         // Gridded mode's unique RNG.
 
@@ -299,6 +300,9 @@ static void _run_spinup(void)
     // turn it off, then turn it back on afterwards.
     Bool myUseSeedDispersal = UseSeedDispersal;
     UseSeedDispersal = FALSE;
+
+    // This is a flag from SOILWAT2. It MUST be FALSE during spinup.
+    prepare_IterationSummary = FALSE;
 
 	Bool killedany;             // killedany for mortality functions
 

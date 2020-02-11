@@ -204,6 +204,13 @@ struct grid_cell_st
 	SXW_resourceType* mySXWResources;
 	/* ------------------ End SXW ----------------------- */
 
+    /* ----------------- SOILWAT2 output ---------------- */
+    /**
+     * \brief If TRUE this cell should print SOIWLAT2 output.
+     */
+    Bool generateSWOutput;
+    /* --------------- End SOILWAT2 output -------------- */
+
 	/* ------------------- Soils ------------------------ */
 	/** \brief  Soil layer information specific to this cell. */
 	SoilType mySoils;

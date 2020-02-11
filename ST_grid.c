@@ -107,6 +107,8 @@ SXW_resourceType* getSXWResources(void);
 transp_t* getTranspWindow(void);
 void copy_sxw_variables(SXW_t* newSXW, SXW_resourceType* newSXWResources, transp_t* newTransp_window);
 
+extern Bool prepare_IterationSummary; // defined in `SOILWAT2/SW_Output.c`
+
 /***********************************************************/
 /* --------- Locally Used Function Declarations ---------- */
 /***********************************************************/
@@ -449,11 +451,9 @@ static void _init_grid_inputs(void)
 
     for(i = 0; i < grid_Rows; ++i) {
         for(j = 0; j < grid_Cols; ++j) {
-            load_cell(i, j);
             gridCells[i][j].DuringSpinup = FALSE;
         }
     }
-    unload_cell();
 }
 
 /**
@@ -492,6 +492,10 @@ static void _init_stepwat_inputs(void)
 	/* Loop through all gridCells. */
 	for(i = 0; i < grid_Rows; ++i){
 		for(j = 0; j < grid_Cols; ++j){
+            // This MUST happen before the first ever call to load_cell. 
+            // Otherwise, SOILWAT2 output will never happen.
+            gridCells[i][j].generateSWOutput = prepare_IterationSummary;
+
 			load_cell(i, j); 				     // Load this cell into the global variables
 			parm_Initialize();				     // Initialize the STEPWAT variables
 			gridCells[i][j].myGroup = RGroup;    // This is necessary because load_cell only points RGroup to our cell-specific
@@ -887,6 +891,8 @@ void load_cell(int row, int col){
 
 	/* Copy this cell's SXW variables into the local variables in sxw.c */
 	copy_sxw_variables(gridCells[row][col].mySXW, gridCells[row][col].mySXWResources, gridCells[row][col].myTranspWindow);
+
+    prepare_IterationSummary = gridCells[row][col].generateSWOutput;
 
 	// If we have read in the soil information num_layers will be > 0.
 	// Otherwise we haven't read the file so there is no point wasting time on this.
