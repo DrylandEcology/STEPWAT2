@@ -41,6 +41,9 @@
 #include "ST_spinup.h"
 #include "ST_progressBar.h"
 #include "ST_colonization.h"
+#include "sw_src/SW_Output.h"
+#include "sw_src/SW_Output_outtext.h"
+#include "sw_src/SW_Output_outarray.h"
 
 int grid_Cells;
 Bool UseDisturbances, UseSoils; //these are treated like booleans
@@ -108,6 +111,8 @@ transp_t* getTranspWindow(void);
 void copy_sxw_variables(SXW_t* newSXW, SXW_resourceType* newSXWResources, transp_t* newTransp_window);
 
 extern Bool prepare_IterationSummary; // defined in `SOILWAT2/SW_Output.c`
+extern Bool print_IterationSummary;   // defined in `SOILWAT2/SW_Output_outtext.c`
+extern Bool storeAllIterations; // defined in `SOILWAT2/SW_Output.c`
 
 /***********************************************************/
 /* --------- Locally Used Function Declarations ---------- */
@@ -222,6 +227,10 @@ void runGrid(void)
 				load_cell(i, j);
 				Plot_Initialize();
 				Globals->currIter = iter;
+
+                if (prepare_IterationSummary) {
+			        print_IterationSummary = (Bool) (Globals->currIter == SuperGlobals.runModelIterations);
+                }
 			}
 		}
 		unload_cell(); // Reset the global variables
@@ -464,6 +473,13 @@ static void _init_grid_inputs(void)
 static void _init_SXW_inputs(Bool init_SW, char *f_roots)
 {
 	SXW_Init(init_SW, f_roots);	// initializes soilwat
+    SW_OUT_set_ncol(); // set number of output columns
+	SW_OUT_set_colnames(); // set column names for output files
+    if (prepare_IterationSummary) {
+		SW_OUT_create_summary_files();
+		// allocate `p_OUT` and `p_OUTsd` arrays to aggregate SOILWAT2 output across iterations
+		setGlobalSTEPWAT2_OutputVariables();
+    }
 	if (init_SW)
 	{
 		char aString[2048];
