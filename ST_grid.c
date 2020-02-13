@@ -212,9 +212,16 @@ void runGrid(void)
 	char SW_prefix_permanent[2048];
 	sprintf(SW_prefix_permanent, "%s/%s", grid_directories[GRID_DIRECTORY_STEPWAT_INPUTS], SW_Weather.name_prefix);
 
+    SW_OUT_set_ncol(); // set number of output columns
+	SW_OUT_set_colnames(); // set column names for output files
+    if (prepare_IterationSummary) {
+		SW_OUT_create_summary_files();
+		// allocate `p_OUT` and `p_OUTsd` arrays to aggregate SOILWAT2 output across iterations
+		setGlobalSTEPWAT2_OutputVariables();
+    }
+
 	for (iter = 1; iter <= SuperGlobals.runModelIterations; iter++)
 	{ //for each iteration
-
 		/*
 		 * 06/15/2016 (akt) Added resetting correct historical weather file path,
 		 * as it was resetting to original path value (that was not correct for grid version)from input file after every iteration
@@ -321,8 +328,11 @@ void runGrid(void)
 		for(i = 0; i < grid_Rows; ++i){
 			for(j = 0; j < grid_Cols; ++j){
 				load_cell(i, j);
+                int realYears = SuperGlobals.runModelYears;
+                SuperGlobals.runModelYears *= (grid_Cols * grid_Rows);
 				SXW_Reset(gridCells[i][j].mySXW->f_watin);
 				unload_cell();
+                SuperGlobals.runModelYears = realYears;
 			}
 		}
 		Mem_Free(SW_Soilwat.hist.file_prefix);
@@ -472,14 +482,10 @@ static void _init_grid_inputs(void)
  */
 static void _init_SXW_inputs(Bool init_SW, char *f_roots)
 {
+    int realYears = SuperGlobals.runModelYears;
+    SuperGlobals.runModelYears *= (grid_Cols * grid_Rows);
 	SXW_Init(init_SW, f_roots);	// initializes soilwat
-    SW_OUT_set_ncol(); // set number of output columns
-	SW_OUT_set_colnames(); // set column names for output files
-    if (prepare_IterationSummary) {
-		SW_OUT_create_summary_files();
-		// allocate `p_OUT` and `p_OUTsd` arrays to aggregate SOILWAT2 output across iterations
-		setGlobalSTEPWAT2_OutputVariables();
-    }
+    SuperGlobals.runModelYears = realYears;
 	if (init_SW)
 	{
 		char aString[2048];
