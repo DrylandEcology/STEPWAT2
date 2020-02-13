@@ -126,8 +126,8 @@ void _sxw_update_resource(void) {
 	ForEachGroup(g)
 	{
 //printf("%s: _resource_cur pre-multiplication = %f. Post multiplication = %f.\n",RGroup[g]->name, 
-                                //_resource_cur[g], SXWResources->_resource_cur[g] * SXWResources->_bvt);
-		SXWResources->_resource_cur[g] = SXWResources->_resource_cur[g] * SXWResources->_bvt;
+                                //_resource_cur[g], SXWResources->_resource_cur[g] * RGroup[g]->_bvt);
+		SXWResources->_resource_cur[g] = SXWResources->_resource_cur[g] * RGroup[g]->_bvt;
 	}
 
     Mem_Free(sizes);

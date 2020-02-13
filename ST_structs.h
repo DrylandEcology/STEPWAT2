@@ -29,6 +29,7 @@
  * \brief Holds information on perennial plant individuals. 
  * 
  * Most of the code associated with this struct is found in \ref ST_indivs.c.
+ * NOTE: If you add a variable to this struct, make sure you add code to \ref copy_individual()
  * 
  * \sa indiv_ann_st
  * 
@@ -131,7 +132,7 @@ struct indiv_ann_st {
  * This struct contains constants and variables that differ between
  * species. \ref Species is a global array of these structs.
  * 
- * \sa Species
+ * NOTE: If you add a variable to this struct, make sure you add code to \ref copy_species()
  * 
  * \ingroup SPECIES
  */
@@ -272,7 +273,7 @@ struct species_st {
  * Some fields are constant and some are variable, so be careful what you are modifying. 
  * \ref RGroup is a global array of these structs used in STEPWAT2.
  * 
- * \sa RGroup 
+ * NOTE: If you add a variable to this struct, make sure you add code to \ref copy_rgroup()
  * 
  * \ingroup RGROUP
  */
@@ -308,7 +309,10 @@ struct resourcegroup_st {
         pr,
       /** \brief Fraction of the total biomass for this vegtype contributed by this resgroup.
        * \sa veg_prod_type */
-        rgroupFractionOfVegTypeBiomass;
+        rgroupFractionOfVegTypeBiomass,
+      /** \brief ratio of biomass/m2 / transp/m2.
+       * Used in \ref sxw.c */
+        _bvt;
       /** \brief Number of species established in group. */
   SppIndex est_count,
       /** \brief Array of indexes of species established in this resgroup. 

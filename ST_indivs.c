@@ -131,9 +131,15 @@ Bool indiv_New( SppIndex sp) {
   return TRUE;
 }
 
-/* Copy one individual's information to another individual. 
-   Note: this does not modify either individual's linked list functionality.
-   Both individuals MUST be allocated. */
+/** \brief Copy one individual's information to another individual. 
+ * 
+ *  \param src is the source [IndivType](\ref IndivType) to copy from.
+ *  \param dest is the destination [IndivType](\ref IndivType) to copy to.
+ * 
+ *  Note: this does not modify either individual's linked list functionality.
+ * 
+ *  Both individuals MUST be allocated prior to calling this function. 
+ */
 void copy_individual(const IndivType* src, IndivType* dest){
   dest->id = src->id;
   dest->normal_growth = src->normal_growth;
@@ -166,11 +172,11 @@ void copy_individual(const IndivType* src, IndivType* dest){
  * 
  * \sa indiv_New() which calls this function.
  * 
+ * \author Chris Bennett in 2000
+ * 
  * \ingroup INDIVIDUAL_PRIVATE
  */
 static IndivType *_create ( void) {
-/* HISTORY */
-/* Chris Bennett @ LTER-CSU 6/15/2000            */
   IndivType *p;
 
   p = (IndivType *) Mem_Calloc( 1, sizeof(IndivType),

@@ -1,10 +1,10 @@
 # sxw prod definition file STEPPEWAT
-
-#Production Coefficients for STEPWAT
+# Production Coefficients for STEPWAT
 
 # These values are used to convert yearly biomass
 # from STEPPE to monthly production values for SOILWAT
 
+######################### LITTER ###########################
 # LITTER - use the maximum value from the converted biomass 
 #          to multiply by this number to compute a litter 
 #          value in g/m^2.  Needn't sum to 1.0.
@@ -12,19 +12,17 @@
 # PCT_LIVE - RGroups pct live each month is used to calc
 #            VegProdTypes pct live for soilwat.
 
-# LITTER 
-0.75    # January            
-0.80    # February          
-0.85    # March            
-0.75    # April            
-0.36    # May            
-0.31    # June            
-0.28    # July            
-0.29    # August            
-0.38    # September            
-0.46    # October            
-0.58    # November            
-0.68    # December
+# Group		Jan	Feb	Mar	Apr	May	Jun	Jul	Aug	Sep	Oct	Nov	Dec
+sagebrush	0.41	0.42	0.42	0.37	0.42	0.46	0.46	0.60	0.55	0.53	0.51	0.49
+a.cool.forb	0.50	0.53	0.57	0.53	0.26	0.23	0.20	0.25	0.32	0.36	0.41	0.47
+a.warm.forb	0.50	0.53	0.57	0.53	0.26	0.23	0.20	0.25	0.32	0.36	0.41	0.47
+p.cool.forb	0.50	0.53	0.57	0.53	0.26	0.23	0.20	0.25	0.32	0.36	0.41	0.47
+p.warm.forb	0.50	0.53	0.57	0.53	0.26	0.23	0.20	0.25	0.32	0.36	0.41	0.47
+a.cool.grass	0.50	0.53	0.57	0.53	0.26	0.23	0.20	0.25	0.32	0.36	0.41	0.47
+p.cool.grass	0.50	0.53	0.57	0.53	0.26	0.23	0.20	0.25	0.32	0.36	0.41	0.47
+p.warm.grass	0.50	0.53	0.57	0.53	0.26	0.23	0.20	0.25	0.32	0.36	0.41	0.47
+shrub		0.41	0.42	0.42	0.37	0.42	0.46	0.46	0.60	0.55	0.53	0.51	0.49
+succulents	0.50	0.53	0.57	0.53	0.26	0.23	0.20	0.25	0.32	0.36	0.41	0.47
 
 [end]  # section end
 
@@ -50,6 +48,7 @@ p.cool.grass   .50  .50  .50  .70  0.9  1.0  1.0  1.0  .90  .70  .50   .50
 p.warm.grass   .50  .50  .50  .50  .70  .90  1.0  1.0  1.0  .90  .70   .50
 shrub	       .90  .90  .90  .95  .95  1.0  1.0  1.0  1.0  .95  .90   .90
 succulents     .95  .95  .95  .95  1.0  1.0  1.0  1.0  1.0  .95  .95   .95
+
 [end]  # section end
 
 # PCTLive
@@ -73,5 +72,6 @@ p.cool.grass   .00  .10  .10  .20  .40  .60  .60  .40  .20  .10  .00   .00
 p.warm.grass   .00  .00  .10  .20  .40  .40  .60  .60  .40  .20  .10   .00
 shrub          .10  .10  .20  .30  .40  .60  .60  .40  .40  .20  .10   .10
 succulents     .00  .00  .10  .20  .40  .60  .60  .60  .40  .20  .10   .00
+
 [end]  # section end
 
