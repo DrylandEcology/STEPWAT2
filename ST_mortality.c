@@ -24,6 +24,7 @@
 #include <stdio.h>
 #include <math.h>
 
+#include "ST_mortality.h"
 #include "sw_src/filefuncs.h"
 #include "generic.h"
 #include "rands.h"
@@ -44,18 +45,9 @@ void indiv_Kill_Complete( IndivType *ndv, int killType);
 void check_sizes(const char *); /* found in main */
 void _delete(IndivType *ndv);
 
-/*------------------------------------------------------*/
-/* Modular functions only used on one or two specific   */
-/* places; that is, they are not generally useful       */
-/* (like C++ friend functions) but have to be declared. */
-void mort_Main( Bool *killed);
-void mort_EndOfYear( void);
-void proportion_Recovery(void);
-void grazing_EndOfYear( void);
 void rgroup_DropSpecies(SppIndex sp);
 
-/*********** Locally Used Function Declarations ************/
-/***********************************************************/
+/* ---- Local function declarations. Treat these functions as private. ----- */
 static void _pat( const SppIndex sp);
 static void _mound( const SppIndex sp);
 static void _burrow( const SppIndex sp);
@@ -63,12 +55,8 @@ static void _succulents( const SppIndex sp);
 static void _slow_growth( const SppIndex sp);
 static void _no_resources( GrpIndex rg);
 static void _age_independent( const SppIndex sp);
-static void _stretched_clonal( GrpIndex rg, Int start, Int last,
-                           IndivType *nlist[]);
-//Nov 4th 15 -AT - Made below two function non-static as they also getting call from main.c
-void _kill_annuals(void);
-void _kill_extra_growth(void);
-void _kill_maxage(void);
+static void _stretched_clonal( GrpIndex rg, Int start, Int last, 
+                              IndivType *nlist[]);
 void _updateCheatgrassPrecip(int year);
 double _getCheatgrassCover(double biomass);
 double _getWildfireProbability(double percentCover);
@@ -76,23 +64,7 @@ Bool _simulateWildfire(double cheatgrassCover);
 Bool _simulatePrescribedFire(void);
 double _getCheatgrassBiomass(void);
 
-
-/************ File-Level Variable Declarations *************/
-/***********************************************************/
-
-/**
- * \brief TRUE if a function in ST_mortality.c killed an individual.
- * \ingroup MORTALITY_PRIVATE
- */
-Bool *_SomeKillage;
-
-/**
- * \brief A flag for turning cheatgrass-driven wildfire on and off.
- * \ingroup MORTALITY
- */
-Bool UseCheatgrassWildfire;
-
-/************************* Mortality struct(s) *******************************/
+/********************** Private mortality objects ****************************/
 /**
  * \brief [Mortality](\ref MORTALITY)'s private precipitation information.
  * 
@@ -102,8 +74,11 @@ Bool UseCheatgrassWildfire;
  */
 CheatgrassPrecip* cheatgrassPrecip = 0;
 
-extern
-  pcg32_random_t mortality_rng; //declared in ST_main.c
+/**
+ * \brief TRUE if a function in ST_mortality.c killed an individual.
+ * \ingroup MORTALITY_PRIVATE
+ */
+Bool *_SomeKillage = 0;
 
 /**
  * \brief Performs mortality that occurs during the growing season.
@@ -180,7 +155,7 @@ void mort_Main( Bool *killed) {
   ForEachGroup(rg) {
     g = RGroup[rg];
     if (g->est_count == 0) continue;
-    /* annuals are not subject to these sources of mortality and instead die in _kill_annuals */
+    /* annuals are not subject to these sources of mortality and instead die in killAnnuals */
     if (g->max_age == 1) continue;
 
     /* Calculate PR at the functional group level: resources required/resources available */
@@ -342,7 +317,7 @@ void mort_EndOfYear(void) {
     }
 
     /* If the current year is a fire year, then remove extra_growth here
-      instead of in _kill_extra_growth called in ST_main.c. Otherwise,
+      instead of in killExtraGrowth called in ST_main.c. Otherwise,
       biomass will be non-zero in a fire year with complete killing */
     if (Globals->currYear == RGroup[rg]->killyr) {
       if (!RGroup[rg]->use_extra_res){
@@ -629,7 +604,7 @@ void proportion_Recovery(void) {
 
             ForEachEstSpp(sp, rg, i) {
 
-                /* Annuals have already been killed in _kill_annuals and are not
+                /* Annuals have already been killed in killAnnuals and are not
                  * subject to proportion recovery after fire */
                 if (Species[sp]->max_age == 1)
                     continue;
@@ -1135,7 +1110,7 @@ static void _stretched_clonal( GrpIndex rg, Int start, Int last,
  * 
  * \ingroup MORTALITY_PRIVATE
  */
-void _kill_annuals( void) {
+void killAnnuals( void) {
   GrpIndex rg;
   SppIndex sp;
   Int i;
@@ -1164,7 +1139,7 @@ void _kill_annuals( void) {
  * 
  * \ingroup MORTALITY_PRIVATE
  */
-void _kill_extra_growth(void) {
+void killExtraGrowth(void) {
     IntU j;
     GrpIndex rg;
     SppIndex sp;
@@ -1183,8 +1158,8 @@ void _kill_extra_growth(void) {
             /* Now FINALLY remove individuals that were killed because of fire or grazing and set 
              * relsizes to 0, and remove the Species if the following cases are true */
             if (getSpeciesRelsize(sp) <= 0.0) {
-                // printf("s->relsize in _kill_extra_growth check1 before = %f\n", Species[sp]->relsize);
-                // printf("s->relsize in _kill_extra_growth check1 after = %f\n", Species[sp]->relsize);
+                // printf("s->relsize in killExtraGrowth check1 before = %f\n", Species[sp]->relsize);
+                // printf("s->relsize in killExtraGrowth check1 after = %f\n", Species[sp]->relsize);
 
                 IndivType *p1 = Species[sp]->IndvHead, *t1;
                 while (p1) {
@@ -1208,7 +1183,7 @@ void _kill_extra_growth(void) {
  * 
  * \ingroup MORTALITY_PRIVATE
  */
-void _kill_maxage(void) {
+void killMaxage(void) {
     SppIndex s;
     IndivType *i;
 
@@ -1304,7 +1279,7 @@ Bool _simulateWildfire(double cheatgrassBiomass) {
   GrpIndex rg;
   double percentCover = _getCheatgrassCover(cheatgrassBiomass);
   Bool wildfire = FALSE;
-
+  
   if(RandUni(&mortality_rng) < _getWildfireProbability(percentCover)) {
     wildfire = TRUE;
     ForEachGroup(rg) {

@@ -24,6 +24,7 @@
 #define STEPPE_STRUCT_DEF
 
 #include "generic.h"
+#include "ST_mortality.h"
 
 /**
  * \brief Holds information on perennial plant individuals. 
@@ -734,67 +735,5 @@ struct superglobals_st {
 
     IntL randseed;
 };
-
-/**
- * \brief Information used when simulating the cheatgrass-wildfire loop.
- * 
- * The biggest determinant in cheatgrass driven wildfire is precipitation,
- * specifically precipitation in Spring and Winter. This struct stores the 
- * values from previous Spring and Winter precipitation as well as the running
- * averages of both.
- * 
- * Note that "year" in this context refers to the water year, which runs from
- * October to September.
- * 
- * \sa _updateCheatgrassPrecip, where this struct is updated each year.
- * \author Chandler Haukap
- * \date 13 January 2020
- * \ingroup MORTALITY
- */
-struct CheatgrassPrecip_st {
-  /** \brief The Spring precipitation in the previous 3 years.
-   * The array is indexed from newest to oldest, meaning prevSpring[0] is the 
-   * most recent value. */
-  double prevSprings[3];
-  /** \brief The precipitation in the last Winter, meaning the Oct-Dec
-   * precipitation from 2 years ago and the Jan-Mar precipitation from last 
-   * year. */
-  double lastWinter;
-  /** \brief The current year's Spring precipitation. */
-  double currentSpring;
-
-  /** \brief The running average of Spring precipitation. */
-  double springMean;
-  /** \brief The running average of Winter precipitation. */
-  double winterMean;
-
-  /** \brief The sum of October - December precipitation information from last
-   *         year.
-   * 
-   * The variable we use to get precipitation information, \ref SXW, stores 
-   * values for the current year, but we need the values from 2 years ago to 
-   * calcualte last year's winter precipitation. We therefore store it here,
-   * even though it does make the struct a little more confusing. 
-   */ 
-  double lastOctThruDec;
-  /** \brief The sum of October - December precipitation information from the
-   *         current year.
-   * 
-   * The variable we use to get precipitation information, \ref SXW, stores 
-   * values for the current year, but we need the values from 2 years ago to 
-   * calcualte last year's winter precipitation. We therefore store it here,
-   * even though it does make the struct a little more confusing. 
-   */ 
-  double thisOctThruDec;
-  /** \brief The sum of January - March precipitation information from last
-   *         year.
-   * 
-   * The variable we use to get precipitation information, \ref SXW, stores 
-   * values for the current year, but we need the values from 1 year ago to 
-   * calcualte last year's winter precipitation. We therefore store it here,
-   * even though it does make the struct a little more confusing. 
-   */ 
-  double thisJanThruMar;
-} typedef CheatgrassPrecip;
 
 #endif

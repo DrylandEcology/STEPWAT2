@@ -602,7 +602,7 @@ void rgroup_Grow(void) {
  * 
  * When there are resources beyond the minimum necessary for "normal" growth, 
  * the extra resources are converted to superfluous growth in the current year 
- * and is removed at the end of the year in _kill_extra_growth. 
+ * and is removed at the end of the year in killExtraGrowth. 
  * 
  * \param rg the index in \ref RGroup of the resource group.
  * 
