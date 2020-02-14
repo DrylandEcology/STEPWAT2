@@ -64,7 +64,6 @@ testing.sagebrush.MT_drs/Stepwat_Inputs/Input/sxw/Input/outsetup_v30.in
 *.out
 *.log
 
-*/Output
 */Stepwat_Inputs/Output
 
 # Netbeans project files
