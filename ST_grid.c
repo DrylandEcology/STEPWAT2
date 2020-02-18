@@ -1067,7 +1067,7 @@ static int _get_value_index(char* s, char seperator, int nSeperators)
 
 /* Read the grid_soils.csv file and assign values to all gridCells.mySoils variables. */
 static void _read_soils_in(void){
-	int i, row, col, lineReadReturnValue;
+	int i, j, row, col, lineReadReturnValue;
 	char buf[4096];
 
 	/* tempSoil is allocated the maximum amount of memory that a SoilType could need.
@@ -1116,7 +1116,7 @@ static void _read_soils_in(void){
 		/* If we get here we have successfully populated the first layer of soil. 
 		   Now we must populate the rest. */
 		else {
-			for(int j = 1; j < tempSoil.num_layers; ++j){
+			for(j = 1; j < tempSoil.num_layers; ++j){
 				if(!GetALine(f, buf)){
 					LogError(logfp, LOGFATAL, "Too few lines in %s", grid_files[GRID_FILE_SOILS]);
 				}
