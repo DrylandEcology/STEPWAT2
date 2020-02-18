@@ -65,7 +65,7 @@ void logProgress(int iteration, int year, Status status){
 			needsProgressBar = TRUE;
 			break;
 		case OUTPUT:
-			strcpy(progressString, "Writing files");
+			strcpy(progressString, "Writing files...                   ");
 			index += 13;	// We have copied over 13 characters
 			break;
 		case DONE:
