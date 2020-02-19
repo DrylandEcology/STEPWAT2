@@ -251,6 +251,9 @@ typedef enum
     GRID_FILE_SPINUP_SPECIES,
 	/** \brief Location in \ref grid_files of the colonization file name. */
 	GRID_FILE_COLONIZATION,
+    /** \brief Location in \ref grid_files of the SOILWAT2 output cells file. */
+    GRID_FILE_SOILWAT2_OUTPUT,
+
 	/** \brief Location in \ref grid_files of the STEPWAT2 input file name. */
     GRID_FILE_FILES,
 	/** \brief Location in \ref grid_files of the max rgroup and species file
@@ -330,6 +333,12 @@ char *grid_directories[N_GRID_DIRECTORIES];
  * \ingroup GRID
  */
 Bool writeIndividualFiles;
+
+/**
+ * \brief Set to TRUE to tell the gridded mode to output SOILWAT2 files.
+ * \ingroup GRID
+ */
+Bool writeSOILWAT2Output;
 
 /**************************** Exported Functions **********************************/
 /* See ST_grid.c for documentation of these functions. */

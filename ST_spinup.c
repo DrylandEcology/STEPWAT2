@@ -279,7 +279,7 @@ void loadSpinupConditions(){
 			copy_environment(&spinupCells[row][col].myEnvironment, Env);
 			copy_plot(&spinupCells[row][col].myPlot, Plot);
 			copy_succulent(&spinupCells[row][col].mySucculent, Succulent);
-
+            
 			unload_cell();
 		}
 	}
@@ -317,7 +317,7 @@ static void _run_spinup(void)
     _kill_extra_growth(); 		// Kill superfluous growth	
 
     // Turn UseSeedDispersal back on (if it was ever on)
-    UseSeedDispersal = myUseSeedDispersal;		
+    UseSeedDispersal = myUseSeedDispersal;
 }
 
 /**

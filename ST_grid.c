@@ -48,7 +48,7 @@
 #include "sw_src/SW_Output_outarray.h"
 
 int grid_Cells;
-Bool UseDisturbances, UseSoils; //these are treated like booleans
+Bool UseDisturbances, UseSoils;
 
 /***************************** Externed variables **********************************/
 /* Note that in an ideal world we wouldn't need to extern any variables because 
@@ -134,6 +134,7 @@ static void _read_spinup_species(void);
 static void _read_maxrgroupspecies(void);
 static void _read_grid_setup(void);
 static void _read_files(void);
+static void _init_soilwat_outputs(char* fileName);
 static void _init_stepwat_inputs(void);
 static void _init_grid_inputs(void);
 static void _separateSOILWAT2Output(void);
@@ -219,9 +220,11 @@ void runGrid(void)
 	char SW_prefix_permanent[2048];
 	sprintf(SW_prefix_permanent, "%s/%s", grid_directories[GRID_DIRECTORY_STEPWAT_INPUTS], SW_Weather.name_prefix);
 
+
+  _init_soilwat_outputs(grid_files[GRID_FILE_SOILWAT2_OUTPUT]);
     SW_OUT_set_ncol(); // set number of output columns
 	SW_OUT_set_colnames(); // set column names for output files
-    if (prepare_IterationSummary) {
+    if (_getNumberSOILWAT2OutputCells() > 0) {
 		SW_OUT_create_summary_files();
 		// allocate `p_OUT` and `p_OUTsd` arrays to aggregate SOILWAT2 output across iterations
 		setGlobalSTEPWAT2_OutputVariables();
@@ -242,7 +245,7 @@ void runGrid(void)
 				Plot_Initialize();
 				Globals->currIter = iter;
 
-                if (prepare_IterationSummary) {
+                if (_getNumberSOILWAT2OutputCells() > 0) {
 			        print_IterationSummary = (Bool) (Globals->currIter == SuperGlobals.runModelIterations);
                 }
 			}
@@ -336,7 +339,7 @@ void runGrid(void)
 			for(j = 0; j < grid_Cols; ++j){
 				load_cell(i, j);
                 int realYears = SuperGlobals.runModelYears;
-                SuperGlobals.runModelYears *= (grid_Cols * grid_Rows);
+                SuperGlobals.runModelYears *= _getNumberSOILWAT2OutputCells();
 				SXW_Reset(gridCells[i][j].mySXW->f_watin);
 				unload_cell();
                 SuperGlobals.runModelYears = realYears;
@@ -506,6 +509,44 @@ static void _init_SXW_inputs(Bool init_SW, char *f_roots)
 	}
 }
 
+static void _init_soilwat_outputs(char* fileName) {
+  if(!writeSOILWAT2Output) {
+    return;
+  }
+
+  char buffer[2048];
+  int cell;
+  FILE* inFile = fopen(fileName, "r");
+  if(!inFile) {
+    LogError(logfp, LOGFATAL, "Could not open SOILWAT2 output cells file."
+             "\n\tFile named \"%s\"", fileName);
+  }
+
+  if(!GetALine(inFile, buffer)) {
+    fclose(inFile);
+    return;
+  }
+
+  while(sscanf(buffer, "%d,%s", &cell, buffer) == 2) {
+    if(cell < 0 || cell > (grid_Cols * grid_Rows)) {
+      LogError(logfp, LOGWARN, "Invalid cell (%d) specified in file \"%s\"",
+               cell, fileName);
+    }
+    gridCells[cell / grid_Cols][cell % grid_Cols].generateSWOutput = TRUE;
+  }
+
+  if(sscanf(buffer, "%d", &cell) == 1) {
+    if(cell < 0 || cell > (grid_Cols * grid_Rows)) {
+      LogError(logfp, LOGWARN, "Invalid cell (%d) specified in file \"%s\"",
+               cell, fileName);
+    }
+    gridCells[cell / grid_Cols][cell % grid_Cols].generateSWOutput = TRUE;
+  }
+  printf("%d cells requested SOILWAT2 output.\n", _getNumberSOILWAT2OutputCells());
+
+  fclose(inFile);
+}
+
 /**
  * \brief Read in the STEPWAT2 files and populate the grid. This only needs to be called once.
  * 
@@ -526,10 +567,6 @@ static void _init_stepwat_inputs(void)
 	/* Loop through all gridCells. */
 	for(i = 0; i < grid_Rows; ++i){
 		for(j = 0; j < grid_Cols; ++j){
-            // This MUST happen before the first ever call to load_cell. 
-            // Otherwise, SOILWAT2 output will never happen.
-            gridCells[i][j].generateSWOutput = prepare_IterationSummary;
-
 			load_cell(i, j); 				     // Load this cell into the global variables
 			parm_Initialize();				     // Initialize the STEPWAT variables
 			gridCells[i][j].myGroup = RGroup;    // This is necessary because load_cell only points RGroup to our cell-specific
@@ -1161,7 +1198,7 @@ static void _read_soils_in(void){
  * \return Otherwise returns the cell number that destination should copy.
  * 
  * \ingroup GRID_PRIVATE
- */
+ */ 
 static int _read_soil_line(char* buf, SoilType* destination, int layer){
 	int entriesRead, cellToCopy, cellNum, layerRead;
 	entriesRead = sscanf(buf, "%d,,%d,%d,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%s",

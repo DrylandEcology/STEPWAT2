@@ -192,6 +192,7 @@ int main(int argc, char **argv) {
 	printf("STEPWAT  init_args() executed successfully \n");
 
 	if (UseGrid) {
+        writeSOILWAT2Output = prepare_IterationSummary;
 		runGrid();
 		return 0;
 	}
