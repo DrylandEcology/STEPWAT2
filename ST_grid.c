@@ -138,10 +138,11 @@ static void _init_soilwat_outputs(char* fileName);
 static void _init_stepwat_inputs(void);
 static void _init_grid_inputs(void);
 static void _separateSOILWAT2Output(void);
-static void _separateSOILWAT2DailyOutput(char* fileName);
-static void _separateSOILWAT2MonthlyOutput(char* fileName);
-static void _separateSOILWAT2YearlyOutput(char* fileName);
+static void _separateSOILWAT2DailyOutput(char* fileName, int* cellNumbers);
+static void _separateSOILWAT2MonthlyOutput(char* fileName, int* cellNumbers);
+static void _separateSOILWAT2YearlyOutput(char* fileName, int* cellNumbers);
 static int _getNumberSOILWAT2OutputCells(void);
+static int* _getSOILWAT2OutputCells(void);
 
 /******************** Begin Model Code *********************/
 /***********************************************************/
@@ -542,7 +543,6 @@ static void _init_soilwat_outputs(char* fileName) {
     }
     gridCells[cell / grid_Cols][cell % grid_Cols].generateSWOutput = TRUE;
   }
-  printf("%d cells requested SOILWAT2 output.\n", _getNumberSOILWAT2OutputCells());
 
   fclose(inFile);
 }
@@ -1807,6 +1807,7 @@ static void _separateSOILWAT2Output(void){
     return;
   }
 
+  int* cells = _getSOILWAT2OutputCells();
   DIR *d;
   struct dirent *dir;
   ChDir("./Output/sw_output/");
@@ -1816,15 +1817,16 @@ static void _separateSOILWAT2Output(void){
     while ((dir = readdir(d)) != NULL)
     {
       if(strncmp(dir->d_name, "sw2_daily_", 10) == 0) {
-        _separateSOILWAT2DailyOutput(dir->d_name);
+        _separateSOILWAT2DailyOutput(dir->d_name, cells);
       } else if(strncmp(dir->d_name, "sw2_monthly_", 12) == 0) {
-        _separateSOILWAT2MonthlyOutput(dir->d_name);
+        _separateSOILWAT2MonthlyOutput(dir->d_name, cells);
       } else if(strncmp(dir->d_name, "sw2_yearly_", 11) == 0) {
-        _separateSOILWAT2YearlyOutput(dir->d_name);
+        _separateSOILWAT2YearlyOutput(dir->d_name, cells);
       }
     }
     closedir(d);
   }
+  Mem_Free(cells);
   ChDir("../..");
 }
 
@@ -1836,13 +1838,15 @@ static void _separateSOILWAT2Output(void){
  * into cell-specific files.
  * 
  * \param fileName is the name of the file containing the daily data.
+ * \param cellNumbers is an array of size \ref _getNumberSOILWAT2OutputCells
+ *        containing the cell numbers that requested SOILWAT2 output.
  * 
  * \sa _separateSOILWAT2Output
  * \author Chandler Haukap
  * \date 18 February 2020
  * \ingroup GRID_PRIVATE
  */
-static void _separateSOILWAT2DailyOutput(char* fileName) {
+static void _separateSOILWAT2DailyOutput(char* fileName, int* cellNumbers) {
   int thisDay, lastDay = 0, junk, outFileIndex;
   size_t bufsize = 9000;
   char junkBuffer[4096];
@@ -1861,7 +1865,7 @@ static void _separateSOILWAT2DailyOutput(char* fileName) {
   // Open the output files then copy the header over.
   getline(&buffer, &bufsize, inFile);
   for(outFileIndex = 0; outFileIndex < numCells; ++outFileIndex) {
-    sprintf(junkBuffer, "Cell_%d_%s", outFileIndex, fileName);
+    sprintf(junkBuffer, "Cell_%d_%s", cellNumbers[outFileIndex], fileName);
     outFiles[outFileIndex] = fopen(junkBuffer, "w");
     fprintf(outFiles[outFileIndex], "%s", buffer);
   }
@@ -1898,13 +1902,15 @@ static void _separateSOILWAT2DailyOutput(char* fileName) {
  * into cell-specific files.
  * 
  * \param fileName is the name of the file containing the monthly data.
+ * \param cellNumbers is an array of size \ref _getNumberSOILWAT2OutputCells
+ *        containing the cell numbers that requested SOILWAT2 output.
  * 
  * \sa _separateSOILWAT2Output
  * \author Chandler Haukap
  * \date 18 February 2020
  * \ingroup GRID_PRIVATE
  */
-static void _separateSOILWAT2MonthlyOutput(char* fileName) {
+static void _separateSOILWAT2MonthlyOutput(char* fileName, int* cellNumbers) {
   int outFileIndex, month = 1;
   size_t bufsize = 9000;
   char junkBuffer[4096];
@@ -1923,7 +1929,7 @@ static void _separateSOILWAT2MonthlyOutput(char* fileName) {
   // Open the output files then copy the header over.
   getline(&buffer, &bufsize, inFile);
   for(outFileIndex = 0; outFileIndex < numCells; ++outFileIndex) {
-    sprintf(junkBuffer, "Cell_%d_%s", outFileIndex, fileName);
+    sprintf(junkBuffer, "Cell_%d_%s", cellNumbers[outFileIndex], fileName);
     outFiles[outFileIndex] = fopen(junkBuffer, "w");
     fprintf(outFiles[outFileIndex], "%s", buffer);
   }
@@ -1958,13 +1964,15 @@ static void _separateSOILWAT2MonthlyOutput(char* fileName) {
  * into cell-specific files.
  * 
  * \param fileName is the name of the file containing the yearly data.
+ * \param cellNumbers is an array of size \ref _getNumberSOILWAT2OutputCells
+ *        containing the cell numbers that requested SOILWAT2 output.
  * 
  * \sa _separateSOILWAT2Output
  * \author Chandler Haukap
  * \date 18 February 2020
  * \ingroup GRID_PRIVATE
  */
-static void _separateSOILWAT2YearlyOutput(char* fileName) {
+static void _separateSOILWAT2YearlyOutput(char* fileName, int* cellNumbers) {
   int outFileIndex;
   size_t bufsize = 9000;
   char junkBuffer[4096];
@@ -1983,7 +1991,7 @@ static void _separateSOILWAT2YearlyOutput(char* fileName) {
   // Open the output files then copy the header over.
   getline(&buffer, &bufsize, inFile);
   for(outFileIndex = 0; outFileIndex < numCells; ++outFileIndex) {
-    sprintf(junkBuffer, "Cell_%d_%s", outFileIndex, fileName);
+    sprintf(junkBuffer, "Cell_%d_%s", cellNumbers[outFileIndex], fileName);
     outFiles[outFileIndex] = fopen(junkBuffer, "w");
     fprintf(outFiles[outFileIndex], "%s", buffer);
   }
@@ -2024,4 +2032,33 @@ static int _getNumberSOILWAT2OutputCells(void) {
     }
   }
   return count;
+}
+
+/**
+ * \brief Get an array of cell numbers that requested SOILWAT2 output.
+ * 
+ * \return An array of ints of size \ref _getNumberSOILWAT2OutputCells().
+ * 
+ * \sideeffect Allocated a new array.
+ * 
+ * \author Chandler Haukap
+ * \date 21 February 2020
+ * \ingroup GRID_PRIVATE
+ */
+static int* _getSOILWAT2OutputCells(void) {
+  int i, j, count = 0;
+  int numCells = _getNumberSOILWAT2OutputCells();
+  int* cells = Mem_Calloc(numCells, sizeof(int),
+                          "_getSOILWAT2OutputCells");
+    
+  for(i = 0; i < grid_Rows; ++i) {
+    for(j = 0; j < grid_Cols; ++j) {
+      if(gridCells[i][j].generateSWOutput) {
+        cells[count] = (i * grid_Cols) + (j % grid_Cols);
+        count++;
+      }
+    }
+  }
+
+  return cells;
 }
