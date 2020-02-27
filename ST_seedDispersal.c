@@ -20,6 +20,7 @@ float _distance(int x1, int y1, int x2, int y2, float cellWidth);
 Bool _shouldProduceSeeds(SppIndex sp);
 float _rateOfDispersal(float PMD, float meanHeight, float maxHeight);
 float _probabilityOfDispersal(float rate, float height, float distance);
+float _maxDispersalDistance(float height);
 void _recordDispersalEvent(int year, int iteration, int fromCell, int toCell, 
                            const char* name);
 
@@ -133,7 +134,7 @@ void disperseSeeds(int year) {
         height = getSpeciesHeight(Species[sp]);
         rate = _rateOfDispersal(Species[sp]->maxDispersalProbability,
                                 Species[sp]->meanHeight,
-                                Species[sp]->maxDispersalDistance);
+                                _maxDispersalDistance(height));
 
         // Iterate through all possible recipients of seeds.
         for (receiverRow = 0; receiverRow < grid_Rows; ++receiverRow) {
@@ -338,6 +339,29 @@ float _rateOfDispersal(float PMD, float meanHeight, float maxDistance) {
  */
 float _probabilityOfDispersal(float rate, float height, float distance) {
   return exp(rate / sqrt(height)) * distance;
+}
+
+/**
+ * \brief Returns the maximum dispersal distance for a given 
+ *        [individual](\ref IndivType).
+ * 
+ * This function is stochastic, meaning it will return a different value even if
+ * it is given the same input parameter.
+ * 
+ * \param height The height, in cm, of the individual.
+ * 
+ * \return A float greater than or equal to 0.
+ * 
+ * \sa getSpeciesHeight which will give you the height of the tallest
+ *     individual in a species.
+ * 
+ * \author Chandler Haukap
+ * \date 27 February 2020
+ * \ingroup SEED_DISPERSAL_PRIVATE
+ */
+float _maxDispersalDistance(float height) {
+    float constant = 0.921;
+    return RandUniFloatRange(0, 2 * constant * height, &dispersal_rng);
 }
 
 /**

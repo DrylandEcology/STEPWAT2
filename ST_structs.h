@@ -235,9 +235,6 @@ struct species_st {
        *         biomass. Constant read in from inputs.
        * \ingroup SEED_DISPERSAL */
         heightSlope,
-      /** \brief Maximum distance a seed can travel in meters. 
-       * \ingroup SEED_DISPERSAL */
-        maxDispersalDistance,
       /** \brief The probability that a species disperses seeds 
        *         \ref maxDispersalDistance meters away. 
        *  \ingroup SEED_DISPERSAL */
