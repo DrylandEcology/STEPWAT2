@@ -225,9 +225,6 @@ struct species_st {
       /** \brief Minimum relsize at which an individual can produce seeds.
        * \ingroup SEED_DISPERSAL */
   	    minReproductiveSize,
-      /** \brief Average height of an individual of this species.
-       * \ingroup SEED_DISPERSAL */
-	      meanHeight,
       /** \brief The maximum height of an individual of this species.
        * \ingroup SEED_DISPERSAL */
         maxHeight,

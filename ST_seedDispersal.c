@@ -18,7 +18,7 @@
 
 float _distance(int x1, int y1, int x2, int y2, float cellWidth);
 Bool _shouldProduceSeeds(SppIndex sp);
-float _rateOfDispersal(float PMD, float meanHeight, float maxHeight);
+float _rateOfDispersal(float PMD, float height, float maxHeight);
 float _probabilityOfDispersal(float rate, float height, float distance);
 float _maxDispersalDistance(float height);
 void _recordDispersalEvent(int year, int iteration, int fromCell, int toCell, 
@@ -133,7 +133,7 @@ void disperseSeeds(int year) {
         // These variables are independent of recipient.
         height = getSpeciesHeight(Species[sp]);
         rate = _rateOfDispersal(Species[sp]->maxDispersalProbability,
-                                Species[sp]->meanHeight,
+                                getSpeciesHeight(Species[sp]),
                                 _maxDispersalDistance(height));
 
         // Iterate through all possible recipients of seeds.
@@ -309,7 +309,7 @@ Bool _shouldProduceSeeds(SppIndex sp) {
  * \brief Returns the rate of dispersal.
  *
  * \param PMD is the probability of maximum dispersal.
- * \param meanHeight is the average height of an individual of the given
+ * \param height is the average height of an individual of the given
  *                   species.
  * \param maxDistance is the maximum distance an individual of this species can
  *                    disperse seeds.
@@ -320,8 +320,8 @@ Bool _shouldProduceSeeds(SppIndex sp) {
  * \date 17 December 2019
  * \ingroup SEED_DISPERSAL_PRIVATE
  */
-float _rateOfDispersal(float PMD, float meanHeight, float maxDistance) {
-  return log(PMD) * meanHeight / maxDistance;
+float _rateOfDispersal(float PMD, float height, float maxDistance) {
+  return log(PMD) * height / maxDistance;
 }
 
 /**
