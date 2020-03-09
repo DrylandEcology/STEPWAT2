@@ -216,6 +216,20 @@ void mort_Main( Bool *killed) {
   killed = _SomeKillage;
 }
 
+/**
+ * \brief Simulates prescribed fire for all [groups](\ref RGROUP).
+ * 
+ * Fire is simulated based on the flags read in from inputs.
+ * 
+ * \return TRUE if prescribed fire is on for at least one [group](\ref RGROUP).
+ *         FALSE if prescribed fire is off for all [groups](\ref RGROUP).
+ *         Note that the return values does _not_ indicate whether the 
+ *         _current_ year is a fire year.
+ * 
+ * \author Chandler Haukap
+ * \date January 2020
+ * \ingroup MORTALITY_PRIVATE
+ */
 Bool _simulatePrescribedFire(void) {
   GrpIndex rg;
   double randomNumber = RandUni(&mortality_rng);
