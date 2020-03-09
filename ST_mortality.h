@@ -53,7 +53,7 @@ struct CheatgrassPrecip_st {
    * 
    * The variable we use to get precipitation information, \ref SXW, stores 
    * values for the current year, but we need the values from 2 years ago to 
-   * calcualte last year's winter precipitation. We therefore store it here,
+   * calculate last year's winter precipitation. We therefore store it here,
    * even though it does make the struct a little more confusing. 
    */ 
   double lastOctThruDec;
@@ -62,7 +62,7 @@ struct CheatgrassPrecip_st {
    * 
    * The variable we use to get precipitation information, \ref SXW, stores 
    * values for the current year, but we need the values from 2 years ago to 
-   * calcualte last year's winter precipitation. We therefore store it here,
+   * calculate last year's winter precipitation. We therefore store it here,
    * even though it does make the struct a little more confusing. 
    */ 
   double thisOctThruDec;

@@ -126,8 +126,8 @@ succulents		-0.0025 6.736 -0.0217 6.736
 
 #=============================================================
 #                 Cheatgrass-Wildfire Flag
-# Note that setting this flag to 1 will override any prescribed fire treatment
-# specified above.
+# Implement wildfire based on cheatgrass biomass (g/m2). Setting this flag to 1 will
+# override any prescribed fire treatment(s) specified above.
 
 0 # Use cheatgrass-driven wildfire? 1 for yes, 0 for no.
 

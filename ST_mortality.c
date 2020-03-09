@@ -284,8 +284,10 @@ void mort_EndOfYear(void) {
   RealF cheatgrassBiomass;
 
   /* Update the precipitation parameters that determine cheatgrass-driven
-   * wildfire. */
-  _updateCheatgrassPrecip(Globals->currYear);
+   * wildfire. This function call is commented out for the time being until the
+   * struct that it updates (cheatgrassPrecip) can be incorporated into the 
+   * rest of the code. */
+  // _updateCheatgrassPrecip(Globals->currYear);
   /* printf("%d:\tMeanSpring = %f\t ThisSpring = %f\t MeanWinter = %f\t LastWinter = %f\n",
          Globals->currYear, cheatgrassPrecip->springMean, cheatgrassPrecip->currentSpring, 
          cheatgrassPrecip->winterMean, cheatgrassPrecip->lastWinter); */
@@ -1222,8 +1224,8 @@ double _getCheatgrassCover(double biomass) {
  * This equation was derived by Maggie England.
  * 
  * \param percentCover is the percent of the total plot covered in cheatgrass.
- *                     A value between 0 and 1 is expected. I suggest using the
- *                     \ref _getCheatgrassCover function.
+ *                     A value between 0 and 100 is expected. I suggest using 
+ *                     the \ref _getCheatgrassCover function.
  * 
  * \return A double between 0 and 1 representing the probability of a wildfire.
  * 
