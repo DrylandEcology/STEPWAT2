@@ -1204,8 +1204,7 @@ void killMaxage(void) {
  * 
  * \param biomass is the biomass of cheatgrass.
  * 
- * \return A double between 0 and 1 representing the percent of the plot 
- *         covered by cheatgrass.
+ * \return A double 0 and 100 representing the percent cover of cheatgrass.
  * 
  * \author Maggie England (derived the algorithm)
  * \author Chandler Haukap (implemented the code)
@@ -1213,8 +1212,8 @@ void killMaxage(void) {
  * \ingroup MORTALITY_PRIVATE
  */
 double _getCheatgrassCover(double biomass) {
-  int cover = biomass / (10.296 * Globals->plotsize);
-  return (cover > 1) ? 1 : cover;
+  double cover = biomass / (10.296 * Globals->plotsize);
+  return (cover > 100) ? 100 : cover;
 }
 
 /**
