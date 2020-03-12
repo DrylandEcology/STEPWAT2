@@ -1249,7 +1249,7 @@ double _getCheatgrassCover(double biomass) {
  * \ingroup MORTALITY_PRIVATE
  */
 double _getWildfireProbability(double percentCover) {
-  return 0.0074 * pow(percentCover, 0.0649);
+  return 0.015 * pow(percentCover, 0.0649);
 }
 
 /**
