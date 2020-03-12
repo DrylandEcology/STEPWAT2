@@ -192,6 +192,11 @@ void runGrid(void)
 	Bool killedany;
 	IntS year, iter;
 
+  if(storeAllIterations) {
+    printf("WARNING: SOILWAT2 iteration output unavailable for gridded mode.\n");
+    storeAllIterations = FALSE;
+  }
+
 	_init_grid_files();				// reads in files.in file
 	_read_maxrgroupspecies();       // reads in maxrgroupspecies.in file
 	_read_grid_setup();             // reads in grid_setup.in file
