@@ -7,6 +7,6 @@
 #include "ST_globals.h"
 
 // From ST_mortality.c
-extern void (*simulatePrescribedFire)(GrpIndex, RealF);
+extern Bool (*simulatePrescribedFire)();
 
 #endif

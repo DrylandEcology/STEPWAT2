@@ -147,18 +147,6 @@ typedef enum {NoSeason=-1, CoolSeason, WarmSeason}
   TempClass;
 
 /**
- * \brief All types of mortality.
- * 
- * Used to record what killed an individual.
- * 
- * \sa indiv_st which instanciates this enumerator.
- * 
- * \ingroup MORTALITY
- */
-typedef enum {Slow, NoResources, Intrinsic, Disturbance, LastMort}
-  MortalityType;
-
-/**
  * \brief All types of disturbances.
  * 
  * Used to determine what type of disturbance is on the plot.
@@ -188,7 +176,7 @@ typedef enum {VerySensitive, Sensitive, Insensitive, VeryInsensitive}
  * Used to determine whether this year's precipitation is above average, 
  * average, or below average.
  * 
- * \sa environs_st which instanciates this enumerator.
+ * \sa environs_st which instantiates this enumerator.
  * 
  * \ingroup STEPPE
  */
@@ -215,7 +203,7 @@ typedef enum {Intcpt, Slope, P0=0, P1, P2, P3, P4}
  * 
  * Defined at the rgroup level.
  * 
- * \sa resourcegroup_st which instanciates this enumerator.
+ * \sa resourcegroup_st which instantiates this enumerator.
  * 
  * \ingroup STEPPE
  */

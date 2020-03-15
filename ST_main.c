@@ -37,13 +37,14 @@
 #include "ST_initialization.h"
 #include "ST_progressBar.h"
 #include "ST_seedDispersal.h"
+#include "ST_mortality.h"
 
 extern Bool prepare_IterationSummary; // defined in `SOILWAT2/SW_Output.c`
 extern Bool print_IterationSummary; // defined in `SOILWAT2/SW_Output_outtext.c`
 extern Bool storeAllIterations; // defined in `SOILWAT2/SW_Output.c`
 extern SW_VEGPROD SW_VegProd;
+extern Bool *_SomeKillage;				// From ST_mortality.c 
 SW_FILE_STATUS SW_File_Status;
-extern Bool* _SomeKillage;
 
 /************* External Function Declarations **************/
 /***********************************************************/
@@ -53,20 +54,12 @@ extern Bool* _SomeKillage;
   void rgroup_IncrAges( void);
   void rgroup_PartResources( void);
 
-  void mort_Main( Bool *killed);
-  void mort_EndOfYear( void);
-  void proportion_Recovery(void);
-  void grazing_EndOfYear( void);
-
   void parm_Initialize(void);
   void parm_SetFirstName( char *s);
 
   void output_Bmass_Yearly( Int year );
   void output_Mort_Yearly( void );
 
-  void _kill_annuals(void);
-  void _kill_extra_growth(void);
-  void _kill_maxage(void);
   void save_annual_species_relsize(void);
 
   void files_init(void);
@@ -165,7 +158,6 @@ SppIndex sp;
 IndivType *ndv; /* shorthand for the current indiv */
 
 pcg32_random_t environs_rng;
-pcg32_random_t mortality_rng;
 pcg32_random_t resgroups_rng;
 pcg32_random_t species_rng;
 pcg32_random_t grid_rng;
@@ -267,10 +259,10 @@ int main(int argc, char **argv) {
 
 			rgroup_IncrAges();
 
-      // Added functions for Grazing and mort_end_year as proportional killing effect before exporting biomass end of the year
+			// Added functions for Grazing and mort_end_year as proportional killing effect before exporting biomass end of the year
 			grazing_EndOfYear();
 
-      save_annual_species_relsize();
+			save_annual_species_relsize();
 
       		mort_EndOfYear();
 
@@ -279,14 +271,14 @@ int main(int argc, char **argv) {
 			if (BmassFlags.yearly)
 				output_Bmass_Yearly(year);
 
-       // Moved kill annual and kill extra growth after we export biomass, and recovery of biomass after fire before the next year
-			_kill_annuals();
+			// Moved kill annual and kill extra growth after we export biomass, and recovery of biomass after fire before the next year
+			killAnnuals();
                         
-                        _kill_maxage();
+			killMaxage();
 
 			proportion_Recovery();
 
-			_kill_extra_growth();
+			killExtraGrowth();
 			
 			// if the user requests the stdebug.sqlite3 file to be generated
 			// it is populated here.
@@ -348,6 +340,7 @@ int main(int argc, char **argv) {
   SW_OUT_close_files();
   SW_CTL_clear_model(TRUE); // de-allocate all memory
   free_all_sxw_memory();
+  freeMortalityMemory();
 
 	deallocate_Globals(FALSE);
 
@@ -437,6 +430,7 @@ void Plot_Initialize(void) {
 		RGroup[rg]->extirpated = FALSE;
 	}
 
+	initCheatgrassPrecip();
 	SXW_InitPlot();
 }
 

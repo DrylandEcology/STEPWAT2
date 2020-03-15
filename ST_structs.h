@@ -24,6 +24,7 @@
 #define STEPPE_STRUCT_DEF
 
 #include "generic.h"
+#include "ST_mortality.h"
 
 /**
  * \brief Holds information on perennial plant individuals. 
@@ -371,14 +372,6 @@ struct resourcegroup_st {
        * values > 1 result in fires at a return interval = killfreq. 
        * \sa mort_EndOfYear() */
         killfreq,
-      /** \brief Cheatgrass biomass (g/m2) that triggers potential ignition of a wildfire.
-       * If ignition == 0 wildfire is turned off. 
-       * \sa mort_EndOfYear() */
-        ignition,
-      /** \brief Intercept of the cheatgrass biomass-wildfire probability relationship. */
-        cheatgrass_coefficient,
-      /** \brief Slope of the cheatgrass biomass-wildfire probability relationship. */	
-        wild_fire_slope,
       /** \brief Ephemeral growth. Used to calculate superficial growth when precipitation is high. */
         xgrow,
       /** \brief Growthrate that triggers mortality. Defined in inputs. */

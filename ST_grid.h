@@ -81,8 +81,14 @@ struct grid_cell_st
 	Grid_Init_Species_St mySpeciesInit;
 	/* seed dispersal information corresponding to this cell */
 	Grid_SD_St *mySeedDispersal;
+	/** \brief This cell's cheatgrass-wildfire parameters. */
+	CheatgrassPrecip* myCheatgrassPrecip;
 
 	Bool* someKillage;
+
+	/** \brief this cell's version of the \ref UseCheatgrassWildfire variable
+	 *         from the \ref MORTALITY module. */
+	Bool UseCheatgrassWildfire;
 	
 	/* ---------------- accumulators -------------------- */
 	StatType *_Dist, *_Ppt, *_Temp,
