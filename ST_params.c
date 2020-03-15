@@ -767,8 +767,7 @@ static void _rgroup_init( void) {
    /* input variables related to disturbances */
    Int extirp, killyr, killfreq_startyr, 
        grazingfreq_startyr;
-   RealF  killfreq, prop_killed, prop_recovered,grazing_frq, prop_grazing;
-        prop_killed, prop_recovered,grazing_frq, prop_grazing, biomass,
+   RealF  killfreq, prop_killed, prop_recovered,grazing_frq, prop_grazing, biomass,
         transpiration;
 
    MyFileName = Parm_name(F_RGroup);
