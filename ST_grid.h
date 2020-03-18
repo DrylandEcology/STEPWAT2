@@ -127,9 +127,15 @@ struct grid_cell_st
 	Bool DuringSpinup;
 	/** \brief Species' [spinup](\ref SPINUP) information. */
 	Grid_Init_Species_St mySpeciesInit;
+	/** \brief This cell's cheatgrass-wildfire parameters. */
+	CheatgrassPrecip* myCheatgrassPrecip;
 
 	/** \brief TRUE if an individual was killed this year. */
 	Bool* someKillage;
+
+	/** \brief this cell's version of the \ref UseCheatgrassWildfire variable
+	 *         from the \ref MORTALITY module. */
+	Bool UseCheatgrassWildfire;
 	
 	/* ---------------- accumulators -------------------- */
 

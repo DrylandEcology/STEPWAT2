@@ -1,7 +1,7 @@
-cell,fecal_pat_use,ant_mound_use,animal_burrows_use,kill_yr,killfreq_startyr,Prescribed_killfreq,extirp,grazing_frq,grazingfrq_startyr,ignition
-0,0,0,0,0,0,0,0,0,0,0
-1,0,0,0,0,5,80,0,0,0,0
-2,0,0,0,0,0,0,0,0,0,12.05
+cell,fecal_pat_use,ant_mound_use,animal_burrows_use,kill_yr,killfreq_startyr,Prescribed_killfreq,extirp,grazing_frq,grazingfrq_startyr,Use_Cheatgrass_Wildfire
+0,0,0,0,0,0,0,0,0,0,1
+1,0,0,0,0,5,80,0,0,0,1
+2,0,0,0,0,0,0,0,0,0,0
 3,0,0,0,0,1,100,0,0,0,0
 4,0,0,0,0,0,0,0,0,0,0
 5,0,0,0,0,0,0,0,0,0,0

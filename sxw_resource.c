@@ -153,6 +153,7 @@ void _sxw_update_root_tables( RealF sizes[] ) {
 	ForEachGroup(g)
 	{
 		nLyrs = getNTranspLayers(RGroup[g]->veg_prod_type);
+		
 		for (l = 0; l < nLyrs; l++) {
 			ForEachTrPeriod(p)
 			{

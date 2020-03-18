@@ -46,6 +46,7 @@
 #include "sw_src/SW_Output.h"
 #include "sw_src/SW_Output_outtext.h"
 #include "sw_src/SW_Output_outarray.h"
+#include "ST_mortality.h"
 
 int grid_Cells;
 Bool UseDisturbances, UseSoils;
@@ -63,19 +64,17 @@ extern pcg32_random_t grid_rng;         // Gridded mode's unique RNG.
 
 /* We need to seed these RNGs when using the gridded mode but do not use them in this file. */
 extern pcg32_random_t environs_rng;     // Used exclusively in ST_environs.c
-extern pcg32_random_t mortality_rng;    // Used exclusively in ST_mortality.c
 extern pcg32_random_t resgroups_rng;    // Used exclusively in ST_resgroups.c
 extern pcg32_random_t species_rng;      // Used exclusively in ST_species.c
 extern pcg32_random_t markov_rng;       // Used exclusively in SW_Markov.c
 
 extern Bool UseProgressBar;             // From ST_main.c
-extern Bool* _SomeKillage;              // From ST_mortality.c
+extern Bool *_SomeKillage;				// From ST_mortality.c 
 
 /******** Modular External Function Declarations ***********/
 /* -- truly global functions are declared in functions.h --*/
 /***********************************************************/
 //from ST_species.c
-void proportion_Recovery(void);
 void save_annual_species_relsize(void);
 void copy_species(const SpeciesType* src, SpeciesType* dest);
 
@@ -85,14 +84,6 @@ void rgroup_Establish(void);
 void rgroup_IncrAges(void);
 void rgroup_PartResources(void);
 void copy_rgroup(const GroupType* src, GroupType* dest);
-
-//from ST_mortality.c
-void mort_Main(Bool *killed);
-void mort_EndOfYear(void);
-void grazing_EndOfYear(void);
-void _kill_annuals(void);
-void _kill_maxage(void);
-void _kill_extra_growth(void);
 
 //functions from ST_params.c
 void parm_Initialize(void);
@@ -315,10 +306,10 @@ void runGrid(void)
 
 					stat_Collect(year); 		// Update the accumulators
 
-				    _kill_annuals(); 			// Kill annuals
-				    _kill_maxage();             // Kill plants that reach max age
+				    killAnnuals(); 			// Kill annuals
+				    killMaxage();             // Kill plants that reach max age
 					proportion_Recovery(); 		// Recover from any disturbances
-					_kill_extra_growth(); 		// Kill superfluous growth
+					killExtraGrowth(); 		// Kill superfluous growth
 
 				} /* end model run for this cell*/
 			} /* end model run for this row */
@@ -648,6 +639,11 @@ static void _allocate_gridCells(int rows, int cols){
 				Mem_Calloc(MAX_SPECIES, sizeof(int), "_allocate_gridCells: mySpeciesInit");
 
 			gridCells[i][j].someKillage = (Bool*) Mem_Calloc(1, sizeof(Bool), "_allocate_gridCells: someKillage");
+			
+			// Allocate the cheatgrassPrecip variable for the Mortality module
+			setCheatgrassPrecip(0);
+			initCheatgrassPrecip();
+			gridCells[i][j].myCheatgrassPrecip = getCheatgrassPrecip();
 		}
 	}
 }
@@ -886,6 +882,7 @@ void free_grid_memory(void)
             #ifndef STDEBUG
 			deallocate_Globals(TRUE);
             #endif
+			freeMortalityMemory();
 			free_all_sxw_memory();
 			stat_free_mem();
 			unload_cell();
@@ -956,7 +953,11 @@ void load_cell(int row, int col){
 	/* TRUE if this cell is in spinup mode */
 	DuringSpinup = gridCells[row][col].DuringSpinup;
 
+	/* This cell's cheatgrass-wildfire parameters */
+	setCheatgrassPrecip(gridCells[row][col].myCheatgrassPrecip);
+
 	_SomeKillage = gridCells[row][col].someKillage;
+	UseCheatgrassWildfire = gridCells[row][col].UseCheatgrassWildfire;
 
 	/* Copy this cell's accumulators into the local accumulators in ST_stats.c */
 	stat_Copy_Accumulators(gridCells[row][col]._Dist, gridCells[row][col]._Ppt, gridCells[row][col]._Temp,
@@ -1063,10 +1064,12 @@ static void _read_disturbances_in(void)
 			break;
 
         ForEachGroup(rg) {
-            num = sscanf(buf, "%d,%u,%u,%u,%hu,%hu,%f,%hu,%f,%hu,%f", &cell,
-                &Globals->pat.use, &Globals->mound.use, &Globals->burrow.use, &RGroup[rg]->killyr, 
-				&RGroup[rg]->killfreq_startyr, &RGroup[rg]->killfreq, &RGroup[rg]->extirp, 
-				&RGroup[rg]->grazingfrq, &RGroup[rg]->grazingfreq_startyr, &RGroup[rg]->ignition);
+            num = sscanf(buf, "%d,%u,%u,%u,%hu,%hu,%f,%hu,%f,%hu,%u", &cell,
+                &Globals->pat.use, &Globals->mound.use, &Globals->burrow.use,
+				&RGroup[rg]->killyr, &RGroup[rg]->killfreq_startyr, 
+				&RGroup[rg]->killfreq, &RGroup[rg]->extirp, 
+				&RGroup[rg]->grazingfrq, &RGroup[rg]->grazingfreq_startyr, 
+				&gridCells[row][col].UseCheatgrassWildfire);
 		}
 
 		if (num != 11)

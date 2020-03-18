@@ -16,6 +16,7 @@
 #include "ST_spinup.h"
 #include "ST_stats.h"
 #include "ST_globals.h"
+#include "ST_mortality.h"
 #include "sw_src/rands.h"
 #include "sxw_funcs.h"
 #include "myMemory.h"
@@ -45,13 +46,11 @@ extern pcg32_random_t grid_rng;         // Gridded mode's unique RNG.
 /* We need to seed these RNGs when using the gridded mode but do not use them
  * in this file. */
 extern pcg32_random_t environs_rng;     // Used exclusively in ST_environs.c
-extern pcg32_random_t mortality_rng;    // Used exclusively in ST_mortality.c
 extern pcg32_random_t resgroups_rng;    // Used exclusively in ST_resgroups.c
 extern pcg32_random_t species_rng;      // Used exclusively in ST_species.c
 extern pcg32_random_t markov_rng;       // Used exclusively in SW_Markov.c
 
 extern Bool UseProgressBar;             // From ST_main.c
-extern Bool* _SomeKillage;              // From ST_mortality.c
 
 /********* Modular functions defined elsewhere ************/
 /* Again, we should clean this up eventually. -CH */
@@ -59,12 +58,7 @@ extern Bool* _SomeKillage;              // From ST_mortality.c
 void rgroup_Establish(void);
 void rgroup_PartResources(void);
 void rgroup_Grow(void); 
-void mort_Main(Bool* killed);
 void rgroup_IncrAges(void);
-void _kill_annuals(void);
-void _kill_maxage(void);
-void proportion_Recovery(void); 
-void _kill_extra_growth(void); 	
 void parm_Initialize(void);
 void Plot_Initialize(void);
 void copy_rgroup(const GroupType* src, GroupType* dest);
@@ -312,9 +306,9 @@ static void _run_spinup(void)
     rgroup_Grow(); 				// Grow
     mort_Main(&killedany); 		// Mortality that occurs during the growing season
     rgroup_IncrAges(); 			// Increment ages of all plants
-    _kill_annuals(); 			// Kill annuals
-    _kill_maxage();             // Kill plants that reach max age
-    _kill_extra_growth(); 		// Kill superfluous growth	
+    killAnnuals(); 			// Kill annuals
+    killMaxage();             // Kill plants that reach max age
+    killExtraGrowth(); 		// Kill superfluous growth	
 
     // Turn UseSeedDispersal back on (if it was ever on)
     UseSeedDispersal = myUseSeedDispersal;
