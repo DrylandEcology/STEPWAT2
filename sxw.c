@@ -238,9 +238,17 @@ void SXW_Init( Bool init_SW, char *f_roots ) {
 static void SXW_Reinit(char* SOILWAT_file) {
 	char *temp;
 
+	// setup and construct model (independent of inputs)
 	temp = strdup(SOILWAT_file);
-	SW_CTL_init_model(temp);
-	SW_CTL_obtain_inputs();
+	SW_CTL_setup_model(temp);
+
+	// read user inputs
+	SW_CTL_read_inputs_from_disk();
+
+	// initialize simulation run (based on user inputs)
+	SW_CTL_init_run();
+
+	// initialize output: transfer between STEPPE and SOILWAT2
 	SW_OUT_set_SXWrequests();
     free(temp);
 }
@@ -992,7 +1000,7 @@ void _print_debuginfo(void) {
 			days = 30;
 		else if (p == Feb) { //February has either 28 or 29 days
 			days = 28;
-			if (Is_LeapYear(SW_Model.year))
+			if (isleapyear(SW_Model.year))
 				days = 29;
 		} // all the other months have 31 days
 

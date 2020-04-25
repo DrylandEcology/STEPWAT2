@@ -413,7 +413,7 @@ void insertOutputProd(SW_VEGPROD *v) {
 			days = 30;
 		else if (p == Feb) { //February has either 28 or 29 days
 			days = 28;
-			if (Is_LeapYear(SW_Model.year))
+			if (isleapyear(SW_Model.year))
 				days = 29;
 		} // all the other months have 31 days
 
