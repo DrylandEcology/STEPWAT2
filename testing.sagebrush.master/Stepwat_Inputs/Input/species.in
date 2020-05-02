@@ -109,11 +109,11 @@
 #
 # name  viable xdecay  pseed   var
  vuoc     10    1.00       0  0.0000     
- brte      3    1.00    1000  0.0001   
- cryp     10    1.00     100  0.0001    
+ brte      3    1.00      50  0.01   
+ cryp     10    1.00      30  0.008    
  trdu     10    1.00       0  0.0000 
  amre     10    1.00       0  0.0000
- chen     10    1.00     100  0.0001
+ chen     10    1.00      30  0.008
 
 [end]  # end of additional annuals-only parameters.
 
