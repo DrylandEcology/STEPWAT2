@@ -2,15 +2,15 @@
 # Production Coefficients for STEPWAT
 
 # These values are used to convert yearly biomass
-# from STEPPE to monthly production values for SOILWAT
+# from STEPPE to monthly production values for SOILWAT2
 
 ######################### LITTER ###########################
-# LITTER - use the maximum value from the converted biomass 
-#          to multiply by this number to compute a litter 
-#          value in g/m^2.  Needn't sum to 1.0.
-# BMASS -  STEPPE's yearly vals are converted to monthly.
-# PCT_LIVE - RGroups pct live each month is used to calc
-#            VegProdTypes pct live for soilwat.
+# LITTER - Multiply litter fractions by annual biomass for the FT 
+#          to compute a litter value in g/m^2.
+# BMASS -  These fractions are used to convert STEPPE's yearly biomass 
+# 		    values  to monthly values for SOILWAT2.
+# PCT_LIVE - RGroups pct live each month is used to calculate
+#            VegProdTypes pct live for SOILWAT2.
 
 # Group		Jan	Feb	Mar	Apr	May	Jun	Jul	Aug	Sep	Oct	Nov	Dec
 sagebrush	0.41	0.42	0.42	0.37	0.42	0.46	0.46	0.60	0.55	0.53	0.51	0.49

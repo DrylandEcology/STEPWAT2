@@ -52,8 +52,8 @@
 #            Overrides grazingyear.
 # proportion_grazing = proportion of biomass removed due to grazing. 
 # grazingfreq_startyr = start year for grazing
-# biomass, along with transpiration, construct a simple linear relationship (grams per centimeter) used to calculate bvt.
-# transpiration, along with biomass, construct a simple linear relationship (grams per centimeter) used to calculate bvt.
+# biomass, along with transpiration, construct a simple linear relationship (grams biomass per centimeter of transpired water) used to calculate bvt.
+# transpiration, along with biomass, construct a simple linear relationship (grams biomass per centimeter of transpired water) used to calculate bvt.
 
 #TM - density values from Biondini et al 1998 - used density% in Table 2 for p.cool.forb (Achillea millefolium) and
 #	p.warm.forb (Grindelia squarrosa)
