@@ -1025,14 +1025,28 @@ static int _read_soil_line(char* buf, SoilType* destination, int layer){
 								&destination->pclay[layer], &destination->imperm[layer], 
 								&destination->soiltemp[layer], destination->rootsFile);
 
-	if(cellNum > grid_Cells || layerRead > destination->num_layers){
-		LogError(logfp, LOGFATAL, "%s: cells out of order or too many layers.", grid_files[GRID_FILE_SOILS]);
+	if(cellNum > grid_Cells){
+		LogError(
+			logfp, LOGFATAL,
+			"%s: cell number (id=%d) is larger than number of cells in grid (n=%d).",
+			grid_files[GRID_FILE_SOILS], cellNum, grid_Cells
+		);
 	}
+
 
 	/* If the user specified a cell to copy we will perform the copy, regardless
 	   of whether or not they also entered parameters. */
 	if(entriesRead == 1){
 		entriesRead = sscanf(buf, "%d,%d", &cellNum, &cellToCopy);
+
+		if(cellToCopy > grid_Cells){
+			LogError(
+				logfp, LOGFATAL,
+				"%s: cell to copy (id=%d) not present in grid (n=%d).",
+				grid_files[GRID_FILE_SOILS], cellToCopy, grid_Cells
+			);
+		}
+
 		if(entriesRead == 2){
 			return cellToCopy;
 		} else {
@@ -1041,6 +1055,14 @@ static int _read_soil_line(char* buf, SoilType* destination, int layer){
 	}
 
 	if(entriesRead == 16) {
+		if(layerRead > destination->num_layers){
+			LogError(
+				logfp, LOGFATAL,
+				"%s: cell %d has too many soil layers (%d for max=%d).",
+				grid_files[GRID_FILE_SOILS], cellNum, layerRead, destination->num_layers
+			);
+		}
+
 		return SOIL_READ_SUCCESS;
 	} else {
 		return SOIL_READ_FAILURE;
