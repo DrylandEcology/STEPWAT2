@@ -1,26 +1,17 @@
-# phen definition file STEPPEWAT
-
-# Monthly phenological activity values for each resource
-# group in the STEPWAT model in percent.  Activity is defined as the 
-# growth activity for that month as a proportion of the total.  
-# For example, if half of a plant group's yearly growth occurs 
-# in one month, that month's value for that group would be 0.50.
-# Metabolic activity doesn't count
-#
-# First column is the group name as defined in the 
-# group parameters file for STEPPE.  The name must be
-# spelled exactly the same.
-# Remaining columns are monthly activity values.  
-# All the activity values for a group must sum to 100
+# Monthly phenological activity values for each functional group.
+# Activity is defined as the "competitive" ability of each functional group
+# to grow in response to extracted water for each month. Values do not need to sum to 1.
+# First column is the rgroup name as defined in rgroup.in.
+# The name must be spelled exactly the same.
 
 # Group     	Jan   Feb   Mar  Apr  May  Jun  Jul  Aug  Sep   Oct   Nov   Dec
-sagebrush	   	.0125 .0125 .10  .125 .15  .25  .15  .10  .0625 .0125 .0125 .0125
-a.cool.forb	    .00	  .05   .10	 .20  .35  .20  .10	 .00  .00   .00   .00   .00
-a.warm.forb     .00	  .00   .00	 .10  .25  .30  .20  .10  .05   .00   .00   .00
-p.cool.forb	    .00	  .05   .10	 .20  .35  .20  .10	 .00  .00   .00   .00   .00
-p.warm.forb     .00	  .00   .00	 .10  .25  .30  .20  .10  .05   .00   .00   .00
-a.cool.grass	.05   .10   .15  .20  .30  .05  .00  .00  .00   .05   .05   .05
-p.cool.grass	.00   .05   .10  .20  .30  .20  .10  .05  .00   .00   .00   .00
-p.warm.grass	.00   .00   .00  .05  .15  .40  .20  .15  .05   .00   .00   .00
-shrub	   	    .00   .025  .10  .125 .15  .25  .15  .10  .0625 .0125 .025  .00
-succulents      .00   .00   .05  .10  .15  .17  .18  .15  .10   .05   .05   .00
+sagebrush	   	.10   .10   .30  .50  .90  1.0  1.0  .90  .50   .30	  .10   .10
+a.cool.forb	    .00	  .10   .50	 .70  1.0  .50  .10	 .10  .10   .00   .00   .00
+a.warm.forb     .00	  .00   .10	 .50  .70  1.0  .30  .10  .10   .10   .00   .00
+p.cool.forb	    .00	  .10   .30	 .50  1.0  1.0  .50	 .10  .10   .10   .00   .00
+p.warm.forb     .00	  .00   .10	 .30  .70  1.0  1.0  .50  .30   .10   .10   .00
+a.cool.grass	.10   .30   .50  1.0  .70  .50  .10  .00  .00   .10   .10   .10
+p.cool.grass	.00   .10   .30  .70  1.0  1.0  .50  .30  .10   .10   .00   .00
+p.warm.grass	.00   .00   .00  .10  .50  .80  1.0  1.0  .70   .30   .10   .00
+shrub	   	    .10   .10   .30  .50  .90  1.0  .90  .70  .50   .30   .10   .10
+succulents      .00   .00   .10  .20  .50  .70  1.0  .70  .50   .20   .10   .00

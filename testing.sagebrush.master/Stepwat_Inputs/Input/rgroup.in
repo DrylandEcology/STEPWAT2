@@ -52,6 +52,8 @@
 #            Overrides grazingyear.
 # proportion_grazing = proportion of biomass removed due to grazing. 
 # grazingfreq_startyr = start year for grazing
+# biomass, along with transpiration, construct a simple linear relationship (grams biomass per centimeter of transpired water) used to calculate bvt.
+# transpiration, along with biomass, construct a simple linear relationship (grams biomass per centimeter of transpired water) used to calculate bvt.
 
 #TM - density values from Biondini et al 1998 - used density% in Table 2 for p.cool.forb (Achillea millefolium) and
 #	p.warm.forb (Grindelia squarrosa)
@@ -64,17 +66,17 @@
 # space parameter for shrubs was a guess (KP) 
 #TM 10.6.2015 - tested various stretch values for sagebrush and found stretch of 8 to be best paired with irate 0.02
 
-# name     space  density maxest slow stretch xres  estann  on  startyr xgrow  veg_prod_type  killyr killfreq_startyr Prescribed_killfreq   extirp  mort    proportion_killed proportion_recovered grazing_frq proportion_grazing  grazingfreq_startyr 
- sagebrush     0.320  1.0000   1  0.0500   8     1       0   1      1     0.10000   2  0      0       0    0     1    1.00  0.00 0  0.00  0 
- a.cool.forb   0.030  5.0000   1  0.0500   2     1       0   1      1     0.20000   4  0      0       0    0     1    1.00  0.00 0  0.24  0  
- a.warm.forb   0.020  3.0000   1  0.0500   2     1       0   1      1     0.20000   4  0      0       0    0     1    1.00  0.00 0  0.24  0  
- p.cool.forb   0.160  8.0000   1  0.0500   2     1       0   1      1     0.20000   4  0      0       0    0     1    1.00  0.50 0  0.24  0  
- p.warm.forb   0.040  3.0000   1  0.0500   2     1       0   1      1     0.20000   4  0      0       0    0     1    1.00  0.50 0  0.24  0   
- a.cool.grass  0.050  50.000   1  0.0500   2     1       0   1      1     0.30000   3  0      0       0    0     1    1.00  0.00 0  0.24  0  
- p.cool.grass  0.220  15.000   1  0.0500   2     1       0   1      1     0.30000   3  0      0       0    0     1    1.00  0.80 0  0.24  0  
- p.warm.grass  0.040   5.000   1  0.0500   2     1       0   1      1     0.30000   3  0      0       0    0     1    1.00  0.80 0  0.24  0 
- shrub         0.090  1.0000   1  0.0500   2     1       0   1      1     0.20000   2  0      0       0    0     1    1.00  0.50 0  0.00  0 
- succulents    0.030  0.3100   1  0.0500   8     1       0   1      1     0.10000   2  0      0       0    0     1    1.00  0.00 0  0.00  0
+# name     space  density maxest slow stretch xres  estann  on  startyr xgrow  veg_prod_type  killyr killfreq_startyr Prescribed_killfreq   extirp  mort    proportion_killed proportion_recovered grazing_frq proportion_grazing  grazingfreq_startyr biomass transpiration
+ sagebrush     0.320  1.0000   1  0.0500   8     1       0   1      1     0.10000   2  0      0       0    0     1    1.00  0.00 0  0.00  0  900 23
+ a.cool.forb   0.030  5.0000   1  0.0500   2     1       0   1      1     0.20000   4  0      0       0    0     1    1.00  0.00 0  0.24  0  900 23
+ a.warm.forb   0.020  3.0000   1  0.0500   2     1       0   1      1     0.20000   4  0      0       0    0     1    1.00  0.00 0  0.24  0  900 23
+ p.cool.forb   0.160  8.0000   1  0.0500   2     1       0   1      1     0.20000   4  0      0       0    0     1    1.00  0.50 0  0.24  0  900 23
+ p.warm.forb   0.040  3.0000   1  0.0500   2     1       0   1      1     0.20000   4  0      0       0    0     1    1.00  0.50 0  0.24  0  900 23
+ a.cool.grass  0.050  50.000   1  0.0500   2     1       0   1      1     0.30000   3  0      0       0    0     1    1.00  0.00 0  0.24  0  900 23
+ p.cool.grass  0.220  15.000   1  0.0500   2     1       0   1      1     0.30000   3  0      0       0    0     1    1.00  0.80 0  0.24  0  900 23
+ p.warm.grass  0.040   5.000   1  0.0500   2     1       0   1      1     0.30000   3  0      0       0    0     1    1.00  0.80 0  0.24  0  900 23
+ shrub         0.090  1.0000   1  0.0500   2     1       0   1      1     0.20000   2  0      0       0    0     1    1.00  0.50 0  0.00  0  900 23
+ succulents    0.030  0.3100   1  0.0500   8     1       0   1      1     0.10000   2  0      0       0    0     1    1.00  0.00 0  0.00  0  900 23
 
 [end]  # section end
 

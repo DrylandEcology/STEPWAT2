@@ -1173,6 +1173,7 @@ void copy_rgroup(const GroupType* src, GroupType* dest){
     dest->wildfire = src->wildfire;
     dest->xgrow = src->xgrow;
     dest->yrs_neg_pr = src->yrs_neg_pr;
+    dest->_bvt = src->_bvt;
 
     /* ---------------- Copy Species Array ----------------- */
     for(i = 0; i < SuperGlobals.max_spp_per_grp; ++i){

@@ -1,30 +1,28 @@
 # sxw prod definition file STEPPEWAT
-
-#Production Coefficients for STEPWAT
+# Production Coefficients for STEPWAT
 
 # These values are used to convert yearly biomass
-# from STEPPE to monthly production values for SOILWAT
+# from STEPPE to monthly production values for SOILWAT2
 
-# LITTER - use the maximum value from the converted biomass 
-#          to multiply by this number to compute a litter 
-#          value in g/m^2.  Needn't sum to 1.0.
-# BMASS -  STEPPE's yearly vals are converted to monthly.
-# PCT_LIVE - RGroups pct live each month is used to calc
-#            VegProdTypes pct live for soilwat.
+######################### LITTER ###########################
+# LITTER - Multiply litter fractions by annual biomass for the FT 
+#          to compute a litter value in g/m^2.
+# BMASS -  These fractions are used to convert STEPPE's yearly biomass 
+# 		    values  to monthly values for SOILWAT2.
+# PCT_LIVE - RGroups pct live each month is used to calculate
+#            VegProdTypes pct live for SOILWAT2.
 
-# LITTER 
-0.75    # January            
-0.80    # February          
-0.85    # March            
-0.75    # April            
-0.36    # May            
-0.31    # June            
-0.28    # July            
-0.29    # August            
-0.38    # September            
-0.46    # October            
-0.58    # November            
-0.68    # December
+# Group		Jan	Feb	Mar	Apr	May	Jun	Jul	Aug	Sep	Oct	Nov	Dec
+sagebrush	0.41	0.42	0.42	0.37	0.42	0.46	0.46	0.60	0.55	0.53	0.51	0.49
+a.cool.forb	0.50	0.53	0.57	0.53	0.26	0.23	0.20	0.25	0.32	0.36	0.41	0.47
+a.warm.forb	0.50	0.53	0.57	0.53	0.26	0.23	0.20	0.25	0.32	0.36	0.41	0.47
+p.cool.forb	0.50	0.53	0.57	0.53	0.26	0.23	0.20	0.25	0.32	0.36	0.41	0.47
+p.warm.forb	0.50	0.53	0.57	0.53	0.26	0.23	0.20	0.25	0.32	0.36	0.41	0.47
+a.cool.grass	0.23	0.20	0.25	0.32	0.36	0.41	0.47	0.50	0.53	0.57	0.53	0.26
+p.cool.grass	0.50	0.53	0.57	0.53	0.26	0.23	0.20	0.25	0.32	0.36	0.41	0.47
+p.warm.grass	0.50	0.53	0.57	0.53	0.26	0.23	0.20	0.25	0.32	0.36	0.41	0.47
+shrub		0.41	0.42	0.42	0.37	0.42	0.46	0.46	0.60	0.55	0.53	0.51	0.49
+succulents	0.50	0.53	0.57	0.53	0.26	0.23	0.20	0.25	0.32	0.36	0.41	0.47
 
 [end]  # section end
 
@@ -40,16 +38,16 @@
 #The above value would be converted to above ground biomass by sxwprod.in Biomass column
 
 # Group        Jan  Feb  Mar  Apr  May  Jun  Jul  Aug  Sep   Oct  Nov  Dec
-sagebrush      .38  .38  .38  .50  .72  .84  .94  1.0  .84  .72  .52   .46
-a.cool.forb    .00  .20  .50  .80  1.0  .80  .20  .20  .10  .00  .00   .00
-a.warm.forb    .00  .00  .20  .50  .72  .80  1.0  .90  .40  .20  .00   .00
-p.cool.forb    .00  .20  .50  .80  1.0  .60  .30  .20  .20  .10  .00   .00
-p.warm.forb    .00  .00  .10  .30  .50  .70  .90  1.0  .70  .30  .20   .00
-a.cool.grass   .20  .40  .60  .80  1.0  .50  .10  .10  .10  .20  .20   .20
-p.cool.grass   .20  .40  .60  .80  1.0  .80  .60  .40  .20  .20  .20   .20
-p.warm.grass   .20  .20  .20  .30  .50  .70  .90  1.0  .80  .40  .30   .20
-shrub	       .38  .38  .38  .50  .72  .84  .94  1.0  .84  .72  .52   .46
-succulents     .38  .38  .38  .50  .72  .84  .94  1.0  .84  .72  .52   .46
+sagebrush      .90  .90  .90  .95  .95  1.0  1.0  1.0  1.0  .95  .95   .90
+a.cool.forb    .00  .20  .50  .80  1.0  1.0  .50  .30  .20  .10  .00   .00
+a.warm.forb    .00  .00  .20  .50  .80  1.0  1.0  .50  .30  .20  .10   .00
+p.cool.forb    .50  .50  .50  .70  .90  1.0  1.0  1.0  .90  .70  .50   .50
+p.warm.forb    .50  .50  .50  .50  .70  .90  1.0  1.0  1.0  .90  .70   .50
+a.cool.grass   .50  .70  .90  1.0  1.0  .90  .90  .70  .50  .50  .50   .50
+p.cool.grass   .50  .50  .50  .70  0.9  1.0  1.0  1.0  .90  .70  .50   .50
+p.warm.grass   .50  .50  .50  .50  .70  .90  1.0  1.0  1.0  .90  .70   .50
+shrub	       .90  .90  .90  .95  .95  1.0  1.0  1.0  1.0  .95  .90   .90
+succulents     .95  .95  .95  .95  1.0  1.0  1.0  1.0  1.0  .95  .95   .95
 
 [end]  # section end
 
@@ -64,16 +62,16 @@ succulents     .38  .38  .38  .50  .72  .84  .94  1.0  .84  .72  .52   .46
 # spelled exactly the same.
 #
 # Group        Jan  Feb  Mar  Apr  May  Jun  Jul  Aug  Sep   Oct  Nov  Dec
-sagebrush      .06  .08  .20  .33  .57  .55  .50  .46  .32  .15  .08   .06
-a.cool.forb    .00  .05  .10  .20  .40  .60  .20  .10  .05  .00  .00   .00
-a.warm.forb    .00  .00  .05  .20  .40  .60  .60  .40  .20  .05  .00   .00
-p.cool.forb    .00  .05  .10  .20  .40  .60  .20  .10  .05  .00  .00   .00   
-p.warm.forb    .00  .00  .05  .20  .40  .60  .60  .60  .40  .20  .05   .00
-a.cool.grass   .05  .10  .10  .40  .60  .40  .00  .00  .00  .05  .05   .05
-p.cool.grass   .00  .05  .10  .20  .40  .60  .20  .10  .05  .00  .00   .00
-p.warm.grass   .00  .00  .10  .20  .40  .60  .60  .60  .40  .20  .05   .00
-shrub          .00  .08  .20  .33  .57  .55  .50  .46  .32  .15  .08   .00
-succulents     .00  .00  .10  .20  .40  .60  .40  .60  .40  .20  .10   .00
+sagebrush      .06  .08  .20  .33  .55  .57  .57  .46  .32  .15  .08   .06
+a.cool.forb    .00  .05  .10  .20  .60  .40  .20  .10  .05  .00  .00   .00
+a.warm.forb    .00  .00  .05  .10  .20  .60  .40  .20  .10  .05  .00   .00
+p.cool.forb    .00  .10  .10  .30  .60  .60  .40  .40  .20  .10  .00   .00   
+p.warm.forb    .00  .00  .10  .20  .40  .60  .60  .60  .40  .20  .10   .00
+a.cool.grass   .05  .10  .30  .60  .40  .20  .10  .00  .00  .05  .05   .05
+p.cool.grass   .00  .10  .10  .30  .60  .60  .40  .40  .20  .10  .00   .00
+p.warm.grass   .00  .00  .10  .20  .40  .40  .60  .60  .40  .20  .10   .00
+shrub          .10  .10  .20  .30  .40  .60  .60  .40  .40  .20  .10   .10
+succulents     .00  .00  .10  .20  .40  .60  .60  .60  .40  .20  .10   .00
 
 [end]  # section end
 

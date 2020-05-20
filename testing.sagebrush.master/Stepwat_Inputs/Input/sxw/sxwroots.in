@@ -1,11 +1,14 @@
-#GrpName       %L1   %L2    %L3    %L4    %L5		%L6
-sagebrush      	.05	   .20	 .25	.25	   .20	   .05
-a.cool.forb		.40    .30	 .20	.10	   .00	   .00
-a.warm.forb		.40    .25	 .25	.10	   .00	   .00
-p.cool.forb		.15    .20	 .40	.20	   .05	   .00
-p.warm.forb		.15    .20	 .35	.25	   .05	   .00
-a.cool.grass    .40    .35   .15    .10    .00	   .00
-p.cool.grass    .20    .35   .25    .15	   .05     .00
-p.warm.grass 	.25    .25   .25    .20	   .05	   .00
-shrub			.15    .20	 .20	.35	   .10	   .00
-succulents       1      0     0      0      0		 0
+#These root fractions do not need to sum to 1.0.
+#They represent the “competitive” ability of a functional group to extract water from each soil layer
+
+#GrpName       %L1   %L2    %L3    %L4    %L5		%L6		%L7		%L8
+sagebrush      	.40	   .50	 .50	.70	   .90	   1.0		1.0		.50
+a.cool.forb		1.0    1.0	 .70	.10	   .00	   .00		.00		.00
+a.warm.forb		1.0    1.0	 .70	.10	   .00	   .00		.00		.00
+p.cool.forb		.70    1.0	 1.0	.50	   .30	   .10		.00		.00
+p.warm.forb		.70    1.0	 1.0	.50	   .30	   .10		.10		.10
+a.cool.grass    1.0    1.0   .70    .10    .10	   .10		.00		.00
+p.cool.grass    .70    1.0   1.0    .50	   .30     .10		.10		.10
+p.warm.grass 	.70    1.0   1.0    .50	   .30	   .10		.10		.10
+shrub			.50    .50	 1.0	.70	   .30	   .10		.10		.10
+succulents      1.0    .10   .00    .00    .00	   .00		.00		.00
