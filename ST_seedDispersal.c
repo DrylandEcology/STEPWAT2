@@ -147,9 +147,9 @@ void disperseSeeds(int year) {
             }
 
             // If this cell already has seeds there is no point in continuing
-            if (receiverCell->mySpecies[sp]->seedsPresent) {
-              continue;
-            }
+            //if (receiverCell->mySpecies[sp]->seedsPresent) {
+            //  continue;
+            //}
 
             // These variables depend on the recipient.
             distance = _distance(col, row, receiverCol, receiverRow,
