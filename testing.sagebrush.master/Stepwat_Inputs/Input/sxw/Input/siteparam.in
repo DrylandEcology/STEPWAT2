@@ -44,10 +44,12 @@
 1.1          # range
 
 # ---- Intrinsic site params: Blak, MT (47.06581° N, -108.5826° E,  m elevation) ----
-0.8214533	# latitude of the site in radians
+-0.0000	# longitude of the site in degrees (W < 0; E > 0)
+				# (currently not used by simulation, but useful for site documentation)
+47.0658	# latitude of the site in degrees (N > 0; S < 0)
 1039	# altitude of site (m a.s.l.)
-2			# slope at site (degrees): no slope = 0
--1			# aspect at site (degrees): N=0, E=90, S=180, W=270, no slope:-1
+0			# slope at site (degrees): no slope = 0, vertical = 90
+999		# aspect at site (degrees): S=0, E=-90, N=±180, W=90; ignored if slope = 0 or aspect = 999
 
 # ---- Soil Temperature Constants ----
 # from Parton 1978, ch. 2.2.2 Temperature-profile Submodel

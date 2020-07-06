@@ -50,6 +50,7 @@ sources_core = \
 	sw_src/SW_Files.c \
 	sw_src/SW_Flow.c \
 	sw_src/SW_Flow_lib.c \
+	sw_src/SW_Flow_lib_PET.c \
 	sw_src/SW_Markov.c \
 	sw_src/SW_Model.c \
 	sw_src/SW_Output.c \
@@ -135,11 +136,11 @@ output_clean:
 	-@rm -rf testing.sagebrush.master/Stepwat_Inputs/Output/*
 
 .PHONY : documentation_clean
-documentation_clean : 
+documentation_clean :
 		@rm -rf Documentation/html
 
 .PHONY : documentation
-documentation: 
+documentation:
 		@doxygen doxyfile
 		@if open Documentation/html/index.html; \
 		  then echo "Success"; \
