@@ -8,8 +8,8 @@
 #include "ST_defines.h"
 #include "ST_grid.h"
 #include "ST_seedDispersal.h"
-#include "rands.h"
-#include "myMemory.h"
+#include "sw_src/rands.h"
+#include "sw_src/myMemory.h"
 
 int _do_bulk_dispersal(SppIndex sp);
 void _do_precise_dispersal(int leftoverSeeds, SppIndex sp);

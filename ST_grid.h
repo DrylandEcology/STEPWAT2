@@ -15,11 +15,11 @@
 #include "ST_defines.h"
 #include "sw_src/pcg/pcg_basic.h"
 #include "sxw_vars.h"
-#include "SW_Site.h"
-#include "SW_SoilWater.h"
-#include "SW_VegProd.h"
-#include "SW_Model.h"
-#include "SW_Weather.h"
+#include "sw_src/SW_Site.h"
+#include "sw_src/SW_SoilWater.h"
+#include "sw_src/SW_VegProd.h"
+#include "sw_src/SW_Model.h"
+#include "sw_src/SW_Weather.h"
 #include "ST_seedDispersal.h"
 
 /*********************** Grid Structures ****************************/

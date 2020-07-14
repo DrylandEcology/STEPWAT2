@@ -21,22 +21,22 @@
 /* --------------------------------------------------- */
 
 #include <stdio.h>
-#include "generic.h"
-#include "rands.h"
-#include "filefuncs.h"
-#include "myMemory.h"
+#include "sw_src/generic.h"
+#include "sw_src/rands.h"
+#include "sw_src/filefuncs.h"
+#include "sw_src/myMemory.h"
 #include "ST_steppe.h"
 #include "ST_globals.h"
-#include "SW_Defines.h"
+#include "sw_src/SW_Defines.h"
 #include "sxw.h"
 #include "sxw_module.h"
 #include "sxw_vars.h"
-#include "SW_Control.h"
-#include "SW_Site.h"
-#include "SW_SoilWater.h"
-#include "SW_VegProd.h"
-#include "SW_Files.h"
-#include "SW_Times.h"
+#include "sw_src/SW_Control.h"
+#include "sw_src/SW_Site.h"
+#include "sw_src/SW_SoilWater.h"
+#include "sw_src/SW_VegProd.h"
+#include "sw_src/SW_Files.h"
+#include "sw_src/SW_Times.h"
 #include "sw_src/pcg/pcg_basic.h"
 
 /*************** Global Variable Declarations ***************/
