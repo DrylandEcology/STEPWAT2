@@ -27,8 +27,8 @@
 #include "sw_src/pcg/pcg_basic.h"
 #include "sw_src/rands.h"
 #include "sxw_funcs.h"
-#include "myMemory.h"
-#include "filefuncs.h"
+#include "sw_src/myMemory.h"
+#include "sw_src/filefuncs.h"
 #include "ST_progressBar.h"
 #include "ST_stats.h"
 

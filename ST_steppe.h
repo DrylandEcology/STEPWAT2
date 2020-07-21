@@ -15,7 +15,7 @@
 #include "ST_defines.h"
 #include "ST_functions.h"
 
-#include "generic.h"
+#include "sw_src/generic.h"
 
 #define DFLT_FIRSTFILE "files.in"
 

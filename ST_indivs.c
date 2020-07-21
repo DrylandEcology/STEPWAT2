@@ -22,8 +22,8 @@
 #include <memory.h>
 #include "ST_steppe.h"
 #include "ST_globals.h"
-#include "filefuncs.h"
-#include "myMemory.h"
+#include "sw_src/filefuncs.h"
+#include "sw_src/myMemory.h"
 
 
 /******** Modular External Function Declarations ***********/
