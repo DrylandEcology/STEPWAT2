@@ -20,11 +20,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "ST_steppe.h"
-#include "generic.h"
-#include "filefuncs.h"
-#include "myMemory.h"
-#include "SW_VegProd.h"
-#include "SW_Control.h"
+#include "sw_src/generic.h"
+#include "sw_src/filefuncs.h"
+#include "sw_src/myMemory.h"
+#include "sw_src/SW_VegProd.h"
+#include "sw_src/SW_Control.h"
 #include "sw_src/pcg/pcg_basic.h"
 
 #include "sxw_funcs.h"

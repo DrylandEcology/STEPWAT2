@@ -17,16 +17,16 @@
 /* --------------------------------------------------- */
 
 #include <stdio.h>
-#include "generic.h"
+#include "sw_src/generic.h"
 #include "ST_steppe.h"
 /*#include "ST_globals.h"*/
-#include "SW_Defines.h"
+#include "sw_src/SW_Defines.h"
 #include "sxw.h"
 #include "sxw_module.h"
-#include "SW_Model.h"
-#include "SW_Site.h"
-#include "SW_SoilWater.h"
-#include "SW_Weather.h"
+#include "sw_src/SW_Model.h"
+#include "sw_src/SW_Site.h"
+#include "sw_src/SW_SoilWater.h"
+#include "sw_src/SW_Weather.h"
 
 /*************** Global Variable Declarations ***************/
 /***********************************************************/

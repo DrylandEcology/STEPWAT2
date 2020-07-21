@@ -10,7 +10,7 @@
 #ifndef MORTALITY_H
 #define MORTALITY_H
 
-#include "generic.h"
+#include "sw_src/generic.h"
 #include "sw_src/pcg/pcg_basic.h"
 
 /* --------------------------- Exported Structs ---------------------------- */

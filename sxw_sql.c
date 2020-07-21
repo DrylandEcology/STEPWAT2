@@ -10,7 +10,7 @@
 #include <sqlite3.h>
 #include "ST_steppe.h"
 #include "ST_globals.h"
-#include "SW_Defines.h"
+#include "sw_src/SW_Defines.h"
 #include "sxw_module.h"
 #include "sxw.h"
 

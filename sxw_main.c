@@ -27,9 +27,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "ST_steppe.h"
-#include "generic.h"
-#include "filefuncs.h"
-#include "myMemory.h"
+#include "sw_src/generic.h"
+#include "sw_src/filefuncs.h"
+#include "sw_src/myMemory.h"
 #include "sxw_funcs.h"
 
 /* for the chdir function */
