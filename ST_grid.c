@@ -1320,6 +1320,7 @@ void _Output_AllCellAvgBmass(const char * filename){
 
 	char buf[2048], tbuf[2048];	// Two buffers: one for accumulating and one for formatting.
 	char sep = BmassFlags.sep;	// Separator specified in inputs
+	size_t len_buf;
 
 	FILE* file;
 	file = fopen(filename, "w");
@@ -1483,6 +1484,12 @@ void _Output_AllCellAvgBmass(const char * filename){
 			}
 		}
 		/* --------------- End generate output string ---------------- */
+
+		// remove the last (and superfluous) `sep` and replace it with a '\0'
+		len_buf = strlen(buf);
+		if (len_buf > 1) {
+			buf[len_buf - 1] = 0;
+		}
 
 		fprintf(file, "%s\n", buf); // Finally, print this line
 	} // End for each year
