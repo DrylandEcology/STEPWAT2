@@ -278,6 +278,8 @@ RealF getSpeciesHeight(SpeciesType* sp)
         }
     }
 
+	printf("within getSpeciesHeight maxrelsize = %f, Species mature_biomass = %f, maxHeight= %f, heightSlope= %f\n ", maxrelsize, sp->mature_biomass, sp->maxHeight, sp->heightSlope);
+
     // (maxrelsize * sp->mature_biomass) is the biomass of the individual.
     return sp->maxHeight * (1 - exp(
         -(sp->heightSlope * maxrelsize * sp->mature_biomass)));
