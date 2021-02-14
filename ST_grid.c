@@ -283,6 +283,9 @@ void runGrid(void)
                     /* Ensure that all global variables reference the specific cell */
 					load_cell(i, j);
 
+					printf("------------------------Repetition/year = %d / %d\n", iter, year);
+
+
 					Globals->currYear = year;
 
 					/* The following functions mimic ST_main.c. */
