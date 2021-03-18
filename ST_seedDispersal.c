@@ -342,7 +342,7 @@ float _rateOfDispersal(float PMD, float maxHeight, float maxDistance) {
  * \ingroup SEED_DISPERSAL_PRIVATE
  */
 float _probabilityOfDispersal(float rate, float height, float distance) {
-  return exp(rate / sqrt(height)) * distance;
+  return exp((rate * distance) / height);
 }
 
 /**
