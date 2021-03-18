@@ -18,7 +18,7 @@
 
 float _distance(int x1, int y1, int x2, int y2, float cellWidth);
 Bool _shouldProduceSeeds(SppIndex sp);
-float _rateOfDispersal(float PMD, float height, float maxHeight);
+float _rateOfDispersal(float PMD, float maxHeight, float maxDistance);
 float _probabilityOfDispersal(float rate, float height, float distance);
 float _maxDispersalDistance(float height);
 void _recordDispersalEvent(int year, int iteration, int fromCell, int toCell, 
@@ -135,7 +135,7 @@ void disperseSeeds(int year) {
 		printf("height after getSpeciesHeight called Species = %s, height = %f\n ", Species[sp]->name, height);
 
         rate = _rateOfDispersal(Species[sp]->maxDispersalProbability,
-                                getSpeciesHeight(Species[sp]),
+                                Species[sp]->maxHeight,
                                 _maxDispersalDistance(height));
 
 		printf("rate after _rateOfDispersal called Species = %s, rate = %f\n ", Species[sp]->name, rate);
@@ -324,8 +324,8 @@ Bool _shouldProduceSeeds(SppIndex sp) {
  * \date 17 December 2019
  * \ingroup SEED_DISPERSAL_PRIVATE
  */
-float _rateOfDispersal(float PMD, float height, float maxDistance) {
-  return log(PMD) * height / maxDistance;
+float _rateOfDispersal(float PMD, float maxHeight, float maxDistance) {
+  return log((PMD) * maxHeight) / maxDistance;
 }
 
 /**
