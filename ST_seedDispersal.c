@@ -364,8 +364,8 @@ float _probabilityOfDispersal(float rate, float height, float distance) {
  * \ingroup SEED_DISPERSAL_PRIVATE
  */
 float _maxDispersalDistance(float height) {
-    float constant = 0.921;
-    return RandUniFloatRange(0, 2 * constant * height, &dispersal_rng);
+    float constant = 8.337;
+    return RandUniFloatRange(0, 2 * constant * (height/100), &dispersal_rng);
 }
 
 /**
