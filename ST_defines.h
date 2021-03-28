@@ -17,7 +17,7 @@
 #ifndef STEPPE_DEF_H
 #define STEPPE_DEF_H
 
-#include "generic.h"
+#include "sw_src/generic.h"
 
 /* see #include "ST_structs.h" below */
 
@@ -44,12 +44,6 @@
  * \ingroup SPECIES
  */
 #define MAX_SPECIES (SuperGlobals.max_spp_per_grp * SuperGlobals.max_rgroups)
-/**
- * \brief how long the name of a species can be.
- * 
- * \ingroup SPECIES
- */
-#define MAX_SPECIESNAMELEN   4 /* keep around for SOILWAT for now */
 
 /**
  * \brief MAX_OUTFIELDS The maximum number of fields our output functions are 

@@ -1,4 +1,5 @@
 CC  	=	gcc
+CXX   = g++
 
 CFLAGS = \
 	-std=c99 \
@@ -17,15 +18,16 @@ CFLAGS = \
 	-Wstrict-prototypes \
 	-Wunused
 
+sw2 = SOILWAT2
+lib_sw2 = lib$(sw2).a
+path_sw2 = sw_src
+
 INC_DIRS = \
 	-I. \
 	-Isqlite-amalgamation \
-	-Isw_src \
-	-Isw_src/googletest/googletest \
-	-Isw_src/googletest/googletest/include \
+	-I$(path_sw2)/googletest/googletest \
+	-I$(path_sw2)/googletest/googletest/include \
 	-Itest
-
-LIBS = -lm
 
 sources_core = \
 	sqlite-amalgamation/sqlite3.c \
@@ -40,29 +42,6 @@ sources_core = \
 	ST_species.c \
 	ST_sql.c \
 	ST_stats.c \
-	sw_src/filefuncs.c \
-	sw_src/generic.c \
-	sw_src/mymemory.c \
-	sw_src/pcg/pcg_basic.c \
-	sw_src/rands.c \
-	sw_src/SW_Carbon.c \
-	sw_src/SW_Control.c \
-	sw_src/SW_Files.c \
-	sw_src/SW_Flow.c \
-	sw_src/SW_Flow_lib.c \
-	sw_src/SW_Markov.c \
-	sw_src/SW_Model.c \
-	sw_src/SW_Output.c \
-	sw_src/SW_Output_get_functions.c \
-	sw_src/SW_Output_outarray.c \
-	sw_src/SW_Output_outtext.c \
-	sw_src/SW_Site.c \
-	sw_src/SW_Sky.c \
-	sw_src/SW_SoilWater.c \
-	sw_src/SW_VegEstab.c \
-	sw_src/SW_VegProd.c \
-	sw_src/SW_Weather.c \
-	sw_src/Times.c \
 	sxw.c \
 	sxw_environs.c \
 	sxw_resource.c \
@@ -74,25 +53,39 @@ sources_core = \
 	ST_colonization.c
 
 sources_test = \
-	sw_src/googletest/googletest/src/gtest-all.cc \
-	sw_src/googletest/googletest/src/gtest_main.cc \
+	$(path_sw2)/googletest/googletest/src/gtest-all.cc \
+	$(path_sw2)/googletest/googletest/src/gtest_main.cc \
 	test/test_ST_mortality.cc
+
+sw2_sources = \
+	SW_Output_outarray.c \
+	SW_Output_outtext.c
+
 
 objects_core = $(sources_core:%.c=obj/%.o)
 objects_core_test = $(sources_core:%.c=obj/%_TEST.o)
 objects_test = $(sources_test:%.cc=obj/%.o)
 
-all: stepwat stepwat_test
 
-stepwat: $(objects_core)
-	$(CC) $(objects_core) $(CFLAGS) $(CPPFLAGS) $(LIBS) -o stepwat
+sw_LDFLAGS = $(LDFLAGS) -L. -L$(path_sw2)
+sw_LDLIBS = -l$(sw2) $(LDLIBS) -lm
+
+
+
+all: $(path_sw2)/$(lib_sw2) stepwat stepwat_test
+
+$(path_sw2)/$(lib_sw2):
+	@(cd $(path_sw2) && $(MAKE) $(lib_sw2) \
+		CC="$(CC)" CPPFLAGS="$(CPPFLAGS)" CFLAGS="$(CFLAGS)" AR="$(AR)" \
+		sw_sources="$(sw2_sources)")
+
+stepwat: $(path_sw2)/$(lib_sw2) $(objects_core)
+	$(CC) $(objects_core) $(CFLAGS) $(CPPFLAGS) $(sw_LDLIBS) $(sw_LDFLAGS) -o stepwat
 	-@cp stepwat testing.sagebrush.master
 	-@cp stepwat testing.sagebrush.master/Stepwat_Inputs
 
-stepwat_test: $(objects_core_test) $(objects_test)
-	$(CXX) $(objects_core_test) $(objects_test) $(CFLAGS) $(CPPFLAGS) $(LIBS) -o stepwat_test
-	-@cp stepwat_test testing.sagebrush.master
-	-@cp stepwat_test testing.sagebrush.master/Stepwat_Inputs
+stepwat_test: $(path_sw2)/$(lib_sw2) $(objects_core_test) $(objects_test)
+	$(CXX) $(objects_core_test) $(objects_test) $(CFLAGS) $(CPPFLAGS) $(sw_LDLIBS) $(sw_LDFLAGS) -o stepwat_test
 
 obj/%.o: %.c
 	$(CC) $(CFLAGS) $(CPPFLAGS) $(INC_DIRS) -c $< -o $@
@@ -103,12 +96,16 @@ obj/%.o: %.cc
 obj/%_TEST.o: %.c
 	$(CC) $(CFLAGS) $(CPPFLAGS) $(INC_DIRS) -DSTDEBUG -c $< -o $@
 
+.PHONY: run_tests
+run_tests: stepwat_test
+	./stepwat_test
+
 .PHONY: bint_testing_nongridded
-bint_testing_nongridded: stepwat stepwat_test
+bint_testing_nongridded: stepwat
 	testing.sagebrush.master/Stepwat_Inputs/stepwat -d testing.sagebrush.master/Stepwat_Inputs -f files.in -o -i
 
 .PHONY: bint_testing_gridded
-bint_testing_gridded: stepwat stepwat_test
+bint_testing_gridded: stepwat
 	testing.sagebrush.master/stepwat -d testing.sagebrush.master -f files.in -g
 
 .PHONY: cleanall
@@ -120,15 +117,14 @@ clean: cleanobjs cleanbin documentation_clean
 .PHONY: cleanobjs
 cleanobjs:
 	-@find . -type f -name '*.o' -delete
+	-@$(RM) -f $(path_sw2)/$(lib_sw2)
 
 .PHONY: cleanbin
 cleanbin:
 	-@rm -f stepwat
 	-@rm -f stepwat_test
 	-@rm -f testing.sagebrush.master/stepwat
-	-@rm -f testing.sagebrush.master/stepwat_test
 	-@rm -f testing.sagebrush.master/Stepwat_Inputs/stepwat
-	-@rm -f testing.sagebrush.master/Stepwat_Inputs/stepwat_test
 
 .PHONY: output_clean
 output_clean:
@@ -136,11 +132,11 @@ output_clean:
 	-@rm -rf testing.sagebrush.master/Stepwat_Inputs/Output/*
 
 .PHONY : documentation_clean
-documentation_clean : 
+documentation_clean :
 		@rm -rf Documentation/html
 
 .PHONY : documentation
-documentation: 
+documentation:
 		@doxygen doxyfile
 		@if open Documentation/html/index.html; \
 		  then echo "Success"; \

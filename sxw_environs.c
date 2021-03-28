@@ -16,7 +16,7 @@
 #include "ST_steppe.h"
 #include "sxw.h"
 #include "sxw_module.h"
-#include "SW_Weather.h"
+#include "sw_src/SW_Weather.h"
 
 /*************** Global Variable Declarations ***************/
 /***********************************************************/

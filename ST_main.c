@@ -23,9 +23,9 @@
 #include <string.h>
 #include <stdlib.h>
 #include "ST_steppe.h"
-#include "filefuncs.h"
-#include "myMemory.h"
-#include "SW_Control.h"
+#include "sw_src/filefuncs.h"
+#include "sw_src/myMemory.h"
+#include "sw_src/SW_Control.h"
 #include "sxw_funcs.h"
 #include "sw_src/SW_Output.h"
 #include "sw_src/SW_Output_outtext.h"

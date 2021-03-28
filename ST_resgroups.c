@@ -29,8 +29,8 @@
 #include <string.h>
 #include "ST_steppe.h"
 #include "ST_globals.h"
-#include "myMemory.h"
-#include "rands.h"
+#include "sw_src/myMemory.h"
+#include "sw_src/rands.h"
 #include "sw_src/filefuncs.h"
 #include "sxw_funcs.h"
 
@@ -1247,7 +1247,7 @@ IndivType **RGroup_GetIndivs(GrpIndex rg, const char sort, IntS *num)
 }
 
 #ifdef DEBUG_MEM
-#include "myMemory.h"
+#include "sw_src/myMemory.h"
 /*======================================================*/
 void RGroup_SetMemoryRefs( void)
 {

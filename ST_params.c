@@ -23,9 +23,9 @@
 #include <ctype.h>
 #include <errno.h>
 #include "ST_steppe.h"
-#include "filefuncs.h"
-#include "myMemory.h"
-#include "rands.h"
+#include "sw_src/filefuncs.h"
+#include "sw_src/myMemory.h"
+#include "sw_src/rands.h"
 #include "sxw_funcs.h"
 #include "ST_globals.h"
 #include "sxw_vars.h"
@@ -1234,7 +1234,7 @@ void parm_free_memory( void ) {
 
 
 #ifdef DEBUG_MEM
-#include "myMemory.h"
+#include "sw_src/myMemory.h"
 /**************************************************************/
 void Parm_SetMemoryRefs( void) {
 /*======================================================*/

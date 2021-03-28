@@ -9,8 +9,8 @@
  */
 
 #include "ST_colonization.h"
-#include "myMemory.h"
-#include "filefuncs.h"
+#include "sw_src/myMemory.h"
+#include "sw_src/filefuncs.h"
 #include "ST_functions.h"
 #include "ST_globals.h"
 

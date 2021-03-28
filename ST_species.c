@@ -23,8 +23,8 @@
 #include "ST_steppe.h"
 #include "ST_globals.h"
 #include "sw_src/filefuncs.h"
-#include "myMemory.h"
-#include "rands.h"
+#include "sw_src/myMemory.h"
+#include "sw_src/rands.h"
 #include "ST_spinup.h"
 #include "ST_seedDispersal.h"
 
@@ -680,7 +680,7 @@ void save_annual_species_relsize() {
 }
 
 #ifdef DEBUG_MEM
-#include "myMemory.h"
+#include "sw_src/myMemory.h"
 /*======================================================*/
 void Species_SetMemoryRefs( void)
 {

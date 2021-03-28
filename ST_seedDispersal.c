@@ -13,8 +13,8 @@
 #include "ST_seedDispersal.h"
 #include "ST_globals.h"
 #include "ST_grid.h"
-#include "myMemory.h"
-#include "rands.h"
+#include "sw_src/myMemory.h"
+#include "sw_src/rands.h"
 
 float _distance(int x1, int y1, int x2, int y2, float cellWidth);
 Bool _shouldProduceSeeds(SppIndex sp);

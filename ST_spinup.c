@@ -19,8 +19,8 @@
 #include "ST_mortality.h"
 #include "sw_src/rands.h"
 #include "sxw_funcs.h"
-#include "myMemory.h"
-#include "filefuncs.h"
+#include "sw_src/myMemory.h"
+#include "sw_src/filefuncs.h"
 #include "ST_progressBar.h"
 
 /******** Local functions. These should all be treated as private. ***********/

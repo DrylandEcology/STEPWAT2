@@ -48,12 +48,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "generic.h"
-#include "filefuncs.h"
-#include "myMemory.h"
+#include "sw_src/generic.h"
+#include "sw_src/filefuncs.h"
+#include "sw_src/myMemory.h"
 #include "ST_steppe.h"
 #include "ST_globals.h"
-#include "SW_Defines.h"
+#include "sw_src/SW_Defines.h"
 #include "sxw.h"
 #include "sxw_funcs.h"
 #include "sxw_module.h"
@@ -1114,7 +1114,7 @@ void _print_debuginfo(void) {
 
 
 #ifdef DEBUG_MEM
-#include "myMemory.h"
+#include "sw_src/myMemory.h"
 /*======================================================*/
 void SXW_SetMemoryRefs( void) {
 /* when debugging memory problems, use the bookkeeping

@@ -12,7 +12,7 @@
 
 #include "ST_progressBar.h"
 #include "ST_globals.h"
-#include<string.h>
+#include <string.h>
 
 /*************** Local Function(s). Treat these as private. ***************/
 
