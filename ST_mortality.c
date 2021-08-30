@@ -1228,7 +1228,7 @@ void killMaxage(void) {
  * \ingroup MORTALITY_PRIVATE
  */
 double _getCheatgrassCover(double biomass) {
-  double cover = biomass / (10.296 * Globals->plotsize);
+  double cover = pow(((sqrt(biomass) - 1.53) / 2.67), 2) * Globals->plotsize;
   return (cover > 100) ? 100 : cover;
 }
 
