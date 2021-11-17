@@ -10,7 +10,7 @@
 #define SEEDDISPERSAL_H
 
 /* Holds seed dispersal information. */
-struct _grid_sd_struct
+typedef struct _grid_sd_struct
 { //for seed dispersal
 	/* TRUE if seeds are present. */
 	Bool seeds_present;
@@ -20,7 +20,7 @@ struct _grid_sd_struct
 	double **dispersalProb;
 	/* Last year's precipitation. */
 	double lyppt;
-}typedef Grid_SD_St;
+} Grid_SD_St;
 
 /* TRUE if we should run seed dispersal between years during the main simulation. */
 Bool UseSeedDispersal;

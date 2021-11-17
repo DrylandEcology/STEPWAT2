@@ -25,7 +25,7 @@
 /*********************** Grid Structures ****************************/
 
 // Contains the input data for all the soil layers of a cell
-struct Soil_st
+typedef struct Soil_st
 {
 	// Number of soil layers (size of lyr array)
 	int num_layers;
@@ -45,20 +45,20 @@ struct Soil_st
     RealF *pclay;       /* Each Layer's clay content */
     RealF *imperm;      /* Each layer's impermiability */
     RealF *soiltemp;    /* Each Layer's temperature */
-}typedef SoilType;
+} SoilType;
 
 /* Initialization information. */
-struct grid_init_species_st
+typedef struct grid_init_species_st
 {
 	/* TRUE if at least one species has requested initialization */
 	int useInitialization;
 	/* Array of Boolean values. TRUE if given species
 	   should be included in spinup */
 	int *shouldBeInitialized;
-}typedef Grid_Init_Species_St;
+} Grid_Init_Species_St;
 
 /* Holds all plot-specific parameters */
-struct grid_cell_st
+typedef struct grid_cell_st
 {
 	/* RGroup corresponding to this cell */
 	GroupType **myGroup;
@@ -108,7 +108,7 @@ struct grid_cell_st
 	// Soil layer information for this cell.
 	SoilType mySoils;
 	/* ------------------ End Soils --------------------- */
-} typedef CellType;
+}  CellType;
 
 /**************************** Enumerators *********************************/
 /* Indices for grid_directories go here */

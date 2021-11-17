@@ -31,7 +31,7 @@
  * \date 13 January 2020
  * \ingroup MORTALITY
  */
-struct CheatgrassPrecip_st {
+typedef struct CheatgrassPrecip_st {
   /** \brief The Spring precipitation in the previous 3 years.
    * The array is indexed from newest to oldest, meaning prevSpring[0] is the 
    * most recent value. */
@@ -75,7 +75,7 @@ struct CheatgrassPrecip_st {
    * even though it does make the struct a little more confusing. 
    */ 
   double thisJanThruMar;
-} typedef CheatgrassPrecip;
+} CheatgrassPrecip;
 
 /* -------------------------- Exported Functions --------------------------- */
 // See ST_mortality.c for definitions and documentation of these functions.
