@@ -28,6 +28,9 @@
 #include "sw_src/SW_Times.h"
 #include "ST_defines.h"
 #include "sw_src/SW_Defines.h"
+#include "sw_src/pcg/pcg_basic.h"
+
+
 
 int getNTranspLayers(int veg_prod_type);
 void free_all_sxw_memory( void );
@@ -180,5 +183,15 @@ typedef struct temp_SXW_st{
 /* convert 2d group by layer indices to
    layer/period 1D index */
 #define Ilg(l,g) ((l)*SXW->NGrps + (g))
+
+
+
+/* =================================================== */
+/*            Externed Global Variables                */
+/* --------------------------------------------------- */
+extern SXW_t *SXW;
+extern SXW_resourceType *SXWResources;
+extern pcg32_random_t resource_rng;
+extern transp_t *transp_window;
 
 #endif

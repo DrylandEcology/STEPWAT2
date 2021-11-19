@@ -22,9 +22,16 @@ typedef struct _grid_sd_struct
 	double lyppt;
 } Grid_SD_St;
 
-/* TRUE if we should run seed dispersal between years during the main simulation. */
-Bool UseSeedDispersal;
 
+/* =================================================== */
+/*            Externed Global Variables                */
+/* --------------------------------------------------- */
+extern Bool UseSeedDispersal;
+
+
+/* =================================================== */
+/*             Global Function Declarations            */
+/* --------------------------------------------------- */
 void disperseSeeds(void);
 void initDispersalParameters(void);
 

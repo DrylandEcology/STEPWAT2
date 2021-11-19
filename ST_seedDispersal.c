@@ -15,12 +15,22 @@ int _do_bulk_dispersal(SppIndex sp);
 void _do_precise_dispersal(int leftoverSeeds, SppIndex sp);
 float _cell_dist(int row1, int row2, int col1, int col2, float cellLen);
 
+
+/* =================================================== */
+/*                  Global Variables                   */
+/* --------------------------------------------------- */
+
 /* RNG unique to seed dispersal. */
 pcg32_random_t dispersal_rng;
 
-/* Derives the probabilities that a given cell will disperse seeds to any other cell. 
-   results of this function can be accessed using 
-   gridCells[a][b].mySeedDispersal[s].dispersalProb[c][d] 
+/* TRUE if we should run seed dispersal between years during the main simulation. */
+Bool UseSeedDispersal = 0;
+
+
+
+/* Derives the probabilities that a given cell will disperse seeds to any other cell.
+   results of this function can be accessed using
+   gridCells[a][b].mySeedDispersal[s].dispersalProb[c][d]
    where (a,b) are the coordinates of the sender,
    (b, c) are the coordinates of the receiver,
    and s is the species. */

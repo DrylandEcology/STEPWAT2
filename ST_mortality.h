@@ -94,44 +94,31 @@ void initCheatgrassPrecip(void);
 void setCheatgrassPrecip(CheatgrassPrecip* newCheatgrassPrecip);
 CheatgrassPrecip* getCheatgrassPrecip(void);
 
-/* ----------------------------- Exported RNG ------------------------------ */
-
-/**
- * \brief The random number generator specific to the 
- *        [mortality](\ref MORTALITY) module.
- * 
- * This RGN is declared in the header file for other modules can seed it. Other
- * modules should NOT use this RNG to generate random numbers.
- * 
- * \ingroup MORTALITY
- */
-pcg32_random_t mortality_rng;
-
-/* ---------------------------- Exported Flags ----------------------------- */
-
-/**
- * \brief A flag for turning cheatgrass-driven wildfire on and off.
- * \ingroup MORTALITY
- */
-Bool UseCheatgrassWildfire;
-
 /* ---------------------------- Exported Enums ----------------------------- */
 
 /**
  * \brief All types of mortality.
- * 
+ *
  * Used to record what killed an individual.
- * 
+ *
  * \sa indiv_st which instantiates this enumerator.
- * 
+ *
  * \ingroup MORTALITY
  */
 typedef enum {
-    Slow, 
-    NoResources, 
-    Intrinsic, 
-    Disturbance, 
+    Slow,
+    NoResources,
+    Intrinsic,
+    Disturbance,
     LastMort
 } MortalityType;
+
+
+/* =================================================== */
+/*            Externed Global Variables                */
+/* --------------------------------------------------- */
+extern pcg32_random_t mortality_rng;
+extern Bool *_SomeKillage;
+extern Bool UseCheatgrassWildfire;
 
 #endif

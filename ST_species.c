@@ -29,10 +29,15 @@
 #include "sw_src/rands.h"
 #include "sw_src/pcg/pcg_basic.h"
 #include "ST_initialization.h"
-#include "ST_seedDispersal.h"
+#include "ST_seedDispersal.h" // externs `UseSeedDispersal`
 
-extern
-  pcg32_random_t species_rng;
+
+/* =================================================== */
+/*                  Global Variables                   */
+/* --------------------------------------------------- */
+pcg32_random_t species_rng;
+
+
 
 /******** Modular External Function Declarations ***********/
 /* -- truly global functions are declared in functions.h --*/

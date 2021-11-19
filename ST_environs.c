@@ -20,10 +20,10 @@
 #include "ST_globals.h"
 #include "sw_src/pcg/pcg_basic.h"
 #include "sw_src/rands.h"
+#include "sxw.h" // externs `*SXW`
 #include "sxw_funcs.h"
 #include "sw_src/filefuncs.h"
 #include "sw_src/Times.h"
-extern SXW_t* SXW;
 
 /*********** Locally Used Function Declarations ************/
 /***********************************************************/
@@ -37,8 +37,7 @@ static void _make_disturbance( void);
 /**************************************************************/
 /**************************************************************/
 
-extern
-  pcg32_random_t environs_rng;
+pcg32_random_t environs_rng;
 
 
 void Env_Generate( void) {

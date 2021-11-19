@@ -45,8 +45,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "sw_src/generic.h"
-#include "sw_src/filefuncs.h"
+#include "sw_src/generic.h" // externs `errstr`
+#include "sw_src/filefuncs.h" // externs `inbuf`
 #include "sw_src/myMemory.h"
 #include "ST_steppe.h"
 #include "ST_globals.h"
@@ -63,7 +63,7 @@
 #include "sw_src/SW_Files.h"
 #include "sw_src/SW_Weather.h"
 #include "sw_src/SW_Markov.h"
-#include "sw_src/SW_Output.h"
+#include "sw_src/SW_Output.h" // externs `prepare_IterationSummary`, `storeAllIterations`
 #include "sw_src/rands.h"
 #include "sw_src/pcg/pcg_basic.h"
 
@@ -71,17 +71,10 @@
 /*************** Global Variable Declarations ***************/
 /***********************************************************/
 SXW_t* SXW;
+SXW_resourceType* SXWResources;
+pcg32_random_t resource_rng; //rng for swx_resource.c functions.
 
-extern SW_SITE SW_Site;
-extern SW_MODEL SW_Model;
-extern SW_VEGPROD SW_VegProd;
-extern SW_WEATHER SW_Weather;
-extern SW_MARKOV SW_Markov;
-//extern SW_SOILWAT SW_Soilwat;
 
-// defined in `SW_Output.c`:
-extern Bool prepare_IterationSummary;
-extern Bool storeAllIterations;
 
 /*************** Module/Local Variable Declarations ***************/
 /***********************************************************/
@@ -91,11 +84,8 @@ extern Bool storeAllIterations;
 // Window of transpiration used by _transp_contribution_by_group() in sxw_resource.c
 // "Window" refers to the number of years over which transpiration data is averaged.
 transp_t* transp_window;
-pcg32_random_t resource_rng; //rng for swx_resource.c functions.
-SXW_resourceType* SXWResources;
 
 /* These are only used here so they are static.  */
-// static char inbuf[FILENAME_MAX];   /* reusable input buffer */
 static char _swOutDefName[FILENAME_MAX];
 static char *MyFileName;
 static char **_sxwfiles[SXW_NFILES];

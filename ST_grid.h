@@ -147,20 +147,20 @@ typedef enum
 	SOIL_READ_FAILURE = -1,
 } Soil_Read_Return_Values;
 
-/************************ Exported Variable Declarations **************************/
 
-/* gridCells[i][j] denotes the cell at position (i,j) */
-CellType** gridCells;
-/* Rows in the grid */
-int grid_Rows;
-/* Columns in the grid */
-int grid_Cols;
-/* Array of file names. Use the File_Indices enum to pick the correct index. */
-char *grid_files[N_GRID_FILES];
-/* Array of directory names. Use the Directory_Indices enum to pick the correct index. */
-char *grid_directories[N_GRID_DIRECTORIES];
-/* TRUE if every cell should write its own output file. */
-Bool writeIndividualFiles;
+
+/* =================================================== */
+/*            Externed Global Variables                */
+/* --------------------------------------------------- */
+extern pcg32_random_t grid_rng;
+extern CellType** gridCells;
+extern int grid_Rows;
+extern int grid_Cols;
+extern char *grid_files[N_GRID_FILES];
+extern char *grid_directories[N_GRID_DIRECTORIES];
+extern Bool writeIndividualFiles;
+
+
 
 /**************************** Exported Functions **********************************/
 

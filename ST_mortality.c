@@ -34,6 +34,34 @@
 #include "sw_src/pcg/pcg_basic.h"
 #include "sxw_vars.h"
 
+
+/* =================================================== */
+/*                  Global Variables                   */
+/* --------------------------------------------------- */
+
+/* ----------------------------- Exported RNG ------------------------------ */
+
+/**
+ * \brief The random number generator specific to the
+ *        [mortality](\ref MORTALITY) module.
+ *
+ * This RGN is declared in the header file for other modules can seed it. Other
+ * modules should NOT use this RNG to generate random numbers.
+ *
+ * \ingroup MORTALITY
+ */
+pcg32_random_t mortality_rng;
+
+/* ---------------------------- Exported Flags ----------------------------- */
+
+/**
+ * \brief A flag for turning cheatgrass-driven wildfire on and off.
+ * \ingroup MORTALITY
+ */
+Bool UseCheatgrassWildfire = 0;
+
+
+
 /******** Modular External Function Declarations ***********/
 /* -- truly global functions are declared in functions.h --*/
 /***********************************************************/
