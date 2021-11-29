@@ -18,19 +18,39 @@
 //      an example initialization function check out _run_spinup().
 /***********************************************************************/
 
-// ST_initialization.h contains declarations for runInitialization and loadInitializationConditions 
-#include "ST_initialization.h" 
-#include "ST_grid.h"
+// ST_initialization.h contains declarations for runInitialization and loadInitializationConditions
+#include "ST_initialization.h"
+#include "ST_grid.h" // externs `grid_rng`
 #include "ST_stats.h"
-#include "ST_globals.h"
-#include "ST_mortality.h"
+#include "ST_globals.h" // externs `UseProgressBar`
+#include "ST_functions.h" // externs `environs_rng`, `resgroups_rng`, `species_rng`
+#include "ST_mortality.h" // externs `mortality_rng`
 #include "sw_src/pcg/pcg_basic.h"
 #include "sw_src/rands.h"
 #include "sxw_funcs.h"
 #include "sw_src/myMemory.h"
 #include "sw_src/filefuncs.h"
+#include "sw_src/SW_Site.h" // externs SW_Site
+#include "sw_src/SW_VegProd.h" // externs SW_VegProd
+#include "sw_src/SW_SoilWater.h" // externs SW_Soilwat
+#include "sw_src/SW_Weather.h" // externs SW_Weather
+#include "sw_src/SW_Markov.h"// externs `markov_rng`
 #include "ST_progressBar.h"
 #include "ST_stats.h"
+
+
+/* =================================================== */
+/*                  Global Variables                   */
+/* --------------------------------------------------- */
+
+/* Stores the state of the cells following spinup. */
+CellType** initializationCells;
+/* The method of initialization specified in inputs. */
+InitializationMethod initializationMethod;
+/* TRUE if the program is currently in initialization. */
+Bool DuringInitialization = 0;
+
+
 
 /********** Local functions. These should all be treated as private. *************/
 static void _run_spinup(void);
@@ -39,42 +59,23 @@ static void _beginInitialization(void);
 static void _endInitialization(void);
 static void _saveAsInitializationConditions(void);
 
-/***************************** Externed variables **********************************/
-/* Note that in an ideal world we wouldn't need to extern any variables because 
-   every module would declare them in a header file. Hopefully we can get this
-   cleaned up soon! -CH */
 
-// these are SOILWAT variables that we need...
-extern SW_SOILWAT SW_Soilwat;
-extern SW_SITE SW_Site;
-extern SW_VEGPROD SW_VegProd;
-extern SW_WEATHER SW_Weather;
-
-extern pcg32_random_t grid_rng;         // Gridded mode's unique RNG.
-
-/* We need to seed these RNGs when using the gridded mode but do not use them in this file. */
-extern pcg32_random_t environs_rng;     // Used exclusively in ST_environs.c
-extern pcg32_random_t resgroups_rng;    // Used exclusively in ST_resgroups.c
-extern pcg32_random_t species_rng;      // Used exclusively in ST_species.c
-extern pcg32_random_t markov_rng;       // Used exclusively in SW_Markov.c
-
-extern Bool UseProgressBar;             // From ST_main.c
 
 /********* Modular functions defined elsewhere ************/
 /* Again, we should clean this up eventually. -CH */
 
 void rgroup_Establish(void);
 void rgroup_PartResources(void);
-void rgroup_Grow(void); 
+void rgroup_Grow(void);
 void rgroup_IncrAges(void);
 void parm_Initialize(void);
 void Plot_Initialize(void);
 void copy_rgroup(const GroupType* src, GroupType* dest);
 void copy_species(const SpeciesType* src, SpeciesType* dest);
 
-/* Initializes the plot with whichever method you have specified with initializationMethod. 
+/* Initializes the plot with whichever method you have specified with initializationMethod.
    This function takes care of EVERYTHING involved with initialization.
-   After calling this function you can load in the initialization information by calling 
+   After calling this function you can load in the initialization information by calling
    loadInitializationConditions(). */
 void runInitialization(void){
 	_beginInitialization();

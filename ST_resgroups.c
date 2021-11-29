@@ -37,8 +37,12 @@
 #include "ST_functions.h"
 #include "sxw_funcs.h"
 
-extern
-  pcg32_random_t resgroups_rng;
+
+/* =================================================== */
+/*                  Global Variables                   */
+/* --------------------------------------------------- */
+pcg32_random_t resgroups_rng;
+
 
 /******** Modular External Function Declarations ***********/
 /* -- truly global functions are declared in functions.h --*/

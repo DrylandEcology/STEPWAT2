@@ -17,6 +17,19 @@
 
 #include "ST_defines.h"
 
+
+/* =================================================== */
+/*            Externed Global Variables                */
+/* --------------------------------------------------- */
+extern pcg32_random_t environs_rng; // defined in ST_environs.c
+extern pcg32_random_t resgroups_rng; // defined in  ST_resgroups.c
+extern pcg32_random_t species_rng; // defined in ST_species.c
+
+
+
+/* =================================================== */
+/*             Global Function Declarations            */
+/* --------------------------------------------------- */
 void Env_Generate( void );
 void copy_environment(const EnvType* src, EnvType* dest);
 void copy_plot(const PlotType* src, PlotType* dest);

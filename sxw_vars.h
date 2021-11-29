@@ -15,11 +15,9 @@
 #ifndef SXW_VARS_DEF
 #define SXW_VARS_DEF
 
-#include "sxw.h"
+#include "sxw.h" // externs `*SXW`
 #include "sw_src/generic.h"
 
-
-extern SXW_t* SXW;
 
 
 #endif

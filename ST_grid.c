@@ -35,40 +35,46 @@
 #include "sw_src/filefuncs.h"
 #include "sw_src/myMemory.h"
 #include "sw_src/rands.h"
+#include "sw_src/SW_SoilWater.h" // externs SW_Soilwat
+#include "sw_src/SW_Weather.h" // externs SW_Weather
+#include "sw_src/SW_Markov.h"// externs `markov_rng`
 #include "ST_grid.h"
 #include "ST_steppe.h"
-#include "ST_globals.h"
+#include "ST_globals.h" // externs `UseProgressBar`
+#include "ST_functions.h" // externs `environs_rng`, `resgroups_rng`, `species_rng`
 #include "ST_stats.h"
 #include "sxw_funcs.h"
 #include "ST_initialization.h"
 #include "ST_progressBar.h"
-#include "ST_seedDispersal.h"
-#include "ST_mortality.h"
+#include "ST_seedDispersal.h" // externs `UseSeedDispersal`
+#include "ST_mortality.h" // externs `mortality_rng`, `*_SomeKillage`, `UseCheatgrassWildfire`
+
+
+/* =================================================== */
+/*                  Global Variables                   */
+/* --------------------------------------------------- */
 
 char sd_Sep;
 
-int grid_Cells;
-Bool UseDisturbances, UseSoils, sd_DoOutput; //these are treated like booleans
+int grid_Cells = 0;
+Bool UseDisturbances = 0, UseSoils = 0, sd_DoOutput = 0; //these are treated like booleans
 
-/***************************** Externed variables **********************************/
-/* Note that in an ideal world we wouldn't need to extern any variables because 
-   every module would declare them in a header file. Hopefully we can get this
-   cleaned up soon! -CH */
+pcg32_random_t grid_rng;         // Gridded mode's unique RNG.
 
-// these are SOILWAT variables that we need...
-extern SW_SOILWAT SW_Soilwat;
-extern SW_WEATHER SW_Weather;
+/* gridCells[i][j] denotes the cell at position (i,j) */
+CellType** gridCells;
+/* Rows in the grid */
+int grid_Rows = 0;
+/* Columns in the grid */
+int grid_Cols = 0;
+/* Array of file names. Use the File_Indices enum to pick the correct index. */
+char *grid_files[N_GRID_FILES];
+/* Array of directory names. Use the Directory_Indices enum to pick the correct index. */
+char *grid_directories[N_GRID_DIRECTORIES];
+/* TRUE if every cell should write its own output file. */
+Bool writeIndividualFiles = 0;
 
-extern pcg32_random_t grid_rng;         // Gridded mode's unique RNG.
 
-/* We need to seed these RNGs when using the gridded mode but do not use them in this file. */
-extern pcg32_random_t environs_rng;     // Used exclusively in ST_environs.c
-extern pcg32_random_t resgroups_rng;    // Used exclusively in ST_resgroups.c
-extern pcg32_random_t species_rng;      // Used exclusively in ST_species.c
-extern pcg32_random_t markov_rng;       // Used exclusively in SW_Markov.c
-
-extern Bool UseProgressBar;             // From ST_main.c
-extern Bool *_SomeKillage;				// From ST_mortality.c 
 
 /******** Modular External Function Declarations ***********/
 /* -- truly global functions are declared in functions.h --*/
@@ -181,7 +187,7 @@ void runGrid(void)
 
 	// SOILWAT resets SW_Weather.name_prefix every iteration. This is not the behavior we want 
 	// so the name is stored here.
-	char SW_prefix_permanent[2048];
+	char SW_prefix_permanent[MAX_FILENAMESIZE - 5]; // see `SW_WEATHER`: subtract 4-digit 'year' file type extension
 	sprintf(SW_prefix_permanent, "%s/%s", grid_directories[GRID_DIRECTORY_STEPWAT_INPUTS], SW_Weather.name_prefix);
 
 	for (iter = 1; iter <= SuperGlobals.runModelIterations; iter++)

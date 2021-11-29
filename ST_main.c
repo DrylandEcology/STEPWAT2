@@ -20,31 +20,31 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "ST_steppe.h"
-#include "sw_src/generic.h"
-#include "sw_src/filefuncs.h"
+#include "sw_src/generic.h" // externs `*logfp`, `errstr`, `EchoInits`, `QuietMode`, `logged`
+#include "sw_src/filefuncs.h" // externs `inbuf`
 #include "sw_src/myMemory.h"
 #include "sw_src/SW_VegProd.h"
 #include "sw_src/SW_Control.h"
 #include "sw_src/pcg/pcg_basic.h"
+#include "sw_src/SW_Markov.h"// externs `markov_rng`
 
 #include "sxw_funcs.h"
 #include "sxw.h"
+// externs `prepare_IterationSummary`, `storeAllIterations`
 #include "sw_src/SW_Output.h"
-#include "sw_src/SW_Output_outtext.h"
+#include "sw_src/SW_Output_outtext.h" // externs `print_IterationSummary`
 #include "sw_src/SW_Output_outarray.h"
 #include "sw_src/rands.h"
+#include "ST_functions.h" // externs `environs_rng`, `resgroups_rng`, `species_rng`
 #include "ST_stats.h"
 #include "ST_initialization.h"
 #include "ST_progressBar.h"
-#include "ST_seedDispersal.h"
-#include "ST_mortality.h"
+#include "ST_seedDispersal.h" // externs `UseSeedDispersal`
+#include "ST_mortality.h" // externs `mortality_rng`, `*_SomeKillage`
+#include "ST_grid.h" // externs `grid_rng`
 
-extern Bool prepare_IterationSummary; // defined in `SOILWAT2/SW_Output.c`
-extern Bool print_IterationSummary; // defined in `SOILWAT2/SW_Output_outtext.c`
-extern Bool storeAllIterations; // defined in `SOILWAT2/SW_Output.c`
-extern SW_VEGPROD SW_VegProd;
-extern Bool *_SomeKillage;				// From ST_mortality.c 
-SW_FILE_STATUS SW_File_Status;
+
+
 
 /************* External Function Declarations **************/
 /***********************************************************/
@@ -112,19 +112,15 @@ void deallocate_Globals(Bool isGriddedMode);
 /* a couple of debugging routines */
 void check_sizes(const char *);
 
-Bool QuietMode;
+
 
 /************ External Variable Definitions  ***************/
 /*              see ST_globals.h                       */
 /***********************************************************/
-char errstr[1024];
-char inbuf[1024];
-/** \brief The log file */
-FILE *logfp;
+
+
 /** \brief optional place to put progress info */
 FILE *progfp;
-/** \brief indicator that err file was written to */
-int logged;
 /** \brief Global struct holding species-specific variables. */
 SpeciesType  **Species;
 /** \brief Global struct holding rgroup-specific variables. */
@@ -145,8 +141,9 @@ BmassFlagsType BmassFlags;
 MortFlagsType  MortFlags;
 
 Bool UseGrid;
-Bool EchoInits;
 Bool UseProgressBar;
+
+
 /**
  * \brief If TRUE an SQL database wil be generated containing debug information.
  * This flag can be set by adding "-STDebug" as an option when calling the program.
@@ -157,16 +154,11 @@ GrpIndex rg;
 SppIndex sp;
 IndivType *ndv; /* shorthand for the current indiv */
 
-pcg32_random_t environs_rng;
-pcg32_random_t resgroups_rng;
-pcg32_random_t species_rng;
-pcg32_random_t grid_rng;
-extern pcg32_random_t markov_rng;
 
 #ifndef STDEBUG
 
 /** \brief Runs the program.
- * 
+ *
  * Initializes flags and parameters, and runs the non-gridded mode. If the
  * user requests gridded mode this function calls RunGrid.
  */

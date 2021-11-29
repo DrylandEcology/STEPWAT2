@@ -27,8 +27,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "ST_steppe.h"
-#include "sw_src/generic.h"
-#include "sw_src/filefuncs.h"
+#include "sw_src/generic.h" // externs `errstr`
+#include "sw_src/filefuncs.h" // externs `inbuf`
 #include "sw_src/myMemory.h"
 #include "sxw_funcs.h"
 
@@ -43,10 +43,7 @@
 /************ External Variable Definitions  ***************/
 /*              see ST_globals.h                       */
 /***********************************************************/
-char errstr[1024];
-char inbuf[1024];
-FILE *logfp;
-int logged;  /* indicator that err file was written to */
+
 SpeciesType  **Species;
 GroupType    **RGroup;
 SucculentType  Succulent;

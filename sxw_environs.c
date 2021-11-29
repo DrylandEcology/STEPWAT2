@@ -19,25 +19,16 @@
 #include <stdio.h>
 #include "sw_src/generic.h"
 #include "ST_steppe.h"
-/*#include "ST_globals.h"*/
+#include "ST_globals.h" // externs `*Env`
 #include "sw_src/SW_Defines.h"
-#include "sxw.h"
+#include "sxw.h" // externs `*SXW`
 #include "sxw_module.h"
-#include "sw_src/SW_Model.h"
-#include "sw_src/SW_Site.h"
-#include "sw_src/SW_SoilWater.h"
-#include "sw_src/SW_Weather.h"
+#include "sw_src/SW_Model.h" // externs SW_Model
+#include "sw_src/SW_Site.h" // externs SW_Site
+#include "sw_src/SW_SoilWater.h" // externs SW_Soilwat
+#include "sw_src/SW_Weather.h" // externs SW_Weather
 
-/*************** Global Variable Declarations ***************/
-/***********************************************************/
-extern SXW_t* SXW;
 
-extern SW_SITE SW_Site;
-extern SW_MODEL SW_Model;
-extern SW_SOILWAT SW_Soilwat;
-extern SW_WEATHER SW_Weather;
-
-extern EnvType *Env;
 
 /*************** Local Variable Declarations ***************/
 /***********************************************************/

@@ -29,13 +29,12 @@ void runInitialization(void);
 void loadInitializationConditions(void);
 void freeInitializationMemory(void);
 
-/************************ Exported variables ****************************/
 
-/* Stores the state of the cells following spinup. */
-CellType** initializationCells;
-/* The method of initialization specified in inputs. */
-InitializationMethod initializationMethod;
-/* TRUE if the program is currently in initialization. */
-Bool DuringInitialization;
+/* =================================================== */
+/*            Externed Global Variables                */
+/* --------------------------------------------------- */
+extern CellType** initializationCells;
+extern InitializationMethod initializationMethod;
+extern Bool DuringInitialization;
 
 #endif

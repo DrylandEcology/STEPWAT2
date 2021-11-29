@@ -39,7 +39,7 @@
 #include "sw_src/myMemory.h"
 #include "ST_structs.h"
 #include "ST_stats.h" // Contains most of the function declarations.
-#include "ST_seedDispersal.h"
+#include "ST_seedDispersal.h" // externs `UseSeedDispersal`
 #include "ST_globals.h"
 
 /* ----------------- Local Variables --------------------- */

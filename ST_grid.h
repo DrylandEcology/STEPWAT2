@@ -25,7 +25,7 @@
 /*********************** Grid Structures ****************************/
 
 // Contains the input data for all the soil layers of a cell
-struct Soil_st
+typedef struct Soil_st
 {
 	// Number of soil layers (size of lyr array)
 	int num_layers;
@@ -45,20 +45,20 @@ struct Soil_st
     RealF *pclay;       /* Each Layer's clay content */
     RealF *imperm;      /* Each layer's impermiability */
     RealF *soiltemp;    /* Each Layer's temperature */
-}typedef SoilType;
+} SoilType;
 
 /* Initialization information. */
-struct grid_init_species_st
+typedef struct grid_init_species_st
 {
 	/* TRUE if at least one species has requested initialization */
 	int useInitialization;
 	/* Array of Boolean values. TRUE if given species
 	   should be included in spinup */
 	int *shouldBeInitialized;
-}typedef Grid_Init_Species_St;
+} Grid_Init_Species_St;
 
 /* Holds all plot-specific parameters */
-struct grid_cell_st
+typedef struct grid_cell_st
 {
 	/* RGroup corresponding to this cell */
 	GroupType **myGroup;
@@ -108,7 +108,7 @@ struct grid_cell_st
 	// Soil layer information for this cell.
 	SoilType mySoils;
 	/* ------------------ End Soils --------------------- */
-} typedef CellType;
+}  CellType;
 
 /**************************** Enumerators *********************************/
 /* Indices for grid_directories go here */
@@ -147,20 +147,20 @@ typedef enum
 	SOIL_READ_FAILURE = -1,
 } Soil_Read_Return_Values;
 
-/************************ Exported Variable Declarations **************************/
 
-/* gridCells[i][j] denotes the cell at position (i,j) */
-CellType** gridCells;
-/* Rows in the grid */
-int grid_Rows;
-/* Columns in the grid */
-int grid_Cols;
-/* Array of file names. Use the File_Indices enum to pick the correct index. */
-char *grid_files[N_GRID_FILES];
-/* Array of directory names. Use the Directory_Indices enum to pick the correct index. */
-char *grid_directories[N_GRID_DIRECTORIES];
-/* TRUE if every cell should write its own output file. */
-Bool writeIndividualFiles;
+
+/* =================================================== */
+/*            Externed Global Variables                */
+/* --------------------------------------------------- */
+extern pcg32_random_t grid_rng;
+extern CellType** gridCells;
+extern int grid_Rows;
+extern int grid_Cols;
+extern char *grid_files[N_GRID_FILES];
+extern char *grid_directories[N_GRID_DIRECTORIES];
+extern Bool writeIndividualFiles;
+
+
 
 /**************************** Exported Functions **********************************/
 
