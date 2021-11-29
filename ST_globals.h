@@ -18,6 +18,7 @@
 #ifndef GLOBALS_H
 #define GLOBALS_H
 
+#include "ST_defines.h"
 #include "ST_functions.h"
 
 extern SpeciesType  **Species;
@@ -31,5 +32,7 @@ extern MortFlagsType  MortFlags;
 extern GlobalType     SuperGlobals;
 
 extern Bool UseGrid;
+extern Bool UseProgressBar;
+
 
 #endif

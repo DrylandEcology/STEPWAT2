@@ -16,8 +16,10 @@
 
 /******** These modules are necessary to compile ST_grid.c ********/
 #include "ST_stats.h"
+#include "ST_defines.h"
 #include "sw_src/pcg/pcg_basic.h"
 #include "sxw_vars.h"
+#include "sw_src/SW_Site.h"
 #include "sw_src/SW_SoilWater.h"
 #include "sw_src/SW_VegProd.h"
 #include "sw_src/SW_Model.h"
@@ -34,7 +36,7 @@
  * 
  * \ingroup GRID
  */
-struct Soil_st
+typedef struct Soil_st
 {
 	/** \brief Number of soil layers. */
 	int num_layers;
@@ -76,14 +78,14 @@ struct Soil_st
 	/** \brief temperature of each soil layer. size of array defined by 
 	 *         num_layers.  */
     RealF *soiltemp;
-}typedef SoilType;
+} SoilType;
 
 /** 
  * \brief [Spinup](\ref SPINUP) information for a given [cell](\ref CellType).
  * 
  * \ingroup GRID
  */
-struct grid_init_species_st
+typedef struct grid_init_species_st
 {
 	/** \brief TRUE if at least one species has requested spinup in
 	 *         this cell. */
@@ -95,7 +97,7 @@ struct grid_init_species_st
 	 *  TRUE if Species[sp] should use spinup.
 	 */
 	int *shouldSpinup;
-}typedef Grid_Init_Species_St;
+} Grid_Init_Species_St;
 
 /** 
  * \brief All information specific to a cell.
@@ -106,7 +108,7 @@ struct grid_init_species_st
  * \sa gridCells
  * \ingroup GRID
  */
-struct grid_cell_st
+typedef struct grid_cell_st
 {
 	/** \brief RGroup corresponding to this cell */
 	GroupType **myGroup;
@@ -221,7 +223,7 @@ struct grid_cell_st
 	/** \brief  Soil layer information specific to this cell. */
 	SoilType mySoils;
 	/* ------------------ End Soils --------------------- */
-} typedef CellType;
+} CellType;
 
 /**************************** Enumerators *********************************/
 /** 
@@ -298,53 +300,21 @@ typedef enum
 	SOIL_READ_FAILURE = -1,
 } Soil_Read_Return_Values;
 
-/************************ Exported Variable Declarations **************************/
 
-/** 
- * \brief The main struct of the gridded mode module.
- * 
- * gridCells[i][j] denotes the cell at position (i,j)
- * 
- * \author Chandler Haukap
- * \ingroup GRID
- */
-CellType** gridCells;
 
-/** 
- * \brief Rows in the [grid](\ref gridCells).
- * \ingroup GRID
- */
-int grid_Rows;
+/* =================================================== */
+/*            Externed Global Variables                */
+/* --------------------------------------------------- */
+extern pcg32_random_t grid_rng;
+extern CellType** gridCells;
+extern int grid_Rows;
+extern int grid_Cols;
+extern char *grid_files[N_GRID_FILES];
+extern char *grid_directories[N_GRID_DIRECTORIES];
+extern Bool writeIndividualFiles;
+extern Bool writeSOILWAT2Output;
 
-/** 
- * \brief Columns in the [grid](\ref gridCells).
- * \ingroup GRID
- */
-int grid_Cols;
 
-/** 
- * \brief Array of file names. Use the \ref File_Indices enum to pick the 
- *         correct index. 
- * \ingroup GRID
- */
-char *grid_files[N_GRID_FILES];
-
-/** \brief Array of directory names. Use the \ref Directory_Indices enum to 
- *         pick the correct index.
- * \ingroup GRID
- */
-char *grid_directories[N_GRID_DIRECTORIES];
-/** 
- * \brief TRUE if every cell should write its own output file.
- * \ingroup GRID
- */
-Bool writeIndividualFiles;
-
-/**
- * \brief Set to TRUE to tell the gridded mode to output SOILWAT2 files.
- * \ingroup GRID
- */
-Bool writeSOILWAT2Output;
 
 /**************************** Exported Functions **********************************/
 /* See ST_grid.c for documentation of these functions. */

@@ -28,16 +28,16 @@ struct accumulators_st {
 };
 
 /* Accumulator along with the RGroup or Species name. */
-struct stat_st {
+typedef struct stat_st {
   char *name; /* array of ptrs to names in RGroup & Species */
   struct accumulators_st *s;
-} typedef StatType;
+} StatType;
 
 /* Struct for wildfire and prescribed fire stats. */
-struct fire_st {
+typedef struct fire_st {
   int *wildfire;
   int **prescribedFire;
-} typedef FireStatsType;
+} FireStatsType;
 
 /*----------------------- Exported Functions ---------------------------------- */
 void stat_Collect( Int year ) ;

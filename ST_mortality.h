@@ -31,7 +31,7 @@
  * \date 13 January 2020
  * \ingroup MORTALITY
  */
-struct CheatgrassPrecip_st {
+typedef struct CheatgrassPrecip_st {
   /** \brief The Spring precipitation in the previous 3 years.
    * The array is indexed from newest to oldest, meaning prevSpring[0] is the 
    * most recent value. */
@@ -75,7 +75,7 @@ struct CheatgrassPrecip_st {
    * even though it does make the struct a little more confusing. 
    */ 
   double thisJanThruMar;
-} typedef CheatgrassPrecip;
+} CheatgrassPrecip;
 
 /* -------------------------- Exported Functions --------------------------- */
 // See ST_mortality.c for definitions and documentation of these functions.
@@ -94,44 +94,31 @@ void initCheatgrassPrecip(void);
 void setCheatgrassPrecip(CheatgrassPrecip* newCheatgrassPrecip);
 CheatgrassPrecip* getCheatgrassPrecip(void);
 
-/* ----------------------------- Exported RNG ------------------------------ */
-
-/**
- * \brief The random number generator specific to the 
- *        [mortality](\ref MORTALITY) module.
- * 
- * This RGN is declared in the header file for other modules can seed it. Other
- * modules should NOT use this RNG to generate random numbers.
- * 
- * \ingroup MORTALITY
- */
-pcg32_random_t mortality_rng;
-
-/* ---------------------------- Exported Flags ----------------------------- */
-
-/**
- * \brief A flag for turning cheatgrass-driven wildfire on and off.
- * \ingroup MORTALITY
- */
-Bool UseCheatgrassWildfire;
-
 /* ---------------------------- Exported Enums ----------------------------- */
 
 /**
  * \brief All types of mortality.
- * 
+ *
  * Used to record what killed an individual.
- * 
+ *
  * \sa indiv_st which instantiates this enumerator.
- * 
+ *
  * \ingroup MORTALITY
  */
 typedef enum {
-    Slow, 
-    NoResources, 
-    Intrinsic, 
-    Disturbance, 
+    Slow,
+    NoResources,
+    Intrinsic,
+    Disturbance,
     LastMort
 } MortalityType;
+
+
+/* =================================================== */
+/*            Externed Global Variables                */
+/* --------------------------------------------------- */
+extern pcg32_random_t mortality_rng;
+extern Bool *_SomeKillage;
+extern Bool UseCheatgrassWildfire;
 
 #endif

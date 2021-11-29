@@ -1,27 +1,65 @@
 /**
- * \file ST_spinup.c 
+ * \file ST_spinup.c
  * \brief Definitions of all [spinup](\ref SPINUP) functions.
- * 
+ *
  * Contains definitions of all functions related to spinup. The
  * underscore prefix in function names to denote private functions that should
  * NEVER be called outside of this file.
- * 
+ *
  * \author Chandler Haukap
  * \date September 2019
  * \ingroup SPINUP_PRIVATE
  */
 
-// ST_spinup.h contains declarations for runSpinup and 
-// loadSpinupConditions 
+// ST_spinup.h contains declarations for runSpinup and
+// loadSpinupConditions
 #include "ST_spinup.h"
 #include "ST_stats.h"
-#include "ST_globals.h"
+#include "ST_globals.h" // externs UseProgressBar
 #include "ST_mortality.h"
 #include "sw_src/rands.h"
+#include "sw_src/SW_SoilWater.h" // externs SW_Soilwat
+#include "sw_src/SW_Weather.h" // externs SW_Weather
+#include "sw_src/SW_Site.h" // externs SW_Site
+#include "sw_src/SW_VegProd.h" // externs SW_VegProd
+#include "sw_src/SW_Markov.h"// externs `markov_rng`
 #include "sxw_funcs.h"
 #include "sw_src/myMemory.h"
 #include "sw_src/filefuncs.h"
 #include "ST_progressBar.h"
+#include "ST_grid.h" // externs grid_rng
+// externs `prepare_IterationSummary`, `storeAllIterations`
+#include "sw_src/SW_Output.h"
+#include "sw_src/SW_Output_outtext.h" // externs `print_IterationSummary`
+#include "sw_src/SW_Output_outarray.h"
+#include "ST_functions.h" // externs `environs_rng`, `resgroups_rng`, `species_rng`
+
+
+/* =================================================== */
+/*                  Global Variables                   */
+/* --------------------------------------------------- */
+/**
+ * \brief Stores the state of the cells following spinup.
+ *
+ * This information must be stored so it can be loaded in every iteration of
+ * the spinup.
+ *
+ * \ingroup SPINUP
+ */
+CellType** spinupCells;
+
+/**
+ * \brief TRUE if spinup should be run.
+ * \ingroup SPINUP
+ */
+Bool shouldSpinup;
+
+/**
+ * \brief TRUE if the program is currently in spinup.
+ * \ingroup SPINUP
+ */
+Bool DuringSpinup;
+
 
 /******** Local functions. These should all be treated as private. ***********/
 static void _run_spinup(void);
@@ -29,35 +67,13 @@ static void _beginSpinup(void);
 static void _endSpinup(void);
 static void _saveAsSpinupConditions(void);
 
-/************************** Externed variables *******************************/
-/* Note that in an ideal world we wouldn't need to extern any variables because
-   every module would declare them in a header file. Hopefully we can get this
-   cleaned up soon! -CH */
-
-// these are SOILWAT variables that we need...
-extern SW_SOILWAT SW_Soilwat;
-extern SW_SITE SW_Site;
-extern SW_VEGPROD SW_VegProd;
-extern SW_WEATHER SW_Weather;
-extern Bool prepare_IterationSummary;
-
-extern pcg32_random_t grid_rng;         // Gridded mode's unique RNG.
-
-/* We need to seed these RNGs when using the gridded mode but do not use them
- * in this file. */
-extern pcg32_random_t environs_rng;     // Used exclusively in ST_environs.c
-extern pcg32_random_t resgroups_rng;    // Used exclusively in ST_resgroups.c
-extern pcg32_random_t species_rng;      // Used exclusively in ST_species.c
-extern pcg32_random_t markov_rng;       // Used exclusively in SW_Markov.c
-
-extern Bool UseProgressBar;             // From ST_main.c
 
 /********* Modular functions defined elsewhere ************/
 /* Again, we should clean this up eventually. -CH */
 
 void rgroup_Establish(void);
 void rgroup_PartResources(void);
-void rgroup_Grow(void); 
+void rgroup_Grow(void);
 void rgroup_IncrAges(void);
 void parm_Initialize(void);
 void Plot_Initialize(void);
@@ -66,11 +82,11 @@ void copy_species(const SpeciesType* src, SpeciesType* dest);
 
 /**
  * \brief Spin up \ref gridCells.
- * 
+ *
  * This function takes care of EVERYTHING involved with spinup. After calling
  * this function you can load in the spinup information by calling
  * \ref loadSpinupConditions.
- * 
+ *
  * \author Chandler Haukap
  * \date August 2019
  * \ingroup SPINUP
@@ -126,12 +142,12 @@ void runSpinup(void){
                     continue; // No spinup requested. Move on to next cell.
                 }
 
-                /* This step is important. load_cell loaded in the actual 
+                /* This step is important. load_cell loaded in the actual
                    accumulators, but we do not want to accumulate stats while
                    in spinup. We need to load in dummy accumulators to ensure
                    we ignore everything that happens in spinup. */
                 stat_Copy_Accumulators(dummy_Dist, dummy_Ppt, dummy_Temp,
-                                       dummy_Grp, dummy_Gsize, dummy_Gpr, 
+                                       dummy_Grp, dummy_Gsize, dummy_Gpr,
                                        dummy_Gmort, dummy_Gestab, dummy_Spp,
                                        dummy_Indv, dummy_Smort, dummy_Sestab,
                                        dummy_Sreceived, dummy_Gwf, TRUE);
@@ -156,12 +172,12 @@ void runSpinup(void){
 
 /**
  * \brief Prepares for spinup by turning on species that have requested spinup
- *        and turning off species that have not requested spinup. 
- * 
+ *        and turning off species that have not requested spinup.
+ *
  * This function should be accompanied by a call to \ref _endSpinup.
- * 
+ *
  * \author Chandler Haukap
- * \date August 2019 
+ * \date August 2019
  * \ingroup SPINUP_PRIVATE
  */
 static void _beginSpinup(void){
@@ -171,9 +187,9 @@ static void _beginSpinup(void){
 
 	DuringSpinup = TRUE;
 
-	/* Swap Species[sp]->use_me and mySpeciesInit.shouldSpinup[sp]. shouldSpinup is an array 
-	   of booleans that represent whether the given species should be used in spinup. use_me is a 
-	   boolean that represents whether the given species should be used in production. By swaping them we 
+	/* Swap Species[sp]->use_me and mySpeciesInit.shouldSpinup[sp]. shouldSpinup is an array
+	   of booleans that represent whether the given species should be used in spinup. use_me is a
+	   boolean that represents whether the given species should be used in production. By swaping them we
 	   save space, but we have to remember to swap them back before the production run. */
 	for(i = 0; i < grid_Rows; ++i){
 		for(j = 0; j < grid_Cols; ++j){
@@ -188,7 +204,7 @@ static void _beginSpinup(void){
 				// Temporarily store use_me
 				temporary_storage = Species[sp]->use_me;
 				// Swap use_me
-				Species[sp]->use_me = gridCells[i][j].mySpeciesInit.shouldSpinup[sp]; 
+				Species[sp]->use_me = gridCells[i][j].mySpeciesInit.shouldSpinup[sp];
 				// Swap shouldBeSpinup[sp]
 				gridCells[i][j].mySpeciesInit.shouldSpinup[sp] = temporary_storage;
 			} /* End for each species */
@@ -198,14 +214,14 @@ static void _beginSpinup(void){
 }
 
 /**
- * \brief Return the program to the state it needs to be in for the main 
+ * \brief Return the program to the state it needs to be in for the main
  *        simulation.
- * 
+ *
  * \ref gridCells from gridded mode was modified heavily during spinup. Calling
  * this function reverts it to it's original state.
- * 
- * This should only be called if you have called \ref _beginSpinup. 
- * 
+ *
+ * This should only be called if you have called \ref _beginSpinup.
+ *
  * \author Chandler Haukap
  * \date August 2019
  * \ingroup SPINUP_PRIVATE
@@ -221,13 +237,13 @@ static void _endSpinup(void){
 
 /**
  * \brief Save the current state of the program as spinup conditions.
- *  
+ *
  * This is low level function. If you have already called \ref _endSpinup()
- * there is no need to call this function. 
- * 
+ * there is no need to call this function.
+ *
  * \sideeffect
  *     This function will reread the input files.
- * 
+ *
  * \author Chandler Haukap
  * \date August 2019
  * \ingroup SPINUP_PRIVATE
@@ -244,11 +260,11 @@ static void _saveAsSpinupConditions(){
 
 /**
  * \brief Load the state of the program following spinup into \ref gridCells.
- * 
- * This function must be called before every iteration of 
+ *
+ * This function must be called before every iteration of
  * [gridded mode](\ref GRID). Of course, this function will only work after a
  * call to \ref runSpinup.
- * 
+ *
  * \author Chandler Haukap
  * \date August 2019
  * \ingroup SPINUP
@@ -273,7 +289,7 @@ void loadSpinupConditions(){
 			copy_environment(&spinupCells[row][col].myEnvironment, Env);
 			copy_plot(&spinupCells[row][col].myPlot, Plot);
 			copy_succulent(&spinupCells[row][col].mySucculent, Succulent);
-            
+
 			unload_cell();
 		}
 	}
@@ -281,9 +297,9 @@ void loadSpinupConditions(){
 }
 
 /**
- * \brief "Spinup" the model by running without stat collection, fire, or 
+ * \brief "Spinup" the model by running without stat collection, fire, or
  *        grazing.
- * 
+ *
  * \author Chandler Haukap
  * \date August 2019
  * \ingroup SPINUP_PRIVATE
@@ -308,7 +324,7 @@ static void _run_spinup(void)
     rgroup_IncrAges(); 			// Increment ages of all plants
     killAnnuals(); 			// Kill annuals
     killMaxage();             // Kill plants that reach max age
-    killExtraGrowth(); 		// Kill superfluous growth	
+    killExtraGrowth(); 		// Kill superfluous growth
 
     // Turn UseSeedDispersal back on (if it was ever on)
     UseSeedDispersal = myUseSeedDispersal;
@@ -316,9 +332,9 @@ static void _run_spinup(void)
 
 /**
  * \brief Free memory allocated to spinupCells.
- * 
- * This function should only be called once per simulation. 
- * 
+ *
+ * This function should only be called once per simulation.
+ *
  * \author Chandler Haukap
  * \date August 2019
  * \ingroup SPINUP

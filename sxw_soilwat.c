@@ -38,20 +38,25 @@
 /*                INCLUDES / DEFINES                   */
 /* --------------------------------------------------- */
 
+
+#include "sw_src/generic.h"
 #include "sw_src/filefuncs.h"
 #include "sw_src/myMemory.h"
+#include "sw_src/Times.h"
 #include "ST_steppe.h"
 #include "ST_globals.h"
+#include "sw_src/SW_Defines.h"
+#include "sxw.h" // externs `*SXWResources`
 #include "sxw_module.h"
 #include "sxw_vars.h"
+#include "sw_src/SW_Control.h"
+#include "sw_src/SW_Model.h" // externs `SW_Model`
+#include "sw_src/SW_Site.h" // externs `SW_Site`
+#include "sw_src/SW_SoilWater.h"
+#include "sw_src/SW_VegProd.h" // externs `SW_VegProd`
+#include "sw_src/SW_Files.h"
 
-/*************** Global Variable Declarations ***************/
-/***********************************************************/
 
-extern SW_SITE SW_Site;
-extern SW_MODEL SW_Model;
-extern SW_VEGPROD SW_VegProd;
-extern SXW_resourceType* SXWResources;
 
 /*************** Local Function Declarations ***************/
 /***********************************************************/

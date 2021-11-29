@@ -1,7 +1,7 @@
 /**
  * \file ST_seedDispersal.c
  * \brief Function definitions for all seed dispersal specific functions.
- * 
+ *
  * Note that this module uses the underscore prefix to denote "private"
  * functions and variables.
  *
@@ -10,9 +10,11 @@
  * \ingroup SEED_DISPERSAL_PRIVATE
  */
 
-#include "ST_seedDispersal.h"
 #include "ST_globals.h"
+#include "ST_defines.h"
 #include "ST_grid.h"
+#include "ST_seedDispersal.h"
+#include "sw_src/rands.h"
 #include "sw_src/myMemory.h"
 #include "sw_src/rands.h"
 
@@ -21,27 +23,27 @@ Bool _shouldProduceSeeds(SppIndex sp);
 float _rateOfDispersal(float PMD, float maxHeight, float maxDistance);
 float _probabilityOfDispersal(float rate, float height, float distance);
 float _maxDispersalDistance(float height);
-void _recordDispersalEvent(int year, int iteration, int fromCell, int toCell, 
+void _recordDispersalEvent(int year, int iteration, int fromCell, int toCell,
                            const char* name);
 
+/* =================================================== */
+/*                  Global Variables                   */
+/* --------------------------------------------------- */
+
 /**
- * \brief A struct for a single dispersal event. 
- * 
- * A linked list of these events can be used to output any statistics you could
- * want about seed dispersal.
- * 
- * \author Chandler Haukap
- * \date 28 January 2020
- * \ingroup SEED_DISPERSAL_PRIVATE
+ * \brief If TRUE then seed dispersal will be used.
+ * \ingroup SEED_DISPERSAL
  */
-struct dispersal_event_st {
-    int year;
-    int iteration;
-    int fromCell;
-    int toCell;
-    char name[5];
-    struct dispersal_event_st* next;
-} typedef DispersalEvent;
+Bool UseSeedDispersal;
+
+/**
+ * \brief If TRUE this module will record information about when and where
+ *        seeds are being dispersed.
+ *
+ * \ingroup SEED_DISPERSAL
+ */
+Bool recordDispersalEvents;
+
 
 /**
  * \brief A module level variable pointing to the first \ref DispersalEvent.
@@ -73,7 +75,7 @@ Bool isRNGSeeded = FALSE;
  * Iterates through all senders and recipients and determines which cells
  * received seeds. If a cell does receive seeds for a given species,
  * Species[sp]->seedsPresent will be set to TRUE.
- * 
+ *
  * \param year the year of the simulation. This is input as a parameter because
  *             disperseSeeds() is typically called before the gridded mode
  *             updates the year for each cell.
@@ -168,9 +170,9 @@ void disperseSeeds(int year) {
 
               // If the user requested statistics.
               if(recordDispersalEvents) {
-                _recordDispersalEvent(year, Globals->currIter, 
+                _recordDispersalEvent(year, Globals->currIter,
                                       (row * grid_Cols) + col, (receiverRow *
-                                      grid_Cols) + receiverCol, 
+                                      grid_Cols) + receiverCol,
                                       Species[sp]->name);
               }
             }
@@ -185,16 +187,16 @@ void disperseSeeds(int year) {
 /**
  * \brief Output a summary of every [dispersal event](\ref DispersalEvent) that
  *        has occurred.
- * 
- * This function will output a file for every \ref gridCell. The files will 
- * contain one entry for every time the associated cell received seeds from 
+ *
+ * This function will output a file for every \ref gridCell. The files will
+ * contain one entry for every time the associated cell received seeds from
  * another [cell](\ref CellType).
- * 
+ *
  * \param filePrefix is the name all of the files should have. The actual names
  *                   of the files will be "<filePrefix><N>.csv" where N is the
- *                   number of the [cell](\ref CellType) associated with the 
+ *                   number of the [cell](\ref CellType) associated with the
  *                   file.
- * 
+ *
  * \author Chandler Haukap
  * \date January 28 2020
  * \ingroup SEED_DISPERSAL
@@ -203,7 +205,7 @@ void outputDispersalEvents(char* filePrefix) {
     char fileName[1024];
     int i;
     DispersalEvent* thisEvent = _firstEvent;
-    FILE** files = Mem_Calloc(grid_Rows * grid_Cols, sizeof(FILE*), 
+    FILE** files = Mem_Calloc(grid_Rows * grid_Cols, sizeof(FILE*),
                               "outputDispersalEvents");
 
     for(i = 0; i < grid_Rows * grid_Cols; ++i) {
@@ -213,10 +215,10 @@ void outputDispersalEvents(char* filePrefix) {
     }
 
     while(thisEvent) {
-        fprintf(files[thisEvent->toCell], "%d,%d,%d,%s,%d\n", 
+        fprintf(files[thisEvent->toCell], "%d,%d,%d,%s,%d\n",
                 thisEvent->iteration, thisEvent->year, thisEvent->fromCell,
                 thisEvent->name, thisEvent->toCell);
-        
+
         thisEvent = thisEvent->next;
     }
 
@@ -227,12 +229,12 @@ void outputDispersalEvents(char* filePrefix) {
 }
 
 /**
- * \brief Free the memory allocated in the 
+ * \brief Free the memory allocated in the
  *        [seed dispersal module](\ref SEED_DISPERSAL)
- * 
+ *
  * This function should be called after running the colonization module to
  * ensure that no memory leaks occur. It is safe to call multiple times.
- * 
+ *
  * \author Chandler Haukap
  * \date January 28 2020
  * \ingroup SEED_DISPERSAL
@@ -346,19 +348,19 @@ float _probabilityOfDispersal(float rate, float height, float distance) {
 }
 
 /**
- * \brief Returns the maximum dispersal distance for a given 
+ * \brief Returns the maximum dispersal distance for a given
  *        [individual](\ref IndivType).
- * 
+ *
  * This function is stochastic, meaning it will return a different value even if
  * it is given the same input parameter.
- * 
+ *
  * \param height The height, in cm, of the individual.
- * 
+ *
  * \return A float greater than or equal to 0.
- * 
+ *
  * \sa getSpeciesHeight which will give you the height of the tallest
  *     individual in a species.
- * 
+ *
  * \author Chandler Haukap
  * \date 27 February 2020
  * \ingroup SEED_DISPERSAL_PRIVATE
@@ -371,15 +373,15 @@ float _maxDispersalDistance(float height) {
 /**
  * \brief Add a [dispersal event](\ref DispersalEvent) to the linked list of
  *        dispersal events.
- * 
+ *
  * \param year is the year of the simulation when this event occurred.
  * \param fromCell is the origin of the seeds.
  * \param toCell is the recipient of the seeds.
  * \param name is the name of the species.
- * 
+ *
  * \sideeffect
  *     This will allocate memory for a new DispersalEvent.
- * 
+ *
  * \author Chandler Haukap
  * \date 28 January 2020
  * \ingroup SEED_DISPERSAL_PRIVATE
@@ -387,7 +389,7 @@ float _maxDispersalDistance(float height) {
 void _recordDispersalEvent(int year, int iteration, int fromCell, int toCell,
                            const char* name) {
   // Allocate a new event.
-  DispersalEvent* newEvent = Mem_Calloc(1, sizeof(DispersalEvent), 
+  DispersalEvent* newEvent = Mem_Calloc(1, sizeof(DispersalEvent),
                                         "_recordDispersalEvent");
 
   // Populate the struct that we just allocated.
@@ -401,7 +403,7 @@ void _recordDispersalEvent(int year, int iteration, int fromCell, int toCell,
   newEvent->name[2] = name[2];
   newEvent->name[3] = name[3];
   newEvent->name[4] = '\0';
-  
+
   // Add the event to the linked list.
   if(!_firstEvent){
     _firstEvent = newEvent;

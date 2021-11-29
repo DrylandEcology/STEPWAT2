@@ -27,11 +27,14 @@
 #include "sw_src/SW_Times.h"
 #include "ST_defines.h"
 #include "sw_src/SW_Defines.h"
+#include "sw_src/pcg/pcg_basic.h"
+
+
 
 int getNTranspLayers(int veg_prod_type);
 void free_all_sxw_memory( void );
 
-struct stepwat_st {
+typedef struct stepwat_st {
   // ------ Values from SOILWAT2:
   // Note: the function `SW_OUT_set_SXWrequests` specifies the required
   // output time periods and output aggregation types
@@ -66,7 +69,7 @@ struct stepwat_st {
 
   // ------ DEBUG stuff:
   char *debugfile; /* added in ST_Main(), read to get debug instructions */
-} typedef SXW_t;
+} SXW_t;
 
 /** 
  * \brief Stores statistics on transpiration over a window defined in inputs.
@@ -79,7 +82,7 @@ struct stepwat_st {
  * 
  * \ingroup SXW
  */
-struct transp_data {
+typedef struct transp_data {
   // average of all transp/ppt values currently inside ratios[]. It should be updated every time
   // a value is added to transp[].
   RealF ratio_average;
@@ -122,10 +125,10 @@ struct transp_data {
   // this variable keeps track of what year last year was, to make sure that the year actually
   // incremented. If it did NOT, then this is a setup year.
   int lastYear;
-  
-} typedef transp_t;
 
-struct temp_SXW_st{
+} transp_t;
+
+typedef struct temp_SXW_st{
   /* ----- 3d arrays ------- */
   RealD * _rootsXphen, /* relative roots X phen in each lyr,grp,pd */
         * _roots_active, // "active" in terms of size and phenology 
@@ -152,7 +155,7 @@ struct temp_SXW_st{
   RealD* _prod_bmass;
   RealD* _prod_pctlive;
 
-} typedef SXW_resourceType;
+} SXW_resourceType;
 
 #define ForEachTrPeriod(i) for((i)=0; (i)< SXW->NPds; (i)++)
 
@@ -179,5 +182,15 @@ struct temp_SXW_st{
 /* convert 2d group by layer indices to
    layer/period 1D index */
 #define Ilg(l,g) ((l)*SXW->NGrps + (g))
+
+
+
+/* =================================================== */
+/*            Externed Global Variables                */
+/* --------------------------------------------------- */
+extern SXW_t *SXW;
+extern SXW_resourceType *SXWResources;
+extern pcg32_random_t resource_rng;
+extern transp_t *transp_window;
 
 #endif

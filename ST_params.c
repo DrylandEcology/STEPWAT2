@@ -29,6 +29,8 @@
 #include "sxw_funcs.h"
 #include "ST_globals.h"
 #include "sxw_vars.h"
+#include "ST_mortality.h" // externs `UseCheatgrassWildfire`
+
 
 /******** Modular External Function Declarations ***********/
 /* -- truly global functions are declared in functions.h --*/

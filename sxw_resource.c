@@ -12,31 +12,30 @@
 /*                INCLUDES / DEFINES                   */
 /* --------------------------------------------------- */
 
+
+#include "sw_src/generic.h"
 #include "sw_src/rands.h"
 #include "sw_src/filefuncs.h"
 #include "sw_src/myMemory.h"
 #include "ST_steppe.h"
 #include "ST_globals.h"
+#include "sw_src/SW_Defines.h"
+#include "sxw.h" // externs `*SXWResources`, `transp_window`, `resource_rng`
 #include "sxw_module.h"
 #include "sxw_vars.h"
+#include "sw_src/SW_Control.h"
+#include "sw_src/SW_Site.h"
+#include "sw_src/SW_SoilWater.h"
+#include "sw_src/SW_VegProd.h"
+#include "sw_src/SW_Files.h"
+#include "sw_src/SW_Times.h"
 #include "sw_src/pcg/pcg_basic.h"
+
+
 
 /*************** Global Variable Declarations ***************/
 /***********************************************************/
 /* for steppe, see ST_globals.h */
-
-//extern SW_SITE SW_Site;
-//extern SW_SOILWAT SW_Soilwat;
-//extern SW_VEGPROD SW_VegProd;
-
-extern SXW_resourceType* SXWResources;
-
-/* ------ Running Averages ------ */
-extern
-  transp_t* transp_window;
-
-extern
-  pcg32_random_t resource_rng;
 
 //void _print_debuginfo(void);
 

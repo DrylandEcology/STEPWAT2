@@ -22,8 +22,8 @@
 /******** Modular External Function Declarations ***********/
 /* -- truly global functions are declared in functions.h --*/
 /***********************************************************/
-#include "sw_src/SW_Model.h"
-extern SW_MODEL SW_Model;
+#include "sw_src/SW_Model.h" // externs `SW_Model`
+
 
 /*------------------------------------------------------*/
 /* Modular functions only used on one or two specific   */

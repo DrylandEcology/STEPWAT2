@@ -18,8 +18,7 @@
 #ifndef SXW_VARS_DEF
 #define SXW_VARS_DEF
 
-#include "sxw.h"
+#include "sxw.h" // externs `*SXW`
 
-extern SXW_t* SXW;
 
 #endif

@@ -26,10 +26,15 @@
 #include "sw_src/myMemory.h"
 #include "sw_src/rands.h"
 #include "ST_spinup.h"
-#include "ST_seedDispersal.h"
+#include "ST_seedDispersal.h" // externs `UseSeedDispersal`
 
-extern
-  pcg32_random_t species_rng;
+
+/* =================================================== */
+/*                  Global Variables                   */
+/* --------------------------------------------------- */
+pcg32_random_t species_rng;
+
+
 
 /******** Modular External Function Declarations ***********/
 /* -- truly global functions are declared in functions.h --*/

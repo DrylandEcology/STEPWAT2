@@ -12,14 +12,12 @@
 #include <sqlite3.h>
 #include "ST_steppe.h"
 #include "ST_globals.h"
+#include "sw_src/SW_Model.h" // externs `SW_Model`
+#include "sw_src/SW_Site.h" // externs `SW_Site`
+#include "sw_src/SW_VegProd.h" // externs `SW_VegProd`
 #include "sxw_module.h"
-#include "sxw.h"
+#include "sxw.h" // externs `*SXW`, `*SXWResources`
 
-extern SW_MODEL SW_Model;
-extern SXW_t* SXW;
-extern SW_SITE SW_Site;
-extern SW_VEGPROD SW_VegProd;
-extern SXW_resourceType* SXWResources;
 
 static sqlite3 *db;
 static char sql[1024];
