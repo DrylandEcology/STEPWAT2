@@ -41,7 +41,7 @@
 #
 
 OUTSEP c
-TIMESTEP dy wk mo yr # must be lowercase
+TIMESTEP dy mo yr # must be lowercase
 
 #         KEY     SUMTYPE   PERIOD   START END FILENAME_PREFIX      DESCRIPTION
          TEMP     AVG       WK       1     end        temp_air      /* max., min, average air temperature (C) */
