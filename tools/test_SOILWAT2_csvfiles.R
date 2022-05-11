@@ -8,21 +8,30 @@
 # Consider turning on csv-output files for each of the four output time periods:
 # --> set `TIMESTEP dy wk mo yr` in file `outsetup.in`
 
-# Run this R code from the parent directory of `STEPWAT2/` after a
-# `STEPWAT2` sumulation has been run in the testing directory with
+# Run this R code from within the `STEPWAT2/` directory after a
+# `STEPWAT2` simulation has been run in the testing directory with
+# ```
 #   cd testing.sagebrush.master/Stepwat_Inputs/
 #   ./stepwat -f files.in -s -i -o
+#   cd ../..
+#   Rscript tools/test_SOILWAT2_csvfiles.R
+# ```
 
 # Adjust variable `reps` below to reflect number of iterations from `STEPWAT2`
 # run (as specified as `niter` in file `model.in`).
 #-------------------------------------------
 
-dir <- "STEPWAT2/testing.sagebrush.master/Stepwat_Inputs/Output/sw_output"
+dir <- file.path(
+  "testing.sagebrush.master",
+  "Stepwat_Inputs",
+  "Output",
+  "sw_output"
+)
 
 report_by_var <- FALSE
 report_by_period <- TRUE
 
-reps <- 3
+reps <- 1
 OutPeriods <- c("daily", "weekly", "monthly", "yearly")
 agg_type <- c("", "_slyrs")
 
