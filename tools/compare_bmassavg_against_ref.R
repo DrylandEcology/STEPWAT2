@@ -8,10 +8,17 @@
 
 # Run this R code from within the directory of `STEPWAT2/` after
 # two non-gridded `STEPWAT2` simulations have been run in the testing directory
+# ```
 #   cd testing.sagebrush.master/Stepwat_Inputs/
 #   ./stepwat -f files.in -o
 #   cp -r Output/ Output_ref/
+#
+#   # Switch to development branch
 #   ./stepwat -f files.in -o
+#   cd ../..
+#
+#   Rscript tools/compare_bmassavg_against_ref.R
+# ```
 
 #-------------------------------------------
 

@@ -82,7 +82,7 @@ cd testing.sagebrush.master/Stepwat_Inputs/
 
 
 * Run non-gridded version of STEPWAT using SOILWAT and output all variables passed between Stepwat and SOILWAT:
-  
+
 ```
 cd testing.sagebrush.master/Stepwat_Inputs/
 ./stepwat -f files.in -ssxwdebug.in
@@ -131,6 +131,37 @@ git checkout -b [branch name]
 ```
 git submodule update --init --recursive
 ```
+
+
+<br>
+
+## Compare output of a new branch to output from a previous (reference) release
+
+Depending on the purpose of the development branch
+the new output should be exactly the same as reference output or
+differ in specific ways in specific variables.
+
+The following steps provide a starting point for such comparisons:
+
+```
+# Simulate on master branch and copy output to "Output_ref"
+git checkout master
+make clean bint_testing_nongridded
+cp -r testing.sagebrush.master/Stepwat_Inputs/Output testing.sagebrush.master/Stepwat_Inputs/Output_ref
+
+# Switch to development branch <branch_xxx> and run the same simulation
+git checkout <branch_xxx>
+make clean bint_testing_nongridded
+
+# Compare the two sets of outputs
+#   * Lists all output files and determine if they are exactly they same
+diff -qsr testing.sagebrush.master/Stepwat_Inputs/Output testing.sagebrush.master/Stepwat_Inputs/Output_ref
+#   * Produce two figures (scatter plots and time series of biomass)
+#     that are saved as PDFs at testing.sagebrush.master/
+Rscript tools/compare_bmassavg_against_ref.R
+```
+
+
 
 <br>
 
