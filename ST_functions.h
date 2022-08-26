@@ -72,6 +72,8 @@ void Indiv_SortSize( const byte sorttype,
 int Indiv_CompSize_A( const void *key1, const void *key2);
 int Indiv_CompSize_D( const void *key1, const void *key2);
 
+RealF proportion_precip(int start, int end);
+
 #ifdef DEBUG_MEM
   void RGroup_SetMemoryRefs(void);
   void Species_SetMemoryRefs(void);
