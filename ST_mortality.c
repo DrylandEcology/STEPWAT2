@@ -86,7 +86,6 @@ static void _age_independent( const SppIndex sp);
 static void _stretched_clonal( GrpIndex rg, Int start, Int last, 
                               IndivType *nlist[]);
 void _updateCheatgrassPrecip(int year);
-double _getCheatgrassCover(double biomass);
 double _getWildfireProbability(void);
 Bool _simulateWildfire(void);
 Bool _simulatePrescribedFire(void);
@@ -1238,42 +1237,6 @@ void killMaxage(void) {
             }
         }
     }
-}
-
-/**
- * \brief Converts the biomass of cheatgrass to the % cover of cheatgrass.
- * 
- * This relationship is based on the equation presented in  Mahood et al. 2021
- * Cover-based allometric estimate of aboveground biomass of a non-native,
- * invasive annual grass (Bromus tectorum L.) in the Great Basin, USA.
- * Linear interpolation is used to overcome issues with the equation as presented:
- * cover increases slightly as biomass decreases for biomass <= 1.53^2
- *
- * \param biomass is the biomass of cheatgrass.
- * 
- * \return A double 0 and 100 representing the percent cover of cheatgrass.
- * 
- * \author Chandler Haukap, Daniel Schlaepfer, Kyle Palmquist (implemented the code)
- * \date February 5 2020, updated November 10 2021
- * \ingroup MORTALITY_PRIVATE
- */
-double _getCheatgrassCover(double biomass) {
-
-  double cover = 0.;
-
-  if (GT(biomass, 4.)) {
-      /* Mahood et al. 2021 equation has a minimum of 0 cover at 1.53^2 biomass */
-      cover = fmin(100., pow(((sqrt(biomass) - 1.53) / 2.67), 2.));
-
-  } else {
-      /* linear interpolation between (0, 0) and (4 g biomass, 0.03098655 cover) to overcome
-	  small increases in cover <= 1.53^2 biomass */
-
-      cover = fmax(0., 0.007746638 * biomass);
-  }
-
-  return cover  * Globals->plotsize;
-
 }
 
 /**
