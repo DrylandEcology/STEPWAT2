@@ -87,8 +87,8 @@ static void _stretched_clonal( GrpIndex rg, Int start, Int last,
                               IndivType *nlist[]);
 void _updateCheatgrassPrecip(int year);
 double _getCheatgrassCover(double biomass);
-double _getWildfireProbability(double percentCover);
-Bool _simulateWildfire(double cheatgrassCover);
+double _getWildfireProbability(void);
+Bool _simulateWildfire(void);
 Bool _simulatePrescribedFire(void);
 double _getCheatgrassBiomass(void);
 
@@ -344,7 +344,7 @@ void mort_EndOfYear(void) {
     cheatgrassBiomass = _getCheatgrassBiomass();
     // If cheatgrass was found in the Species array.
     if(cheatgrassBiomass >= 0) {
-      _simulateWildfire(cheatgrassBiomass);
+      _simulateWildfire();
     }
   } else {
     _simulatePrescribedFire();
@@ -1279,21 +1279,55 @@ double _getCheatgrassCover(double biomass) {
 /**
  * \brief Calculates the probability of a cheatgrass-driven wildfire occuring.
  * 
- * This equation was derived by Maggie England.
- * 
- * \param percentCover is the percent of the total plot covered in cheatgrass.
- *                     A value between 0 and 100 is expected. I suggest using 
- *                     the \ref _getCheatgrassCover function.
- * 
  * \return A double between 0 and 1 representing the probability of a wildfire.
  * 
- * \author Maggie England (derived the equation)
- * \author Chandler Haukap (implemented the code)
- * \date February 5 2020
+ * \author Martin Holdrege (primary author of equation)
+ * \author John Bradford (author of equation)
+ * \author Daniel Schlaepfer (author of equation)
+ * \author Michael Novotny (implemented the code)
+ * \date August 26 2022
  * \ingroup MORTALITY_PRIVATE
  */
-double _getWildfireProbability(double percentCover) {
-  return 0.015 * pow(percentCover, 0.0649);
+double _getWildfireProbability(void) {
+  // In the future if the simulation is to be ran without certain functional groups,
+  // these next four lines need to be updated appropriately
+  const int numAfg = 3;
+  const int numPfg = 4;
+  char *afgRGroupNames[numAfg] = {"a.cool.forb", "a.warm.forb", "a.cool.grass"};
+  char *pfgRGroupNames[numPfg] = {"p.cool.forb", "p.warm.forb", "p.cool.grass", "p.warm.grass"};
+
+  double afgAGB; // annual forbs and grasses biomass
+  double pfgAGB; // perennial forbs and grasses biomass
+  double y; //bad variable names, but directly from "The Description of the Fire Probability Model"
+  double MAT = SXW->temp + 273.15; // temp converted to Kelvin, mean annual temperature
+  double MAP = SXW->ppt; // mean annual precipitation
+  double prcpPropSum = proportion_precip(5, 7); // proportion precipitation over June, July, August
+
+  for (int i = 0; i < numAfg; i++) {
+	  afgAGB += RGroup_GetBiomass(RGroup_Name2Index(afgRGroupNames[i]));
+  }
+  for (int i = 0; i < numPfg; i++) {
+  	  pfgAGB += RGroup_GetBiomass(RGroup_Name2Index(pfgRGroupNames[i]));
+  }
+  if (afgAGB <= 167) {
+	  y = -4.159 + (760.3 * afgAGB) + (72.51 * afgAGB * afgAGB)
+	    + (179.2 * pfgAGB) - (332.3 * pfgAGB * pfgAGB)
+		+ (722.7 * MAT) - (284.7 * MAT * MAT)
+		+ (483.4 * MAP) - (313.1 * MAP * MAP)
+		- (895.5 * prcpPropSum) - (88.38 * prcpPropSum * prcpPropSum)
+		- (0.0001621 * afgAGB * MAP) - (0.1099 * afgAGB * prcpPropSum);
+  } else {
+	  y = -4.159 + (760.3 * 167) + (72.51 * 167 * 167)
+		+ (179.2 * pfgAGB) - (332.3 * pfgAGB * pfgAGB)
+		+ (722.7 * MAT) - (284.7 * MAT * MAT)
+		+ (483.4 * MAP) - (313.1 * MAP * MAP)
+		- (895.5 * prcpPropSum) - (88.38 * prcpPropSum * prcpPropSum)
+		- (0.0001621 * afgAGB * MAP) - (0.1099 * afgAGB * prcpPropSum);
+  }
+
+  double p = 1 / (1 + exp(-1 * y));
+  return p;
+
 }
 
 /**
@@ -1308,7 +1342,7 @@ double _getWildfireProbability(double percentCover) {
  * \author Chandler Haukap
  * \ingroup MORTALITY_PRIVATE
  */
-double _getCheatgrassBiomass() {
+double _getCheatgrassBiomass(void) {
   char *cheatgrassName = "brte";
   SppIndex sp;
 
@@ -1325,21 +1359,21 @@ double _getCheatgrassBiomass() {
 /**
  * \brief Simulates cheatgrass-driven wildfire.
  * 
- * \param cheatgrassBiomass the biomass of cheatgrass.
  * 
  * \return TRUE if a wildfire happens.
  * \return FALSE if no wildfire happens.
  * 
  * \author Chandler Haukap
+ * \author Michael Novotny
  * \date February 6 2020
+ * \date August 26 2022
  * \ingroup MORTALITY_PRIVATE
  */
-Bool _simulateWildfire(double cheatgrassBiomass) {
+Bool _simulateWildfire(void) {
   GrpIndex rg;
-  double percentCover = _getCheatgrassCover(cheatgrassBiomass);
   Bool wildfire = FALSE;
   
-  if(RandUni(&mortality_rng) < _getWildfireProbability(percentCover)) {
+  if(RandUni(&mortality_rng) < _getWildfireProbability()) {
     wildfire = TRUE;
     ForEachGroup(rg) {
       RGroup[rg]->wildfire = 1;
