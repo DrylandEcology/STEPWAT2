@@ -1256,8 +1256,8 @@ double _getWildfireProbability(void) {
   // these next four lines need to be updated appropriately
   const int numAfg = 3;
   const int numPfg = 4;
-  char *afgRGroupNames[numAfg] = {"a.cool.forb", "a.warm.forb", "a.cool.grass"};
-  char *pfgRGroupNames[numPfg] = {"p.cool.forb", "p.warm.forb", "p.cool.grass", "p.warm.grass"};
+  const char *afgRGroupNames[] = {"a.cool.forb", "a.warm.forb", "a.cool.grass"};
+  const char *pfgRGroupNames[] = {"p.cool.forb", "p.warm.forb", "p.cool.grass", "p.warm.grass"};
 
   double afgAGB; // annual forbs and grasses biomass
   double pfgAGB; // perennial forbs and grasses biomass
