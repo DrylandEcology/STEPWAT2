@@ -89,7 +89,6 @@ void _updateCheatgrassPrecip(int year);
 double _getWildfireProbability(void);
 Bool _simulateWildfire(void);
 Bool _simulatePrescribedFire(void);
-double _getCheatgrassBiomass(void);
 
 /********************** Private mortality objects ****************************/
 /**
@@ -322,7 +321,6 @@ void mort_EndOfYear(void) {
   GrpIndex rg;
   SppIndex sp;
   IntU j;
-  RealF cheatgrassBiomass;
 
   /* Update the precipitation parameters that determine cheatgrass-driven
    * wildfire. This function call is commented out for the time being until the
@@ -340,15 +338,8 @@ void mort_EndOfYear(void) {
   }
 
   if(UseCheatgrassWildfire) {
-    cheatgrassBiomass = _getCheatgrassBiomass();
-    // If cheatgrass was found in the Species array.
-    if(cheatgrassBiomass >= 0) {
       _simulateWildfire();
-    }
-  } else {
-    _simulatePrescribedFire();
   }
-
   // For all RGroups determine if this year is a kill year. If it was, implement
   // killing.
   ForEachGroup(rg) {
@@ -1240,7 +1231,7 @@ void killMaxage(void) {
 }
 
 /**
- * \brief Calculates the probability of a cheatgrass-driven wildfire occuring.
+ * \brief Calculates the probability of wildfire, which is driven by annual forb and grass biomass, perennial grass and forb biomass, annual precipitation, mean annual temperature, and the fraction of precipitation falling in the summer months (June-August).
  * 
  * \return A double between 0 and 1 representing the probability of a wildfire.
  * 
@@ -1253,39 +1244,44 @@ void killMaxage(void) {
  */
 double _getWildfireProbability(void) {
   // In the future if the simulation is to be ran without certain functional groups,
-  // these next four lines need to be updated appropriately
-  const int numAfg = 3;
-  const int numPfg = 4;
+  // these next two lines need to be updated appropriately.
   const char *afgRGroupNames[] = {"a.cool.forb", "a.warm.forb", "a.cool.grass"};
   const char *pfgRGroupNames[] = {"p.cool.forb", "p.warm.forb", "p.cool.grass", "p.warm.grass"};
 
-  double afgAGB; // annual forbs and grasses biomass
-  double pfgAGB; // perennial forbs and grasses biomass
-  double y; //bad variable names, but directly from "The Description of the Fire Probability Model"
+  double afgAGB; // annual forb and grass biomass
+  double pfgAGB; // perennial forb and grass biomass
+  double y; // as defined in the documentation "Description of the fire probability model", author: Martin Holdrege
   double MAT = SXW->temp + 273.15; // temp converted to Kelvin, mean annual temperature
-  double MAP = SXW->ppt; // mean annual precipitation
+  double AP = SXW->ppt; // annual precipitation
   double prcpPropSum = proportion_precip(5, 7); // proportion precipitation over June, July, August
 
+  // get length of arrays for the loops below.
+  int numAfg = sizeof(afgRGroupNames) / sizeof(char*);
+  int numPfg = sizeof(pfgRGroupNames) / sizeof(char*);
+
+  // calculates annual grass and forb biomass in the current year
   for (int i = 0; i < numAfg; i++) {
 	  afgAGB += RGroup_GetBiomass(RGroup_Name2Index(afgRGroupNames[i]));
   }
+  // calculates perennial grass and forb biomass in the current year
   for (int i = 0; i < numPfg; i++) {
   	  pfgAGB += RGroup_GetBiomass(RGroup_Name2Index(pfgRGroupNames[i]));
   }
+  // calculates wildfire probability
   if (afgAGB <= 167) {
 	  y = -4.159 + (760.3 * afgAGB) + (72.51 * afgAGB * afgAGB)
 	    + (179.2 * pfgAGB) - (332.3 * pfgAGB * pfgAGB)
 		+ (722.7 * MAT) - (284.7 * MAT * MAT)
-		+ (483.4 * MAP) - (313.1 * MAP * MAP)
+		+ (483.4 * AP) - (313.1 * AP * AP)
 		- (895.5 * prcpPropSum) - (88.38 * prcpPropSum * prcpPropSum)
-		- (0.0001621 * afgAGB * MAP) - (0.1099 * afgAGB * prcpPropSum);
+		- (0.0001621 * afgAGB * AP) - (0.1099 * afgAGB * prcpPropSum);
   } else {
 	  y = -4.159 + (760.3 * 167) + (72.51 * 167 * 167)
 		+ (179.2 * pfgAGB) - (332.3 * pfgAGB * pfgAGB)
 		+ (722.7 * MAT) - (284.7 * MAT * MAT)
-		+ (483.4 * MAP) - (313.1 * MAP * MAP)
+		+ (483.4 * AP) - (313.1 * AP * AP)
 		- (895.5 * prcpPropSum) - (88.38 * prcpPropSum * prcpPropSum)
-		- (0.0001621 * afgAGB * MAP) - (0.1099 * afgAGB * prcpPropSum);
+		- (0.0001621 * afgAGB * AP) - (0.1099 * afgAGB * prcpPropSum);
   }
 
   double p = 1 / (1 + exp(-1 * y));
@@ -1294,33 +1290,7 @@ double _getWildfireProbability(void) {
 }
 
 /**
- * \brief Returns the biomass of cheatgrass.
- * 
- * This function assumes that cheatgrass is present in the simulation and named
- * "brte".
- * 
- * \return The biomass of cheatgrass. 
- * \return -1 if cheatgrass cannot be found.
- * 
- * \author Chandler Haukap
- * \ingroup MORTALITY_PRIVATE
- */
-double _getCheatgrassBiomass(void) {
-  char *cheatgrassName = "brte";
-  SppIndex sp;
-
-  ForEachSpecies(sp) {
-    /* if this species is cheatgrass then get the biomass */
-    if (strcmp(cheatgrassName, Species[sp]->name) == 0) {
-      return Species_GetBiomass(sp);
-    }
-  }
-
-  return -1;
-}
-
-/**
- * \brief Simulates cheatgrass-driven wildfire.
+ * \brief Simulates wildfire based on annual forb and grass biomass, perennial grass and forb biomass, annual precipitation, mean annual temperature, and the fraction of precipitation falling in the summer months (June-August).
  * 
  * 
  * \return TRUE if a wildfire happens.
