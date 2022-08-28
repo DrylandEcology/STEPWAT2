@@ -308,23 +308,23 @@ static void _make_disturbance( void) {
 }
 
 /**
- * \brief Used to calculate the proportion of yearly rainfall over
+ * \brief Used to calculate the proportion of yearly precipitation over
  *        the course of specified months.
  *
- * This function is needed for the new cheatgrass wildfire cycle overhaul, which needs the proportion
- * of precipitation over the summer months.
+ * This function is needed for the new cheatgrass wildfire cycle overhaul, which needs
+ * the fraction of precipitation occurring in summer (June-August)
  *
  * \param start the start month 0 = January, 11 = December
  * \param end the end month 0 = January, 11 = December
- * \return the proportion of precipitation over given months
+ * \return the fraction of precipitation over given months
  *
  * \author Michael Novotny
  * \date August 26 2022
  */
-RealF proportion_precip(int start, int end) {
-	float rainfall_over_months = 0;
+RealF precip_fraction(int start, int end) {
+	float precip_over_months = 0;
 	for (int i = start; i < end + 1; i++) {
-		rainfall_over_months += SXW->ppt_monthly[i];
+		precip_over_months += SXW->ppt_monthly[i];
 	}
-	return (rainfall_over_months / SXW->ppt);
+	return (precip_over_months / SXW->ppt);
 }
