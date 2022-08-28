@@ -339,6 +339,8 @@ void mort_EndOfYear(void) {
 
   if(UseCheatgrassWildfire) {
       _simulateWildfire();
+  } else {
+	  _simulatePrescribedFire();
   }
   // For all RGroups determine if this year is a kill year. If it was, implement
   // killing.
