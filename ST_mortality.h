@@ -119,6 +119,6 @@ typedef enum {
 /* --------------------------------------------------- */
 extern pcg32_random_t mortality_rng;
 extern Bool *_SomeKillage;
-extern Bool UseCheatgrassWildfire;
+extern Bool UseWildfire;
 
 #endif

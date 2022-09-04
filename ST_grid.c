@@ -47,7 +47,7 @@
 #include "ST_initialization.h"
 #include "ST_progressBar.h"
 #include "ST_seedDispersal.h" // externs `UseSeedDispersal`
-#include "ST_mortality.h" // externs `mortality_rng`, `*_SomeKillage`, `UseCheatgrassWildfire`
+#include "ST_mortality.h" // externs `mortality_rng`, `*_SomeKillage`, `UseWildfire`
 
 
 /* =================================================== */
@@ -791,7 +791,7 @@ void load_cell(int row, int col){
 	setCheatgrassPrecip(gridCells[row][col].myCheatgrassPrecip);
 
 	_SomeKillage = gridCells[row][col].someKillage;
-	UseCheatgrassWildfire = gridCells[row][col].UseCheatgrassWildfire;
+	UseWildfire = gridCells[row][col].UseWildfire;
 
 	/* Copy this cell's accumulators into the local accumulators in ST_stats.c */
 	stat_Copy_Accumulators(gridCells[row][col]._Dist, gridCells[row][col]._Ppt, gridCells[row][col]._Temp,
@@ -890,7 +890,7 @@ static void _read_disturbances_in(void)
 				&RGroup[rg]->killyr, &RGroup[rg]->killfreq_startyr, 
 				&RGroup[rg]->killfreq, &RGroup[rg]->extirp, 
 				&RGroup[rg]->grazingfrq, &RGroup[rg]->grazingfreq_startyr, 
-				&gridCells[row][col].UseCheatgrassWildfire);
+				&gridCells[row][col].UseWildfire);
 		}
 
 		if (num != 11)

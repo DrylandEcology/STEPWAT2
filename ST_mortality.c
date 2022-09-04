@@ -58,7 +58,7 @@ pcg32_random_t mortality_rng;
  * \brief A flag for turning cheatgrass-driven wildfire on and off.
  * \ingroup MORTALITY
  */
-Bool UseCheatgrassWildfire = 0;
+Bool UseWildfire = 0;
 
 
 
@@ -337,7 +337,7 @@ void mort_EndOfYear(void) {
     RGroup[rg]->wildfire = 0;
   }
 
-  if(UseCheatgrassWildfire) {
+  if(UseWildfire) {
       _simulateWildfire();
   } else {
 	  _simulatePrescribedFire();

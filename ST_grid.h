@@ -86,9 +86,9 @@ typedef struct grid_cell_st
 
 	Bool* someKillage;
 
-	/** \brief this cell's version of the \ref UseCheatgrassWildfire variable
+	/** \brief this cell's version of the \ref UseWildfire variable
 	 *         from the \ref MORTALITY module. */
-	Bool UseCheatgrassWildfire;
+	Bool UseWildfire;
 	
 	/* ---------------- accumulators -------------------- */
 	StatType *_Dist, *_Ppt, *_Temp,

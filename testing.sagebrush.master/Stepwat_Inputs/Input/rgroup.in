@@ -125,11 +125,11 @@ succulents		-0.0025 6.736 -0.0217 6.736
 [end]  # section end
 
 #=============================================================
-#                 Cheatgrass-Wildfire Flag
-# Implement wildfire based on cheatgrass biomass (g/m2). Setting this flag to 1 will
+#         Flag for wildfire driven by AFG biomass, PFG biomass, and climate
+# Implement wildfire based on AFG biomass, PFG biomass, and climate. Setting this flag to 1 will
 # override any prescribed fire treatment(s) specified above.
 
-0 # Use cheatgrass-driven wildfire? 1 for yes, 0 for no.
+0 # Use wildfire? 1 for yes, 0 for no.
 
 [end]  # section end
 

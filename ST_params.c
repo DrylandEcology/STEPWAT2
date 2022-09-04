@@ -34,7 +34,7 @@
 /***********************************************************/
 #include "ST_globals.h"
 #include "sxw_vars.h"
-#include "ST_mortality.h" // externs `UseCheatgrassWildfire`
+#include "ST_mortality.h" // externs `UseWildfire`
 
 
 /******** Modular External Function Declarations ***********/
@@ -861,9 +861,9 @@ static void _rgroup_init( void) {
         break;
      }
 
-     x=sscanf( inbuf, "%u", &UseCheatgrassWildfire);
+     x=sscanf( inbuf, "%u", &UseWildfire);
      if (x != 1) {
-       LogError(logfp, LOGFATAL, "%s: Cheatgrass-Wildfire flag not read.",
+       LogError(logfp, LOGFATAL, "%s: Wildfire flag not read.",
                MyFileName);
      } 
    }/* end while*/
