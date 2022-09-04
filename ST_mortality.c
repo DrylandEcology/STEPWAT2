@@ -1254,7 +1254,7 @@ double _getWildfireProbability(void) {
   double pfgAGB; // perennial forb and grass biomass
   double y; // as defined in the documentation "Description of the fire probability model", author: Martin Holdrege
   double MAT = SXW->temp + 273.15; // temp converted to Kelvin, mean annual temperature
-  double AP = SXW->ppt; // annual precipitation
+  double AP = SXW->ppt * 10; // annual precipitation (mm)
   double prcpPropSum = precip_fraction(5, 7); // proportion precipitation over June, July, August
 
   // get length of arrays for the loops below.
