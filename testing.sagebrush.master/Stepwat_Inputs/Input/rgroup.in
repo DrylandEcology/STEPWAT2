@@ -129,7 +129,7 @@ succulents		-0.0025 6.736 -0.0217 6.736
 # Implement wildfire based on AFG biomass, PFG biomass, and climate. Setting this flag to 1 will
 # override any prescribed fire treatment(s) specified above.
 
-0 # Use wildfire? 1 for yes, 0 for no.
+1 # Use wildfire? 1 for yes, 0 for no.
 
 [end]  # section end
 

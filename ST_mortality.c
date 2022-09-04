@@ -1264,10 +1264,12 @@ double _getWildfireProbability(void) {
   // calculates annual grass and forb biomass in the current year
   for (int i = 0; i < numAfg; i++) {
 	  afgAGB += RGroup_GetBiomass(RGroup_Name2Index(afgRGroupNames[i]));
+      printf("afgAGB = %f\n", afgAGB);
   }
   // calculates perennial grass and forb biomass in the current year
   for (int i = 0; i < numPfg; i++) {
   	  pfgAGB += RGroup_GetBiomass(RGroup_Name2Index(pfgRGroupNames[i]));
+      printf("pfgAGB = %f\n", pfgAGB);
   }
   // calculates wildfire probability
   if (afgAGB <= 167) {
@@ -1277,6 +1279,10 @@ double _getWildfireProbability(void) {
 		+ (483.4 * AP) - (313.1 * AP * AP)
 		- (895.5 * prcpPropSum) - (88.38 * prcpPropSum * prcpPropSum)
 		- (0.0001621 * afgAGB * AP) - (0.1099 * afgAGB * prcpPropSum);
+      printf("MAT = %f\n",  MAT);
+      printf("AP = %f\n",  AP);
+      printf("prcpPropSum = %f\n",  prcpPropSum);
+      printf("y1 = %f\n",  y);
   } else {
 	  y = -4.159 + (760.3 * 167) + (72.51 * 167 * 167)
 		+ (179.2 * pfgAGB) - (332.3 * pfgAGB * pfgAGB)
@@ -1284,9 +1290,14 @@ double _getWildfireProbability(void) {
 		+ (483.4 * AP) - (313.1 * AP * AP)
 		- (895.5 * prcpPropSum) - (88.38 * prcpPropSum * prcpPropSum)
 		- (0.0001621 * afgAGB * AP) - (0.1099 * afgAGB * prcpPropSum);
+	  printf("MAT = %f\n",  MAT);
+	  printf("AP = %f\n",  AP);
+      printf("prcpPropSum = %f\n",  prcpPropSum);
+      printf("y2 = %f\n",  y);
   }
 
   double p = 1 / (1 + exp(-1 * y));
+  printf("p = %f\n",  p);
   return p;
 
 }
