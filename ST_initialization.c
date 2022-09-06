@@ -92,14 +92,6 @@ void runInitialization(void){
 	/* For iterating over years */
 	IntS year;
 
-    /* Initialization is technically an iteration so we need to seed the RNGs. */
-    RandSeed(SuperGlobals.randseed, &environs_rng);
-    RandSeed(SuperGlobals.randseed, &mortality_rng);
-    RandSeed(SuperGlobals.randseed, &resgroups_rng);
-    RandSeed(SuperGlobals.randseed, &species_rng);
-    RandSeed(SuperGlobals.randseed, &grid_rng);
-    RandSeed(SuperGlobals.randseed, &markov_rng);
-
     // Initialize the plot for each grid cell
     for (i = 0; i < grid_Rows; i++){
         for (j = 0; j < grid_Cols; j++){
@@ -127,6 +119,8 @@ void runInitialization(void){
                 } else {
                     continue; // No spinup requested. Move on to next cell.
                 }
+
+                set_all_rngs(SuperGlobals.randseed, 0, year, j * grid_Rows + i);
 
                 /* This step is important. load_cell loaded in the actual accumulators, but we do not want
                     to accumulate stats while in spinup. We need to load in dummy accumulators to ensure

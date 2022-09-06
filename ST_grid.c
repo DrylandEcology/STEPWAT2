@@ -214,13 +214,6 @@ void runGrid(void)
 			loadInitializationConditions();
 		}
 
-		RandSeed(SuperGlobals.randseed, &environs_rng);
-		RandSeed(SuperGlobals.randseed, &mortality_rng);
-		RandSeed(SuperGlobals.randseed, &resgroups_rng);
-		RandSeed(SuperGlobals.randseed, &species_rng);
-		RandSeed(SuperGlobals.randseed, &grid_rng);
-		RandSeed(SuperGlobals.randseed, &markov_rng);
-
 		for (year = 1; year <= SuperGlobals.runModelYears; year++)
 		{ //for each year
 			if(UseProgressBar){
@@ -232,6 +225,8 @@ void runGrid(void)
                 
                     /* Ensure that all global variables reference the specific cell */
 					load_cell(i, j);
+
+					set_all_rngs(SuperGlobals.randseed, iter, year, j * grid_Rows + i);
 
 					Globals->currYear = year;
 

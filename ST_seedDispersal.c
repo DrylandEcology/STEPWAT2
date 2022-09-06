@@ -44,7 +44,9 @@ void initDispersalParameters(void)
 	double distanceBetweenPlots; /* distance between the sender and the receiver */
     CellType* sender;
 
-    RandSeed(SuperGlobals.randseed, &dispersal_rng);
+	// FIXME: seed with appropriate iter, year, and cell_id
+	// RNG ID 6, see `set_all_rngs()`
+	RandSeed(SuperGlobals.randseed, RNG_INITSEQ(6, 0, 0, 0), &dispersal_rng);
 
 	/* sender denotes that these loops refer to the cell distributing seeds */
 	for(senderRow = 0; senderCol < grid_Rows; ++senderRow){
