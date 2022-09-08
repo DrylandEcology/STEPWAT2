@@ -1272,7 +1272,7 @@ double _getWildfireProbability(void) {
       printf("pfgAGB = %f\n", pfgAGB);
   }
   // calculates wildfire probability
-  if (afgAGB <= 167) {
+  if (afgAGB > 167) {
 	  afgAGB = 167;
   }
   y = -2067 + (0.02868 * afgAGB) + (0.0001470 * afgAGB * afgAGB)
