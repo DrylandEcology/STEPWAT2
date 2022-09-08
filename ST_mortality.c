@@ -1250,9 +1250,9 @@ double _getWildfireProbability(void) {
   const char *afgRGroupNames[] = {"a.cool.forb", "a.warm.forb", "a.cool.grass"};
   const char *pfgRGroupNames[] = {"p.cool.forb", "p.warm.forb", "p.cool.grass", "p.warm.grass"};
 
-  double afgAGB; // annual forb and grass biomass
-  double pfgAGB; // perennial forb and grass biomass
-  double y; // as defined in the documentation "Description of the fire probability model", author: Martin Holdrege
+  double afgAGB = 0.0f; // annual forb and grass biomass
+  double pfgAGB = 0.0f; // perennial forb and grass biomass
+  double y = 0.0f; // as defined in the documentation "Description of the fire probability model", author: Martin Holdrege
   double MAT = SXW->temp + 273.15; // temp converted to Kelvin, mean annual temperature
   double AP = SXW->ppt * 10; // annual precipitation (mm)
   double prcpPropSum = precip_fraction(5, 7); // proportion precipitation over June, July, August
@@ -1273,28 +1273,18 @@ double _getWildfireProbability(void) {
   }
   // calculates wildfire probability
   if (afgAGB <= 167) {
-	  y = -4.159 + (760.3 * afgAGB) + (72.51 * afgAGB * afgAGB)
-	    + (179.2 * pfgAGB) - (332.3 * pfgAGB * pfgAGB)
-		+ (722.7 * MAT) - (284.7 * MAT * MAT)
-		+ (483.4 * AP) - (313.1 * AP * AP)
-		- (895.5 * prcpPropSum) - (88.38 * prcpPropSum * prcpPropSum)
-		- (0.0001621 * afgAGB * AP) - (0.1099 * afgAGB * prcpPropSum);
-      printf("MAT = %f\n",  MAT);
-      printf("AP = %f\n",  AP);
-      printf("prcpPropSum = %f\n",  prcpPropSum);
-      printf("y1 = %f\n",  y);
-  } else {
-	  y = -4.159 + (760.3 * 167) + (72.51 * 167 * 167)
-		+ (179.2 * pfgAGB) - (332.3 * pfgAGB * pfgAGB)
-		+ (722.7 * MAT) - (284.7 * MAT * MAT)
-		+ (483.4 * AP) - (313.1 * AP * AP)
-		- (895.5 * prcpPropSum) - (88.38 * prcpPropSum * prcpPropSum)
-		- (0.0001621 * afgAGB * AP) - (0.1099 * afgAGB * prcpPropSum);
-	  printf("MAT = %f\n",  MAT);
-	  printf("AP = %f\n",  AP);
-      printf("prcpPropSum = %f\n",  prcpPropSum);
-      printf("y2 = %f\n",  y);
+	  afgAGB = 167;
   }
+  y = -2067 + (0.02868 * afgAGB) + (0.0001470 * afgAGB * afgAGB)
+	+ (0.03207 * pfgAGB) - (0.0002139 * pfgAGB * pfgAGB)
+	+ (14.32 * MAT) - (0.02487 * MAT * MAT)
+	+ (0.01318 * AP) - (0.00001108 * AP * AP)
+	- (4.607 * prcpPropSum) - (8.816 * prcpPropSum * prcpPropSum)
+	- (0.0001621 * afgAGB * AP) - (0.1099 * afgAGB * prcpPropSum);
+  printf("MAT = %f\n",  MAT);
+  printf("AP = %f\n",  AP);
+  printf("prcpPropSum = %f\n",  prcpPropSum);
+  printf("y = %f\n",  y);
 
   double p = 1 / (1 + exp(-1 * y));
   printf("p = %f\n",  p);
