@@ -50,6 +50,11 @@
 #include "ST_mortality.h" // externs `mortality_rng`, `*_SomeKillage`, `UseCheatgrassWildfire`
 
 
+#include "sw_src/SW_Flow.h" // for `SW_FLW_init_run()`
+#include "sw_src/SW_Flow_lib.h" // for `SW_ST_init_run()`
+
+
+
 /* =================================================== */
 /*                  Global Variables                   */
 /* --------------------------------------------------- */
@@ -808,6 +813,24 @@ void load_cell(int row, int col){
 					   gridCells[row][col].mySoils.psand, gridCells[row][col].mySoils.pclay, gridCells[row][col].mySoils.imperm,
 				   	   gridCells[row][col].mySoils.soiltemp, 3, soilRegionsLowerBounds);
 	}
+
+	// Zero SOILWAT2 variables (weather, flow, soil temperature, soil moisture)
+	// of current cell; otherwise, last values from previous cell carry over
+	// to first value of next cell (vegetation is handled separately by STEPWAT2).
+	// NOTE: This should also reset soil variables via `SW_SIT_init_run()` but
+	// soils are here handled separately via the previous section calling
+	// `set_soillayers()`.
+	// NOTE: To fully re-initialize all SOILWAT2 variables, this here
+	// should be a call to `SW_CTL_init_run()`.
+	// WARNING: Ideally, a grid cell should continue with the state that it ended
+	// the previous year (and not be zeroed out).
+	// FIXME: remove once SOILWAT2 is re-entrant or
+	// gridded code manages SOILWAT2 globals.
+	SW_WTH_init_run();
+	//SW_SIT_init_run();
+	SW_FLW_init_run();
+	SW_ST_init_run();
+	SW_SWC_init_run();
 }
 
 /* Nullify all global variables. This function should appear after every call 
