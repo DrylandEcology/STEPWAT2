@@ -39,7 +39,7 @@
 #include "ST_stats.h"
 #include "ST_initialization.h"
 #include "ST_progressBar.h"
-#include "ST_seedDispersal.h" // externs `UseSeedDispersal`
+#include "ST_seedDispersal.h" // externs `UseSeedDispersal`, `dispersal_rng`
 #include "ST_mortality.h" // externs `mortality_rng`, `*_SomeKillage`
 #include "ST_grid.h" // externs `grid_rng`
 
@@ -210,12 +210,7 @@ int main(int argc, char **argv) {
 	for (iter = 1; iter <= SuperGlobals.runModelIterations; iter++) {
 		Plot_Initialize();
 
-		RandSeed(SuperGlobals.randseed, &environs_rng);
-		RandSeed(SuperGlobals.randseed, &mortality_rng);
-		RandSeed(SuperGlobals.randseed, &resgroups_rng);
-		RandSeed(SuperGlobals.randseed, &species_rng);
-		RandSeed(SuperGlobals.randseed, &grid_rng);
-		RandSeed(SuperGlobals.randseed, &markov_rng);
+		set_all_rngs(SuperGlobals.randseed, iter, 0, 0);
 
 		Globals->currIter = iter;
                 
@@ -425,6 +420,56 @@ void Plot_Initialize(void) {
 	initCheatgrassPrecip();
 	SXW_InitPlot();
 }
+
+
+/** Set up all random number generators
+
+  STEPWAT2 expects random number generators to produce sequences of random
+  numbers that are reproducible (if user-provided "seed" is non-zero) and
+      * unique among RNGs, iterations, years, and grid cells (most RNGs)
+      * unique among RNGs, iterations, and years but identical among grid cells
+        (weather generator RNG).
+
+  A user-provided "seed" of zero produces non-reproducible random number
+  sequences which are non-coinciding among RNGs, iterations, and grid cells.
+
+  The set up of RNGs retains its characteristics even if `iter`, `year`, and/or
+  `cell_id` are zero.
+
+  See #RNG_INITSEQ and SOILWAT2's `RandSeed()` for further details.
+
+  \param initstate The initial state of the system,
+         i.e., the user provided "seed".
+  \param iter The iteration identification number.
+  \param year The simulated year.
+  \param cell_id The cell identification number.
+
+  \sideeffect STEPWAT2's random number generators are
+              initialized with state and sequence.
+ */
+void set_all_rngs(
+	unsigned long initstate,
+	int iter,
+	int year,
+	int cell_id
+) {
+	/* Set up RNGs with seed/state and sequence identifier that is
+		 reproducible and unique among RNGs, iterations, years and grid cells */
+	RandSeed(initstate, RNG_INITSEQ(1, iter, year, cell_id), &environs_rng);
+	RandSeed(initstate, RNG_INITSEQ(2, iter, year, cell_id), &mortality_rng);
+	RandSeed(initstate, RNG_INITSEQ(3, iter, year, cell_id), &resgroups_rng);
+	RandSeed(initstate, RNG_INITSEQ(4, iter, year, cell_id), &species_rng);
+	RandSeed(initstate, RNG_INITSEQ(5, iter, year, cell_id), &grid_rng);
+	RandSeed(initstate, RNG_INITSEQ(6, iter, year, cell_id), &dispersal_rng);
+	RandSeed(initstate, RNG_INITSEQ(7, iter, year, cell_id), &resource_rng);
+
+	/* Initialize RNGs with seed/state and sequence identifier that is
+		 reproducible and unique among RNGs, iterations, and year
+		 but not grid cells */
+	RandSeed(initstate, RNG_INITSEQ(8, iter, year, 0), &markov_rng);
+}
+
+
 
 #ifndef STDEBUG
 
