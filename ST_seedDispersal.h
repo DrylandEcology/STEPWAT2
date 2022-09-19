@@ -27,7 +27,7 @@ typedef struct _grid_sd_struct
 /*            Externed Global Variables                */
 /* --------------------------------------------------- */
 extern Bool UseSeedDispersal;
-
+extern pcg32_random_t dispersal_rng;
 
 /* =================================================== */
 /*             Global Function Declarations            */

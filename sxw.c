@@ -141,7 +141,9 @@ void SXW_Init( Bool init_SW, char *f_roots ) {
    */
 	char roots[MAX_FILENAMESIZE] = { '\0' };
 
-	RandSeed(SuperGlobals.randseed, &resource_rng);
+	// FIXME: seed with appropriate iter, year, and cell_id
+	// RNG ID 7, see `set_all_rngs()`
+	RandSeed(SuperGlobals.randseed, RNG_INITSEQ(7, 0, 0, 0), &resource_rng);
 
 	_allocate_memory(); //Allocate memory for all local pointers
 
