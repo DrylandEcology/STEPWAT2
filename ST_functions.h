@@ -36,6 +36,7 @@ void Env_Generate( void );
 void copy_environment(const EnvType* src, EnvType* dest);
 void copy_plot(const PlotType* src, PlotType* dest);
 void copy_succulent(const SucculentType* src, SucculentType* dest);
+void set_all_rngs(unsigned long initstate, int iter, int year, int cell_id);
 
 /* See steppe_main.c for declarations of the following
 

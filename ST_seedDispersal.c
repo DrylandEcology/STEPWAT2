@@ -44,6 +44,9 @@ Bool UseSeedDispersal;
  */
 Bool recordDispersalEvents;
 
+	// FIXME: seed with appropriate iter, year, and cell_id
+	// RNG ID 6, see `set_all_rngs()`
+	RandSeed(SuperGlobals.randseed, RNG_INITSEQ(6, 0, 0, 0), &dispersal_rng);
 
 /**
  * \brief A module level variable pointing to the first \ref DispersalEvent.

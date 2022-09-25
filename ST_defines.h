@@ -35,6 +35,33 @@
 /***************************************************
  * Basic definitions
  ***************************************************/
+
+/**
+ * \brief Random number generators sequence spacing
+          among iterations, years, and grid cells
+*/
+#define RNG_SEQDELTA1 1000000000000UL // must be larger than `MAX_ITERATIONS * MAX_YEARS * MAX_CELLS`
+
+/**
+ * \brief Random number generators sequence spacing among years and grid cells
+*/
+#define RNG_SEQDELTA2 100000000UL // must be larger than `MAX_YEARS * MAX_CELLS`
+
+/**
+ * \brief Macro for initial RNG sequence identifiers
+ *
+ * RNGs are seeded with an initial state and initial sequence identifier that is
+ * reproducible and unique among RNGs.
+ * Some RNGs are unique among iterations and years but each grid cell produces
+ * an identical stream (e.g., weather generator),
+ * i.e., their initial sequence is determined by
+ *   `rng_id * RNG_SEQDELTA + iteration`.
+ * Some RNGs are unique among iterations, years, and grid cells
+ * (e.g., plant dynamics), i.e., their initial sequence is determined by
+ *   `rng_id * RNG_SEQDELTA + iteration * MAX_CELLS + cell_id`.
+ */
+#define RNG_INITSEQ(rng_id, iter, year, cell_id) ((unsigned long) (rng_id) * RNG_SEQDELTA1 + (iter) * RNG_SEQDELTA2 + (year) * MAX_CELLS + (cell_id))
+
 /**
  * \brief Macro for the maximum number of species allowed in the simulation.
  * 
