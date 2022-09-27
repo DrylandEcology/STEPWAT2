@@ -41,7 +41,6 @@
 #include "ST_functions.h" // externs `environs_rng`, `resgroups_rng`, `species_rng`
 #include "ST_spinup.h"
 #include "ST_stats.h"
-#include "ST_initialization.h"
 #include "ST_progressBar.h"
 #include "ST_seedDispersal.h" // externs `UseSeedDispersal`, `dispersal_rng`
 #include "ST_mortality.h" // externs `mortality_rng`, `*_SomeKillage`
