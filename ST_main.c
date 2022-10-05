@@ -214,8 +214,6 @@ int main(int argc, char **argv) {
 	for (iter = 1; iter <= SuperGlobals.runModelIterations; iter++) {
 		Plot_Initialize();
 
-		set_all_rngs(SuperGlobals.randseed, iter, 0, 0);
-
 		Globals->currIter = iter;
                 
 		if (storeAllIterations) {
@@ -233,6 +231,8 @@ int main(int argc, char **argv) {
             }
 
 			//printf("------------------------Repetition/year = %d / %d\n", iter, year);
+
+			set_all_rngs(SuperGlobals.randseed, iter, year, 0);
 
 			Globals->currYear = year;
 

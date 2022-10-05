@@ -34,6 +34,7 @@ void _sxw_update_root_tables( RealF sizes[] );
 
 /* These functions are found in sxw_soilwat.c */
 void  _sxw_sw_setup(RealF sizes[]);
+void  _sxw_generate_weather(void);
 void  _sxw_sw_run(void);
 void  _sxw_sw_clear_transp(void);
 

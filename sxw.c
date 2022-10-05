@@ -302,6 +302,9 @@ void SXW_Run_SOILWAT(void) {
 
     _sxw_sw_setup(sizes);
 
+    // Generate weather for current call (iteration, year, cell, ...)
+    _sxw_generate_weather();
+
     // Initialize `SXW` values for current year's run:
 	SXW->aet = 0.; /* used to be in sw_setup() but it needs clearing each run */
 
