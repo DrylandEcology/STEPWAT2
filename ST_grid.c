@@ -168,6 +168,7 @@ void runGrid(void)
 	IntS year, iter;
 
 	_init_grid_files();				// reads in files.in file
+	printf("here 1/n");
 	_read_maxrgroupspecies();       // reads in maxrgroupspecies.in file
 	_read_grid_setup();             // reads in grid_setup.in file
     _read_files();                  // reads in Stepwat_Inputs/files.in file
@@ -505,6 +506,11 @@ static void _allocate_gridCells(int rows, int cols){
 			setCheatgrassPrecip(0);
 			initCheatgrassPrecip();
 			gridCells[i][j].myCheatgrassPrecip = getCheatgrassPrecip();
+
+			// Allocate wildfireClimate for Mortality
+			setWildfireClimate(NULL);
+			initWildfireClimate();
+			gridCells[i][j].myWildfireClimate = getWildfireClimate();
 		}
 	}
 }
@@ -789,6 +795,9 @@ void load_cell(int row, int col){
 
 	/* This cell's cheatgrass-wildfire parameters */
 	setCheatgrassPrecip(gridCells[row][col].myCheatgrassPrecip);
+
+	/* This cell's wildfireClimate */
+	setWildfireClimate(gridCells[row][col].myWildfireClimate);
 
 	_SomeKillage = gridCells[row][col].someKillage;
 	UseWildfire = gridCells[row][col].UseWildfire;

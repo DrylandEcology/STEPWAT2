@@ -418,6 +418,7 @@ void Plot_Initialize(void) {
 	}
 
 	initCheatgrassPrecip();
+	initWildfireClimate();
 	SXW_InitPlot();
 }
 

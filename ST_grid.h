@@ -83,6 +83,8 @@ typedef struct grid_cell_st
 	Grid_SD_St *mySeedDispersal;
 	/** \brief This cell's cheatgrass-wildfire parameters. */
 	CheatgrassPrecip* myCheatgrassPrecip;
+	/* WildfireClimate (from mortality) corresponding to this cell */
+	WildfireClimate *myWildfireClimate;
 
 	Bool* someKillage;
 

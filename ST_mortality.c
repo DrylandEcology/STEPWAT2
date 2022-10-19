@@ -101,6 +101,13 @@ Bool _simulatePrescribedFire(void);
 CheatgrassPrecip* cheatgrassPrecip = 0;
 
 /**
+ * @brief 10 year climate information for wildfire probability model
+ * @author Michael Novotny
+ * @date 17 October 2022
+ */
+WildfireClimate* wildfireClimate = NULL;
+
+/**
  * \brief TRUE if a function in ST_mortality.c killed an individual.
  * \ingroup MORTALITY_PRIVATE
  */
@@ -492,6 +499,10 @@ void freeMortalityMemory(void) {
   if(cheatgrassPrecip){
     Mem_Free(cheatgrassPrecip);
   }
+  if(wildfireClimate) {
+	Mem_Free(wildfireClimate);
+	wildfireClimate = NULL;
+  }
 }
 
 /**
@@ -603,6 +614,136 @@ void _updateCheatgrassPrecip(int year) {
   for(i = 0; i < 3; ++i){
     cheatgrassPrecip->thisJanThruMar += SXW->ppt_monthly[i];
   }
+}
+
+/**
+ * @brief initializes wildfireClimate by allocating memory for it if it does not exist, and initializing some members to 0.
+ *
+ * @author Michael Novotny
+ * @date 17 October 2022
+ *
+ */
+void initWildfireClimate(void) {
+	if (!wildfireClimate) {
+		wildfireClimate = Mem_Calloc(1, sizeof(WildfireClimate), "initWildfireClimate: wildfireClimate");
+	}
+	wildfireClimate->propSummerPrecipAvg = 0;
+	wildfireClimate->meanAnnTempAvg = 0;
+	wildfireClimate->annPrecipAvg = 0;
+	wildfireClimate->count = 0;
+
+	wildfireClimate->afgAGBAvg = 0;
+	wildfireClimate->pfgAGBAvg = 0;
+	wildfireClimate->biomassCount = 0;
+}
+
+/**
+ * @brief returns the pointer to the WildfireClimate structure currently loaded into wildfireClimate
+ *
+ * This is needed for gridded mode, so each cell can have it's own copy.
+ *
+ * @author Michael Novotny
+ * @date 18 October 2022
+ */
+WildfireClimate *getWildfireClimate(void) {
+	return wildfireClimate;
+};
+
+/**
+ * @brief sets the local wildfireClimate to the WildfireClimate pointer value passed into the function
+ *
+ * This is needed for gridded mode, so each cell can have it's own copy.
+ *
+ * @author Michael Novotny
+ * @date 18 October 2022
+ */
+void setWildfireClimate(WildfireClimate *newWildfireClimate) {
+	wildfireClimate = newWildfireClimate;
+}
+
+/**
+ * @brief updates wildfireClimate and calculates new 10-year averages for the wildfire probability model.
+ *
+ * @param propSummerPrecip the proportion of yearly precipitation that happens over the summer months
+ * @param meanAnnualTemperature the mean annual temperature in Kelvin
+ * @param annualPrecipitation annual precipitation in mm
+ *
+ * @author Michael Novotny
+ * @date 17 October 2022
+ */
+void _updateWildfireClimate(double propSummerPrecip, double meanAnnualTemperature, double annualPrecipitation) {
+	// if there have not yet been 10 values added, we cannot calculate a 10 year average.
+	// Instead, we have to manually sum up all of the values and calculate the average.
+	if (wildfireClimate->count < 10) {
+		wildfireClimate->propSummerPrecip[wildfireClimate->count] = propSummerPrecip;
+		wildfireClimate->meanAnnTemp[wildfireClimate->count] = meanAnnualTemperature;
+		wildfireClimate->annPrecip[wildfireClimate->count] = annualPrecipitation;
+
+		// Calculate cumulative average to this point
+		wildfireClimate->propSummerPrecipAvg = get_running_mean(wildfireClimate->count + 1, wildfireClimate->propSummerPrecipAvg, propSummerPrecip);
+		wildfireClimate->meanAnnTempAvg = get_running_mean(wildfireClimate->count + 1, wildfireClimate->meanAnnTempAvg, meanAnnualTemperature);
+		wildfireClimate->annPrecipAvg = get_running_mean(wildfireClimate->count + 1, wildfireClimate->annPrecipAvg, annualPrecipitation);
+
+	} else {
+		// Once we have seen 10 values, we can begin doing a more efficient 10 year running average calculation.
+		//
+		//               new_average = old_average - (the_oldest_value / n) + (new_value / n)
+		//
+		// By using the modulo operator on the count, we have a cycle of 0 -- 9.
+		// By indexing using this cycle, we easily find the oldest value and can update the moving average.
+
+		wildfireClimate->propSummerPrecipAvg -= wildfireClimate->propSummerPrecip[wildfireClimate->count % 10] / 10;
+		wildfireClimate->propSummerPrecipAvg += propSummerPrecip / 10;
+		wildfireClimate->propSummerPrecip[wildfireClimate->count % 10] = propSummerPrecip;
+
+		wildfireClimate->meanAnnTempAvg -= wildfireClimate->meanAnnTemp[wildfireClimate->count % 10] / 10;
+		wildfireClimate->meanAnnTempAvg += meanAnnualTemperature / 10;
+		wildfireClimate->meanAnnTemp[wildfireClimate->count % 10] = meanAnnualTemperature;
+
+		wildfireClimate->annPrecipAvg -= wildfireClimate->annPrecip[wildfireClimate->count % 10] / 10;
+		wildfireClimate->annPrecipAvg += annualPrecipitation / 10;
+		wildfireClimate->annPrecip[wildfireClimate->count % 10] = annualPrecipitation;
+	}
+
+	wildfireClimate->count++;
+}
+/**
+ * @brief updates the biomass accumulators and calculates new three year running average
+ *
+ * @param afgAGB annual forbs and grasses above ground biomass
+ * @param pfgAGB perennial forbs and grasses above ground biomass
+ *
+ * @author Michael Novotny
+ * @date 18 October 2022
+ */
+void _updateWildfireClimateBiomass(double afgAGB, double pfgAGB) {
+	if (wildfireClimate->biomassCount < 3) {
+		wildfireClimate->afgAGB[wildfireClimate->biomassCount] = afgAGB;
+		wildfireClimate->pfgAGB[wildfireClimate->biomassCount] = pfgAGB;
+
+		wildfireClimate->afgAGBAvg = get_running_mean(wildfireClimate->biomassCount + 1, wildfireClimate->afgAGBAvg, afgAGB);
+		wildfireClimate->pfgAGBAvg = get_running_mean(wildfireClimate->biomassCount + 1, wildfireClimate->pfgAGBAvg, pfgAGB);
+	} else {
+		wildfireClimate->afgAGBAvg -= wildfireClimate->afgAGB[wildfireClimate->biomassCount % 3] / 3;
+		wildfireClimate->afgAGBAvg += afgAGB / 3;
+		wildfireClimate->afgAGB[wildfireClimate->biomassCount % 3] = afgAGB;
+
+		wildfireClimate->pfgAGBAvg -= wildfireClimate->pfgAGB[wildfireClimate->biomassCount % 3] / 3;
+		wildfireClimate->pfgAGBAvg += pfgAGB / 3;
+		wildfireClimate->pfgAGB[wildfireClimate->biomassCount % 3] = pfgAGB;
+	}
+
+	wildfireClimate->biomassCount++;
+}
+/**
+ * @brief resets the biomass averages to zero
+ * @author Michael Novotny
+ * @date 18 October 2022
+ */
+void _resetWildfireClimateBiomass(void) {
+	wildfireClimate->afgAGBAvg = 0;
+	wildfireClimate->pfgAGBAvg = 0;
+	wildfireClimate->biomassCount = 0;
 }
 
 /**
@@ -1250,12 +1391,13 @@ double _getWildfireProbability(void) {
   const char *afgRGroupNames[] = {"a.cool.forb", "a.warm.forb", "a.cool.grass"};
   const char *pfgRGroupNames[] = {"p.cool.forb", "p.warm.forb", "p.cool.grass", "p.warm.grass"};
 
-  double afgAGB = 0.0f; // annual forb and grass biomass
-  double pfgAGB = 0.0f; // perennial forb and grass biomass
-  double y = 0.0f; // as defined in the documentation "Description of the fire probability model", author: Martin Holdrege
-  double MAT = SXW->temp + 273.15; // temp converted to Kelvin, mean annual temperature
-  double AP = SXW->ppt * 10; // annual precipitation (mm)
-  double prcpPropSum = precip_fraction(5, 7); // proportion precipitation over June, July, August
+  double afgAGB = 0.0; // annual forb and grass biomass
+  double pfgAGB = 0.0; // perennial forb and grass biomass
+  double y = 0.0; // as defined in the documentation "Description of the fire probability model", author: Martin Holdrege
+
+  // update wildfireClimate with new proportion precipitation over summer months, annual temperature in Kelvin, and annual precipitation in mm
+  // this function adds them to the structure, and calculates new 10 year averages for use in the probability model.
+  _updateWildfireClimate(precip_fraction(5, 7), SXW->temp + 273.15, SXW->ppt * 10);
 
   // get length of arrays for the loops below.
   int numAfg = sizeof(afgRGroupNames) / sizeof(char*);
@@ -1264,26 +1406,37 @@ double _getWildfireProbability(void) {
   // calculates annual grass and forb biomass in the current year
   for (int i = 0; i < numAfg; i++) {
 	  afgAGB += RGroup_GetBiomass(RGroup_Name2Index(afgRGroupNames[i]));
-      printf("afgAGB = %f\n", afgAGB);
+      printf("%s = %f\n", afgRGroupNames[i], afgAGB);
   }
   // calculates perennial grass and forb biomass in the current year
   for (int i = 0; i < numPfg; i++) {
   	  pfgAGB += RGroup_GetBiomass(RGroup_Name2Index(pfgRGroupNames[i]));
-      printf("pfgAGB = %f\n", pfgAGB);
+      printf("%s = %f\n", pfgRGroupNames[i], pfgAGB);
   }
+  // get new 3 year running averages for afgAGB and pfgAGB
+  _updateWildfireClimateBiomass(afgAGB, pfgAGB);
+  printf("    afgAGB = %f\n", afgAGB);
+  printf("3yr afgAGB = %f\n", wildfireClimate->afgAGBAvg);
+  printf("    pfgAGB = %f\n", pfgAGB);
+  printf("3yr pfgAGB = %f\n", wildfireClimate->pfgAGBAvg);
+
+  // access running average biomass members for use in the wildfire probability formula
+  afgAGB = wildfireClimate->afgAGBAvg;
+  pfgAGB = wildfireClimate->pfgAGBAvg;
+
   // calculates wildfire probability
   if (afgAGB > 167) {
 	  afgAGB = 167;
   }
   y = -2067 + (0.02868 * afgAGB) + (0.0001470 * afgAGB * afgAGB)
 	+ (0.03207 * pfgAGB) - (0.0002139 * pfgAGB * pfgAGB)
-	+ (14.32 * MAT) - (0.02487 * MAT * MAT)
-	+ (0.01318 * AP) - (0.00001108 * AP * AP)
-	- (4.607 * prcpPropSum) - (8.816 * prcpPropSum * prcpPropSum)
-	- (0.0001621 * afgAGB * AP) - (0.1099 * afgAGB * prcpPropSum);
-  printf("MAT = %f\n",  MAT);
-  printf("AP = %f\n",  AP);
-  printf("prcpPropSum = %f\n",  prcpPropSum);
+	+ (14.32 * wildfireClimate->meanAnnTempAvg) - (0.02487 * wildfireClimate->meanAnnTempAvg * wildfireClimate->meanAnnTempAvg)
+	+ (0.01318 * wildfireClimate->annPrecipAvg) - (0.00001108 * wildfireClimate->annPrecipAvg * wildfireClimate->annPrecipAvg)
+	- (4.607 * wildfireClimate->propSummerPrecipAvg) - (8.816 * wildfireClimate->propSummerPrecipAvg * wildfireClimate->propSummerPrecipAvg)
+	- (0.0001621 * afgAGB * wildfireClimate->annPrecipAvg) - (0.1099 * afgAGB * wildfireClimate->propSummerPrecipAvg);
+  printf("MAT = %f\n",  wildfireClimate->meanAnnTempAvg);
+  printf("AP = %f\n",  wildfireClimate->annPrecipAvg);
+  printf("prcpPropSum = %f\n",  wildfireClimate->propSummerPrecipAvg);
   printf("y = %f\n",  y);
 
   double p = 1 / (1 + exp(-1 * y));
@@ -1315,6 +1468,8 @@ Bool _simulateWildfire(void) {
       RGroup[rg]->wildfire = 1;
       RGroup[rg]->killyr = Globals->currYear;
     }
+    // reset biomass averages if there is a wildfire
+    _resetWildfireClimateBiomass();
   }
 
   return wildfire;
