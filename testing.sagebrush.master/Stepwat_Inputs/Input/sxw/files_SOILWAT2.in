@@ -8,6 +8,7 @@ Output/logfile.log	# errors or important info (can also be stdout)
 #Site
 Input/siteparam.in	# site parameters
 Input/soils.in	# soil layer definitions
+Input/swrc_params.in		# Input for soil water retention curve (used if pdf_type = 0, i.e., pedotransfer functions are not used)
 
 #Weather & climate
 Input/weathsetup.in	# weather parameters
