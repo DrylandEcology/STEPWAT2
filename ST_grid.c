@@ -33,13 +33,13 @@
 #include <string.h>
 #include <ctype.h>
 #include <dirent.h>
-#include "sw_src/generic.h"
-#include "sw_src/filefuncs.h"
-#include "sw_src/myMemory.h"
-#include "sw_src/rands.h"
-#include "sw_src/SW_SoilWater.h" // externs SW_Soilwat
-#include "sw_src/SW_Weather.h" // externs SW_Weather
-#include "sw_src/SW_Markov.h"// externs `markov_rng`
+#include "sw_src/include/generic.h"
+#include "sw_src/include/filefuncs.h"
+#include "sw_src/include/myMemory.h"
+#include "sw_src/include/rands.h"
+#include "sw_src/include/SW_SoilWater.h" // externs SW_Soilwat
+#include "sw_src/include/SW_Weather.h" // externs SW_Weather
+#include "sw_src/include/SW_Markov.h"// externs `markov_rng`
 #include "ST_grid.h"
 #include "ST_steppe.h"
 #include "ST_globals.h" // externs `UseProgressBar`
@@ -51,12 +51,12 @@
 #include "ST_colonization.h"
 #include "ST_seedDispersal.h" // externs `UseSeedDispersal`
 #include "ST_mortality.h" // externs `mortality_rng`, `*_SomeKillage`, `UseCheatgrassWildfire`
-#include "sw_src/SW_Output.h"
-#include "sw_src/SW_Output_outtext.h"
-#include "sw_src/SW_Output_outarray.h"
+#include "sw_src/include/SW_Output.h"
+#include "sw_src/include/SW_Output_outtext.h"
+#include "sw_src/include/SW_Output_outarray.h"
 
-#include "sw_src/SW_Flow.h" // for `SW_FLW_init_run()`
-#include "sw_src/SW_Flow_lib.h" // for `SW_ST_init_run()`
+#include "sw_src/include/SW_Flow.h" // for `SW_FLW_init_run()`
+#include "sw_src/include/SW_Flow_lib.h" // for `SW_ST_init_run()`
 
 
 

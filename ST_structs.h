@@ -23,7 +23,7 @@
 #ifndef STEPPE_STRUCT_DEF
 #define STEPPE_STRUCT_DEF
 
-#include "sw_src/generic.h"
+#include "sw_src/include/generic.h"
 #include "ST_mortality.h"
 
 /**
