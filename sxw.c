@@ -1109,7 +1109,7 @@ void _print_debuginfo(void) {
 
 
 #ifdef DEBUG_MEM
-#include "sw_src/myMemory.h"
+#include "sw_src/include/myMemory.h"
 /*======================================================*/
 void SXW_SetMemoryRefs( void) {
 /* when debugging memory problems, use the bookkeeping
