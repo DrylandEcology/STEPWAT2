@@ -12,9 +12,9 @@
 #include <sqlite3.h>
 #include "ST_steppe.h"
 #include "ST_globals.h"
-#include "sw_src/SW_Model.h" // externs `SW_Model`
-#include "sw_src/SW_Site.h" // externs `SW_Site`
-#include "sw_src/SW_VegProd.h" // externs `SW_VegProd`
+#include "sw_src/include/SW_Model.h" // externs `SW_Model`
+#include "sw_src/include/SW_Site.h" // externs `SW_Site`
+#include "sw_src/include/SW_VegProd.h" // externs `SW_VegProd`
 #include "sxw_module.h"
 #include "sxw.h" // externs `*SXW`, `*SXWResources`
 

@@ -15,13 +15,13 @@
 
 #include "ST_steppe.h"
 #include "ST_globals.h" // externs `*Env`
-#include "sw_src/SW_Defines.h"
+#include "sw_src/include/SW_Defines.h"
 #include "sxw.h" // externs `*SXW`
 #include "sxw_module.h"
-#include "sw_src/SW_Model.h" // externs SW_Model
-#include "sw_src/SW_Site.h" // externs SW_Site
-#include "sw_src/SW_SoilWater.h" // externs SW_Soilwat
-#include "sw_src/SW_Weather.h" // externs SW_Weather
+#include "sw_src/include/SW_Model.h" // externs SW_Model
+#include "sw_src/include/SW_Site.h" // externs SW_Site
+#include "sw_src/include/SW_SoilWater.h" // externs SW_Soilwat
+#include "sw_src/include/SW_Weather.h" // externs SW_Weather
 
 
 

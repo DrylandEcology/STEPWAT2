@@ -48,27 +48,27 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "sw_src/generic.h" // externs `errstr`
-#include "sw_src/filefuncs.h" // externs `inbuf`
-#include "sw_src/myMemory.h"
+#include "sw_src/include/generic.h" // externs `errstr`
+#include "sw_src/include/filefuncs.h" // externs `inbuf`
+#include "sw_src/include/myMemory.h"
 #include "ST_steppe.h"
 #include "ST_globals.h"
-#include "sw_src/SW_Defines.h"
+#include "sw_src/include/SW_Defines.h"
 #include "sxw.h"
 #include "sxw_funcs.h"
 #include "sxw_module.h"
-#include "sw_src/SW_Control.h"
-#include "sw_src/SW_Model.h"
-#include "sw_src/SW_VegProd.h"
-#include "sw_src/SW_Carbon.h"
-#include "sw_src/SW_Site.h"
-#include "sw_src/SW_SoilWater.h"
-#include "sw_src/SW_Files.h"
-#include "sw_src/SW_Weather.h"
-#include "sw_src/SW_Markov.h"
-#include "sw_src/SW_Output.h" // externs `prepare_IterationSummary`, `storeAllIterations`
-#include "sw_src/rands.h"
-#include "sw_src/pcg/pcg_basic.h"
+#include "sw_src/include/SW_Control.h"
+#include "sw_src/include/SW_Model.h"
+#include "sw_src/include/SW_VegProd.h"
+#include "sw_src/include/SW_Carbon.h"
+#include "sw_src/include/SW_Site.h"
+#include "sw_src/include/SW_SoilWater.h"
+#include "sw_src/include/SW_Files.h"
+#include "sw_src/include/SW_Weather.h"
+#include "sw_src/include/SW_Markov.h"
+#include "sw_src/include/SW_Output.h" // externs `prepare_IterationSummary`, `storeAllIterations`
+#include "sw_src/include/rands.h"
+#include "sw_src/external/pcg/pcg_basic.h"
 
 
 /*************** Global Variable Declarations ***************/
@@ -1109,7 +1109,7 @@ void _print_debuginfo(void) {
 
 
 #ifdef DEBUG_MEM
-#include "sw_src/myMemory.h"
+#include "sw_src/include/myMemory.h"
 /*======================================================*/
 void SXW_SetMemoryRefs( void) {
 /* when debugging memory problems, use the bookkeeping

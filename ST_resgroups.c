@@ -29,9 +29,9 @@
 #include <string.h>
 #include "ST_steppe.h"
 #include "ST_globals.h"
-#include "sw_src/myMemory.h"
-#include "sw_src/rands.h"
-#include "sw_src/filefuncs.h"
+#include "sw_src/include/myMemory.h"
+#include "sw_src/include/rands.h"
+#include "sw_src/include/filefuncs.h"
 #include "sxw_funcs.h"
 
 

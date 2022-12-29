@@ -14,11 +14,11 @@
 #ifndef SXW_MODULE_DEF
 #define SXW_MODULE_DEF
 
-#include "sw_src/SW_Control.h"
-#include "sw_src/SW_Model.h"
-#include "sw_src/SW_VegProd.h"
-#include "sw_src/SW_SoilWater.h"
-#include "sw_src/SW_Files.h"
+#include "sw_src/include/SW_Control.h"
+#include "sw_src/include/SW_Model.h"
+#include "sw_src/include/SW_VegProd.h"
+#include "sw_src/include/SW_SoilWater.h"
+#include "sw_src/include/SW_Files.h"
 
 /* some macros for the production conversion array */
 #define PC_Bmass 0

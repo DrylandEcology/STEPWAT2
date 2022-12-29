@@ -39,23 +39,23 @@
 /* --------------------------------------------------- */
 
 
-#include "sw_src/generic.h"
-#include "sw_src/filefuncs.h"
-#include "sw_src/myMemory.h"
-#include "sw_src/Times.h"
+#include "sw_src/include/generic.h"
+#include "sw_src/include/filefuncs.h"
+#include "sw_src/include/myMemory.h"
+#include "sw_src/include/Times.h"
 #include "ST_steppe.h"
 #include "ST_globals.h"
-#include "sw_src/SW_Defines.h"
+#include "sw_src/include/SW_Defines.h"
 #include "sxw.h" // externs `*SXWResources`
 #include "sxw_module.h"
 #include "sxw_vars.h"
-#include "sw_src/SW_Control.h"
-#include "sw_src/SW_Weather.h" // externs `SW_Weather`
-#include "sw_src/SW_Model.h" // externs `SW_Model`
-#include "sw_src/SW_Site.h" // externs `SW_Site`
-#include "sw_src/SW_SoilWater.h"
-#include "sw_src/SW_VegProd.h" // externs `SW_VegProd`
-#include "sw_src/SW_Files.h"
+#include "sw_src/include/SW_Control.h"
+#include "sw_src/include/SW_Weather.h" // externs `SW_Weather`
+#include "sw_src/include/SW_Model.h" // externs `SW_Model`
+#include "sw_src/include/SW_Site.h" // externs `SW_Site`
+#include "sw_src/include/SW_SoilWater.h"
+#include "sw_src/include/SW_VegProd.h" // externs `SW_VegProd`
+#include "sw_src/include/SW_Files.h"
 
 
 
