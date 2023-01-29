@@ -56,6 +56,7 @@
 #include "sw_src/include/SW_SoilWater.h"
 #include "sw_src/include/SW_VegProd.h" // externs `SW_VegProd`
 #include "sw_src/include/SW_Files.h"
+#include "sw_src/include/SW_Sky.h" // externs SW_Sky
 
 
 
@@ -102,6 +103,8 @@ void _sxw_sw_setup (RealF sizes[]) {
 */
 void _sxw_generate_weather(void) {
   SW_WEATHER *w = &SW_Weather;
+  SW_SKY *sky = &SW_Sky;
+  int flag;
 
   deallocateAllWeather(w);
   w->n_years = 1;
@@ -116,12 +119,26 @@ void _sxw_generate_weather(void) {
     );
   }
 
+  // Make sure monthly flags are set to interpolate monthly values into daily values
+  w->use_humidityMonthly = swTRUE;
+  w->use_cloudCoverMonthly = swTRUE;
+  w->use_windSpeedMonthly = swTRUE;
+
   readAllWeather(
     w->allHist,
     w->startYear,
     w->n_years,
     swTRUE, // `use_weathergenerator_only`
-    w->name_prefix // not used because `use_weathergenerator_only`
+    w->name_prefix, // not used because `use_weathergenerator_only`
+	w->use_cloudCoverMonthly,
+	w->use_humidityMonthly,
+	w->use_windSpeedMonthly,
+	w->n_input_forcings,
+	w->dailyInputIndices,
+	w->dailyInputFlags,
+	sky->cloudcov,
+	sky->windspeed,
+	sky->r_humidity
   );
 
   finalizeAllWeather(w); // run the weather generator
