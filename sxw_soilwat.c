@@ -104,7 +104,6 @@ void _sxw_sw_setup (RealF sizes[]) {
 void _sxw_generate_weather(void) {
   SW_WEATHER *w = &SW_Weather;
   SW_SKY *sky = &SW_Sky;
-  int flag;
 
   deallocateAllWeather(w);
   w->n_years = 1;
