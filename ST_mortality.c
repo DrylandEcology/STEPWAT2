@@ -55,7 +55,7 @@ pcg32_random_t mortality_rng;
 /* ---------------------------- Exported Flags ----------------------------- */
 
 /**
- * \brief A flag for turning cheatgrass-driven wildfire on and off.
+ * \brief A flag for turning wildfire on and off.
  * \ingroup MORTALITY
  */
 Bool UseWildfire = 0;

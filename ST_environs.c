@@ -311,7 +311,7 @@ static void _make_disturbance( void) {
  * \brief Used to calculate the proportion of yearly precipitation over
  *        the course of specified months.
  *
- * This function is needed for the new cheatgrass wildfire cycle overhaul, which needs
+ * This function is needed for the implementation of wildfire, which is based on
  * the fraction of precipitation occurring in summer (June-August)
  *
  * \param start the start month 0 = January, 11 = December
