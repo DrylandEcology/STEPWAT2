@@ -1425,15 +1425,14 @@ double _getWildfireProbability(void) {
   pfgAGB = wildfireClimate->pfgAGBAvg;
 
   // calculates wildfire probability
-  if (afgAGB > 167) {
-	  afgAGB = 167;
-  }
-  y = -2067 + (0.02868 * afgAGB) + (0.0001470 * afgAGB * afgAGB)
-	+ (0.03207 * pfgAGB) - (0.0002139 * pfgAGB * pfgAGB)
-	+ (14.32 * wildfireClimate->meanAnnTempAvg) - (0.02487 * wildfireClimate->meanAnnTempAvg * wildfireClimate->meanAnnTempAvg)
-	+ (0.01318 * wildfireClimate->annPrecipAvg) - (0.00001108 * wildfireClimate->annPrecipAvg * wildfireClimate->annPrecipAvg)
-	- (4.607 * wildfireClimate->propSummerPrecipAvg) - (8.816 * wildfireClimate->propSummerPrecipAvg * wildfireClimate->propSummerPrecipAvg)
-	- (0.0001621 * afgAGB * wildfireClimate->annPrecipAvg) - (0.1099 * afgAGB * wildfireClimate->propSummerPrecipAvg);
+  y = -3084 - (3.18 * afgAGB) + (0.02281 * afgAGB * afgAGB)
+	+ (0.05529 * pfgAGB) - (0.0002741 * pfgAGB * pfgAGB)
+	+ (21.57 * wildfireClimate->meanAnnTempAvg) - (0.0378 * wildfireClimate->meanAnnTempAvg * wildfireClimate->meanAnnTempAvg)
+	+ (0.01101 * wildfireClimate->annPrecipAvg) - (0.00001037 * wildfireClimate->annPrecipAvg * wildfireClimate->annPrecipAvg)
+	- (1.352 * wildfireClimate->propSummerPrecipAvg) - (13.59 * wildfireClimate->propSummerPrecipAvg * wildfireClimate->propSummerPrecipAvg)
+	- (0.0000742 * afgAGB * wildfireClimate->annPrecipAvg) + (0.01141 * afgAGB * wildfireClimate->meanAnnTempAvg)
+	- (0.0000002835 * afgAGB * afgAGB * (wildfireClimate->meanAnnTempAvg * wildfireClimate->meanAnnTempAvg)) - (0.0007734 * afgAGB * pfgAGB);
+
   printf("MAT = %f\n",  wildfireClimate->meanAnnTempAvg);
   printf("AP = %f\n",  wildfireClimate->annPrecipAvg);
   printf("prcpPropSum = %f\n",  wildfireClimate->propSummerPrecipAvg);
