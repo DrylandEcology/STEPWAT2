@@ -1386,7 +1386,7 @@ void killMaxage(void) {
  * \ingroup MORTALITY_PRIVATE
  */
 double _getWildfireProbability(void) {
-  // In the future if the simulation is to be ran without certain functional groups,
+  // In the future if the simulation is to be run without certain functional groups,
   // these next two lines need to be updated appropriately.
   const char *afgRGroupNames[] = {"a.cool.forb", "a.warm.forb", "a.cool.grass"};
   const char *pfgRGroupNames[] = {"p.cool.forb", "p.warm.forb", "p.cool.grass", "p.warm.grass"};
