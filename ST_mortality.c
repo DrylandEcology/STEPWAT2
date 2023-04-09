@@ -1425,6 +1425,10 @@ double _getWildfireProbability(void) {
   pfgAGB = wildfireClimate->pfgAGBAvg;
 
   // calculates wildfire probability
+  if (afgAGB > 167) {
+	  afgAGB = 167;
+  }
+
   y = -3084 - (3.18 * afgAGB) + (0.02281 * afgAGB * afgAGB)
 	+ (0.05529 * pfgAGB) - (0.0002741 * pfgAGB * pfgAGB)
 	+ (21.57 * wildfireClimate->meanAnnTempAvg) - (0.0378 * wildfireClimate->meanAnnTempAvg * wildfireClimate->meanAnnTempAvg)
