@@ -1406,19 +1406,19 @@ double _getWildfireProbability(void) {
   // calculates annual grass and forb biomass in the current year
   for (int i = 0; i < numAfg; i++) {
 	  afgAGB += RGroup_GetBiomass(RGroup_Name2Index(afgRGroupNames[i]));
-      printf("%s = %f\n", afgRGroupNames[i], afgAGB);
+      //printf("%s = %f\n", afgRGroupNames[i], afgAGB);
   }
   // calculates perennial grass and forb biomass in the current year
   for (int i = 0; i < numPfg; i++) {
   	  pfgAGB += RGroup_GetBiomass(RGroup_Name2Index(pfgRGroupNames[i]));
-      printf("%s = %f\n", pfgRGroupNames[i], pfgAGB);
+      //printf("%s = %f\n", pfgRGroupNames[i], pfgAGB);
   }
   // get new 3 year running averages for afgAGB and pfgAGB
   _updateWildfireClimateBiomass(afgAGB, pfgAGB);
-  printf("    afgAGB = %f\n", afgAGB);
-  printf("3yr afgAGB = %f\n", wildfireClimate->afgAGBAvg);
-  printf("    pfgAGB = %f\n", pfgAGB);
-  printf("3yr pfgAGB = %f\n", wildfireClimate->pfgAGBAvg);
+  //printf("    afgAGB = %f\n", afgAGB);
+  //printf("3yr afgAGB = %f\n", wildfireClimate->afgAGBAvg);
+  //printf("    pfgAGB = %f\n", pfgAGB);
+  //printf("3yr pfgAGB = %f\n", wildfireClimate->pfgAGBAvg);
 
   // access running average biomass members for use in the wildfire probability formula
   afgAGB = wildfireClimate->afgAGBAvg;
@@ -1437,13 +1437,13 @@ double _getWildfireProbability(void) {
 	- (0.0000742 * afgAGB * wildfireClimate->annPrecipAvg) + (0.01141 * afgAGB * wildfireClimate->meanAnnTempAvg)
 	- (0.0000002835 * afgAGB * afgAGB * (wildfireClimate->meanAnnTempAvg * wildfireClimate->meanAnnTempAvg)) - (0.0007734 * afgAGB * pfgAGB);
 
-  printf("MAT = %f\n",  wildfireClimate->meanAnnTempAvg);
-  printf("AP = %f\n",  wildfireClimate->annPrecipAvg);
-  printf("prcpPropSum = %f\n",  wildfireClimate->propSummerPrecipAvg);
-  printf("y = %f\n",  y);
+  //printf("MAT = %f\n",  wildfireClimate->meanAnnTempAvg);
+  //printf("AP = %f\n",  wildfireClimate->annPrecipAvg);
+  //printf("prcpPropSum = %f\n",  wildfireClimate->propSummerPrecipAvg);
+  //printf("y = %f\n",  y);
 
   double p = 1 / (1 + exp(-1 * y));
-  printf("p = %f\n",  p);
+  //printf("p = %f\n",  p);
   return p;
 
 }
