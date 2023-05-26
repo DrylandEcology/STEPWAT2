@@ -44,7 +44,7 @@ Bool indiv_Kill_Partial( MortalityType code,
 void indiv_Kill_Complete( IndivType *ndv, int killType);
 void indiv_proportion_Kill( IndivType *ndv, int killType,RealF proportionKilled);
 void indiv_proportion_Recovery( IndivType *ndv, int killType,RealF proportionRecovery,RealF proportionKilled);
-void indiv_proportion_Grazing( IndivType *ndv, RealF proportionGrazing);
+RealF indiv_proportion_Grazing( IndivType *ndv, RealF proportionGrazing);
 
 /*********** Locally Used Function Declarations ************/
 /***********************************************************/
@@ -298,7 +298,7 @@ void indiv_proportion_Kill(IndivType *ndv, int killType, RealF proportKilled)
  * 
  * \ingroup INDIVIDUAL
  */
-void indiv_proportion_Grazing( IndivType *ndv, RealF proportionGrazing)
+RealF indiv_proportion_Grazing( IndivType *ndv, RealF proportionGrazing)
 {
 #define xF_DELTA (20*F_DELTA)
 #define xD_DELTA (20*D_DELTA)
@@ -319,6 +319,9 @@ void indiv_proportion_Grazing( IndivType *ndv, RealF proportionGrazing)
 #undef xF_DELTA
 #undef xD_DELTA
 #undef ZERO
+
+//returning proportion grazed on individual multiplied by -1
+return grazing_reduce * -1;
 }
 
 /**

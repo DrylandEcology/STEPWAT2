@@ -45,7 +45,7 @@
 /* ----------------- Local Variables --------------------- */
 StatType *_Dist, *_Ppt, *_Temp,
   *_Grp, *_Gsize, *_Gpr, *_Gmort, *_Gestab,
-  *_Spp, *_Indv, *_Smort, *_Sestab, *_Sreceived;
+  *_Spp, *_Indv, *_Smort, *_Sestab, *_Sreceived, *_Grazed;
 
 FireStatsType *_Gwf;
 
@@ -126,6 +126,20 @@ void stat_Collect( Int year ) {
   }
 
   year--;
+
+  ForEachGroup(rg) {
+    RealF propGraze = 0.0;
+
+    Int i = 0;
+
+    ForEachEstSpp2(rg, i) {
+      propGraze += Species[RGroup[rg]->est_spp[i]]->res_grazed; /*collect grazing for
+                                                                  each species in resource group
+                                                                  for overall resource group grazing*/
+    }
+    _collect_add(&_Grazed[rg].s[year], propGraze);
+  }
+
   if (BmassFlags.dist && Plot->disturbed)
     _Dist->s[year].nobs++;
 
@@ -198,6 +212,14 @@ static void _init( void) {
 /* must be called after model is initialized */
   SppIndex sp;
   GrpIndex rg;
+
+  _Grazed = (StatType*) Mem_Calloc(SuperGlobals.max_rgroups, sizeof(StatType), "_stat_init(Grazed)");
+
+  ForEachGroup(rg) {
+    _Grazed[rg].s = (struct accumulators_st*) Mem_Calloc(SuperGlobals.runModelYears,
+                                                    sizeof(struct accumulators_st),
+                                                    "_stat_init(Grazed[rg].s)");
+  }
 
   if (BmassFlags.dist) {
     _Dist = (StatType*) Mem_Calloc(1, sizeof(StatType), "_stat_init(Dist)");
@@ -374,9 +396,10 @@ static void _init( void) {
 
 /* Shallow copies StatType and FireStatsType pointers to the local pointers.
    This is intended to be used with gridded mode to load in a given cell */
-void stat_Copy_Accumulators(StatType* newDist, StatType* newPpt, StatType* newTemp, StatType* newGrp, StatType* newGsize, 
+void stat_Copy_Accumulators(StatType* newDist, StatType* newPpt, StatType* newTemp, StatType* newGrp, StatType* newGsize,
                             StatType* newGpr, StatType* newGmort, StatType* newGestab, StatType* newSpp, StatType* newIndv,
-                            StatType* newSmort, StatType* newSestab, StatType* newSrecieved, FireStatsType* newGwf, Bool firstTime){
+                            StatType* newSmort, StatType* newSestab, StatType* newSrecieved, StatType* newGrazed, FireStatsType* newGwf,
+                             Bool firstTime){
 
   /* Move the local pointers to the location of the given pointers */
   _Dist = newDist;
@@ -392,6 +415,7 @@ void stat_Copy_Accumulators(StatType* newDist, StatType* newPpt, StatType* newTe
   _Smort = newSmort;
   _Sestab = newSestab;
   _Sreceived = newSrecieved;
+  _Grazed = newGrazed;
   _Gwf = newGwf;
   firsttime = firstTime;
 }
@@ -401,6 +425,11 @@ void stat_free_mem( void ) {
 	//frees memory allocated in this module
 	GrpIndex gp;
 	SppIndex sp;
+
+  ForEachGroup(gp) {
+    Mem_Free(_Grazed[gp].s);
+  }
+  Mem_Free(_Grazed);
 
   	if(BmassFlags.grpb)
   		ForEachGroup(gp) {
@@ -734,6 +763,10 @@ void stat_Output_AllBmass(void) {
                   _Gwf->prescribedFire[rg][yr-1], sep);
           strcat( buf, tbuf);
         }
+
+        //grazing
+        sprintf(tbuf, "%f%c", _get_avg(&_Grazed[rg].s[yr-1]), sep);
+        strcat(buf, tbuf);
       }
     }
 
@@ -904,6 +937,8 @@ void make_header_with_std( char *buf) {
         strcpy(fields[fc], RGroup[rg]->name);
         strcat(fields[fc++], "_PFire");
       }
+      strcpy(fields[fc], RGroup[rg]->name);
+      strcat(fields[fc++], "_graz");
     }
   }
 
@@ -1043,6 +1078,12 @@ void Stat_SetMemoryRefs(void) {
 
   SppIndex sp;
   GrpIndex rg;
+
+  NoteMemoryRef(_Grazed);
+
+  ForEachGroup(rg) {
+    NotememoryRef(_Grazed[rg].s);
+  }
 
   if (BmassFlags.dist)
     NoteMemoryRef(_Dist.s);

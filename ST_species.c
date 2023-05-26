@@ -49,7 +49,7 @@ void indiv_Kill_Complete(IndivType *ndv, int killType);
 void indiv_proportion_Kill(IndivType *ndv, int killType, RealF proportionKilled);
 void indiv_proportion_Recovery(IndivType *ndv, int killType,
 		RealF proportionRecovery, RealF proportionKilled);
-void indiv_proportion_Grazing(IndivType *ndv, RealF proportionGrazing);
+RealF indiv_proportion_Grazing(IndivType *ndv, RealF proportionGrazing);
 
 void _delete(IndivType *ndv);
 void save_annual_species_relsize(void);
@@ -531,6 +531,8 @@ void Species_Proportion_Grazing(const SppIndex sp, RealF proportionGrazing)
 	//    growth for the whole species.
 	//    loss represents the proportion of extragrowth that is eaten by livestock
 	RealF loss = Species[sp]->extragrowth * proportionGrazing;
+	RealF indivGrazed = 0.0;
+	Species[sp]->res_grazed = 0.0; //reset res_grazed
 
 	//CH- Remove the loss from Species extra growth.
 	Species[sp]->extragrowth -= loss;	// remove the loss from extragrowth
@@ -540,9 +542,12 @@ void Species_Proportion_Grazing(const SppIndex sp, RealF proportionGrazing)
 	while (p) //while p points to an individual
 	{
 		t = p->Next; //must store Next since p might be deleted at any time.
-		indiv_proportion_Grazing(p, proportionGrazing);
+		indivGrazed += indiv_proportion_Grazing(p, proportionGrazing); /*Storing all proportio
+																																		*grazing on individuals */
 		p = t; //move to the next plant.
 	}
+	//res_grazed = maturn biomass in grams multiplied by loss proportion plus individual grazed proportion
+	Species[sp]->res_grazed = Species[sp]->mature_biomass * (loss + indivGrazed);
 }
 
 /**
