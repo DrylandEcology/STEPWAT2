@@ -290,9 +290,9 @@ void indiv_proportion_Kill(IndivType *ndv, int killType, RealF proportKilled)
  * Implement grazing for each individual. Also keep up with survivorship data.
  * 
  * \param ndv A pointer to the individual.
- * \param proportionGrazing Value between 0 and 1. The proportion of biomass to remove.
+ * \param proportionGrazing Value between 0 and 1. The proportion of biomass to remove / reduction in relsize.
  * 
- * \sideeffect ndv->relsize is adjusted.
+ * \sideeffect ndv->relsize is adjusted and the reduction in individual relsizes due to grazing is returned.
  * 
  * \sa Species_Proportion_Grazing()
  * 
@@ -320,7 +320,7 @@ RealF indiv_proportion_Grazing( IndivType *ndv, RealF proportionGrazing)
 #undef xD_DELTA
 #undef ZERO
 
-//returning proportion grazed on individual multiplied by -1
+//return the reduction in individual relative size removed by grazing this year
 return grazing_reduce * -1;
 }
 

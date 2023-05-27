@@ -169,8 +169,8 @@ struct species_st {
       /** \brief Beta parameter for random number draw from beta distribution in establishment of annual species.
        * \sa _add_annuals() */
         beta,
-        /** \brief mass in grams grazed this iteration for this species. Is reset in stat_Collect()
-          *\sa Species_Proportion_Grazing()*/
+      /** \brief Species biomass removed by livestock grazing. Reset in stat_Collect()
+       * \sa Species_Proportion_Grazing() */
         res_grazed;
       /** \brief Variance parameter of the beta distribution for establishment of annual species. */
   float var;
