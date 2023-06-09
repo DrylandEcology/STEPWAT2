@@ -524,13 +524,14 @@ static void _allocate_accumulators(void){
 			   gridCells[i][j].<accumulator> because the ST_stats accumulators are local. */
 			load_cell(i,j);
 
-        /* Grazing */
-        gridCells[i][j]._Grazed = (StatType*)Mem_Calloc(SuperGlobals.max_rgroups, sizeof(StatType),
-                                   "allocate_accumulators(Grazed)");
-        ForEachGroup(rg) {
-          gridCells[i][j]._Grazed[rg].s = (struct accumulators_st*) Mem_Calloc(SuperGlobals.runModelYears,
-                                            sizeof(struct accumulators_st), "_allocate_accumulators(Grazed)");
-        }
+			if (BmassFlags.graz) {
+				gridCells[i][j]._Grazed = (StatType*)Mem_Calloc(SuperGlobals.max_rgroups, sizeof(StatType),
+					"allocate_accumulators(Grazed)");
+				ForEachGroup(rg) {
+					gridCells[i][j]._Grazed[rg].s = (struct accumulators_st*)Mem_Calloc(SuperGlobals.runModelYears,
+						sizeof(struct accumulators_st), "_allocate_accumulators(Grazed)");
+				}
+			}
 
   			if (BmassFlags.dist) {
     			gridCells[i][j]._Dist = (StatType*) Mem_Calloc(1, sizeof(StatType), "_allocate_accumulators(Dist)");
@@ -1388,7 +1389,7 @@ void _Output_AllCellAvgBmass(const char * filename){
 			gprsos[rg] = 0;
 			gprstd[rg] = 0; 
 			prescribedfire[rg] = 0;
-      graze[rg] = 0;
+			graze[rg] = 0;
 		}
 		ForEachSpecies(sp){
 			spp[sp] = 0;
@@ -1400,10 +1401,6 @@ void _Output_AllCellAvgBmass(const char * filename){
 			for(j = 0; j < grid_Cols; ++j){ // For each column
 				/* ------------- Accumulate requested output ----------------- */
 				nobs++;
-
-        ForEachGroup(rg) {
-          graze[rg] = gridCells[i][j]._Grazed[rg].s[year].ave;
-        }
 
 				if(BmassFlags.ppt) {
 					
@@ -1420,6 +1417,11 @@ void _Output_AllCellAvgBmass(const char * filename){
 				}
 				if(BmassFlags.dist) dist += gridCells[i][j]._Dist->s[year].nobs;
 				if(BmassFlags.grpb) {
+					if (BmassFlags.graz) {
+						ForEachGroup(rg) {
+							graze[rg] = gridCells[i][j]._Grazed[rg].s[year].ave;
+						}
+					}
 					if(BmassFlags.wildfire){
 						wildfire += gridCells[i][j]._Gwf->wildfire[year];
 					}
@@ -1509,8 +1511,10 @@ void _Output_AllCellAvgBmass(const char * filename){
 					sprintf(tbuf, "%f%c", prescribedfire[rg], sep);
 					strcat(buf, tbuf);
 				}
-        sprintf(tbuf, "%f%c", graze[rg], sep);
-        strcat(buf, tbuf);
+				if (BmassFlags.graz) {
+					sprintf(tbuf, "%f%c", graze[rg], sep);
+					strcat(buf, tbuf);
+				}
 			}
 		}
 		if(BmassFlags.sppb){

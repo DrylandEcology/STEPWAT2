@@ -701,6 +701,8 @@ struct bmassflags_st {
        indv;
       /** \brief the character used to separate values in the output files. */
   char sep;
+      /** \brief If TRUE output grazed biomass. */
+  Bool graz;
 };
 
 /**

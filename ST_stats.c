@@ -127,19 +127,6 @@ void stat_Collect( Int year ) {
 
   year--;
 
-  ForEachGroup(rg) {
-    RealF propGraze = 0.0;
-
-    Int i = 0;
-
-    ForEachEstSpp2(rg, i) {
-      propGraze += Species[RGroup[rg]->est_spp[i]]->res_grazed; /*collect grazing for
-                                                                  each species in resource group
-                                                                  for overall resource group grazing*/
-    }
-    _collect_add(&_Grazed[rg].s[year], propGraze);
-  }
-
   if (BmassFlags.dist && Plot->disturbed)
     _Dist->s[year].nobs++;
 
@@ -150,6 +137,20 @@ void stat_Collect( Int year ) {
     _collect_add( &_Temp->s[year], Env->temp);
 
   if (BmassFlags.grpb) {
+    if (BmassFlags.graz) {
+          ForEachGroup(rg) {
+              RealF propGraze = 0.0;
+
+              Int i = 0;
+
+              ForEachEstSpp2(rg, i) {
+                  propGraze += Species[RGroup[rg]->est_spp[i]]->res_grazed; /*collect grazing for
+                                                                              each species in resource group
+                                                                              for overall resource group grazing*/
+              }
+              _collect_add(&_Grazed[rg].s[year], propGraze);
+          }
+      }
     if (BmassFlags.wildfire) {
         _Gwf->wildfire[year] += (RGroup[0]->wildfire) ? 1 : 0;
     }
@@ -213,12 +214,14 @@ static void _init( void) {
   SppIndex sp;
   GrpIndex rg;
 
-  _Grazed = (StatType*) Mem_Calloc(SuperGlobals.max_rgroups, sizeof(StatType), "_stat_init(Grazed)");
+  if (BmassFlags.graz) {
+      _Grazed = (StatType*)Mem_Calloc(SuperGlobals.max_rgroups, sizeof(StatType), "_stat_init(Grazed)");
 
-  ForEachGroup(rg) {
-    _Grazed[rg].s = (struct accumulators_st*) Mem_Calloc(SuperGlobals.runModelYears,
-                                                    sizeof(struct accumulators_st),
-                                                    "_stat_init(Grazed[rg].s)");
+      ForEachGroup(rg) {
+          _Grazed[rg].s = (struct accumulators_st*)Mem_Calloc(SuperGlobals.runModelYears,
+              sizeof(struct accumulators_st),
+              "_stat_init(Grazed[rg].s)");
+      }
   }
 
   if (BmassFlags.dist) {
@@ -426,16 +429,12 @@ void stat_free_mem( void ) {
 	GrpIndex gp;
 	SppIndex sp;
 
-  ForEachGroup(gp) {
-    Mem_Free(_Grazed[gp].s);
-  }
-  Mem_Free(_Grazed);
-
   	if(BmassFlags.grpb)
   		ForEachGroup(gp) {
   			Mem_Free(_Grp[gp].s);
   			if (BmassFlags.size) Mem_Free(_Gsize[gp].s);
   			if (BmassFlags.pr) Mem_Free(_Gpr[gp].s);
+            if (BmassFlags.graz) Mem_Free(_Grazed[gp].s);
   		}
   	if(BmassFlags.sppb)
   		ForEachSpecies(sp) {
@@ -468,6 +467,7 @@ void stat_free_mem( void ) {
   		Mem_Free(_Grp);
   		if (BmassFlags.size) Mem_Free(_Gsize);
   		if (BmassFlags.size) Mem_Free(_Gpr);
+        if (BmassFlags.graz) Mem_Free(_Grazed);
   	}
   	if (MortFlags.group) {
   		ForEachGroup(gp) {
@@ -763,10 +763,10 @@ void stat_Output_AllBmass(void) {
                   _Gwf->prescribedFire[rg][yr-1], sep);
           strcat( buf, tbuf);
         }
-
-        //grazing
-        sprintf(tbuf, "%f%c", _get_avg(&_Grazed[rg].s[yr-1]), sep);
-        strcat(buf, tbuf);
+        if (BmassFlags.graz) {
+            sprintf(tbuf, "%f%c", _get_avg(&_Grazed[rg].s[yr - 1]), sep);
+            strcat(buf, tbuf);
+        }
       }
     }
 
@@ -937,8 +937,10 @@ void make_header_with_std( char *buf) {
         strcpy(fields[fc], RGroup[rg]->name);
         strcat(fields[fc++], "_PFire");
       }
-      strcpy(fields[fc], RGroup[rg]->name);
-      strcat(fields[fc++], "_graz");
+      if (BmassFlags.graz) {
+          strcpy(fields[fc], RGroup[rg]->name);
+          strcat(fields[fc++], "_graz");
+      }
     }
   }
 
@@ -1030,6 +1032,10 @@ void make_header( char *buf) {
         strcpy(fields[fc], RGroup[rg]->name);
         strcat(fields[fc++], "_PrescribedFire");
       }
+      if (BmassFlags.graz) {
+         strcpy(fields[fc], RGroup[rg]->name);
+         strcat(fields[fc++], "_graz");
+      }
     }
   }
 
@@ -1079,11 +1085,13 @@ void Stat_SetMemoryRefs(void) {
   SppIndex sp;
   GrpIndex rg;
 
-  NoteMemoryRef(_Grazed);
+    if (BmassFlags.graz)
+        NoteMemoryRef(_Grazed);
 
-  ForEachGroup(rg) {
-    NotememoryRef(_Grazed[rg].s);
-  }
+    ForEachGroup(rg) {
+        NotememoryRef(_Grazed[rg].s);
+    }
+}
 
   if (BmassFlags.dist)
     NoteMemoryRef(_Dist.s);
