@@ -40,8 +40,8 @@
 
 #include <string.h>
 #include "ST_steppe.h"
-#include "sw_src/filefuncs.h"
-#include "sw_src/myMemory.h"
+#include "sw_src/include/filefuncs.h"
+#include "sw_src/include/myMemory.h"
 #include "ST_stats.h" // Contains most of the function declarations.
 #include "ST_seedDispersal.h" // externs `UseSeedDispersal`
 #include "ST_globals.h"

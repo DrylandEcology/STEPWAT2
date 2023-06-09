@@ -14,11 +14,11 @@
 
 #include "ST_steppe.h"
 #include "ST_globals.h"
-#include "sw_src/pcg/pcg_basic.h"
-#include "sw_src/rands.h"
+#include "sw_src/external/pcg/pcg_basic.h"
+#include "sw_src/include/rands.h"
 #include "sxw.h" // externs `*SXW`
 #include "sxw_funcs.h"
-#include "sw_src/filefuncs.h"
+#include "sw_src/include/filefuncs.h"
 
 /*********** Locally Used Function Declarations ************/
 /***********************************************************/

@@ -23,21 +23,21 @@
 #include <string.h>
 #include <stdlib.h>
 #include "ST_steppe.h"
-#include "sw_src/generic.h" // externs `*logfp`, `errstr`, `EchoInits`, `QuietMode`, `logged`
-#include "sw_src/filefuncs.h" // externs `inbuf`
-#include "sw_src/myMemory.h"
-#include "sw_src/SW_VegProd.h"
-#include "sw_src/SW_Control.h"
-#include "sw_src/pcg/pcg_basic.h"
-#include "sw_src/SW_Markov.h"// externs `markov_rng`
+#include "sw_src/include/generic.h" // externs `*logfp`, `errstr`, `EchoInits`, `QuietMode`, `logged`
+#include "sw_src/include/filefuncs.h" // externs `inbuf`
+#include "sw_src/include/myMemory.h"
+#include "sw_src/include/SW_VegProd.h"
+#include "sw_src/include/SW_Control.h"
+#include "sw_src/external/pcg/pcg_basic.h"
+#include "sw_src/include/SW_Markov.h"// externs `markov_rng`
 
 #include "sxw_funcs.h"
 #include "sxw.h"
 // externs `prepare_IterationSummary`, `storeAllIterations`
-#include "sw_src/SW_Output.h"
-#include "sw_src/SW_Output_outtext.h" // externs `print_IterationSummary`
-#include "sw_src/SW_Output_outarray.h"
-#include "sw_src/rands.h"
+#include "sw_src/include/SW_Output.h"
+#include "sw_src/include/SW_Output_outtext.h" // externs `print_IterationSummary`
+#include "sw_src/include/SW_Output_outarray.h"
+#include "sw_src/include/rands.h"
 #include "ST_functions.h" // externs `environs_rng`, `resgroups_rng`, `species_rng`
 #include "ST_spinup.h"
 #include "ST_stats.h"
@@ -214,8 +214,6 @@ int main(int argc, char **argv) {
 	for (iter = 1; iter <= SuperGlobals.runModelIterations; iter++) {
 		Plot_Initialize();
 
-		set_all_rngs(SuperGlobals.randseed, iter, 0, 0);
-
 		Globals->currIter = iter;
                 
 		if (storeAllIterations) {
@@ -233,6 +231,8 @@ int main(int argc, char **argv) {
             }
 
 			//printf("------------------------Repetition/year = %d / %d\n", iter, year);
+
+			set_all_rngs(SuperGlobals.randseed, iter, year, 0);
 
 			Globals->currYear = year;
 

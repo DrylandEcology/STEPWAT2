@@ -13,23 +13,23 @@
 /* --------------------------------------------------- */
 
 
-#include "sw_src/generic.h"
-#include "sw_src/rands.h"
-#include "sw_src/filefuncs.h"
-#include "sw_src/myMemory.h"
+#include "sw_src/include/generic.h"
+#include "sw_src/include/rands.h"
+#include "sw_src/include/filefuncs.h"
+#include "sw_src/include/myMemory.h"
 #include "ST_steppe.h"
 #include "ST_globals.h"
-#include "sw_src/SW_Defines.h"
+#include "sw_src/include/SW_Defines.h"
 #include "sxw.h" // externs `*SXWResources`, `transp_window`, `resource_rng`
 #include "sxw_module.h"
 #include "sxw_vars.h"
-#include "sw_src/SW_Control.h"
-#include "sw_src/SW_Site.h"
-#include "sw_src/SW_SoilWater.h"
-#include "sw_src/SW_VegProd.h"
-#include "sw_src/SW_Files.h"
-#include "sw_src/SW_Times.h"
-#include "sw_src/pcg/pcg_basic.h"
+#include "sw_src/include/SW_Control.h"
+#include "sw_src/include/SW_Site.h"
+#include "sw_src/include/SW_SoilWater.h"
+#include "sw_src/include/SW_VegProd.h"
+#include "sw_src/include/SW_Files.h"
+#include "sw_src/include/SW_Times.h"
+#include "sw_src/external/pcg/pcg_basic.h"
 
 
 

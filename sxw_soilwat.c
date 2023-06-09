@@ -39,22 +39,24 @@
 /* --------------------------------------------------- */
 
 
-#include "sw_src/generic.h"
-#include "sw_src/filefuncs.h"
-#include "sw_src/myMemory.h"
-#include "sw_src/Times.h"
+#include "sw_src/include/generic.h"
+#include "sw_src/include/filefuncs.h"
+#include "sw_src/include/myMemory.h"
+#include "sw_src/include/Times.h"
 #include "ST_steppe.h"
 #include "ST_globals.h"
-#include "sw_src/SW_Defines.h"
+#include "sw_src/include/SW_Defines.h"
 #include "sxw.h" // externs `*SXWResources`
 #include "sxw_module.h"
 #include "sxw_vars.h"
-#include "sw_src/SW_Control.h"
-#include "sw_src/SW_Model.h" // externs `SW_Model`
-#include "sw_src/SW_Site.h" // externs `SW_Site`
-#include "sw_src/SW_SoilWater.h"
-#include "sw_src/SW_VegProd.h" // externs `SW_VegProd`
-#include "sw_src/SW_Files.h"
+#include "sw_src/include/SW_Control.h"
+#include "sw_src/include/SW_Weather.h" // externs `SW_Weather`
+#include "sw_src/include/SW_Model.h" // externs `SW_Model`
+#include "sw_src/include/SW_Site.h" // externs `SW_Site`
+#include "sw_src/include/SW_SoilWater.h"
+#include "sw_src/include/SW_VegProd.h" // externs `SW_VegProd`
+#include "sw_src/include/SW_Files.h"
+#include "sw_src/include/SW_Sky.h" // externs SW_Sky
 
 
 
@@ -84,6 +86,63 @@ void _sxw_sw_setup (RealF sizes[]) {
     }
   }
 }
+
+/** @brief Handle the weather generator to create new daily weather for current year
+
+  This function takes the place of SOILWAT2's `SW_WTH_read()` and
+  `SW_WTH_finalize_all_weather()`.
+
+  Note: `Env_Generate()` (via `_sxw_sw_run()`) sets SOILWAT2's "year"
+  (`SW_Model.year`) to `SW_Model.startyr + Globals->currYear - 1`.
+  SOILWAT2 expects current year's weather values at element
+  `SW_Model.year - SW_Weather.startYear` (see `SW_WTH_new_day()`).
+
+  Note: As an alternative to the function here that is called by `Env_Generate()`,
+  STEPWAT2 could generate weather for all years at once if
+  each grid cell would store a local copy of `SW_Weather`.
+*/
+void _sxw_generate_weather(void) {
+  SW_WEATHER *w = &SW_Weather;
+  SW_SKY *sky = &SW_Sky;
+
+  deallocateAllWeather(w);
+  w->n_years = 1;
+  w->startYear = SW_Model.startyr + Globals->currYear - 1;
+  allocateAllWeather(w);
+
+  if (!w->use_weathergenerator_only) {
+    LogError(
+      logfp,
+      LOGERROR,
+      "STEPWAT2 expects 'use_weathergenerator_only'."
+    );
+  }
+
+  // Make sure monthly flags are set to interpolate monthly values into daily values
+  w->use_humidityMonthly = swTRUE;
+  w->use_cloudCoverMonthly = swTRUE;
+  w->use_windSpeedMonthly = swTRUE;
+
+  readAllWeather(
+    w->allHist,
+    w->startYear,
+    w->n_years,
+    swTRUE, // `use_weathergenerator_only`
+    w->name_prefix, // not used because `use_weathergenerator_only`
+	w->use_cloudCoverMonthly,
+	w->use_humidityMonthly,
+	w->use_windSpeedMonthly,
+	w->n_input_forcings,
+	w->dailyInputIndices,
+	w->dailyInputFlags,
+	sky->cloudcov,
+	sky->windspeed,
+	sky->r_humidity
+  );
+
+  finalizeAllWeather(w); // run the weather generator
+}
+
 
 void _sxw_sw_run(void) {
 /*======================================================*/

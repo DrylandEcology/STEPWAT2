@@ -17,23 +17,23 @@
 /******** These modules are necessary to compile ST_grid.c ********/
 #include "ST_stats.h"
 #include "ST_defines.h"
-#include "sw_src/pcg/pcg_basic.h"
+#include "sw_src/external/pcg/pcg_basic.h"
 #include "sxw_vars.h"
-#include "sw_src/SW_Site.h"
-#include "sw_src/SW_SoilWater.h"
-#include "sw_src/SW_VegProd.h"
-#include "sw_src/SW_Model.h"
-#include "sw_src/SW_Weather.h"
+#include "sw_src/include/SW_Site.h"
+#include "sw_src/include/SW_SoilWater.h"
+#include "sw_src/include/SW_VegProd.h"
+#include "sw_src/include/SW_Model.h"
+#include "sw_src/include/SW_Weather.h"
 #include "ST_seedDispersal.h"
 
 /*********************** Grid Structures ****************************/
 
-/** 
+/**
  * \brief Soil layer information for a single [cell](\ref CellType)
- * 
+ *
  * This struct requires dynamic memory allocation, so be carefull when
  * instanciating it.
- * 
+ *
  * \ingroup GRID
  */
 typedef struct Soil_st
