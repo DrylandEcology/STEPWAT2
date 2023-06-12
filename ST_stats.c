@@ -139,16 +139,7 @@ void stat_Collect( Int year ) {
   if (BmassFlags.grpb) {
     if (BmassFlags.graz) {
           ForEachGroup(rg) {
-              RealF propGraze = 0.0;
-
-              Int i = 0;
-
-              ForEachEstSpp2(rg, i) {
-                  propGraze += Species[RGroup[rg]->est_spp[i]]->res_grazed; /*collect grazing for
-                                                                              each species in resource group
-                                                                              for overall resource group grazing*/
-              }
-              _collect_add(&_Grazed[rg].s[year], propGraze);
+              _collect_add(&_Grazed[rg].s[year], RGroup[rg]->res_grazed);
           }
       }
     if (BmassFlags.wildfire) {

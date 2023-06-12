@@ -168,10 +168,7 @@ struct species_st {
         alpha,
       /** \brief Beta parameter for random number draw from beta distribution in establishment of annual species.
        * \sa _add_annuals() */
-        beta,
-      /** \brief Species biomass removed by livestock grazing. Reset in stat_Collect()
-       * \sa Species_Proportion_Grazing() */
-        res_grazed;
+      beta;
       /** \brief Variance parameter of the beta distribution for establishment of annual species. */
   float var;
       /** \brief Head of a doubly-linked list of all individuals of this species. 
@@ -326,6 +323,9 @@ struct resourcegroup_st {
   Bool extirpated,
       /** \brief For annuals: If TRUE this group can regenerate. */
        regen_ok;
+      /** \brief RGroup biomass removed by livestock grazing. Reset in grazing_EndOfYear()
+       * \sa grazing_EndOfYear() */
+  RealF res_grazed;
 
   /**** Quantities that DO NOT change during model runs *****/
 

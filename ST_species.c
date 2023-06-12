@@ -526,14 +526,13 @@ void Species_Proportion_Kill(const SppIndex sp, int killType,
  * 
  * \ingroup SPECIES
  */
-void Species_Proportion_Grazing(const SppIndex sp, RealF proportionGrazing)
+RealF Species_Proportion_Grazing(const SppIndex sp, RealF proportionGrazing)
 {
 	//CH- extra growth is only stored at the species level. This will graze extra
 	//    growth for the whole species.
 	//    loss represents the proportion of extragrowth that is removed by livestock grazing
 	RealF loss = Species[sp]->extragrowth * proportionGrazing;
 	RealF indivGrazed = 0.0;
-	Species[sp]->res_grazed = 0.0;
 
 	//CH- Remove the loss from Species extra growth.
 	Species[sp]->extragrowth -= loss;	// remove the loss from extragrowth
@@ -547,7 +546,7 @@ void Species_Proportion_Grazing(const SppIndex sp, RealF proportionGrazing)
 		p = t; //move to the next plant.
 	}
 	//res_grazed = species biomass removed by livestock grazing this year
-	Species[sp]->res_grazed = Species[sp]->mature_biomass * (loss + indivGrazed);
+	return Species[sp]->mature_biomass * (loss + indivGrazed);
 }
 
 /**

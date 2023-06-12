@@ -8,7 +8,7 @@
 ####################################################
 #
 #
-# Sumry Yearly Header Sep YrNum Disturb PPT PClass Temp GrpBmass GrpPR GrpSize GrpWf GrpPf SppBmass Indivs Grazing
+# Sumry Yearly Header Sep YrNum Disturb PPT PClass Temp GrpBmass GrpPR GrpSize GrpWf GrpPf Grazing SppBmass Indivs
      y      n	   y   ,     y      n   y     n     y       y     y      y     y      y       y      y      y
 #===================================================
 # The input line is a set of yes/no flags that define
@@ -61,6 +61,7 @@
 #         pr (above) is turned on.
 #         summary: average for the given year. Can only be
 #         output if GrpBmass is specified.
+# Grazing == if 'y', grazing averages will be output.
 # SppBmass == net biomass for each species for the year.
 #          If "head" is true, species names are output as
 #          the field names.

@@ -528,13 +528,13 @@ static void _bmassflags_init( void) {
             BmassFlags.prescribedfire     = (Bool)(*m=='y'||*m=='Y');
             break;
        case 13:
-            BmassFlags.sppb   = (Bool)(*s=='y'||*s=='Y');
+            BmassFlags.graz = (Bool)(*b == 'y' || *b == 'Y');
             break;
        case 14:
-            BmassFlags.indv   = (Bool)(*n=='y'||*n=='Y');
+            BmassFlags.sppb = (Bool)(*s == 'y' || *s == 'Y');
             break;
        case 15:
-           BmassFlags.graz = (Bool)(*b == 'y' || *b == 'Y');
+            BmassFlags.indv = (Bool)(*n == 'y' || *n == 'Y');
             break;
      }
    }
