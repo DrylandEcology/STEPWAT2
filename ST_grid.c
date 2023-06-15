@@ -37,9 +37,9 @@
 #include "sw_src/include/filefuncs.h"
 #include "sw_src/include/myMemory.h"
 #include "sw_src/include/rands.h"
-#include "sw_src/include/SW_SoilWater.h" // externs SW_Soilwat
-#include "sw_src/include/SW_Weather.h" // externs SW_Weather
-#include "sw_src/include/SW_Markov.h"// externs `markov_rng`
+#include "sw_src/include/SW_SoilWater.h"
+#include "sw_src/include/SW_Weather.h"
+#include "sw_src/include/SW_Markov.h"
 #include "ST_grid.h"
 #include "ST_steppe.h"
 #include "ST_globals.h" // externs `UseProgressBar`

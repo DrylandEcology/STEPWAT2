@@ -50,13 +50,13 @@
 #include "sxw_module.h"
 #include "sxw_vars.h"
 #include "sw_src/include/SW_Control.h"
-#include "sw_src/include/SW_Weather.h" // externs `SW_Weather`
-#include "sw_src/include/SW_Model.h" // externs `SW_Model`
-#include "sw_src/include/SW_Site.h" // externs `SW_Site`
+#include "sw_src/include/SW_Weather.h"
+#include "sw_src/include/SW_Model.h"
+#include "sw_src/include/SW_Site.h"
 #include "sw_src/include/SW_SoilWater.h"
-#include "sw_src/include/SW_VegProd.h" // externs `SW_VegProd`
+#include "sw_src/include/SW_VegProd.h"
 #include "sw_src/include/SW_Files.h"
-#include "sw_src/include/SW_Sky.h" // externs SW_Sky
+#include "sw_src/include/SW_Sky.h"
 
 
 

@@ -48,8 +48,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "sw_src/include/generic.h" // externs `errstr`
-#include "sw_src/include/filefuncs.h" // externs `inbuf`
+#include "sw_src/include/generic.h"
+#include "sw_src/include/filefuncs.h"
 #include "sw_src/include/myMemory.h"
 #include "ST_steppe.h"
 #include "ST_globals.h"
@@ -66,7 +66,7 @@
 #include "sw_src/include/SW_Files.h"
 #include "sw_src/include/SW_Weather.h"
 #include "sw_src/include/SW_Markov.h"
-#include "sw_src/include/SW_Output.h" // externs `prepare_IterationSummary`, `storeAllIterations`
+#include "sw_src/include/SW_Output.h"
 #include "sw_src/include/rands.h"
 #include "sw_src/external/pcg/pcg_basic.h"
 

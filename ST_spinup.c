@@ -18,19 +18,18 @@
 #include "ST_globals.h" // externs UseProgressBar
 #include "ST_mortality.h"
 #include "sw_src/include/rands.h"
-#include "sw_src/include/SW_SoilWater.h" // externs SW_Soilwat
-#include "sw_src/include/SW_Weather.h" // externs SW_Weather
-#include "sw_src/include/SW_Site.h" // externs SW_Site
-#include "sw_src/include/SW_VegProd.h" // externs SW_VegProd
-#include "sw_src/include/SW_Markov.h"// externs `markov_rng`
+#include "sw_src/include/SW_SoilWater.h"
+#include "sw_src/include/SW_Weather.h"
+#include "sw_src/include/SW_Site.h"
+#include "sw_src/include/SW_VegProd.h"
+#include "sw_src/include/SW_Markov.h"
 #include "sxw_funcs.h"
 #include "sw_src/include/myMemory.h"
 #include "sw_src/include/filefuncs.h"
 #include "ST_progressBar.h"
 #include "ST_grid.h" // externs grid_rng
-// externs `prepare_IterationSummary`, `storeAllIterations`
 #include "sw_src/include/SW_Output.h"
-#include "sw_src/include/SW_Output_outtext.h" // externs `print_IterationSummary`
+#include "sw_src/include/SW_Output_outtext.h"
 #include "sw_src/include/SW_Output_outarray.h"
 #include "ST_functions.h" // externs `environs_rng`, `resgroups_rng`, `species_rng`
 
