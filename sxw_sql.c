@@ -213,9 +213,9 @@ static void insertSXWinputVarsRow(int year, int iter, double fracGrass, double f
 }
 
 void insertInputVars() {
-	int Year = SW_Model.year;
+	int Year = SoilWatAll.Model.year;
 	int Iteration = Globals->currIter;
-	SW_VEGPROD *v = &SW_VegProd;
+	SW_VEGPROD *v = &SoilWatAll.VegProd;
 
 	beginTransaction();
 	insertSXWinputVarsRow(Year, Iteration, v->veg[3].cov.fCover, v->veg[1].cov.fCover, v->veg[0].cov.fCover, v->veg[2].cov.fCover, v->bare_cov.fCover);
@@ -246,10 +246,10 @@ static void insertSXWinputProdRow(int year, int iter, int VegProdType, int Month
 }
 
 void insertInputProd() {
-	int Year = SW_Model.year;
+	int Year = SoilWatAll.Model.year;
 	int Iteration = Globals->currIter;
 	int p;
-	SW_VEGPROD *v = &SW_VegProd;
+	SW_VEGPROD *v = &SoilWatAll.VegProd;
 
 	beginTransaction();
 	ForEachTrPeriod(p) {
@@ -284,15 +284,15 @@ static void insertSXWinputSoilsRow(int year, int iter, int Layer, double Tree_tr
 }
 
 void insertInputSoils() {
-	int Year = SW_Model.year;
+	int Year = SoilWatAll.Model.year;
 	int Iteration = Globals->currIter;
 	int l;
-	SW_SITE *s = &SW_Site;
+	SW_SITE *s = &SoilWatAll.Site;
 
 	beginTransaction();
-	ForEachSoilLayer(l)
+	ForEachSoilLayer(l, SoilWatAll.Site.n_layers)
 	{
-		insertSXWinputSoilsRow(Year, Iteration, l+1, s->lyr[l]->transp_coeff[0], s->lyr[l]->transp_coeff[1], s->lyr[l]->transp_coeff[3], s->lyr[l]->transp_coeff[2]);
+		insertSXWinputSoilsRow(Year, Iteration, l+1, s->transp_coeff[l][0], s->transp_coeff[l][1], s->transp_coeff[l][3], s->transp_coeff[l][2]);
 	}
 	endTransaction();
 }
@@ -324,7 +324,7 @@ static void insertSXWoutputVarsRow(int year, int iter, int MAP_mm, double MAT_C,
 }
 
 void insertOutputVars(RealF * _resource_cur, RealF added_transp) {
-	int Year = SW_Model.year;
+	int Year = SoilWatAll.Model.year;
 	int Iteration = Globals->currIter;
 	int p;
 	int t;
@@ -374,7 +374,7 @@ static void insertSXWoutputRgroupRow(int year, int iter, int RGroupID, double Bi
 }
 
 void insertRgroupInfo(RealF * _resource_cur) {
-	int Year = SW_Model.year;
+	int Year = SoilWatAll.Model.year;
 	int Iteration = Globals->currIter;
 	int r;
 
@@ -397,7 +397,7 @@ static void insertSXWoutputProdRow(int year, int iter, int Month, double BMass, 
 
 void insertOutputProd(SW_VEGPROD *v) {
 	int p;
-	int Year = SW_Model.year;
+	int Year = SoilWatAll.Model.year;
 	int Iteration = Globals->currIter;
 
 	beginTransaction();
@@ -411,7 +411,7 @@ void insertOutputProd(SW_VEGPROD *v) {
 			days = 30;
 		else if (p == Feb) { //February has either 28 or 29 days
 			days = 28;
-			if (isleapyear(SW_Model.year))
+			if (isleapyear(SoilWatAll.Model.year))
 				days = 29;
 		} // all the other months have 31 days
 
@@ -484,7 +484,7 @@ void insertRootsSum(RealD * _roots_active_sum) {
 	int p;
 	int i;
 	double m[12];
-	int Year = SW_Model.year;
+	int Year = SoilWatAll.Model.year;
 	int Iteration = Globals->currIter;
 
 	beginTransaction();
@@ -539,7 +539,7 @@ void insertRootsRelative(RealD * _roots_active_rel) {
 	int g;
 	int nLyrs;
 	double m[12];
-	int Year = SW_Model.year;
+	int Year = SoilWatAll.Model.year;
 	int Iteration = Globals->currIter;
 
 	beginTransaction();
@@ -593,7 +593,7 @@ void insertTranspiration() {
 	int l;
 	int p;
 	double m[12];
-	int Year = SW_Model.year;
+	int Year = SoilWatAll.Model.year;
 	int Iteration = Globals->currIter;
 
 	beginTransaction();
@@ -675,7 +675,7 @@ void insertSWCBulk() {
 	int l;
 	int p;
 	double m[12];
-	int Year = SW_Model.year;
+	int Year = SoilWatAll.Model.year;
 	int Iteration = Globals->currIter;
 
 	beginTransaction();

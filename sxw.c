@@ -179,15 +179,15 @@ void SXW_Init( Bool init_SW, char *f_roots ) {
 		SXW_Reinit(SXW->f_watin);
   }
 
-  SXW->NTrLyrs = SW_Site.n_transp_lyrs[0];
-  if(SW_Site.n_transp_lyrs[1] > SXW->NTrLyrs)
-  	SXW->NTrLyrs = SW_Site.n_transp_lyrs[1];
-  if(SW_Site.n_transp_lyrs[3] > SXW->NTrLyrs)
-  	SXW->NTrLyrs = SW_Site.n_transp_lyrs[3];
-  if(SW_Site.n_transp_lyrs[2] > SXW->NTrLyrs)
-	  SXW->NTrLyrs = SW_Site.n_transp_lyrs[2];
+  SXW->NTrLyrs = SoilWatAll.Site.n_transp_lyrs[0];
+  if(SoilWatAll.Site.n_transp_lyrs[1] > SXW->NTrLyrs)
+  	SXW->NTrLyrs = SoilWatAll.Site.n_transp_lyrs[1];
+  if(SoilWatAll.Site.n_transp_lyrs[3] > SXW->NTrLyrs)
+  	SXW->NTrLyrs = SoilWatAll.Site.n_transp_lyrs[3];
+  if(SoilWatAll.Site.n_transp_lyrs[2] > SXW->NTrLyrs)
+	  SXW->NTrLyrs = SoilWatAll.Site.n_transp_lyrs[2];
 
-  SXW->NSoLyrs = SW_Site.n_layers;
+  SXW->NSoLyrs = SoilWatAll.Site.n_layers;
 
   /* Print general information to stdout. 
      If we are using gridded mode this functionallity will be handled in ST_grid.c */
@@ -220,14 +220,15 @@ static void SXW_Reinit(char* SOILWAT_file) {
 	char *temp;
 
 	// setup and construct model (independent of inputs)
-	temp = strdup(SOILWAT_file);
-	SW_CTL_setup_model(temp);
+	PathInfo.InFiles[eFirst] = strdup(SOILWAT_file);
+	SW_CTL_setup_model(&SoilWatAll, &SoilWatOutputPtrs, &PathInfo, &LogInfo);
 
 	// read user inputs
-	SW_CTL_read_inputs_from_disk();
+	memcpy(&SoilWatAll.SuperGlobals, &SuperGlobals, sizeof(GlobalType));
+	SW_CTL_read_inputs_from_disk(&SoilWatAll, &PathInfo, EchoInits, &LogInfo);
 
 	// initialize simulation run (based on user inputs)
-	SW_CTL_init_run();
+	SW_CTL_init_run(&SoilWatAll, &PathInfo, &LogInfo);
 
 	// initialize output: transfer between STEPPE and SOILWAT2
 	SW_OUT_set_SXWrequests();
@@ -249,7 +250,7 @@ static void SXW_Reinit(char* SOILWAT_file) {
  * \ingroup SXW
  */
 void SXW_Reset(char* SOILWAT_file) {
-	SW_CTL_clear_model(FALSE); // don't reset output arrays
+	SW_CTL_clear_model(FALSE, &SoilWatAll, &PathInfo); // don't reset output arrays
 	SXW_Reinit(SOILWAT_file);
 }
 
@@ -325,47 +326,47 @@ void SXW_SW_Setup_Echo(void) {
 	strcat(name, _debugout);
 	FILE *f = OpenFile(strcat(name, ".input.out"), "a", &LogInfo);
 	int i;
-	fprintf(f, "\n================== %d ==============================\n", SW_Model.year);
-	fprintf(f,"Fractions Grass:%f Shrub:%f Tree:%f Forb:%f BareGround:%f\n", SW_VegProd.veg[3].cov.fCover, SW_VegProd.veg[1].cov.fCover, SW_VegProd.veg[0].cov.fCover, SW_VegProd.veg[2].cov.fCover, SW_VegProd.bare_cov.fCover);
+	fprintf(f, "\n================== %d ==============================\n", SoilWatAll.Model.year);
+	fprintf(f,"Fractions Grass:%f Shrub:%f Tree:%f Forb:%f BareGround:%f\n", SoilWatAll.VegProd.veg[3].cov.fCover, SoilWatAll.VegProd.veg[1].cov.fCover, SoilWatAll.VegProd.veg[0].cov.fCover, SoilWatAll.VegProd.veg[2].cov.fCover, SoilWatAll.VegProd.bare_cov.fCover);
 	fprintf(f,"Monthly Production Values\n");
 	fprintf(f,"Grass\n");
 	fprintf(f,"Month\tLitter\tBiomass\tPLive\tLAI_conv\n");
 	for (i = 0; i < 12; i++) {
-		fprintf(f,"%u\t%f\t%f\t%f\t%f\n", i + 1, SW_VegProd.veg[3].litter[i],
-				SW_VegProd.veg[3].biomass[i], SW_VegProd.veg[3].pct_live[i],
-				SW_VegProd.veg[3].lai_conv[i]);
+		fprintf(f,"%u\t%f\t%f\t%f\t%f\n", i + 1, SoilWatAll.VegProd.veg[3].litter[i],
+				SoilWatAll.VegProd.veg[3].biomass[i], SoilWatAll.VegProd.veg[3].pct_live[i],
+				SoilWatAll.VegProd.veg[3].lai_conv[i]);
 	}
 
 	fprintf(f,"Shrub\n");
 	fprintf(f,"Month\tLitter\tBiomass\tPLive\tLAI_conv\n");
 	for (i = 0; i < 12; i++) {
-		fprintf(f,"%u\t%f\t%f\t%f\t%f\n", i + 1, SW_VegProd.veg[1].litter[i],
-				SW_VegProd.veg[1].biomass[i], SW_VegProd.veg[1].pct_live[i],
-				SW_VegProd.veg[1].lai_conv[i]);
+		fprintf(f,"%u\t%f\t%f\t%f\t%f\n", i + 1, SoilWatAll.VegProd.veg[1].litter[i],
+				SoilWatAll.VegProd.veg[1].biomass[i], SoilWatAll.VegProd.veg[1].pct_live[i],
+				SoilWatAll.VegProd.veg[1].lai_conv[i]);
 	}
 
 	fprintf(f,"Tree\n");
 	fprintf(f,"Month\tLitter\tBiomass\tPLive\tLAI_conv\n");
 	for (i = 0; i < 12; i++) {
-		fprintf(f,"%u\t%f\t%f\t%f\t%f\n", i + 1, SW_VegProd.veg[0].litter[i],
-				SW_VegProd.veg[0].biomass[i], SW_VegProd.veg[0].pct_live[i],
-				SW_VegProd.veg[0].lai_conv[i]);
+		fprintf(f,"%u\t%f\t%f\t%f\t%f\n", i + 1, SoilWatAll.VegProd.veg[0].litter[i],
+				SoilWatAll.VegProd.veg[0].biomass[i], SoilWatAll.VegProd.veg[0].pct_live[i],
+				SoilWatAll.VegProd.veg[0].lai_conv[i]);
 	}
 
 	fprintf(f,"Forb\n");
 	fprintf(f,"Month\tLitter\tBiomass\tPLive\tLAI_conv\n");
 	for (i = 0; i < 12; i++) {
-		fprintf(f,"%u\t%f\t%f\t%f\t%f\n", i + 1, SW_VegProd.veg[2].litter[i],
-				SW_VegProd.veg[2].biomass[i], SW_VegProd.veg[2].pct_live[i],
-				SW_VegProd.veg[2].lai_conv[i]);
+		fprintf(f,"%u\t%f\t%f\t%f\t%f\n", i + 1, SoilWatAll.VegProd.veg[2].litter[i],
+				SoilWatAll.VegProd.veg[2].biomass[i], SoilWatAll.VegProd.veg[2].pct_live[i],
+				SoilWatAll.VegProd.veg[2].lai_conv[i]);
 	}
 
-	SW_SITE *s = &SW_Site;
+	SW_SITE *s = &SoilWatAll.Site;
 	fprintf(f,"Soils Transp_coeff\n");
 	fprintf(f,"Forb\tTree\tShrub\tGrass\n");
-	ForEachSoilLayer(i)
+	ForEachSoilLayer(i, s->n_layers)
 	{// %u %u %u %u s->lyr[i]->my_transp_rgn_forb, s->lyr[i]->my_transp_rgn_tree, s->lyr[i]->my_transp_rgn_shrub, s->lyr[i]->my_transp_rgn_grass
-		fprintf(f,"%6.2f %6.2f %6.2f %6.2f\n", s->lyr[i]->transp_coeff[2], s->lyr[i]->transp_coeff[0], s->lyr[i]->transp_coeff[1], s->lyr[i]->transp_coeff[3]);
+		fprintf(f,"%6.2f %6.2f %6.2f %6.2f\n", s->transp_coeff[2][i], s->transp_coeff[0][i], s->transp_coeff[1][i], s->transp_coeff[3][i]);
 	}
 
   // adding values to sxw structure for use in ST_stats.c
@@ -399,7 +400,7 @@ void SXW_PrintDebug(Bool cleanup) {
 		debugCleanUp();
 	} else {
 		for (i = 0; i < _debugyrs_cnt; i++) {
-			if (SW_Model.year == _debugyrs[i]) {
+			if (SoilWatAll.Model.year == _debugyrs[i]) {
 				SXW_SW_Setup_Echo();
 				_print_debuginfo();
 				break;
@@ -417,7 +418,7 @@ void SXW_PrintDebug(Bool cleanup) {
 		insertInputSoils();
 		insertOutputVars(SXWResources->_resource_cur, transp_window->added_transp);
 		insertRgroupInfo(SXWResources->_resource_cur);
-		insertOutputProd(&SW_VegProd);
+		insertOutputProd(&SoilWatAll.VegProd);
 		insertRootsSum(SXWResources->_roots_active_sum);
 		insertRootsRelative(SXWResources->_roots_active_rel);
 		insertTranspiration();
@@ -931,7 +932,7 @@ void debugCleanUp() {
 
 void _print_debuginfo(void) {
 /*======================================================*/
-	SW_VEGPROD *v = &SW_VegProd;
+	SW_VEGPROD *v = &SoilWatAll.VegProd;
 	TimeInt p;
 	LyrIndex t;
 	int l;
@@ -981,7 +982,7 @@ void _print_debuginfo(void) {
 			sum += SXW->transpTotal[Ilp(t, p)];
 	}
 
-	fprintf(f, "\n================== %d =============================\n", SW_Model.year);
+	fprintf(f, "\n================== %d =============================\n", SoilWatAll.Model.year);
 	fprintf(f, "MAP = %d(mm)\tMAT = %5.2f(C)\tAET = %5.4f(cm)\tT = %5.4f(cm)\tTADDED = %5.4f(cm)\tAT = %5.4f(cm)\n\n", Env->ppt, Env->temp, SXW->aet, sum, transp_window->added_transp, sum + transp_window->added_transp);
 
 	fprintf(f, "Group     \tRelsize\tPR\tResource_cur\tResource_cur\n");
@@ -1009,7 +1010,7 @@ void _print_debuginfo(void) {
 			days = 30;
 		else if (p == Feb) { //February has either 28 or 29 days
 			days = 28;
-			if (isleapyear(SW_Model.year))
+			if (isleapyear(SoilWatAll.Model.year))
 				days = 29;
 		} // all the other months have 31 days
 
@@ -1098,7 +1099,7 @@ void _print_debuginfo(void) {
 	ForEachTrPeriod(p)
 	{
 		fprintf(f, "%d : ", p + 1);
-		ForEachSoilLayer(t)
+		ForEachSoilLayer(t, SoilWatAll.Site.n_layers)
 			fprintf(f, "\t%5.4f", SXW->swc[Ilp(t, p)]);
 		fprintf(f, "\n");
 	}
@@ -1172,7 +1173,7 @@ int get_SW2_veg_index(int veg_prod_type) {
  /***********************************************************/
  //returns the number of transpiration layers correctly for each veg_prod_type
 int getNTranspLayers(int veg_prod_type) {
-  return SW_Site.n_transp_lyrs[veg_prod_type];
+  return SoilWatAll.Site.n_transp_lyrs[veg_prod_type];
 }
 
 /** 

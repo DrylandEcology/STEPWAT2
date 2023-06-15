@@ -72,7 +72,7 @@ static void _update_productivity(RealF size[]);
 void _sxw_sw_setup (RealF sizes[]) {
 /*======================================================*/
 	int doy, k;
-	SW_VEGPROD *v = &SW_VegProd;
+	SW_VEGPROD *v = &SoilWatAll.VegProd;
 
   _update_productivity(sizes);
   _update_transp_coeff();
@@ -102,12 +102,12 @@ void _sxw_sw_setup (RealF sizes[]) {
   each grid cell would store a local copy of `SW_Weather`.
 */
 void _sxw_generate_weather(void) {
-  SW_WEATHER *w = &SW_Weather;
-  SW_SKY *sky = &SW_Sky;
+  SW_WEATHER *w = &SoilWatAll.Weather;
+  SW_SKY *sky = &SoilWatAll.Sky;
 
   deallocateAllWeather(w);
   w->n_years = 1;
-  w->startYear = SW_Model.startyr + Globals->currYear - 1;
+  w->startYear = SoilWatAll.Model.startyr + Globals->currYear - 1;
   allocateAllWeather(w);
 
   if (!w->use_weathergenerator_only) {
@@ -150,8 +150,11 @@ void _sxw_generate_weather(void) {
 
 void _sxw_sw_run(void) {
 /*======================================================*/
-	SW_Model.year = SW_Model.startyr + Globals->currYear-1;
-	SW_CTL_run_current_year();
+	SoilWatAll.Model.year = SoilWatAll.Model.startyr + Globals->currYear-1;
+  memcpy(&SoilWatAll.GenOutput.Globals, &Globals, sizeof(ModelType));
+  memcpy(&SoilWatAll.Model.SuperGlobals, &SuperGlobals, sizeof(GlobalType));
+	SW_CTL_run_current_year(&SoilWatAll, &SoilWatOutputPtrs, &PathInfo, &LogInfo);
+  memcpy(&SoilWatAll.GenOutput.SXW, &SXW, sizeof(SXW_t));
 }
 
 void _sxw_sw_clear_transp(void) {
@@ -172,47 +175,43 @@ static void _update_transp_coeff(void) {
      *   there can be transpiration but nowhere for it to come
      *   from in the soilwat model.
      */
-    SW_LAYER_INFO *y;
     GrpIndex g;
     LyrIndex l;
     RealF sum[NVEGTYPES] = {0.};
 
     ForEachTreeTranspLayer(l) {
-        y = SW_Site.lyr[l];
-        y->transp_coeff[SW_TREES] = 0.;
+        SoilWatAll.Site.transp_coeff[SW_TREES][l] = 0.;
         ForEachGroup(g) {
           if (RGroup[g]->veg_prod_type == SW_TREES)
               if (getNTranspLayers(SW_TREES))
-                  y->transp_coeff[SW_TREES] += (RealF) SXWResources->_roots_max[Ilg(l, g)] * RGroup[g]->rgroupFractionOfVegTypeBiomass;
+                  SoilWatAll.Site.transp_coeff[SW_TREES][l] += (RealF) SXWResources->_roots_max[Ilg(l, g)] * RGroup[g]->rgroupFractionOfVegTypeBiomass;
         }
-        sum[SW_TREES] += y->transp_coeff[SW_TREES];
+        sum[SW_TREES] += SoilWatAll.Site.transp_coeff[SW_TREES][l];
     }
 
     ForEachShrubTranspLayer(l) {
-        y = SW_Site.lyr[l];
-        y->transp_coeff[SW_SHRUB] = 0.;
+        SoilWatAll.Site.transp_coeff[SW_SHRUB][l] = 0.;
         ForEachGroup(g)
         if (RGroup[g]->veg_prod_type == SW_SHRUB) {
             if (getNTranspLayers(SW_SHRUB))
-                y->transp_coeff[SW_SHRUB] += (RealF) SXWResources->_roots_max[Ilg(l, g)] * RGroup[g]->rgroupFractionOfVegTypeBiomass;
+                SoilWatAll.Site.transp_coeff[SW_SHRUB][l] += (RealF) SXWResources->_roots_max[Ilg(l, g)] * RGroup[g]->rgroupFractionOfVegTypeBiomass;
 
             /*printf("* lyr=%d, group=%s(%d), type=%d, tl=%d, rootmax=%f, relsize2=%f, trco=%f\n",
               l, RGroup[g]->name, g, RGroup[g]->veg_prod_type, getNTranspLayers(RGroup[g]->veg_prod_type),
               SXWResources->_roots_max[Ilg(l, g)], getRGroupRelsize(g), y->transp_coeff[SW_SHRUB]);
              */
         }
-        sum[SW_SHRUB] += y->transp_coeff[SW_SHRUB];
+        sum[SW_SHRUB] += SoilWatAll.Site.transp_coeff[SW_SHRUB][l];
     }
 
     ForEachGrassTranspLayer(l) {
-        y = SW_Site.lyr[l];
-        y->transp_coeff[SW_GRASS] = 0.;
+        SoilWatAll.Site.transp_coeff[SW_GRASS][l] = 0.;
         ForEachGroup(g) {
           if (RGroup[g]->veg_prod_type == SW_GRASS)
               if (getNTranspLayers(SW_GRASS))
-                  y->transp_coeff[SW_GRASS] += (RealF) SXWResources->_roots_max[Ilg(l, g)] * RGroup[g]->rgroupFractionOfVegTypeBiomass;
+                  SoilWatAll.Site.transp_coeff[SW_GRASS][l] += (RealF) SXWResources->_roots_max[Ilg(l, g)] * RGroup[g]->rgroupFractionOfVegTypeBiomass;
         }
-        sum[SW_GRASS] += y->transp_coeff[SW_GRASS];
+        sum[SW_GRASS] += SoilWat.Site.transp_coeff[SW_GRASS][l];
     }
 
     ForEachForbTranspLayer(l) {
@@ -250,12 +249,12 @@ static void _update_transp_coeff(void) {
 }
 
 static void _update_productivity(RealF sizes[]) {
-    
+
     GrpIndex g;
     TimeInt m;
     IntUS k;
 
-    SW_VEGPROD *v = &SW_VegProd;
+    SW_VEGPROD *v = &SoilWatAll.VegProd;
     RealF totbmass = 0.0,
             *bmassg,
     vegTypeBiomass[NVEGTYPES] = {0.};

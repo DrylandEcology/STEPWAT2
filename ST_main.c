@@ -176,24 +176,24 @@ IndivType *ndv; /* shorthand for the current indiv */
  * user requests gridded mode this function calls RunGrid.
  */
 int main(int argc, char **argv) {
-  IntS year, iter;
+	IntS year, iter;
 	Bool killedany;
 
-	logged = FALSE;
+	SoilWatAll.GenOutput.logged = FALSE;
 	atexit(check_log);
 	/* provides a way to inform user that something
 	 * was logged.  see generic.h */
 
-  prepare_IterationSummary = FALSE; // dont want to get soilwat output unless -o flag
-  storeAllIterations = FALSE; // dont want to store all soilwat output iterations unless -i flag
-  STdebug_requested = FALSE;
+	SoilWatAll.GenOutput.prepare_IterationSummary = FALSE; // dont want to get soilwat output unless -o flag
+	SoilWatAll.GenOutput.storeAllIterations = FALSE; // dont want to store all soilwat output iterations unless -i flag
+	STdebug_requested = FALSE;
 
 	init_args(argc, argv); // read input arguments and intialize proper flags
 
 	printf("STEPWAT  init_args() executed successfully \n");
 
 	if (UseGrid) {
-        writeSOILWAT2Output = prepare_IterationSummary;
+        writeSOILWAT2Output = SoilWatAll.GenOutput.prepare_IterationSummary;
 		runGrid();
 		return 0;
 	}
@@ -207,9 +207,12 @@ int main(int argc, char **argv) {
 	parm_Initialize();
         
 	SXW_Init(TRUE, NULL); // allocate SOILWAT2-memory
-	SW_OUT_set_ncol(); // set number of output columns
-	SW_OUT_set_colnames(); // set column names for output files
-	if (prepare_IterationSummary) {
+	SW_OUT_set_ncol(SoilWatAll.Site.n_layers, SoilWatAll.Site.n_evap_lyrs,
+					SoilWatAll.VegEstab.count, SoilWatAll.GenOutput.ncol_OUT); // set number of output columns
+	SW_OUT_set_colnames(SoilWatAll.Site.n_layers, SoilWatAll.VegEstab.parms,
+						SoilWatAll.GenOutput.ncol_OUT,
+						SoilWatAll.GenOutput.colnames_OUT, &LogInfo); // set column names for output files
+	if (SoilWatAll.GenOutput.prepare_IterationSummary) {
 		SW_OUT_create_summary_files();
 		// allocate `p_OUT` and `p_OUTsd` arrays to aggregate SOILWAT2 output across iterations
 		setGlobalSTEPWAT2_OutputVariables();
@@ -225,13 +228,13 @@ int main(int argc, char **argv) {
 		Plot_Initialize();
 
 		Globals->currIter = iter;
-                
-		if (storeAllIterations) {
+
+		if (SoilWatAll.GenOutput.storeAllIterations) {
 			SW_OUT_create_iteration_files(Globals->currIter);
 		}
 
-		if (prepare_IterationSummary) {
-			print_IterationSummary = (Bool) (Globals->currIter == SuperGlobals.runModelIterations);
+		if (SoilWatAll.GenOutput.prepare_IterationSummary) {
+			SoilWatAll.GenOutput.print_IterationSummary = (Bool) (Globals->currIter == SuperGlobals.runModelIterations);
 		}
 
 		/* ------  Begin running the model ------ */
@@ -338,14 +341,14 @@ int main(int argc, char **argv) {
     SXW_PrintDebug(1);
   }
 
-  SW_OUT_close_files();
-  SW_CTL_clear_model(TRUE); // de-allocate all memory
-  free_all_sxw_memory();
-  freeMortalityMemory();
+	SW_OUT_close_files(&SoilWatAll.FileStatus, &SoilWatAll.GenOutput, &LogInfo);
+	SW_CTL_clear_model(TRUE, &SoilWatAll, &PathInfo); // de-allocate all memory
+	free_all_sxw_memory();
+	freeMortalityMemory();
 
 	deallocate_Globals(FALSE);
 
-    // This isn't wrapped in an if statement on purpose. 
+    // This isn't wrapped in an if statement on purpose.
     // We should print "Done" either way.
     logProgress(0, 0, DONE);
 
@@ -480,7 +483,7 @@ void set_all_rngs(
 	/* Initialize RNGs with seed/state and sequence identifier that is
 		 reproducible and unique among RNGs, iterations, and year
 		 but not grid cells */
-	RandSeed(initstate, RNG_INITSEQ(8, iter, year, 0), &markov_rng);
+	RandSeed(initstate, RNG_INITSEQ(8, iter, year, 0), &SoilWatAll.Markov.markov_rng);
 }
 
 
@@ -685,21 +688,21 @@ static void init_args(int argc, char **argv) {
 
 		case 6:
       		printf("storing SOILWAT output aggregated across-iterations (-o flag)\n");
-      		prepare_IterationSummary = TRUE;
+      		SoilWatAll.GenOutput.prepare_IterationSummary = TRUE;
 			break; /* -o */
 
     	case 7: // -i
       		printf("storing SOILWAT output for each iteration (-i flag)\n");
-      		storeAllIterations = TRUE;
+      		SoilWatAll.GenOutput.storeAllIterations = TRUE;
       		break;
 
 		case 8: // -s
 			if (strlen(argv[a]) > 1){
 				printf("Generating SXW debug file\n");
-				SXW->debugfile = Str_Dup(&argv[a][1]);
+				SXW->debugfile = Str_Dup(&argv[a][1], &LogInfo);
 			}
 			break;
-	  
+
 	  	case 9: // -S
 		    if(!strncmp("-STdebug", argv[a], 8)){ //  -STdebug
 				printf("Generating STdebug.sqlite database (-STdebug flag)\n");

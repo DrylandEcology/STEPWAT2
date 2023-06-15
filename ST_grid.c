@@ -229,9 +229,9 @@ void runGrid(void)
 	Bool killedany;
 	IntS year, iter;
 
-  if(storeAllIterations) {
+  if(SoilWatAll.GenOutput.storeAllIterations) {
     printf("WARNING: SOILWAT2 iteration output unavailable for gridded mode.\n");
-    storeAllIterations = FALSE;
+    SoilWatAll.GenOutput.storeAllIterations = FALSE;
   }
 
 	_init_grid_files();				// reads in files.in file
@@ -242,8 +242,8 @@ void runGrid(void)
 	_init_grid_inputs();			// reads the grid inputs in & initializes the global grid variables
 	initColonization(grid_files[GRID_FILE_COLONIZATION]);
 	//SWC hist file prefix needs to be cleared
-	Mem_Free(SW_Soilwat.hist.file_prefix);
-	SW_Soilwat.hist.file_prefix = NULL;
+	Mem_Free(SoilWatAll.SoilWat.hist.file_prefix);
+	SoilWatAll.SoilWat.hist.file_prefix = NULL;
 
 	printGeneralInfo();
 
@@ -284,7 +284,7 @@ void runGrid(void)
 		 * 06/15/2016 (akt) Added resetting correct historical weather file path,
 		 * as it was resetting to original path value (that was not correct for grid version)from input file after every iteration
 		 */
-		sprintf(SW_Weather.name_prefix, "%s", SW_prefix_permanent); //updates the directory of the weather files so SOILWAT2 can find them
+		sprintf(SoilWatAll.Weather.name_prefix, "%s", SW_prefix_permanent); //updates the directory of the weather files so SOILWAT2 can find them
 
 		// Initialize the plot for each grid cell
 		for (i = 0; i < grid_Rows; i++){
@@ -294,7 +294,7 @@ void runGrid(void)
 				Globals->currIter = iter;
 
                 if (_getNumberSOILWAT2OutputCells() > 0) {
-			        print_IterationSummary = (Bool) (Globals->currIter == SuperGlobals.runModelIterations);
+			        SoilWatAll.GenOutput.print_IterationSummary = (Bool) (Globals->currIter == SuperGlobals.runModelIterations);
                 }
 			}
 		}
@@ -392,8 +392,8 @@ void runGrid(void)
                 SuperGlobals.runModelYears = realYears;
 			}
 		}
-		Mem_Free(SW_Soilwat.hist.file_prefix);
-		SW_Soilwat.hist.file_prefix = NULL;
+		Mem_Free(SoilWatAll.SoilWat.hist.file_prefix);
+		SoilWatAll.SoilWat.hist.file_prefix = NULL;
 		ChDir("..");
 
 	} /* end iterations */
@@ -551,8 +551,8 @@ static void _init_SXW_inputs(Bool init_SW, char *f_roots)
 	if (init_SW)
 	{
 		char aString[2048];
-		sprintf(aString, "%s/%s", grid_directories[GRID_DIRECTORY_STEPWAT_INPUTS], SW_Weather.name_prefix);
-		sprintf(SW_Weather.name_prefix, "%s", aString); //updates the directory correctly for the weather files so soilwat can find them
+		sprintf(aString, "%s/%s", grid_directories[GRID_DIRECTORY_STEPWAT_INPUTS], SoilWatAll.Weather.name_prefix);
+		sprintf(SoilWatAll.Weather.name_prefix, "%s", aString); //updates the directory correctly for the weather files so soilwat can find them
 	}
 }
 
@@ -1052,11 +1052,12 @@ void load_cell(int row, int col){
 	// the previous year (and not be zeroed out).
 	// FIXME: remove once SOILWAT2 is re-entrant or
 	// gridded code manages SOILWAT2 globals.
-	SW_WTH_init_run();
+	SW_WTH_init_run(&SoilWatAll.Weather);
 	//SW_SIT_init_run();
-	SW_FLW_init_run();
-	SW_ST_init_run();
-	SW_SWC_init_run();
+	SW_FLW_init_run(&SoilWatAll.SoilWat);
+	SW_ST_init_run(&SoilWatAll.StRegValues);
+	SW_SWC_init_run(&SoilWatAll.SoilWat, &SoilWatAll.Site,
+					&SoilWatAll.Weather.temp_snow);
 }
 
 /**

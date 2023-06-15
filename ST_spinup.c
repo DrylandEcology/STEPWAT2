@@ -158,8 +158,8 @@ void runSpinup(void){
     ChDir(grid_directories[GRID_DIRECTORY_STEPWAT_INPUTS]);
     SXW_Reset(gridCells[0][0].mySXW->f_watin);
     //TODO: This is a shortcut. swc history is not used and shouldn't be until this is fixed.
-    Mem_Free(SW_Soilwat.hist.file_prefix);
-    SW_Soilwat.hist.file_prefix = NULL;
+    Mem_Free(SoilWatAll.SoilWat.hist.file_prefix);
+    SoilWatAll.SoilWat.hist.file_prefix = NULL;
     ChDir("..");
 
 	_endSpinup();
@@ -307,7 +307,7 @@ static void _run_spinup(void)
     UseSeedDispersal = FALSE;
 
     // This is a flag from SOILWAT2. It MUST be FALSE during spinup.
-    prepare_IterationSummary = FALSE;
+    SoilWatAll.GenOutput.prepare_IterationSummary = FALSE;
 
 	Bool killedany;             // killedany for mortality functions
 
