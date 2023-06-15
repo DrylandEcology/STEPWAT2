@@ -165,7 +165,7 @@ void Species_Add_Indiv(SppIndex sp, Int new_indivs)
 	{
 		if (!indiv_New(sp))
 		{
-			LogError(logfp, LOGFATAL, "Unable to add new individual in Species_Add_Indiv()");
+			LogError(&LogInfo, LOGFATAL, "Unable to add new individual in Species_Add_Indiv()");
 		}
 
 		Species[sp]->est_count++;
@@ -311,7 +311,7 @@ SppIndex species_New(void)
 
 	if (++Globals->sppCount > MAX_SPECIES)
 	{
-		LogError(logfp, LOGFATAL, "Too many species specified (>%d)!\n"
+		LogError(&LogInfo, LOGFATAL, "Too many species specified (>%d)!\n"
 				"You must adjust MAX_SPECIES and recompile!\n",
 		MAX_SPECIES);
 	}
@@ -354,14 +354,14 @@ void copy_species(const SpeciesType* src, SpeciesType* dest){
 	// kills: Note that this array is allocated if and only if MortFlags.summary.
 	if(src->max_age > 1 && src->use_me && MortFlags.summary){
 		Mem_Free(dest->kills);
-		dest->kills = (IntUS*) Mem_Calloc(src->max_age, sizeof(IntUS), "copy_species: kills");
+		dest->kills = (IntUS*) Mem_Calloc(src->max_age, sizeof(IntUS), "copy_species: kills", &LogInfo);
 		for(i = 0; i < src->max_age; ++i){
 			dest->kills[i] = src->kills[i];
 		}
 	}
 	// seedprod
 	Mem_Free(dest->seedprod);
-	dest->seedprod = (IntUS*) Mem_Calloc(src->viable_yrs, sizeof(IntUS), "copy_species: seedprod");
+	dest->seedprod = (IntUS*) Mem_Calloc(src->viable_yrs, sizeof(IntUS), "copy_species: seedprod", &LogInfo);
 	for(i = 0; i < src->viable_yrs; ++i){
 		dest->seedprod[i] = src->seedprod[i];
 	}
@@ -424,7 +424,7 @@ void copy_species(const SpeciesType* src, SpeciesType* dest){
 	// If there is a list at all.
 	if(srcIndv){
 		// Allocate a new individual
-		destIndv = (IndivType*) Mem_Calloc(1, sizeof(IndivType), "copy_species: individual");
+		destIndv = (IndivType*) Mem_Calloc(1, sizeof(IndivType), "copy_species: individual", &LogInfo);
 		// This individual is the head of the list
 		dest->IndvHead = destIndv;
 		// Copy the individual information across
@@ -436,7 +436,7 @@ void copy_species(const SpeciesType* src, SpeciesType* dest){
 			// Move to the next individual in src
 			srcIndv = srcIndv->Next;
 			// Allocate the next entry in dest.
-			destIndv->Next = (IndivType*) Mem_Calloc(1, sizeof(IndivType), "copy_species: individual");
+			destIndv->Next = (IndivType*) Mem_Calloc(1, sizeof(IndivType), "copy_species: individual", &LogInfo);
 			// Doubly link the list before moving on.
 			destIndv->Next->Prev = destIndv;
 			// Move to the new entry
@@ -466,8 +466,8 @@ static SpeciesType *_create(void)
 {
 	SpeciesType *p;
 
-	p = (SpeciesType *) Mem_Calloc(1, sizeof(SpeciesType), "Species_Create");
-        p->name = Mem_Calloc(SuperGlobals.max_speciesnamelen + 1, sizeof(char), "Species_Create");
+	p = (SpeciesType *) Mem_Calloc(1, sizeof(SpeciesType), "Species_Create", &LogInfo);
+        p->name = Mem_Calloc(SuperGlobals.max_speciesnamelen + 1, sizeof(char), "Species_Create", &LogInfo);
 
 	return (p);
 }

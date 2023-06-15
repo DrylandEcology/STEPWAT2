@@ -258,15 +258,20 @@ void runGrid(void)
 		ChDir("..");
 	}
 
-	// SOILWAT resets SW_Weather.name_prefix every iteration. This is not the behavior we want
+	// SOILWAT resets SoilWatAll.Weather.name_prefix every iteration. This is not the behavior we want
 	// so the name is stored here.
 	char SW_prefix_permanent[MAX_FILENAMESIZE - 5]; // see `SW_WEATHER`: subtract 4-digit 'year' file type extension
-	sprintf(SW_prefix_permanent, "%s/%s", grid_directories[GRID_DIRECTORY_STEPWAT_INPUTS], SW_Weather.name_prefix);
+	sprintf(SW_prefix_permanent, "%s/%s",
+			grid_directories[GRID_DIRECTORY_STEPWAT_INPUTS],
+			SoilWatAll.Weather.name_prefix);
 
 
   _init_soilwat_outputs(grid_files[GRID_FILE_SOILWAT2_OUTPUT]);
-    SW_OUT_set_ncol(); // set number of output columns
-	SW_OUT_set_colnames(); // set column names for output files
+    SW_OUT_set_ncol(SoilWatAll.Site.n_layers, SoilWatAll.Site.n_evap_lyrs,
+					SoilWatAll.VegEstab.count, SoilWatAll.GenOutput.ncol_OUT); // set number of output columns
+	SW_OUT_set_colnames(SoilWatAll.Site.n_layers, SoilWatAll.VegEstab.parms,
+						SoilWatAll.GenOutput.ncol_OUT,
+						SoilWatAll.GenOutput.colnames_OUT, &LogInfo); // set column names for output files
     if (_getNumberSOILWAT2OutputCells() > 0) {
 		SW_OUT_create_summary_files();
 		// allocate `p_OUT` and `p_OUTsd` arrays to aggregate SOILWAT2 output across iterations
@@ -468,13 +473,13 @@ static void _init_grid_files(void)
 	char buf[1024];
 	int i;
 
-	f = OpenFile(Parm_name(F_First), "r");
+	f = OpenFile(Parm_name(F_First), "r", &LogInfo);
 
 	for (i = 0; i < N_GRID_DIRECTORIES; i++)
 	{ //0 is stepwat directory
 		if (!GetALine(f, buf))
 			break;
-		grid_directories[i] = Str_Dup(Str_TrimLeftQ(buf));
+		grid_directories[i] = Str_Dup(Str_TrimLeftQ(buf), &LogInfo);
 	}
 	if (i != N_GRID_DIRECTORIES)
 		LogError(stderr, LOGFATAL, "Invalid files.in");
@@ -483,20 +488,20 @@ static void _init_grid_files(void)
 	{
 		if (!GetALine(f, buf))
 			break;
-		grid_files[i] = Str_Dup(Str_TrimLeftQ(buf));
+		grid_files[i] = Str_Dup(Str_TrimLeftQ(buf), &LogInfo);
 	}
 	if (i != N_GRID_FILES)
 		LogError(stderr, LOGFATAL, "Invalid files.in");
 
 	// opens the log file...
 	if (!strcmp("stdout", grid_files[GRID_FILE_LOGFILE])){
-        logfp = stdout;
+        LogInfo.logfp = stdout;
     }
 	else {
-        logfp = OpenFile(grid_files[GRID_FILE_LOGFILE], "w");
+        LogInfo.logfp = OpenFile(grid_files[GRID_FILE_LOGFILE], "w", &LogInfo);
     }
 
-	CloseFile(&f);
+	CloseFile(&f, &LogInfo);
 }
 
 /**
@@ -560,7 +565,7 @@ static void _init_soilwat_outputs(char* fileName) {
   int cell;
   FILE* inFile = fopen(fileName, "r");
   if(!inFile) {
-    LogError(logfp, LOGFATAL, "Could not open SOILWAT2 output cells file."
+    LogError(&LogInfo, LOGFATAL, "Could not open SOILWAT2 output cells file."
              "\n\tFile named \"%s\"", fileName);
   }
 
@@ -571,7 +576,7 @@ static void _init_soilwat_outputs(char* fileName) {
 
   while(sscanf(buffer, "%d,%s", &cell, buffer) == 2) {
     if(cell < 0 || cell > (grid_Cols * grid_Rows)) {
-      LogError(logfp, LOGWARN, "Invalid cell (%d) specified in file \"%s\"",
+      LogError(&LogInfo, LOGWARN, "Invalid cell (%d) specified in file \"%s\"",
                cell, fileName);
     }
     gridCells[cell / grid_Cols][cell % grid_Cols].generateSWOutput = TRUE;
@@ -579,7 +584,7 @@ static void _init_soilwat_outputs(char* fileName) {
 
   if(sscanf(buffer, "%d", &cell) == 1) {
     if(cell < 0 || cell > (grid_Cols * grid_Rows)) {
-      LogError(logfp, LOGWARN, "Invalid cell (%d) specified in file \"%s\"",
+      LogError(&LogInfo, LOGWARN, "Invalid cell (%d) specified in file \"%s\"",
                cell, fileName);
     }
     gridCells[cell / grid_Cols][cell % grid_Cols].generateSWOutput = TRUE;
@@ -670,9 +675,9 @@ void rereadInputs(void){
  */
 static void _allocate_gridCells(int rows, int cols){
 	int i, j;
-	gridCells = (CellType**) Mem_Calloc(rows, sizeof(CellType*), "_allocate_gridCells: rows");
+	gridCells = (CellType**) Mem_Calloc(rows, sizeof(CellType*), "_allocate_gridCells: rows", &LogInfo);
 	for(i = 0; i < rows; ++i){
-		gridCells[i] = (CellType*) Mem_Calloc(cols, sizeof(CellType), "_allocate_gridCells: columns");
+		gridCells[i] = (CellType*) Mem_Calloc(cols, sizeof(CellType), "_allocate_gridCells: columns", &LogInfo);
 	}
 
 	/* Allocate all fields specific to gridded mode. This is not necessary for fields like mySpecies
@@ -681,9 +686,9 @@ static void _allocate_gridCells(int rows, int cols){
 		for(j = 0; j < grid_Cols; ++j){
 			// shouldBeInitialized is a dynamically allocated array
 			gridCells[i][j].mySpeciesInit.shouldSpinup = (int*)
-				Mem_Calloc(MAX_SPECIES, sizeof(int), "_allocate_gridCells: mySpeciesInit");
+				Mem_Calloc(MAX_SPECIES, sizeof(int), "_allocate_gridCells: mySpeciesInit", &LogInfo);
 
-			gridCells[i][j].someKillage = (Bool*) Mem_Calloc(1, sizeof(Bool), "_allocate_gridCells: someKillage");
+			gridCells[i][j].someKillage = (Bool*) Mem_Calloc(1, sizeof(Bool), "_allocate_gridCells: someKillage", &LogInfo);
 
 			// Allocate the cheatgrassPrecip variable for the Mortality module
 			setCheatgrassPrecip(0);
@@ -720,48 +725,48 @@ static void _allocate_accumulators(void){
 			load_cell(i,j);
 
   			if (BmassFlags.dist) {
-    			gridCells[i][j]._Dist = (StatType*) Mem_Calloc(1, sizeof(StatType), "_allocate_accumulators(Dist)");
+    			gridCells[i][j]._Dist = (StatType*) Mem_Calloc(1, sizeof(StatType), "_allocate_accumulators(Dist)", &LogInfo);
 		    	gridCells[i][j]._Dist->s = (struct accumulators_st *)
 		               		Mem_Calloc( SuperGlobals.runModelYears,
 		                           		sizeof(struct accumulators_st),
- 		                         		"_allocate_accumulators(Dist)");
+ 		                         		"_allocate_accumulators(Dist)", &LogInfo);
 		  	}
  		 	if (BmassFlags.ppt) {
-		    	gridCells[i][j]._Ppt = (StatType*) Mem_Calloc(1, sizeof(StatType), "_allocate_accumulators(PPT");
+		    	gridCells[i][j]._Ppt = (StatType*) Mem_Calloc(1, sizeof(StatType), "_allocate_accumulators(PPT", &LogInfo);
 		    	gridCells[i][j]._Ppt->s  = (struct accumulators_st *)
 		               		Mem_Calloc( SuperGlobals.runModelYears,
 		                           		sizeof(struct accumulators_st),
-		                          		"_allocate_accumulators(PPT)");
+		                          		"_allocate_accumulators(PPT)", &LogInfo);
  		 	}
 		  	if (BmassFlags.tmp) {
-		    	gridCells[i][j]._Temp = (StatType*) Mem_Calloc(1, sizeof(StatType), "_allocate_accumulators(Temp)");
+		    	gridCells[i][j]._Temp = (StatType*) Mem_Calloc(1, sizeof(StatType), "_allocate_accumulators(Temp)", &LogInfo);
 		    	gridCells[i][j]._Temp->s = (struct accumulators_st *)
 		               		Mem_Calloc( SuperGlobals.runModelYears,
  		                          		sizeof(struct accumulators_st),
- 		                         		"_allocate_accumulators(Temp)");
+ 		                         		"_allocate_accumulators(Temp)", &LogInfo);
 		  	}
 		  	if (BmassFlags.grpb) {
  			   	gridCells[i][j]._Grp = (struct stat_st *)
            				Mem_Calloc( Globals->grpCount,
                 		       sizeof(struct stat_st),
-                		      "_allocate_accumulators(Grp)");
+                		      "_allocate_accumulators(Grp)", &LogInfo);
     			ForEachGroup(rg){
       				gridCells[i][j]._Grp[rg].s = (struct accumulators_st *)
              			Mem_Calloc( SuperGlobals.runModelYears,
                          			sizeof(struct accumulators_st),
-                        			"_allocate_accumulators(Grp[rg].s)");
+                        			"_allocate_accumulators(Grp[rg].s)", &LogInfo);
 				}
 
     			if (BmassFlags.size) {
       				gridCells[i][j]._Gsize = (struct stat_st *)
              				Mem_Calloc( Globals->grpCount,
                          				sizeof(struct stat_st),
-                        				"_allocate_accumulators(GSize)");
+                        				"_allocate_accumulators(GSize)", &LogInfo);
       				ForEachGroup(rg){
           				gridCells[i][j]._Gsize[rg].s = (struct accumulators_st *)
              							Mem_Calloc( SuperGlobals.runModelYears,
                          							sizeof(struct accumulators_st),
-                        							"_allocate_accumulators(GSize[rg].s)");
+                        							"_allocate_accumulators(GSize[rg].s)", &LogInfo);
 					}
     			}
 
@@ -769,33 +774,34 @@ static void _allocate_accumulators(void){
       				gridCells[i][j]._Gpr = (struct stat_st *)
              				Mem_Calloc( Globals->grpCount,
                 		         		sizeof(struct stat_st),
-                		        		"_allocate_accumulators(Gpr)");
+                		        		"_allocate_accumulators(Gpr)", &LogInfo);
       				ForEachGroup(rg){
           				gridCells[i][j]._Gpr[rg].s = (struct accumulators_st *)
              							Mem_Calloc( SuperGlobals.runModelYears,
                     		     					sizeof(struct accumulators_st),
-                        							"_allocate_accumulators(Gpr[rg].s)");
+                        							"_allocate_accumulators(Gpr[rg].s)", &LogInfo);
 					}
     			}
 
     			if (BmassFlags.wildfire || BmassFlags.prescribedfire) {
       				gridCells[i][j]._Gwf = (struct fire_st *)
              				Mem_Calloc( 1, sizeof(struct fire_st),
-                		        		"_allocate_accumulators(Gwf)");
+                		        		"_allocate_accumulators(Gwf)", &LogInfo);
 
       				gridCells[i][j]._Gwf->wildfire = (int *) Mem_Calloc( 1,
                     		  		 sizeof(int) * SuperGlobals.runModelYears,
-                    		  		 "_allocate_accumulators(Gwf->wildfire)");
+                    		  		 "_allocate_accumulators(Gwf->wildfire)", &LogInfo);
 
       				gridCells[i][j]._Gwf->prescribedFire = (int **) Mem_Calloc( 1,
                       						sizeof(int **) * SuperGlobals.max_rgroups,
-                       						"_allocate_accumulators(Gwf->prescribedfire");
+                       						"_allocate_accumulators(Gwf->prescribedfire", &LogInfo);
 
       				ForEachGroup(rg){
         				gridCells[i][j]._Gwf->prescribedFire[rg] = (int *)
-          										   Mem_Calloc( SuperGlobals.runModelYears,
-                      										   sizeof(int) * SuperGlobals.runModelYears,
-                      										   "_allocate_accumulators(Gwf->prescribedFire)");
+											Mem_Calloc( SuperGlobals.runModelYears,
+												sizeof(int) * SuperGlobals.runModelYears,
+												"_allocate_accumulators(Gwf->prescribedFire)",
+												&LogInfo);
       				}
     			}
     		}
@@ -804,20 +810,20 @@ static void _allocate_accumulators(void){
     			gridCells[i][j]._Gestab = (struct stat_st *)
              	  		  Mem_Calloc( Globals->grpCount,
                          			sizeof(struct stat_st),
-                         			"_allocate_accumulators(Gestab)");
+                         			"_allocate_accumulators(Gestab)", &LogInfo);
 
 				gridCells[i][j]._Gmort = (struct stat_st *)
            		 		 Mem_Calloc( Globals->grpCount,
                        				sizeof(struct stat_st),
-                      				"_allocate_accumulators(Gmort)");
+                      				"_allocate_accumulators(Gmort)", &LogInfo);
     			ForEachGroup(rg){
       				gridCells[i][j]._Gestab[rg].s = (struct accumulators_st *)
                      				Mem_Calloc( 1, sizeof(struct accumulators_st),
-                                				"_allocate_accumulators(Gestab[rg].s)");
+                                				"_allocate_accumulators(Gestab[rg].s)", &LogInfo);
 					gridCells[i][j]._Gmort[rg].s = (struct accumulators_st *)
            							Mem_Calloc( GrpMaxAge(rg),
                        							sizeof(struct accumulators_st),
-                      							"_allocate_accumulators(Gmort[rg].s)");
+                      							"_allocate_accumulators(Gmort[rg].s)", &LogInfo);
 				}
   			}
 
@@ -825,24 +831,24 @@ static void _allocate_accumulators(void){
       			gridCells[i][j]._Spp = (struct stat_st *)
                		   Mem_Calloc( Globals->sppCount,
                            		   sizeof(struct stat_st),
-                          		   "_allocate_accumulators(Spp)");
+                          		   "_allocate_accumulators(Spp)", &LogInfo);
       			ForEachSpecies(sp){
         			gridCells[i][j]._Spp[sp].s = (struct accumulators_st *)
                			 		  Mem_Calloc( SuperGlobals.runModelYears,
                            					sizeof(struct accumulators_st),
-                          					"_allocate_accumulators(Spp[sp].s)");
+                          					"_allocate_accumulators(Spp[sp].s)", &LogInfo);
 				}
 
       			if (BmassFlags.indv) {
         			gridCells[i][j]._Indv = (struct stat_st *)
                		 		Mem_Calloc( Globals->sppCount,
                            		 		sizeof(struct stat_st),
-                          		 		"_allocate_accumulators(Indv)");
+                          		 		"_allocate_accumulators(Indv)", &LogInfo);
         			ForEachSpecies(sp){
           				gridCells[i][j]._Indv[sp].s = (struct accumulators_st *)
                				  		Mem_Calloc( SuperGlobals.runModelYears,
                            						sizeof(struct accumulators_st),
-                          						"_allocate_accumulators(Indv[sp].s)");
+                          						"_allocate_accumulators(Indv[sp].s)", &LogInfo);
 					}
     			}
     		}
@@ -850,32 +856,35 @@ static void _allocate_accumulators(void){
     			gridCells[i][j]._Sestab = (struct stat_st *)
            					Mem_Calloc( Globals->sppCount,
                        					sizeof(struct stat_st),
-                      					"_allocate_accumulators(Sestab)");
+                      					"_allocate_accumulators(Sestab)", &LogInfo);
 
 				gridCells[i][j]._Smort = (struct stat_st *)
            		 		Mem_Calloc( Globals->sppCount,
                        				sizeof(struct stat_st),
-                      				"_allocate_accumulators(Smort)");
+                      				"_allocate_accumulators(Smort)", &LogInfo);
 
     			ForEachSpecies(sp){
       				gridCells[i][j]._Sestab[sp].s = (struct accumulators_st *)
                     				Mem_Calloc( 1, sizeof(struct accumulators_st),
-                                				"_allocate_accumulators(Sestab[sp].s)");
+                                				"_allocate_accumulators(Sestab[sp].s)", &LogInfo);
 					gridCells[i][j]._Smort[sp].s = (struct accumulators_st *)
             		        		Mem_Calloc( SppMaxAge(sp),
             		                    	   sizeof(struct accumulators_st),
-             		                   	   	   "_allocate_accumulators(Smort[sp].s)");
+             		                   	   	   "_allocate_accumulators(Smort[sp].s)", &LogInfo);
 				}
   			}
 
   			if (UseSeedDispersal) {
-	  			gridCells[i][j]._Sreceived = Mem_Calloc( Globals->sppCount, sizeof(struct stat_st), "_allocate_accumulators(Sreceived)");
+	  			gridCells[i][j]._Sreceived = Mem_Calloc( Globals->sppCount,
+											 sizeof(struct stat_st),
+											 "_allocate_accumulators(Sreceived)",
+											 &LogInfo);
 
 	  			ForEachSpecies(sp) {
 		  			gridCells[i][j]._Sreceived[sp].s = (struct accumulators_st *)
 					  									Mem_Calloc( SuperGlobals.runModelYears,
 														  		   sizeof(struct accumulators_st),
-																   "_allocate_accumulators(Sreceived[sp].s)");
+																   "_allocate_accumulators(Sreceived[sp].s)", &LogInfo);
 		  			gridCells[i][j]._Sreceived[sp].name = &Species[sp]->name[0];
 	  			}
   			}
@@ -1014,17 +1023,21 @@ void load_cell(int row, int col){
 	/* Copy this cell's SXW variables into the local variables in sxw.c */
 	copy_sxw_variables(gridCells[row][col].mySXW, gridCells[row][col].mySXWResources, gridCells[row][col].myTranspWindow);
 
-    prepare_IterationSummary = gridCells[row][col].generateSWOutput;
+    SoilWatAll.GenOutput.prepare_IterationSummary = gridCells[row][col].generateSWOutput;
 
 	// If we have read in the soil information num_layers will be > 0.
 	// Otherwise we haven't read the file so there is no point wasting time on this.
 	if(gridCells[row][col].mySoils.num_layers > 0){
 		RealD soilRegionsLowerBounds[3] = { 30, 70, 100 };
-		set_soillayers(gridCells[row][col].mySoils.num_layers, gridCells[row][col].mySoils.depth, gridCells[row][col].mySoils.matricd,
-	    	           gridCells[row][col].mySoils.gravel, gridCells[row][col].mySoils.evco, gridCells[row][col].mySoils.trco_grass,
-					   gridCells[row][col].mySoils.trco_shrub, gridCells[row][col].mySoils.trco_tree, gridCells[row][col].mySoils.trco_forb,
-					   gridCells[row][col].mySoils.psand, gridCells[row][col].mySoils.pclay, gridCells[row][col].mySoils.imperm,
-				   	   gridCells[row][col].mySoils.soiltemp, 3, soilRegionsLowerBounds);
+		set_soillayers(&SoilWatAll.VegProd, &SoilWatAll.Site,
+			gridCells[row][col].mySoils.num_layers, gridCells[row][col].mySoils.depth,
+			gridCells[row][col].mySoils.matricd, gridCells[row][col].mySoils.gravel,
+			gridCells[row][col].mySoils.evco, gridCells[row][col].mySoils.trco_grass,
+			gridCells[row][col].mySoils.trco_shrub, gridCells[row][col].mySoils.trco_tree,
+			gridCells[row][col].mySoils.trco_forb, gridCells[row][col].mySoils.psand,
+			gridCells[row][col].mySoils.pclay, gridCells[row][col].mySoils.imperm,
+			gridCells[row][col].mySoils.soiltemp, 3, soilRegionsLowerBounds,
+			PathInfo.InFiles, &LogInfo);
 	}
 
 	// Zero SOILWAT2 variables (weather, flow, soil temperature, soil moisture)
@@ -1113,7 +1126,7 @@ static void _read_disturbances_in(void)
 	int i, row, col, cell, num = 0;
     GrpIndex rg;
 
-	f = OpenFile(grid_files[GRID_FILE_DISTURBANCES], "r");
+	f = OpenFile(grid_files[GRID_FILE_DISTURBANCES], "r", &LogInfo);
 
 	GetALine2(f, buf, 1024); // gets rid of the first line (since it just defines the columns)
 	for (i = 0; i < grid_Cells; i++)
@@ -1136,15 +1149,15 @@ static void _read_disturbances_in(void)
 		}
 
 		if (num != 11)
-			LogError(logfp, LOGFATAL, "Invalid %s file line %d wrong",
+			LogError(&LogInfo, LOGFATAL, "Invalid %s file line %d wrong",
 					grid_files[GRID_FILE_DISTURBANCES], i + 2);
 	}
 	if (i != grid_Cells)
-		LogError(logfp, LOGFATAL, "Invalid %s file wrong number of cells",
+		LogError(&LogInfo, LOGFATAL, "Invalid %s file wrong number of cells",
 				grid_files[GRID_FILE_DISTURBANCES]);
 
     unload_cell();
-	CloseFile(&f);
+	CloseFile(&f, &LogInfo);
 }
 
 /**
@@ -1181,22 +1194,22 @@ static void _read_soils_in(void){
 	/* tempSoil is allocated the maximum amount of memory that a SoilType could need.
 	   It will serve to read in parameters. */
 	SoilType tempSoil;
-	tempSoil.depth = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil");
-	tempSoil.evco = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil");
-	tempSoil.gravel = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil");
-	tempSoil.imperm = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil");
-	tempSoil.matricd = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil");
-	tempSoil.pclay = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil");
-	tempSoil.psand = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil");
-	tempSoil.soiltemp = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil");
-	tempSoil.trco_forb = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil");
-	tempSoil.trco_grass = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil");
-	tempSoil.trco_shrub = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil");
-	tempSoil.trco_tree = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil");
+	tempSoil.depth = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil", &LogInfo);
+	tempSoil.evco = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil", &LogInfo);
+	tempSoil.gravel = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil", &LogInfo);
+	tempSoil.imperm = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil", &LogInfo);
+	tempSoil.matricd = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil", &LogInfo);
+	tempSoil.pclay = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil", &LogInfo);
+	tempSoil.psand = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil", &LogInfo);
+	tempSoil.soiltemp = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil", &LogInfo);
+	tempSoil.trco_forb = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil", &LogInfo);
+	tempSoil.trco_grass = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil", &LogInfo);
+	tempSoil.trco_shrub = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil", &LogInfo);
+	tempSoil.trco_tree = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil", &LogInfo);
 
-	FILE* f = OpenFile(grid_files[GRID_FILE_SOILS], "r");
+	FILE* f = OpenFile(grid_files[GRID_FILE_SOILS], "r", &LogInfo);
 	if(!GetALine(f, buf)){ // Throw out the header line.
-		LogError(logfp, LOGFATAL, "%s file empty.", grid_files[GRID_FILE_SOILS]);
+		LogError(&LogInfo, LOGFATAL, "%s file empty.", grid_files[GRID_FILE_SOILS]);
 	}
 
 	for(i = 0; i < grid_Cells; ++i){
@@ -1205,17 +1218,17 @@ static void _read_soils_in(void){
 		load_cell(row, col);
 
 		if(!GetALine(f, buf)){
-			LogError(logfp, LOGFATAL, "Too few lines in %s", grid_files[GRID_FILE_SOILS]);
+			LogError(&LogInfo, LOGFATAL, "Too few lines in %s", grid_files[GRID_FILE_SOILS]);
 		}
 		lineReadReturnValue = _read_soil_line(buf, &tempSoil, 0);
 		if (lineReadReturnValue == SOIL_READ_FAILURE){
-			LogError(logfp, LOGFATAL, "Error reading %s file.", grid_files[GRID_FILE_SOILS]);
+			LogError(&LogInfo, LOGFATAL, "Error reading %s file.", grid_files[GRID_FILE_SOILS]);
 		}
 		/* If _read_soil_line didnt return SUCCESS or FAILURE,
 		   it returned a cell number to copy. */
 		else if (lineReadReturnValue != SOIL_READ_SUCCESS){
 			if(lineReadReturnValue > i){
-				LogError(logfp, LOGFATAL, "%s: Attempted to copy values that have not been read yet.\n"
+				LogError(&LogInfo, LOGFATAL, "%s: Attempted to copy values that have not been read yet.\n"
 				                          "\tIf you want to copy a soil make sure you define the layers"
 										  "the FIRST time you use it.", grid_files[GRID_FILE_SOILS]);
 			}
@@ -1226,11 +1239,11 @@ static void _read_soils_in(void){
 		else {
 			for(j = 1; j < tempSoil.num_layers; ++j){
 				if(!GetALine(f, buf)){
-					LogError(logfp, LOGFATAL, "Too few lines in %s", grid_files[GRID_FILE_SOILS]);
+					LogError(&LogInfo, LOGFATAL, "Too few lines in %s", grid_files[GRID_FILE_SOILS]);
 				}
 				lineReadReturnValue = _read_soil_line(buf, &tempSoil, j);
 				if(lineReadReturnValue != SOIL_READ_SUCCESS){
-					LogError(logfp, LOGFATAL, "Different behavior is specified between layers %d and %d of"
+					LogError(&LogInfo, LOGFATAL, "Different behavior is specified between layers %d and %d of"
 					                          " cell %d in file %s. (Perhaps you specified a cell to copy in one"
 											  " but not the other?)", j, j+1, i, grid_files[GRID_FILE_SOILS]);
 				}
@@ -1241,7 +1254,7 @@ static void _read_soils_in(void){
 	}
 
 	unload_cell();
-	CloseFile(&f);
+	CloseFile(&f, &LogInfo);
 
 	Mem_Free(tempSoil.soiltemp);
 	Mem_Free(tempSoil.trco_forb);
@@ -1283,7 +1296,7 @@ static int _read_soil_line(char* buf, SoilType* destination, int layer){
 
 	if(cellNum > grid_Cells){
 		LogError(
-			logfp, LOGFATAL,
+			&LogInfo, LOGFATAL,
 			"%s: cell number (id=%d) is larger than number of cells in grid (n=%d).",
 			grid_files[GRID_FILE_SOILS], cellNum, grid_Cells
 		);
@@ -1297,7 +1310,7 @@ static int _read_soil_line(char* buf, SoilType* destination, int layer){
 
 		if(cellToCopy > grid_Cells){
 			LogError(
-				logfp, LOGFATAL,
+				&LogInfo, LOGFATAL,
 				"%s: cell to copy (id=%d) not present in grid (n=%d).",
 				grid_files[GRID_FILE_SOILS], cellToCopy, grid_Cells
 			);
@@ -1313,7 +1326,7 @@ static int _read_soil_line(char* buf, SoilType* destination, int layer){
 	if(entriesRead == 16) {
 		if(layerRead > destination->num_layers){
 			LogError(
-				logfp, LOGFATAL,
+				&LogInfo, LOGFATAL,
 				"%s: cell %d has too many soil layers (%d for max=%d).",
 				grid_files[GRID_FILE_SOILS], cellNum, layerRead, destination->num_layers
 			);
@@ -1341,18 +1354,18 @@ void _copy_soils(SoilType* src, SoilType* dest){
 	int i;
 
 	dest->num_layers = src->num_layers;
-	dest->gravel = Mem_Calloc(src->num_layers, sizeof(RealF), "_copy_Soils: gravel");
-	dest->depth = Mem_Calloc(src->num_layers, sizeof(RealF), "_copy_Soils: depth");
-	dest->matricd = Mem_Calloc(src->num_layers, sizeof(RealF), "_copy_Soils: matricd");
-	dest->evco = Mem_Calloc(src->num_layers, sizeof(RealF), "_copy_Soils: evco");
-	dest->trco_grass = Mem_Calloc(src->num_layers, sizeof(RealF), "_copy_Soils: trco_grass");
-	dest->trco_shrub = Mem_Calloc(src->num_layers, sizeof(RealF), "_copy_Soils: trco_shrub");
-	dest->trco_tree = Mem_Calloc(src->num_layers, sizeof(RealF), "_copy_Soils: trco_tree");
-	dest->trco_forb = Mem_Calloc(src->num_layers, sizeof(RealF), "_copy_Soils: trco_forb");
-	dest->psand = Mem_Calloc(src->num_layers, sizeof(RealF), "_copy_Soils: psand");
-	dest->pclay = Mem_Calloc(src->num_layers, sizeof(RealF), "_copy_Soils: pclay");
-	dest->imperm = Mem_Calloc(src->num_layers, sizeof(RealF), "_copy_Soils: imperm");
-	dest->soiltemp = Mem_Calloc(src->num_layers, sizeof(RealF), "_copy_Soils: soiltemp");
+	dest->gravel = Mem_Calloc(src->num_layers, sizeof(RealF), "_copy_Soils: gravel", &LogInfo);
+	dest->depth = Mem_Calloc(src->num_layers, sizeof(RealF), "_copy_Soils: depth", &LogInfo);
+	dest->matricd = Mem_Calloc(src->num_layers, sizeof(RealF), "_copy_Soils: matricd", &LogInfo);
+	dest->evco = Mem_Calloc(src->num_layers, sizeof(RealF), "_copy_Soils: evco", &LogInfo);
+	dest->trco_grass = Mem_Calloc(src->num_layers, sizeof(RealF), "_copy_Soils: trco_grass", &LogInfo);
+	dest->trco_shrub = Mem_Calloc(src->num_layers, sizeof(RealF), "_copy_Soils: trco_shrub", &LogInfo);
+	dest->trco_tree = Mem_Calloc(src->num_layers, sizeof(RealF), "_copy_Soils: trco_tree", &LogInfo);
+	dest->trco_forb = Mem_Calloc(src->num_layers, sizeof(RealF), "_copy_Soils: trco_forb", &LogInfo);
+	dest->psand = Mem_Calloc(src->num_layers, sizeof(RealF), "_copy_Soils: psand", &LogInfo);
+	dest->pclay = Mem_Calloc(src->num_layers, sizeof(RealF), "_copy_Soils: pclay", &LogInfo);
+	dest->imperm = Mem_Calloc(src->num_layers, sizeof(RealF), "_copy_Soils: imperm", &LogInfo);
+	dest->soiltemp = Mem_Calloc(src->num_layers, sizeof(RealF), "_copy_Soils: soiltemp", &LogInfo);
 
 	for(i = 0; i < src->num_layers; ++i){
 		dest->gravel[i] = src->gravel[i];
@@ -1390,7 +1403,7 @@ static void _read_spinup_species(void)
 	char buf[4096];
 
 	//open the file/do the reading
-	f = OpenFile(grid_files[GRID_FILE_SPINUP_SPECIES], "r");
+	f = OpenFile(grid_files[GRID_FILE_SPINUP_SPECIES], "r", &LogInfo);
 
 	GetALine2(f, buf, 4096); // gets rid of the first line (since it just defines the columns)... it's only there for user readability
 	for (i = 0; i < grid_Cells; i++)
@@ -1410,7 +1423,7 @@ static void _read_spinup_species(void)
 		copy_cell_col = copy_cell % grid_Cols;
 
 		if (num != 3)
-			LogError(logfp, LOGFATAL, "Invalid %s file", grid_files[GRID_FILE_SPINUP_SPECIES]);
+			LogError(&LogInfo, LOGFATAL, "Invalid %s file", grid_files[GRID_FILE_SPINUP_SPECIES]);
 
 		int stringIndex = _get_value_index(buf, ',', 3); //gets us the index of the string that is right after what we just parsed in
 
@@ -1425,7 +1438,7 @@ static void _read_spinup_species(void)
 			continue;
 		}
 		else if (do_copy == 1)
-			LogError(logfp, LOGFATAL,
+			LogError(&LogInfo, LOGFATAL,
 					"Invalid %s file line %d invalid copy_cell attempt",
 					grid_files[GRID_FILE_SPINUP_SPECIES], i + 2);
 
@@ -1435,7 +1448,7 @@ static void _read_spinup_species(void)
 		{
 			num = sscanf(&buf[stringIndex], "%d,", &seeds_Avail);
 			if (num != 1){
-				LogError(logfp, LOGFATAL, "Invalid %s file line %d invalid species input",
+				LogError(&LogInfo, LOGFATAL, "Invalid %s file line %d invalid species input",
 						 grid_files[GRID_FILE_SPINUP_SPECIES], i + 2);
 			}
 
@@ -1452,16 +1465,16 @@ static void _read_spinup_species(void)
 	}
 
 	if (i != grid_Cells)
-		LogError(logfp, LOGFATAL, "Invalid %s file, not enough cells",
+		LogError(&LogInfo, LOGFATAL, "Invalid %s file, not enough cells",
 				grid_files[GRID_FILE_SPINUP_SPECIES]);
 
 	if(!isAnyCellOnForSpinup){
-		LogError(logfp, LOGWARN, "Spinup is on, but no species are turned on for spinup inside %s.",
+		LogError(&LogInfo, LOGWARN, "Spinup is on, but no species are turned on for spinup inside %s.",
 				grid_files[GRID_FILE_SPINUP_SPECIES]);
 	}
 
     unload_cell();
-	CloseFile(&f);
+	CloseFile(&f, &LogInfo);
 }
 
 /**
@@ -1503,18 +1516,18 @@ static void _read_grid_setup(void)
     char buf[1024];
     int i, j;
 
-    f = OpenFile(grid_files[GRID_FILE_SETUP], "r");
+    f = OpenFile(grid_files[GRID_FILE_SETUP], "r", &LogInfo);
 
     GetALine(f, buf);
     i = sscanf(buf, "%d %d", &grid_Rows, &grid_Cols);
     if (i != 2)
-        LogError(logfp, LOGFATAL,
+        LogError(&LogInfo, LOGFATAL,
                  "Invalid grid setup file (rows/cols line wrong)");
 
     grid_Cells = grid_Cols * grid_Rows;
 
     if (grid_Cells > MAX_CELLS)
-        LogError(logfp, LOGFATAL,
+        LogError(&LogInfo, LOGFATAL,
                  "Number of cells in grid exceeds MAX_CELLS defined in ST_defines.h");
 
     /* Allocate the 2d array of cells now that we know how many we need */
@@ -1523,46 +1536,46 @@ static void _read_grid_setup(void)
     GetALine(f, buf);
     i = sscanf(buf, "%u", &UseDisturbances);
     if (i != 1)
-        LogError(logfp, LOGFATAL,
+        LogError(&LogInfo, LOGFATAL,
                  "Invalid grid setup file (disturbances line wrong)");
 
     GetALine(f, buf);
     i = sscanf(buf, "%u", &UseSoils);
     if (i != 1)
-        LogError(logfp, LOGFATAL, "Invalid grid setup file (soils line wrong)");
+        LogError(&LogInfo, LOGFATAL, "Invalid grid setup file (soils line wrong)");
 
     GetALine(f, buf);
     i = sscanf(buf, "%d", &j);
     if (i != 1)
-        LogError(logfp, LOGFATAL,
+        LogError(&LogInfo, LOGFATAL,
                  "Invalid grid setup file (seed dispersal line wrong)");
     UseSeedDispersal = itob(j);
 
 	GetALine(f, buf);
 	i = sscanf(buf, "%d", &shouldSpinup);
 	if(i < 1){
-		LogError(logfp, LOGFATAL, "Invalid grid setup file (Spinup line wrong)");
+		LogError(&LogInfo, LOGFATAL, "Invalid grid setup file (Spinup line wrong)");
 	}
 
 	GetALine(f, buf);
 	i = sscanf(buf, "%hd", &SuperGlobals.runSpinupYears);
 	if(i < 1){
-		LogError(logfp, LOGFATAL, "Invalid grid setup file (Spinup years line wrong)");
+		LogError(&LogInfo, LOGFATAL, "Invalid grid setup file (Spinup years line wrong)");
 	}
 
 	GetALine(f, buf);
 	i = sscanf(buf, "%u", &writeIndividualFiles);
 	if(i < 1){
-		LogError(logfp, LOGFATAL, "Invalid grid setup file (Individual output line wrong)");
+		LogError(&LogInfo, LOGFATAL, "Invalid grid setup file (Individual output line wrong)");
 	}
 
 	GetALine(f, buf);
 	if (sscanf(buf, "%u", &recordDispersalEvents) != 1) {
-		LogError(logfp, LOGFATAL,
+		LogError(&LogInfo, LOGFATAL,
 				"Invalid %s file: seed dispersal events output line\n", grid_files[GRID_FILE_SETUP]);
     }
 
-    CloseFile(&f);
+    CloseFile(&f, &LogInfo);
 }
 
 /**
@@ -1786,7 +1799,7 @@ void _Output_AllCellAvgMort(const char* fileName){
           Gmort[SuperGlobals.max_rgroups][Globals->Max_Age],
           Smort[SuperGlobals.max_spp_per_grp * SuperGlobals.max_rgroups][Globals->Max_Age];
 
-    file = OpenFile( fileName, "w");
+    file = OpenFile( fileName, "w", &LogInfo);
 
     /* --------------------- Initialize values ----------------------- */
     ForEachSpecies(sp){
@@ -1887,7 +1900,7 @@ void _Output_AllCellAvgMort(const char* fileName){
     /* ----------------- End printing values --------------- */
 
     unload_cell();
-    CloseFile(&file);
+    CloseFile(&file, &LogInfo);
 }
 
 /**
@@ -1952,13 +1965,13 @@ static void _separateSOILWAT2DailyOutput(char* fileName, int* cellNumbers) {
   char junkBuffer[4096];
   int numCells = _getNumberSOILWAT2OutputCells();
   FILE** outFiles = Mem_Calloc(numCells, sizeof(FILE*),
-                               "_separateSOILWAT2DailyOutput");
+                               "_separateSOILWAT2DailyOutput", &LogInfo);
   char* buffer = Mem_Calloc(bufsize, sizeof(char),
-                            "_separateSOILWAT2DailyOutput");
+                            "_separateSOILWAT2DailyOutput", &LogInfo);
   FILE* inFile = fopen(fileName, "r");
 
   if(!inFile) {
-    LogError(logfp, LOGFATAL, "Issue while separating SOILWAT2 output.\n\tFile"
+    LogError(&LogInfo, LOGFATAL, "Issue while separating SOILWAT2 output.\n\tFile"
              "\"%s\" not found.", fileName);
   }
 
@@ -2016,13 +2029,13 @@ static void _separateSOILWAT2MonthlyOutput(char* fileName, int* cellNumbers) {
   char junkBuffer[4096];
   int numCells = _getNumberSOILWAT2OutputCells();
   FILE** outFiles = Mem_Calloc(numCells, sizeof(FILE*),
-                               "_separateSOILWAT2MonthlyOutput");
+                               "_separateSOILWAT2MonthlyOutput", &LogInfo);
   char* buffer = Mem_Calloc(bufsize, sizeof(char),
-                            "_separateSOILWAT2MonthlyOutput");
+                            "_separateSOILWAT2MonthlyOutput", &LogInfo);
   FILE* inFile = fopen(fileName, "r");
 
   if(!inFile) {
-    LogError(logfp, LOGFATAL, "Issue while separating SOILWAT2 output.\n\tFile"
+    LogError(&LogInfo, LOGFATAL, "Issue while separating SOILWAT2 output.\n\tFile"
              "\"%s\" not found.", fileName);
   }
 
@@ -2078,13 +2091,13 @@ static void _separateSOILWAT2YearlyOutput(char* fileName, int* cellNumbers) {
   char junkBuffer[4096];
   int numCells = _getNumberSOILWAT2OutputCells();
   FILE** outFiles = Mem_Calloc(numCells, sizeof(FILE*),
-                               "_separateSOILWAT2YearlyOutput");
+                               "_separateSOILWAT2YearlyOutput", &LogInfo);
   char* buffer = Mem_Calloc(bufsize, sizeof(char),
-                            "_separateSOILWAT2YearlyOutput");
+                            "_separateSOILWAT2YearlyOutput", &LogInfo);
   FILE* inFile = fopen(fileName, "r");
 
   if(!inFile) {
-    LogError(logfp, LOGFATAL, "Issue while separating SOILWAT2 output.\n\tFile"
+    LogError(&LogInfo, LOGFATAL, "Issue while separating SOILWAT2 output.\n\tFile"
              "\"%s\" not found.", fileName);
   }
 
@@ -2149,7 +2162,7 @@ static int* _getSOILWAT2OutputCells(void) {
   int i, j, count = 0;
   int numCells = _getNumberSOILWAT2OutputCells();
   int* cells = Mem_Calloc(numCells, sizeof(int),
-                          "_getSOILWAT2OutputCells");
+                          "_getSOILWAT2OutputCells", &LogInfo);
 
   for(i = 0; i < grid_Rows; ++i) {
     for(j = 0; j < grid_Cols; ++j) {

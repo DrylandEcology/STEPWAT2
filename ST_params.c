@@ -112,7 +112,7 @@ void parm_SetFirstName( char *s) {
 /*======================================================*/
 
   if (_files[F_First]) Mem_Free( _files[F_First]);
-  _files[F_First] = Str_Dup(s);
+  _files[F_First] = Str_Dup(s, &LogInfo);
 
 }
 
@@ -124,7 +124,7 @@ void parm_SetName( char *s, int which) {
 	if(which > (NFILES - 1) || which < 0)
 		return;
 	if (_files[which]) Mem_Free( _files[which]);
-  	_files[which] = Str_Dup(s);
+  	_files[which] = Str_Dup(s, &LogInfo);
 
 }
 
@@ -139,26 +139,26 @@ void files_init( void ) {
 
   MyFileName = Parm_name(F_First);
 
-  f = OpenFile(MyFileName, "r");
+  f = OpenFile(MyFileName, "r", &LogInfo);
 
   for(i=F_Log; i <= last; i++) {
     if ( ! GetALine(f, inbuf)) break;
-    _files[i] = Str_Dup(Str_TrimLeftQ(inbuf));
+    _files[i] = Str_Dup(Str_TrimLeftQ(inbuf), &LogInfo);
     //printf("FILES: %d : %s\n", i, _files[i]);
   }
 
   if ( i < last) {
-    LogError(logfp, LOGFATAL, "%s: Too few input files specified",
+    LogError(&LogInfo, LOGFATAL, "%s: Too few input files specified",
                               MyFileName);
   }
 
-  CloseFile(&f);
+  CloseFile(&f, &LogInfo);
 
   if(!UseGrid) {	//if the gridded option has been specified, then the logfile has already been opened
   	if ( !strcmp("stdout", _files[F_Log]) )
-    	logfp = stdout;
+    	LogInfo.logfp = stdout;
   	else
-    	logfp = OpenFile(_files[F_Log], "w");
+    	LogInfo.logfp = OpenFile(_files[F_Log], "w", &LogInfo);
    }
 
 }
@@ -171,11 +171,11 @@ static void _model_init( void) {
    char tmp[80];
 
    MyFileName = Parm_name(F_Model);
-   f = OpenFile(MyFileName, "r");
+   f = OpenFile(MyFileName, "r", &LogInfo);
    /* ----------------------------------------------------*/
    /* scan for the first line*/
    if (!GetALine(f, inbuf)) {
-     LogError(logfp, LOGFATAL, "%s: No data found!\n", MyFileName);
+     LogError(&LogInfo, LOGFATAL, "%s: No data found!\n", MyFileName);
    } else {
      sscanf( inbuf, "%s %d %d",
              tmp,
@@ -187,15 +187,15 @@ static void _model_init( void) {
      SuperGlobals.runModelIterations = atoi(tmp);
      if (SuperGlobals.runModelIterations < 1 ||
          SuperGlobals.runModelYears < 1 ) {
-       LogError(logfp, LOGFATAL,"Invalid parameters for RunModelIterations "
+       LogError(&LogInfo, LOGFATAL,"Invalid parameters for RunModelIterations "
                "or RunModelYears (%s)",
                MyFileName);
      }
      Globals->bmass.suffixwidth = Globals->mort.suffixwidth = strlen(tmp);
      SuperGlobals.randseed = (IntL) ((seed) ? -abs(seed) : 0);
    }
-   
-   CloseFile(&f);
+
+   CloseFile(&f, &LogInfo);
 }
 
 
@@ -213,7 +213,7 @@ static void _env_init( void) {
        use[3];
 
    MyFileName = Parm_name(F_Env);
-   f = OpenFile(MyFileName, "r");
+   f = OpenFile(MyFileName, "r", &LogInfo);
 
    while( GetALine(f, inbuf)) {
 
@@ -265,7 +265,7 @@ static void _env_init( void) {
             break;
       }
       if (x<nitems) {
-         LogError(logfp, LOGFATAL, "%s: Invalid record %d",
+         LogError(&LogInfo, LOGFATAL, "%s: Invalid record %d",
                  MyFileName, index);
       }
 
@@ -275,7 +275,7 @@ static void _env_init( void) {
    Globals->mound.use  = itob(use[1]);
    Globals->burrow.use = itob(use[2]);
 
-   CloseFile(&f);
+   CloseFile(&f, &LogInfo);
 }
 
 
@@ -287,22 +287,22 @@ static void _plot_init( void) {
    int x, nitems=1;
 
    MyFileName = Parm_name(F_Plot);
-   f = OpenFile(MyFileName, "r");
+   f = OpenFile(MyFileName, "r", &LogInfo);
 
    /* ----------------------------------------------------*/
    /* scan for the first line*/
    if (!GetALine(f, inbuf)) {
-     LogError(logfp, LOGFATAL, "%s: No data found!\n", MyFileName);
+     LogError(&LogInfo, LOGFATAL, "%s: No data found!\n", MyFileName);
    }
 
    x = sscanf( inbuf, " %f", &Globals->plotsize);
    if (x < nitems) {
-     LogError(logfp, LOGFATAL, "%s: Incorrect number of fields",
+     LogError(&LogInfo, LOGFATAL, "%s: Incorrect number of fields",
                      MyFileName);
    }
 
 
-   CloseFile(&f);
+   CloseFile(&f, &LogInfo);
 }
 
 
@@ -341,11 +341,11 @@ static void _check_species( void) {
     if (cnt < g->max_spp_estab) {
       tripped = TRUE;
       g->max_spp_estab = cnt;
-      LogError(logfp, LOGNOTE, "Max_Spp_Estab > Number of Spp for %s",
+      LogError(&LogInfo, LOGNOTE, "Max_Spp_Estab > Number of Spp for %s",
               g->name);
     }
   }
-  if (tripped) LogError(logfp, LOGNOTE,"Continuing.");
+  if (tripped) LogError(&LogInfo, LOGNOTE,"Continuing.");
 
   /* -------------------------------------------*/
   /* determine max age for the species and
@@ -370,7 +370,7 @@ static void _check_species( void) {
     }
 
     if (minage == 1 && maxage != 1) {
-      LogError(logfp, LOGFATAL, "%s: Can't mix annuals and perennials within a group\n"
+      LogError(&LogInfo, LOGFATAL, "%s: Can't mix annuals and perennials within a group\n"
                       "Refer to the groups.in and species.in files\n",
                        RGroup[rg]->name);
     }
@@ -387,7 +387,7 @@ static void _check_species( void) {
       if ( Species[sp]->use_me) {
         Species[sp]->kills = (IntUS *) Mem_Calloc(SppMaxAge(sp),
                                                sizeof(IntUS),
-                             "_check_species(Species.kills)");
+                             "_check_species(Species.kills)", &LogInfo);
       } else {
         Species[sp]->kills = NULL;
       }
@@ -409,7 +409,7 @@ static void _check_species( void) {
         }
         RGroup[rg]->kills = (IntUS *) Mem_Calloc(GrpMaxAge(rg),
                                                 sizeof(IntUS),
-                        "_check_species(RGroup.kills)");
+                        "_check_species(RGroup.kills)", &LogInfo);
       } else {
         RGroup[rg]->kills = NULL;
       }
@@ -455,10 +455,10 @@ static void _bmassflags_init( void) {
    char z;
 
    MyFileName = Parm_name(F_BMassFlag);
-   fin = OpenFile(MyFileName, "r");
+   fin = OpenFile(MyFileName, "r", &LogInfo);
 
    if (!GetALine(fin, inbuf)) {
-     LogError(logfp, LOGFATAL, "%s: No data found!\n", MyFileName);
+     LogError(&LogInfo, LOGFATAL, "%s: No data found!\n", MyFileName);
    }
 
    x = sscanf( inbuf, "%s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s",
@@ -472,7 +472,7 @@ static void _bmassflags_init( void) {
    }
 
    if (x < nitems) {
-     LogError(logfp, LOGFATAL, "%s: Invalid number of parameters",
+     LogError(&LogInfo, LOGFATAL, "%s: Invalid number of parameters",
              MyFileName);
    }
 
@@ -532,7 +532,7 @@ static void _bmassflags_init( void) {
      }
 
    }
-   CloseFile(&fin);
+   CloseFile(&fin, &LogInfo);
 
    /* remove old output and/or create the output directories if needed */
    /* borrow inbuf for filenames */
@@ -588,10 +588,10 @@ static void _mortflags_init( void) {
 
 
    MyFileName = Parm_name(F_MortFlag);
-   fin = OpenFile(MyFileName, "r");
+   fin = OpenFile(MyFileName, "r", &LogInfo);
 
    if (!GetALine(fin, inbuf)) {
-     LogError(logfp, LOGFATAL, "%s No data found!\n", MyFileName);
+     LogError(&LogInfo, LOGFATAL, "%s No data found!\n", MyFileName);
 
    }
 
@@ -607,7 +607,7 @@ static void _mortflags_init( void) {
    }
 
    if (x < nitems -2) {
-     LogError(logfp, LOGFATAL,"%s: Invalid number of parameters",
+     LogError(&LogInfo, LOGFATAL,"%s: Invalid number of parameters",
              MyFileName);
    }
 
@@ -637,7 +637,7 @@ static void _mortflags_init( void) {
      }
 
     }
-    CloseFile(&fin);
+    CloseFile(&fin, &LogInfo);
 
    /* remove old output and/or create the output directories if needed */
    /* borrow inbuf for filenames */
@@ -683,58 +683,59 @@ static void _setNameLen(char *dest, char *src, Int len) {
 void maxrgroupspecies_init( void) {
 /*======================================================*/
     FILE *f;
-    
+    char inbuf[MAX_FILENAMESIZE];
+
     MyFileName = Parm_name(F_MaxRGroupSpecies);
-    f = OpenFile(MyFileName, "r");
-    
+    f = OpenFile(MyFileName, "r", &LogInfo);
+
     /* These values determine the memory allocated for resource groups, species, and their names. */
     /* If these limits are exceeded, memory leaks will result. */
 
     /* Resource group limits */
 
     if (!GetALine(f, inbuf)) {
-       LogError(logfp, LOGFATAL, "%s: Could not read maximum resource groups allowed.", MyFileName);
+       LogError(&LogInfo, LOGFATAL, "%s: Could not read maximum resource groups allowed.", MyFileName);
     }
 
     if (sscanf(inbuf, "%zu", &SuperGlobals.max_rgroups) != 1) {
-       LogError(logfp, LOGFATAL, "%s: Could not read maximum resource groups allowed.", MyFileName);
+       LogError(&LogInfo, LOGFATAL, "%s: Could not read maximum resource groups allowed.", MyFileName);
     }
 
     if (!GetALine(f, inbuf)) {
-       LogError(logfp, LOGFATAL, "%s: Could not read maximum resource group name length.", MyFileName);
+       LogError(&LogInfo, LOGFATAL, "%s: Could not read maximum resource group name length.", MyFileName);
     }
 
     if (sscanf(inbuf, "%zu", &SuperGlobals.max_groupnamelen) != 1) {
-       LogError(logfp, LOGFATAL, "%s: Could not read maximum resource group name length.", MyFileName);
+       LogError(&LogInfo, LOGFATAL, "%s: Could not read maximum resource group name length.", MyFileName);
     }
 
     /* Species limits */
 
     if (!GetALine(f, inbuf)) {
-       LogError(logfp, LOGFATAL, "%s: Could not read maximum species allowed per resource group.", MyFileName);
+       LogError(&LogInfo, LOGFATAL, "%s: Could not read maximum species allowed per resource group.", MyFileName);
     }
 
     if (sscanf(inbuf, "%zu", &SuperGlobals.max_spp_per_grp) != 1) {
-       LogError(logfp, LOGFATAL, "%s: Could not read maximum species allowed per resource group.", MyFileName);
+       LogError(&LogInfo, LOGFATAL, "%s: Could not read maximum species allowed per resource group.", MyFileName);
     }
 
     if (!GetALine(f, inbuf)) {
-       LogError(logfp, LOGFATAL, "%s: Could not read maximum individuals allowed per species.", MyFileName);
+       LogError(&LogInfo, LOGFATAL, "%s: Could not read maximum individuals allowed per species.", MyFileName);
     }
 
     if (sscanf(inbuf, "%zu", &SuperGlobals.max_indivs_per_spp) != 1) {
-       LogError(logfp, LOGFATAL, "%s: Could not read maximum individuals allowed per species.", MyFileName);
+       LogError(&LogInfo, LOGFATAL, "%s: Could not read maximum individuals allowed per species.", MyFileName);
     }
 
     if (!GetALine(f, inbuf)) {
-       LogError(logfp, LOGFATAL, "%s: Could not read maximum species name length.", MyFileName);
+       LogError(&LogInfo, LOGFATAL, "%s: Could not read maximum species name length.", MyFileName);
     }
 
     if (sscanf(inbuf, "%zu", &SuperGlobals.max_speciesnamelen) != 1) {
-       LogError(logfp, LOGFATAL, "%s: Could not read maximum species name length.", MyFileName);
+       LogError(&LogInfo, LOGFATAL, "%s: Could not read maximum species name length.", MyFileName);
     }
-    
-    CloseFile(&f);
+
+    CloseFile(&f, &LogInfo);
 }
 
 
@@ -768,10 +769,10 @@ static void _rgroup_init( void) {
         transpiration;
 
    MyFileName = Parm_name(F_RGroup);
-   f = OpenFile(MyFileName, "r");
-   
-   name = (char *)Mem_Calloc(SuperGlobals.max_groupnamelen + 1, sizeof(char), "_rgroup_init");
-   RGroup = (GroupType **)Mem_Calloc(SuperGlobals.max_rgroups, sizeof(GroupType *), "_rgroup_init");
+   f = OpenFile(MyFileName, "r", &LogInfo);
+
+   name = (char *)Mem_Calloc(SuperGlobals.max_groupnamelen + 1, sizeof(char), "_rgroup_init", &LogInfo);
+   RGroup = (GroupType **)Mem_Calloc(SuperGlobals.max_rgroups, sizeof(GroupType *), "_rgroup_init", &LogInfo);
 
    /* ------------------------------------------------------------*/
    /* Install all the defined groups, except for dry/wet/norm parms */
@@ -788,7 +789,7 @@ static void _rgroup_init( void) {
                &prop_killed, &prop_recovered,&grazing_frq, &prop_grazing,
                &grazingfreq_startyr, &biomass, &transpiration);
      if (x < 22) {
-       LogError(logfp, LOGFATAL, "%s: Too few columns in groups",
+       LogError(&LogInfo, LOGFATAL, "%s: Too few columns in groups",
                MyFileName);
      }
 
@@ -805,7 +806,7 @@ static void _rgroup_init( void) {
    }/* end while*/
 
    if (!groupsok) {
-      LogError(logfp, LOGFATAL, "%s: Incomplete input in group definitions",
+      LogError(&LogInfo, LOGFATAL, "%s: Incomplete input in group definitions",
               MyFileName);
    }
 
@@ -821,14 +822,14 @@ static void _rgroup_init( void) {
                name,
                &nslope, &nint, &wslope, &wint, &dslope, &dint);
      if (x != 7) {
-       LogError(logfp, LOGFATAL, "%s: Wrong number of columns in groups' wet/dry parms",
+       LogError(&LogInfo, LOGFATAL, "%s: Wrong number of columns in groups' wet/dry parms",
                MyFileName);
      }
      _rgroup_add2( name, nslope, nint, wslope, wint, dslope, dint);
    }/* end while*/
 
    if (!groupsok) {
-      LogError(logfp, LOGFATAL, "%s: Incomplete input in group definitions",
+      LogError(&LogInfo, LOGFATAL, "%s: Incomplete input in group definitions",
               MyFileName);
    }
 
@@ -838,7 +839,7 @@ static void _rgroup_init( void) {
    x=sscanf( inbuf, "%s %f %f %f %f",
              name, &wslope, &wint, &dslope, &dint);
    if (x < 5) {
-     LogError(logfp, LOGFATAL,
+     LogError(&LogInfo, LOGFATAL,
           "%s: Too few values in succulent growth parameters",
            MyFileName);
    }
@@ -852,20 +853,20 @@ static void _rgroup_init( void) {
    while(GetALine(f,inbuf)) {
      if (!isnull(strstr(inbuf,"[end]"))) {
         groupsok = TRUE;
-        
+
         break;
      }
 
      x=sscanf( inbuf, "%u", &UseCheatgrassWildfire);
      if (x != 1) {
-       LogError(logfp, LOGFATAL, "%s: Cheatgrass-Wildfire flag not read.",
+       LogError(&LogInfo, LOGFATAL, "%s: Cheatgrass-Wildfire flag not read.",
                MyFileName);
-     } 
+     }
    }/* end while*/
 
    Mem_Free(name);
-   
-   CloseFile(&f);
+
+   CloseFile(&f, &LogInfo);
 }
 
 /**************************************************************/
@@ -909,7 +910,7 @@ static void _rgroup_add2( char name[], RealF nslope, RealF nint, RealF wslope,
 
   rg = RGroup_Name2Index(name);
   if (rg < 0) {
-    LogError(logfp, LOGFATAL, "%s: Mismatched name (%s) for succulents",
+    LogError(&LogInfo, LOGFATAL, "%s: Mismatched name (%s) for succulents",
              MyFileName, name);
   }
 
@@ -922,16 +923,16 @@ static void _rgroup_add2( char name[], RealF nslope, RealF nint, RealF wslope,
 }
 
 
-static void _rgroup_add_disturbance( char name[], Int killyr, Int killfreq_startyr, 
-                      RealF killfreq, Int extirp, RealF prop_killed, 
-                      RealF prop_recovered, RealF grazing_frq, RealF prop_grazing, 
+static void _rgroup_add_disturbance( char name[], Int killyr, Int killfreq_startyr,
+                      RealF killfreq, Int extirp, RealF prop_killed,
+                      RealF prop_recovered, RealF grazing_frq, RealF prop_grazing,
                       Int grazingfreq_startyr) {
 /*======================================================*/
    GrpIndex rg;
 
    rg = RGroup_Name2Index(name);
    if (rg < 0) {
-     LogError(logfp, LOGFATAL, "%s: Mismatched name (%s) for disturbance",
+     LogError(&LogInfo, LOGFATAL, "%s: Mismatched name (%s) for disturbance",
              MyFileName, name);
    }
 
@@ -958,7 +959,7 @@ static void _rgroup_addsucculent( char name[], RealF wslope, RealF wint,
 
    rg = RGroup_Name2Index(name);
    if (rg < 0) {
-     LogError(logfp, LOGFATAL, "%s: Mismatched name (%s) for succulents",
+     LogError(&LogInfo, LOGFATAL, "%s: Mismatched name (%s) for succulents",
              MyFileName, name);
    }
    RGroup[rg]->succulent = TRUE;
@@ -1009,10 +1010,10 @@ static void _species_init( void) {
    char clonal[5];
 
    MyFileName = Parm_name( F_Species);
-   f = OpenFile(MyFileName, "r");
+   f = OpenFile(MyFileName, "r", &LogInfo);
 
-   name = (char *)Mem_Calloc(SuperGlobals.max_speciesnamelen + 1, sizeof(char), "_species_init");
-   Species = (SpeciesType **)Mem_Calloc(MAX_SPECIES, sizeof(SpeciesType *), "_species_init");
+   name = (char *)Mem_Calloc(SuperGlobals.max_speciesnamelen + 1, sizeof(char), "_species_init", &LogInfo);
+   Species = (SpeciesType **)Mem_Calloc(MAX_SPECIES, sizeof(SpeciesType *), "_species_init", &LogInfo);
 
    while( readspp) {
       if( ! GetALine(f, inbuf )) {sppok=FALSE;break;}
@@ -1026,7 +1027,7 @@ static void _species_init( void) {
 				name, &rg, &turnon, &age, &slow, &dist, &eind, &vegi, &temp, clonal, &irate, &ratep,  &estab,
 				&minb, &maxb, &cohort);
       if (x != 16) {
-        LogError(logfp, LOGFATAL, "%s: Wrong number of columns in species",
+        LogError(&LogInfo, LOGFATAL, "%s: Wrong number of columns in species",
                 MyFileName);
       }
 
@@ -1051,7 +1052,7 @@ static void _species_init( void) {
         case 4:
           Species[sp]->disturbclass = VeryInsensitive; break;
         default:
-          LogError(logfp, LOGFATAL, "%s: Incorrect disturbance class found",
+          LogError(&LogInfo, LOGFATAL, "%s: Incorrect disturbance class found",
                   MyFileName);
       }
 
@@ -1080,7 +1081,7 @@ static void _species_init( void) {
     }/* end while*/
 
    if (!sppok) {
-      LogError(logfp, LOGFATAL, "%s: Incorrect/incomplete input",
+      LogError(&LogInfo, LOGFATAL, "%s: Incorrect/incomplete input",
               MyFileName);
    }
 
@@ -1099,19 +1100,19 @@ static void _species_init( void) {
      x=sscanf( inbuf, "%s %hd %f %hd %f",
                name, &viable, &xdecay, &pseed, &var);
      if (x < 5) {
-       LogError(logfp, LOGFATAL, "%s: Too few columns in annual estab parms",
+       LogError(&LogInfo, LOGFATAL, "%s: Too few columns in annual estab parms",
                MyFileName);
      }
 
      sp = Species_Name2Index(name);
      if (sp < 0) {
-       LogError(logfp, LOGFATAL, "%s: Mismatched name (%s) for annual estab parms",
+       LogError(&LogInfo, LOGFATAL, "%s: Mismatched name (%s) for annual estab parms",
                MyFileName, name);
      }
 
      Species[sp]->viable_yrs = viable;
      Species[sp]->exp_decay  = xdecay;
-     Species[sp]->seedprod = (IntUS *) Mem_Calloc( viable, sizeof(IntUS), "species_init()");
+     Species[sp]->seedprod = (IntUS *) Mem_Calloc( viable, sizeof(IntUS), "species_init()", &LogInfo);
      Species[sp]->var = var;
      Species[sp]->pseed = pseed / Globals->plotsize;
 
@@ -1127,17 +1128,17 @@ static void _species_init( void) {
       * which is not the desired outcome. The variance (s->var) and mean (pestab) should be adjusted
       * to obtain an unimodal beta-distribution with density > 0 */
      if (Species[sp]->alpha < 1) {
-        LogError(logfp, LOGWARN, "Species %s, alpha less than 1: %f \n", 
+        LogError(&LogInfo, LOGWARN, "Species %s, alpha less than 1: %f \n",
                  Species[sp]->name, Species[sp]->alpha);
      }
      if (Species[sp]->beta < 1) {
-        LogError(logfp, LOGWARN, "Species %s, beta less than 1: %f \n", 
+        LogError(&LogInfo, LOGWARN, "Species %s, beta less than 1: %f \n",
                  Species[sp]->name, Species[sp]->beta);
      }
    } /* end while readspp*/
 
    if (!sppok) {
-      LogError(logfp, LOGFATAL, "%s: Incorrect/incomplete input in annual estab parms",
+      LogError(&LogInfo, LOGFATAL, "%s: Incorrect/incomplete input in annual estab parms",
               MyFileName);
    }
 
@@ -1155,13 +1156,13 @@ static void _species_init( void) {
       x=sscanf( inbuf, "%s %f %f %f %f",
                 name, &p1, &p2, &p3, &p4);
       if (x < 5) {
-        LogError(logfp, LOGFATAL, "%s: Too few columns in species probs",
+        LogError(&LogInfo, LOGFATAL, "%s: Too few columns in species probs",
                 MyFileName);
       }
 
       sp = Species_Name2Index(name);
       if (sp < 0) {
-        LogError(logfp, LOGFATAL, "%s: Mismatched name (%s) for species probs",
+        LogError(&LogInfo, LOGFATAL, "%s: Mismatched name (%s) for species probs",
                 MyFileName, name);
       }
 
@@ -1171,7 +1172,7 @@ static void _species_init( void) {
       Species[sp]->prob_veggrow[Disturbance] = p4;
     } /* end while readspp*/
    if (!sppok) {
-      LogError(logfp, LOGFATAL, "%s: Incorrect/incomplete input in probs",
+      LogError(&LogInfo, LOGFATAL, "%s: Incorrect/incomplete input in probs",
               MyFileName);
    }
 
@@ -1190,12 +1191,12 @@ static void _species_init( void) {
     x = sscanf( inbuf, "%s %hd %f %f %f %f",
                 name, &turnondispersal, &p1, &HMAX, &PMD, &HSlope); 
     if(x < 6) {
-      LogError(logfp, LOGFATAL, "%s: Too few columns in species seed dispersal inputs", MyFileName);
+      LogError(&LogInfo, LOGFATAL, "%s: Too few columns in species seed dispersal inputs", MyFileName);
     }
 
     sp = Species_Name2Index(name);
     if(sp < 0){
-      LogError(logfp, LOGFATAL, "%s: Mismatched name (%s) for species seed dispersal inputs", MyFileName, name);
+      LogError(&LogInfo, LOGFATAL, "%s: Mismatched name (%s) for species seed dispersal inputs", MyFileName, name);
     }
 
     Species[sp]->use_dispersal = itob(turnondispersal);
@@ -1205,12 +1206,12 @@ static void _species_init( void) {
     Species[sp]->heightSlope = HSlope;
   }
   if(!sppok) {
-	  LogError(logfp, LOGFATAL, "%s: Incorrect/incomplete input in species seed dispersal input", MyFileName);
+	  LogError(&LogInfo, LOGFATAL, "%s: Incorrect/incomplete input in species seed dispersal input", MyFileName);
   }
-   
+
    Mem_Free(name);
 
-   CloseFile(&f);
+   CloseFile(&f, &LogInfo);
 }
 
 

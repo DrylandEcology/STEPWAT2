@@ -112,7 +112,7 @@ void _sxw_generate_weather(void) {
 
   if (!w->use_weathergenerator_only) {
     LogError(
-      logfp,
+      &LogInfo,
       LOGERROR,
       "STEPWAT2 expects 'use_weathergenerator_only'."
     );
@@ -129,18 +129,22 @@ void _sxw_generate_weather(void) {
     w->n_years,
     swTRUE, // `use_weathergenerator_only`
     w->name_prefix, // not used because `use_weathergenerator_only`
-	w->use_cloudCoverMonthly,
-	w->use_humidityMonthly,
-	w->use_windSpeedMonthly,
-	w->n_input_forcings,
-	w->dailyInputIndices,
-	w->dailyInputFlags,
-	sky->cloudcov,
-	sky->windspeed,
-	sky->r_humidity
-  );
+    w->use_cloudCoverMonthly,
+    w->use_humidityMonthly,
+    w->use_windSpeedMonthly,
+    w->n_input_forcings,
+    w->dailyInputIndices,
+    w->dailyInputFlags,
+    sky->cloudcov,
+    sky->windspeed,
+    sky->r_humidity,
+    SoilWatAll.Model.cum_monthdays,
+    SoilWatAll.Model.days_in_month,
+    &LogInfo
+    );
 
-  finalizeAllWeather(w); // run the weather generator
+  finalizeAllWeather(&SoilWatAll.Markov, w, SoilWatAll.Model.cum_monthdays,
+                     SoilWatAll.Model.days_in_month, &LogInfo); // run the weather generator
 }
 
 
@@ -256,7 +260,8 @@ static void _update_productivity(RealF sizes[]) {
             *bmassg,
     vegTypeBiomass[NVEGTYPES] = {0.};
 
-    bmassg = (RealF *)Mem_Calloc(SuperGlobals.max_rgroups, sizeof(RealF), "_update_productivity");
+    bmassg = (RealF *)Mem_Calloc(SuperGlobals.max_rgroups, sizeof(RealF),
+                                 "_update_productivity", &LogInfo);
 
 
     // totbmass: total biomass in g/m2

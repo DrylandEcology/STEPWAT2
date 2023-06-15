@@ -85,7 +85,7 @@ void _sxw_update_resource(void) {
   RealF *sizes;
   GrpIndex g;
 
-  sizes = (RealF *)Mem_Calloc(SuperGlobals.max_rgroups, sizeof(RealF), "_sxw_update_resource");
+  sizes = (RealF *)Mem_Calloc(SuperGlobals.max_rgroups, sizeof(RealF), "_sxw_update_resource", &LogInfo);
 
 	ForEachGroup(g)
 	{
@@ -306,7 +306,7 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
             // This transpiration will be added
             transp_window->added_transp = (1 - transp_ratio / RandUniFloatRange(min, max, &resource_rng)) * transp_window->average;
             if(transp_window->added_transp < 0){
-                LogError(logfp, LOGNOTE, "sxw_resource: Added transpiration less than 0.\n");
+                LogError(&LogInfo, LOGNOTE, "sxw_resource: Added transpiration less than 0.\n");
             }
             //printf("Year %d:\tTranspiration to add: %f\n",Globals->currYear,add_transp);
 

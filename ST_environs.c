@@ -132,7 +132,7 @@ static void _make_ppt( void) {
 
   if (Env->gsppt <= 0)
   {
-    LogError(logfp, LOGWARN, "Zero growing season precipitation in "\
+    LogError(&LogInfo, LOGWARN, "Zero growing season precipitation in "\
       "year = %d of iteration = %d", Globals->currYear, Globals->currIter);
     Env->gsppt = 0;
   }

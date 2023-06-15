@@ -389,12 +389,12 @@ void Plot_Initialize(void) {
 
 		/* This should no longer occur following the resolution of issue #209 on GitHub */
 		if (!ZRO(getSpeciesRelsize(sp))) {
-			LogError(logfp, LOGNOTE, 
+			LogError(&LogInfo, LOGNOTE,
 							 "%s relsize = %f in Plot_Initialize. This indicates that some individuals in this species were not killed.",
 							 Species[sp]->name, getSpeciesRelsize(sp));
 		}
 		if (Species[sp]->est_count) {
-			LogError(logfp, LOGNOTE, "%s est_count (%d) forced "
+			LogError(&LogInfo, LOGNOTE, "%s est_count (%d) forced "
 					"in Plot_Initialize", Species[sp]->name,
 					Species[sp]->est_count);
 			Species[sp]->est_count = 0;
@@ -413,16 +413,16 @@ void Plot_Initialize(void) {
 
     /* This should no longer occur following the resolution of issue #209 on GitHub */
 		if (!ZRO(getRGroupRelsize(rg))) {
-			LogError(logfp, LOGNOTE, 
+			LogError(&LogInfo, LOGNOTE,
 							 "%s relsize = %f in Plot_Initialize. This indicates that some individuals in this RGroup were not killed.",
 							 RGroup[rg]->name, getRGroupRelsize(rg));
                         /*printf("in plot_initialize before forcing, Rgroup = %s, relsize = %f, est_count= %d\n",
                         RGroup[rg]->name, RGroup[rg]->relsize, RGroup[rg]->est_count); */
 		}
-                
+
 		/* THIS NEVER SEEMS TO OCCUR */
 		if (RGroup[rg]->est_count) {
-			LogError(logfp, LOGNOTE, "%s est_count (%d) forced "
+			LogError(&LogInfo, LOGNOTE, "%s est_count (%d) forced "
 					"in Plot_Initialize", RGroup[rg]->name,
 					RGroup[rg]->est_count);
 			RGroup[rg]->est_count = 0;
@@ -490,11 +490,11 @@ void set_all_rngs(
 /**************************************************************/
 /* Allocates memory for any global variables defined as pointers */
 void allocate_Globals(void){
-	Env = (EnvType*) Mem_Calloc(1, sizeof(EnvType), "allocate_Globals: Env");
-	Succulent = (SucculentType*) Mem_Calloc(1, sizeof(SucculentType), "allocate_Globals: Succulent");
-	Globals = (ModelType*) Mem_Calloc(1, sizeof(ModelType), "allocate_Globals: Globals");
-	Plot = (PlotType*) Mem_Calloc(1, sizeof(PlotType), "allocate_Globals: Plot");
-	_SomeKillage = (Bool*) Mem_Calloc(1, sizeof(Bool), "allocate_Globals: _SomeKillage");
+	Env = (EnvType*) Mem_Calloc(1, sizeof(EnvType), "allocate_Globals: Env", &LogInfo);
+	Succulent = (SucculentType*) Mem_Calloc(1, sizeof(SucculentType), "allocate_Globals: Succulent", &LogInfo);
+	Globals = (ModelType*) Mem_Calloc(1, sizeof(ModelType), "allocate_Globals: Globals", &LogInfo);
+	Plot = (PlotType*) Mem_Calloc(1, sizeof(PlotType), "allocate_Globals: Plot", &LogInfo);
+	_SomeKillage = (Bool*) Mem_Calloc(1, sizeof(Bool), "allocate_Globals: _SomeKillage", &LogInfo);
 }
 
 /* Deallocates the global variables */
@@ -711,7 +711,7 @@ static void init_args(int argc, char **argv) {
 			}
 
 		default:
-			LogError(logfp, LOGFATAL,
+			LogError(&LogInfo, LOGFATAL,
 					"Programmer: bad option in main:init_args:switch");
 		}
 
@@ -732,11 +732,11 @@ static void init_args(int argc, char **argv) {
 static void check_log(void) {
 /* =================================================== */
 
-  if (logfp != stdout) {
-    if (logged && !QuietMode)
+  if (LogInfo.logfp != stdout) {
+    if (LogInfo.logged && !QuietMode)
       fprintf(progfp, "\nCheck logfile for error messages.\n");
 
-    CloseFile(&logfp);
+    CloseFile(&LogInfo.logfp, &LogInfo);
   }
 
 }

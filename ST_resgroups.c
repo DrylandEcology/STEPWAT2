@@ -119,7 +119,7 @@ void rgroup_PartResources(void) {
            // printf("\tafter correction: res_avail = %f, res_required = %f\n",
            //     g->res_avail, g->res_required);
 
-            LogError(logfp, LOGWARN, "RGroup %s : res_avail is Zero and res_required > 0", g->name);
+            LogError(&LogInfo, LOGWARN, "RGroup %s : res_avail is Zero and res_required > 0", g->name);
         }
 
         /* If relsize>0 and individuals are established, reset noplants from TRUE to FALSE */
@@ -373,9 +373,9 @@ void rgroup_ResPartIndiv(void) {
             *size_base, /* biomass of the functional group */
     		*size_obase; /* biomass of functional groups that can use extra resources */
 
-    size_base = (RealF *)Mem_Calloc(SuperGlobals.max_rgroups, sizeof(RealF), "rgroup_ResPartIndiv");
-    size_obase = (RealF *)Mem_Calloc(SuperGlobals.max_rgroups, sizeof(RealF), "rgroup_ResPartIndiv");
-    
+    size_base = (RealF *)Mem_Calloc(SuperGlobals.max_rgroups, sizeof(RealF), "rgroup_ResPartIndiv", &LogInfo);
+    size_obase = (RealF *)Mem_Calloc(SuperGlobals.max_rgroups, sizeof(RealF), "rgroup_ResPartIndiv", &LogInfo);
+
     /* Divide each group's normal resources to individuals */
     ForEachGroup(rg) {
         g = RGroup[rg];
@@ -802,7 +802,7 @@ void rgroup_IncrAges(void)
 				ndv->age++;
 				if (ndv->age > Species[ndv->myspecies]->max_age)
 				{
-					LogError(logfp, LOGWARN,
+					LogError(&LogInfo, LOGWARN,
 							"%s grown older than max_age (%d > %d). Iter=%d, Year=%d\n",
 							Species[ndv->myspecies]->name, ndv->age,
 							Species[ndv->myspecies]->max_age, Globals->currIter,
@@ -955,11 +955,11 @@ static GroupType *_create(void)
 {
 	GroupType *p;
 
-	p = (GroupType *) Mem_Calloc(1, sizeof(GroupType), "_create");
-        p->name = (char *) Mem_Calloc(SuperGlobals.max_groupnamelen + 1, sizeof(char), "_create");
-        p->est_spp = (SppIndex *) Mem_Calloc(SuperGlobals.max_spp_per_grp, sizeof(SppIndex), "_create");
-        p->species = (SppIndex *) Mem_Calloc(SuperGlobals.max_spp_per_grp, sizeof(SppIndex), "_create");
-        
+	p = (GroupType *) Mem_Calloc(1, sizeof(GroupType), "_create", &LogInfo);
+        p->name = (char *) Mem_Calloc(SuperGlobals.max_groupnamelen + 1, sizeof(char), "_create", &LogInfo);
+        p->est_spp = (SppIndex *) Mem_Calloc(SuperGlobals.max_spp_per_grp, sizeof(SppIndex), "_create", &LogInfo);
+        p->species = (SppIndex *) Mem_Calloc(SuperGlobals.max_spp_per_grp, sizeof(SppIndex), "_create", &LogInfo);
+
 	return (p);
 
 }
@@ -982,7 +982,7 @@ GrpIndex RGroup_New(void)
 
 	if (++Globals->grpCount > SuperGlobals.max_rgroups)
 	{
-		LogError(logfp, LOGFATAL, "Too many groups specified (>%d)!\n"
+		LogError(&LogInfo, LOGFATAL, "Too many groups specified (>%d)!\n"
 				"You must adjust MAX_RGROUPS in maxrgroupspecies.in!",
 		SuperGlobals.max_rgroups);
 	}
@@ -1116,14 +1116,14 @@ void copy_rgroup(const GroupType* src, GroupType* dest){
     /* -------------- Copy any arrays -------------- */
     if(MortFlags.summary){
         Mem_Free(dest->kills);
-        dest->kills = (IntUS*) Mem_Calloc(GrpMaxAge(src->grp_num), sizeof(IntUS), "copy_rgroup: kills");
+        dest->kills = (IntUS*) Mem_Calloc(GrpMaxAge(src->grp_num), sizeof(IntUS), "copy_rgroup: kills", &LogInfo);
         for(i = 0; i < GrpMaxAge(src->grp_num); ++i){
             dest->kills[i] = src->kills[i];
         }
     }
 
     Mem_Free(dest->est_spp);
-    dest->est_spp = (SppIndex*) Mem_Calloc(src->est_count, sizeof(SppIndex), "copy_rgroup: est_spp");
+    dest->est_spp = (SppIndex*) Mem_Calloc(src->est_count, sizeof(SppIndex), "copy_rgroup: est_spp", &LogInfo);
     for(i = 0; i < src->est_count; ++i){
         dest->est_spp[i] = src->est_spp[i];
     }
@@ -1236,7 +1236,7 @@ IndivType **RGroup_GetIndivs(GrpIndex rg, const char sort, IntS *num)
 	ForEachEstSpp(sp, rg, j)
 		ForEachIndiv(ndv, Species[sp])
 			i++;
-	nlist = Mem_Calloc(i, i_size, "Rgroup_GetIndivs(nlist)");
+	nlist = Mem_Calloc(i, i_size, "Rgroup_GetIndivs(nlist)", &LogInfo);
 
 	i = 0;
 	ForEachEstSpp(sp, rg, j)
