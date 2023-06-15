@@ -45,8 +45,9 @@ void Env_Generate( void) {
 /* HISTORY */
 /* Chris Bennett @ LTER-CSU 6/15/2000            */
 /*------------------------------------------------------*/
-
+  memcpy(&SoilWatAll.GenOutput.Globals, &Globals, sizeof(ModelType));
   SXW_Run_SOILWAT();
+  memcpy(&SoilWatAll.GenOutput.SXW, &SXW, sizeof(SXW_t));
 
   _make_ppt();
   _set_ppt_reduction();
