@@ -184,7 +184,7 @@ void initColonization(char* fileName) {
     load_cell(toCell / grid_Cols, toCell % grid_Cols);
     if(Species_Name2Index(name) == -1) {
       Mem_Free(tempEvents);
-      LogError(logfp, LOGFATAL, "Error reading colonization file:"
+      LogError(&LogInfo, LOGFATAL, "Error reading colonization file:"
                "\n\tUnrecognized species name (%s).", name);
       return;
     }
