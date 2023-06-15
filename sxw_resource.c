@@ -1,8 +1,8 @@
 /**
  * \file sxw_resource.c
- * \brief Translates transpiration values from [SOILWAT](\ref sw_src) into 
+ * \brief Translates transpiration values from [SOILWAT](\ref sw_src) into
  *        [Steppe](\ref STEPPE) resource values.
- * 
+ *
  * \author CWB (initial programming)
  * \date 21 May 2002
  * \ingroup SXW_PRIVATE
@@ -106,7 +106,7 @@ void _sxw_update_resource(void) {
          * (cm) to biomass that can be supported by those resources (g/cm) */
 	ForEachGroup(g)
 	{
-//printf("%s: _resource_cur pre-multiplication = %f. Post multiplication = %f.\n",RGroup[g]->name, 
+//printf("%s: _resource_cur pre-multiplication = %f. Post multiplication = %f.\n",RGroup[g]->name,
                                 //_resource_cur[g], SXWResources->_resource_cur[g] * RGroup[g]->_bvt);
 		SXWResources->_resource_cur[g] = SXWResources->_resource_cur[g] * RGroup[g]->_bvt;
 	}
@@ -144,7 +144,7 @@ void _sxw_update_root_tables( RealF sizes[] ) {
 		}
 	}
 
-	/* Rescale SXWResources->_roots_active_sum to represent the relative "activity" of a 
+	/* Rescale SXWResources->_roots_active_sum to represent the relative "activity" of a
          * STEPPE group's roots in a given layer in a given month */
   /* Details: for each soil layer `l` and each month (trperiod) `p`, the sum
      of `_roots_active_rel[Iglp(g, l, p)]` across rgroups `g` must be 1;
@@ -152,7 +152,7 @@ void _sxw_update_root_tables( RealF sizes[] ) {
 	ForEachGroup(g)
 	{
 		nLyrs = getNTranspLayers(RGroup[g]->veg_prod_type);
-		
+
 		for (l = 0; l < nLyrs; l++) {
 			ForEachTrPeriod(p)
 			{
@@ -161,7 +161,7 @@ void _sxw_update_root_tables( RealF sizes[] ) {
           sum_all_veg_types += SXWResources->_roots_active_sum[Itlp(t, l, p)];
         }
 
-				SXWResources->_roots_active_rel[Iglp(g, l, p)] = ZRO(sum_all_veg_types) ? 0. 
+				SXWResources->_roots_active_rel[Iglp(g, l, p)] = ZRO(sum_all_veg_types) ? 0.
                                          : SXWResources->_roots_active[Iglp(g, l, p)] / sum_all_veg_types;
 			}
 		}
@@ -349,5 +349,5 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
     }
 
     //remember the last year. When setting up for a new iteration the same year will appear twice, and we want to skip it the second time
-    transp_window->lastYear = Globals->currYear; 
+    transp_window->lastYear = Globals->currYear;
 }

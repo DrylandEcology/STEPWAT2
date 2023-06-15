@@ -1,14 +1,14 @@
 /**
  * \file ST_params.c
- * \brief Reads and initializes the model parameters. 
- * 
+ * \brief Reads and initializes the model parameters.
+ *
  * Most of the parameters come from the input files and some are computed.
- * 
+ *
  * History
  * (6/15/2000) -- INITIAL CODING - cwb
  * (15-Apr-02)  -- added code to interface with SOILWAT (cwb)
  *                 only modified parm_Files_Init().
- * 
+ *
  * \author CWB (initial coding)
  * \author Chandler Haukap (author of this documentation)
  * \date 15 April 2002
@@ -760,10 +760,10 @@ static void _rgroup_init( void) {
    /* input variables*/
    Int estab, stretch, xres, turnon, estann,
        styr, veg_prod_type, mort;
-   RealF space, density, slow, 
+   RealF space, density, slow,
          nslope, nint, wslope, wint, dslope, dint, xgro;
    /* input variables related to disturbances */
-   Int extirp, killyr, killfreq_startyr, 
+   Int extirp, killyr, killfreq_startyr,
        grazingfreq_startyr;
    RealF  killfreq, prop_killed, prop_recovered,grazing_frq, prop_grazing, biomass,
         transpiration;
@@ -783,9 +783,9 @@ static void _rgroup_init( void) {
         break;
      }
      x=sscanf( inbuf, "%s %f %f %d %f %d %d %d %d %d %f %d %d %d %f %d %d %f %f"
-               " %f %f %d %f %f", name, &space, &density, &estab, &slow, 
+               " %f %f %d %f %f", name, &space, &density, &estab, &slow,
                &stretch, &xres, &estann, &turnon, &styr, &xgro, &veg_prod_type,
-               &killyr, &killfreq_startyr, &killfreq, &extirp, &mort, 
+               &killyr, &killfreq_startyr, &killfreq, &extirp, &mort,
                &prop_killed, &prop_recovered,&grazing_frq, &prop_grazing,
                &grazingfreq_startyr, &biomass, &transpiration);
      if (x < 22) {
@@ -796,12 +796,12 @@ static void _rgroup_init( void) {
     // Convert to SOILWAT2 vegetation index
     veg_prod_type = get_SW2_veg_index(veg_prod_type);
 
-     _rgroup_add1( name, space, density, estab, slow, stretch, xres, estann, 
-                   turnon, styr, xgro, veg_prod_type, mort, biomass, 
+     _rgroup_add1( name, space, density, estab, slow, stretch, xres, estann,
+                   turnon, styr, xgro, veg_prod_type, mort, biomass,
                    transpiration);
 
      _rgroup_add_disturbance(name, killyr, killfreq_startyr, killfreq,
-                   extirp, prop_killed, prop_recovered,grazing_frq, prop_grazing, 
+                   extirp, prop_killed, prop_recovered,grazing_frq, prop_grazing,
                    grazingfreq_startyr);
    }/* end while*/
 
@@ -877,11 +877,11 @@ static void _rgroup_add1( char name[], RealF space, RealF density,
                       RealF biomass, RealF transpiration) {
   GrpIndex rg;
   size_t len;
-  
+
   rg = RGroup_New();
-  
+
   len = strlen(name);
-  
+
   _setNameLen(RGroup[rg]->name, name, len);
   RGroup[rg]->grp_num       = rg;
   RGroup[rg]->max_stretch   = (IntS) stretch;
@@ -969,19 +969,19 @@ static void _rgroup_addsucculent( char name[], RealF wslope, RealF wint,
    Succulent->mort[Intcpt] = dint;
 }
 
-/** 
+/**
  * \brief Read the species-specific inputs and initialize the \ref Species
  *        array.
- * 
+ *
  * This function will read the species.in files and allocate enough memory
  * for the number of species requested. It then adds the species to the
- * \ref Species array and initializes all variables in the corresponding 
+ * \ref Species array and initializes all variables in the corresponding
  * \ref SpeciesType struct.
- * 
+ *
  * \sideeffect Memory will be allocated for multiple \ref SpeciesType structs
  *             and the memory will be populated according to the input
  *             parameters.
- * 
+ *
  * \ingroup SPECIES_PRIVATE
  */
 static void _species_init( void) {
@@ -1032,9 +1032,9 @@ static void _species_init( void) {
       }
 
       sp = species_New();
-      
+
       len = strlen(name);
-      
+
       _setNameLen(Species[sp]->name, name, len);
       Species[sp]->sp_num  = (SppIndex) sp;
       Species[sp]->res_grp = (GrpIndex) rg-1; /* file gives natural # */
@@ -1189,7 +1189,7 @@ static void _species_init( void) {
     }
 
     x = sscanf( inbuf, "%s %hd %f %f %f %f",
-                name, &turnondispersal, &p1, &HMAX, &PMD, &HSlope); 
+                name, &turnondispersal, &p1, &HMAX, &PMD, &HSlope);
     if(x < 6) {
       LogError(&LogInfo, LOGFATAL, "%s: Too few columns in species seed dispersal inputs", MyFileName);
     }

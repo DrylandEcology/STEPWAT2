@@ -2,10 +2,10 @@
  *  \file sxw.c
  *  \brief Interface module for the STEPWAT2 to SOILWAT
  *         data flow.
- * 
+ *
  *  Application: STEPWAT2 - plant community dynamics simulator
  *  coupled with the  SOILWAT2 model.
- *  History 
+ *  History
  *     (9-May-2002) -- INITIAL CODING - cwb
  *     28-Feb-02 - cwb - The model runs but plants die
  *         soon after establishment in a way that suggests
@@ -30,11 +30,11 @@
  *         defined with double vs single precision and take
  *         appropriate casting measures.
  *	07-16-12 (DLM) - made a ton of changes to try and
- *          get it to compile with the new updated version of soilwat (version 23) 
+ *          get it to compile with the new updated version of soilwat (version 23)
  *  11-15-19 - Chandler Haukap - The functionality described by cwb on February
  *         28 2002 has been entirely deprecated. I removed the last reference
  *         to SXW_BYMAXSIZE and _Grp_BMass today.
- * 
+ *
  * \author CWB (initial coding)
  * \author Chandler Haukap
  * \date 9 May 2002 (initial coding)
@@ -127,7 +127,7 @@ void copy_sxw_variables(SXW_t* newSXW, SXW_resourceType* newSXWResources, transp
 
 /**
  * \brief Read [SOILWAT2](\ref sw_src) input files and initialize variables.
- * 
+ *
  * \ingroup SXW
  */
 void SXW_Init( Bool init_SW, char *f_roots ) {
@@ -189,7 +189,7 @@ void SXW_Init( Bool init_SW, char *f_roots ) {
 
   SXW->NSoLyrs = SoilWatAll.Site.n_layers;
 
-  /* Print general information to stdout. 
+  /* Print general information to stdout.
      If we are using gridded mode this functionallity will be handled in ST_grid.c */
   if(!UseGrid){
     printf("Number of iterations: %d\n", SuperGlobals.runModelIterations);
@@ -246,7 +246,7 @@ static void SXW_Reinit(char* SOILWAT_file) {
  * `setGlobalSTEPWAT2_OutputVariables` because those variables are carrying
  * over from one STEPWAT2 iteration to the next. They are only de-allocated
  * at the end of an entire STEPWAT2 run (see `ST_main.c/main()`).
- * 
+ *
  * \ingroup SXW
  */
 void SXW_Reset(char* SOILWAT_file) {
@@ -255,11 +255,11 @@ void SXW_Reset(char* SOILWAT_file) {
 }
 
 /**
- * \brief Resets the SOILWAT2 transpiration tables. This should be called 
+ * \brief Resets the SOILWAT2 transpiration tables. This should be called
  *        every iteration.
- * 
+ *
  * \sa Plot_Init() where this function is called.
- * 
+ *
  * \ingroup SXW
  */
 void SXW_InitPlot (void) {
@@ -268,11 +268,11 @@ void SXW_InitPlot (void) {
 }
 
 /**
- * \brief Executes SOILWAT2 which generates soil water resources for plants to 
- *        utilize this year. 
- * 
+ * \brief Executes SOILWAT2 which generates soil water resources for plants to
+ *        utilize this year.
+ *
  * \sa Env_Generate() where this function is called.
- * 
+ *
  * \ingroup SXW
  */
 void SXW_Run_SOILWAT(void) {
@@ -290,7 +290,7 @@ void SXW_Run_SOILWAT(void) {
         //printf("First call to sizes: RGroup = %s, sizes[g] = %f\n", RGroup[g]->name, sizes[g]);
 
         ForEachEstSpp(sp, g, j) {
-            
+
             /* For annual species, increment the biomass that is passed into SOILWAT2 to also include last year's biomass, in addition to biomass due to establishment this year */
             if (Species[sp]->max_age == 1) {
 
@@ -593,16 +593,16 @@ static void _read_phen(void) {
 }
 
 /** \brief Read the values from the SXW prod file.
- * 
+ *
  * These values are LITTER, BIOMASS, and PCTLIVE. All three values are input
  * for each group for each month in separate two dimensional tables. If a table
  * if poorly formated, i.e. incorrect \ref RGroup names, incorrect number of
- * months, or incorrect number of \ref RGroups, this function will throw a 
+ * months, or incorrect number of \ref RGroups, this function will throw a
  * fatal error.
- * 
+ *
  * \sideeffect
  *         Populates multiple one dimensional and two dimensional arrays.
- * 
+ *
  * \ingroup SXW_private
  */
 static void _read_prod(void) {
@@ -797,13 +797,13 @@ static void _make_phen_arrays(void) {
 
 }
 
-/** \brief Allocate the "prod" arrays. 
- * 
+/** \brief Allocate the "prod" arrays.
+ *
  * _prod_bmass, _prod_pctlive, and _prod_litter from the \ref SXWResources
  * struct are all allocated here.
- * 
+ *
  * \sideeffect two arrays and one 2D array will be allocated.
- * 
+ *
  * \ingroup
  */
 static void _make_prod_arrays(void) {
@@ -992,7 +992,7 @@ void _print_debuginfo(void) {
 		sum2 += RGroup[r]->pr;
 		sum3 += SXWResources->_resource_cur[r];
 		fprintf(f, "%s\t%.4f\t%.4f\t%.4f\t\t%.4f\n", RGroup[r]->name, getRGroupRelsize(r),
-                RGroup[r]->pr, SXWResources->_resource_cur[r]/RGroup[r]->_bvt, 
+                RGroup[r]->pr, SXWResources->_resource_cur[r]/RGroup[r]->_bvt,
                 SXWResources->_resource_cur[r]);
 	}
 
@@ -1176,19 +1176,19 @@ int getNTranspLayers(int veg_prod_type) {
   return SoilWatAll.Site.n_transp_lyrs[veg_prod_type];
 }
 
-/** 
- * \brief Free the memory allocated to the SXW, transp_window, and 
+/**
+ * \brief Free the memory allocated to the SXW, transp_window, and
  *         SXWResources structs.
- * 
+ *
  * This function will free the memory of all pointers in the structs
  * then free the structs themselves. This function should always be preceded
  * by a call to \ref SXW_Init().
- * 
- * \sideeffect 
+ *
+ * \sideeffect
  *         All three variables mentioned will be completely deallocated.
- * 
+ *
  * \author Chandler Haukap
- * 
+ *
  * \ingroup SXW
  */
 void free_all_sxw_memory( void ) {

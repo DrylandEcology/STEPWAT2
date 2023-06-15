@@ -1,36 +1,36 @@
 /**
  * \file ST_stats.c
  * \brief Record keeping for the entire model.
- * 
+ *
  * Statistics are kept for all metrics of a plant's lifecycle.
  * These statistics are kept for [resource groups](\ref RGROUP),
- * [species](\ref SPECIES), [individuals](\ref INDIVIDUAL), and 
+ * [species](\ref SPECIES), [individuals](\ref INDIVIDUAL), and
  * [mortality events](\ref MORTALITY).
- * 
+ *
  *  History:
  *    (6/15/2000) -- INITIAL CODING - cwb
  *    1/9/01 - revised to make extensive use of malloc()
  *	  5/28/2013 (DLM) - added module level variable accumulators (grid_Stat) for the grid and functions.
  *    07/30/2016 (AKT) Fixed bug at std_dev calculation
- *    8/30/2019 (Chandler Haukap) - Removed grid_Stat accumulators and 
+ *    8/30/2019 (Chandler Haukap) - Removed grid_Stat accumulators and
  *           functionality. Gridded mode accumulators are now stored in the
- *           Celltype struct in ST_grid.h and swapped into this module using 
+ *           Celltype struct in ST_grid.h and swapped into this module using
  *           a call to stat_Copy_Accumulators().
- * 
+ *
  * \author Chris Bennett (initial coding)
  * \date 15 June 2000
- * 
+ *
  * \author DLM (added gridded mode variables and functions)
  * \date 28 May 2016
- * 
+ *
  * \author AKT (fixed bug in std_dev calculation)
  * \date 30 July 2016
- * 
+ *
  * \author Chandler Haukap (overhauled all changes made by DLM)
  * \author Kyle Palmquist
  * \author Freddy Pierson
  * \date 23 August 2019
- * 
+ *
  * \ingroup STATISTICS
  */
 
@@ -59,14 +59,14 @@ static RealF _get_avg( struct accumulators_st *p);
 static RealF _get_std( struct accumulators_st *p);
 
 /** \brief A macro for collecting statistics.
- * 
+ *
  * \param p is a pointer to the \ref accumulators_st which is collecting the data.
  * \param v is a double which will be collected.
- * 
+ *
  * Note that the syntax checker is obviated, so make sure
  * you follow the this prototype:
  * static void _collect_add(struct accumulators_st *p, double v).
- * 
+ *
  * \ingroup STATISTICS_PRIVATE
  */
 #define _collect_add(p, v) {					\
@@ -78,12 +78,12 @@ static RealF _get_std( struct accumulators_st *p);
 }
 
 /** \brief A macro that copies the data of p into v.
- * 
+ *
  * \param p is a pointer to the \ref accumulators_st to copy from.
  * \param v is a pointer to the \ref accumulators_st to copy to.
- * 
+ *
  * The correct usage is _copy_over(struct accumulators_st *p, struct accumulators_st *v).
- * 
+ *
  * \ingroup STATISTICS_PRIVATE
  */
 #define _copy_over(p, v) { \
@@ -102,15 +102,15 @@ static Bool firsttime = TRUE;
 
 /**
  * \brief Collects the requested statistics.
- * 
+ *
  * \param year is the year you are collecting. year should be base 1.
- * 
+ *
  * Statistics are collected for every metric specified in bmassflags.in
  * and mortflags.in.
- * 
+ *
  * \sa Stat_Output() which is where the collected statistics are printed
  *     to CSV files.
- * 
+ *
  * \ingroup STATISTICS
  */
 void stat_Collect( Int year ) {
@@ -189,13 +189,13 @@ void stat_Collect( Int year ) {
 
 /**
  * \brief initialize the statistics accumulators.
- * 
+ *
  * The function will allocate the accumulators. Note that this function only has to be
  * called once per simulation.
- * 
+ *
  * \sideeffect Accumulators are allocated memory based on which statistics are requested
  *             in bmassflags.in and mortflags.in.
- * 
+ *
  * \ingroup STATISTICS_PRIVATE
  */
 static void _init( void) {
@@ -380,7 +380,7 @@ static void _init( void) {
 
 /* Shallow copies StatType and FireStatsType pointers to the local pointers.
    This is intended to be used with gridded mode to load in a given cell */
-void stat_Copy_Accumulators(StatType* newDist, StatType* newPpt, StatType* newTemp, StatType* newGrp, StatType* newGsize, 
+void stat_Copy_Accumulators(StatType* newDist, StatType* newPpt, StatType* newTemp, StatType* newGrp, StatType* newGsize,
                             StatType* newGpr, StatType* newGmort, StatType* newGestab, StatType* newSpp, StatType* newIndv,
                             StatType* newSmort, StatType* newSestab, StatType* newSrecieved, FireStatsType* newGwf, Bool firstTime){
 
@@ -479,14 +479,14 @@ void stat_free_mem( void ) {
 
 /**
  * \brief Collects mortality statistics across iterations for all entries in \ref RGroup.
- * 
- * Mortality statistics are accumulated in species_Update_Kills(). stat_Collect_GMort should 
+ *
+ * Mortality statistics are accumulated in species_Update_Kills(). stat_Collect_GMort should
  * be called after every iteration to add the iteration to the simulation statistics.
- * 
+ *
  * \sideeffect \ref _Gmort will be modified according to the last iteration's mortality stats.
- * 
+ *
  * \sa species_Update_Kills().
- * 
+ *
  * \ingroup STATISTICS
  */
 void stat_Collect_GMort ( void ) {
@@ -505,14 +505,14 @@ void stat_Collect_GMort ( void ) {
 
 /**
  * \brief Collects mortality statistics across iterations for all entries in \ref Species.
- * 
- * Mortality statistics are accumulated in species_Update_Kills(). stat_Collect_SMort should 
+ *
+ * Mortality statistics are accumulated in species_Update_Kills(). stat_Collect_SMort should
  * be called after every iteration to add the iteration to the simulation statistics.
- * 
+ *
  * \sideeffect \ref _Smort will be modified according to the last iteration's mortality stats.
- * 
+ *
  * \sa species_Update_Kills().
- * 
+ *
  * \ingroup STATISTICS
  */
 void stat_Collect_SMort ( void ) {
@@ -532,10 +532,10 @@ void stat_Collect_SMort ( void ) {
 
 /**
  * \brief Prints mortality statistics to the file specified in Globals.mort.fp_year.
- * 
+ *
  * This function Will create the header and all entries in the yearly mortality output
  * file. The statistics output are those specified in mortflags.in.
- * 
+ *
  * \ingroup STATISTICS
  */
 void stat_Output_YrMorts( void ) {
@@ -597,10 +597,10 @@ void stat_Output_YrMorts( void ) {
 
 /**
  * \brief Outputs all mortality statistics.
- * 
+ *
  * The file they are printed to is denoted by \ref Parm_name().
  * The statistics printed are those denoted in the mortflags.in file.
- * 
+ *
  * \ingroup STATISTICS
  */
 void stat_Output_AllMorts( void) {
@@ -781,27 +781,27 @@ void stat_Output_AllBmass(void) {
 
 /**
  * \brief returns the average value of an accumulator.
- * 
+ *
  * This function works, but is deprecated. You can reference the
  * average directly with p->ave.
- * 
+ *
  * \param p is a pointer to the \ref accumulators_st.
- * 
+ *
  * \ingroup STATISTICS_PRIVATE
  */
-static RealF _get_avg( struct accumulators_st *p) 
+static RealF _get_avg( struct accumulators_st *p)
 {
 	return p->ave;
 }
 
 /**
  * \brief returns the standard deviation of an accumulator.
- * 
+ *
  * This function works, but is deprecated. You can reference the
  * standard deviation directly with p->sd.
- * 
+ *
  * \param p is a pointer to the \ref accumulators_st.
- * 
+ *
  * \ingroup STATISTICS_PRIVATE
  */
 static RealF _get_std(struct accumulators_st *p)
@@ -811,13 +811,13 @@ static RealF _get_std(struct accumulators_st *p)
 
 /**
  * \brief prints the header for biomass statistics with standard deviations.
- * 
+ *
  * This function is called when a header is requested in bmassflags.in.
  * stat_Output_AllBmass() takes care of calling this function when
  * requested.
- * 
+ *
  * \sa _make_header()
- * 
+ *
  * \ingroup STATISTICS_PRIVATE
  */
 void make_header_with_std( char *buf) {
@@ -900,19 +900,19 @@ void make_header_with_std( char *buf) {
     for (i = 0; i < MAX_OUTFIELDS * 2; i++) {
         Mem_Free(fields[i]);
     }
-    
+
     Mem_Free(fields);
 }
 
 /**
  * \brief prints the header for biomass statistics without standard deviations.
- * 
+ *
  * This function is called when a header is requested in bmassflags.in.
  * stat_Output_AllBmass() takes care of calling this function when
  * requested.
- * 
+ *
  * \sa _make_header_with_std()
- * 
+ *
  * \ingroup STATISTICS_PRIVATE
  */
 void make_header( char *buf) {
@@ -989,7 +989,7 @@ void make_header( char *buf) {
     for (i = 0; i < MAX_OUTFIELDS * 2; i++) {
         Mem_Free(fields[i]);
     }
-    
+
     Mem_Free(fields);
 }
 

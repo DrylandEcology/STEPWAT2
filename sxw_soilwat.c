@@ -1,10 +1,10 @@
 /**
  * \file sxw_soilwat.c
  * \brief Handles function calls to [SOILWAT2](\ref sw_src)
- * 
+ *
  * Functions in this file set up SOILWAT2 to be run inside of STEPWAT2.
  * This means allocating memory and running SOILWAT.
- * 
+ *
  *  History:
  *     (14-Apr-2002) -- INITIAL CODING - cwb
  *     28-Feb-02 - cwb - The model runs but plants die
@@ -23,8 +23,8 @@
  *                 other affected variables.  See notes in
  *                 sxw.c.
  *	08/01/2012 - DLM - updated _update_productivity() function
- *          to use the 3 different VegProds now used in soilwat 
- * 
+ *          to use the 3 different VegProds now used in soilwat
+ *
  * \author CWB (initial programming)
  * \date 14 April 2002
  * \author DLM
@@ -317,7 +317,7 @@ static void _update_productivity(RealF sizes[]) {
               k = RGroup[g]->veg_prod_type;
               v->veg[k].pct_live[m] += SXWResources->_prod_pctlive[Igp(g, m)] * RGroup[g]->rgroupFractionOfVegTypeBiomass;
 
-              v->veg[k].biomass[m] += SXWResources->_prod_bmass[Igp(g, m)] * 
+              v->veg[k].biomass[m] += SXWResources->_prod_bmass[Igp(g, m)] *
                                       bmassg[g] / v->veg[k].cov.fCover;
 
               v->veg[k].litter[m] += vegTypeBiomass[k] * SXWResources->_prod_litter[g][m];

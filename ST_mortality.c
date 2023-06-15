@@ -1,18 +1,18 @@
 /**
  * \file ST_mortality.c
- * \brief Implements all of the mortality functions.  
- * 
+ * \brief Implements all of the mortality functions.
+ *
  * mort_Main() is the entry point. All the other functions implement
  * a specific type of mortality or are support routines.
- *  
+ *
  * \author
  *     Chandler Haukap\n
  *     Kyle Palmquist\n
  *     Chris Bennett\n
  *     Ashish Tiwari
- * 
+ *
  * \date 23 August 2019
- * 
+ *
  * \ingroup MORTALITY
  */
 
@@ -80,7 +80,7 @@ static void _succulents( const SppIndex sp);
 static void _slow_growth( const SppIndex sp);
 static void _no_resources( GrpIndex rg);
 static void _age_independent( const SppIndex sp);
-static void _stretched_clonal( GrpIndex rg, Int start, Int last, 
+static void _stretched_clonal( GrpIndex rg, Int start, Int last,
                               IndivType *nlist[]);
 void _updateCheatgrassPrecip(int year);
 double _getCheatgrassCover(double biomass);
@@ -92,7 +92,7 @@ double _getCheatgrassBiomass(void);
 /********************** Private mortality objects ****************************/
 /**
  * \brief [Mortality](\ref MORTALITY)'s private precipitation information.
- * 
+ *
  * \author Chandler Haukap
  * \date 13 January 2020
  * \ingroup MORTALITY_PRIVATE
@@ -107,12 +107,12 @@ Bool *_SomeKillage = 0;
 
 /**
  * \brief Performs mortality that occurs during the growing season.
- * 
+ *
  *  This function reduces "plant-space" according to
- *  resource availability, age, growth rate, and fecal pats, 
- *  ant mounds, and animal burrows. Also, succulents are 
+ *  resource availability, age, growth rate, and fecal pats,
+ *  ant mounds, and animal burrows. Also, succulents are
  *  killed if it's a wet year.
- * 
+ *
  *  This function is not to be confused with mort_EndOfYear().
  *
  *  An important consideration is the fact that the age of new
@@ -123,7 +123,7 @@ Bool *_SomeKillage = 0;
  *  rgroup_Establish()).  However, for consistency with other
  *  arrays, the age-related arrays are indexed from 0.  Thus,
  *  age is base1 but the arrays are base0.
- * 
+ *
  *  The outline for this function is:\n
  *    1) Death by limited resources using eqns 7, 8, 9.\n
  *    2) Age independent mortality using eqn 14.\n
@@ -149,23 +149,23 @@ Bool *_SomeKillage = 0;
  *    eqn 16.  The parameters are defined in the group-parms and
  *    the reduction amount is computed in the Env module based
  *    on precipitation.
- *  - Execute disturbances from fecal pats, ant mounds, and animal 
+ *  - Execute disturbances from fecal pats, ant mounds, and animal
  *    burrows, if any.
- * 
- *  Note that other disturbances (i.e. fire and grazing) are implemented 
+ *
+ *  Note that other disturbances (i.e. fire and grazing) are implemented
  *  elsewhere.
- * 
+ *
  * \param killed Reference to a boolean. Set to TRUE if one or more
  *               individuals were killed in any species. FALSE otherwise.
- * 
+ *
  * \sideeffect Individuals are killed. Individuals are stored in a
- *             linked list in Species[sp]->IndivHead, so expect the 
+ *             linked list in Species[sp]->IndivHead, so expect the
  *             list to be modified for all sp.\n
  *             _SomeKillage will be set to TRUE if any individuals die.
- * 
+ *
  * \sa mort_EndOfYear()
  * \sa rgroup_Establish()
- * 
+ *
  * \ingroup MORTALITY
  */
 void mort_Main( Bool *killed) {
@@ -243,14 +243,14 @@ void mort_Main( Bool *killed) {
 
 /**
  * \brief Simulates prescribed fire for all [groups](\ref RGROUP).
- * 
+ *
  * Fire is simulated based on the flags read in from inputs.
- * 
+ *
  * \return TRUE if prescribed fire is on for at least one [group](\ref RGROUP).
  *         FALSE if prescribed fire is off for all [groups](\ref RGROUP).
- *         Note that the return values does _not_ indicate whether the 
+ *         Note that the return values does _not_ indicate whether the
  *         _current_ year is a fire year.
- * 
+ *
  * \author Chandler Haukap
  * \date January 2020
  * \ingroup MORTALITY_PRIVATE
@@ -261,11 +261,11 @@ Bool _simulatePrescribedFire(void) {
   Bool prescribedFireOn = FALSE;
 
   ForEachGroup(rg) {
-    if((Globals->currYear < RGroup[rg]->killfreq_startyr) || 
+    if((Globals->currYear < RGroup[rg]->killfreq_startyr) ||
        (RGroup[rg]->killfreq_startyr == 0)) {
       continue;
     }
-    
+
     if (RGroup[rg]->killfreq < 1) {
       prescribedFireOn = TRUE;
       /* -------------------- STOCHASTIC PRESCRIBED FIRE ------------------- */
@@ -275,7 +275,7 @@ Bool _simulatePrescribedFire(void) {
         RGroup[rg]->prescribedfire = 1;
       }
       /* ------------------ END STOCHASTIC PRESCRIBED FIRE ----------------- */
-    } else if (((Globals->currYear - RGroup[rg]->killfreq_startyr) % 
+    } else if (((Globals->currYear - RGroup[rg]->killfreq_startyr) %
                (IntU) RGroup[rg]->killfreq) == 0) {
       prescribedFireOn = TRUE;
       /* ------------ PRESCRIBED FIRE AT A FIXED RETURN INTERVAL ----------- */
@@ -296,24 +296,24 @@ Bool (*simulatePrescribedFire)(void) = _simulatePrescribedFire;
 /***********************************************************/
 /**
  * \brief Simulates fires and extirpation.
- * 
+ *
  * Implements killing of plants through wildfire, prescribed fire, or another event
  * that would result in mortality in single year (killyr) or
  * extirpation (extirp) where plants are killed and do not return.
- * 
+ *
  * If wildfire is simulated it will affect all individuals in all species in all rgroups.
- * If prescribed fire is simulated it is possible to specify inputs such that fire will 
+ * If prescribed fire is simulated it is possible to specify inputs such that fire will
  * only affect one rgroup.
- * 
+ *
  * \sideeffect If fire is simulated RGroup[rg]->killyr will be set to the current year.\n
  *             If fire is simulated all individuals in RGroup[rg] will be killed.\n
  *             If prescribed fire is simulated RGroup[rg]->prescribedfire will be set to 1.\n
  *             If wildfire is simulated RGroup[rg]->wildfire will be set to 1.\n
  *             If extirpation is performed all species in RGroup[rg] will be dropped.\n
- *             
+ *
  * \sa mort_Main()
  * \sa rgroup_Extirpate()
- * 
+ *
  * \ingroup MORTALITY
  */
 void mort_EndOfYear(void) {
@@ -324,11 +324,11 @@ void mort_EndOfYear(void) {
 
   /* Update the precipitation parameters that determine cheatgrass-driven
    * wildfire. This function call is commented out for the time being until the
-   * struct that it updates (cheatgrassPrecip) can be incorporated into the 
+   * struct that it updates (cheatgrassPrecip) can be incorporated into the
    * rest of the code. */
   // _updateCheatgrassPrecip(Globals->currYear);
   /* printf("%d:\tMeanSpring = %f\t ThisSpring = %f\t MeanWinter = %f\t LastWinter = %f\n",
-         Globals->currYear, cheatgrassPrecip->springMean, cheatgrassPrecip->currentSpring, 
+         Globals->currYear, cheatgrassPrecip->springMean, cheatgrassPrecip->currentSpring,
          cheatgrassPrecip->winterMean, cheatgrassPrecip->lastWinter); */
 
   /* Reset prescribedfire and wildfire for every RGroup. */
@@ -364,7 +364,7 @@ void mort_EndOfYear(void) {
       if (!RGroup[rg]->use_extra_res){
         continue;
       }
-      
+
       ForEachGroupSpp(sp, rg, j) {
         /* If the species is turned off, continue */
         if (!Species[sp]->use_me){
@@ -379,20 +379,20 @@ void mort_EndOfYear(void) {
 
 /**
  * \brief Implements grazing at the frequency and intensity that is specified in rgroup.in
- * 
+ *
  * This is a straightforward function. It checks if the current year is a grazing year for
- * every rgroup. If it is, it performs grazing on all species in the given group. 
- * 
+ * every rgroup. If it is, it performs grazing on all species in the given group.
+ *
  * Most of the time we want grazing to occur for all groups in the same year. However, this
  * function checks each RGroup individually, so any number of groups could be grazed in any
  * given year.
- * 
+ *
  * \sideeffect If RGroup[rg] is grazed every individual's biomass in every species in RGroup[rg]
  *            will be reduced based on RGroup[rg]->proportion_grazing.
- * 
+ *
  * \sa Species_Proportion_Grazing() this function is called to modify any species that need
  *                                  grazing.
- * 
+ *
  * \ingroup MORTALITY
  */
 void grazing_EndOfYear( void){
@@ -437,7 +437,7 @@ void grazing_EndOfYear( void){
 				{
 					continue;
 				}
-        
+
 				/* Remove plant biomass to implement grazing using the proportion_grazing specified in inputs */
 				Species_Proportion_Grazing(RGroup[rg]->est_spp[i],RGroup[rg]->proportion_grazing );
 			}
@@ -447,14 +447,14 @@ void grazing_EndOfYear( void){
 
 /**
  * \brief Initialize the variables necessary for cheatgrass-driven wildfire.
- * 
+ *
  * This function can be called multiple times, and should be called before
  * every iteration of the program. It will allocate memory the first time it is
  * run, then every subsequent time it will reset the fields to 0.
- * 
+ *
  * \sideeffect
  *     This function will allocate memory the first time it is run.
- * 
+ *
  * \sa CheatgrassPrecip
  * \author Chandler Haukap
  * \date 13 January 2020
@@ -483,13 +483,13 @@ void initCheatgrassPrecip(void) {
 }
 
 /**
- * \brief Free all memory allocated inside the 
+ * \brief Free all memory allocated inside the
  *        [mortality module](\ref MORTALITY).
- * 
+ *
  * \sideeffect
- *     All local variables that have been dynamically allocated will be 
+ *     All local variables that have been dynamically allocated will be
  *    deallocated.
- * 
+ *
  * \author Chandler Haukap
  * \date 14 January 2020
  * \ingroup MORTALITY
@@ -501,16 +501,16 @@ void freeMortalityMemory(void) {
 }
 
 /**
- * \brief Load a different CheatgrassPrecip struct into the 
+ * \brief Load a different CheatgrassPrecip struct into the
  *        [mortality](\ref MORTALITY) module.
- * 
- * This is particularly useful in [gridded mode](\ref GRID) where each 
+ *
+ * This is particularly useful in [gridded mode](\ref GRID) where each
  * [cell](\ref CellType) has it's own precipitation information.
- * 
- * As far as allocation goes, you can either allocate the new 
+ *
+ * As far as allocation goes, you can either allocate the new
  * \ref CheatgrassPrecip struct yourself, or, call this function then
  * call \ref initCheatgrassPrecip.
- * 
+ *
  * \author Chandler Haukap
  * \date 13 January 2020
  * \ingroup MORTALITY
@@ -521,10 +521,10 @@ void setCheatgrassPrecip(CheatgrassPrecip* newCheatgrassPrecip) {
 
 /**
  * \brief Returns a pointer to \ref cheatgrassPrecip.
- * 
+ *
  * This is necessary in [gridded mode](\ref GRID) in order to allocate more
  * than 1 \ref cheatgrassPrecip.
- * 
+ *
  * \sa setCheatgrassPrecip
  * \author Chandler Haukap
  * \date 14 January 2020
@@ -536,21 +536,21 @@ CheatgrassPrecip* getCheatgrassPrecip(void) {
 
 /**
  * \brief Updates \ref cheatgrassPrecip with the current year's precipitation.
- * 
+ *
  * Call this function before determining if a cheatgrass-driven wildfire should
  * occur for the given year.
- * 
+ *
  * Note that \ref cheatgrassPrecip must be allocated before calling this
  * function, either by calling \ref initCheatgrassPrecip or by allocating a new
  * \ref CheatgrassPrecip variable then calling \ref setCheatgrassPrecip.
- * 
+ *
  * \param year is the year in which this function is being called. It is
  *             necessary when calculating the running precipitation averages.
- * 
+ *
  * \sideeffect
  *     Every field in \ref cheatgrassPrecip will be updated to reflect this
  *     year's values.
- * 
+ *
  * \author Chandler Haukap
  * \date 13 January 2020
  * \ingroup MORTALITY_PRIVATE
@@ -563,14 +563,14 @@ void _updateCheatgrassPrecip(int year) {
   /* --------------------- Update the running averages --------------------- */
   if(year > 1) {
     // We only have a data point for the spring after year 1.
-    cheatgrassPrecip->springMean = 
-        get_running_mean(year - 1, cheatgrassPrecip->springMean, 
+    cheatgrassPrecip->springMean =
+        get_running_mean(year - 1, cheatgrassPrecip->springMean,
                          cheatgrassPrecip->currentSpring);
 
     if(year > 2) {
       // We only have a data point for the winter after year 2 because we need
       // The Oct - Dec values from 2 years previously
-      cheatgrassPrecip->winterMean = 
+      cheatgrassPrecip->winterMean =
           get_running_mean(year - 2, cheatgrassPrecip->winterMean,
                            cheatgrassPrecip->lastWinter);
     }
@@ -613,16 +613,16 @@ void _updateCheatgrassPrecip(int year) {
 
 /**
  * \brief Recovers biomass that represents re-sprouting after a fire.
- * 
+ *
  * This is controlled by proportion_recovered, specified in inputs and can be turned
  * on or off for each functional group, depending on their capacity to resprout.
- * 
+ *
  * \sideeffect If this year was a fire year for RGroup[rg] every individual in every
- *             species in RGroup[rg] will be given a chance to recover some biomass. 
- * 
+ *             species in RGroup[rg] will be given a chance to recover some biomass.
+ *
  * \sa Species_Proportion_Recovery() which is called by this function to determine
  *                                   how much biomass should be recovered.
- * 
+ *
  * \ingroup MORTALITY
  */
 void proportion_Recovery(void) {
@@ -632,7 +632,7 @@ void proportion_Recovery(void) {
     ForEachGroup(rg) {
 
         if (Globals->currYear < RGroup[rg]->startyr) {
-            /* Recovery of biomass after fire cannot occur for an RGroup[rg] until the year 
+            /* Recovery of biomass after fire cannot occur for an RGroup[rg] until the year
             * that RGroup[rg] is turned on */
             continue;
         }
@@ -669,19 +669,19 @@ void proportion_Recovery(void) {
 
 /**
  * \brief Implements mortality by fecal pats.
- * 
+ *
  * This function is called my mort_Main(). If there is a pat on the plot
  * it kills any annual individuals and any sensitive individuals.
- * 
+ *
  * \param sp The index of the species to potentially kill.
- * 
- * \sideeffect If Species[sp]->disturbclass is VerySensitive or Sensitive 
+ *
+ * \sideeffect If Species[sp]->disturbclass is VerySensitive or Sensitive
  *             all individuals of the species will be killed.\n
  *             _SomeKillage is set to TRUE if at least one individual is
  *             killed.
- * 
+ *
  * \sa mort_Main() where this function is called.
- * 
+ *
  * \ingroup MORTALITY_PRIVATE
  */
 static void _pat( const SppIndex sp) {
@@ -719,27 +719,27 @@ static void _pat( const SppIndex sp) {
     }
 
     if (k >= 0) *_SomeKillage = TRUE;
-    
+
     Mem_Free(kills);
 }
 
 
 /**
  * \brief Implements mortality by ant mounds.
- * 
+ *
  * This function is called my mort_Main(). If there is a mound on the plot
- * it kills most species with the exception of succulents (Coffin and 
+ * it kills most species with the exception of succulents (Coffin and
  * Lauenroth 1990).
- * 
+ *
  * \param sp The index of the species to potentially kill.
- * 
+ *
  * \sideeffect If Species[sp]->disturbclass is more sensitive than VeryInsensitive
  *             all individuals of the species will be killed.\n
  *             _SomeKillage is set to TRUE if at least one individual is
  *             killed.
- * 
+ *
  * \sa mort_Main() where this function is called.
- * 
+ *
  * \ingroup MORTALITY_PRIVATE
  */
 static void _mound( const SppIndex sp) {
@@ -765,19 +765,19 @@ static void _mound( const SppIndex sp) {
 
 /**
  * \brief Implements mortality by animal burrows.
- * 
+ *
  * This function is called my mort_Main(). If there is a burrow on the plot
  * it kills all individuals in Species[sp]
- * 
+ *
  * \param sp The index of the species to potentially kill.
- * 
- * \sideeffect Species[sp]->disturbclass doesn't matter for burrows. All 
+ *
+ * \sideeffect Species[sp]->disturbclass doesn't matter for burrows. All
  *             individuals are killed.
  *             _SomeKillage is set to TRUE if at least one individual is
  *             killed.
- * 
+ *
  * \sa mort_Main() where this function is called.
- * 
+ *
  * \ingroup MORTALITY_PRIVATE
  */
 static void _burrow( const SppIndex sp) {
@@ -798,22 +798,22 @@ static void _burrow( const SppIndex sp) {
 
 
 /**
- * \brief Reduces succulent biomass based on reduction specified in inputs 
+ * \brief Reduces succulent biomass based on reduction specified in inputs
  *        due to precipitation.
- * 
- * This function will remove the same amount of biomass from all individuals 
+ *
+ * This function will remove the same amount of biomass from all individuals
  * in Species[sp]. If the removal removes all biomass the individual is killed.
- * 
+ *
  * \param sp the index in Species of the succulent.
- * 
+ *
  * \sideeffect Some individuals of Species[sp] will most likely be killed, and
  *             all individuals will loose some biomass.\n
  *             _SomeKillage set to TRUE if some individuals were killed.
- * 
+ *
  * \sa indiv_Kill_Partial(), which is called to reduce biomass (but not kill).
  * \sa indiv_Kill_Complete(), which is called to kill individuals.
  * \sa mort_Main() where this function is called.
- * 
+ *
  * \ingroup MORTALITY_PRIVATE
  */
 static void _succulents( const SppIndex sp) {
@@ -837,17 +837,17 @@ static void _succulents( const SppIndex sp) {
 
 
   if (Species[sp]->est_count) *_SomeKillage = TRUE;
-  
+
   Mem_Free(kills);
 }
 
 
 /**
  * \brief Implements slow growth mortality.
- * 
- * Kill plants if the growth rate is less than the "slow rate" which is 
+ *
+ * Kill plants if the growth rate is less than the "slow rate" which is
  * defined by the user in the group-level parameters (max_slow) and in
- * the species-level parameters (max_rate). The slow rate is 
+ * the species-level parameters (max_rate). The slow rate is
  * growthrate <= max_slow * max_rate.
  *
  * Increment the counter for number of years of slow growth.
@@ -859,18 +859,18 @@ static void _succulents( const SppIndex sp) {
  *
  * Of course, annuals aren't subject to this mortality,
  * nor are 1 year old plants.
- * 
+ *
  * \param sp The index of the species in the Species array.
- * 
+ *
  * \sideeffect Calculates ndv->slow_yrs for all individuals in
- *                  the species.\n 
+ *                  the species.\n
  *              If ndv->slow_yrs passes the mortality threshold
  *                  the given individual is killed.\n
  *              _SomeKillage is set to TRUE is at least on individual
  *                  is killed.
- * 
+ *
  * \sa mort_Main() where this function is called.
- * 
+ *
  * \ingroup MORTALITY_PRIVATE
  */
 static void _slow_growth( const SppIndex sp) {
@@ -903,29 +903,29 @@ static void _slow_growth( const SppIndex sp) {
     indiv_Kill_Complete(kills[n], 8);
 
   if (k >= 0) *_SomeKillage = TRUE;
-  
+
   Mem_Free(kills);
 }
 
 /**
  * \brief Implements age-independent mortality.
- * 
- * Kills individuals in a species by the age-independent function (eqn 14) in 
+ *
+ * Kills individuals in a species by the age-independent function (eqn 14) in
  * C&L'90 assuming that AGEMAX was defined.
- * 
- * Annuals are NOT killed here. Also, if Species[sp]->max_age == 0 (a species 
+ *
+ * Annuals are NOT killed here. Also, if Species[sp]->max_age == 0 (a species
  * can live indefinitely) this function does nothing.
- * 
- * Initial programming by Chris Bennett @ LTER-CSU 6/15/2000  
- * 
+ *
+ * Initial programming by Chris Bennett @ LTER-CSU 6/15/2000
+ *
  * \param sp The index of the species in the Species array.
- * 
- * \sideeffect Some individuals from the Species[sp]->IndivHead linked list 
+ *
+ * \sideeffect Some individuals from the Species[sp]->IndivHead linked list
  *             might be removed if this function kills them.\n
  *             _SomeKillage will be set to TRUE is an individual is killed.
- * 
+ *
  * \sa mort_Main() where this function is called.
- * 
+ *
  * \ingroup MORTALITY_PRIVATE
  */
 static void _age_independent( const SppIndex sp) {
@@ -968,34 +968,34 @@ static void _age_independent( const SppIndex sp) {
 
 /**
  * \brief Kills individuals to simulate death by insufficient resources.
- * 
+ *
  * Note that this function does NOT check if resource availibility is low.
  * It kills an amount of individuals proportional to resource limitations,
  * but deciding if any individuals should be killed at all (whether or
  * not to call this function) takes place in mort_Main().
- * 
+ *
  * In reality, resource death would occur gradually over the growing
  * season. However, in this yearly-time-step model, it must be done either
- * before or after the growing season. 
- * 
+ * before or after the growing season.
+ *
  * This function takes an additional step with clonal species. It calls
- * _stretched_clonal() to kill additional amounts of clonal plants due 
+ * _stretched_clonal() to kill additional amounts of clonal plants due
  * to insufficient resources.
- * 
- * Note that to make it here, the rgroup's PR MUST BE > 1.0., which is 
+ *
+ * Note that to make it here, the rgroup's PR MUST BE > 1.0., which is
  * checked in \ref mort_Main().
- * 
+ *
  * Initial programming by Chris Bennett @ LTER-CSU 6/15/2000.
- * 
+ *
  * \param rg The Index in RGroup of the group to kill.
- * 
+ *
  * \sideeffect Individuals killed by this function will be removed from
  *             the corresponding individual linked list.\n
  *             _SomeKillage set to TRUE if an individual was killed.
- * 
+ *
  * \sa _stretched_clonal() which is called to perfom additional mortality.
  * \sa mort_Main() where _no_resources() is called.
- * 
+ *
  * \ingroup MORTALITY_PRIVATE
  */
 static void _no_resources( GrpIndex rg) {
@@ -1035,20 +1035,20 @@ static void _no_resources( GrpIndex rg) {
 
 /**
  * \brief Kill portions of clonal individuals when resources are limited.
- * 
+ *
  * Mortality is based on equations 8 and 9 of Coffin and Lauenroth (1990).
- * 
+ *
  * \param rg The group to perform mortality on.
  * \param start Index in nlist to start considering killing individuals.
  * \param last Index in nlist to stop considering killing.
  * \param nlist An array of IndivType pointers that are under consideration.
- * 
+ *
  * \sideeffect This function will kill individuals from nlist if there
  *             are any clonal individuals.\n
  *             _SomeKillage set to TRUE if an individual is killed.
- * 
+ *
  * \sa _no_resources() where this function is called.
- * 
+ *
  * \ingroup MORTALITY_PRIVATE
  */
 static void _stretched_clonal( GrpIndex rg, Int start, Int last,
@@ -1139,7 +1139,7 @@ static void _stretched_clonal( GrpIndex rg, Int start, Int last,
 
 /**
  * \brief Kill all individuals belonging to annual species
- * 
+ *
  * Loop through all species and kill the annual species.  This
  * routine should be called at the end of the year after
  * all growth happens and statistics are calculated and
@@ -1148,11 +1148,11 @@ static void _stretched_clonal( GrpIndex rg, Int start, Int last,
  * The assumption, of course, is that all of the annual
  * species that are established are indeed one year old.
  * See the discussion at the top of this file and in
- * indiv_create() for more details. 
- * 
+ * indiv_create() for more details.
+ *
  * \sideeffect All individuals in all annual species will
  *             be deleted.
- * 
+ *
  * \ingroup MORTALITY_PRIVATE
  */
 void killAnnuals( void) {
@@ -1171,17 +1171,17 @@ void killAnnuals( void) {
 }
 
 /**
- * \brief Remove superfluous growth due to extra resources accumulated during the 
- * growing season. 
- * 
- * This should be done after all the statistics are accumulated for the year. 
- * 
+ * \brief Remove superfluous growth due to extra resources accumulated during the
+ * growing season.
+ *
+ * This should be done after all the statistics are accumulated for the year.
+ *
  * Updated by KAP 5/2018.
- * 
+ *
  * \sideeffect Species[sp]->extragrowth will be set to 0 for all sp.\n
  *             If this results in 0 biomass for a species it will also be
  *             dropped from the RGroup.
- * 
+ *
  * \ingroup MORTALITY_PRIVATE
  */
 void killExtraGrowth(void) {
@@ -1200,7 +1200,7 @@ void killExtraGrowth(void) {
              * However, setting it to zero again is just as fast as checking. */
             Species[sp]->extragrowth = 0.0;
 
-            /* Now FINALLY remove individuals that were killed because of fire or grazing and set 
+            /* Now FINALLY remove individuals that were killed because of fire or grazing and set
              * relsizes to 0, and remove the Species if the following cases are true */
             if (getSpeciesRelsize(sp) <= 0.0) {
                 // printf("s->relsize in killExtraGrowth check1 before = %f\n", Species[sp]->relsize);
@@ -1220,12 +1220,12 @@ void killExtraGrowth(void) {
 
 /**
  * \brief Kill plants once they reach their maximum age.
- * 
+ *
  * Created by Frederick Pierson on 4/6/2019.
- * 
+ *
  * \sideeffect Every individual in every species that has reached it's
  *             max age will be deleted (killed).
- * 
+ *
  * \ingroup MORTALITY_PRIVATE
  */
 void killMaxage(void) {
@@ -1243,7 +1243,7 @@ void killMaxage(void) {
 
 /**
  * \brief Converts the biomass of cheatgrass to the % cover of cheatgrass.
- * 
+ *
  * This relationship is based on the equation presented in  Mahood et al. 2021
  * Cover-based allometric estimate of aboveground biomass of a non-native,
  * invasive annual grass (Bromus tectorum L.) in the Great Basin, USA.
@@ -1251,9 +1251,9 @@ void killMaxage(void) {
  * cover increases slightly as biomass decreases for biomass <= 1.53^2
  *
  * \param biomass is the biomass of cheatgrass.
- * 
+ *
  * \return A double 0 and 100 representing the percent cover of cheatgrass.
- * 
+ *
  * \author Chandler Haukap, Daniel Schlaepfer, Kyle Palmquist (implemented the code)
  * \date February 5 2020, updated November 10 2021
  * \ingroup MORTALITY_PRIVATE
@@ -1279,15 +1279,15 @@ double _getCheatgrassCover(double biomass) {
 
 /**
  * \brief Calculates the probability of a cheatgrass-driven wildfire occuring.
- * 
+ *
  * This equation was derived by Maggie England.
- * 
+ *
  * \param percentCover is the percent of the total plot covered in cheatgrass.
- *                     A value between 0 and 100 is expected. I suggest using 
+ *                     A value between 0 and 100 is expected. I suggest using
  *                     the \ref _getCheatgrassCover function.
- * 
+ *
  * \return A double between 0 and 1 representing the probability of a wildfire.
- * 
+ *
  * \author Maggie England (derived the equation)
  * \author Chandler Haukap (implemented the code)
  * \date February 5 2020
@@ -1299,13 +1299,13 @@ double _getWildfireProbability(double percentCover) {
 
 /**
  * \brief Returns the biomass of cheatgrass.
- * 
+ *
  * This function assumes that cheatgrass is present in the simulation and named
  * "brte".
- * 
- * \return The biomass of cheatgrass. 
+ *
+ * \return The biomass of cheatgrass.
  * \return -1 if cheatgrass cannot be found.
- * 
+ *
  * \author Chandler Haukap
  * \ingroup MORTALITY_PRIVATE
  */
@@ -1325,12 +1325,12 @@ double _getCheatgrassBiomass() {
 
 /**
  * \brief Simulates cheatgrass-driven wildfire.
- * 
+ *
  * \param cheatgrassBiomass the biomass of cheatgrass.
- * 
+ *
  * \return TRUE if a wildfire happens.
  * \return FALSE if no wildfire happens.
- * 
+ *
  * \author Chandler Haukap
  * \date February 6 2020
  * \ingroup MORTALITY_PRIVATE
@@ -1339,7 +1339,7 @@ Bool _simulateWildfire(double cheatgrassBiomass) {
   GrpIndex rg;
   double percentCover = _getCheatgrassCover(cheatgrassBiomass);
   Bool wildfire = FALSE;
-  
+
   if(RandUni(&mortality_rng) < _getWildfireProbability(percentCover)) {
     wildfire = TRUE;
     ForEachGroup(rg) {

@@ -1,8 +1,8 @@
 /**
  * \file ST_colonization.c
- * \brief Function definitions and private variables for the 
+ * \brief Function definitions and private variables for the
  *        [colonization](\ref COLONIZATION) module.
- * 
+ *
  * \author Chandler Haukap
  * \date January 2020
  * \ingroup COLONIZATION_PRIVATE
@@ -22,36 +22,36 @@ void _copyEvent(ColonizationEvent* dest, ColonizationEvent* src);
 /**
  * \brief All of the events this module will simulate, sorted by their start
  *        year.
- * 
+ *
  * \ingroup COLONIZATION_PRIVATE
  */
 ColonizationEvent* _allEvents = 0;
 
 /**
- * \brief The number of [events](\ref ColonizationEvent) in the 
+ * \brief The number of [events](\ref ColonizationEvent) in the
  *        \ref _allEvents array.
- * 
+ *
  * \ingroup COLONIZATION_PRIVATE
  */
 int _numberOfEvents = 0;
 
 /**
  * \brief The main function of the colonization module.
- * 
+ *
  * This function will perform all colonization events, meaning if an event is
  * supposed to occur in the given year it will provides seeds for the requested
  * species in the requested cell.
- * 
- * \param year is the current year. Year is input as a parameter, rather than 
- *             infered from a cell, to make sure that there is no descrepency 
+ *
+ * \param year is the current year. Year is input as a parameter, rather than
+ *             infered from a cell, to make sure that there is no descrepency
  *             between the current year of any [cell](\ref CellType).
- * 
+ *
  * \return TRUE if colonization occurred in any cell.
  * \return FALSE if nothing colonized in any cell.
- * 
+ *
  * \sideeffect
  *     If the species was turned off this function will also turn it on.
- * 
+ *
  * \author Chandler Haukap
  * \date January 2020
  * \ingroup COLONIZATION
@@ -60,7 +60,7 @@ Bool colonize(int year) {
   Bool somethingColonized = FALSE;
   ColonizationEvent* event;
   int i = 0, cell;
-  
+
   // While the startYear is earlier than the current year.
   while(i < _numberOfEvents && _allEvents[i].startYear <= year) {
     // If the event is occurring this year
@@ -86,17 +86,17 @@ Bool colonize(int year) {
 
 /**
  * \brief Initialize the colonization module from a file.
- * 
- * This function will allocate memory for every 
+ *
+ * This function will allocate memory for every
  * [colonization event](\ref ColonizationEvent) the user specified in the input
  * file.
- * 
+ *
  * It will then populate the \ref _allEvents array with the events, sorted from
  * earliest startYear to latest.
- * 
+ *
  * \param fileName The name of the file to open. This can be a relative path
  *                 or an absolute path.
- * 
+ *
  * \author Chandler Haukap
  * \date January 2020
  * \ingroup COLONIZATION
@@ -140,7 +140,7 @@ void initColonization(char* fileName) {
       }
     } else {
       // If the event only occurs in a single cell.
-      valuesRead = sscanf(inbuf, "%d,%d,%d,%s", &fromCell, &startYear, 
+      valuesRead = sscanf(inbuf, "%d,%d,%d,%s", &fromCell, &startYear,
                           &duration, name);
       // -1 means all cells.
       if(fromCell == -1){
@@ -244,10 +244,10 @@ void initColonization(char* fileName) {
 
 /**
  * \brief Free this module's memory
- * 
+ *
  * This function is safe to call more than once, but it only needs to be called
  * once per simulation.
- * 
+ *
  * \author Chandler Haukap
  * \date January 2020
  * \ingroup COLONIZATION
@@ -261,9 +261,9 @@ void freeColonizationMemory(void) {
 
 /**
  * \brief Copy one [event](\ref ColonizationEvent)'s information to an other.
- * 
+ *
  * Note that both events MUST be allocated prior to calling this function.
- * 
+ *
  * \author Chandler Haukap
  * \date January 2020
  * \ingroup COLONIZATION_PRIVATE

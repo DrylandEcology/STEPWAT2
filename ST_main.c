@@ -1,13 +1,13 @@
 /**
  * \file ST_main.c
  * \brief Main program loop and argument processing
- * 
+ *
  *  History:
  *     (6/15/2000) -- INITIAL CODING - cwb
  *     15-Apr-02 (cwb) -- added code to interface with SOILWAT
  *	   5-24-2013 (DLM) -- added gridded option to program... see ST_grid.c
- *               source file for the rest of the gridded code 
- * 
+ *               source file for the rest of the gridded code
+ *
  * \author CWB (initial programming)
  * \author DLM (added gridded mode option)
  * \author Kyle Palmquist
@@ -84,9 +84,9 @@ void Plot_Initialize( void);
 
 #ifndef STDEBUG
 /** \brief Prints a description of flags then exits the program.
- *  
+ *
  * Meant to be used when the user inputs an undefined flag.
- * 
+ *
  * \sa init_args(int argc, char **argv)
  */
 static void usage(void) {
@@ -205,7 +205,7 @@ int main(int argc, char **argv) {
 	allocate_Globals();
 
 	parm_Initialize();
-        
+
 	SXW_Init(TRUE, NULL); // allocate SOILWAT2-memory
 	SW_OUT_set_ncol(SoilWatAll.Site.n_layers, SoilWatAll.Site.n_evap_lyrs,
 					SoilWatAll.VegEstab.count, SoilWatAll.GenOutput.ncol_OUT); // set number of output columns
@@ -217,7 +217,7 @@ int main(int argc, char **argv) {
 		// allocate `p_OUT` and `p_OUTsd` arrays to aggregate SOILWAT2 output across iterations
 		setGlobalSTEPWAT2_OutputVariables();
 	}
-        
+
 	/* Connect to ST db and insert static data */
 	if(STdebug_requested){
 	    ST_connect("Output/stdebug");
@@ -277,13 +277,13 @@ int main(int argc, char **argv) {
 
 			// Moved kill annual and kill extra growth after we export biomass, and recovery of biomass after fire before the next year
 			killAnnuals();
-                        
+
 			killMaxage();
 
 			proportion_Recovery();
 
 			killExtraGrowth();
-			
+
 			// if the user requests the stdebug.sqlite3 file to be generated
 			// it is populated here.
 			if(STdebug_requested){
@@ -330,7 +330,7 @@ int main(int argc, char **argv) {
 		stat_Output_AllMorts();
 	if (BmassFlags.summary)
 		stat_Output_AllBmass();
-        
+
     /* Disconnect from the database */
 	if(STdebug_requested){
 		ST_disconnect();
@@ -358,10 +358,10 @@ int main(int argc, char **argv) {
 #endif
 
 /** \brief (re)initializes the plot.
- * 
+ *
  * Zeros out Species and RGroup and kills all individuals.
  * Finally this function resets sxw.
- * 
+ *
  * \sa SXW_InitPlot(void)
  */
 void Plot_Initialize(void) {
@@ -512,7 +512,7 @@ void deallocate_Globals(Bool isGriddedMode){
 		Mem_Free(Plot);
 		Mem_Free(_SomeKillage);
 	}
-	
+
 	/* Free Species */
 	ForEachSpecies(sp){
 		/* Start by freeing any pointers in the Species struct */
@@ -531,7 +531,7 @@ void deallocate_Globals(Bool isGriddedMode){
 		Mem_Free(Species[sp]);
 	}
 	/* Then free the entire array */
-	Mem_Free(Species); 
+	Mem_Free(Species);
 
 	/* Free RGroup */
 	ForEachGroup(rg){
@@ -547,10 +547,10 @@ void deallocate_Globals(Bool isGriddedMode){
 }
 
 /** \brief Translates the input flags to in program flags.
- * 
+ *
  * The recognised flags are -d, -f, -q, -e, -p, -g, -o, -i, -s and -S.
- * Note that flags are case sensitive. 
- * 
+ * Note that flags are case sensitive.
+ *
  * When the -f flag is uses this function looks next for the name of the file.
  */
 static void init_args(int argc, char **argv) {
@@ -726,10 +726,10 @@ static void init_args(int argc, char **argv) {
 }
 
 /** \brief Prints a warning if there is an entry in the logfile
- * 
- * The warning is printed to the progress file, which is usually the 
+ *
+ * The warning is printed to the progress file, which is usually the
  * same as stdout.
- * 
+ *
  * check_log is registered to run automatically at exit.
  */
 static void check_log(void) {
@@ -746,9 +746,9 @@ static void check_log(void) {
 #endif
 
 /** \brief Compares the getRelsize funcitons to calculated values.
- * 
- * Used for debugging. 
- * 
+ *
+ * Used for debugging.
+ *
  * \sa getSpeciesRelsize
  * \sa getRGroupRelsize
  */

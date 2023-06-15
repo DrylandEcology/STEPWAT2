@@ -1,10 +1,10 @@
 /**
  * \file ST_output.c
- * \brief Outputs mortality or biomass on a yearly time step. 
- * 
+ * \brief Outputs mortality or biomass on a yearly time step.
+ *
  * This file differs from \ref ST_stats.c because it does not accumulate values.
  * It simply prints the values to the given year.
- * 
+ *
  * \ingroup OUTPUT
  */
 
@@ -35,11 +35,11 @@
 
 
 /**
- * \brief Outputs the current year's values to the file denoted in 
+ * \brief Outputs the current year's values to the file denoted in
  *        [Globals.bmass.fp_year](\ref Globals)
- * 
+ *
  * \param year is the year that these values are being printed. This is 1 indexed.
- * 
+ *
  * \ingroup OUTPUT
  */
 void output_Bmass_Yearly( Int year ) {
@@ -79,7 +79,7 @@ void output_Bmass_Yearly( Int year ) {
       if(BmassFlags.wildfire){
         strcpy(fields[fc++], "Wildfire");
       }
-      ForEachGroup(rg) 
+      ForEachGroup(rg)
       {
         strcpy(fields[fc++], RGroup[rg]->name);
         if (BmassFlags.size) {
@@ -201,9 +201,9 @@ void output_Bmass_Yearly( Int year ) {
 /**
  * \brief Outputs the current year's values to the file specified in
  *        [Globals->mort.fp_year](\ref Globals)
- * 
+ *
  * Prints mortality values. These values are indexed by age at death.
- * 
+ *
  * \ingroup OUTPUT
  */
 void output_Mort_Yearly( void ) {

@@ -1,8 +1,8 @@
-/** 
+/**
  * \file ST_environs.c
- * \brief Controls all environmental phenomenon from creating ppt and temp to 
+ * \brief Controls all environmental phenomenon from creating ppt and temp to
  *        creating the disturbances.
- * 
+ *
  * \author CWB (initial coding)
  * \date 15 June 2000
  * \ingroup ENVIRONMENT
