@@ -136,6 +136,7 @@ void files_init( void ) {
   FILE *f;
   ST_FileIndex i;
   ST_FileIndex last = F_MaxRGroupSpecies;
+  char inbuf[MAX_FILENAMESIZE];
 
   MyFileName = Parm_name(F_First);
 
@@ -168,7 +169,7 @@ static void _model_init( void) {
 /*======================================================*/
    FILE *f;
    int seed, years;
-   char tmp[80];
+   char tmp[80], inbuf[MAX_FILENAMESIZE];
 
    MyFileName = Parm_name(F_Model);
    f = OpenFile(MyFileName, "r", &LogInfo);
@@ -211,6 +212,7 @@ static void _env_init( void) {
        index=0,
        nitems,
        use[3];
+    char inbuf[MAX_FILENAMESIZE];
 
    MyFileName = Parm_name(F_Env);
    f = OpenFile(MyFileName, "r", &LogInfo);
@@ -285,6 +287,7 @@ static void _plot_init( void) {
 
    FILE *f;
    int x, nitems=1;
+   char inbuf[MAX_FILENAMESIZE];
 
    MyFileName = Parm_name(F_Plot);
    f = OpenFile(MyFileName, "r", &LogInfo);
@@ -453,6 +456,8 @@ static void _bmassflags_init( void) {
         s[5],  /* biomass for each species */
         n[5];  /* number of individuals for each species */
    char z;
+   char inbuf[MAX_FILENAMESIZE], bMassAvgFile[FILENAME_MAX],
+        bMassPreFile[FILENAME_MAX];
 
    MyFileName = Parm_name(F_BMassFlag);
    fin = OpenFile(MyFileName, "r", &LogInfo);
@@ -539,29 +544,31 @@ static void _bmassflags_init( void) {
    /* -- do avg file first, otherwise it may get deleted by match
     *    with BMassPre and then not be there for specific delete.
     */
-   if (DirExists(DirName(Parm_name(F_BMassAvg)))) {
+   DirName(Parm_name(F_BMassAvg), bMassAvgFile);
+   if (DirExists(bMassAvgFile)) {
      strcpy(inbuf, Parm_name(F_BMassAvg));
-     if (!RemoveFiles(inbuf) )
-       LogError(logfp, LOGWARN, "Can't remove old average biomass output file %s\n%s",
+     if (!RemoveFiles(inbuf, &LogInfo) )
+       LogError(&LogInfo, LOGWARN, "Can't remove old average biomass output file %s\n%s",
                 inbuf, strerror(errno) );
 
-   } else if (!MkDir(DirName(Parm_name(F_BMassAvg))) ) {
-     LogError(logfp, LOGFATAL,
+   } else if (!MkDir(bMassAvgFile) ) {
+     LogError(&LogInfo, LOGFATAL,
               "Can't make output path for average biomass file: %s\n%s",
-              DirName(Parm_name(F_BMassAvg)), strerror(errno));
+              bMassAvgFile, strerror(errno));
    }
 
-   if (DirExists(DirName(Parm_name(F_BMassPre)))) {
+   DirName(Parm_name(F_BMassPre), bMassPreFile);
+   if (DirExists(bMassPreFile)) {
      strcpy(inbuf, Parm_name(F_BMassPre));
      strcat(inbuf, "*.csv");
-     if (!RemoveFiles(inbuf) )
-       LogError(logfp, LOGWARN, "Can't remove old biomass output files %s\n%s",
+     if (!RemoveFiles(inbuf, &LogInfo) )
+       LogError(&LogInfo, LOGWARN, "Can't remove old biomass output files %s\n%s",
                 inbuf, strerror(errno) );
 
-   } else if (!MkDir(DirName(Parm_name(F_BMassPre))) ) {
-       LogError(logfp, LOGFATAL,
+   } else if (!MkDir(bMassPreFile)) {
+       LogError(&LogInfo, LOGFATAL,
                 "Can't make output path for yearly biomass files: %s\n%s",
-                DirName(Parm_name(F_BMassPre)), strerror(errno) );
+                bMassPreFile, strerror(errno) );
    }
 
 }
@@ -585,6 +592,8 @@ static void _mortflags_init( void) {
         g[5],  /* group data */
         k[5];  /* species data */
    char z;
+   char inbuf[MAX_FILENAMESIZE], mortAvgFile[FILENAME_MAX],
+        mortPreFile[FILENAME_MAX];
 
 
    MyFileName = Parm_name(F_MortFlag);
@@ -644,30 +653,31 @@ static void _mortflags_init( void) {
    /* -- do avg file first, otherwise it may get deleted by match
     *    with MortPre and then not be there for specific delete.
     */
-   if (DirExists(DirName(Parm_name(F_MortAvg)))) {
+    DirName(Parm_name(F_MortAvg), mortAvgFile);
+   if (DirExists(mortAvgFile)) {
      strcpy(inbuf, Parm_name(F_MortAvg));
-     if (!RemoveFiles(inbuf) )
-       LogError(logfp, LOGWARN, "Can't remove old average biomass output file %s\n%s",
+     if (!RemoveFiles(inbuf, &LogInfo) )
+       LogError(&LogInfo, LOGWARN, "Can't remove old average biomass output file %s\n%s",
                 inbuf, strerror(errno) );
 
-   } else if (!MkDir(DirName(Parm_name(F_MortAvg))) ) {
-     LogError(logfp, LOGFATAL,
+   } else if (!MkDir(mortAvgFile)) {
+     LogError(&LogInfo, LOGFATAL,
               "Can't make output path for average biomass file: %s\n%s",
-              DirName(Parm_name(F_MortAvg)), strerror(errno));
+              mortAvgFile, strerror(errno));
    }
 
-
-   if (DirExists(DirName(Parm_name(F_MortPre)))) {
+   DirName(Parm_name(F_MortAvg), mortPreFile);
+   if (DirExists(mortPreFile)) {
      strcpy(inbuf, Parm_name(F_MortPre));
      strcat(inbuf, "*.csv");
-     if (!RemoveFiles(inbuf) )
-       LogError(logfp, LOGWARN, "Can't remove old biomass output files %s\n%s",
+     if (!RemoveFiles(inbuf, &LogInfo) )
+       LogError(&LogInfo, LOGWARN, "Can't remove old biomass output files %s\n%s",
                 inbuf, strerror(errno) );
 
-   } else if (!MkDir(DirName(Parm_name(F_MortPre))) ) {
-       LogError(logfp, LOGFATAL,
+   } else if (!MkDir(mortPreFile) ) {
+       LogError(&LogInfo, LOGFATAL,
                 "Can't make output path for yearly biomass files: %s\n%s",
-                DirName(Parm_name(F_MortPre)), strerror(errno) );
+                mortPreFile, strerror(errno) );
    }
 
 }
@@ -755,7 +765,7 @@ static void _rgroup_init( void) {
    Bool groupsok;
 
    /* temp vars to hold the group info*/
-   char *name;
+   char *name, inbuf[MAX_FILENAMESIZE];
 
    /* input variables*/
    Int estab, stretch, xres, turnon, estann,
@@ -1007,7 +1017,7 @@ static void _species_init( void) {
    RealF irate, ratep, estab, minb, maxb, cohort, xdecay,
          p1, p2, p3, p4, HMAX, PMD, HSlope;
    float var;
-   char clonal[5];
+   char clonal[5], inbuf[MAX_FILENAMESIZE];
 
    MyFileName = Parm_name( F_Species);
    f = OpenFile(MyFileName, "r", &LogInfo);

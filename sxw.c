@@ -161,7 +161,7 @@ void SXW_Init( Bool init_SW, char *f_roots ) {
   _read_files();
   if(f_roots != NULL) {
 	  //Copy the directory for the sxwroots files
-	  strcpy(roots, DirName(*_sxwfiles[0]));
+	  DirName(*_sxwfiles[0], roots);
 	  strcat(roots, f_roots);
 	  Mem_Free(*_sxwfiles[0]);
 	  _sxwfiles[0] = &SXW->f_roots;
@@ -486,6 +486,7 @@ static void  _read_files( void ) {
   /* read list of input files.   */
   FILE *fin;
   int i, nfiles = SXW_NFILES;
+  char inbuf[MAX_FILENAMESIZE];
 
   SXW->f_files = Parm_name(F_SXW);  /* aliased */
   MyFileName = SXW->f_files;
@@ -511,7 +512,7 @@ static void  _read_roots_max(void) {
 	GrpIndex g;
 	int cnt = 0, lyr;
 	char *p;
-	char *name;
+	char *name, inbuf[MAX_FILENAMESIZE];
 	FILE *fp;
 
 	name = (char *)Mem_Calloc(SuperGlobals.max_groupnamelen + 1, sizeof(char), "_read_roots_max", &LogInfo);
@@ -556,7 +557,7 @@ static void _read_phen(void) {
   GrpIndex g;
   IntUS cnt=0;
   TimeInt m;
-  char *p;
+  char *p, inbuf[MAX_FILENAMESIZE];
   FILE *fp;
 
   MyFileName = SXW->f_phen;
@@ -611,7 +612,7 @@ static void _read_prod(void) {
 
 	GrpIndex g;
 	IntUS count = 0;
-	char *p;
+	char *p, inbuf[MAX_FILENAMESIZE];
 	char * pch;
 	MyFileName = SXW->f_prod;
 	fp = OpenFile(MyFileName, "r", &LogInfo);
@@ -735,6 +736,7 @@ static void _read_watin(void) {
    FILE *f;
    int lineno = 0;
    Bool found = FALSE;
+   char inbuf[MAX_FILENAMESIZE], outString[MAX_FILENAMESIZE];
 
    MyFileName = SXW->f_watin;
    f = OpenFile(MyFileName, "r", &LogInfo);
@@ -742,7 +744,8 @@ static void _read_watin(void) {
 
    while( GetALine(f, inbuf) ) {
      if (++lineno == (eOutput + 2)) {
-       strcpy(_swOutDefName, DirName(SXW->f_watin));
+       DirName(SXW->f_watin, outString);
+	   strcpy(_swOutDefName, outString);
        strcat(_swOutDefName, inbuf);
        found = TRUE;
        break;
@@ -878,7 +881,7 @@ static void _read_debugfile(void) {
 	char *date, str[102];
 	int cnt = 0;
 	TimeInt i;
-	char name[256] = {0};
+	char name[256] = {0}, inbuf[MAX_FILENAMESIZE], errstr[MAX_ERROR];
 
 	f = OpenFile(SXW->debugfile, "r", &LogInfo);
 
@@ -950,7 +953,7 @@ void _print_debuginfo(void) {
 	strcpy(vegProdNames[SW_FORBS], "FORB");
 	char name[256] = {0};
 	strcat(name, _debugout);
-	f = OpenFile(strcat(name, ".output.out"), "a");
+	f = OpenFile(strcat(name, ".output.out"), "a", &LogInfo);
 
 	if (!beenhere) {
 		beenhere = TRUE;
