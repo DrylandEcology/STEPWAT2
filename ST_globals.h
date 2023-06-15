@@ -2,12 +2,12 @@
 /**
  * \file ST_globals.h
  * \brief Defines the globally available variables.
- * 
+ *
  * Defines the globally available variables to access/manipulate the various
  * "objects". Except for \ref ST_main.c, all modules requiring access to a
- * global variable will reference this file. \ref ST_main.c module actually 
+ * global variable will reference this file. \ref ST_main.c module actually
  * declares these variables.
- * 
+ *
  * \author CWB (initial programming)
  * \date 15 June 2000
  * \author Chandler Haukap (changed all variables to pointers)
@@ -20,6 +20,7 @@
 
 #include "ST_defines.h"
 #include "ST_functions.h"
+#include "sw_src/include/sw_datastructs.h"
 
 extern SpeciesType  **Species;
 extern GroupType    **RGroup;
@@ -30,6 +31,10 @@ extern ModelType      *Globals;
 extern BmassFlagsType BmassFlags;
 extern MortFlagsType  MortFlags;
 extern GlobalType     SuperGlobals;
+extern SW_ALL SoilWatAll;
+extern SW_OUTPUT_POINTERS SoilWatOutputPtrs;
+extern LOG_INFO LogInfo;
+extern PATH_INFO PathInfo;
 
 extern Bool UseGrid;
 extern Bool UseProgressBar;

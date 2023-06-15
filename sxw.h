@@ -2,18 +2,18 @@
  * \file sxw.h
  * \brief Contains function declarations, global variables,
  *        etc required to interface STEPPE with SOILWAT.
- * 
+ *
  * The structs, functions, variables, and macros defined in this file
- * facilitate the conversion of SOILWAT2 output into STEPWAT2 input. 
- * 
+ * facilitate the conversion of SOILWAT2 output into STEPWAT2 input.
+ *
  * \author
  *     Kyle Palmquist\n
  *     Daniel Schlaepfer\n
  *     Chandler Haukap\n
  *     Chris Bennett\n
- * 
+ *
  * \date 22 August 2019
- * 
+ *
  * \ingroup SXW
  */
 
@@ -71,15 +71,15 @@ typedef struct stepwat_st {
   char *debugfile; /* added in ST_Main(), read to get debug instructions */
 } SXW_t;
 
-/** 
+/**
  * \brief Stores statistics on transpiration over a window defined in inputs.
- * 
- * transp_data stores three arrays: ratios, transp, and sum of squares. These arrays form 
+ *
+ * transp_data stores three arrays: ratios, transp, and sum of squares. These arrays form
  * a moving window that stores "size" years worth of previous transpiration data.
  * average, ratio_average, and sum_of_sqrs all store summaries of their respective arrays
- * so that you do not have to iterate through the arrays every time to get information. 
+ * so that you do not have to iterate through the arrays every time to get information.
  * size and add_here deal directly with manipulating the arrays.
- * 
+ *
  * \ingroup SXW
  */
 typedef struct transp_data {
@@ -94,7 +94,7 @@ typedef struct transp_data {
   // sum of all (xi - mean)^2 values currently inside SoS_array[]. It should be updated every
   // time a value is added to SoS_array[].
   RealF sum_of_sqrs;
-  
+
   // The size off all arrays(see below) is MAX_WINDOW. How much of that window we use is determined
   // by size. size should be set before using a transp_data struct, and must be between 1 and MAX_WINDOW
   int size;
@@ -110,7 +110,7 @@ typedef struct transp_data {
   // ratios[] stores (transpiration/precipitation) values. It is used to keep track of
   // what value needs to be removed from the moving average.
   RealF* ratios; // transp/ppt
-  
+
   // transp[] stores transpiration values. It is used to keep track of what value needs to be
   // removed from the moving ratio_average.
   RealF* transp; // transp
@@ -131,7 +131,7 @@ typedef struct transp_data {
 typedef struct temp_SXW_st{
   /* ----- 3d arrays ------- */
   RealD * _rootsXphen, /* relative roots X phen in each lyr,grp,pd */
-        * _roots_active, // "active" in terms of size and phenology 
+        * _roots_active, // "active" in terms of size and phenology
                          // relative to the total roots_phen_lyr_group
         * _roots_active_rel;
 
@@ -140,10 +140,10 @@ typedef struct temp_SXW_st{
   /* rgroup by layer, ie, group-level values */
   RealD * _roots_max,     // root distribution with depth for STEPPE functional
                           // groups, read from input.
-        * _roots_active_sum, // active roots in each month and soil layer for 
-                             // STEPPE functional groups in the current year.
+        * _roots_active_sum, // active roots in each month and soil layer for
+                             // STEPPE functional groups in the current year.time
         /* rgroup by period */
-        * _phen;          // phenological activity for each month for STEPPE 
+        * _phen;          // phenological activity for each month for STEPPE
                           // functional groups, read from input.
 
   /* simple vectors hold the resource information for each group */
@@ -192,5 +192,9 @@ extern SXW_t *SXW;
 extern SXW_resourceType *SXWResources;
 extern pcg32_random_t resource_rng;
 extern transp_t *transp_window;
+extern SW_ALL SoilWatAll;
+extern LOG_INFO LogInfo;
+extern PATH_INFO PathInfo;
+extern SW_OUTPUT_POINTERS SoilWatOutputPtrs;
 
 #endif

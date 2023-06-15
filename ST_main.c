@@ -138,6 +138,16 @@ PlotType       *Plot;
 ModelType      *Globals;
 /** \brief Global struct holding biomass output flags. */
 GlobalType     SuperGlobals;
+/** \brief Global struct holding SOILWAT2 variables*/
+SW_ALL         SoilWatAll;
+/** \brief Global struct holding pointers to output subroutines */
+SW_OUTPUT_POINTERS SoilWatOutputPtrs;
+/** \brief Global struct holding log information (used by SOILWAT2) */
+LOG_INFO       LogInfo;
+/** \brief Global struct holding path information of SOILWAT2 (used by SOILWAT2) */
+PATH_INFO      PathInfo;
+/** \brief Local booleans to echo inputs/any output (used by SOILWAT2) */
+Bool           EchoInits, QuietMode;
 
 BmassFlagsType BmassFlags;
 /** \brief Global struct holding mortality output flags. */
