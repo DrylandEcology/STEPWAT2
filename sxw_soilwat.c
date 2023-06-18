@@ -152,7 +152,7 @@ void _sxw_sw_run(void) {
 /*======================================================*/
 	SoilWatAll.Model.year = SoilWatAll.Model.startyr + Globals->currYear-1;
 
-	SW_CTL_run_current_year(&SoilWatAll, &SoilWatOutputPtrs, &PathInfo, &LogInfo);
+	SW_CTL_run_current_year(&SoilWatAll, SoilWatOutputPtrs, &PathInfo, &LogInfo);
 }
 
 void _sxw_sw_clear_transp(void) {

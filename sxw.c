@@ -221,7 +221,7 @@ static void SXW_Reinit(char* SOILWAT_file) {
 
 	// setup and construct model (independent of inputs)
 	PathInfo.InFiles[eFirst] = strdup(SOILWAT_file);
-	SW_CTL_setup_model(&SoilWatAll, &SoilWatOutputPtrs, &PathInfo, &LogInfo);
+	SW_CTL_setup_model(&SoilWatAll, SoilWatOutputPtrs, &PathInfo, &LogInfo);
 
 	free(PathInfo.InFiles[eFirst]);
 	PathInfo.InFiles[eFirst] = strdup(SOILWAT_file);
