@@ -273,9 +273,11 @@ void runGrid(void)
 						SoilWatAll.GenOutput.ncol_OUT,
 						SoilWatAll.GenOutput.colnames_OUT, &LogInfo); // set column names for output files
     if (_getNumberSOILWAT2OutputCells() > 0) {
-		SW_OUT_create_summary_files();
+		SW_OUT_create_summary_files(&SoilWatAll.FileStatus, SoilWatAll.Output,
+									&SoilWatAll.GenOutput, PathInfo.InFiles,
+									SoilWatAll.Site.n_layers, &LogInfo);
 		// allocate `p_OUT` and `p_OUTsd` arrays to aggregate SOILWAT2 output across iterations
-		setGlobalSTEPWAT2_OutputVariables();
+		setGlobalSTEPWAT2_OutputVariables(SoilWatAll.Output, &SoilWatAll.GenOutput, &LogInfo);
     }
 
 	for (iter = 1; iter <= SuperGlobals.runModelIterations; iter++)
@@ -482,7 +484,7 @@ static void _init_grid_files(void)
 		grid_directories[i] = Str_Dup(Str_TrimLeftQ(buf), &LogInfo);
 	}
 	if (i != N_GRID_DIRECTORIES)
-		LogError(stderr, LOGFATAL, "Invalid files.in");
+		LogError(&LogInfo, LOGFATAL, "Invalid files.in");
 
 	for (i = 0; i < N_GRID_FILES; i++)
 	{
@@ -491,7 +493,7 @@ static void _init_grid_files(void)
 		grid_files[i] = Str_Dup(Str_TrimLeftQ(buf), &LogInfo);
 	}
 	if (i != N_GRID_FILES)
-		LogError(stderr, LOGFATAL, "Invalid files.in");
+		LogError(&LogInfo, LOGFATAL, "Invalid files.in");
 
 	// opens the log file...
 	if (!strcmp("stdout", grid_files[GRID_FILE_LOGFILE])){
