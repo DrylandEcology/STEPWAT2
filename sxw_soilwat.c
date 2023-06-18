@@ -151,10 +151,8 @@ void _sxw_generate_weather(void) {
 void _sxw_sw_run(void) {
 /*======================================================*/
 	SoilWatAll.Model.year = SoilWatAll.Model.startyr + Globals->currYear-1;
-  memcpy(&SoilWatAll.GenOutput.Globals, &Globals, sizeof(ModelType));
-  memcpy(&SoilWatAll.Model.SuperGlobals, &SuperGlobals, sizeof(GlobalType));
+
 	SW_CTL_run_current_year(&SoilWatAll, &SoilWatOutputPtrs, &PathInfo, &LogInfo);
-  memcpy(&SoilWatAll.GenOutput.SXW, &SXW, sizeof(SXW_t));
 }
 
 void _sxw_sw_clear_transp(void) {

@@ -12,6 +12,8 @@
 /*                INCLUDES / DEFINES                   */
 /* --------------------------------------------------- */
 
+#include <string.h>
+
 #include "ST_steppe.h"
 #include "ST_globals.h"
 #include "sw_src/external/pcg/pcg_basic.h"
@@ -46,8 +48,9 @@ void Env_Generate( void) {
 /* Chris Bennett @ LTER-CSU 6/15/2000            */
 /*------------------------------------------------------*/
   memcpy(&SoilWatAll.GenOutput.Globals, &Globals, sizeof(ModelType));
+  memcpy(&SoilWatAll.Model.SuperGlobals, &SuperGlobals, sizeof(GlobalType));
   SXW_Run_SOILWAT();
-  memcpy(&SoilWatAll.GenOutput.SXW, &SXW, sizeof(SXW_t));
+  memcpy(&SXW, &SoilWatAll.GenOutput.SXW, sizeof(SXW_t));
 
   _make_ppt();
   _set_ppt_reduction();
