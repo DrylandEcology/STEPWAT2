@@ -20,7 +20,7 @@
 
 #include "ST_defines.h"
 #include "ST_functions.h"
-#include "sw_src/include/sw_datastructs.h"
+#include "sw_src/include/SW_datastructs.h"
 
 extern SpeciesType  **Species;
 extern GroupType    **RGroup;
