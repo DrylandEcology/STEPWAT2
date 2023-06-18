@@ -178,7 +178,7 @@ int main(int argc, char **argv) {
 	IntS year, iter;
 	Bool killedany;
 
-	SoilWatAll.GenOutput.logged = FALSE;
+	LogInfo.logged = FALSE;
 	atexit(check_log);
 	/* provides a way to inform user that something
 	 * was logged.  see generic.h */
@@ -212,9 +212,11 @@ int main(int argc, char **argv) {
 						SoilWatAll.GenOutput.ncol_OUT,
 						SoilWatAll.GenOutput.colnames_OUT, &LogInfo); // set column names for output files
 	if (SoilWatAll.GenOutput.prepare_IterationSummary) {
-		SW_OUT_create_summary_files();
+		SW_OUT_create_summary_files(&SoilWatAll.FileStatus, SoilWatAll.Output,
+									&SoilWatAll.GenOutput, PathInfo.InFiles,
+									SoilWatAll.Site.n_layers, &LogInfo);
 		// allocate `p_OUT` and `p_OUTsd` arrays to aggregate SOILWAT2 output across iterations
-		setGlobalSTEPWAT2_OutputVariables();
+		setGlobalSTEPWAT2_OutputVariables(SoilWatAll.Output, &SoilWatAll.GenOutput, &LogInfo);
 	}
 
 	/* Connect to ST db and insert static data */
@@ -229,7 +231,9 @@ int main(int argc, char **argv) {
 		Globals->currIter = iter;
 
 		if (SoilWatAll.GenOutput.storeAllIterations) {
-			SW_OUT_create_iteration_files(Globals->currIter);
+			SW_OUT_create_iteration_files(&SoilWatAll.FileStatus,
+				SoilWatAll.Output, iter, &SoilWatAll.GenOutput, PathInfo.InFiles,
+				SoilWatAll.Site.n_layers, &LogInfo);
 		}
 
 		if (SoilWatAll.GenOutput.prepare_IterationSummary) {
@@ -590,7 +594,7 @@ static void init_args(int argc, char **argv) {
   /* Defaults */
   parm_SetFirstName( DFLT_FIRSTFILE);
   QuietMode = EchoInits = UseSeedDispersal = FALSE;
-  progfp = stderr;
+  LogInfo.logfp = stderr;
 
 
   a=1;
@@ -607,7 +611,7 @@ static void init_args(int argc, char **argv) {
 		}
 		if (op == nopts)
 		{
-			fprintf(stderr, "Invalid option %s\n", argv[a]);
+			fprintf(LogInfo.logfp, "Invalid option %s\n", argv[a]);
 			usage();
 			exit(-1);
 		}
@@ -626,7 +630,7 @@ static void init_args(int argc, char **argv) {
 			}
 			else if (lastop_noval && valopts[op] > 0)
 			{
-				fprintf(stderr, "Incomplete option %s\n", opts[op]);
+				fprintf(LogInfo.logfp, "Incomplete option %s\n", opts[op]);
 				usage();
 				exit(-1);
 
@@ -660,7 +664,7 @@ static void init_args(int argc, char **argv) {
 		case 0: /* -d */
 			if (!ChDir(str))
 			{
-				LogError(stderr, LOGFATAL, "Invalid project directory (%s)",
+				LogError(&LogInfo, LOGFATAL, "Invalid project directory (%s)",
 						str);
 			}
 			break;
@@ -677,7 +681,7 @@ static void init_args(int argc, char **argv) {
 			break; /* -e */
 
 		case 4:
-			progfp = stdout; /* -p */
+			LogInfo.logfp = stdout; /* -p */
 			UseProgressBar = TRUE;
 			break;
 
@@ -736,7 +740,7 @@ static void check_log(void) {
 
   if (LogInfo.logfp != stdout) {
     if (LogInfo.logged && !QuietMode)
-      fprintf(progfp, "\nCheck logfile for error messages.\n");
+      fprintf(LogInfo.logfp, "\nCheck logfile for error messages.\n");
 
     CloseFile(&LogInfo.logfp, &LogInfo);
   }
@@ -776,7 +780,7 @@ void check_sizes(const char *chkpt) {
             rgsize += spsize;
 
             if (LT(diff, fabs(spsize - getSpeciesRelsize(sp)))) {
-                LogError(stdout, LOGWARN, "%s (%d:%d): SP: \"%s\" size error: "
+                LogError(&LogInfo, LOGWARN, "%s (%d:%d): SP: \"%s\" size error: "
                         "SP=%.7f, ndv=%.7f",
                         chkpt, Globals->currIter, Globals->currYear,
                         Species[sp]->name, getSpeciesRelsize(sp), spsize);
@@ -784,7 +788,7 @@ void check_sizes(const char *chkpt) {
         }
 
         if (LT(diff, fabs(rgsize - getRGroupRelsize(rg)))) {
-            LogError(stdout, LOGWARN, "%s (%d:%d): RG \"%s\" size error: "
+            LogError(&LogInfo, LOGWARN, "%s (%d:%d): RG \"%s\" size error: "
                     "RG=%.7f, ndv=%.7f",
                     chkpt, Globals->currIter, Globals->currYear,
                     RGroup[rg]->name, getRGroupRelsize(rg), rgsize);
