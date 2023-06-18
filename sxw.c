@@ -218,24 +218,29 @@ void SXW_Init( Bool init_SW, char *f_roots ) {
  * \ingroup SXW
  */
 static void SXW_Reinit(char* SOILWAT_file) {
-	char *temp;
 
 	// setup and construct model (independent of inputs)
 	PathInfo.InFiles[eFirst] = strdup(SOILWAT_file);
 	SW_CTL_setup_model(&SoilWatAll, &SoilWatOutputPtrs, &PathInfo, &LogInfo);
 
+	free(PathInfo.InFiles[eFirst]);
+	PathInfo.InFiles[eFirst] = strdup(SOILWAT_file);
+
 	// read user inputs
-	memcpy(&SoilWatAll.SuperGlobals, &SuperGlobals, sizeof(GlobalType));
-	SW_CTL_read_inputs_from_disk(&SoilWatAll, &PathInfo, EchoInits, &LogInfo);
+	memcpy(&SoilWatAll.Model.SuperGlobals, &SuperGlobals, sizeof(GlobalType));
+	SW_CTL_read_inputs_from_disk(&SoilWatAll, &PathInfo, &LogInfo);
 
 	// initialize simulation run (based on user inputs)
 	SW_CTL_init_run(&SoilWatAll, &PathInfo, &LogInfo);
 
 	// initialize output: transfer between STEPPE and SOILWAT2
-	SW_OUT_set_SXWrequests();
-    free(temp);
-}
+	SW_OUT_set_SXWrequests(SoilWatAll.GenOutput.timeSteps_SXW,
+						   SoilWatAll.GenOutput.used_OUTNPERIODS,
+						   SoilWatAll.Output, &LogInfo);
 
+	free(PathInfo.InFiles[eFirst]);
+
+}
 
 /**
  * @brief This function resets the model to default conditions
