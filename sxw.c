@@ -69,6 +69,7 @@
 #include "sw_src/include/SW_Output.h"
 #include "sw_src/include/rands.h"
 #include "sw_src/external/pcg/pcg_basic.h"
+#include "sw_src/include/SW_Times.h"
 
 
 /*************** Global Variable Declarations ***************/

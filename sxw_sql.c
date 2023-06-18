@@ -15,6 +15,7 @@
 #include "sw_src/include/SW_Model.h"
 #include "sw_src/include/SW_Site.h"
 #include "sw_src/include/SW_VegProd.h"
+#include "sw_src/include/Times.h"
 #include "sxw_module.h"
 #include "sxw.h" // externs `*SXW`, `*SXWResources`
 
