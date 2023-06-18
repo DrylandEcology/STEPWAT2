@@ -140,7 +140,7 @@ GlobalType     SuperGlobals;
 /** \brief Global struct holding SOILWAT2 variables*/
 SW_ALL         SoilWatAll;
 /** \brief Global struct holding pointers to output subroutines */
-SW_OUTPUT_POINTERS SoilWatOutputPtrs;
+SW_OUTPUT_POINTERS SoilWatOutputPtrs[SW_OUTNKEYS];
 /** \brief Global struct holding log information (used by SOILWAT2) */
 LOG_INFO       LogInfo;
 /** \brief Global struct holding path information of SOILWAT2 (used by SOILWAT2) */

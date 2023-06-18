@@ -32,7 +32,7 @@ extern BmassFlagsType BmassFlags;
 extern MortFlagsType  MortFlags;
 extern GlobalType     SuperGlobals;
 extern SW_ALL SoilWatAll;
-extern SW_OUTPUT_POINTERS SoilWatOutputPtrs;
+extern SW_OUTPUT_POINTERS SoilWatOutputPtrs[SW_OUTNKEYS];
 extern LOG_INFO LogInfo;
 extern PATH_INFO PathInfo;
 
