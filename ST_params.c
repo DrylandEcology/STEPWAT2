@@ -792,7 +792,7 @@ static void _rgroup_init( void) {
                &killyr, &killfreq_startyr, &killfreq, &extirp, &mort, 
                &prop_killed, &prop_recovered,&grazing_frq, &prop_grazing,
                &grazingfreq_startyr, &biomass, &transpiration, &live_biomass);
-     if (x < 22) {
+     if (x < 25) {
        LogError(logfp, LOGFATAL, "%s: Too few columns in groups",
                MyFileName);
      }
