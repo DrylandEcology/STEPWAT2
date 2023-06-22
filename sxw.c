@@ -239,8 +239,6 @@ static void SXW_Reinit(char* SOILWAT_file) {
 						   SoilWatAll.GenOutput.used_OUTNPERIODS,
 						   SoilWatAll.Output, &LogInfo);
 
-	free(PathInfo.InFiles[eFirst]);
-
 }
 
 /**
