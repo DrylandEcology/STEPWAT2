@@ -227,7 +227,8 @@ static void SXW_Reinit(char* SOILWAT_file) {
 	PathInfo.InFiles[eFirst] = strdup(SOILWAT_file);
 
 	// read user inputs
-	memcpy(&SoilWatAll.Model.SuperGlobals, &SuperGlobals, sizeof(GlobalType));
+	SoilWatAll.Model.runModelIterations = SuperGlobals.runModelIterations;
+	SoilWatAll.Model.runModelYears = SuperGlobals.runModelYears;
 	SW_CTL_read_inputs_from_disk(&SoilWatAll, &PathInfo, &LogInfo);
 
 	// initialize simulation run (based on user inputs)

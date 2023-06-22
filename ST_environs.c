@@ -47,10 +47,31 @@ void Env_Generate( void) {
 /* HISTORY */
 /* Chris Bennett @ LTER-CSU 6/15/2000            */
 /*------------------------------------------------------*/
-  memcpy(&SoilWatAll.GenOutput.Globals, &Globals, sizeof(ModelType));
-  memcpy(&SoilWatAll.Model.SuperGlobals, &SuperGlobals, sizeof(GlobalType));
+
+  LyrIndex lyrno;
+  TimeInt month;
+  int vegType;
+
+  // Copy global values to SOILWAT2's SW_ALL to work with correct values
+  SoilWatAll.GenOutput.currIter = Globals->currIter;
+  SoilWatAll.Model.runModelIterations = SuperGlobals.runModelIterations;
+  SoilWatAll.Model.runModelYears = SuperGlobals.runModelYears;
+
   SXW_Run_SOILWAT();
-  memcpy(&SXW, &SoilWatAll.GenOutput.SXW, sizeof(SXW_t));
+
+  // Copy the results of SOILWAT2's version of SXW values
+  for(lyrno = 0; lyrno < SoilWatAll.Site.n_layers; lyrno++) {
+    ForEachTrPeriod(month) {
+      SXW->swc[Ilp(lyrno, month)] = SoilWatAll.GenOutput.swc[lyrno][month];
+      SXW->transpTotal[Ilp(lyrno, month)] =
+                            SoilWatAll.GenOutput.transpTotal[lyrno][month];
+
+      ForEachVegType(vegType) {
+        SXW->transpVeg[vegType][Ilp(lyrno, month)] =
+                        SoilWatAll.GenOutput.transpVeg[vegType][lyrno][month];
+      }
+    }
+  }
 
   _make_ppt();
   _set_ppt_reduction();
