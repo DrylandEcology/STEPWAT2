@@ -301,7 +301,9 @@ struct resourcegroup_st {
         rgroupFractionOfVegTypeBiomass,
       /** \brief ratio of biomass/m2 / transp/m2.
        * Used in \ref sxw.c */
-        _bvt;
+        _bvt,
+		/** \proportion of live biomass used to determine res_required and res_avail */
+		live_biomass;
       /** \brief Number of species established in group. */
   SppIndex est_count,
       /** \brief Array of indexes of species established in this resgroup. 

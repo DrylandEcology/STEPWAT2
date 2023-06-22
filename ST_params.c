@@ -63,7 +63,7 @@ static void _rgroup_add1( char name[], RealF space, RealF density,
                       Int estab, RealF slow, Int stretch,
                       Int xres, Int estann, Int turnon,
                       Int styr,  RealF xgro, Int veg_prod_type, Int mort,
-                      RealF biomass, RealF transpiration);
+                      RealF biomass, RealF transpiration, RealF live_biomass);
 static void _rgroup_add2( char name[],
                       RealF nslope, RealF nint,
                       RealF wslope, RealF wint,
@@ -765,7 +765,7 @@ static void _rgroup_init( void) {
    Int extirp, killyr, killfreq_startyr, 
        grazingfreq_startyr;
    RealF  killfreq, prop_killed, prop_recovered,grazing_frq, prop_grazing, biomass,
-        transpiration;
+        transpiration, live_biomass;
 
    MyFileName = Parm_name(F_RGroup);
    f = OpenFile(MyFileName, "r");
@@ -782,12 +782,12 @@ static void _rgroup_init( void) {
         break;
      }
      x=sscanf( inbuf, "%s %f %f %d %f %d %d %d %d %d %f %d %d %d %f %d %d %f %f"
-               " %f %f %d %f %f", name, &space, &density, &estab, &slow, 
+               " %f %f %d %f %f %f", name, &space, &density, &estab, &slow,
                &stretch, &xres, &estann, &turnon, &styr, &xgro, &veg_prod_type,
                &killyr, &killfreq_startyr, &killfreq, &extirp, &mort, 
                &prop_killed, &prop_recovered,&grazing_frq, &prop_grazing,
-               &grazingfreq_startyr, &biomass, &transpiration);
-     if (x < 22) {
+               &grazingfreq_startyr, &biomass, &transpiration, &live_biomass);
+     if (x < 25) {
        LogError(logfp, LOGFATAL, "%s: Too few columns in groups",
                MyFileName);
      }
@@ -797,7 +797,7 @@ static void _rgroup_init( void) {
 
      _rgroup_add1( name, space, density, estab, slow, stretch, xres, estann, 
                    turnon, styr, xgro, veg_prod_type, mort, biomass, 
-                   transpiration);
+                   transpiration, live_biomass);
 
      _rgroup_add_disturbance(name, killyr, killfreq_startyr, killfreq,
                    extirp, prop_killed, prop_recovered,grazing_frq, prop_grazing, 
@@ -873,7 +873,7 @@ static void _rgroup_add1( char name[], RealF space, RealF density,
                       Int estab, RealF slow, Int stretch,
                       Int xres, Int estann, Int turnon,
                       Int styr,  RealF xgro, Int veg_prod_type, Int mort,
-                      RealF biomass, RealF transpiration) {
+                      RealF biomass, RealF transpiration, RealF live_biomass) {
   GrpIndex rg;
   size_t len;
   
@@ -899,6 +899,7 @@ static void _rgroup_add1( char name[], RealF space, RealF density,
   RGroup[rg]->veg_prod_type = veg_prod_type;
   RGroup[rg]->use_extra_res = itob(xres);
   RGroup[rg]->_bvt = biomass / transpiration;
+  RGroup[rg]->live_biomass = live_biomass;
 }
 
 

@@ -82,22 +82,22 @@ void _sxw_update_resource(void) {
  * soil layer and month with transpiration in each layer and month. Finally, we
  * scale resources available (cm) to resources in terms of grams of biomass */
 
-  RealF *sizes;
+  RealF *sizes_live;
   GrpIndex g;
 
-  sizes = (RealF *)Mem_Calloc(SuperGlobals.max_rgroups, sizeof(RealF), "_sxw_update_resource");
+  sizes_live = (RealF *)Mem_Calloc(SuperGlobals.max_rgroups, sizeof(RealF), "_sxw_update_resource");
 
 	ForEachGroup(g)
 	{
-		sizes[g] = 0.;
+		sizes_live[g] = 0.;
 //printf("_sxw_update_resource()RGroup Name= %s, RGroup[g]->regen_ok=%d \n ", RGroup[g]->name, RGroup[g]->regen_ok);
 		if (!RGroup[g]->regen_ok)
 			continue;
-		sizes[g] = RGroup_GetBiomass(g);
+		sizes_live[g] = RGroup_GetBiomass(g) * RGroup[g]->live_biomass;
 	}
 
     /* Update the active relative roots based on current biomass values */
-	_sxw_update_root_tables(sizes);
+	_sxw_update_root_tables(sizes_live);
 
 	/* Assign transpiration (resource availability) to each STEPPE functional group */
 	_transp_contribution_by_group(SXWResources->_resource_cur);
@@ -111,10 +111,10 @@ void _sxw_update_resource(void) {
 		SXWResources->_resource_cur[g] = SXWResources->_resource_cur[g] * RGroup[g]->_bvt;
 	}
 
-    Mem_Free(sizes);
+    Mem_Free(sizes_live);
 }
 
-void _sxw_update_root_tables( RealF sizes[] ) {
+void _sxw_update_root_tables( RealF sizes_live[] ) {
 /*======================================================*/
 /* Updates the active relative roots array based on sizes, which contains the groups'
  * actual biomass in grams. This array in utilized in partitioning of transpiration
@@ -137,7 +137,7 @@ void _sxw_update_root_tables( RealF sizes[] ) {
 		for (l = 0; l < nLyrs; l++) {
 			ForEachTrPeriod(p)
 			{
-				x = SXWResources->_rootsXphen[Iglp(g, l, p)] * sizes[g];
+				x = SXWResources->_rootsXphen[Iglp(g, l, p)] * sizes_live[g];
 				SXWResources->_roots_active[Iglp(g, l, p)] = x;
 				SXWResources->_roots_active_sum[Itlp(RGroup[g]->veg_prod_type, l, p)] += x;
 			}
