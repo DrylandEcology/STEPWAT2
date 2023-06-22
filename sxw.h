@@ -140,7 +140,7 @@ typedef struct temp_SXW_st{
   RealD * _roots_max,     // root distribution with depth for STEPPE functional
                           // groups, read from input.
         * _roots_active_sum, // active roots in each month and soil layer for
-                             // STEPPE functional groups in the current year.time
+                             // STEPPE functional groups in the current year.
         /* rgroup by period */
         * _phen;          // phenological activity for each month for STEPPE
                           // functional groups, read from input.
