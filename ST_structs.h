@@ -672,39 +672,39 @@ struct globals_st {
  */
 struct bmassflags_st {
       /** \brief If FALSE print no biomass output. */
-  Bool summary,
-      /** \brief If TRUE print biomass output for each year of the simulation. */
-       yearly,
-      /** \brief If TRUE the output files need a header. */
-       header,
-      /** \brief If TRUE the output files will contain a year column. */
-       yr,
-      /** \brief If TRUE Output disturbance information. */
-       dist,
-      /** \brief If TRUE Output precipitation information. */
-       ppt,
-      /** \brief If TRUE Output precipitation class information. */
-       pclass,
-      /** \brief If TRUE output the yearly average temperature. */
-       tmp,
-      /** \brief If TRUE output the group biomasses. */
-       grpb,
-      /** \brief If TRUE output relsize. */
-       pr,
-      /** \brief If TRUE output biomass. */
-       size,
-      /** \brief If TRUE output species information. */
-       sppb,
-      /** \brief Print total wild fire count across all iterations. */
-       wildfire,
-      /** \brief Print prescribed fire count across all the iterations */
-       prescribedfire,
-      /** \brief print individual information like number of establishments by year. */
-       indv;
+    Bool summary,
+        /** \brief If TRUE print biomass output for each year of the simulation. */
+        yearly,
+        /** \brief If TRUE the output files need a header. */
+        header,
+        /** \brief If TRUE the output files will contain a year column. */
+        yr,
+        /** \brief If TRUE Output disturbance information. */
+        dist,
+        /** \brief If TRUE Output precipitation information. */
+        ppt,
+        /** \brief If TRUE Output precipitation class information. */
+        pclass,
+        /** \brief If TRUE output the yearly average temperature. */
+        tmp,
+        /** \brief If TRUE output the group biomasses. */
+        grpb,
+        /** \brief If TRUE output relsize. */
+        pr,
+        /** \brief If TRUE output biomass. */
+        size,
+        /** \brief If TRUE output species information. */
+        sppb,
+        /** \brief Print total wild fire count across all iterations. */
+        wildfire,
+        /** \brief Print prescribed fire count across all the iterations */
+        prescribedfire,
+        /** \brief print individual information like number of establishments by year. */
+        indv,
+        /** \brief If TRUE output grazed biomass. */
+        graz;
       /** \brief the character used to separate values in the output files. */
   char sep;
-      /** \brief If TRUE output grazed biomass. */
-  Bool graz;
 };
 
 /**

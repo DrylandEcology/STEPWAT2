@@ -61,7 +61,7 @@
 #         pr (above) is turned on.
 #         summary: average for the given year. Can only be
 #         output if GrpBmass is specified.
-# Grazing == if 'y', grazing averages will be output.
+# Grazing == if 'y' biomass removed by grazing will be outputted.
 # SppBmass == net biomass for each species for the year.
 #          If "head" is true, species names are output as
 #          the field names.

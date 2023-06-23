@@ -468,7 +468,7 @@ static void _bmassflags_init( void) {
    }
 
    x = sscanf( inbuf, "%s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s",
-                      u, a, h, f, y, d, p, c, t, g, q, r, w, m, s, n, b );
+                      u, a, h, f, y, d, p, c, t, g, q, r, w, m, b, s, n );
 
    /* don't bother initializing the rest if first flag is 'n' */
    BmassFlags.summary  = (Bool)(*u=='y'||*u=='Y');
@@ -538,7 +538,7 @@ static void _bmassflags_init( void) {
             break;
      }
    }
-   
+
    CloseFile(&fin);
 
    /* remove old output and/or create the output directories if needed */
