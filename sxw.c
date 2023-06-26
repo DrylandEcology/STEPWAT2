@@ -223,9 +223,6 @@ static void SXW_Reinit(char* SOILWAT_file) {
 	PathInfo.InFiles[eFirst] = strdup(SOILWAT_file);
 	SW_CTL_setup_model(&SoilWatAll, SoilWatOutputPtrs, &PathInfo, &LogInfo);
 
-	free(PathInfo.InFiles[eFirst]);
-	PathInfo.InFiles[eFirst] = strdup(SOILWAT_file);
-
 	// read user inputs
 	SoilWatAll.Model.runModelIterations = SuperGlobals.runModelIterations;
 	SoilWatAll.Model.runModelYears = SuperGlobals.runModelYears;
