@@ -1419,7 +1419,7 @@ void _Output_AllCellAvgBmass(const char * filename){
 				if(BmassFlags.grpb) {
 					if (BmassFlags.graz) {
 						ForEachGroup(rg) {
-							graze[rg] = gridCells[i][j]._Grazed[rg].s[year].ave;
+							graze[rg] = get_running_mean(nobs, graze[rg], gridCells[i][j]._Grazed[rg].s[year].ave);
 						}
 					}
 					if(BmassFlags.wildfire){
