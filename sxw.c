@@ -233,7 +233,7 @@ static void SXW_Reinit(char* SOILWAT_file) {
 
 	// initialize output: transfer between STEPPE and SOILWAT2
 	SW_OUT_set_SXWrequests(SoilWatAll.GenOutput.timeSteps_SXW,
-						   SoilWatAll.GenOutput.used_OUTNPERIODS,
+						   &SoilWatAll.GenOutput.used_OUTNPERIODS,
 						   SoilWatAll.Output, &LogInfo);
 
 }
