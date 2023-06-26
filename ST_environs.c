@@ -48,37 +48,7 @@ void Env_Generate( void) {
 /* Chris Bennett @ LTER-CSU 6/15/2000            */
 /*------------------------------------------------------*/
 
-  SW_GEN_OUT *swGenOut = &SoilWatAll.GenOutput;
-  LyrIndex lyrno;
-  TimeInt month;
-  int vegType;
-
-  // Copy global values to SOILWAT2's SW_ALL to work with correct values
-  SoilWatAll.GenOutput.currIter = Globals->currIter;
-  SoilWatAll.Model.runModelIterations = SuperGlobals.runModelIterations;
-  SoilWatAll.Model.runModelYears = SuperGlobals.runModelYears;
-
   SXW_Run_SOILWAT();
-
-  // Copy the results of SOILWAT2's version of SXW values
-  for(lyrno = 0; lyrno < SoilWatAll.Site.n_layers; lyrno++) {
-    ForEachTrPeriod(month) {
-      SXW->swc[Ilp(lyrno, month)] = swGenOut->swc[lyrno][month];
-      SXW->transpTotal[Ilp(lyrno, month)] = swGenOut->transpTotal[lyrno][month];
-
-      SXW->ppt_monthly[month] = swGenOut->ppt_monthly[month];
-      SXW->temp_monthly[month] = swGenOut->temp_monthly[month];
-
-      ForEachVegType(vegType) {
-        SXW->transpVeg[vegType][Ilp(lyrno, month)] =
-                                  swGenOut->transpVeg[vegType][lyrno][month];
-      }
-    }
-  }
-
-  SXW->temp = swGenOut->temp;
-  SXW->ppt = swGenOut->ppt;
-  SXW->aet = swGenOut->aet;
 
   _make_ppt();
   _set_ppt_reduction();

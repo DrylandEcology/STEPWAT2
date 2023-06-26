@@ -293,7 +293,7 @@ void runGrid(void)
 			for (j = 0; j < grid_Cols; j++){
 				load_cell(i, j);
 				Plot_Initialize();
-				Globals->currIter = iter;
+				Globals->currIter = SoilWatAll.GenOutput.currIter = iter;
 
                 if (_getNumberSOILWAT2OutputCells() > 0) {
 			        SoilWatAll.GenOutput.print_IterationSummary = (Bool) (Globals->currIter == SuperGlobals.runModelIterations);

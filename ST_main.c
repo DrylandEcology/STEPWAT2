@@ -228,7 +228,7 @@ int main(int argc, char **argv) {
 	for (iter = 1; iter <= SuperGlobals.runModelIterations; iter++) {
 		Plot_Initialize();
 
-		Globals->currIter = iter;
+		Globals->currIter = SoilWatAll.GenOutput.currIter = iter;
 
 		if (SoilWatAll.GenOutput.storeAllIterations) {
 			SW_OUT_create_iteration_files(&SoilWatAll.FileStatus,

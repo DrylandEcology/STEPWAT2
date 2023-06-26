@@ -150,9 +150,38 @@ void _sxw_generate_weather(void) {
 
 void _sxw_sw_run(void) {
 /*======================================================*/
+  SW_GEN_OUT *swGenOut = &SoilWatAll.GenOutput;
+  LyrIndex lyrno;
+  TimeInt month;
+  int vegType;
+
 	SoilWatAll.Model.year = SoilWatAll.Model.startyr + Globals->currYear-1;
 
+  // Copy global values to SOILWAT2's SW_ALL to work with correct values
+  SoilWatAll.Model.runModelIterations = SuperGlobals.runModelIterations;
+  SoilWatAll.Model.runModelYears = SuperGlobals.runModelYears;
+
 	SW_CTL_run_current_year(&SoilWatAll, SoilWatOutputPtrs, &PathInfo, &LogInfo);
+
+  // Copy the results of SOILWAT2's SXW values
+  for(lyrno = 0; lyrno < SXW->NSoLyrs; lyrno++) {
+    ForEachTrPeriod(month) {
+      SXW->swc[Ilp(lyrno, month)] = swGenOut->swc[lyrno][month];
+      SXW->transpTotal[Ilp(lyrno, month)] = swGenOut->transpTotal[lyrno][month];
+
+      SXW->ppt_monthly[month] = swGenOut->ppt_monthly[month];
+      SXW->temp_monthly[month] = swGenOut->temp_monthly[month];
+
+      ForEachVegType(vegType) {
+        SXW->transpVeg[vegType][Ilp(lyrno, month)] =
+                                  swGenOut->transpVeg[vegType][lyrno][month];
+      }
+    }
+  }
+
+  SXW->temp = swGenOut->temp;
+  SXW->ppt = swGenOut->ppt;
+  SXW->aet = swGenOut->aet;
 }
 
 void _sxw_sw_clear_transp(void) {
