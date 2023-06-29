@@ -315,7 +315,9 @@ struct resourcegroup_st {
        * Used in \ref sxw.c */
         _bvt,
 		/** \proportion of live biomass used to determine res_required and res_avail */
-		live_biomass;
+		live_biomass,
+       /* \sa grazing_EndOfYear() */
+        res_grazed;
       /** \brief Number of species established in group. */
   SppIndex est_count,
       /** \brief Array of indexes of species established in this resgroup. 
@@ -326,8 +328,7 @@ struct resourcegroup_st {
       /** \brief For annuals: If TRUE this group can regenerate. */
        regen_ok;
       /** \brief RGroup biomass removed by livestock grazing. Reset in grazing_EndOfYear()
-       * \sa grazing_EndOfYear() */
-  RealF res_grazed;
+
 
   /**** Quantities that DO NOT change during model runs *****/
 
