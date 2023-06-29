@@ -43,10 +43,10 @@ void stat_Output_AllMorts( void) ;
 void stat_Output_AllBmass(void) ;
 void stat_Output_Seed_Dispersal(const char * filename, const char sep);
 void stat_free_mem( void );
-void stat_Copy_Accumulators(StatType* newDist, StatType* newPpt, StatType* newTemp, StatType* newGrp, 
-                            StatType* newGsize, StatType* newGpr, StatType* newGmort, StatType* newGestab, 
-                            StatType* newSpp, StatType* newIndv, StatType* newSmort, StatType* newSestab, 
-                            StatType* newSrecieved, FireStatsType* newGwf, Bool firstTime);
+void stat_Copy_Accumulators(StatType* newDist, StatType* newPpt, StatType* newTemp, StatType* newGrp,
+                            StatType* newGsize, StatType* newGpr, StatType* newGmort, StatType* newGestab,
+                            StatType* newSpp, StatType* newIndv, StatType* newSmort, StatType* newSestab,
+                            StatType* newSrecieved, StatType* newGrazed, FireStatsType* newGwf, Bool firstTime);
 void make_header( char *buf);
 void make_header_with_std( char *buf);
 

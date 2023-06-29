@@ -44,7 +44,7 @@ Bool indiv_Kill_Partial( MortalityType code,
 void indiv_Kill_Complete( IndivType *ndv, int killType);
 void indiv_proportion_Kill( IndivType *ndv, int killType,RealF proportionKilled);
 void indiv_proportion_Recovery( IndivType *ndv, int killType,RealF proportionRecovery,RealF proportionKilled);
-void indiv_proportion_Grazing( IndivType *ndv, RealF proportionGrazing);
+RealF indiv_proportion_Grazing( IndivType *ndv, RealF proportionGrazing);
 
 /*********** Locally Used Function Declarations ************/
 /***********************************************************/
@@ -290,15 +290,15 @@ void indiv_proportion_Kill(IndivType *ndv, int killType, RealF proportKilled)
  * Implement grazing for each individual. Also keep up with survivorship data.
  * 
  * \param ndv A pointer to the individual.
- * \param proportionGrazing Value between 0 and 1. The proportion of biomass to remove.
+ * \param proportionGrazing Value between 0 and 1. The proportion of biomass to remove / reduction in relsize.
  * 
- * \sideeffect ndv->relsize is adjusted.
+ * \sideeffect ndv->relsize is adjusted and the reduction in individual relsizes due to grazing is returned.
  * 
  * \sa Species_Proportion_Grazing()
  * 
  * \ingroup INDIVIDUAL
  */
-void indiv_proportion_Grazing( IndivType *ndv, RealF proportionGrazing)
+RealF indiv_proportion_Grazing( IndivType *ndv, RealF proportionGrazing)
 {
 #define xF_DELTA (20*F_DELTA)
 #define xD_DELTA (20*D_DELTA)
@@ -319,6 +319,9 @@ void indiv_proportion_Grazing( IndivType *ndv, RealF proportionGrazing)
 #undef xF_DELTA
 #undef xD_DELTA
 #undef ZERO
+
+//return the reduction in individual relative size removed by grazing this year
+return grazing_reduce * -1;
 }
 
 /**

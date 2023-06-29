@@ -93,7 +93,7 @@ typedef struct grid_cell_st
 	/* ---------------- accumulators -------------------- */
 	StatType *_Dist, *_Ppt, *_Temp,
   		*_Grp, *_Gsize, *_Gpr, *_Gmort, *_Gestab,
-  		*_Spp, *_Indv, *_Smort, *_Sestab, *_Sreceived;
+  		*_Spp, *_Indv, *_Smort, *_Sestab, *_Sreceived, *_Grazed;
 	FireStatsType *_Gwf;
 	Bool stats_init;
 	/* -------------- end accumulators ------------------ */

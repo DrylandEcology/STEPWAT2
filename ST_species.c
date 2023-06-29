@@ -49,7 +49,7 @@ void indiv_Kill_Complete(IndivType *ndv, int killType);
 void indiv_proportion_Kill(IndivType *ndv, int killType, RealF proportionKilled);
 void indiv_proportion_Recovery(IndivType *ndv, int killType,
 		RealF proportionRecovery, RealF proportionKilled);
-void indiv_proportion_Grazing(IndivType *ndv, RealF proportionGrazing);
+RealF indiv_proportion_Grazing(IndivType *ndv, RealF proportionGrazing);
 
 void _delete(IndivType *ndv);
 void save_annual_species_relsize(void);
@@ -504,33 +504,35 @@ void Species_Proportion_Kill(const SppIndex sp, int killType,
 }
 
 /**
- * \brief Performs grazing on a given species at a given proportion.
+ * \brief Performs grazing on a given species at a given grazing intensity.
  * 
- * This function will perform grazing on every individual in the given species.
- * It will also graze the extra (superfluous) growth stored at the species level.
+ * This function will implement grazing on every plant individual.
+ * It will also implement grazing on the extra (superfluous) growth that is stored at the species level.
  * 
  * Initial programming by AT on 1/11/15.
  * Extra growth grazing added by Chandler Haukap 14/8/18.
+ * Saving of forage utilization for output added by Alexis Belt 5/23.
  * 
  * \param sp is the index in \ref Species of the species.
  * \param proportionGrazing is the proportion of relative size to remove. Value
  *                          between 0 and 1.
  * 
  * \sideeffect All individuals in the given species' relsizes will be reduced
- *             proportionally.\n
- *             \ref Species[sp]->relsize will be reduced by the same proportion.
+ *             proportionally and saved.\n
+ *             \ref Species[sp]->relsize will be reduced by the same proportion and saved.
  * 
  * \sa indiv_proportion_Grazing() which is the function this function calls to 
  *                                perform grazing on each individual.
  * 
  * \ingroup SPECIES
  */
-void Species_Proportion_Grazing(const SppIndex sp, RealF proportionGrazing)
+RealF Species_Proportion_Grazing(const SppIndex sp, RealF proportionGrazing)
 {
 	//CH- extra growth is only stored at the species level. This will graze extra
 	//    growth for the whole species.
-	//    loss represents the proportion of extragrowth that is eaten by livestock
+	//    loss represents the proportion of extragrowth that is removed by livestock grazing
 	RealF loss = Species[sp]->extragrowth * proportionGrazing;
+	RealF indivGrazed = 0.0;
 
 	//CH- Remove the loss from Species extra growth.
 	Species[sp]->extragrowth -= loss;	// remove the loss from extragrowth
@@ -540,9 +542,11 @@ void Species_Proportion_Grazing(const SppIndex sp, RealF proportionGrazing)
 	while (p) //while p points to an individual
 	{
 		t = p->Next; //must store Next since p might be deleted at any time.
-		indiv_proportion_Grazing(p, proportionGrazing);
+		indivGrazed += indiv_proportion_Grazing(p, proportionGrazing); //store the total reduction in individual plant size resulting from grazing
 		p = t; //move to the next plant.
 	}
+	//res_grazed = species biomass removed by livestock grazing this year
+	return Species[sp]->mature_biomass * (loss + indivGrazed);
 }
 
 /**
