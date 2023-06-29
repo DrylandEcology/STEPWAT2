@@ -316,7 +316,8 @@ struct resourcegroup_st {
         _bvt,
 		/** \proportion of live biomass used to determine res_required and res_avail */
 		live_biomass,
-       /* \sa grazing_EndOfYear() */
+      /** \brief RGroup biomass removed by livestock grazing. Reset in grazing_EndOfYear()
+       * \sa grazing_EndOfYear() */
         res_grazed;
       /** \brief Number of species established in group. */
   SppIndex est_count,
@@ -327,8 +328,6 @@ struct resourcegroup_st {
   Bool extirpated,
       /** \brief For annuals: If TRUE this group can regenerate. */
        regen_ok;
-      /** \brief RGroup biomass removed by livestock grazing. Reset in grazing_EndOfYear()
-
 
   /**** Quantities that DO NOT change during model runs *****/
 
