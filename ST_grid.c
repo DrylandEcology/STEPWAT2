@@ -1347,9 +1347,9 @@ void _Output_AllCellAvgBmass(const char * filename){
 	/* One accumulator for every accumulator in ST_stats.c */
 	float ppt, pptstd, pptsos, temp, tempstd, tempsos, dist, wildfire, grp[SuperGlobals.max_rgroups], grpstd[SuperGlobals.max_rgroups], 
 		  grpsos[SuperGlobals.max_rgroups], gsize[SuperGlobals.max_rgroups], gpr[SuperGlobals.max_rgroups], 
-		  gprsos[SuperGlobals.max_rgroups], gprstd[SuperGlobals.max_rgroups], prescribedfire[SuperGlobals.max_rgroups],
-		  spp[SuperGlobals.max_spp_per_grp * SuperGlobals.max_rgroups],
-		  indv[SuperGlobals.max_spp_per_grp * SuperGlobals.max_rgroups], graze[SuperGlobals.max_rgroups];
+		  gprsos[SuperGlobals.max_rgroups], gprstd[SuperGlobals.max_rgroups], graze[SuperGlobals.max_rgroups]
+		  prescribedfire[SuperGlobals.max_rgroups], spp[SuperGlobals.max_spp_per_grp * SuperGlobals.max_rgroups],
+		  indv[SuperGlobals.max_spp_per_grp * SuperGlobals.max_rgroups];
 
 	char buf[2048], tbuf[2048];	// Two buffers: one for accumulating and one for formatting.
 	char sep = BmassFlags.sep;	// Separator specified in inputs

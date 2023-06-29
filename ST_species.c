@@ -506,7 +506,7 @@ void Species_Proportion_Kill(const SppIndex sp, int killType,
 /**
  * \brief Performs grazing on a given species at a given grazing intensity.
  * 
- * This function will implemented grazing on every plant individual.
+ * This function will implement grazing on every plant individual.
  * It will also implement grazing on the extra (superfluous) growth that is stored at the species level.
  * 
  * Initial programming by AT on 1/11/15.
