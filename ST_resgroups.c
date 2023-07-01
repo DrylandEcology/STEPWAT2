@@ -1172,6 +1172,7 @@ void copy_rgroup(const GroupType* src, GroupType* dest){
     dest->regen_ok = src->regen_ok;
     dest->res_avail = src->res_avail;
     dest->res_extra = src->res_extra;
+    dest->res_grazed = src->res_grazed;
     dest->res_required = src->res_required;
     dest->rgroupFractionOfVegTypeBiomass = src->rgroupFractionOfVegTypeBiomass;
     dest->slowrate = src->slowrate;

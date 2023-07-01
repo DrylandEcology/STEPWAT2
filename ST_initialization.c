@@ -83,7 +83,7 @@ void runInitialization(void){
     /* Dummy accumulators to ensure we do not collect statistics */
 	StatType *dummy_Dist, *dummy_Ppt, *dummy_Temp,
   		*dummy_Grp, *dummy_Gsize, *dummy_Gpr, *dummy_Gmort, *dummy_Gestab,
-  		*dummy_Spp, *dummy_Indv, *dummy_Smort, *dummy_Sestab, *dummy_Sreceived;
+  		*dummy_Spp, *dummy_Indv, *dummy_Smort, *dummy_Sestab, *dummy_Sreceived, *dummy_Grazed;
 	FireStatsType *dummy_Gwf;
 
 	/* For iterating over gridCells */
@@ -126,7 +126,7 @@ void runInitialization(void){
                     to accumulate stats while in spinup. We need to load in dummy accumulators to ensure
                     we ignore everything that happens in spinup. */
                 stat_Copy_Accumulators(dummy_Dist, dummy_Ppt, dummy_Temp, dummy_Grp, dummy_Gsize, dummy_Gpr, dummy_Gmort, dummy_Gestab,
-                                        dummy_Spp, dummy_Indv, dummy_Smort, dummy_Sestab, dummy_Sreceived, dummy_Gwf, TRUE);
+                                        dummy_Spp, dummy_Indv, dummy_Smort, dummy_Sestab, dummy_Sreceived, dummy_Grazed, dummy_Gwf, TRUE);
 
                 Globals->currYear = year;
 

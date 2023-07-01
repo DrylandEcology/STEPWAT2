@@ -168,7 +168,7 @@ struct species_st {
         alpha,
       /** \brief Beta parameter for random number draw from beta distribution in establishment of annual species.
        * \sa _add_annuals() */
-        beta;
+      beta;
       /** \brief Variance parameter of the beta distribution for establishment of annual species. */
   float var;
       /** \brief Head of a doubly-linked list of all individuals of this species. 
@@ -315,7 +315,10 @@ struct resourcegroup_st {
        * Used in \ref sxw.c */
         _bvt,
 		/** \proportion of live biomass used to determine res_required and res_avail */
-		live_biomass;
+		live_biomass,
+      /** \brief RGroup biomass removed by livestock grazing. Reset in grazing_EndOfYear()
+       * \sa grazing_EndOfYear() */
+        res_grazed;
       /** \brief Number of species established in group. */
   SppIndex est_count,
       /** \brief Array of indexes of species established in this resgroup. 
@@ -669,35 +672,37 @@ struct globals_st {
  */
 struct bmassflags_st {
       /** \brief If FALSE print no biomass output. */
-  Bool summary,
-      /** \brief If TRUE print biomass output for each year of the simulation. */
-       yearly,
-      /** \brief If TRUE the output files need a header. */
-       header,
-      /** \brief If TRUE the output files will contain a year column. */
-       yr,
-      /** \brief If TRUE Output disturbance information. */
-       dist,
-      /** \brief If TRUE Output precipitation information. */
-       ppt,
-      /** \brief If TRUE Output precipitation class information. */
-       pclass,
-      /** \brief If TRUE output the yearly average temperature. */
-       tmp,
-      /** \brief If TRUE output the group biomasses. */
-       grpb,
-      /** \brief If TRUE output relsize. */
-       pr,
-      /** \brief If TRUE output biomass. */
-       size,
-      /** \brief If TRUE output species information. */
-       sppb,
-      /** \brief Print total wild fire count across all iterations. */
-       wildfire,
-      /** \brief Print prescribed fire count across all the iterations */
-       prescribedfire,
-      /** \brief print individual information like number of establishments by year. */
-       indv;
+    Bool summary,
+        /** \brief If TRUE print biomass output for each year of the simulation. */
+        yearly,
+        /** \brief If TRUE the output files need a header. */
+        header,
+        /** \brief If TRUE the output files will contain a year column. */
+        yr,
+        /** \brief If TRUE Output disturbance information. */
+        dist,
+        /** \brief If TRUE Output precipitation information. */
+        ppt,
+        /** \brief If TRUE Output precipitation class information. */
+        pclass,
+        /** \brief If TRUE output the yearly average temperature. */
+        tmp,
+        /** \brief If TRUE output the group biomasses. */
+        grpb,
+        /** \brief If TRUE output relsize. */
+        pr,
+        /** \brief If TRUE output biomass. */
+        size,
+        /** \brief If TRUE output species information. */
+        sppb,
+        /** \brief Print total wild fire count across all iterations. */
+        wildfire,
+        /** \brief Print prescribed fire count across all the iterations */
+        prescribedfire,
+        /** \brief print individual information like number of establishments by year. */
+        indv,
+        /** \brief If TRUE output grazed biomass. */
+        graz;
       /** \brief the character used to separate values in the output files. */
   char sep;
 };
