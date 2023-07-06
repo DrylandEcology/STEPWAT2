@@ -69,4 +69,3 @@
 # Indivs == yearly: net number of individuals of this species
 #        this year.
 #    summary: average number of individuals for this year.
-#           Can only be output if SppBmass specified.

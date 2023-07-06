@@ -646,20 +646,19 @@ static void _allocate_accumulators(void){
                            					sizeof(struct accumulators_st),
                           					"_allocate_accumulators(Spp[sp].s)");
 				}
-
-      			if (BmassFlags.indv) {
-        			gridCells[i][j]._Indv = (struct stat_st *)
-               		 		Mem_Calloc( Globals->sppCount,
-                           		 		sizeof(struct stat_st),
-                          		 		"_allocate_accumulators(Indv)");
-        			ForEachSpecies(sp){
-          				gridCells[i][j]._Indv[sp].s = (struct accumulators_st *)
-               				  		Mem_Calloc( SuperGlobals.runModelYears,
-                           						sizeof(struct accumulators_st),
-                          						"_allocate_accumulators(Indv[sp].s)");
-					}
-    			}
     		}
+			if (BmassFlags.indv) {
+				gridCells[i][j]._Indv = (struct stat_st*)
+					Mem_Calloc(Globals->sppCount,
+						sizeof(struct stat_st),
+						"_allocate_accumulators(Indv)");
+				ForEachSpecies(sp) {
+					gridCells[i][j]._Indv[sp].s = (struct accumulators_st*)
+						Mem_Calloc(SuperGlobals.runModelYears,
+							sizeof(struct accumulators_st),
+							"_allocate_accumulators(Indv[sp].s)");
+				}
+			}
   			if (MortFlags.species) {
     			gridCells[i][j]._Sestab = (struct stat_st *)
            					Mem_Calloc( Globals->sppCount,
@@ -1447,11 +1446,13 @@ void _Output_AllCellAvgBmass(const char * filename){
 				if(BmassFlags.sppb){
 					ForEachSpecies(sp){
 						spp[sp] += gridCells[i][j]._Spp[sp].s[year].ave;
-						if(BmassFlags.indv){
-							indv[sp] += gridCells[i][j]._Indv[sp].s[year].ave;
-						}
 					} // End ForEachSpecies
 				} // End sppb
+				if (BmassFlags.indv) {
+					ForEachSpecies(sp) {
+						indv[sp] += gridCells[i][j]._Indv[sp].s[year].ave;
+					}
+				}
 				/* ------------ End Accumulate requested output --------------- */	
 			} // End for each column
 		} // End for each row
@@ -1521,10 +1522,12 @@ void _Output_AllCellAvgBmass(const char * filename){
 			ForEachSpecies(sp){
 				sprintf(tbuf, "%f%c", spp[sp], sep);
 				strcat(buf, tbuf);
-				if(BmassFlags.indv){
-					sprintf(tbuf, "%f%c", indv[sp], sep);
-					strcat(buf, tbuf);
-				}
+			}
+		}
+		if (BmassFlags.indv) {
+			ForEachSpecies(sp) {
+				sprintf(tbuf, "%f%c", indv[sp], sep);
+				strcat(buf, tbuf);
 			}
 		}
 		/* --------------- End generate output string ---------------- */
