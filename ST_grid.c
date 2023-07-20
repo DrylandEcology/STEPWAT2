@@ -1039,7 +1039,7 @@ void load_cell(int row, int col){
 			gridCells[row][col].mySoils.trco_forb, gridCells[row][col].mySoils.psand,
 			gridCells[row][col].mySoils.pclay, gridCells[row][col].mySoils.imperm,
 			gridCells[row][col].mySoils.soiltemp, 3, soilRegionsLowerBounds,
-			PathInfo.InFiles, &LogInfo);
+			&LogInfo);
 	}
 
 	// Zero SOILWAT2 variables (weather, flow, soil temperature, soil moisture)

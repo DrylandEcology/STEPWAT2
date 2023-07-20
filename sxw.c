@@ -229,7 +229,7 @@ static void SXW_Reinit(char* SOILWAT_file) {
 	SW_CTL_read_inputs_from_disk(&SoilWatAll, &PathInfo, &LogInfo);
 
 	// initialize simulation run (based on user inputs)
-	SW_CTL_init_run(&SoilWatAll, &PathInfo, &LogInfo);
+	SW_CTL_init_run(&SoilWatAll, &LogInfo);
 
 	// initialize output: transfer between STEPPE and SOILWAT2
 	SW_OUT_set_SXWrequests(SoilWatAll.GenOutput.timeSteps_SXW,
