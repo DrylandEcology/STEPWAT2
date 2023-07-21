@@ -95,7 +95,7 @@ void rgroup_PartResources(void) {
         g = RGroup[rg];
 
         //Set resources available and resources required for each functional group
-        g->res_required = RGroup_GetBiomass(rg);
+        g->res_required = RGroup_GetBiomass(rg) * g->live_biomass;
         g->res_avail = SXW_GetTranspiration(rg);
         //printf("g->res_avail = %f\n,Group = %s \n",RGroup[rg]->name,  g->res_avail);
         //printf("g->res_required = %f\n,Group = %s \n",RGroup[rg]->name,  g->res_required);
@@ -394,7 +394,7 @@ void rgroup_ResPartIndiv(void) {
                 ndv = indivs[n];
 
                 /* Calculate resources required for each individual in terms of biomass */
-                ndv->res_required = ndv->relsize * Species [sp]->mature_biomass;
+                ndv->res_required = ndv->relsize * Species [sp]->mature_biomass * RGroup[rg]->live_biomass;
                 //printf("ndv->res_required = %f\n, Species = %s \n", Species[sp]->name, ndv->res_required);
                 //printf("ndv->relsize = %f\n, Species = %s \n", Species[sp]->name, ndv->relsize);
 
@@ -414,7 +414,7 @@ void rgroup_ResPartIndiv(void) {
 
         /* Check to see if each functional group can use extra resources. If so,
          * then pass the biomass of the FG, otherwise pass 0 into _res_part_extra */
-        size_base[rg] = RGroup_GetBiomass(rg);
+        size_base[rg] = RGroup[rg]->res_required;
         size_obase[rg] = (g->use_extra_res) ? size_base[rg] : 0.;
         //printf("size_obase = %f\n", size_obase[rg]);
 
@@ -1178,6 +1178,7 @@ void copy_rgroup(const GroupType* src, GroupType* dest){
     dest->xgrow = src->xgrow;
     dest->yrs_neg_pr = src->yrs_neg_pr;
     dest->_bvt = src->_bvt;
+    dest->live_biomass = src->live_biomass;
 
     /* ---------------- Copy Species Array ----------------- */
     for(i = 0; i < SuperGlobals.max_spp_per_grp; ++i){
