@@ -177,7 +177,11 @@ void SXW_Init( Bool init_SW, char *f_roots ) {
 
   if (init_SW)
   {
-		SXW_Reinit(SXW->f_watin);
+    // we need to deallocate memory previously dynamically allocated
+    // by SOILWAT2 in global variables, e.g., `SoilWatAll`,
+    // as long as these variables are reused/shared,
+    // e.g., among grid cells or among iterations
+		SXW_Reset(SXW->f_watin);
   }
 
   SXW->NTrLyrs = SoilWatAll.Site.n_transp_lyrs[0];
@@ -214,6 +218,10 @@ void SXW_Init( Bool init_SW, char *f_roots ) {
 /**
  * @brief This function initializes and allocates SOILWAT2 structures,
  *		  and reads SOILWAT2 inputs.
+ *
+ * @note De-allocate dynamically allocated memory in SOILWAT2 structures
+ * if it has been previously allocated before SXW_Reinit() is called,
+ * e.g., use SXW_Reset() instead.
  *
  * \ingroup SXW
  */
