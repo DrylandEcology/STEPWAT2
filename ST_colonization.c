@@ -114,14 +114,14 @@ void initColonization(char* fileName) {
   // Open the file.
   FILE* file = fopen(fileName, "r");
   if(!file) {
-    LogError(logfp, LOGERROR, "Error in Colonization module:"
+    LogError(&LogInfo, LOGERROR, "Error in Colonization module:"
              "\n\tCannot open input file %s", fileName);
   }
 
   // A temporary variable to store colonization events
   ColonizationEvent* tempEvents = Mem_Calloc(MAX_COLONIZATION_EVENTS,
                                              sizeof(ColonizationEvent),
-                                             "initColonization");
+                                             "initColonization", &LogInfo);
 
   // Throw away the header
   GetALine(file, inbuf);
@@ -155,7 +155,7 @@ void initColonization(char* fileName) {
         
     /* ----------------------- Input Validation ------------------------ */
     if(_numberOfEvents >= MAX_COLONIZATION_EVENTS) {
-      LogError(logfp, LOGWARN, "Error reading colonization file:"
+      LogError(&LogInfo, LOGWARN, "Error reading colonization file:"
                "A maximum of %d colonization events can be specified. "
                "The rest of the events will be ignored.", 
                MAX_COLONIZATION_EVENTS);
@@ -163,20 +163,20 @@ void initColonization(char* fileName) {
     }
     if(valuesRead != 4 && valuesRead != 5) {
       Mem_Free(tempEvents);
-      LogError(logfp, LOGFATAL, "Error reading colonization file:\n\tIncorrect"
+      LogError(&LogInfo, LOGFATAL, "Error reading colonization file:\n\tIncorrect"
                " number of input arguments.\n\tIs it possible you put a space"
                " somewhere? Remember this file cannot contain spaces.");
       return;
     }
     if(fromCell < 0 || toCell > ((grid_Rows * grid_Cols) - 1)) {
       Mem_Free(tempEvents);
-      LogError(logfp, LOGFATAL, "Error reading colonization file:"
+      LogError(&LogInfo, LOGFATAL, "Error reading colonization file:"
                "\n\tInvalid cell range ( %d - %d ) specified.", fromCell, toCell);
       return;
     }
     if(startYear < 1 || startYear > SuperGlobals.runModelYears) {
       Mem_Free(tempEvents);
-      LogError(logfp, LOGFATAL, "Error reading colonization file:"
+      LogError(&LogInfo, LOGFATAL, "Error reading colonization file:"
                "\n\tInvalid start year (%d) specified.", startYear);
       return;
     }
@@ -184,7 +184,7 @@ void initColonization(char* fileName) {
     load_cell(toCell / grid_Cols, toCell % grid_Cols);
     if(Species_Name2Index(name) == -1) {
       Mem_Free(tempEvents);
-      LogError(logfp, LOGFATAL, "Error reading colonization file:"
+      LogError(&LogInfo, LOGFATAL, "Error reading colonization file:"
                "\n\tUnrecognized species name (%s).", name);
       return;
     }
@@ -217,7 +217,7 @@ void initColonization(char* fileName) {
   // Sorting the entries now will save time later.
   int lowestYear, lowestYearIndex;
   _allEvents = Mem_Calloc(_numberOfEvents, sizeof(ColonizationEvent), 
-                          "initColonization");
+                          "initColonization", &LogInfo);
   for(i = 0; i < _numberOfEvents; ++i) {
     lowestYear = 0;
     lowestYearIndex = -1;

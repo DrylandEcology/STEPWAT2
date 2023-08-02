@@ -146,7 +146,7 @@ void stat_Collect( Int year ) {
     ForEachGroup(rg) {
       bmass = (double) RGroup_GetBiomass(rg);
       if ( LT(bmass, 0.0) ) {
-        LogError(logfp, LOGWARN, "Grp %s biomass(%.4f) < 0 in stat_Collect()",
+        LogError(&LogInfo, LOGWARN, "Grp %s biomass(%.4f) < 0 in stat_Collect()",
                         RGroup[rg]->name, bmass);
         bmass = 0.0;
       }
@@ -168,7 +168,7 @@ void stat_Collect( Int year ) {
     ForEachSpecies(sp) {
       bmass = (double) Species_GetBiomass(sp);
       if ( LT(bmass, 0.0) ) {
-        LogError(logfp, LOGWARN, "Spp %s biomass(%.4f) < 0 in stat_Collect()",
+        LogError(&LogInfo, LOGWARN, "Spp %s biomass(%.4f) < 0 in stat_Collect()",
                        Species[sp]->name, bmass);
         bmass = 0.0;
       }
@@ -204,81 +204,81 @@ static void _init( void) {
   GrpIndex rg;
 
   if (BmassFlags.dist) {
-    _Dist = (StatType*) Mem_Calloc(1, sizeof(StatType), "_stat_init(Dist)");
+    _Dist = (StatType*) Mem_Calloc(1, sizeof(StatType), "_stat_init(Dist)", &LogInfo);
     _Dist->s = (struct accumulators_st *)
                Mem_Calloc( SuperGlobals.runModelYears,
                            sizeof(struct accumulators_st),
-                          "_stat_init(Dist)");
+                          "_stat_init(Dist)", &LogInfo);
   }
   if (BmassFlags.ppt) {
-    _Ppt = (StatType*) Mem_Calloc(1, sizeof(StatType), "_stat_init(PPT");
+    _Ppt = (StatType*) Mem_Calloc(1, sizeof(StatType), "_stat_init(PPT", &LogInfo);
     _Ppt->s  = (struct accumulators_st *)
                Mem_Calloc( SuperGlobals.runModelYears,
                            sizeof(struct accumulators_st),
-                          "_stat_init(PPT)");
+                          "_stat_init(PPT)", &LogInfo);
   }
   if (BmassFlags.tmp) {
-    _Temp = (StatType*) Mem_Calloc(1, sizeof(StatType), "_stat_init(Temp)");
+    _Temp = (StatType*) Mem_Calloc(1, sizeof(StatType), "_stat_init(Temp)", &LogInfo);
     _Temp->s = (struct accumulators_st *)
                Mem_Calloc( SuperGlobals.runModelYears,
                            sizeof(struct accumulators_st),
-                          "_stat_init(Temp)");
+                          "_stat_init(Temp)", &LogInfo);
   }
   if (BmassFlags.grpb) {
     _Grp = (struct stat_st *)
            Mem_Calloc( Globals->grpCount,
                        sizeof(struct stat_st),
-                      "_stat_init(Grp)");
+                      "_stat_init(Grp)", &LogInfo);
     ForEachGroup(rg)
       _Grp[rg].s = (struct accumulators_st *)
              Mem_Calloc( SuperGlobals.runModelYears,
                          sizeof(struct accumulators_st),
-                        "_stat_init(Grp[rg].s)");
+                        "_stat_init(Grp[rg].s)", &LogInfo);
 
     if (BmassFlags.size) {
       _Gsize = (struct stat_st *)
              Mem_Calloc( Globals->grpCount,
                          sizeof(struct stat_st),
-                        "_stat_init(GSize)");
+                        "_stat_init(GSize)", &LogInfo);
       ForEachGroup(rg)
           _Gsize[rg].s = (struct accumulators_st *)
              Mem_Calloc( SuperGlobals.runModelYears,
                          sizeof(struct accumulators_st),
-                        "_stat_init(GSize[rg].s)");
+                        "_stat_init(GSize[rg].s)", &LogInfo);
     }
     if (BmassFlags.pr) {
       _Gpr = (struct stat_st *)
              Mem_Calloc( Globals->grpCount,
                          sizeof(struct stat_st),
-                        "_stat_init(Gpr)");
+                        "_stat_init(Gpr)", &LogInfo);
       ForEachGroup(rg)
           _Gpr[rg].s = (struct accumulators_st *)
              Mem_Calloc( SuperGlobals.runModelYears,
                          sizeof(struct accumulators_st),
-                        "_stat_init(Gpr[rg].s)");
+                        "_stat_init(Gpr[rg].s)", &LogInfo);
     }
 
     if (BmassFlags.wildfire || BmassFlags.prescribedfire) {
       _Gwf = (struct fire_st *)
              Mem_Calloc( 1,
                          sizeof(struct fire_st),
-                        "_stat_init(Gwf)");
+                        "_stat_init(Gwf)", &LogInfo);
 
       _Gwf->wildfire = (int *)
           Mem_Calloc( 1,
                       sizeof(int) * SuperGlobals.runModelYears,
-                      "_stat_init(Gwf->wildfire)");
+                      "_stat_init(Gwf->wildfire)", &LogInfo);
       
       _Gwf->prescribedFire = (int **)
           Mem_Calloc( 1,
                       sizeof(int **) * SuperGlobals.max_rgroups,
-                      "_stat_init(Gwf->prescribedfire");
+                      "_stat_init(Gwf->prescribedfire", &LogInfo);
 
       ForEachGroup(rg){
         _Gwf->prescribedFire[rg] = (int *)
           Mem_Calloc( SuperGlobals.runModelYears,
                       sizeof(int) * SuperGlobals.runModelYears,
-                      "_stat_init(Gwf->prescribedFire)");
+                      "_stat_init(Gwf->prescribedFire)", &LogInfo);
       }
     }
   }
@@ -288,73 +288,75 @@ static void _init( void) {
     _Gestab = (struct stat_st *)
              Mem_Calloc( Globals->grpCount,
                          sizeof(struct stat_st),
-                         "_stat_init(Gestab)");
+                         "_stat_init(Gestab)", &LogInfo);
     ForEachGroup(rg)
       _Gestab[rg].s = (struct accumulators_st *)
                      Mem_Calloc( 1, sizeof(struct accumulators_st),
-                                "_stat_init(Gestab[rg].s)");
+                                "_stat_init(Gestab[rg].s)", &LogInfo);
 
     _Gmort = (struct stat_st *)
            Mem_Calloc( Globals->grpCount,
                        sizeof(struct stat_st),
-                      "_stat_init(Gmort)");
+                      "_stat_init(Gmort)", &LogInfo);
     ForEachGroup(rg)
         _Gmort[rg].s = (struct accumulators_st *)
            Mem_Calloc( GrpMaxAge(rg),
                        sizeof(struct accumulators_st),
-                      "_stat_init(Gmort[rg].s)");
+                      "_stat_init(Gmort[rg].s)", &LogInfo);
   }
 
   if (BmassFlags.sppb) {
       _Spp = (struct stat_st *)
                Mem_Calloc( Globals->sppCount,
                            sizeof(struct stat_st),
-                          "_stat_init(Spp)");
+                          "_stat_init(Spp)", &LogInfo);
       ForEachSpecies(sp)
         _Spp[sp].s = (struct accumulators_st *)
                Mem_Calloc( SuperGlobals.runModelYears,
                            sizeof(struct accumulators_st),
-                          "_stat_init(Spp[sp].s)");
+                          "_stat_init(Spp[sp].s)", &LogInfo);
 
       if (BmassFlags.indv) {
         _Indv = (struct stat_st *)
                Mem_Calloc( Globals->sppCount,
                            sizeof(struct stat_st),
-                          "_stat_init(Indv)");
+                          "_stat_init(Indv)", &LogInfo);
         ForEachSpecies(sp)
           _Indv[sp].s = (struct accumulators_st *)
                Mem_Calloc( SuperGlobals.runModelYears,
                            sizeof(struct accumulators_st),
-                          "_stat_init(Indv[sp].s)");
+                          "_stat_init(Indv[sp].s)", &LogInfo);
     }
   }
   if (MortFlags.species) {
     _Sestab = (struct stat_st *)
            Mem_Calloc( Globals->sppCount,
                        sizeof(struct stat_st),
-                      "_stat_init(Sestab)");
+                      "_stat_init(Sestab)", &LogInfo);
     ForEachSpecies(sp)
       _Sestab[sp].s = (struct accumulators_st *)
                     Mem_Calloc( 1, sizeof(struct accumulators_st),
-                                "_stat_init(Sestab[sp].s)");
+                                "_stat_init(Sestab[sp].s)", &LogInfo);
 
     _Smort = (struct stat_st *)
            Mem_Calloc( Globals->sppCount,
                        sizeof(struct stat_st),
-                      "_stat_init(Smort)");
+                      "_stat_init(Smort)", &LogInfo);
     ForEachSpecies(sp)
       _Smort[sp].s = (struct accumulators_st *)
                     Mem_Calloc( SppMaxAge(sp),
                                 sizeof(struct accumulators_st),
-                                "_stat_init(Smort[sp].s)");
+                                "_stat_init(Smort[sp].s)", &LogInfo);
   }
 
   if (UseSeedDispersal && UseGrid) {
-	  _Sreceived = Mem_Calloc( Globals->sppCount, sizeof(struct stat_st), "_stat_init(Sreceived)");
+	  _Sreceived = Mem_Calloc( Globals->sppCount, sizeof(struct stat_st), "_stat_init(Sreceived)", &LogInfo);
 	  ForEachSpecies(sp) {
-		  _Sreceived[sp].s = (struct accumulators_st *)Mem_Calloc( SuperGlobals.runModelYears, sizeof(struct accumulators_st), "_stat_init(Sreceived[sp].s)");
-		  _Sreceived[sp].name = &Species[sp]->name[0];
-	  }
+ 		  _Sreceived[sp].s = (struct accumulators_st *)Mem_Calloc( SuperGlobals.runModelYears,
+                          sizeof(struct accumulators_st), "_stat_init(Sreceived[sp].s)",
+                          &LogInfo);
+ 		  _Sreceived[sp].name = &Species[sp]->name[0];
+ 	  }
   }
 
   /* "appoint" names of columns*/
@@ -590,7 +592,7 @@ void stat_Output_YrMorts( void ) {
     fprintf(f,"\n");
   }
 
-  CloseFile(&f);
+  CloseFile(&f, &LogInfo);
 }
 
 /**
@@ -610,7 +612,7 @@ void stat_Output_AllMorts( void) {
 
   if (!MortFlags.summary) return;
 
-  f = OpenFile( Parm_name(F_MortAvg), "w");
+  f = OpenFile( Parm_name(F_MortAvg), "w", &LogInfo);
 
   fprintf(f,"Age");
   if (MortFlags.group) {
@@ -654,7 +656,7 @@ void stat_Output_AllMorts( void) {
   fprintf(f,"\n");
   }
 
-  CloseFile(&f);
+  CloseFile(&f, &LogInfo);
 }
 
 /***********************************************************/
@@ -668,7 +670,7 @@ void stat_Output_AllBmass(void) {
 
   if (!BmassFlags.summary) return;
 
-  f = OpenFile( Parm_name( F_BMassAvg), "w");
+  f = OpenFile( Parm_name( F_BMassAvg), "w", &LogInfo);
 
   buf[0]='\0';
 
@@ -773,7 +775,7 @@ void stat_Output_AllBmass(void) {
 
     fprintf( f, "%s\n", buf);
   }  /* end of foreach year */
-  CloseFile(&f);
+  CloseFile(&f, &LogInfo);
 
 }
 
@@ -826,10 +828,12 @@ void make_header_with_std( char *buf) {
   SppIndex sp;
   Int i, fc=0;
   
-  fields = (char **)Mem_Calloc(MAX_OUTFIELDS * 2, sizeof(char *), "make_header_with_std");
+  fields = (char **)Mem_Calloc(MAX_OUTFIELDS * 2, sizeof(char *), 
+                               "make_header_with_std", &LogInfo);
   
   for (i = 0; i < MAX_OUTFIELDS * 2; i++) {
-      fields[i] = (char *)Mem_Calloc(MAX_FIELDLEN + 1, sizeof(char), "make_header_with_std");
+      fields[i] = (char *)Mem_Calloc(MAX_FIELDLEN + 1, sizeof(char), 
+                                     "make_header_with_std", &LogInfo);
   }
 
   /* Set up headers */
@@ -921,10 +925,12 @@ void make_header( char *buf) {
   SppIndex sp;
   Int i, fc=0;
 
-  fields = (char **)Mem_Calloc(MAX_OUTFIELDS * 2, sizeof(char *), "make_header");
+  fields = (char **)Mem_Calloc(MAX_OUTFIELDS * 2, sizeof(char *), 
+                               "make_header", &LogInfo);
   
   for (i = 0; i < MAX_OUTFIELDS * 2; i++) {
-      fields[i] = (char *)Mem_Calloc(MAX_FIELDLEN + 1, sizeof(char), "make_header");
+      fields[i] = (char *)Mem_Calloc(MAX_FIELDLEN + 1, sizeof(char), 
+                                     "make_header", &LogInfo);
   }
   
   /* Set up headers */

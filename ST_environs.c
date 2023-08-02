@@ -12,6 +12,8 @@
 /*                INCLUDES / DEFINES                   */
 /* --------------------------------------------------- */
 
+#include <string.h>
+
 #include "ST_steppe.h"
 #include "ST_globals.h"
 #include "sw_src/external/pcg/pcg_basic.h"
@@ -132,7 +134,7 @@ static void _make_ppt( void) {
 
   if (Env->gsppt <= 0)
   {
-    LogError(logfp, LOGWARN, "Zero growing season precipitation in "\
+    LogError(&LogInfo, LOGWARN, "Zero growing season precipitation in "\
       "year = %d of iteration = %d", Globals->currYear, Globals->currIter);
     Env->gsppt = 0;
   }
