@@ -161,7 +161,7 @@ void _sxw_sw_run(void) {
    SoilWatAll.Model.runModelIterations = SuperGlobals.runModelIterations;
    SoilWatAll.Model.runModelYears = SuperGlobals.runModelYears;
 
- 	SW_CTL_run_current_year(&SoilWatAll, SoilWatOutputPtrs, &PathInfo, &LogInfo);
+ 	SW_CTL_run_current_year(&SoilWatAll, SoilWatOutputPtrs, &LogInfo);
 
    // Copy the results of SOILWAT2's SXW values
    for(lyrno = 0; lyrno < SXW->NSoLyrs; lyrno++) {
