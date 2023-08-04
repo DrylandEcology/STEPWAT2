@@ -168,7 +168,6 @@ void runGrid(void)
 	IntS year, iter;
 
 	_init_grid_files();				// reads in files.in file
-	printf("here 1/n");
 	_read_maxrgroupspecies();       // reads in maxrgroupspecies.in file
 	_read_grid_setup();             // reads in grid_setup.in file
     _read_files();                  // reads in Stepwat_Inputs/files.in file
