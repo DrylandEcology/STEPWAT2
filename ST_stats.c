@@ -166,22 +166,21 @@ void stat_Collect( Int year ) {
     }
   }
 
-  if (BmassFlags.sppb) {
-    ForEachSpecies(sp) {
-      bmass = (double) Species_GetBiomass(sp);
-      if ( LT(bmass, 0.0) ) {
-        LogError(logfp, LOGWARN, "Spp %s biomass(%.4f) < 0 in stat_Collect()",
-                       Species[sp]->name, bmass);
-        bmass = 0.0;
-      }
-      _collect_add( &_Spp[sp].s[year], bmass);
-    }
-  }
-
-  if (BmassFlags.indv) {
+  if (BmassFlags.sppb || BmassFlags.indv) {
       ForEachSpecies(sp) {
-          _collect_add(&_Indv[sp].s[year],
-              (double)Species[sp]->est_count);
+          if (BmassFlags.sppb) {
+              bmass = (double)Species_GetBiomass(sp);
+              if (LT(bmass, 0.0)) {
+                  LogError(logfp, LOGWARN, "Spp %s biomass(%.4f) < 0 in stat_Collect()",
+                      Species[sp]->name, bmass);
+                  bmass = 0.0;
+              }
+              _collect_add(&_Spp[sp].s[year], bmass);
+          }
+          if (BmassFlags.indv) {
+              _collect_add(&_Indv[sp].s[year],
+                  (double)Species[sp]->est_count);
+          }
       }
   }
 
@@ -429,14 +428,13 @@ void stat_free_mem( void ) {
   			if (BmassFlags.pr) Mem_Free(_Gpr[gp].s);
             if (BmassFlags.graz) Mem_Free(_Grazed[gp].s);
   		}
-  	if(BmassFlags.sppb)
-  		ForEachSpecies(sp) {
-  			Mem_Free(_Spp[sp].s);
-  		}
 
-    if (BmassFlags.indv) {
+    if (BmassFlags.sppb || BmassFlags.indv) {
         ForEachSpecies(sp) {
-            Mem_Free(_Indv[sp].s);
+            if(BmassFlags.sppb)
+                Mem_Free(_Spp[sp].s);
+            if(BmassFlags.indv)
+                    Mem_Free(_Indv[sp].s);
         }
     }
 
@@ -767,36 +765,39 @@ void stat_Output_AllBmass(void) {
         }
       }
     }
+    if (BmassFlags.sppb || BmassFlags.indv) {
+        for ((sp) = 0; (sp) < Globals->sppCount - 1; (sp)++)
+        {
+            if (BmassFlags.sppb) {
+                sprintf(tbuf, "%f%c", _get_avg(&_Spp[sp].s[yr - 1]), sep);
+                strcat(buf, tbuf);
+            }
 
-			for ((sp) = 0; (sp) < Globals->sppCount - 1; (sp)++)
-			{
-                if (BmassFlags.sppb) {
-                    sprintf(tbuf, "%f%c", _get_avg(&_Spp[sp].s[yr - 1]), sep);
-                    strcat(buf, tbuf);
-                }
+            if (BmassFlags.indv)
+            {
+                sprintf(tbuf, "%f%c", _get_avg(&_Indv[sp].s[yr - 1]), sep);
+                strcat(buf, tbuf);
+            }
+        }
 
-				if (BmassFlags.indv)
-				{
-					sprintf(tbuf, "%f%c", _get_avg(&_Indv[sp].s[yr - 1]), sep);
-					strcat(buf, tbuf);
-				}
-			}
+        if (BmassFlags.indv)
+        {
+            if (BmassFlags.sppb) {
+                sprintf(tbuf, "%f%c", _get_avg(&_Spp[sp].s[yr - 1]), sep);
+                strcat(buf, tbuf);
+            }
 
-			if (BmassFlags.indv)
-			{
-                if (BmassFlags.sppb) {
-                    sprintf(tbuf, "%f%c", _get_avg(&_Spp[sp].s[yr - 1]), sep);
-                    strcat(buf, tbuf);
-                }
-
-				sprintf(tbuf, "%f", _get_avg(&_Indv[sp].s[yr - 1]));
-				strcat(buf, tbuf);
-			}
-			else
-			{
-				sprintf(tbuf, "%f", _get_avg(&_Spp[sp].s[yr - 1]));
-				strcat(buf, tbuf);
-			}
+            sprintf(tbuf, "%f", _get_avg(&_Indv[sp].s[yr - 1]));
+            strcat(buf, tbuf);
+        }
+        else
+        {
+            if (BmassFlags.sppb) {
+                sprintf(tbuf, "%f", _get_avg(&_Spp[sp].s[yr - 1]));
+                strcat(buf, tbuf);
+            }
+        }
+    }
 
     fprintf( f, "%s\n", buf);
   }  /* end of foreach year */
@@ -942,20 +943,16 @@ void make_header_with_std( char *buf) {
     }
   }
 
-  if (BmassFlags.sppb) {
+  if (BmassFlags.sppb || BmassFlags.indv) {
     ForEachSpecies(sp) {
-      strcpy(fields[fc++], Species[sp]->name);
-    }
-  }
-
-  if (BmassFlags.indv) {
-      ForEachSpecies(sp) {
+      if(BmassFlags.sppb)
+        strcpy(fields[fc++], Species[sp]->name);
+      if (BmassFlags.indv) {
           strcpy(fields[fc], Species[sp]->name);
           strcat(fields[fc++], "_Indivs");
       }
+    }
   }
-
-
 
   /* Put header line in global variable */
     for (i=0; i< fc-1; i++) {
@@ -1040,17 +1037,15 @@ void make_header( char *buf) {
     }
   }
 
-  if (BmassFlags.sppb) {
+  if (BmassFlags.sppb || BmassFlags.indv) {
     ForEachSpecies(sp) {
-      strcpy(fields[fc++], Species[sp]->name);
-    }
-  }
-
-  if (BmassFlags.indv) {
-      ForEachSpecies(sp) {
+      if(BmassFlags.sppb)
+         strcpy(fields[fc++], Species[sp]->name);
+      if (BmassFlags.indv) {
           strcpy(fields[fc], Species[sp]->name);
           strcat(fields[fc++], "_Indivs");
       }
+    }
   }
 
   /* Put header line in global variable */
@@ -1131,16 +1126,19 @@ void Stat_SetMemoryRefs(void) {
       NoteMemoryRef(_Gmort[rg].s);
   }
 
-  if (BmassFlags.sppb) {
-    NoteMemoryRef(_Spp);
-    ForEachSpecies(sp)
-      NoteMemoryRef(_Spp[sp].s);
+  if (BmassFlags.sppb || BmassFlags.indv) {
+    if(BmassFlags.sppb)
+        NoteMemoryRef(_Spp);
+    if(BmassFlags.indv)
+        NoteMemoryRef(_Indv);
+    ForEachSpecies(sp) {
+        if (BmassFlasg.sppb)
+            NoteMemoryRef(_Spp[sp].s);
+        if (BmassFlags.indv)
+            NoteMemoryRef(_Indv[sp].s);
+    }
   }
-  if (BmassFlags.indv) {
-      NoteMemoryRef(_Indv);
-      ForEachSpecies(sp)
-          NoteMemoryRef(_Indv[sp].s);
-  }
+
   if (MortFlags.species) {
     NoteMemoryRef(_Sestab);
     ForEachSpecies(sp)

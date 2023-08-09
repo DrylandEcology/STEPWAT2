@@ -1443,16 +1443,14 @@ void _Output_AllCellAvgBmass(const char * filename){
 						}
 					} // End ForEachGroup
 				} // End grpb
-				if(BmassFlags.sppb){
+				if(BmassFlags.sppb || BmassFlags.indv){
 					ForEachSpecies(sp){
-						spp[sp] += gridCells[i][j]._Spp[sp].s[year].ave;
+						if(BmassFlags.sppb)
+							spp[sp] += gridCells[i][j]._Spp[sp].s[year].ave;
+						if (BmassFlags.indv) 
+							indv[sp] += gridCells[i][j]._Indv[sp].s[year].ave;
 					} // End ForEachSpecies
 				} // End sppb
-				if (BmassFlags.indv) {
-					ForEachSpecies(sp) {
-						indv[sp] += gridCells[i][j]._Indv[sp].s[year].ave;
-					}
-				}
 				/* ------------ End Accumulate requested output --------------- */	
 			} // End for each column
 		} // End for each row
@@ -1518,16 +1516,16 @@ void _Output_AllCellAvgBmass(const char * filename){
 				}
 			}
 		}
-		if(BmassFlags.sppb){
+		if(BmassFlags.sppb || BmassFlags.indv){
 			ForEachSpecies(sp){
-				sprintf(tbuf, "%f%c", spp[sp], sep);
-				strcat(buf, tbuf);
-			}
-		}
-		if (BmassFlags.indv) {
-			ForEachSpecies(sp) {
-				sprintf(tbuf, "%f%c", indv[sp], sep);
-				strcat(buf, tbuf);
+				if (BmassFlags.sppb) {
+					sprintf(tbuf, "%f%c", spp[sp], sep);
+					strcat(buf, tbuf);
+				}
+				if (BmassFlags.indv) {
+					sprintf(tbuf, "%f%c", indv[sp], sep);
+					strcat(buf, tbuf);
+				}
 			}
 		}
 		/* --------------- End generate output string ---------------- */
