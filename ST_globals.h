@@ -20,6 +20,7 @@
 
 #include "ST_defines.h"
 #include "ST_functions.h"
+#include "sw_src/include/SW_datastructs.h"
 
 extern SpeciesType  **Species;
 extern GroupType    **RGroup;
@@ -30,6 +31,10 @@ extern ModelType      *Globals;
 extern BmassFlagsType BmassFlags;
 extern MortFlagsType  MortFlags;
 extern GlobalType     SuperGlobals;
+extern SW_ALL SoilWatAll;
+extern SW_OUTPUT_POINTERS SoilWatOutputPtrs[SW_OUTNKEYS];
+extern LOG_INFO LogInfo;
+extern PATH_INFO PathInfo;
 
 extern Bool UseGrid;
 extern Bool UseProgressBar;

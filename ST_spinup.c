@@ -18,19 +18,11 @@
 #include "ST_globals.h" // externs UseProgressBar
 #include "ST_mortality.h"
 #include "sw_src/include/rands.h"
-#include "sw_src/include/SW_SoilWater.h" // externs SW_Soilwat
-#include "sw_src/include/SW_Weather.h" // externs SW_Weather
-#include "sw_src/include/SW_Site.h" // externs SW_Site
-#include "sw_src/include/SW_VegProd.h" // externs SW_VegProd
-#include "sw_src/include/SW_Markov.h"// externs `markov_rng`
 #include "sxw_funcs.h"
 #include "sw_src/include/myMemory.h"
 #include "sw_src/include/filefuncs.h"
 #include "ST_progressBar.h"
 #include "ST_grid.h" // externs grid_rng
-// externs `prepare_IterationSummary`, `storeAllIterations`
-#include "sw_src/include/SW_Output.h"
-#include "sw_src/include/SW_Output_outtext.h" // externs `print_IterationSummary`
 #include "sw_src/include/SW_Output_outarray.h"
 #include "ST_functions.h" // externs `environs_rng`, `resgroups_rng`, `species_rng`
 
@@ -158,8 +150,8 @@ void runSpinup(void){
     ChDir(grid_directories[GRID_DIRECTORY_STEPWAT_INPUTS]);
     SXW_Reset(gridCells[0][0].mySXW->f_watin);
     //TODO: This is a shortcut. swc history is not used and shouldn't be until this is fixed.
-    Mem_Free(SW_Soilwat.hist.file_prefix);
-    SW_Soilwat.hist.file_prefix = NULL;
+    Mem_Free(SoilWatAll.SoilWat.hist.file_prefix);
+    SoilWatAll.SoilWat.hist.file_prefix = NULL;
     ChDir("..");
 
 	_endSpinup();
@@ -307,7 +299,7 @@ static void _run_spinup(void)
     UseSeedDispersal = FALSE;
 
     // This is a flag from SOILWAT2. It MUST be FALSE during spinup.
-    prepare_IterationSummary = FALSE;
+    SoilWatAll.GenOutput.prepare_IterationSummary = FALSE;
 
 	Bool killedany;             // killedany for mortality functions
 

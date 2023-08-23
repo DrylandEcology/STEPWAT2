@@ -207,7 +207,7 @@ void outputDispersalEvents(char* filePrefix) {
     int i;
     DispersalEvent* thisEvent = _firstEvent;
     FILE** files = Mem_Calloc(grid_Rows * grid_Cols, sizeof(FILE*),
-                              "outputDispersalEvents");
+                              "outputDispersalEvents", &LogInfo);
 
     for(i = 0; i < grid_Rows * grid_Cols; ++i) {
         sprintf(fileName, "%s%d.csv", filePrefix, i);
@@ -391,7 +391,7 @@ void _recordDispersalEvent(int year, int iteration, int fromCell, int toCell,
                            const char* name) {
   // Allocate a new event.
   DispersalEvent* newEvent = Mem_Calloc(1, sizeof(DispersalEvent),
-                                        "_recordDispersalEvent");
+                                        "_recordDispersalEvent", &LogInfo);
 
   // Populate the struct that we just allocated.
   newEvent->next = NULL;

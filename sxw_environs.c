@@ -18,10 +18,10 @@
 #include "sw_src/include/SW_Defines.h"
 #include "sxw.h" // externs `*SXW`
 #include "sxw_module.h"
-#include "sw_src/include/SW_Model.h" // externs SW_Model
-#include "sw_src/include/SW_Site.h" // externs SW_Site
-#include "sw_src/include/SW_SoilWater.h" // externs SW_Soilwat
-#include "sw_src/include/SW_Weather.h" // externs SW_Weather
+#include "sw_src/include/SW_Model.h"
+#include "sw_src/include/SW_Site.h"
+#include "sw_src/include/SW_SoilWater.h"
+#include "sw_src/include/SW_Weather.h"
 
 
 
