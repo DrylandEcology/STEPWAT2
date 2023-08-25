@@ -173,6 +173,7 @@ typedef struct grid_cell_st
 	/** \brief The [species](\ref SpeciesType) 
 	 *         [seed dispersal](\ref SEED_DISPERSAL) statistics accumulator. */ 
 	StatType *_Sreceived;
+	StatType *_Grazed;
 	/** \brief The [rgroup](\ref GroupType) wildfire statistics accumulator. */
 	FireStatsType *_Gwf;
 

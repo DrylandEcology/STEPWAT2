@@ -731,6 +731,15 @@ static void _allocate_accumulators(void){
 			   gridCells[i][j].<accumulator> because the ST_stats accumulators are local. */
 			load_cell(i,j);
 
+			if (BmassFlags.graz) {
+				gridCells[i][j]._Grazed = (StatType*)Mem_Calloc(SuperGlobals.max_rgroups, sizeof(StatType),
+					"allocate_accumulators(Grazed)", &LogInfo);
+				ForEachGroup(rg) {
+					gridCells[i][j]._Grazed[rg].s = (struct accumulators_st*)Mem_Calloc(SuperGlobals.runModelYears,
+						sizeof(struct accumulators_st), "_allocate_accumulators(Grazed)", &LogInfo);
+				}
+			}
+
   			if (BmassFlags.dist) {
     			gridCells[i][j]._Dist = (StatType*) Mem_Calloc(1, sizeof(StatType), "_allocate_accumulators(Dist)", &LogInfo);
 		    	gridCells[i][j]._Dist->s = (struct accumulators_st *)
@@ -1023,7 +1032,7 @@ void load_cell(int row, int col){
 	                       gridCells[row][col]._Grp, gridCells[row][col]._Gsize, gridCells[row][col]._Gpr,
 						   gridCells[row][col]._Gmort, gridCells[row][col]._Gestab, gridCells[row][col]._Spp,
 						   gridCells[row][col]._Indv, gridCells[row][col]._Smort, gridCells[row][col]._Sestab,
-						   gridCells[row][col]._Sreceived, gridCells[row][col]._Gwf, gridCells[row][col].stats_init);
+						   gridCells[row][col]._Sreceived, gridCells[row][col]._Grazed, gridCells[row][col]._Gwf, gridCells[row][col].stats_init);
 
 	/* Copy this cell's SXW variables into the local variables in sxw.c */
 	copy_sxw_variables(gridCells[row][col].mySXW, gridCells[row][col].mySXWResources, gridCells[row][col].myTranspWindow);
@@ -1084,7 +1093,7 @@ void unload_cell(){
 	Plot = NULL;
 	Globals = NULL;
 	// Nullify the accumulators
-	stat_Copy_Accumulators(NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,FALSE);
+	stat_Copy_Accumulators(NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,FALSE);
 	// Nullify sxw
 	copy_sxw_variables(NULL,NULL,NULL);
 }
@@ -1597,8 +1606,8 @@ void _Output_AllCellAvgBmass(const char * filename){
 	/* One accumulator for every accumulator in ST_stats.c */
 	float ppt, pptstd, pptsos, temp, tempstd, tempsos, dist, wildfire, grp[SuperGlobals.max_rgroups], grpstd[SuperGlobals.max_rgroups],
 		  grpsos[SuperGlobals.max_rgroups], gsize[SuperGlobals.max_rgroups], gpr[SuperGlobals.max_rgroups],
-		  gprsos[SuperGlobals.max_rgroups], gprstd[SuperGlobals.max_rgroups], prescribedfire[SuperGlobals.max_rgroups],
-		  spp[SuperGlobals.max_spp_per_grp * SuperGlobals.max_rgroups],
+		  gprsos[SuperGlobals.max_rgroups], gprstd[SuperGlobals.max_rgroups], graze[SuperGlobals.max_rgroups],
+		  prescribedfire[SuperGlobals.max_rgroups], spp[SuperGlobals.max_spp_per_grp * SuperGlobals.max_rgroups],
 		  indv[SuperGlobals.max_spp_per_grp * SuperGlobals.max_rgroups];
 
 	char buf[2048], tbuf[2048];	// Two buffers: one for accumulating and one for formatting.
@@ -1639,6 +1648,7 @@ void _Output_AllCellAvgBmass(const char * filename){
 			gprsos[rg] = 0;
 			gprstd[rg] = 0;
 			prescribedfire[rg] = 0;
+			graze[rg] = 0;
 		}
 		ForEachSpecies(sp){
 			spp[sp] = 0;
@@ -1665,6 +1675,11 @@ void _Output_AllCellAvgBmass(const char * filename){
 				}
 				if(BmassFlags.dist) dist += gridCells[i][j]._Dist->s[year].nobs;
 				if(BmassFlags.grpb) {
+					if (BmassFlags.graz) {
+						ForEachGroup(rg) {
+							graze[rg] = get_running_mean(nobs, graze[rg], gridCells[i][j]._Grazed[rg].s[year].ave);
+						}
+					}
 					if(BmassFlags.wildfire){
 						wildfire += gridCells[i][j]._Gwf->wildfire[year];
 					}
@@ -1752,6 +1767,10 @@ void _Output_AllCellAvgBmass(const char * filename){
 				}
 				if(BmassFlags.prescribedfire){
 					sprintf(tbuf, "%f%c", prescribedfire[rg], sep);
+					strcat(buf, tbuf);
+				}
+				if (BmassFlags.graz) {
+					sprintf(tbuf, "%f%c", graze[rg], sep);
 					strcat(buf, tbuf);
 				}
 			}

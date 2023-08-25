@@ -403,6 +403,7 @@ void grazing_EndOfYear( void){
 	{
 		IntU grazingyr =0;
 		g = RGroup[rg];
+        RGroup[rg]->res_grazed = 0;
 
 		if (Globals->currYear < RGroup[rg]->startyr)
 		{
@@ -439,7 +440,7 @@ void grazing_EndOfYear( void){
 				}
         
 				/* Remove plant biomass to implement grazing using the proportion_grazing specified in inputs */
-				Species_Proportion_Grazing(RGroup[rg]->est_spp[i],RGroup[rg]->proportion_grazing );
+				RGroup[rg]->res_grazed += Species_Proportion_Grazing(RGroup[rg]->est_spp[i],RGroup[rg]->proportion_grazing );
 			}
 		}
 	}

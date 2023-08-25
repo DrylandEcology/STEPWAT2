@@ -436,7 +436,7 @@ static void _bmassflags_init( void) {
 
    FILE *fin;
    Int x, i,
-       nitems=16; /* number of items expected in first input line */
+       nitems=17; /* number of items expected in first input line */
 
    /*   code      controls: */
    char u[5],  /* summary? if 'n' don't init and don't print */
@@ -454,7 +454,8 @@ static void _bmassflags_init( void) {
         w[5],  /* wildfire count */
         m[5],  /* prescribed fire count */
         s[5],  /* biomass for each species */
-        n[5];  /* number of individuals for each species */
+        n[5],  /* number of individuals for each species */
+        b[5];  /* if 'y', output grazed biomass */
    char z;
    char inbuf[MAX_FILENAMESIZE], bMassAvgFile[FILENAME_MAX],
         bMassPreFile[FILENAME_MAX];
@@ -466,8 +467,8 @@ static void _bmassflags_init( void) {
      LogError(&LogInfo, LOGFATAL, "%s: No data found!\n", MyFileName);
    }
 
-   x = sscanf( inbuf, "%s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s",
-                      u, a, h, f, y, d, p, c, t, g, q, r, w, m, s, n );
+   x = sscanf( inbuf, "%s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s",
+                      u, a, h, f, y, d, p, c, t, g, q, r, w, m, b, s, n );
 
    /* don't bother initializing the rest if first flag is 'n' */
    BmassFlags.summary  = (Bool)(*u=='y'||*u=='Y');
@@ -527,15 +528,15 @@ static void _bmassflags_init( void) {
             BmassFlags.prescribedfire     = (Bool)(*m=='y'||*m=='Y');
             break;
        case 13:
-            BmassFlags.sppb   = (Bool)(*s=='y'||*s=='Y');
+            BmassFlags.graz = (Bool)(*b == 'y' || *b == 'Y');
             break;
        case 14:
-            BmassFlags.indv   = (Bool)(*n=='y'||*n=='Y');
+            BmassFlags.sppb = (Bool)(*s == 'y' || *s == 'Y');
             break;
        case 15:
+            BmassFlags.indv = (Bool)(*n == 'y' || *n == 'Y');
             break;
      }
-
    }
    CloseFile(&fin, &LogInfo);
 
