@@ -8,3 +8,4 @@
 300     # Number of years to perform spinup. 
 1       # Write separate output files for each cell.
 1	# output all seed dispersal events? 1 means yes, 0 means no.
+0   # output full seed dispersal output? 1 means yes, 0 means no.

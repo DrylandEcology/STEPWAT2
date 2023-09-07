@@ -42,6 +42,7 @@ typedef struct dispersal_event_st {
 extern Bool UseSeedDispersal;
 extern Bool recordDispersalEvents;
 extern pcg32_random_t dispersal_rng;
+extern Bool outputSDData;
 
 /* =================================================== */
 /*             Global Function Declarations            */

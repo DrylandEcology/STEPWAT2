@@ -1590,6 +1590,11 @@ static void _read_grid_setup(void)
 				"Invalid %s file: seed dispersal events output line\n", grid_files[GRID_FILE_SETUP]);
     }
 
+	GetALine(f, buf);
+	if (sscanf(buf, "%d", &outputSDData) != 1) {
+		LogError(&LogInfo, LOGFATAL, "Invalid grid setup file (Seed Dispersal Data Output\n");
+	}
+
     CloseFile(&f, &LogInfo);
 }
 

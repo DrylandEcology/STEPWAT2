@@ -69,6 +69,11 @@ pcg32_random_t dispersal_rng;
 Bool isRNGSeeded = FALSE;
 
 /**
+ * \brief Output full Seed Dispersal output
+ */
+Bool outputSDData;
+
+/**
  * \brief Disperse seeds between cells.
  *
  * Iterates through all senders and recipients and determines which cells
@@ -125,8 +130,10 @@ void disperseSeeds(int year) {
       ForEachSpecies(sp) {
         // Running this algorithm on Species that didn't request dispersal
         // wouldn't hurt, but it would be a waste of time.
-        if (!Species[sp]->use_dispersal)
-          continue;
+    	if(!outputSDData){
+    		if (!Species[sp]->use_dispersal)
+    			continue;
+    	}
 
         // If there are no individuals of this species that are of reproductive
         // age continue.
