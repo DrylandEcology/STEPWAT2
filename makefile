@@ -82,7 +82,7 @@ sw_LDLIBS = -l$(sw2) $(LDLIBS) -lm
 
 
 
-all: $(path_sw2lib)/$(lib_sw2) stepwat stepwat_test
+all: $(path_sw2lib)/$(lib_sw2) stepwat
 
 $(path_sw2lib)/$(lib_sw2):
 # Note: `-I..` is required for `#include "ST_defines.h"`
