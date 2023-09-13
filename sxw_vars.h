@@ -1,14 +1,17 @@
-/********************************************************/
-/********************************************************/
-/*  Source file: sxw_vars.h
- *  Type: header
- *  Purpose: Separates the definition of some global variables
- *           so they can be declared in stepp2wat.c and
- *           externed elsewhere.
- *  Application: STEPWAT - plant community dynamics simulator
- *               coupled with the  SOILWAT model. */
-/*  History */
-/*     (14-Apr-2002) -- INITIAL CODING - cwb */
+/** 
+ * \file sxw_vars.h
+ * \brief Including this header will give you the structs from \ref sxw.h and
+ *        the \ref SXW variable.
+ * 
+ * This file is obfuscated to the point where it needs to be removed. Currently
+ * it is \ref sxw.h and an extern statement for the \ref SXW global variable.
+ * If someone in the future has time they should combine \ref sxw.h and this 
+ * file.
+ * 
+ * \author CWB (initial programming)
+ * \date 14 April 2002
+ * \ingroup SXW
+ */
 /********************************************************/
 /********************************************************/
 
@@ -16,8 +19,6 @@
 #define SXW_VARS_DEF
 
 #include "sxw.h" // externs `*SXW`
-#include "sw_src/generic.h"
-
 
 
 #endif

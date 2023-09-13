@@ -1,43 +1,35 @@
-/********************************************************/
-/********************************************************/
-/*  Source file: sxw_resource.c
- *  Type: module
- *  Purpose: Compute resource vector for STEPPE based on
- *           transpiration values from SOILWAT.
- *  Dependency:  sxw.c
- *  Application: STEPWAT - plant community dynamics simulator
- *               coupled with the  SOILWAT model. */
-/*  History:
- *     (21-May-2002) -- INITIAL CODING - cwb
- *     19-Jun-2003 - cwb - Added RealD (double precision)
- *                 types for internal dynamic matrices and
- *                 other affected variables.  See notes in
- *                 sxw.c. */
-/********************************************************/
-/********************************************************/
+/**
+ * \file sxw_resource.c
+ * \brief Translates transpiration values from [SOILWAT](\ref sw_src) into 
+ *        [Steppe](\ref STEPPE) resource values.
+ * 
+ * \author CWB (initial programming)
+ * \date 21 May 2002
+ * \ingroup SXW_PRIVATE
+ */
 
 /* =================================================== */
 /*                INCLUDES / DEFINES                   */
 /* --------------------------------------------------- */
 
-#include <stdio.h>
-#include "sw_src/generic.h"
-#include "sw_src/rands.h"
-#include "sw_src/filefuncs.h"
-#include "sw_src/myMemory.h"
+
+#include "sw_src/include/generic.h"
+#include "sw_src/include/rands.h"
+#include "sw_src/include/filefuncs.h"
+#include "sw_src/include/myMemory.h"
 #include "ST_steppe.h"
 #include "ST_globals.h"
-#include "sw_src/SW_Defines.h"
+#include "sw_src/include/SW_Defines.h"
 #include "sxw.h" // externs `*SXWResources`, `transp_window`, `resource_rng`
 #include "sxw_module.h"
 #include "sxw_vars.h"
-#include "sw_src/SW_Control.h"
-#include "sw_src/SW_Site.h"
-#include "sw_src/SW_SoilWater.h"
-#include "sw_src/SW_VegProd.h"
-#include "sw_src/SW_Files.h"
-#include "sw_src/SW_Times.h"
-#include "sw_src/pcg/pcg_basic.h"
+#include "sw_src/include/SW_Control.h"
+#include "sw_src/include/SW_Site.h"
+#include "sw_src/include/SW_SoilWater.h"
+#include "sw_src/include/SW_VegProd.h"
+#include "sw_src/include/SW_Files.h"
+#include "sw_src/include/SW_Times.h"
+#include "sw_src/external/pcg/pcg_basic.h"
 
 
 
@@ -93,7 +85,8 @@ void _sxw_update_resource(void) {
   RealF *sizes_live;
   GrpIndex g;
 
-  sizes_live = (RealF *)Mem_Calloc(SuperGlobals.max_rgroups, sizeof(RealF), "_sxw_update_resource");
+  sizes_live = (RealF *)Mem_Calloc(SuperGlobals.max_rgroups, sizeof(RealF),
+                                   "_sxw_update_resource", &LogInfo);
 
 	ForEachGroup(g)
 	{
@@ -314,7 +307,7 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
             // This transpiration will be added
             transp_window->added_transp = (1 - transp_ratio / RandUniFloatRange(min, max, &resource_rng)) * transp_window->average;
             if(transp_window->added_transp < 0){
-                LogError(logfp, LOGNOTE, "sxw_resource: Added transpiration less than 0.\n");
+                LogError(&LogInfo, LOGNOTE, "sxw_resource: Added transpiration less than 0.\n");
             }
             //printf("Year %d:\tTranspiration to add: %f\n",Globals->currYear,add_transp);
 

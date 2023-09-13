@@ -1,38 +1,55 @@
-/*********************************************************************************
- * ST_seedDispersal.h
+/**
+ * \file ST_seedDispersal.h
+ * \brief Declarations for all functions and structures exported from the seed
+ *        dispersal module.
  * 
- * Contains declarations for exported functions from the seed dispersal module.
- * It also contains the declaration for the UseSeedDispersal flag and the
- * seed dispersal struct.
- *********************************************************************************/
+ * The seed dispersal module is intended to run in [gridded mode](\ref GRID).
+ * It offers an alternative to traditional establishment by allowing 
+ * establishment only when seeds reach a cell from a nearby cell.
+ * 
+ * \author Chandler Haukap
+ * \date 17 December 2019
+ * \ingroup SEED_DISPERSAL
+ */
 
 #ifndef SEEDDISPERSAL_H
 #define SEEDDISPERSAL_H
 
-/* Holds seed dispersal information. */
-typedef struct _grid_sd_struct
-{ //for seed dispersal
-	/* TRUE if seeds are present. */
-	Bool seeds_present;
-	/* TRUE if this cell has recieved any seeds. */
-	Bool seeds_received;
-	/* dispersalProb[row][col] = the probability that this cell will disperse seeds to cell (row,col). */
-	double **dispersalProb;
-	/* Last year's precipitation. */
-	double lyppt;
-} Grid_SD_St;
+#include "ST_defines.h"
 
+/**
+ * \brief A struct for a single dispersal event.
+ *
+ * A linked list of these events can be used to output any statistics you could
+ * want about seed dispersal.
+ *
+ * \author Chandler Haukap
+ * \date 28 January 2020
+ * \ingroup SEED_DISPERSAL_PRIVATE
+ */
+typedef struct dispersal_event_st {
+    int year;
+    int iteration;
+    int fromCell;
+    int toCell;
+    char name[5];
+    struct dispersal_event_st* next;
+} DispersalEvent;
 
 /* =================================================== */
 /*            Externed Global Variables                */
 /* --------------------------------------------------- */
 extern Bool UseSeedDispersal;
+extern Bool recordDispersalEvents;
 extern pcg32_random_t dispersal_rng;
+extern Bool outputSDData;
 
 /* =================================================== */
 /*             Global Function Declarations            */
 /* --------------------------------------------------- */
-void disperseSeeds(void);
-void initDispersalParameters(void);
+// See ST_seedDispersal.c for documentation of these functions.
+void disperseSeeds(int year);
+void outputDispersalEvents(char* filePrefix);
+void freeDispersalMemory(void);
 
 #endif

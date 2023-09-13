@@ -1,6 +1,11 @@
 # Plant production data file for SOILWAT2
 # Location:
 
+#---- Select method for vegetation parameters
+0	# 0 - Read in the values from file
+ 	# 1 - Estimate fixed vegetation composition (fractional cover) from long-term climate conditions
+
+
 # ---- Composition of vegetation type components (0-1; must add up to 1)
 # Grasses	Shrubs	Trees	Forbs	BareGround
 	0.2	0.2	0.2	0.2	0.2

@@ -23,7 +23,7 @@
 #ifndef STEPPE_STRUCT_DEF
 #define STEPPE_STRUCT_DEF
 
-#include "sw_src/generic.h"
+#include "sw_src/include/generic.h"
 #include "ST_mortality.h"
 
 /**
@@ -148,10 +148,10 @@ struct species_st {
       /** \brief Number of individuals established in current iteration. */
         estabs,
       /** \brief Specific to annuals. Array of seeds produced indexed by year. 
-       * \sa ST_seedDispersal.c */
+       * Not to be confused with [seed dispersal](\ref SEED_DISPERSAL) */
         *seedprod,
       /** \brief not sure what this does yet.
-       * \sa ST_seedDispersal.c */
+       * This is NOT a part of [seed dispersal](\ref SEED_DISPERSAL) */
          seedbank,
       /** \brief Average number of seeds produced by annual species per 1g of biomass, per 1m^2 and per year.
        * internally re-calculated as seeds per 1 g biomass per plot and per year. */
@@ -174,12 +174,10 @@ struct species_st {
       /** \brief Head of a doubly-linked list of all individuals of this species. 
        * \sa indiv_st*/
   struct indiv_st *IndvHead;
-      /** \brief Seed dispersal only- whether to allow growth for the current year.
-       * \sa ST_seedDispersal.c */
-  Bool allow_growth,
       /** \brief Whether seeds where produced/received and germinated this year. 
-       * \sa ST_seedDispersal.c */
-	     sd_sgerm;
+       * \sa ST_seedDispersal.c 
+       * \ingroup SEED_DISPERSAL */
+  Bool seedsPresent;
 
   /**** Quantities that DO NOT change during model runs *****/
 
@@ -226,31 +224,20 @@ struct species_st {
         exp_decay,
       /** \brief 1 value for each mortality type, if clonal*/
         prob_veggrow[4],
-      /** \brief Seed dispersal parameter read from inputs.
-       * \sa ST_seedDispersal.c */
-  	    sd_Param1,
-      /** \brief Seed dispersal parameter read from inputs.
-       * \sa ST_seedDispersal.c */
-  	    sd_PPTdry,
-      /** \brief Seed dispersal parameter read from inputs.
-       * \sa ST_seedDispersal.c */
-	      sd_PPTwet,
-      /** \brief Seed dispersal parameter read from inputs.
-       * \sa ST_seedDispersal.c */
-	      sd_Pmin,
-      /** \brief Seed dispersal parameter read from inputs.
-       * \sa ST_seedDispersal.c */
-  	    sd_Pmax,
-      /** \brief Average release height of the inflorescences in cm.
-       * \sa ST_seedDispersal.c */
-	      sd_H,
-      /** \brief Average sinking velocity of seeds (cm/sec).
-       * \sa ST_seedDispersal.c */
-      	sd_VT,
-      /** \brief This variable is used for seed dispersal, but it needs better
-       *         documentation
-       *  \sa ST_seedDispersal.c */ 
-        sd_VW;
+      /** \brief Minimum relsize at which an individual can produce seeds.
+       * \ingroup SEED_DISPERSAL */
+  	    minReproductiveSize,
+      /** \brief The maximum height of an individual of this species.
+       * \ingroup SEED_DISPERSAL */
+        maxHeight,
+      /** \brief The slope of the allometric relationship between height and 
+       *         biomass. Constant read in from inputs.
+       * \ingroup SEED_DISPERSAL */
+        heightSlope,
+      /** \brief The probability that a species disperses seeds 
+       *         \ref maxDispersalDistance meters away. 
+       *  \ingroup SEED_DISPERSAL */
+        maxDispersalProbability;
       /** \brief Temperature class for this species.
        * \sa TempClass */
   TempClass tempclass;
@@ -264,7 +251,8 @@ struct species_st {
       /** \brief If FALSE do not establish this species. */
        use_me,
       /** \brief TRUE if the user has requested seed dispersal for this species.
-       * \sa ST_seedDispersal.c */
+       * \sa ST_seedDispersal.c 
+       * \ingroup SEED_DISPERSAL */
        use_dispersal;
 };
 
@@ -740,7 +728,7 @@ struct superglobals_st {
            max_speciesnamelen; /* Maximum species name length. */
     
     IntUS runModelIterations,
-          runInitializationYears,
+          runSpinupYears,
           runModelYears,
           nCells;		/* number of cells to use in Grid, only applicable if grid function is being used */
 

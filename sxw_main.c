@@ -1,35 +1,23 @@
-/********************************************************/
-/********************************************************/
-/*  Source file: sxw_main.c
+/**
+ * \file sxw_main.c
+ * \brief A deprecated testing file.
  *
-/*  Type: testing module
+ * This file exists only for reference. It is completely deprecated and will
+ * not compile. At some point it should be removed.
  *
-/*  Purpose: Contains main() for suite of code to test
- *           the sxw module.
- *
-/*  Calls:
- *
-/*  Application: STEPWAT - plant community dynamics simulator
- *               coupled with the  SOILWAT model.
- *
-/*  History:
-/*     (25-Oct-2002) -- INITIAL CODING - cwb
-/*
-/********************************************************/
-/********************************************************/
+ * \author CWB (initial coding)
+ * \date 25 October 2002
+ */
 
 /* =================================================== */
 /*                INCLUDES / DEFINES                   */
 /* --------------------------------------------------- */
 
-
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include "ST_steppe.h"
-#include "sw_src/generic.h" // externs `errstr`
-#include "sw_src/filefuncs.h" // externs `inbuf`
-#include "sw_src/myMemory.h"
+#include "sw_src/include/myMemory.h"
 #include "sxw_funcs.h"
 
 /* for the chdir function */

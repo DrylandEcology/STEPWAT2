@@ -1,57 +1,62 @@
-/*****************************************************************************/
-// Source file: ST_grid.c
-// Type: module
-// Application: STEPPE - plant community dynamics simulator
-// Purpose: This module performs gridded mode simulations.
-// History:
-//  (5/24/2013) -- INITIAL CODING - DLM
-//  (March - July 2019) -- Overhauled by Chandler Haukap with Fredrick Pierson
-//                         See issue #262 and pull request #375 on GitHub
-/*****************************************************************************/
-/*
- Summary:
-    This module handles the gridded mode of STEPWAT2. To accomplish this we use
-    a grid of cells represented by the CellType struct. The entire grid of
-    cells can be referenced by the gridCells variable which is a 2d array of
-    CellTypes. To allow this module to use the same functions as non-gridded
-    mode the CellType structs must be loaded into the global variables using
-    the load_cell function. As long as a cell is loaded in you can be sure that
-    all functions will work as expected.
-
-    In addition to all of the functionality of non-gridded mode, gridded mode
-    has two additional features: initialization and seed dispersal.
-    Initialization allows vegetation to establish before the simulation
-    experiments begin. Seed dispersal allows each cell to disperse seeds to
-    nearby cells.
-*/
+/**
+ * \file ST_grid.c
+ * \brief Function definitions for the gridded mode.
+ *
+ * This module handles the gridded mode of STEPWAT2. To accomplish this we use
+ * a grid of cells represented by the CellType struct. The entire grid of
+ * cells can be referenced by the gridCells variable which is a 2d array of
+ * CellTypes. To allow this module to use the same functions as non-gridded
+ * mode the CellType structs must be loaded into the global variables using
+ * the load_cell function. As long as a cell is loaded in you can be sure that
+ * all functions will work as expected.
+ *
+ * In addition to all of the functionality of non-gridded mode, gridded mode
+ * has three additional features: [spinup](\ref SPINUP),
+ * [seed dispersal](\ref SEED_DISPERSAL) and [colonization](\ref COLONIZATION).
+ * Spinup allows vegetation to establish before the simulation
+ * experiments begin. Seed dispersal allows each cell to disperse seeds to
+ * nearby cells.
+ *
+ * See issue #262 and pull request #375 on GitHub for a discussion of the
+ * overhaul of this module.
+ *
+ * \author DLM (initial programming)
+ * \author Fredrick Pierson
+ * \author Chandler Haukap
+ * \date March through July 2019
+ * \ingroup GRID_PRIVATE
+ */
 
 /*******************************************************/
 /* -------------- INCLUDES / DEFINES ----------------- */
 /*******************************************************/
-#include <stdio.h>
 #include <string.h>
 #include <ctype.h>
-#include "sw_src/generic.h"
-#include "sw_src/filefuncs.h"
-#include "sw_src/myMemory.h"
-#include "sw_src/rands.h"
-#include "sw_src/SW_SoilWater.h" // externs SW_Soilwat
-#include "sw_src/SW_Weather.h" // externs SW_Weather
-#include "sw_src/SW_Markov.h"// externs `markov_rng`
+#include <dirent.h>
+#include "sw_src/include/generic.h"
+#include "sw_src/include/filefuncs.h"
+#include "sw_src/include/myMemory.h"
+#include "sw_src/include/rands.h"
+#include "sw_src/include/SW_SoilWater.h"
+#include "sw_src/include/SW_Weather.h"
+#include "sw_src/include/SW_Markov.h"
 #include "ST_grid.h"
 #include "ST_steppe.h"
 #include "ST_globals.h" // externs `UseProgressBar`
 #include "ST_functions.h" // externs `environs_rng`, `resgroups_rng`, `species_rng`
 #include "ST_stats.h"
 #include "sxw_funcs.h"
-#include "ST_initialization.h"
+#include "ST_spinup.h"
 #include "ST_progressBar.h"
+#include "ST_colonization.h"
 #include "ST_seedDispersal.h" // externs `UseSeedDispersal`
 #include "ST_mortality.h" // externs `mortality_rng`, `*_SomeKillage`, `UseCheatgrassWildfire`
+#include "sw_src/include/SW_Output.h"
+#include "sw_src/include/SW_Output_outtext.h"
+#include "sw_src/include/SW_Output_outarray.h"
 
-
-#include "sw_src/SW_Flow.h" // for `SW_FLW_init_run()`
-#include "sw_src/SW_Flow_lib.h" // for `SW_ST_init_run()`
+#include "sw_src/include/SW_Flow.h" // for `SW_FLW_init_run()`
+#include "sw_src/include/SW_Flow_lib.h" // for `SW_ST_init_run()`
 
 
 
@@ -66,18 +71,52 @@ Bool UseDisturbances = 0, UseSoils = 0, sd_DoOutput = 0; //these are treated lik
 
 pcg32_random_t grid_rng;         // Gridded mode's unique RNG.
 
-/* gridCells[i][j] denotes the cell at position (i,j) */
+/**
+ * \brief The main struct of the gridded mode module.
+ *
+ * gridCells[i][j] denotes the cell at position (i,j)
+ *
+ * \author Chandler Haukap
+ * \ingroup GRID
+ */
 CellType** gridCells;
-/* Rows in the grid */
+
+/**
+ * \brief Rows in the [grid](\ref gridCells).
+ * \ingroup GRID
+ */
 int grid_Rows = 0;
-/* Columns in the grid */
+
+/**
+ * \brief Columns in the [grid](\ref gridCells).
+ * \ingroup GRID
+ */
 int grid_Cols = 0;
-/* Array of file names. Use the File_Indices enum to pick the correct index. */
+
+/**
+ * \brief Array of file names. Use the \ref File_Indices enum to pick the
+ *         correct index.
+ * \ingroup GRID
+ */
 char *grid_files[N_GRID_FILES];
-/* Array of directory names. Use the Directory_Indices enum to pick the correct index. */
+
+/** \brief Array of directory names. Use the \ref Directory_Indices enum to
+ *         pick the correct index.
+ * \ingroup GRID
+ */
 char *grid_directories[N_GRID_DIRECTORIES];
-/* TRUE if every cell should write its own output file. */
+
+/**
+ * \brief TRUE if every cell should write its own output file.
+ * \ingroup GRID
+ */
 Bool writeIndividualFiles = 0;
+
+/**
+ * \brief Set to TRUE to tell the gridded mode to output SOILWAT2 files.
+ * \ingroup GRID
+ */
+Bool writeSOILWAT2Output = 0;
 
 
 
@@ -113,6 +152,7 @@ SXW_resourceType* getSXWResources(void);
 transp_t* getTranspWindow(void);
 void copy_sxw_variables(SXW_t* newSXW, SXW_resourceType* newSXWResources, transp_t* newTransp_window);
 
+
 /***********************************************************/
 /* --------- Locally Used Function Declarations ---------- */
 /***********************************************************/
@@ -127,17 +167,30 @@ static void _allocate_accumulators(void);
 static void _read_disturbances_in(void);
 static void _read_soils_in(void);
 static int _read_soil_line(char* buf, SoilType* destination, int layer);
-static void _read_init_species(void);
+static void _read_spinup_species(void);
 static void _read_maxrgroupspecies(void);
 static void _read_grid_setup(void);
 static void _read_files(void);
+static void _init_soilwat_outputs(char* fileName);
 static void _init_stepwat_inputs(void);
 static void _init_grid_inputs(void);
+static void _separateSOILWAT2Output(void);
+static void _separateSOILWAT2DailyOutput(char* fileName, int* cellNumbers);
+static void _separateSOILWAT2MonthlyOutput(char* fileName, int* cellNumbers);
+static void _separateSOILWAT2YearlyOutput(char* fileName, int* cellNumbers);
+static int _getNumberSOILWAT2OutputCells(void);
+static int* _getSOILWAT2OutputCells(void);
 
 /******************** Begin Model Code *********************/
 /***********************************************************/
 
-/* Print information about the simulation to stdout. */
+/**
+ * \brief Print information about the simulation to stdout.
+ *
+ * \author Chandler Haukap
+ * \date August 2019
+ * \ingroup GRID
+ */
 static void printGeneralInfo(void){
 	/* ------------------- Print some general information to stdout ----------------------- */
     printf("Number of iterations: %d\n", SuperGlobals.runModelIterations);
@@ -145,13 +198,8 @@ static void printGeneralInfo(void){
 	printf("Number of cells: %d\n\n", grid_Cells);
 	if(UseDisturbances) printf("Using grid disturbances file\n");
 	if(UseSoils) printf("Using grid soils file\n");
-	if(initializationMethod == INIT_WITH_SEEDS){
-		printf("Running seed dispersal as initialization\n");
-	} else if(initializationMethod == INIT_WITH_SPINUP) { 
-		printf("Running Spinup as initialization\n");
-	}
-	if(initializationMethod != INIT_WITH_NOTHING){
-		printf("Number of initialization years: %d\n", SuperGlobals.runInitializationYears);
+	if(shouldSpinup){
+		printf("Number of spinup years: %d\n", SuperGlobals.runSpinupYears);
 	}
 	if(UseSeedDispersal){
 		printf("Dispersing seeds between cells\n");
@@ -160,12 +208,31 @@ static void printGeneralInfo(void){
 	/* --------------------------- END printing general info -------------------------------- */
 }
 
-/* Run gridded mode. */
+/**
+ * \brief Run gridded mode.
+ *
+ * This function is responsible for initializing the [cells](\ref CellType),
+ * running the simulation on all of them, then printing output.
+ *
+ * \sideeffect
+ *     In theory this function will have no side effects, but memory leaks are
+ *     possible due to the massive amount of allocations associated with
+ *     gridded mode.
+ *
+ * \author Chandler Haukap
+ * \date August 2019
+ * \ingroup GRID
+ */
 void runGrid(void)
 {
 	int i, j;
 	Bool killedany;
 	IntS year, iter;
+
+  if(SoilWatAll.GenOutput.storeAllIterations) {
+    printf("WARNING: SOILWAT2 iteration output unavailable for gridded mode.\n");
+    SoilWatAll.GenOutput.storeAllIterations = FALSE;
+  }
 
 	_init_grid_files();				// reads in files.in file
 	_read_maxrgroupspecies();       // reads in maxrgroupspecies.in file
@@ -173,50 +240,72 @@ void runGrid(void)
     _read_files();                  // reads in Stepwat_Inputs/files.in file
     _init_stepwat_inputs();			// reads the stepwat inputs in
 	_init_grid_inputs();			// reads the grid inputs in & initializes the global grid variables
+	initColonization(grid_files[GRID_FILE_COLONIZATION]);
 	//SWC hist file prefix needs to be cleared
-	Mem_Free(SW_Soilwat.hist.file_prefix);
-	SW_Soilwat.hist.file_prefix = NULL;
+	Mem_Free(SoilWatAll.SoilWat.hist.file_prefix);
+	SoilWatAll.SoilWat.hist.file_prefix = NULL;
 
 	printGeneralInfo();
 
-	if(initializationMethod != INIT_WITH_NOTHING){
-		runInitialization();
+	if(shouldSpinup){
+		runSpinup();
 	} else {
 		/* SXW expects to be run from the testing.sagebrush.master/Stepwat_Inputs directory.
-        However, we are running from the testing.sagebrush.master directory. To find the 
+        However, we are running from the testing.sagebrush.master directory. To find the
         location of the SOILWAT input files we need to manually set SXW->f_watin. */
 		ChDir(grid_directories[GRID_DIRECTORY_STEPWAT_INPUTS]);
 		SXW_Reset(gridCells[0][0].mySXW->f_watin);
 		ChDir("..");
 	}
 
-	// SOILWAT resets SW_Weather.name_prefix every iteration. This is not the behavior we want 
+	// SOILWAT resets SoilWatAll.Weather.name_prefix every iteration. This is not the behavior we want
 	// so the name is stored here.
 	char SW_prefix_permanent[MAX_FILENAMESIZE - 5]; // see `SW_WEATHER`: subtract 4-digit 'year' file type extension
-	sprintf(SW_prefix_permanent, "%s/%s", grid_directories[GRID_DIRECTORY_STEPWAT_INPUTS], SW_Weather.name_prefix);
+	sprintf(SW_prefix_permanent, "%s/%s", 
+			grid_directories[GRID_DIRECTORY_STEPWAT_INPUTS],
+			SoilWatAll.Weather.name_prefix);
+
+
+  _init_soilwat_outputs(grid_files[GRID_FILE_SOILWAT2_OUTPUT]);
+    SW_OUT_set_ncol(SoilWatAll.Site.n_layers, SoilWatAll.Site.n_evap_lyrs,
+                    SoilWatAll.VegEstab.count, SoilWatAll.GenOutput.ncol_OUT); // set number of output columns
+	SW_OUT_set_colnames(SoilWatAll.Site.n_layers, SoilWatAll.VegEstab.parms,
+ 						SoilWatAll.GenOutput.ncol_OUT,
+ 						SoilWatAll.GenOutput.colnames_OUT, &LogInfo); // set column names for output files
+   if (_getNumberSOILWAT2OutputCells() > 0) {
+ 		SW_OUT_create_summary_files(&SoilWatAll.FileStatus, SoilWatAll.Output,
+ 									&SoilWatAll.GenOutput, PathInfo.InFiles,
+ 									SoilWatAll.Site.n_layers, &LogInfo);
+		// allocate `p_OUT` and `p_OUTsd` arrays to aggregate SOILWAT2 output across iterations
+		setGlobalSTEPWAT2_OutputVariables(SoilWatAll.Output, &SoilWatAll.GenOutput, &LogInfo);
+    }
 
 	for (iter = 1; iter <= SuperGlobals.runModelIterations; iter++)
 	{ //for each iteration
-
 		/*
 		 * 06/15/2016 (akt) Added resetting correct historical weather file path,
 		 * as it was resetting to original path value (that was not correct for grid version)from input file after every iteration
 		 */
-		sprintf(SW_Weather.name_prefix, "%s", SW_prefix_permanent); //updates the directory of the weather files so SOILWAT2 can find them
+		sprintf(SoilWatAll.Weather.name_prefix, "%s", SW_prefix_permanent); //updates the directory of the weather files so SOILWAT2 can find them
 
 		// Initialize the plot for each grid cell
 		for (i = 0; i < grid_Rows; i++){
 			for (j = 0; j < grid_Cols; j++){
 				load_cell(i, j);
 				Plot_Initialize();
-				Globals->currIter = iter;
+				Globals->currIter = SoilWatAll.GenOutput.currIter = iter;
+
+                if (_getNumberSOILWAT2OutputCells() > 0) {
+			        SoilWatAll.GenOutput.print_IterationSummary = 
+						(Bool) (Globals->currIter == SuperGlobals.runModelIterations);
+                }
 			}
 		}
 		unload_cell(); // Reset the global variables
 
 		// If we used spinup we need to reset to the state of the program right after spinup.
-		if (initializationMethod == INIT_WITH_SPINUP){
-			loadInitializationConditions();
+		if (shouldSpinup){
+			loadSpinupConditions();
 		}
 
 		for (year = 1; year <= SuperGlobals.runModelYears; year++)
@@ -224,22 +313,30 @@ void runGrid(void)
 			if(UseProgressBar){
 				logProgress(iter, year, SIMULATION);
 			}
+
+            if (UseSeedDispersal){
+				disperseSeeds(year);
+            }
+
+			// Allow the colonization module to run. This function MUST be
+			// Called after disperseSeeds() because it modifies the
+			// seedsPresent variable of each Species.
+			colonize(year);
+
 			for (i = 0; i < grid_Rows; i++){
 				for (j = 0; j < grid_Cols; j++)
 				{ //for each cell
-                
+
                     /* Ensure that all global variables reference the specific cell */
 					load_cell(i, j);
 
+					//printf("------------------------Repetition/year = %d / %d\n", iter, year);
+
 					set_all_rngs(SuperGlobals.randseed, iter, year, j * grid_Rows + i);
 
-					Globals->currYear = year;
 
-					/* Seed dispersal needs to take into account last year's precipitation, 
-					   so we'll record it before calling Env_Generate(). */
-					if (year > 1 && UseSeedDispersal){
-						gridCells[i][j].mySeedDispersal->lyppt = gridCells[i][j].myEnvironment.ppt;
-					}
+
+					Globals->currYear = year;
 
 					/* The following functions mimic ST_main.c. */
 
@@ -255,7 +352,7 @@ void runGrid(void)
 					rgroup_IncrAges(); 			// Increment ages of all plants
 
 					grazing_EndOfYear(); 		// Livestock grazing
-					
+
 					save_annual_species_relsize(); // Save annuals before we kill them
 
 					mort_EndOfYear(); 			// End of year mortality.
@@ -269,10 +366,7 @@ void runGrid(void)
 
 				} /* end model run for this cell*/
 			} /* end model run for this row */
-			if (UseSeedDispersal){
-				disperseSeeds();
-            }
-			
+
 			unload_cell(); // Reset the global variables
 		}/* end model run for this year*/
 
@@ -288,18 +382,21 @@ void runGrid(void)
 				}
 			}
 		}
-		unload_cell(); 
+		unload_cell();
 		//reset soilwat to initial condition
 		ChDir(grid_directories[GRID_DIRECTORY_STEPWAT_INPUTS]);
 		for(i = 0; i < grid_Rows; ++i){
 			for(j = 0; j < grid_Cols; ++j){
 				load_cell(i, j);
+                int realYears = SuperGlobals.runModelYears;
+                SuperGlobals.runModelYears *= _getNumberSOILWAT2OutputCells();
 				SXW_Reset(gridCells[i][j].mySXW->f_watin);
 				unload_cell();
+                SuperGlobals.runModelYears = realYears;
 			}
 		}
-		Mem_Free(SW_Soilwat.hist.file_prefix);
-		SW_Soilwat.hist.file_prefix = NULL;
+		Mem_Free(SoilWatAll.SoilWat.hist.file_prefix);
+		SoilWatAll.SoilWat.hist.file_prefix = NULL;
 		ChDir("..");
 
 	} /* end iterations */
@@ -314,9 +411,8 @@ void runGrid(void)
 		{
 			int cell = j + (i * grid_Cols);
 			load_cell(i, j);
-			char fileMort[1024], fileBMass[1024], fileReceivedProb[1024];
+			char fileMort[1024], fileBMass[1024];
 
-			sprintf(fileReceivedProb, "%s%d.csv", grid_files[GRID_FILE_PREFIX_RECEIVEDPROB], cell);
 			sprintf(fileMort, "%s%d.csv", grid_files[GRID_FILE_PREFIX_MORTAVG], cell);
 			sprintf(fileBMass, "%s%d.csv", grid_files[GRID_FILE_PREFIX_BMASSAVG], cell);
 			parm_SetName(fileMort, F_MortAvg);
@@ -328,12 +424,13 @@ void runGrid(void)
 			if (BmassFlags.summary && writeIndividualFiles){
 				stat_Output_AllBmass();
 			}
-			if (UseSeedDispersal && sd_DoOutput && writeIndividualFiles){
-				stat_Output_Seed_Dispersal(fileReceivedProb, sd_Sep);
-			}
 		}
 	}
 	unload_cell(); // Reset the global variables
+
+    if (recordDispersalEvents){
+        outputDispersalEvents(grid_files[GRID_FILE_PREFIX_DISPERSALEVENTS]);
+    }
 
 	// Output the Bmass and Mort average statistics (if requested).
 	char fileBMassCellAvg[1024], fileMortCellAvg[1024];
@@ -346,16 +443,32 @@ void runGrid(void)
         _Output_AllCellAvgMort(fileMortCellAvg);
     }
 
+  // If the user requested SOILWAT2 output this function will separate the
+  // output into cell-specific files. If they didn't request SOILWAT2 output
+  // this function will do nothing.
+  _separateSOILWAT2Output();
+
 	free_grid_memory();	// Free our allocated memory since we do not need it anymore
 	parm_free_memory();		// Free memory allocated to the _files array in ST_params.c
-	if(initializationMethod == INIT_WITH_SPINUP) {
-		freeInitializationMemory();
+	freeColonizationMemory(); // Free memory allocated to the Colonization module.
+    freeDispersalMemory(); // Free memory allocated to the Seed Dispersal module.
+	if(shouldSpinup) {
+		freeSpinupMemory();
 	}
 	logProgress(0, 0, DONE);
 }
 
-/* Read the files.in file which was supplied to the program as an argument.
-   This function saves the file names it reads to grid_files and grid_directories. */
+/**
+ * \brief Read the files.in file.
+ *
+ * The files.in file specifies the locations of the other input files.
+ *
+ * \sideeffect
+ *     This function saves the file names it reads to \ref grid_files and
+ *     \ref grid_directories.
+ *
+ * \ingroup GRID_PRIVATE
+ */
 static void _init_grid_files(void)
 {
 	// reads the files.in file
@@ -363,39 +476,49 @@ static void _init_grid_files(void)
 	char buf[1024];
 	int i;
 
-	f = OpenFile(Parm_name(F_First), "r");
+	f = OpenFile(Parm_name(F_First), "r", &LogInfo);
 
 	for (i = 0; i < N_GRID_DIRECTORIES; i++)
 	{ //0 is stepwat directory
 		if (!GetALine(f, buf))
 			break;
-		grid_directories[i] = Str_Dup(Str_TrimLeftQ(buf));
+		grid_directories[i] = Str_Dup(Str_TrimLeftQ(buf), &LogInfo);
 	}
 	if (i != N_GRID_DIRECTORIES)
-		LogError(stderr, LOGFATAL, "Invalid files.in");
+		LogError(&LogInfo, LOGFATAL, "Invalid files.in");
 
 	for (i = 0; i < N_GRID_FILES; i++)
 	{
 		if (!GetALine(f, buf))
 			break;
-		grid_files[i] = Str_Dup(Str_TrimLeftQ(buf));
+		grid_files[i] = Str_Dup(Str_TrimLeftQ(buf), &LogInfo);
 	}
 	if (i != N_GRID_FILES)
-		LogError(stderr, LOGFATAL, "Invalid files.in");
+		LogError(&LogInfo, LOGFATAL, "Invalid files.in");
 
 	// opens the log file...
 	if (!strcmp("stdout", grid_files[GRID_FILE_LOGFILE])){
-        logfp = stdout;
+        LogInfo.logfp = stdout;
     }
 	else {
-        logfp = OpenFile(grid_files[GRID_FILE_LOGFILE], "w");
+        LogInfo.logfp = OpenFile(grid_files[GRID_FILE_LOGFILE], "w", &LogInfo);
     }
 
-	CloseFile(&f);
+	CloseFile(&f, &LogInfo);
 }
 
-/* Read all gridded mode files excluding grid_setup.in. This function overrided values specified in non-gridded 
-   mode files, so make sure you have read the non-gridded mode files before calling this function.*/
+/**
+ * \brief Read all gridded mode files excluding grid_setup.in.
+ *
+ * All associated fields will be populated with the values read.
+ *
+ * \sideeffect
+ *     This function overrides values in the \ref RGroup and \ref Species
+ *     arrays so make sure you have read the non-gridded mode files before
+ *     calling this function.
+ *
+ * \ingroup GRID_PRIVATE
+ */
 static void _init_grid_inputs(void)
 {
     int i, j;
@@ -403,12 +526,8 @@ static void _init_grid_inputs(void)
 	if (UseDisturbances){
 		_read_disturbances_in();
 	}
-	if (UseSeedDispersal || initializationMethod == INIT_WITH_SEEDS)
-	{
-		initDispersalParameters();
-	}
-	if(initializationMethod != INIT_WITH_NOTHING){
-		_read_init_species();
+	if(shouldSpinup){
+		_read_spinup_species();
 	}
 	if (UseSoils) {
 		_read_soils_in();
@@ -416,27 +535,77 @@ static void _init_grid_inputs(void)
 
     for(i = 0; i < grid_Rows; ++i) {
         for(j = 0; j < grid_Cols; ++j) {
-            load_cell(i, j);
-            gridCells[i][j].DuringInitialization = FALSE;
+            gridCells[i][j].DuringSpinup = FALSE;
         }
     }
-    unload_cell();
 }
 
-/* Read SXW input files */
+/**
+ * \brief Read \ref SXW input files
+ *
+ * \ingroup GRID
+ */
 static void _init_SXW_inputs(Bool init_SW, char *f_roots)
 {
+    int realYears = SuperGlobals.runModelYears;
+    SuperGlobals.runModelYears *= (grid_Cols * grid_Rows);
 	SXW_Init(init_SW, f_roots);	// initializes soilwat
+    SuperGlobals.runModelYears = realYears;
 	if (init_SW)
 	{
 		char aString[2048];
-		sprintf(aString, "%s/%s", grid_directories[GRID_DIRECTORY_STEPWAT_INPUTS], SW_Weather.name_prefix);
-		sprintf(SW_Weather.name_prefix, "%s", aString); //updates the directory correctly for the weather files so soilwat can find them
+		sprintf(aString, "%s/%s", grid_directories[GRID_DIRECTORY_STEPWAT_INPUTS], SoilWatAll.Weather.name_prefix);
+		sprintf(SoilWatAll.Weather.name_prefix, "%s", aString); //updates the directory correctly for the weather files so soilwat can find them
 	}
 }
 
-/* Read in the STEPWAT2 files and populate the grid. This only needs to be called once. 
-   DEPENDENCIES: gridCells must be allocated first. */
+static void _init_soilwat_outputs(char* fileName) {
+  if(!writeSOILWAT2Output) {
+    return;
+  }
+
+  char buffer[2048];
+  int cell;
+  FILE* inFile = fopen(fileName, "r");
+  if(!inFile) {
+    LogError(&LogInfo, LOGFATAL, "Could not open SOILWAT2 output cells file."
+             "\n\tFile named \"%s\"", fileName);
+  }
+
+  if(!GetALine(inFile, buffer)) {
+    fclose(inFile);
+    return;
+  }
+
+  while(sscanf(buffer, "%d,%s", &cell, buffer) == 2) {
+    if(cell < 0 || cell > (grid_Cols * grid_Rows)) {
+      LogError(&LogInfo, LOGWARN, "Invalid cell (%d) specified in file \"%s\"",
+               cell, fileName);
+    }
+    gridCells[cell / grid_Cols][cell % grid_Cols].generateSWOutput = TRUE;
+  }
+
+  if(sscanf(buffer, "%d", &cell) == 1) {
+    if(cell < 0 || cell > (grid_Cols * grid_Rows)) {
+      LogError(&LogInfo, LOGWARN, "Invalid cell (%d) specified in file \"%s\"",
+               cell, fileName);
+    }
+    gridCells[cell / grid_Cols][cell % grid_Cols].generateSWOutput = TRUE;
+  }
+
+  fclose(inFile);
+}
+
+/**
+ * \brief Read in the STEPWAT2 files and populate the grid. This only needs to be called once.
+ *
+ * Note that \ref gridCells must be allocated first.
+ *
+ * \sideeffect
+ *     Many fields in the \ref gridCells array will be assigned values.
+ *
+ * \ingroup GRID_PRIVATE
+ */
 static void _init_stepwat_inputs(void)
 {
 	int i, j; 							// Used as indices in gridCells
@@ -456,9 +625,9 @@ static void _init_stepwat_inputs(void)
 			_init_SXW_inputs(TRUE, NULL);	     // Initialize the SXW and SOILWAT variables
 
 			// Set mySXW to the location of the newly allocated SXW
-			gridCells[i][j].mySXW = getSXW();	
+			gridCells[i][j].mySXW = getSXW();
 			// Set myTranspWindow to the location of the newly allocated transp window
-			gridCells[i][j].myTranspWindow = getTranspWindow(); 
+			gridCells[i][j].myTranspWindow = getTranspWindow();
 			// Set mySXWResources to the location of the newly allocated SXW resources
 			gridCells[i][j].mySXWResources = getSXWResources();
 		} /* End for each column */
@@ -474,8 +643,21 @@ static void _init_stepwat_inputs(void)
 	ChDir("..");						// go back to the folder we started in
 }
 
-/* Reread input files. Be careful because this function reallocates the grid.
-   Make sure you call free_grid_memory before calling this function. */
+/**
+ * \brief Reread input files.
+ *
+ * This is useful when transitioning from [spinup](\ref SPINUP)
+ * to the regular simulation. It is a quick way to reset everything
+ *
+ * Be careful because this function reallocates [the grid](\ref gridCells).
+ * Make sure you call \ref free_grid_memory before calling this function.
+ *
+ * \sideeffect
+ *     The grid will be reallocated and all fields will be assigned the values
+ *     from inputs.
+ *
+ * \ingroup GRID
+ */
 void rereadInputs(void){
     _read_grid_setup();
     _read_files();
@@ -483,24 +665,38 @@ void rereadInputs(void){
     _init_grid_inputs();
 }
 
-/* Allocates memory for the grid cells. This only needs to be called once. */
+/**
+ * \brief Allocates memory for the grid cells.
+ *
+ * This function only needs to be called once.
+ *
+ * \sideeffect
+ *     \ref grid_Rows * \ref grid_Cols worth of [cells](\ref CellType)
+ *     will be allocated.
+ *
+ * \ingroup GRID_PRIVATE
+ */
 static void _allocate_gridCells(int rows, int cols){
 	int i, j;
-	gridCells = (CellType**) Mem_Calloc(rows, sizeof(CellType*), "_allocate_gridCells: rows");
+	gridCells = (CellType**) Mem_Calloc(rows, sizeof(CellType*), 
+				"_allocate_gridCells: rows", &LogInfo);
 	for(i = 0; i < rows; ++i){
-		gridCells[i] = (CellType*) Mem_Calloc(cols, sizeof(CellType), "_allocate_gridCells: columns");
+		gridCells[i] = (CellType*) Mem_Calloc(cols, sizeof(CellType), 
+						"_allocate_gridCells: columns", &LogInfo);
 	}
 
-	/* Allocate all fields specific to gridded mode. This is not necessary for fields like mySpecies 
+	/* Allocate all fields specific to gridded mode. This is not necessary for fields like mySpecies
 	   since they are allocated elsewhere in the code.*/
 	for(i = 0; i < grid_Rows; ++i){
 		for(j = 0; j < grid_Cols; ++j){
 			// shouldBeInitialized is a dynamically allocated array
-			gridCells[i][j].mySpeciesInit.shouldBeInitialized = (int*)
-				Mem_Calloc(MAX_SPECIES, sizeof(int), "_allocate_gridCells: mySpeciesInit");
+			gridCells[i][j].mySpeciesInit.shouldSpinup = (int*)
+				Mem_Calloc(MAX_SPECIES, sizeof(int), 
+				          "_allocate_gridCells: mySpeciesInit", &LogInfo);
 
-			gridCells[i][j].someKillage = (Bool*) Mem_Calloc(1, sizeof(Bool), "_allocate_gridCells: someKillage");
-			
+			gridCells[i][j].someKillage = (Bool*) Mem_Calloc(1, sizeof(Bool), 
+										  "_allocate_gridCells: someKillage", &LogInfo);
+
 			// Allocate the cheatgrassPrecip variable for the Mortality module
 			setCheatgrassPrecip(0);
 			initCheatgrassPrecip();
@@ -509,8 +705,19 @@ static void _allocate_gridCells(int rows, int cols){
 	}
 }
 
-/* Initialize each gridCell's accumulators. 
-   Must be called after STEPWAT inputs have been read. */
+/**
+ * \brief Initialize each gridCell's accumulators.
+ *
+ * Must be called after STEPWAT inputs have been read so the program knows
+ * which accumulators are necessary.
+ *
+ * \sideeffect
+ *     Multiple [accumulators](\ref StatType) will be allocated to each
+ *     [cell](\ref CellType). Of course, this means \ref gridCells must be
+ *     allocated first.
+ *
+ * \ingroup GRID_PRIVATE
+ */
 static void _allocate_accumulators(void){
 	int i, j;
 	SppIndex sp;
@@ -526,56 +733,56 @@ static void _allocate_accumulators(void){
 
 			if (BmassFlags.graz) {
 				gridCells[i][j]._Grazed = (StatType*)Mem_Calloc(SuperGlobals.max_rgroups, sizeof(StatType),
-					"allocate_accumulators(Grazed)");
+					"allocate_accumulators(Grazed)", &LogInfo);
 				ForEachGroup(rg) {
 					gridCells[i][j]._Grazed[rg].s = (struct accumulators_st*)Mem_Calloc(SuperGlobals.runModelYears,
-						sizeof(struct accumulators_st), "_allocate_accumulators(Grazed)");
+						sizeof(struct accumulators_st), "_allocate_accumulators(Grazed)", &LogInfo);
 				}
 			}
 
   			if (BmassFlags.dist) {
-    			gridCells[i][j]._Dist = (StatType*) Mem_Calloc(1, sizeof(StatType), "_allocate_accumulators(Dist)");
+    			gridCells[i][j]._Dist = (StatType*) Mem_Calloc(1, sizeof(StatType), "_allocate_accumulators(Dist)", &LogInfo);
 		    	gridCells[i][j]._Dist->s = (struct accumulators_st *)
 		               		Mem_Calloc( SuperGlobals.runModelYears,
 		                           		sizeof(struct accumulators_st),
- 		                         		"_allocate_accumulators(Dist)");
+ 		                         		"_allocate_accumulators(Dist)", &LogInfo);
 		  	}
  		 	if (BmassFlags.ppt) {
-		    	gridCells[i][j]._Ppt = (StatType*) Mem_Calloc(1, sizeof(StatType), "_allocate_accumulators(PPT");
+		    	gridCells[i][j]._Ppt = (StatType*) Mem_Calloc(1, sizeof(StatType), "_allocate_accumulators(PPT", &LogInfo);
 		    	gridCells[i][j]._Ppt->s  = (struct accumulators_st *)
 		               		Mem_Calloc( SuperGlobals.runModelYears,
 		                           		sizeof(struct accumulators_st),
-		                          		"_allocate_accumulators(PPT)");
+		                          		"_allocate_accumulators(PPT)", &LogInfo);
  		 	}
 		  	if (BmassFlags.tmp) {
-		    	gridCells[i][j]._Temp = (StatType*) Mem_Calloc(1, sizeof(StatType), "_allocate_accumulators(Temp)");
+		    	gridCells[i][j]._Temp = (StatType*) Mem_Calloc(1, sizeof(StatType), "_allocate_accumulators(Temp)", &LogInfo);
 		    	gridCells[i][j]._Temp->s = (struct accumulators_st *)
 		               		Mem_Calloc( SuperGlobals.runModelYears,
  		                          		sizeof(struct accumulators_st),
- 		                         		"_allocate_accumulators(Temp)");
+ 		                         		"_allocate_accumulators(Temp)", &LogInfo);
 		  	}
 		  	if (BmassFlags.grpb) {
  			   	gridCells[i][j]._Grp = (struct stat_st *)
            				Mem_Calloc( Globals->grpCount,
                 		       sizeof(struct stat_st),
-                		      "_allocate_accumulators(Grp)");
+                		      "_allocate_accumulators(Grp)", &LogInfo);
     			ForEachGroup(rg){
       				gridCells[i][j]._Grp[rg].s = (struct accumulators_st *)
              			Mem_Calloc( SuperGlobals.runModelYears,
                          			sizeof(struct accumulators_st),
-                        			"_allocate_accumulators(Grp[rg].s)");
+                        			"_allocate_accumulators(Grp[rg].s)", &LogInfo);
 				}
 
     			if (BmassFlags.size) {
       				gridCells[i][j]._Gsize = (struct stat_st *)
              				Mem_Calloc( Globals->grpCount,
                          				sizeof(struct stat_st),
-                        				"_allocate_accumulators(GSize)");
+                        				"_allocate_accumulators(GSize)", &LogInfo);
       				ForEachGroup(rg){
           				gridCells[i][j]._Gsize[rg].s = (struct accumulators_st *)
              							Mem_Calloc( SuperGlobals.runModelYears,
                          							sizeof(struct accumulators_st),
-                        							"_allocate_accumulators(GSize[rg].s)");
+                        							"_allocate_accumulators(GSize[rg].s)", &LogInfo);
 					}
     			}
 
@@ -583,33 +790,33 @@ static void _allocate_accumulators(void){
       				gridCells[i][j]._Gpr = (struct stat_st *)
              				Mem_Calloc( Globals->grpCount,
                 		         		sizeof(struct stat_st),
-                		        		"_allocate_accumulators(Gpr)");
+                		        		"_allocate_accumulators(Gpr)", &LogInfo);
       				ForEachGroup(rg){
           				gridCells[i][j]._Gpr[rg].s = (struct accumulators_st *)
              							Mem_Calloc( SuperGlobals.runModelYears,
                     		     					sizeof(struct accumulators_st),
-                        							"_allocate_accumulators(Gpr[rg].s)");
+                        							"_allocate_accumulators(Gpr[rg].s)", &LogInfo);
 					}
     			}
 
     			if (BmassFlags.wildfire || BmassFlags.prescribedfire) {
       				gridCells[i][j]._Gwf = (struct fire_st *)
              				Mem_Calloc( 1, sizeof(struct fire_st),
-                		        		"_allocate_accumulators(Gwf)");
+                		        		"_allocate_accumulators(Gwf)", &LogInfo);
 
       				gridCells[i][j]._Gwf->wildfire = (int *) Mem_Calloc( 1,
                     		  		 sizeof(int) * SuperGlobals.runModelYears,
-                    		  		 "_allocate_accumulators(Gwf->wildfire)");
-      
+                    		  		 "_allocate_accumulators(Gwf->wildfire)", &LogInfo);
+
       				gridCells[i][j]._Gwf->prescribedFire = (int **) Mem_Calloc( 1,
                       						sizeof(int **) * SuperGlobals.max_rgroups,
-                       						"_allocate_accumulators(Gwf->prescribedfire");
+                       						"_allocate_accumulators(Gwf->prescribedfire", &LogInfo);
 
       				ForEachGroup(rg){
         				gridCells[i][j]._Gwf->prescribedFire[rg] = (int *)
           										   Mem_Calloc( SuperGlobals.runModelYears,
                       										   sizeof(int) * SuperGlobals.runModelYears,
-                      										   "_allocate_accumulators(Gwf->prescribedFire)");
+                      										   "_allocate_accumulators(Gwf->prescribedFire)", &LogInfo);
       				}
     			}
     		}
@@ -618,20 +825,20 @@ static void _allocate_accumulators(void){
     			gridCells[i][j]._Gestab = (struct stat_st *)
              	  		  Mem_Calloc( Globals->grpCount,
                          			sizeof(struct stat_st),
-                         			"_allocate_accumulators(Gestab)");
+                         			"_allocate_accumulators(Gestab)", &LogInfo);
 
 				gridCells[i][j]._Gmort = (struct stat_st *)
            		 		 Mem_Calloc( Globals->grpCount,
                        				sizeof(struct stat_st),
-                      				"_allocate_accumulators(Gmort)");
+                      				"_allocate_accumulators(Gmort)", &LogInfo);
     			ForEachGroup(rg){
       				gridCells[i][j]._Gestab[rg].s = (struct accumulators_st *)
                      				Mem_Calloc( 1, sizeof(struct accumulators_st),
-                                				"_allocate_accumulators(Gestab[rg].s)");
+                                				"_allocate_accumulators(Gestab[rg].s)", &LogInfo);
 					gridCells[i][j]._Gmort[rg].s = (struct accumulators_st *)
            							Mem_Calloc( GrpMaxAge(rg),
                        							sizeof(struct accumulators_st),
-                      							"_allocate_accumulators(Gmort[rg].s)");
+                      							"_allocate_accumulators(Gmort[rg].s)", &LogInfo);
 				}
   			}
 
@@ -639,56 +846,58 @@ static void _allocate_accumulators(void){
       			gridCells[i][j]._Spp = (struct stat_st *)
                		   Mem_Calloc( Globals->sppCount,
                            		   sizeof(struct stat_st),
-                          		   "_allocate_accumulators(Spp)");
+                          		   "_allocate_accumulators(Spp)", &LogInfo);
       			ForEachSpecies(sp){
         			gridCells[i][j]._Spp[sp].s = (struct accumulators_st *)
                			 		  Mem_Calloc( SuperGlobals.runModelYears,
                            					sizeof(struct accumulators_st),
-                          					"_allocate_accumulators(Spp[sp].s)");
+                          					"_allocate_accumulators(Spp[sp].s)", &LogInfo);
 				}
     		}
 			if (BmassFlags.indv) {
 				gridCells[i][j]._Indv = (struct stat_st*)
 					Mem_Calloc(Globals->sppCount,
 						sizeof(struct stat_st),
-						"_allocate_accumulators(Indv)");
+                          		 		"_allocate_accumulators(Indv)", &LogInfo);
 				ForEachSpecies(sp) {
 					gridCells[i][j]._Indv[sp].s = (struct accumulators_st*)
 						Mem_Calloc(SuperGlobals.runModelYears,
 							sizeof(struct accumulators_st),
-							"_allocate_accumulators(Indv[sp].s)");
+                          						"_allocate_accumulators(Indv[sp].s)", &LogInfo);
 				}
 			}
   			if (MortFlags.species) {
     			gridCells[i][j]._Sestab = (struct stat_st *)
            					Mem_Calloc( Globals->sppCount,
                        					sizeof(struct stat_st),
-                      					"_allocate_accumulators(Sestab)");
+                      					"_allocate_accumulators(Sestab)", &LogInfo);
 
 				gridCells[i][j]._Smort = (struct stat_st *)
            		 		Mem_Calloc( Globals->sppCount,
                        				sizeof(struct stat_st),
-                      				"_allocate_accumulators(Smort)");
+                      				"_allocate_accumulators(Smort)", &LogInfo);
 
     			ForEachSpecies(sp){
       				gridCells[i][j]._Sestab[sp].s = (struct accumulators_st *)
                     				Mem_Calloc( 1, sizeof(struct accumulators_st),
-                                				"_allocate_accumulators(Sestab[sp].s)");
+                                				"_allocate_accumulators(Sestab[sp].s)", &LogInfo);
 					gridCells[i][j]._Smort[sp].s = (struct accumulators_st *)
             		        		Mem_Calloc( SppMaxAge(sp),
             		                    	   sizeof(struct accumulators_st),
-             		                   	   	   "_allocate_accumulators(Smort[sp].s)");
+             		                   	   	   "_allocate_accumulators(Smort[sp].s)", &LogInfo);
 				}
   			}
 
   			if (UseSeedDispersal) {
-	  			gridCells[i][j]._Sreceived = Mem_Calloc( Globals->sppCount, sizeof(struct stat_st), "_allocate_accumulators(Sreceived)");
+	  			gridCells[i][j]._Sreceived = Mem_Calloc( Globals->sppCount, sizeof(struct stat_st),
+											 "_allocate_accumulators(Sreceived)", &LogInfo);
 
 	  			ForEachSpecies(sp) {
 		  			gridCells[i][j]._Sreceived[sp].s = (struct accumulators_st *)
 					  									Mem_Calloc( SuperGlobals.runModelYears,
-														  		   sizeof(struct accumulators_st), 
-																   "_allocate_accumulators(Sreceived[sp].s)");
+														  		   sizeof(struct accumulators_st),
+																   "_allocate_accumulators(Sreceived[sp].s)",
+																   &LogInfo);
 		  			gridCells[i][j]._Sreceived[sp].name = &Species[sp]->name[0];
 	  			}
   			}
@@ -715,12 +924,21 @@ static void _allocate_accumulators(void){
 	unload_cell(); // Unload the cell to protect the last cell from unintended modification.
 }
 
-/* Free all memory allocated to the gridded mode during initialization. */
+/**
+ * \brief Free all memory allocated to the gridded mode.
+ *
+ * This includes not only the [cells](\ref gridCells) but also the fields
+ * inside those cells.
+ *
+ * \sideeffect
+ *     \ref gridCells will be completely deallocated.
+ *
+ * \ingroup GRID
+ */
 void free_grid_memory(void)
 {
 	//frees all the memory allocated in this file ST_Grid.c (most of it is dynamically allocated in _init_grid_globals() & _load_grid_globals() functions)
-	int i, j, sd_i;
-	SppIndex s;
+	int i, j;
 
 	/* Free memory that we have allocated in ST_grid.c */
 	for(i = 0; i < grid_Rows; ++i){
@@ -734,19 +952,9 @@ void free_grid_memory(void)
 			freeMortalityMemory();
 			free_all_sxw_memory();
 			stat_free_mem();
-			// If seed dispersal is on we allocated additional memory
-			if(UseSeedDispersal) {
-				ForEachSpecies(s) {
-					for(sd_i = 0; sd_i < grid_Rows; ++sd_i){
-						Mem_Free(gridCells[i][j].mySeedDispersal[s].dispersalProb[sd_i]);
-					}
-					Mem_Free(gridCells[i][j].mySeedDispersal[s].dispersalProb);
-				}
-			}
 			unload_cell();
 
-			Mem_Free(gridCells[i][j].mySpeciesInit.shouldBeInitialized);
-			Mem_Free(gridCells[i][j].mySeedDispersal);
+			Mem_Free(gridCells[i][j].mySpeciesInit.shouldSpinup);
 			Mem_Free(gridCells[i][j].someKillage);
 
 			Mem_Free(gridCells[i][j].mySoils.depth);
@@ -770,8 +978,25 @@ void free_grid_memory(void)
 	Mem_Free(gridCells);
 }
 
-/* Load gridCells[row][col] into the globals variables.
-   Any call to this function should have an accompanying call to unload_cell(). */
+/**
+ * \brief Load \ref gridCells[row][col] into the
+ *        [global variables](\ref ST_globals.h).
+ *
+ * \param row the row in the \ref gridCells 2d array.
+ * \param col the column in the \ref gridCells 2d array.
+ *
+ * After calling this function all variables like \ref Species, \ref RGroup,
+ * and \ref Env will point to a specific cell. It will also pass along the
+ * cell-specific structs like \ref SXWResources to their specific modules.
+ *
+ * Any call to this function should have an accompanying call to
+ * \ref unload_cell().
+ *
+ * \sideeffect
+ *     All global variables will point to the specified cell.
+ *
+ * \ingroup GRID
+ */
 void load_cell(int row, int col){
     /* RGroup for this cell */
 	RGroup = gridCells[row][col].myGroup;
@@ -789,11 +1014,11 @@ void load_cell(int row, int col){
 	/* Cell's plot data */
 	Plot = &gridCells[row][col].myPlot;
 
-	/* Global variables corresponding to this cell */ 
+	/* Global variables corresponding to this cell */
 	Globals = &gridCells[row][col].myGlobals;
 
 	/* TRUE if this cell is in spinup mode */
-	DuringInitialization = gridCells[row][col].DuringInitialization;
+	DuringSpinup = gridCells[row][col].DuringSpinup;
 
 	/* This cell's cheatgrass-wildfire parameters */
 	setCheatgrassPrecip(gridCells[row][col].myCheatgrassPrecip);
@@ -811,15 +1036,21 @@ void load_cell(int row, int col){
 	/* Copy this cell's SXW variables into the local variables in sxw.c */
 	copy_sxw_variables(gridCells[row][col].mySXW, gridCells[row][col].mySXWResources, gridCells[row][col].myTranspWindow);
 
+    SoilWatAll.GenOutput.prepare_IterationSummary = gridCells[row][col].generateSWOutput;
+
 	// If we have read in the soil information num_layers will be > 0.
 	// Otherwise we haven't read the file so there is no point wasting time on this.
 	if(gridCells[row][col].mySoils.num_layers > 0){
 		RealD soilRegionsLowerBounds[3] = { 30, 70, 100 };
-		set_soillayers(gridCells[row][col].mySoils.num_layers, gridCells[row][col].mySoils.depth, gridCells[row][col].mySoils.matricd,
-	    	           gridCells[row][col].mySoils.gravel, gridCells[row][col].mySoils.evco, gridCells[row][col].mySoils.trco_grass,
-					   gridCells[row][col].mySoils.trco_shrub, gridCells[row][col].mySoils.trco_tree, gridCells[row][col].mySoils.trco_forb,
-					   gridCells[row][col].mySoils.psand, gridCells[row][col].mySoils.pclay, gridCells[row][col].mySoils.imperm,
-				   	   gridCells[row][col].mySoils.soiltemp, 3, soilRegionsLowerBounds);
+		set_soillayers(&SoilWatAll.VegProd, &SoilWatAll.Site,
+ 			gridCells[row][col].mySoils.num_layers, gridCells[row][col].mySoils.depth,
+ 			gridCells[row][col].mySoils.matricd, gridCells[row][col].mySoils.gravel,
+ 			gridCells[row][col].mySoils.evco, gridCells[row][col].mySoils.trco_grass,
+ 			gridCells[row][col].mySoils.trco_shrub, gridCells[row][col].mySoils.trco_tree,
+ 			gridCells[row][col].mySoils.trco_forb, gridCells[row][col].mySoils.psand,
+ 			gridCells[row][col].mySoils.pclay, gridCells[row][col].mySoils.imperm,
+ 			gridCells[row][col].mySoils.soiltemp, 3, soilRegionsLowerBounds,
+ 			&LogInfo);
 	}
 
 	// Zero SOILWAT2 variables (weather, flow, soil temperature, soil moisture)
@@ -834,23 +1065,25 @@ void load_cell(int row, int col){
 	// the previous year (and not be zeroed out).
 	// FIXME: remove once SOILWAT2 is re-entrant or
 	// gridded code manages SOILWAT2 globals.
-	SW_WTH_init_run();
+	SW_WTH_init_run(&SoilWatAll.Weather);
 	//SW_SIT_init_run();
-	SW_FLW_init_run();
-	SW_ST_init_run();
-	SW_SWC_init_run();
+	SW_FLW_init_run(&SoilWatAll.SoilWat);
+	SW_ST_init_run(&SoilWatAll.StRegValues);
+	SW_SWC_init_run(&SoilWatAll.SoilWat, &SoilWatAll.Site,
+ 					&SoilWatAll.Weather.temp_snow);
 }
 
-/* Nullify all global variables. This function should appear after every call 
-   to load_cell to prevent accidental modification of a grid cell.
-   Example usage:
-   for i in rows{
-       for j in columns{
-	       load_cell(i, j)
-		   //additional functions
-	   }
-   }
-   unload_cell() */
+/**
+ * \brief Nullify all global variables. Prevents accidental modification of
+ *        [cells](\ref CellType).
+ *
+ * Any call to \ref load_cell should be followed by a call to this function.
+ *
+ * \sideeffect
+ *     All global variables will be nullified, i.e. point to 0.
+ *
+ * \ingroup GRID
+ */
 void unload_cell(){
 	Species = NULL;
 	RGroup = NULL;
@@ -864,10 +1097,14 @@ void unload_cell(){
 	copy_sxw_variables(NULL,NULL,NULL);
 }
 
-/** 
- * \brief Similar to the getaline function in filefuncs.c, except this one 
- * checks for carriage return characters and doesn't deal with whitespace.
- * It treats '\r', '\n', and '\r\n' all like they are valid line feeds.
+/**
+ * \brief Similar to the \ref GetALine function in \ref filefuncs.c, except
+ *        this one checks for carriage return characters and doesn't deal with
+ *        whitespace.
+ *
+ * It treats '\\r', '\\n', and '\\r\\n' all like they are valid line feeds.
+ *
+ * \ingroup GRID_PRIVATE
  */
 static Bool GetALine2(FILE *f, char buf[], int limit)
 {
@@ -889,7 +1126,13 @@ static Bool GetALine2(FILE *f, char buf[], int limit)
 	return TRUE;
 }
 
-/* Reads the grid disturbance CSV. This function will override disturbance inputs from non-gridded mode. */
+/**
+ * \brief Reads the grid disturbance CSV.
+ *
+ * This function will override disturbance inputs from non-gridded mode.
+ *
+ * \ingroup GRID_PRIVATE
+ */
 static void _read_disturbances_in(void)
 {
 	FILE *f;
@@ -897,7 +1140,7 @@ static void _read_disturbances_in(void)
 	int i, row, col, cell, num = 0;
     GrpIndex rg;
 
-	f = OpenFile(grid_files[GRID_FILE_DISTURBANCES], "r");
+	f = OpenFile(grid_files[GRID_FILE_DISTURBANCES], "r", &LogInfo);
 
 	GetALine2(f, buf, 1024); // gets rid of the first line (since it just defines the columns)
 	for (i = 0; i < grid_Cells; i++)
@@ -906,40 +1149,44 @@ static void _read_disturbances_in(void)
 	    col = i % grid_Cols;
 
 	    load_cell(row, col);
-		
+
 		if (!GetALine2(f, buf, 1024))
 			break;
 
         ForEachGroup(rg) {
             num = sscanf(buf, "%d,%u,%u,%u,%hu,%hu,%f,%hu,%f,%hu,%u", &cell,
                 &Globals->pat.use, &Globals->mound.use, &Globals->burrow.use,
-				&RGroup[rg]->killyr, &RGroup[rg]->killfreq_startyr, 
-				&RGroup[rg]->killfreq, &RGroup[rg]->extirp, 
-				&RGroup[rg]->grazingfrq, &RGroup[rg]->grazingfreq_startyr, 
+				&RGroup[rg]->killyr, &RGroup[rg]->killfreq_startyr,
+				&RGroup[rg]->killfreq, &RGroup[rg]->extirp,
+				&RGroup[rg]->grazingfrq, &RGroup[rg]->grazingfreq_startyr,
 				&gridCells[row][col].UseCheatgrassWildfire);
 		}
 
 		if (num != 11)
-			LogError(logfp, LOGFATAL, "Invalid %s file line %d wrong",
+			LogError(&LogInfo, LOGFATAL, "Invalid %s file line %d wrong",
 					grid_files[GRID_FILE_DISTURBANCES], i + 2);
 	}
 	if (i != grid_Cells)
-		LogError(logfp, LOGFATAL, "Invalid %s file wrong number of cells",
+		LogError(&LogInfo, LOGFATAL, "Invalid %s file wrong number of cells",
 				grid_files[GRID_FILE_DISTURBANCES]);
 
     unload_cell();
-	CloseFile(&f);
+	CloseFile(&f, &LogInfo);
 }
 
-/* Iterates through s until it find nSeperators worth of seperators
- * 
+/**
+ * \brief Iterates through s until it find nSeperators worth of seperators
+ *
  * Used to do most of the parsing in the \ref _read_soils_in() function
- * 
+ *
  * \param s is a char* array.
- * \param separator is the character used as a separator, for example tab or space.
- * \param nSeparators is the number of separators to read.
- * 
- * \return index of the character following the last separator. */
+ * \param seperator is the character used as a separator, for example tab or space.
+ * \param nSeperators is the number of separators to read.
+ *
+ * \return index of the character following the last separator.
+ *
+ * \ingroup GRID_PRIVATE
+ */
 static int _get_value_index(char* s, char seperator, int nSeperators)
 {
 	int i = 0, sep = 0;
@@ -961,22 +1208,22 @@ static void _read_soils_in(void){
 	/* tempSoil is allocated the maximum amount of memory that a SoilType could need.
 	   It will serve to read in parameters. */
 	SoilType tempSoil;
-	tempSoil.depth = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil");
-	tempSoil.evco = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil");
-	tempSoil.gravel = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil");
-	tempSoil.imperm = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil");
-	tempSoil.matricd = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil");
-	tempSoil.pclay = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil");
-	tempSoil.psand = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil");
-	tempSoil.soiltemp = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil");
-	tempSoil.trco_forb = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil");
-	tempSoil.trco_grass = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil");
-	tempSoil.trco_shrub = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil");
-	tempSoil.trco_tree = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil");
+	tempSoil.depth = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil", &LogInfo);
+	tempSoil.evco = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil", &LogInfo);
+	tempSoil.gravel = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil", &LogInfo);
+	tempSoil.imperm = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil", &LogInfo);
+	tempSoil.matricd = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil", &LogInfo);
+	tempSoil.pclay = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil", &LogInfo);
+	tempSoil.psand = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil", &LogInfo);
+	tempSoil.soiltemp = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil", &LogInfo);
+	tempSoil.trco_forb = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil", &LogInfo);
+	tempSoil.trco_grass = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil", &LogInfo);
+	tempSoil.trco_shrub = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil", &LogInfo);
+	tempSoil.trco_tree = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil", &LogInfo);
 
-	FILE* f = OpenFile(grid_files[GRID_FILE_SOILS], "r");
+	FILE* f = OpenFile(grid_files[GRID_FILE_SOILS], "r", &LogInfo);
 	if(!GetALine(f, buf)){ // Throw out the header line.
-		LogError(logfp, LOGFATAL, "%s file empty.", grid_files[GRID_FILE_SOILS]);
+		LogError(&LogInfo, LOGFATAL, "%s file empty.", grid_files[GRID_FILE_SOILS]);
 	}
 
 	for(i = 0; i < grid_Cells; ++i){
@@ -985,32 +1232,32 @@ static void _read_soils_in(void){
 		load_cell(row, col);
 
 		if(!GetALine(f, buf)){
-			LogError(logfp, LOGFATAL, "Too few lines in %s", grid_files[GRID_FILE_SOILS]);
+			LogError(&LogInfo, LOGFATAL, "Too few lines in %s", grid_files[GRID_FILE_SOILS]);
 		}
 		lineReadReturnValue = _read_soil_line(buf, &tempSoil, 0);
 		if (lineReadReturnValue == SOIL_READ_FAILURE){
-			LogError(logfp, LOGFATAL, "Error reading %s file.", grid_files[GRID_FILE_SOILS]);
-		} 
-		/* If _read_soil_line didnt return SUCCESS or FAILURE, 
+			LogError(&LogInfo, LOGFATAL, "Error reading %s file.", grid_files[GRID_FILE_SOILS]);
+		}
+		/* If _read_soil_line didnt return SUCCESS or FAILURE,
 		   it returned a cell number to copy. */
 		else if (lineReadReturnValue != SOIL_READ_SUCCESS){
 			if(lineReadReturnValue > i){
-				LogError(logfp, LOGFATAL, "%s: Attempted to copy values that have not been read yet.\n"
+				LogError(&LogInfo, LOGFATAL, "%s: Attempted to copy values that have not been read yet.\n"
 				                          "\tIf you want to copy a soil make sure you define the layers"
 										  "the FIRST time you use it.", grid_files[GRID_FILE_SOILS]);
 			}
 			_copy_soils(&gridCells[lineReadReturnValue / grid_Cols][lineReadReturnValue % grid_Cols].mySoils, &gridCells[row][col].mySoils);
 		}
-		/* If we get here we have successfully populated the first layer of soil. 
+		/* If we get here we have successfully populated the first layer of soil.
 		   Now we must populate the rest. */
 		else {
 			for(j = 1; j < tempSoil.num_layers; ++j){
 				if(!GetALine(f, buf)){
-					LogError(logfp, LOGFATAL, "Too few lines in %s", grid_files[GRID_FILE_SOILS]);
+					LogError(&LogInfo, LOGFATAL, "Too few lines in %s", grid_files[GRID_FILE_SOILS]);
 				}
 				lineReadReturnValue = _read_soil_line(buf, &tempSoil, j);
 				if(lineReadReturnValue != SOIL_READ_SUCCESS){
-					LogError(logfp, LOGFATAL, "Different behavior is specified between layers %d and %d of"
+					LogError(&LogInfo, LOGFATAL, "Different behavior is specified between layers %d and %d of"
 					                          " cell %d in file %s. (Perhaps you specified a cell to copy in one"
 											  " but not the other?)", j, j+1, i, grid_files[GRID_FILE_SOILS]);
 				}
@@ -1021,7 +1268,7 @@ static void _read_soils_in(void){
 	}
 
 	unload_cell();
-	CloseFile(&f);
+	CloseFile(&f, &LogInfo);
 
 	Mem_Free(tempSoil.soiltemp);
 	Mem_Free(tempSoil.trco_forb);
@@ -1037,29 +1284,33 @@ static void _read_soils_in(void){
 	Mem_Free(tempSoil.psand);
 }
 
-/* Reads a line of soil input from buf into destination. 
-
-   Param buf: line of soil input.
-   Param destination: SoilType struct to fill.
-   Param layer: layer number of destination to fill (0 indexed).
-
-   Return: SOIL_READ_FAILURE if buf is incorrectly formatted.
-           SOIL_READ_SUCCESS if destination is populated correctly.
-		   Otherwise returns the cell number that destination should copy. */
+/**
+ * \brief Reads a line of soil input from buf into destination.
+ *
+ * \param buf line of soil input to parse.
+ * \param destination \ref SoilType struct to fill.
+ * \param layer layer number of destination to fill (0 indexed).
+ *
+ * \return SOIL_READ_FAILURE if buf is incorrectly formatted.
+ * \return SOIL_READ_SUCCESS if destination is populated correctly.
+ * \return Otherwise returns the cell number that destination should copy.
+ *
+ * \ingroup GRID_PRIVATE
+ */
 static int _read_soil_line(char* buf, SoilType* destination, int layer){
 	int entriesRead, cellToCopy, cellNum, layerRead;
 	entriesRead = sscanf(buf, "%d,,%d,%d,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%s",
-			                    &cellNum, &destination->num_layers, &layerRead, &destination->depth[layer], 
-								&destination->matricd[layer], &destination->gravel[layer], 
-								&destination->evco[layer], &destination->trco_grass[layer], 
+			                    &cellNum, &destination->num_layers, &layerRead, &destination->depth[layer],
+								&destination->matricd[layer], &destination->gravel[layer],
+								&destination->evco[layer], &destination->trco_grass[layer],
 								&destination->trco_shrub[layer], &destination->trco_tree[layer],
-								&destination->trco_forb[layer], &destination->psand[layer], 
-								&destination->pclay[layer], &destination->imperm[layer], 
+								&destination->trco_forb[layer], &destination->psand[layer],
+								&destination->pclay[layer], &destination->imperm[layer],
 								&destination->soiltemp[layer], destination->rootsFile);
 
 	if(cellNum > grid_Cells){
 		LogError(
-			logfp, LOGFATAL,
+			&LogInfo, LOGFATAL,
 			"%s: cell number (id=%d) is larger than number of cells in grid (n=%d).",
 			grid_files[GRID_FILE_SOILS], cellNum, grid_Cells
 		);
@@ -1073,7 +1324,7 @@ static int _read_soil_line(char* buf, SoilType* destination, int layer){
 
 		if(cellToCopy > grid_Cells){
 			LogError(
-				logfp, LOGFATAL,
+				&LogInfo, LOGFATAL,
 				"%s: cell to copy (id=%d) not present in grid (n=%d).",
 				grid_files[GRID_FILE_SOILS], cellToCopy, grid_Cells
 			);
@@ -1089,7 +1340,7 @@ static int _read_soil_line(char* buf, SoilType* destination, int layer){
 	if(entriesRead == 16) {
 		if(layerRead > destination->num_layers){
 			LogError(
-				logfp, LOGFATAL,
+				&LogInfo, LOGFATAL,
 				"%s: cell %d has too many soil layers (%d for max=%d).",
 				grid_files[GRID_FILE_SOILS], cellNum, layerRead, destination->num_layers
 			);
@@ -1101,28 +1352,34 @@ static int _read_soil_line(char* buf, SoilType* destination, int layer){
 	}
 }
 
-/* Copy one SoilType variable to another. 
-     param src: An allocated and assigned SoilType
-	 param dest: An unallocated SoilType
-	 
-	 note: dest will be allocated memory, so do not call this function
-	       if dest is already allocated. */
+/**
+ * \brief Copy one SoilType variable to another.
+ *
+ * \param src: An allocated and assigned SoilType
+ * \param dest: An unallocated SoilType
+ *
+ * \sideeffect
+ *     dest will be allocated memory, so do not call this function if dest is
+ *     already allocated.
+ *
+ * \ingroup GRID_PRIVATE
+ */
 void _copy_soils(SoilType* src, SoilType* dest){
 	int i;
 
 	dest->num_layers = src->num_layers;
-	dest->gravel = Mem_Calloc(src->num_layers, sizeof(RealF), "_copy_Soils: gravel");
-	dest->depth = Mem_Calloc(src->num_layers, sizeof(RealF), "_copy_Soils: depth");
-	dest->matricd = Mem_Calloc(src->num_layers, sizeof(RealF), "_copy_Soils: matricd");
-	dest->evco = Mem_Calloc(src->num_layers, sizeof(RealF), "_copy_Soils: evco");
-	dest->trco_grass = Mem_Calloc(src->num_layers, sizeof(RealF), "_copy_Soils: trco_grass");
-	dest->trco_shrub = Mem_Calloc(src->num_layers, sizeof(RealF), "_copy_Soils: trco_shrub");
-	dest->trco_tree = Mem_Calloc(src->num_layers, sizeof(RealF), "_copy_Soils: trco_tree");
-	dest->trco_forb = Mem_Calloc(src->num_layers, sizeof(RealF), "_copy_Soils: trco_forb");
-	dest->psand = Mem_Calloc(src->num_layers, sizeof(RealF), "_copy_Soils: psand");
-	dest->pclay = Mem_Calloc(src->num_layers, sizeof(RealF), "_copy_Soils: pclay");
-	dest->imperm = Mem_Calloc(src->num_layers, sizeof(RealF), "_copy_Soils: imperm");
-	dest->soiltemp = Mem_Calloc(src->num_layers, sizeof(RealF), "_copy_Soils: soiltemp");
+	dest->gravel = Mem_Calloc(src->num_layers, sizeof(RealF), "_copy_Soils: gravel", &LogInfo);
+	dest->depth = Mem_Calloc(src->num_layers, sizeof(RealF), "_copy_Soils: depth", &LogInfo);
+	dest->matricd = Mem_Calloc(src->num_layers, sizeof(RealF), "_copy_Soils: matricd", &LogInfo);
+	dest->evco = Mem_Calloc(src->num_layers, sizeof(RealF), "_copy_Soils: evco", &LogInfo);
+	dest->trco_grass = Mem_Calloc(src->num_layers, sizeof(RealF), "_copy_Soils: trco_grass", &LogInfo);
+	dest->trco_shrub = Mem_Calloc(src->num_layers, sizeof(RealF), "_copy_Soils: trco_shrub", &LogInfo);
+	dest->trco_tree = Mem_Calloc(src->num_layers, sizeof(RealF), "_copy_Soils: trco_tree", &LogInfo);
+	dest->trco_forb = Mem_Calloc(src->num_layers, sizeof(RealF), "_copy_Soils: trco_forb", &LogInfo);
+	dest->psand = Mem_Calloc(src->num_layers, sizeof(RealF), "_copy_Soils: psand", &LogInfo);
+	dest->pclay = Mem_Calloc(src->num_layers, sizeof(RealF), "_copy_Soils: pclay", &LogInfo);
+	dest->imperm = Mem_Calloc(src->num_layers, sizeof(RealF), "_copy_Soils: imperm", &LogInfo);
+	dest->soiltemp = Mem_Calloc(src->num_layers, sizeof(RealF), "_copy_Soils: soiltemp", &LogInfo);
 
 	for(i = 0; i < src->num_layers; ++i){
 		dest->gravel[i] = src->gravel[i];
@@ -1140,22 +1397,32 @@ void _copy_soils(SoilType* src, SoilType* dest){
 	}
 }
 
-/* Read the species initialization CSV. This function only needs to be called if the user requests initialization.*/
-static void _read_init_species(void)
+/**
+ * \brief Read the species spinup CSV.
+ *
+ * This function only needs to be called if the user requests spinup.
+ *
+ * \sideeffect
+ *     The species spinup information of each [cell](\ref gridCells)
+ *     will be populated.
+ *
+ * \ingroup GRID_PRIVATE
+ */
+static void _read_spinup_species(void)
 {
 	FILE *f;
-	int i, j, num, cell, do_copy, copy_cell, useInitialization, seeds_Avail,
+	int i, j, num, cell, do_copy, copy_cell, useSpinup, seeds_Avail,
 	    row, col, copy_cell_row, copy_cell_col;
 	Bool isAnyCellOnForSpinup = FALSE;
 	char buf[4096];
 
 	//open the file/do the reading
-	f = OpenFile(grid_files[GRID_FILE_INIT_SPECIES], "r");
+	f = OpenFile(grid_files[GRID_FILE_SPINUP_SPECIES], "r", &LogInfo);
 
 	GetALine2(f, buf, 4096); // gets rid of the first line (since it just defines the columns)... it's only there for user readability
 	for (i = 0; i < grid_Cells; i++)
 	{
-		useInitialization = FALSE;
+		useSpinup = FALSE;
 	    row = i / grid_Cols;
 	    col = i % grid_Cols;
 
@@ -1170,7 +1437,7 @@ static void _read_init_species(void)
 		copy_cell_col = copy_cell % grid_Cols;
 
 		if (num != 3)
-			LogError(logfp, LOGFATAL, "Invalid %s file", grid_files[GRID_FILE_INIT_SPECIES]);
+			LogError(&LogInfo, LOGFATAL, "Invalid %s file", grid_files[GRID_FILE_SPINUP_SPECIES]);
 
 		int stringIndex = _get_value_index(buf, ',', 3); //gets us the index of the string that is right after what we just parsed in
 
@@ -1178,16 +1445,16 @@ static void _read_init_species(void)
 				&& cell != 0 && copy_cell < cell)
 		{ //copy this cells values from a previous cell's
 			for (j = 0; j < Globals->sppCount; j++)
-				gridCells[row][col].mySpeciesInit.shouldBeInitialized[j] =
-				    gridCells[copy_cell_row][copy_cell_col].mySpeciesInit.shouldBeInitialized[j];
-			gridCells[row][col].mySpeciesInit.useInitialization =
-			    gridCells[copy_cell_row][copy_cell_col].mySpeciesInit.useInitialization;
+				gridCells[row][col].mySpeciesInit.shouldSpinup[j] =
+				    gridCells[copy_cell_row][copy_cell_col].mySpeciesInit.shouldSpinup[j];
+			gridCells[row][col].mySpeciesInit.useSpinup =
+			    gridCells[copy_cell_row][copy_cell_col].mySpeciesInit.useSpinup;
 			continue;
 		}
 		else if (do_copy == 1)
-			LogError(logfp, LOGFATAL,
+			LogError(&LogInfo, LOGFATAL,
 					"Invalid %s file line %d invalid copy_cell attempt",
-					grid_files[GRID_FILE_INIT_SPECIES], i + 2);
+					grid_files[GRID_FILE_SPINUP_SPECIES], i + 2);
 
 		//going through each species
 		SppIndex s;
@@ -1195,36 +1462,43 @@ static void _read_init_species(void)
 		{
 			num = sscanf(&buf[stringIndex], "%d,", &seeds_Avail);
 			if (num != 1){
-				LogError(logfp, LOGFATAL, "Invalid %s file line %d invalid species input",
-						 grid_files[GRID_FILE_INIT_SPECIES], i + 2);
+				LogError(&LogInfo, LOGFATAL, "Invalid %s file line %d invalid species input",
+						 grid_files[GRID_FILE_SPINUP_SPECIES], i + 2);
 			}
 
 			if(seeds_Avail){
-				useInitialization = TRUE;
+				useSpinup = TRUE;
 				isAnyCellOnForSpinup = TRUE;
 			}
 
-			gridCells[row][col].mySpeciesInit.shouldBeInitialized[s] = seeds_Avail;
+			gridCells[row][col].mySpeciesInit.shouldSpinup[s] = seeds_Avail;
 			stringIndex += _get_value_index(&buf[stringIndex], ',', 1);
 		}
 
-		gridCells[row][col].mySpeciesInit.useInitialization = useInitialization;
+		gridCells[row][col].mySpeciesInit.useSpinup = useSpinup;
 	}
 
 	if (i != grid_Cells)
-		LogError(logfp, LOGFATAL, "Invalid %s file, not enough cells",
-				grid_files[GRID_FILE_INIT_SPECIES]);
+		LogError(&LogInfo, LOGFATAL, "Invalid %s file, not enough cells",
+				grid_files[GRID_FILE_SPINUP_SPECIES]);
 
 	if(!isAnyCellOnForSpinup){
-		LogError(logfp, LOGWARN, "Initialization is on, but no species are turned on for initialization inside %s.",
-				grid_files[GRID_FILE_INIT_SPECIES]);
+		LogError(&LogInfo, LOGWARN, "Spinup is on, but no species are turned on for spinup inside %s.",
+				grid_files[GRID_FILE_SPINUP_SPECIES]);
 	}
 
     unload_cell();
-	CloseFile(&f);
+	CloseFile(&f, &LogInfo);
 }
 
-/* Read the maxrgroupspecies file. */
+/**
+ * \brief Read the maxrgroupspecies file.
+ *
+ * This will populate the max [RGroup](\ref RGROUP) and [Species](\ref SPECIES)
+ * information in the \ref SuperGlobals struct.
+ *
+ * \ingroup GRID_PRIVATE
+ */
 static void _read_maxrgroupspecies(void)
 {
     ChDir(grid_directories[GRID_DIRECTORY_STEPWAT_INPUTS]);
@@ -1233,7 +1507,11 @@ static void _read_maxrgroupspecies(void)
     ChDir("..");
 }
 
-/* Read the non-gridded mode files.in file. */
+/**
+ * \brief Read the non-gridded mode files.in file.
+ *
+ * \ingroup GRID_PRIVATE
+ */
 static void _read_files(void)
 {
     ChDir(grid_directories[GRID_DIRECTORY_STEPWAT_INPUTS]);
@@ -1241,25 +1519,29 @@ static void _read_files(void)
     ChDir("..");
 }
 
-/* Reads the grid setup file and allocates gridCells.*/
+/**
+ * \brief Reads the grid setup file and allocates \ref gridCells.
+ *
+ * \ingroup GRID_PRIVATE
+ */
 static void _read_grid_setup(void)
 {
     FILE *f;
-    char buf[1024], initializationType[1024];
+    char buf[1024];
     int i, j;
 
-    f = OpenFile(grid_files[GRID_FILE_SETUP], "r");
+    f = OpenFile(grid_files[GRID_FILE_SETUP], "r", &LogInfo);
 
     GetALine(f, buf);
     i = sscanf(buf, "%d %d", &grid_Rows, &grid_Cols);
     if (i != 2)
-        LogError(logfp, LOGFATAL,
+        LogError(&LogInfo, LOGFATAL,
                  "Invalid grid setup file (rows/cols line wrong)");
 
     grid_Cells = grid_Cols * grid_Rows;
 
     if (grid_Cells > MAX_CELLS)
-        LogError(logfp, LOGFATAL,
+        LogError(&LogInfo, LOGFATAL,
                  "Number of cells in grid exceeds MAX_CELLS defined in ST_defines.h");
 
     /* Allocate the 2d array of cells now that we know how many we need */
@@ -1268,84 +1550,66 @@ static void _read_grid_setup(void)
     GetALine(f, buf);
     i = sscanf(buf, "%u", &UseDisturbances);
     if (i != 1)
-        LogError(logfp, LOGFATAL,
+        LogError(&LogInfo, LOGFATAL,
                  "Invalid grid setup file (disturbances line wrong)");
 
     GetALine(f, buf);
     i = sscanf(buf, "%u", &UseSoils);
     if (i != 1)
-        LogError(logfp, LOGFATAL, "Invalid grid setup file (soils line wrong)");
+        LogError(&LogInfo, LOGFATAL, "Invalid grid setup file (soils line wrong)");
 
     GetALine(f, buf);
     i = sscanf(buf, "%d", &j);
     if (i != 1)
-        LogError(logfp, LOGFATAL,
+        LogError(&LogInfo, LOGFATAL,
                  "Invalid grid setup file (seed dispersal line wrong)");
     UseSeedDispersal = itob(j);
 
-	// TODO: Remove this block once seed dispersal works.
-	if(UseSeedDispersal){
-		printf("\nSeed dispersal during the simulation is not yet functional.\n"
-		    "Check out GitHub for updates on this feature.\n");
-		UseSeedDispersal = FALSE;
+	GetALine(f, buf);
+	i = sscanf(buf, "%d", &shouldSpinup);
+	if(i < 1){
+		LogError(&LogInfo, LOGFATAL, "Invalid grid setup file (Spinup line wrong)");
 	}
 
 	GetALine(f, buf);
-	i = sscanf(buf, "%s", initializationType);
+	i = sscanf(buf, "%hd", &SuperGlobals.runSpinupYears);
 	if(i < 1){
-		LogError(logfp, LOGFATAL, "Invalid grid setup file (Initialization line wrong)");
-	}
-	if(!strncmp(initializationType, "spinup", 6)){
-		initializationMethod = INIT_WITH_SPINUP;
-	} else if(!strncmp(initializationType, "seeds", 5)){
-		initializationMethod = INIT_WITH_SEEDS;
-	} else if(!strncmp(initializationType, "none", 4)){
-		initializationMethod = INIT_WITH_NOTHING;
-	} else {
-		LogError(logfp, LOGFATAL, 
-		         "Invalid grid setup file (Initialization line wrong. Valid options are \"spinup\", \"seeds\", or \"none\")");
-	}
-
-	GetALine(f, buf);
-	i = sscanf(buf, "%hd", &SuperGlobals.runInitializationYears);
-	if(i < 1){
-		LogError(logfp, LOGFATAL, "Invalid grid setup file (Initialization years line wrong)");
+		LogError(&LogInfo, LOGFATAL, "Invalid grid setup file (Spinup years line wrong)");
 	}
 
 	GetALine(f, buf);
 	i = sscanf(buf, "%u", &writeIndividualFiles);
 	if(i < 1){
-		LogError(logfp, LOGFATAL, "Invalid grid setup file (Individual output line wrong)");
+		LogError(&LogInfo, LOGFATAL, "Invalid grid setup file (Individual output line wrong)");
 	}
 
 	GetALine(f, buf);
-	if (sscanf(buf, "%u", &sd_DoOutput) != 1)
-		LogError(logfp, LOGFATAL,
-				"Invalid %s file: seed dispersal output line\n", grid_files[GRID_FILE_SETUP]);
+	if (sscanf(buf, "%u", &recordDispersalEvents) != 1) {
+		LogError(&LogInfo, LOGFATAL,
+				"Invalid %s file: seed dispersal events output line\n", grid_files[GRID_FILE_SETUP]);
+    }
 
 	GetALine(f, buf);
-	if (sscanf(buf, "%c", &sd_Sep) != 1)
-		LogError(logfp, LOGFATAL,
-				"Invalid %s file: seed dispersal seperator line\n",
-				grid_files[GRID_FILE_SETUP]);
+	if (sscanf(buf, "%d", &outputSDData) != 1) {
+		LogError(&LogInfo, LOGFATAL, "Invalid grid setup file (Seed Dispersal Data Output\n");
+	}
 
-	if (sd_Sep == 't') //dealing with tab and space special cases...
-		sd_Sep = '\t';
-	else if (sd_Sep == 's')
-		sd_Sep = ' ';
-
-    CloseFile(&f);
+    CloseFile(&f, &LogInfo);
 }
 
-/* Output a master .csv file containing the averages across all cells. */
+/**
+ * \brief Output a master .csv file containing the averages across all cells.
+ *
+ * \ingroup GRID_PRIVATE
+ */
 void _Output_AllCellAvgBmass(const char * filename){
 	int i, j, year, nobs = 0;	//for iterating
 	GrpIndex rg;	//for iterating
 	SppIndex sp;	//for iterating
 
 	/* One accumulator for every accumulator in ST_stats.c */
-	float ppt, pptstd, pptsos, temp, tempstd, tempsos, dist, wildfire, grp[SuperGlobals.max_rgroups], grpstd[SuperGlobals.max_rgroups], 
-		  grpsos[SuperGlobals.max_rgroups], gsize[SuperGlobals.max_rgroups], gpr[SuperGlobals.max_rgroups], 
+	float ppt, pptstd, pptsos, temp, tempstd, tempsos, dist, wildfire, grp[SuperGlobals.max_rgroups], grpstd[SuperGlobals.max_rgroups],
+		  grpsos[SuperGlobals.max_rgroups], gsize[SuperGlobals.max_rgroups], gpr[SuperGlobals.max_rgroups],
 		  gprsos[SuperGlobals.max_rgroups], gprstd[SuperGlobals.max_rgroups], graze[SuperGlobals.max_rgroups],
 		  prescribedfire[SuperGlobals.max_rgroups], spp[SuperGlobals.max_spp_per_grp * SuperGlobals.max_rgroups],
 		  indv[SuperGlobals.max_spp_per_grp * SuperGlobals.max_rgroups];
@@ -1373,7 +1637,7 @@ void _Output_AllCellAvgBmass(const char * filename){
 		nobs = 0;
 		ppt = 0;
 		pptstd = 0;
-		pptsos = 0;		
+		pptsos = 0;
 		temp = 0;
 		tempstd = 0;
 		tempsos = 0;
@@ -1386,7 +1650,7 @@ void _Output_AllCellAvgBmass(const char * filename){
 			gsize[rg] = 0;
 			gpr[rg] = 0;
 			gprsos[rg] = 0;
-			gprstd[rg] = 0; 
+			gprstd[rg] = 0;
 			prescribedfire[rg] = 0;
 			graze[rg] = 0;
 		}
@@ -1400,9 +1664,8 @@ void _Output_AllCellAvgBmass(const char * filename){
 			for(j = 0; j < grid_Cols; ++j){ // For each column
 				/* ------------- Accumulate requested output ----------------- */
 				nobs++;
-
 				if(BmassFlags.ppt) {
-					
+
 					float old_ppt_ave = ppt;
 					ppt = get_running_mean(nobs, ppt, gridCells[i][j]._Ppt->s[year].ave);
 					pptsos += get_running_sqr(old_ppt_ave, ppt, gridCells[i][j]._Ppt->s[year].ave);
@@ -1451,7 +1714,7 @@ void _Output_AllCellAvgBmass(const char * filename){
 							indv[sp] += gridCells[i][j]._Indv[sp].s[year].ave;
 					} // End ForEachSpecies
 				} // End sppb
-				/* ------------ End Accumulate requested output --------------- */	
+				/* ------------ End Accumulate requested output --------------- */
 			} // End for each column
 		} // End for each row
 
@@ -1543,7 +1806,11 @@ void _Output_AllCellAvgBmass(const char * filename){
 	fclose(file); // Close the file
 }
 
-/* Output the average mortality across cells. */
+/**
+ * \brief Output the average mortality across cells.
+ *
+ * \ingroup GRID_PRIVATE
+ */
 void _Output_AllCellAvgMort(const char* fileName){
     if (!MortFlags.summary) return;
 
@@ -1563,7 +1830,7 @@ void _Output_AllCellAvgMort(const char* fileName){
           Gmort[SuperGlobals.max_rgroups][Globals->Max_Age],
           Smort[SuperGlobals.max_spp_per_grp * SuperGlobals.max_rgroups][Globals->Max_Age];
 
-    file = OpenFile( fileName, "w");
+    file = OpenFile( fileName, "w", &LogInfo);
 
     /* --------------------- Initialize values ----------------------- */
     ForEachSpecies(sp){
@@ -1664,5 +1931,278 @@ void _Output_AllCellAvgMort(const char* fileName){
     /* ----------------- End printing values --------------- */
 
     unload_cell();
-    CloseFile(&file);
+    CloseFile(&file, &LogInfo);
+}
+
+/**
+ * \brief Separate any SOILWAT2 output into cell-specific files
+ *
+ * SOILWAT2 prints output into 3 types of files: yearly, monthly and daily.
+ * Each file contains the output for EVERY cell. This function iterates over
+ * these files and separates them into cell-specific files.
+ *
+ * \author Chandler Haukap
+ * \date 18 February 2020
+ * \ingroup GRID_PRIVATE
+ */
+static void _separateSOILWAT2Output(void){
+  // If none of the cells requested SOILWAT2 output we can quit now.
+  if(!_getNumberSOILWAT2OutputCells()) {
+    return;
+  }
+
+  int* cells = _getSOILWAT2OutputCells();
+  DIR *d;
+  struct dirent *dir;
+  ChDir("./Output/sw_output/");
+  d = opendir(".");
+  if (d)
+  {
+    while ((dir = readdir(d)) != NULL)
+    {
+      if(strncmp(dir->d_name, "sw2_daily_", 10) == 0) {
+        _separateSOILWAT2DailyOutput(dir->d_name, cells);
+      } else if(strncmp(dir->d_name, "sw2_monthly_", 12) == 0) {
+        _separateSOILWAT2MonthlyOutput(dir->d_name, cells);
+      } else if(strncmp(dir->d_name, "sw2_yearly_", 11) == 0) {
+        _separateSOILWAT2YearlyOutput(dir->d_name, cells);
+      }
+    }
+    closedir(d);
+  }
+  Mem_Free(cells);
+  ChDir("../..");
+}
+
+/**
+ * \brief Separate the daily SOILWAT2 output files into cell-specific files.
+ *
+ * This function is intended to be called by \ref _separateSOILWAT2Output. It
+ * is a function that separates the daily weather files generated by SOILWAT2
+ * into cell-specific files.
+ *
+ * \param fileName is the name of the file containing the daily data.
+ * \param cellNumbers is an array of size \ref _getNumberSOILWAT2OutputCells
+ *        containing the cell numbers that requested SOILWAT2 output.
+ *
+ * \sa _separateSOILWAT2Output
+ * \author Chandler Haukap
+ * \date 18 February 2020
+ * \ingroup GRID_PRIVATE
+ */
+static void _separateSOILWAT2DailyOutput(char* fileName, int* cellNumbers) {
+  int thisDay, lastDay = 0, junk, outFileIndex;
+  size_t bufsize = 9000;
+  char junkBuffer[4096];
+  int numCells = _getNumberSOILWAT2OutputCells();
+  FILE** outFiles = Mem_Calloc(numCells, sizeof(FILE*),
+                               "_separateSOILWAT2DailyOutput", &LogInfo);
+  char* buffer = Mem_Calloc(bufsize, sizeof(char),
+                            "_separateSOILWAT2DailyOutput", &LogInfo);
+  FILE* inFile = fopen(fileName, "r");
+
+  if(!inFile) {
+    LogError(&LogInfo, LOGFATAL, "Issue while separating SOILWAT2 output.\n\tFile"
+             "\"%s\" not found.", fileName);
+  }
+
+  // Open the output files then copy the header over.
+  getline(&buffer, &bufsize, inFile);
+  for(outFileIndex = 0; outFileIndex < numCells; ++outFileIndex) {
+    sprintf(junkBuffer, "Cell_%d_%s", cellNumbers[outFileIndex], fileName);
+    outFiles[outFileIndex] = fopen(junkBuffer, "w");
+    fprintf(outFiles[outFileIndex], "%s", buffer);
+  }
+
+  // Separate the file
+  outFileIndex = 0;
+  while(getline(&buffer, &bufsize, inFile) > 0) {
+    sscanf(buffer, "%d,%d,%s", &junk, &thisDay, junkBuffer);
+    if(lastDay > thisDay) {
+      outFileIndex = (outFileIndex + 1) % numCells;
+      lastDay = 0;
+    } else {
+      lastDay = thisDay;
+    }
+    fprintf(outFiles[outFileIndex], "%s", buffer);
+  }
+
+  // Close all of the output files
+  for(outFileIndex = 0; outFileIndex < numCells; ++outFileIndex) {
+    fclose(outFiles[outFileIndex]);
+  }
+  fclose(inFile);
+  remove(fileName);
+
+  Mem_Free(outFiles);
+  Mem_Free(buffer);
+}
+
+/**
+ * \brief Separate the monthly SOILWAT2 output files into cell-specific files.
+ *
+ * This function is intended to be called by \ref _separateSOILWAT2Output. It
+ * is a function that separates the monthly weather files generated by SOILWAT2
+ * into cell-specific files.
+ *
+ * \param fileName is the name of the file containing the monthly data.
+ * \param cellNumbers is an array of size \ref _getNumberSOILWAT2OutputCells
+ *        containing the cell numbers that requested SOILWAT2 output.
+ *
+ * \sa _separateSOILWAT2Output
+ * \author Chandler Haukap
+ * \date 18 February 2020
+ * \ingroup GRID_PRIVATE
+ */
+static void _separateSOILWAT2MonthlyOutput(char* fileName, int* cellNumbers) {
+  int outFileIndex, month = 1;
+  size_t bufsize = 9000;
+  char junkBuffer[4096];
+  int numCells = _getNumberSOILWAT2OutputCells();
+  FILE** outFiles = Mem_Calloc(numCells, sizeof(FILE*),
+                               "_separateSOILWAT2MonthlyOutput", &LogInfo);
+  char* buffer = Mem_Calloc(bufsize, sizeof(char),
+                            "_separateSOILWAT2MonthlyOutput", &LogInfo);
+  FILE* inFile = fopen(fileName, "r");
+
+  if(!inFile) {
+    LogError(&LogInfo, LOGFATAL, "Issue while separating SOILWAT2 output.\n\tFile"
+             "\"%s\" not found.", fileName);
+  }
+
+  // Open the output files then copy the header over.
+  getline(&buffer, &bufsize, inFile);
+  for(outFileIndex = 0; outFileIndex < numCells; ++outFileIndex) {
+    sprintf(junkBuffer, "Cell_%d_%s", cellNumbers[outFileIndex], fileName);
+    outFiles[outFileIndex] = fopen(junkBuffer, "w");
+    fprintf(outFiles[outFileIndex], "%s", buffer);
+  }
+
+  // Separate the file
+  outFileIndex = 0;
+  while(getline(&buffer, &bufsize, inFile) > 0) {
+    fprintf(outFiles[outFileIndex], "%s", buffer);
+    month++;
+    if(month > 12){
+      outFileIndex = (outFileIndex + 1) % numCells;
+      month = 1;
+    }
+  }
+
+  // Close all of the output files
+  for(outFileIndex = 0; outFileIndex < numCells; ++outFileIndex) {
+    fclose(outFiles[outFileIndex]);
+  }
+  fclose(inFile);
+  remove(fileName);
+
+  Mem_Free(outFiles);
+  Mem_Free(buffer);
+}
+
+/**
+ * \brief Separate the yearly SOILWAT2 output files into cell-specific files.
+ *
+ * This function is intended to be called by \ref _separateSOILWAT2Output. It
+ * is a function that separates the yearly weather files generated by SOILWAT2
+ * into cell-specific files.
+ *
+ * \param fileName is the name of the file containing the yearly data.
+ * \param cellNumbers is an array of size \ref _getNumberSOILWAT2OutputCells
+ *        containing the cell numbers that requested SOILWAT2 output.
+ *
+ * \sa _separateSOILWAT2Output
+ * \author Chandler Haukap
+ * \date 18 February 2020
+ * \ingroup GRID_PRIVATE
+ */
+static void _separateSOILWAT2YearlyOutput(char* fileName, int* cellNumbers) {
+  int outFileIndex;
+  size_t bufsize = 9000;
+  char junkBuffer[4096];
+  int numCells = _getNumberSOILWAT2OutputCells();
+  FILE** outFiles = Mem_Calloc(numCells, sizeof(FILE*),
+                               "_separateSOILWAT2YearlyOutput", &LogInfo);
+  char* buffer = Mem_Calloc(bufsize, sizeof(char),
+                            "_separateSOILWAT2YearlyOutput", &LogInfo);
+  FILE* inFile = fopen(fileName, "r");
+
+  if(!inFile) {
+    LogError(&LogInfo, LOGFATAL, "Issue while separating SOILWAT2 output.\n\tFile"
+             "\"%s\" not found.", fileName);
+  }
+
+  // Open the output files then copy the header over.
+  getline(&buffer, &bufsize, inFile);
+  for(outFileIndex = 0; outFileIndex < numCells; ++outFileIndex) {
+    sprintf(junkBuffer, "Cell_%d_%s", cellNumbers[outFileIndex], fileName);
+    outFiles[outFileIndex] = fopen(junkBuffer, "w");
+    fprintf(outFiles[outFileIndex], "%s", buffer);
+  }
+
+  // Separate the file
+  outFileIndex = 0;
+  while(getline(&buffer, &bufsize, inFile) > 0) {
+    fprintf(outFiles[outFileIndex], "%s", buffer);
+    outFileIndex = (outFileIndex + 1) % numCells;
+  }
+
+  // Close all of the output files
+  for(outFileIndex = 0; outFileIndex < numCells; ++outFileIndex) {
+    fclose(outFiles[outFileIndex]);
+  }
+  fclose(inFile);
+  remove(fileName);
+
+  Mem_Free(outFiles);
+  Mem_Free(buffer);
+}
+
+/**
+ * \brief Returns the number of [grid cells](\ref gridCells) that requested
+ *        SOILWAT2 output.
+ *
+ * \return an int greater than or equal to 0.
+ *
+ * \author Chandler Haukap
+ * \date 18 February 2020
+ * \ingroup GRID_PRIVATE
+ */
+static int _getNumberSOILWAT2OutputCells(void) {
+  int i, j, count = 0;
+  for(i = 0; i < grid_Rows; ++i) {
+    for(j = 0; j < grid_Cols; ++j) {
+      if(gridCells[i][j].generateSWOutput) count++;
+    }
+  }
+  return count;
+}
+
+/**
+ * \brief Get an array of cell numbers that requested SOILWAT2 output.
+ *
+ * \return An array of ints of size \ref _getNumberSOILWAT2OutputCells().
+ *
+ * \sideeffect Allocated a new array.
+ *
+ * \author Chandler Haukap
+ * \date 21 February 2020
+ * \ingroup GRID_PRIVATE
+ */
+static int* _getSOILWAT2OutputCells(void) {
+  int i, j, count = 0;
+  int numCells = _getNumberSOILWAT2OutputCells();
+  int* cells = Mem_Calloc(numCells, sizeof(int),
+                          "_getSOILWAT2OutputCells", &LogInfo);
+
+  for(i = 0; i < grid_Rows; ++i) {
+    for(j = 0; j < grid_Cols; ++j) {
+      if(gridCells[i][j].generateSWOutput) {
+        cells[count] = (i * grid_Cols) + (j % grid_Cols);
+        count++;
+      }
+    }
+  }
+
+  return cells;
 }

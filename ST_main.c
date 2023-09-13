@@ -1,16 +1,20 @@
-/********************************************************/
-/********************************************************/
-/*  Source file: ST_main.c
- *  Type: module
- *  Application: STEPPE - plant community dynamics simulator
- *  Purpose: Main program loop and initializations. */
-/*  History:
+/**
+ * \file ST_main.c
+ * \brief Main program loop and argument processing
+ * 
+ *  History:
  *     (6/15/2000) -- INITIAL CODING - cwb
  *     15-Apr-02 (cwb) -- added code to interface with SOILWAT
  *	   5-24-2013 (DLM) -- added gridded option to program... see ST_grid.c
- * source file for the rest of the gridded code */
-/********************************************************/
-/********************************************************/
+ *               source file for the rest of the gridded code 
+ * 
+ * \author CWB (initial programming)
+ * \author DLM (added gridded mode option)
+ * \author Kyle Palmquist
+ * \author Chandler Haukap
+ * \date 15 April 2000 (initial programming)
+ * \ingroup STEPPE
+ */
 
 /* =================================================== */
 /*                INCLUDES / DEFINES                   */
@@ -18,26 +22,23 @@
 
 #include <string.h>
 #include <stdlib.h>
-#include <stdio.h>
 #include "ST_steppe.h"
-#include "sw_src/generic.h" // externs `*logfp`, `errstr`, `EchoInits`, `QuietMode`, `logged`
-#include "sw_src/filefuncs.h" // externs `inbuf`
-#include "sw_src/myMemory.h"
-#include "sw_src/SW_VegProd.h"
-#include "sw_src/SW_Control.h"
-#include "sw_src/pcg/pcg_basic.h"
-#include "sw_src/SW_Markov.h"// externs `markov_rng`
+#include "sw_src/include/generic.h"
+#include "sw_src/include/filefuncs.h"
+#include "sw_src/include/myMemory.h"
+#include "sw_src/include/SW_VegProd.h"
+#include "sw_src/include/SW_Control.h"
+#include "sw_src/external/pcg/pcg_basic.h"
 
 #include "sxw_funcs.h"
 #include "sxw.h"
-// externs `prepare_IterationSummary`, `storeAllIterations`
-#include "sw_src/SW_Output.h"
-#include "sw_src/SW_Output_outtext.h" // externs `print_IterationSummary`
-#include "sw_src/SW_Output_outarray.h"
-#include "sw_src/rands.h"
+#include "sw_src/include/SW_Output.h"
+#include "sw_src/include/SW_Output_outtext.h"
+#include "sw_src/include/SW_Output_outarray.h"
+#include "sw_src/include/rands.h"
 #include "ST_functions.h" // externs `environs_rng`, `resgroups_rng`, `species_rng`
+#include "ST_spinup.h"
 #include "ST_stats.h"
-#include "ST_initialization.h"
 #include "ST_progressBar.h"
 #include "ST_seedDispersal.h" // externs `UseSeedDispersal`, `dispersal_rng`
 #include "ST_mortality.h" // externs `mortality_rng`, `*_SomeKillage`
@@ -135,6 +136,16 @@ PlotType       *Plot;
 ModelType      *Globals;
 /** \brief Global struct holding biomass output flags. */
 GlobalType     SuperGlobals;
+/** \brief Global struct holding SOILWAT2 variables*/
+SW_ALL         SoilWatAll;
+/** \brief Global struct holding pointers to output subroutines */
+SW_OUTPUT_POINTERS SoilWatOutputPtrs[SW_OUTNKEYS];
+/** \brief Global struct holding log information (used by SOILWAT2) */
+LOG_INFO       LogInfo;
+/** \brief Global struct holding path information of SOILWAT2 (used by SOILWAT2) */
+PATH_INFO      PathInfo;
+/** \brief Local booleans to echo inputs/any output (used by SOILWAT2) */
+Bool           EchoInits, QuietMode;
 
 BmassFlagsType BmassFlags;
 /** \brief Global struct holding mortality output flags. */
@@ -166,13 +177,13 @@ int main(int argc, char **argv) {
   IntS year, iter;
 	Bool killedany;
 
-	logged = FALSE;
+	LogInfo.logged = FALSE;
 	atexit(check_log);
 	/* provides a way to inform user that something
 	 * was logged.  see generic.h */
 
-  prepare_IterationSummary = FALSE; // dont want to get soilwat output unless -o flag
-  storeAllIterations = FALSE; // dont want to store all soilwat output iterations unless -i flag
+  SoilWatAll.GenOutput.prepare_IterationSummary = FALSE; // dont want to get soilwat output unless -o flag
+  SoilWatAll.GenOutput.storeAllIterations = FALSE; // dont want to store all soilwat output iterations unless -i flag
   STdebug_requested = FALSE;
 
 	init_args(argc, argv); // read input arguments and intialize proper flags
@@ -180,6 +191,7 @@ int main(int argc, char **argv) {
 	printf("STEPWAT  init_args() executed successfully \n");
 
 	if (UseGrid) {
+        writeSOILWAT2Output = SoilWatAll.GenOutput.prepare_IterationSummary;
 		runGrid();
 		return 0;
 	}
@@ -193,13 +205,18 @@ int main(int argc, char **argv) {
 	parm_Initialize();
         
 	SXW_Init(TRUE, NULL); // allocate SOILWAT2-memory
-	SW_OUT_set_ncol(); // set number of output columns
-	SW_OUT_set_colnames(); // set column names for output files
-	if (prepare_IterationSummary) {
-		SW_OUT_create_summary_files();
-		// allocate `p_OUT` and `p_OUTsd` arrays to aggregate SOILWAT2 output across iterations
-		setGlobalSTEPWAT2_OutputVariables();
-	}
+	SW_OUT_set_ncol(SoilWatAll.Site.n_layers, SoilWatAll.Site.n_evap_lyrs,
+ 					SoilWatAll.VegEstab.count, SoilWatAll.GenOutput.ncol_OUT); // set number of output columns
+ 	SW_OUT_set_colnames(SoilWatAll.Site.n_layers, SoilWatAll.VegEstab.parms,
+ 						SoilWatAll.GenOutput.ncol_OUT,
+ 						SoilWatAll.GenOutput.colnames_OUT, &LogInfo); // set column names for output files
+ 	if (SoilWatAll.GenOutput.prepare_IterationSummary) {
+ 		SW_OUT_create_summary_files(&SoilWatAll.FileStatus, SoilWatAll.Output,
+ 									&SoilWatAll.GenOutput, PathInfo.InFiles,
+ 									SoilWatAll.Site.n_layers, &LogInfo);
+ 		// allocate `p_OUT` and `p_OUTsd` arrays to aggregate SOILWAT2 output across iterations
+ 		setGlobalSTEPWAT2_OutputVariables(SoilWatAll.Output, &SoilWatAll.GenOutput, &LogInfo);
+ 	}
         
 	/* Connect to ST db and insert static data */
 	if(STdebug_requested){
@@ -210,16 +227,17 @@ int main(int argc, char **argv) {
 	for (iter = 1; iter <= SuperGlobals.runModelIterations; iter++) {
 		Plot_Initialize();
 
-		set_all_rngs(SuperGlobals.randseed, iter, 0, 0);
-
-		Globals->currIter = iter;
+		Globals->currIter = SoilWatAll.GenOutput.currIter = iter;
                 
-		if (storeAllIterations) {
-			SW_OUT_create_iteration_files(Globals->currIter);
+		if (SoilWatAll.GenOutput.storeAllIterations) {
+ 			SW_OUT_create_iteration_files(&SoilWatAll.FileStatus,
+ 				SoilWatAll.Output, iter, &SoilWatAll.GenOutput, PathInfo.InFiles,
+ 				SoilWatAll.Site.n_layers, &LogInfo);
 		}
 
-		if (prepare_IterationSummary) {
-			print_IterationSummary = (Bool) (Globals->currIter == SuperGlobals.runModelIterations);
+		if (SoilWatAll.GenOutput.prepare_IterationSummary) {
+ 			SoilWatAll.GenOutput.print_IterationSummary = 
+				(Bool) (Globals->currIter == SuperGlobals.runModelIterations);
 		}
 
 		/* ------  Begin running the model ------ */
@@ -229,6 +247,8 @@ int main(int argc, char **argv) {
             }
 
 			//printf("------------------------Repetition/year = %d / %d\n", iter, year);
+
+			set_all_rngs(SuperGlobals.randseed, iter, year, 0);
 
 			Globals->currYear = year;
 
@@ -324,8 +344,8 @@ int main(int argc, char **argv) {
     SXW_PrintDebug(1);
   }
 
-  SW_OUT_close_files();
-  SW_CTL_clear_model(TRUE); // de-allocate all memory
+  SW_OUT_close_files(&SoilWatAll.FileStatus, &SoilWatAll.GenOutput, &LogInfo);
+  SW_CTL_clear_model(TRUE, &SoilWatAll, &PathInfo);; // de-allocate all memory
   free_all_sxw_memory();
   freeMortalityMemory();
 
@@ -375,12 +395,12 @@ void Plot_Initialize(void) {
 
 		/* This should no longer occur following the resolution of issue #209 on GitHub */
 		if (!ZRO(getSpeciesRelsize(sp))) {
-			LogError(logfp, LOGNOTE, 
+			LogError(&LogInfo, LOGNOTE, 
 							 "%s relsize = %f in Plot_Initialize. This indicates that some individuals in this species were not killed.",
 							 Species[sp]->name, getSpeciesRelsize(sp));
 		}
 		if (Species[sp]->est_count) {
-			LogError(logfp, LOGNOTE, "%s est_count (%d) forced "
+			LogError(&LogInfo, LOGNOTE, "%s est_count (%d) forced "
 					"in Plot_Initialize", Species[sp]->name,
 					Species[sp]->est_count);
 			Species[sp]->est_count = 0;
@@ -399,16 +419,16 @@ void Plot_Initialize(void) {
 
     /* This should no longer occur following the resolution of issue #209 on GitHub */
 		if (!ZRO(getRGroupRelsize(rg))) {
-			LogError(logfp, LOGNOTE, 
+			LogError(&LogInfo, LOGNOTE, 
 							 "%s relsize = %f in Plot_Initialize. This indicates that some individuals in this RGroup were not killed.",
 							 RGroup[rg]->name, getRGroupRelsize(rg));
-                        /*printf("in plot_initialize before forcing, Rgroup = %s, relsize = %f, est_count= %d\n",
-                        RGroup[rg]->name, RGroup[rg]->relsize, RGroup[rg]->est_count); */
+			/*printf("in plot_initialize before forcing, Rgroup = %s, relsize = %f, est_count= %d\n",
+			RGroup[rg]->name, RGroup[rg]->relsize, RGroup[rg]->est_count); */
 		}
                 
 		/* THIS NEVER SEEMS TO OCCUR */
 		if (RGroup[rg]->est_count) {
-			LogError(logfp, LOGNOTE, "%s est_count (%d) forced "
+			LogError(&LogInfo, LOGNOTE, "%s est_count (%d) forced "
 					"in Plot_Initialize", RGroup[rg]->name,
 					RGroup[rg]->est_count);
 			RGroup[rg]->est_count = 0;
@@ -466,7 +486,7 @@ void set_all_rngs(
 	/* Initialize RNGs with seed/state and sequence identifier that is
 		 reproducible and unique among RNGs, iterations, and year
 		 but not grid cells */
-	RandSeed(initstate, RNG_INITSEQ(8, iter, year, 0), &markov_rng);
+	RandSeed(initstate, RNG_INITSEQ(8, iter, year, 0), &SoilWatAll.Markov.markov_rng);
 }
 
 
@@ -476,11 +496,11 @@ void set_all_rngs(
 /**************************************************************/
 /* Allocates memory for any global variables defined as pointers */
 void allocate_Globals(void){
-	Env = (EnvType*) Mem_Calloc(1, sizeof(EnvType), "allocate_Globals: Env");
-	Succulent = (SucculentType*) Mem_Calloc(1, sizeof(SucculentType), "allocate_Globals: Succulent");
-	Globals = (ModelType*) Mem_Calloc(1, sizeof(ModelType), "allocate_Globals: Globals");
-	Plot = (PlotType*) Mem_Calloc(1, sizeof(PlotType), "allocate_Globals: Plot");
-	_SomeKillage = (Bool*) Mem_Calloc(1, sizeof(Bool), "allocate_Globals: _SomeKillage");
+	Env = (EnvType*) Mem_Calloc(1, sizeof(EnvType), "allocate_Globals: Env", &LogInfo);
+	Succulent = (SucculentType*) Mem_Calloc(1, sizeof(SucculentType), "allocate_Globals: Succulent", &LogInfo);
+	Globals = (ModelType*) Mem_Calloc(1, sizeof(ModelType), "allocate_Globals: Globals", &LogInfo);
+	Plot = (PlotType*) Mem_Calloc(1, sizeof(PlotType), "allocate_Globals: Plot", &LogInfo);
+	_SomeKillage = (Bool*) Mem_Calloc(1, sizeof(Bool), "allocate_Globals: _SomeKillage", &LogInfo);
 }
 
 /* Deallocates the global variables */
@@ -574,7 +594,7 @@ static void init_args(int argc, char **argv) {
   /* Defaults */
   parm_SetFirstName( DFLT_FIRSTFILE);
   QuietMode = EchoInits = UseSeedDispersal = FALSE;
-  progfp = stderr;
+  LogInfo.logfp = stderr;
 
 
   a=1;
@@ -644,7 +664,7 @@ static void init_args(int argc, char **argv) {
 		case 0: /* -d */
 			if (!ChDir(str))
 			{
-				LogError(stderr, LOGFATAL, "Invalid project directory (%s)",
+				LogError(&LogInfo, LOGFATAL, "Invalid project directory (%s)",
 						str);
 			}
 			break;
@@ -671,18 +691,18 @@ static void init_args(int argc, char **argv) {
 
 		case 6:
       		printf("storing SOILWAT output aggregated across-iterations (-o flag)\n");
-      		prepare_IterationSummary = TRUE;
+      		SoilWatAll.GenOutput.prepare_IterationSummary = TRUE;
 			break; /* -o */
 
     	case 7: // -i
       		printf("storing SOILWAT output for each iteration (-i flag)\n");
-      		storeAllIterations = TRUE;
+      		SoilWatAll.GenOutput.storeAllIterations = TRUE;
       		break;
 
 		case 8: // -s
 			if (strlen(argv[a]) > 1){
 				printf("Generating SXW debug file\n");
-				SXW->debugfile = Str_Dup(&argv[a][1]);
+				SXW->debugfile = Str_Dup(&argv[a][1], &LogInfo);
 			}
 			break;
 	  
@@ -697,7 +717,7 @@ static void init_args(int argc, char **argv) {
 			}
 
 		default:
-			LogError(logfp, LOGFATAL,
+			LogError(&LogInfo, LOGFATAL,
 					"Programmer: bad option in main:init_args:switch");
 		}
 
@@ -718,11 +738,11 @@ static void init_args(int argc, char **argv) {
 static void check_log(void) {
 /* =================================================== */
 
-  if (logfp != stdout) {
-    if (logged && !QuietMode)
+  if (LogInfo.logfp != stdout) {
+    if (LogInfo.logged && !QuietMode)
       fprintf(progfp, "\nCheck logfile for error messages.\n");
 
-    CloseFile(&logfp);
+    CloseFile(&LogInfo.logfp, &LogInfo);
   }
 
 }
@@ -760,7 +780,7 @@ void check_sizes(const char *chkpt) {
             rgsize += spsize;
 
             if (LT(diff, fabs(spsize - getSpeciesRelsize(sp)))) {
-                LogError(stdout, LOGWARN, "%s (%d:%d): SP: \"%s\" size error: "
+                LogError(&LogInfo, LOGWARN, "%s (%d:%d): SP: \"%s\" size error: "
                         "SP=%.7f, ndv=%.7f",
                         chkpt, Globals->currIter, Globals->currYear,
                         Species[sp]->name, getSpeciesRelsize(sp), spsize);
@@ -768,7 +788,7 @@ void check_sizes(const char *chkpt) {
         }
 
         if (LT(diff, fabs(rgsize - getRGroupRelsize(rg)))) {
-            LogError(stdout, LOGWARN, "%s (%d:%d): RG \"%s\" size error: "
+            LogError(&LogInfo, LOGWARN, "%s (%d:%d): RG \"%s\" size error: "
                     "RG=%.7f, ndv=%.7f",
                     chkpt, Globals->currIter, Globals->currYear,
                     RGroup[rg]->name, getRGroupRelsize(rg), rgsize);

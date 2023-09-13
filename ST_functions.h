@@ -1,16 +1,18 @@
-/********************************************************/
-/********************************************************/
-/*  Source file: ST_functions.h
- *  Type: header
- *  Application: STEPPE - plant community dynamics simulator
- *  Purpose: Declares public functions used throughout the
- *           model, although some are only used in specific
- *           places.
- *  History:
- *     (6/15/2000) -- INITIAL CODING - cwb
+
+/**
+ * \file ST_functions.h
+ * \brief Declares public functions used throughout the model.
+ * 
+ * Ideally this file would be removed and all of the functions within would be
+ * declared in module-specific header files. However, that is outside of the 
+ * scope of my current issue.
+ *  
+ * \author CWB (initial programing)
+ * \date 15 June 2000
+ * \author Chandler Haukap (author of this documentation)
+ * \date 16 January 2020
+ * \ingroup STEPPE
  */
-/********************************************************/
-/********************************************************/
 
 #ifndef FUNCTION_DEF
 #define FUNCTION_DEF
@@ -60,6 +62,7 @@ RealF RGroup_GetBiomass( GrpIndex rg) ;
 RealF Species_GetBiomass (SppIndex sp);
 void Species_Add_Indiv( SppIndex sp, Int new_indivs);
 RealF getSpeciesRelsize(SppIndex sp);
+RealF getSpeciesHeight(SpeciesType* sp);
 SppIndex Species_Name2Index (const char *name);
 void Species_Kill (const SppIndex sp, int killType);
 void Species_Proportion_Kill (const SppIndex sp, int killType, RealF proportionKilled );

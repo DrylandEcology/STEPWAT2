@@ -4,9 +4,12 @@
 
 TEST(ST_Mortality_test, Simulate_prescribed_fire_when_killfreq_startyr_is_0) {
     GrpIndex rg = 0;
+    LOG_INFO local_log;
+    local_log.logged = swFALSE;
+    local_log.logfp = NULL;
 
-    RGroup = (GroupType **)Mem_Calloc(1, sizeof(GroupType *), nullptr);
-    RGroup[rg] = (GroupType *)Mem_Calloc(1, sizeof(GroupType), nullptr);
+    RGroup = (GroupType **)Mem_Calloc(1, sizeof(GroupType *), nullptr, &local_log);
+    RGroup[rg] = (GroupType *)Mem_Calloc(1, sizeof(GroupType), nullptr, &local_log);
     RGroup[rg]->killfreq_startyr = 0;
 
     simulatePrescribedFire();

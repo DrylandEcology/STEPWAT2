@@ -1,19 +1,21 @@
-/******************************************************************/
-/* ST_progressBar.h
-    Defines all exported objects from ST_progressBar.c. 
-
-    TO ADD STATUSES:
-        Adding a Status is easy. Start by adding your entry to the
-        Status enum. Then, define what message your status should 
-        print in the switch statement in logProgress() defined in
-        ST_progressBar.c. Finally, if your Status requires a
-        progress bar, create a function for calculating progress
-        in ST_progressBar.c then add your function to 
-        _calculateProgress().
-
-    \author Chandler Haukap in August 2019
-*/
-/******************************************************************/
+/**
+ * \file ST_progressBar.h
+ * \brief Defines all exported objects from ST_progressBar.c. 
+ *
+ * TO ADD A PROGRESS BAR TO NEW CODE:
+ * 
+ * Incorporating a progress bar into new code is easy. Start by adding your 
+ * entry to the \ref Status enum. Then, define what message your status should
+ * print in the switch statement in \ref logProgress. Finally, if your Status
+ * requires a progress bar, create a function for calculating progress in 
+ * \ref ST_progressBar.c (see \ref _calculateSimulationProgress for an example
+ * of such a function) then add your function to the logic in 
+ * \ref _calculateProgress().
+ *
+ * \author Chandler Haukap 
+ * \date August 2019
+ * \ingroup PROGRESS_BAR
+ */
 
 #ifndef PROGRESSBAR_H
 #define PROGRESSBAR_H
@@ -23,7 +25,7 @@
 /* States of the program that the progress bar recognizes. */
 typedef enum 
 {
-	INITIALIZATION,
+	SPINUP,
 	SIMULATION,
 	OUTPUT,
 	DONE

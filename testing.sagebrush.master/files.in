@@ -7,13 +7,15 @@ g_logfile.log				# name of logfile (can also be stdout)
 Grid_Inputs/grid_setup.in		# name of grid setup file
 Grid_Inputs/grid_disturbances.csv	# name of grid disturbances input file
 Grid_Inputs/grid_soils.csv		# name of grid soils input file
-Grid_Inputs/grid_initSpecies.csv	# name of grid species input file
+Grid_Inputs/grid_spinupSpecies.csv	# name of grid species input file
+Grid_Inputs/grid_colonization.csv	# name of the colonization input file
+Grid_Inputs/grid_SOILWAT2OutputCells.csv	# name of the SOILWAT2 output cells file
 
 files.in				# name of stepwat files.in file
-Input/maxrgroupspecies.in     # name of stepwat maxrgroupspecies.in file
+Input/maxrgroupspecies.in		# name of stepwat maxrgroupspecies.in file
 
-Output/g_bmassavg			# name of the prefix given to the biomass output files
-Output/g_mortavg			# name of the prefix given to the mortuary output files
-Output/g_receivedprob			# name of the prefix given to the seed disperal received probability output files
-Output/g_bmass_cell_avg			# name of the prefix given to the biomass grid cell avg output files
-Output/g_mort_cell_avg			# name of the prefix given to the mortality grid cell avg output files
+Output/bmass				# name of the cell-specific biomass output files
+Output/mortality			# name of the cell-specific mortality output files
+Output/seedDispersalEvents		# name of the seed dispersal events output files
+Output/all_cell_average_biomass		# name of the all-cell average biomass output file
+Output/all_cell_average_mortality	# name of the all-cell average mortality output file
