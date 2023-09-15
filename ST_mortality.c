@@ -21,17 +21,14 @@
 /* --------------------------------------------------- */
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
-#include <math.h>
 
 #include "ST_mortality.h"
-#include "sw_src/filefuncs.h"
-#include "sw_src/generic.h"
-#include "sw_src/rands.h"
-#include "sw_src/myMemory.h"
+#include "sw_src/include/filefuncs.h"
+#include "sw_src/include/rands.h"
+#include "sw_src/include/myMemory.h"
 #include "ST_steppe.h"
 #include "ST_globals.h"
-#include "sw_src/pcg/pcg_basic.h"
+#include "sw_src/external/pcg/pcg_basic.h"
 #include "sxw_vars.h"
 
 
@@ -467,7 +464,7 @@ void initCheatgrassPrecip(void) {
   /* If cheatgrassPrecip hasn't been allocated */
   if(!cheatgrassPrecip){
     cheatgrassPrecip = Mem_Calloc(1, sizeof(CheatgrassPrecip),
-                                  "initCheatgrassPrecip: cheatgrassPrecip");
+                                  "initCheatgrassPrecip: cheatgrassPrecip", &LogInfo);
   }
 
   /* Reset all fields to 0 */
@@ -626,7 +623,7 @@ void _updateCheatgrassPrecip(int year) {
  */
 void initWildfireClimate(void) {
 	if (!wildfireClimate) {
-		wildfireClimate = Mem_Calloc(1, sizeof(WildfireClimate), "initWildfireClimate: wildfireClimate");
+		wildfireClimate = Mem_Calloc(1, sizeof(WildfireClimate), "initWildfireClimate: wildfireClimate", &LogInfo);
 	}
 	wildfireClimate->propSummerPrecipAvg = 0;
 	wildfireClimate->meanAnnTempAvg = 0;
@@ -824,7 +821,8 @@ static void _pat( const SppIndex sp) {
     Int i, k=-1;
     IndivType *p, **kills;
     
-    kills = (IndivType **)Mem_Calloc(SuperGlobals.max_indivs_per_spp, sizeof(IndivType *), "_pat");
+    kills = (IndivType **)Mem_Calloc(SuperGlobals.max_indivs_per_spp, 
+                                     sizeof(IndivType *), "_pat", &LogInfo);
 
     /* ---------------------------------------------*/
     /* Generate kill list, depending on sensitivity */
@@ -957,7 +955,8 @@ static void _succulents( const SppIndex sp) {
   RealF killamt = Succulent->reduction;
   int i, k=0;
   
-  kills = (IndivType **)Mem_Calloc(SuperGlobals.max_indivs_per_spp, sizeof(IndivType *), "_succulents");
+  kills = (IndivType **)Mem_Calloc(SuperGlobals.max_indivs_per_spp, 
+          sizeof(IndivType *), "_succulents", &LogInfo);
 
   ForEachIndiv (p, Species[sp]) {
     if ( GT(p->relsize, killamt) )
@@ -1014,7 +1013,8 @@ static void _slow_growth( const SppIndex sp) {
   IndivType *ndv,
             **kills;
   
-  kills = (IndivType **)Mem_Calloc(SuperGlobals.max_indivs_per_spp, sizeof(IndivType *), "_slow_growth");
+  kills = (IndivType **)Mem_Calloc(SuperGlobals.max_indivs_per_spp, 
+          sizeof(IndivType *), "_slow_growth", &LogInfo);
 
   slowrate = RGroup[Species[sp]->res_grp]->slowrate
            * Species[sp]->max_rate;
@@ -1078,7 +1078,7 @@ static void _age_independent( const SppIndex sp) {
 
   kills = (IndivType **) Mem_Calloc(Species[sp]->est_count,
                                    sizeof(IndivType *),
-                                   "_age_independent(kills)");
+                                   "_age_independent(kills)", &LogInfo);
 
   ForEachIndiv (ndv, Species[sp]) {
     a = (RealF)ndv->age / SppMaxAge(sp);
@@ -1201,7 +1201,8 @@ static void _stretched_clonal( GrpIndex rg, Int start, Int last,
 
   IndivType **clist; /* list of clonal individuals */
 
-  clist = (IndivType **)Mem_Calloc(SuperGlobals.max_indivs_per_spp, sizeof(IndivType *), "_stretched_clonal");
+  clist = (IndivType **)Mem_Calloc(SuperGlobals.max_indivs_per_spp,
+          sizeof(IndivType *), "_stretched_clonal", &LogInfo);
   
   /* get a list of remaining clonal plants, still ranked by size */
   for( np=-1, i=start; i <= last; i++) {
@@ -1238,7 +1239,7 @@ static void _stretched_clonal( GrpIndex rg, Int start, Int last,
 
       /* Making sure PR will always be > 1 here */
       if (total_reduction > 1.0)
-        LogError(logfp, LOGFATAL,
+        LogError(&LogInfo, LOGFATAL,
             "PR too large in Mort_StretchClonal()\n");
 
       /* sum up relsizes for total size*/

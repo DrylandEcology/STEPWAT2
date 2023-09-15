@@ -21,12 +21,16 @@ CFLAGS = \
 sw2 = SOILWAT2
 lib_sw2 = lib$(sw2).a
 path_sw2 = sw_src
+path_sw2lib = $(path_sw2)/bin
 
+# Note: `-I$(path_sw2)` is required for `#include "external/pcg/pcg_basic.h"`
+# in SOILWAT2 headers that are included by STEPWAT2 code
 INC_DIRS = \
 	-I. \
 	-Isqlite-amalgamation \
-	-I$(path_sw2)/googletest/googletest \
-	-I$(path_sw2)/googletest/googletest/include \
+	-I$(path_sw2) \
+	-I$(path_sw2)/external/googletest/googletest \
+	-I$(path_sw2)/external/googletest/googletest/include \
 	-Itest
 
 sources_core = \
@@ -47,53 +51,68 @@ sources_core = \
 	sxw_resource.c \
 	sxw_soilwat.c \
 	sxw_sql.c \
-	ST_initialization.c \
+	ST_spinup.c \
 	ST_progressBar.c \
-	ST_seedDispersal.c
+	ST_seedDispersal.c \
+	ST_colonization.c
 
 sources_test = \
-	$(path_sw2)/googletest/googletest/src/gtest-all.cc \
-	$(path_sw2)/googletest/googletest/src/gtest_main.cc \
+	$(path_sw2)/external/googletest/googletest/src/gtest-all.cc \
+	$(path_sw2)/external/googletest/googletest/src/gtest_main.cc \
 	test/test_ST_mortality.cc
 
 sw2_sources = \
-	SW_Output_outarray.c \
-	SW_Output_outtext.c
+	src/SW_Output_outarray.c \
+	src/SW_Output_outtext.c
 
 
 objects_core = $(sources_core:%.c=obj/%.o)
 objects_core_test = $(sources_core:%.c=obj/%_TEST.o)
 objects_test = $(sources_test:%.cc=obj/%.o)
 
+dir_obj = \
+	obj \
+	obj/sqlite-amalgamation
+dir_test = \
+	obj/test \
+	obj/$(path_sw2)/external/googletest/googletest/src
 
-sw_LDFLAGS = $(LDFLAGS) -L. -L$(path_sw2)
+sw_LDFLAGS = $(LDFLAGS) -L. -L$(path_sw2lib)
 sw_LDLIBS = -l$(sw2) $(LDLIBS) -lm
 
 
 
-all: $(path_sw2)/$(lib_sw2) stepwat stepwat_test
+all: $(path_sw2lib)/$(lib_sw2) stepwat
 
-$(path_sw2)/$(lib_sw2):
-	@(cd $(path_sw2) && $(MAKE) $(lib_sw2) \
-		CC="$(CC)" CPPFLAGS="$(CPPFLAGS)" CFLAGS="$(CFLAGS)" AR="$(AR)" \
+$(path_sw2lib)/$(lib_sw2):
+# Note: `-I..` is required for `#include "ST_defines.h"`
+# in SOILWAT2 headers that are included by SOILWAT2 code
+	@(cd $(path_sw2) && $(MAKE) lib \
+		CC="$(CC)" CPPFLAGS="$(CPPFLAGS) -I.." CFLAGS="$(CFLAGS)" AR="$(AR)" \
 		sw_sources="$(sw2_sources)")
 
-stepwat: $(path_sw2)/$(lib_sw2) $(objects_core)
+stepwat: $(path_sw2lib)/$(lib_sw2) $(objects_core) | $(dir_obj)
 	$(CC) $(objects_core) $(CFLAGS) $(CPPFLAGS) $(sw_LDLIBS) $(sw_LDFLAGS) -o stepwat
 	-@cp stepwat testing.sagebrush.master
 	-@cp stepwat testing.sagebrush.master/Stepwat_Inputs
 
-stepwat_test: $(path_sw2)/$(lib_sw2) $(objects_core_test) $(objects_test)
+stepwat_test: $(path_sw2lib)/$(lib_sw2) $(objects_core_test) $(objects_test) | $(dir_obj) $(dir_test)
 	$(CXX) $(objects_core_test) $(objects_test) $(CFLAGS) $(CPPFLAGS) $(sw_LDLIBS) $(sw_LDFLAGS) -o stepwat_test
 
-obj/%.o: %.c
+obj/%.o: %.c | $(dir_obj)
 	$(CC) $(CFLAGS) $(CPPFLAGS) $(INC_DIRS) -c $< -o $@
 
-obj/%.o: %.cc
+obj/%.o: %.cc | $(dir_obj)
 	$(CXX) $(CFLAGS) $(CPPFLAGS) $(INC_DIRS) -std=gnu++11 -c $< -o $@
 
-obj/%_TEST.o: %.c
+obj/%_TEST.o: %.c | $(dir_obj) $(dir_test)
 	$(CC) $(CFLAGS) $(CPPFLAGS) $(INC_DIRS) -DSTDEBUG -c $< -o $@
+
+
+#--- Create directories
+$(dir_obj) $(dir_test):
+		-@mkdir -p $@
+
 
 .PHONY: run_tests
 run_tests: stepwat_test
@@ -116,7 +135,7 @@ clean: cleanobjs cleanbin documentation_clean
 .PHONY: cleanobjs
 cleanobjs:
 	-@find . -type f -name '*.o' -delete
-	-@$(RM) -f $(path_sw2)/$(lib_sw2)
+	-@$(RM) -f $(path_sw2lib)/$(lib_sw2)
 
 .PHONY: cleanbin
 cleanbin:

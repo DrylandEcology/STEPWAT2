@@ -35,7 +35,10 @@
  *         28 2002 has been entirely deprecated. I removed the last reference
  *         to SXW_BYMAXSIZE and _Grp_BMass today.
  * 
- * \ingroup SXW
+ * \author CWB (initial coding)
+ * \author Chandler Haukap
+ * \date 9 May 2002 (initial coding)
+ * \ingroup SXW_PRIVATE
  */
 
 /* =================================================== */
@@ -45,27 +48,28 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "sw_src/generic.h" // externs `errstr`
-#include "sw_src/filefuncs.h" // externs `inbuf`
-#include "sw_src/myMemory.h"
+#include "sw_src/include/generic.h"
+#include "sw_src/include/filefuncs.h"
+#include "sw_src/include/myMemory.h"
 #include "ST_steppe.h"
 #include "ST_globals.h"
-#include "sw_src/SW_Defines.h"
+#include "sw_src/include/SW_Defines.h"
 #include "sxw.h"
 #include "sxw_funcs.h"
 #include "sxw_module.h"
-#include "sw_src/SW_Control.h"
-#include "sw_src/SW_Model.h"
-#include "sw_src/SW_VegProd.h"
-#include "sw_src/SW_Carbon.h"
-#include "sw_src/SW_Site.h"
-#include "sw_src/SW_SoilWater.h"
-#include "sw_src/SW_Files.h"
-#include "sw_src/SW_Weather.h"
-#include "sw_src/SW_Markov.h"
-#include "sw_src/SW_Output.h" // externs `prepare_IterationSummary`, `storeAllIterations`
-#include "sw_src/rands.h"
-#include "sw_src/pcg/pcg_basic.h"
+#include "sw_src/include/SW_Control.h"
+#include "sw_src/include/SW_Model.h"
+#include "sw_src/include/SW_VegProd.h"
+#include "sw_src/include/SW_Carbon.h"
+#include "sw_src/include/SW_Site.h"
+#include "sw_src/include/SW_SoilWater.h"
+#include "sw_src/include/SW_Files.h"
+#include "sw_src/include/SW_Weather.h"
+#include "sw_src/include/SW_Markov.h"
+#include "sw_src/include/SW_Output.h"
+#include "sw_src/include/rands.h"
+#include "sw_src/external/pcg/pcg_basic.h"
+#include "sw_src/include/SW_Times.h"
 
 
 /*************** Global Variable Declarations ***************/
@@ -123,7 +127,7 @@ void copy_sxw_variables(SXW_t* newSXW, SXW_resourceType* newSXWResources, transp
 /****************** Begin Function Code ********************/
 
 /**
- * \brief Read \ref SOILWAT2 input files and initialize variables.
+ * \brief Read [SOILWAT2](\ref sw_src) input files and initialize variables.
  * 
  * \ingroup SXW
  */
@@ -158,11 +162,11 @@ void SXW_Init( Bool init_SW, char *f_roots ) {
   _read_files();
   if(f_roots != NULL) {
 	  //Copy the directory for the sxwroots files
-	  strcpy(roots, DirName(*_sxwfiles[0]));
+	  DirName(*_sxwfiles[0], roots);
 	  strcat(roots, f_roots);
 	  Mem_Free(*_sxwfiles[0]);
 	  _sxwfiles[0] = &SXW->f_roots;
-	  *_sxwfiles[0] = Str_Dup(roots);
+	  *_sxwfiles[0] = Str_Dup(roots, &LogInfo);
   }
   SXW->NPds = MAX_MONTHS;
   _read_watin();
@@ -173,18 +177,22 @@ void SXW_Init( Bool init_SW, char *f_roots ) {
 
   if (init_SW)
   {
-		SXW_Reinit(SXW->f_watin);
+    // we need to deallocate memory previously dynamically allocated
+    // by SOILWAT2 in global variables, e.g., `SoilWatAll`,
+    // as long as these variables are reused/shared,
+    // e.g., among grid cells or among iterations
+		SXW_Reset(SXW->f_watin);
   }
 
-  SXW->NTrLyrs = SW_Site.n_transp_lyrs[0];
-  if(SW_Site.n_transp_lyrs[1] > SXW->NTrLyrs)
-  	SXW->NTrLyrs = SW_Site.n_transp_lyrs[1];
-  if(SW_Site.n_transp_lyrs[3] > SXW->NTrLyrs)
-  	SXW->NTrLyrs = SW_Site.n_transp_lyrs[3];
-  if(SW_Site.n_transp_lyrs[2] > SXW->NTrLyrs)
-	  SXW->NTrLyrs = SW_Site.n_transp_lyrs[2];
+  SXW->NTrLyrs = SoilWatAll.Site.n_transp_lyrs[0];
+  if(SoilWatAll.Site.n_transp_lyrs[1] > SXW->NTrLyrs)
+  SXW->NTrLyrs = SoilWatAll.Site.n_transp_lyrs[1];
+  if(SoilWatAll.Site.n_transp_lyrs[3] > SXW->NTrLyrs)
+  SXW->NTrLyrs = SoilWatAll.Site.n_transp_lyrs[3];
+  if(SoilWatAll.Site.n_transp_lyrs[2] > SXW->NTrLyrs)
+	  SXW->NTrLyrs = SoilWatAll.Site.n_transp_lyrs[2];
 
-  SXW->NSoLyrs = SW_Site.n_layers;
+  SXW->NSoLyrs = SoilWatAll.Site.n_layers;
 
   /* Print general information to stdout. 
      If we are using gridded mode this functionallity will be handled in ST_grid.c */
@@ -211,24 +219,28 @@ void SXW_Init( Bool init_SW, char *f_roots ) {
  * @brief This function initializes and allocates SOILWAT2 structures,
  *		  and reads SOILWAT2 inputs.
  *
+ * @note De-allocate dynamically allocated memory in SOILWAT2 structures
+ * if it has been previously allocated before SXW_Reinit() is called,
+ * e.g., use SXW_Reset() instead.
+ *
  * \ingroup SXW
  */
 static void SXW_Reinit(char* SOILWAT_file) {
-	char *temp;
+	PathInfo.InFiles[eFirst] = strdup(SOILWAT_file);
+ 	SW_CTL_setup_model(&SoilWatAll, SoilWatOutputPtrs, &PathInfo, &LogInfo);
 
-	// setup and construct model (independent of inputs)
-	temp = strdup(SOILWAT_file);
-	SW_CTL_setup_model(temp);
+ 	// read user inputs
+ 	SoilWatAll.Model.runModelIterations = SuperGlobals.runModelIterations;
+ 	SoilWatAll.Model.runModelYears = SuperGlobals.runModelYears;
+ 	SW_CTL_read_inputs_from_disk(&SoilWatAll, &PathInfo, &LogInfo);
 
-	// read user inputs
-	SW_CTL_read_inputs_from_disk();
+ 	// initialize simulation run (based on user inputs)
+ 	SW_CTL_init_run(&SoilWatAll, &LogInfo);
 
-	// initialize simulation run (based on user inputs)
-	SW_CTL_init_run();
-
-	// initialize output: transfer between STEPPE and SOILWAT2
-	SW_OUT_set_SXWrequests();
-    free(temp);
+ 	// initialize output: transfer between STEPPE and SOILWAT2
+ 	SW_OUT_set_SXWrequests(SoilWatAll.GenOutput.timeSteps_SXW,
+ 						   &SoilWatAll.GenOutput.used_OUTNPERIODS,
+ 						   SoilWatAll.Output, &LogInfo);
 }
 
 
@@ -246,7 +258,7 @@ static void SXW_Reinit(char* SOILWAT_file) {
  * \ingroup SXW
  */
 void SXW_Reset(char* SOILWAT_file) {
-	SW_CTL_clear_model(FALSE); // don't reset output arrays
+	SW_CTL_clear_model(FALSE, &SoilWatAll, &PathInfo); // don't reset output arrays
 	SXW_Reinit(SOILWAT_file);
 }
 
@@ -277,7 +289,8 @@ void SXW_Run_SOILWAT(void) {
     SppIndex sp;
     RealF *sizes;
 
-        sizes = (RealF *)Mem_Calloc(SuperGlobals.max_rgroups, sizeof(RealF), "SXW_Run_SOILWAT");
+        sizes = (RealF *)Mem_Calloc(SuperGlobals.max_rgroups, 
+						 sizeof(RealF), "SXW_Run_SOILWAT", &LogInfo);
 
     /* Compute current STEPPE biomass which represents last year's biomass and biomass due to establishment this year (for perennials) and biomass due to establishment this year (for annuals) */
     ForEachGroup(g) {
@@ -299,6 +312,9 @@ void SXW_Run_SOILWAT(void) {
 
     _sxw_sw_setup(sizes);
 
+    // Generate weather for current call (iteration, year, cell, ...)
+    _sxw_generate_weather();
+
     // Initialize `SXW` values for current year's run:
 	SXW->aet = 0.; /* used to be in sw_setup() but it needs clearing each run */
 
@@ -315,52 +331,55 @@ void SXW_Run_SOILWAT(void) {
 }
 
 void SXW_SW_Setup_Echo(void) {
-	char name[256] = {0};
-	strcat(name, _debugout);
-	FILE *f = OpenFile(strcat(name, ".input.out"), "a");
-	int i;
-	fprintf(f, "\n================== %d ==============================\n", SW_Model.year);
-	fprintf(f,"Fractions Grass:%f Shrub:%f Tree:%f Forb:%f BareGround:%f\n", SW_VegProd.veg[3].cov.fCover, SW_VegProd.veg[1].cov.fCover, SW_VegProd.veg[0].cov.fCover, SW_VegProd.veg[2].cov.fCover, SW_VegProd.bare_cov.fCover);
-	fprintf(f,"Monthly Production Values\n");
-	fprintf(f,"Grass\n");
-	fprintf(f,"Month\tLitter\tBiomass\tPLive\tLAI_conv\n");
-	for (i = 0; i < 12; i++) {
-		fprintf(f,"%u\t%f\t%f\t%f\t%f\n", i + 1, SW_VegProd.veg[3].litter[i],
-				SW_VegProd.veg[3].biomass[i], SW_VegProd.veg[3].pct_live[i],
-				SW_VegProd.veg[3].lai_conv[i]);
-	}
+ 	char name[256] = {0};
+ 	strcat(name, _debugout);
+ 	FILE *f = OpenFile(strcat(name, ".input.out"), "a", &LogInfo);
+ 	int i;
+ 	fprintf(f, "\n================== %d ==============================\n", SoilWatAll.Model.year);
+ 	fprintf(f,"Fractions Grass:%f Shrub:%f Tree:%f Forb:%f BareGround:%f\n", SoilWatAll.VegProd.veg[3].cov.fCover, 
+			SoilWatAll.VegProd.veg[1].cov.fCover, SoilWatAll.VegProd.veg[0].cov.fCover, SoilWatAll.VegProd.veg[2].cov.fCover,
+			SoilWatAll.VegProd.bare_cov.fCover);
+ 	fprintf(f,"Monthly Production Values\n");
+ 	fprintf(f,"Grass\n");
+ 	fprintf(f,"Month\tLitter\tBiomass\tPLive\tLAI_conv\n");
+ 	for (i = 0; i < 12; i++) {
+ 		fprintf(f,"%u\t%f\t%f\t%f\t%f\n", i + 1, SoilWatAll.VegProd.veg[3].litter[i],
+ 				SoilWatAll.VegProd.veg[3].biomass[i], SoilWatAll.VegProd.veg[3].pct_live[i],
+ 				SoilWatAll.VegProd.veg[3].lai_conv[i]);
+ 	}
 
-	fprintf(f,"Shrub\n");
-	fprintf(f,"Month\tLitter\tBiomass\tPLive\tLAI_conv\n");
-	for (i = 0; i < 12; i++) {
-		fprintf(f,"%u\t%f\t%f\t%f\t%f\n", i + 1, SW_VegProd.veg[1].litter[i],
-				SW_VegProd.veg[1].biomass[i], SW_VegProd.veg[1].pct_live[i],
-				SW_VegProd.veg[1].lai_conv[i]);
-	}
+ 	fprintf(f,"Shrub\n");
+ 	fprintf(f,"Month\tLitter\tBiomass\tPLive\tLAI_conv\n");
+ 	for (i = 0; i < 12; i++) {
+ 		fprintf(f,"%u\t%f\t%f\t%f\t%f\n", i + 1, SoilWatAll.VegProd.veg[1].litter[i],
+ 				SoilWatAll.VegProd.veg[1].biomass[i], SoilWatAll.VegProd.veg[1].pct_live[i],
+ 				SoilWatAll.VegProd.veg[1].lai_conv[i]);
+ 	}
 
-	fprintf(f,"Tree\n");
-	fprintf(f,"Month\tLitter\tBiomass\tPLive\tLAI_conv\n");
-	for (i = 0; i < 12; i++) {
-		fprintf(f,"%u\t%f\t%f\t%f\t%f\n", i + 1, SW_VegProd.veg[0].litter[i],
-				SW_VegProd.veg[0].biomass[i], SW_VegProd.veg[0].pct_live[i],
-				SW_VegProd.veg[0].lai_conv[i]);
-	}
+ 	fprintf(f,"Tree\n");
+ 	fprintf(f,"Month\tLitter\tBiomass\tPLive\tLAI_conv\n");
+ 	for (i = 0; i < 12; i++) {
+ 		fprintf(f,"%u\t%f\t%f\t%f\t%f\n", i + 1, SoilWatAll.VegProd.veg[0].litter[i],
+ 				SoilWatAll.VegProd.veg[0].biomass[i], SoilWatAll.VegProd.veg[0].pct_live[i],
+ 				SoilWatAll.VegProd.veg[0].lai_conv[i]);
+ 	}
 
-	fprintf(f,"Forb\n");
-	fprintf(f,"Month\tLitter\tBiomass\tPLive\tLAI_conv\n");
-	for (i = 0; i < 12; i++) {
-		fprintf(f,"%u\t%f\t%f\t%f\t%f\n", i + 1, SW_VegProd.veg[2].litter[i],
-				SW_VegProd.veg[2].biomass[i], SW_VegProd.veg[2].pct_live[i],
-				SW_VegProd.veg[2].lai_conv[i]);
-	}
+ 	fprintf(f,"Forb\n");
+ 	fprintf(f,"Month\tLitter\tBiomass\tPLive\tLAI_conv\n");
+ 	for (i = 0; i < 12; i++) {
+ 		fprintf(f,"%u\t%f\t%f\t%f\t%f\n", i + 1, SoilWatAll.VegProd.veg[2].litter[i],
+ 				SoilWatAll.VegProd.veg[2].biomass[i], SoilWatAll.VegProd.veg[2].pct_live[i],
+ 				SoilWatAll.VegProd.veg[2].lai_conv[i]);
+ 	}
 
-	SW_SITE *s = &SW_Site;
-	fprintf(f,"Soils Transp_coeff\n");
-	fprintf(f,"Forb\tTree\tShrub\tGrass\n");
-	ForEachSoilLayer(i)
-	{// %u %u %u %u s->lyr[i]->my_transp_rgn_forb, s->lyr[i]->my_transp_rgn_tree, s->lyr[i]->my_transp_rgn_shrub, s->lyr[i]->my_transp_rgn_grass
-		fprintf(f,"%6.2f %6.2f %6.2f %6.2f\n", s->lyr[i]->transp_coeff[2], s->lyr[i]->transp_coeff[0], s->lyr[i]->transp_coeff[1], s->lyr[i]->transp_coeff[3]);
-	}
+ 	SW_SITE *s = &SoilWatAll.Site;
+ 	fprintf(f,"Soils Transp_coeff\n");
+ 	fprintf(f,"Forb\tTree\tShrub\tGrass\n");
+ 	ForEachSoilLayer(i, s->n_layers)
+ 	{// %u %u %u %u s->lyr[i]->my_transp_rgn_forb, s->lyr[i]->my_transp_rgn_tree, s->lyr[i]->my_transp_rgn_shrub, s->lyr[i]->my_transp_rgn_grass
+ 		fprintf(f,"%6.2f %6.2f %6.2f %6.2f\n", s->transp_coeff[2][i],
+				s->transp_coeff[0][i], s->transp_coeff[1][i], s->transp_coeff[3][i]);
+ 	}
 
   // adding values to sxw structure for use in ST_stats.c
   /*SXW->grass_cover = SW_VegProd.grass.conv_stcr;
@@ -370,7 +389,7 @@ void SXW_SW_Setup_Echo(void) {
 
 
 	fprintf(f, "\n");
-	CloseFile(&f);
+	CloseFile(&f, &LogInfo);
 }
 
 /**
@@ -393,7 +412,7 @@ void SXW_PrintDebug(Bool cleanup) {
 		debugCleanUp();
 	} else {
 		for (i = 0; i < _debugyrs_cnt; i++) {
-			if (SW_Model.year == _debugyrs[i]) {
+			if (SoilWatAll.Model.year == _debugyrs[i]) {
 				SXW_SW_Setup_Echo();
 				_print_debuginfo();
 				break;
@@ -411,7 +430,7 @@ void SXW_PrintDebug(Bool cleanup) {
 		insertInputSoils();
 		insertOutputVars(SXWResources->_resource_cur, transp_window->added_transp);
 		insertRgroupInfo(SXWResources->_resource_cur);
-		insertOutputProd(&SW_VegProd);
+		insertOutputProd(&SoilWatAll.VegProd);
 		insertRootsSum(SXWResources->_roots_active_sum);
 		insertRootsRelative(SXWResources->_roots_active_rel);
 		insertTranspiration();
@@ -431,25 +450,30 @@ void SXW_PrintDebug(Bool cleanup) {
  * \ingroup SXW_private
  */
 static void _allocate_memory(void){
-	transp_window = (transp_t*) Mem_Calloc(1, sizeof(transp_t), "_allocate_memory: transp_window");
+	transp_window = (transp_t*) Mem_Calloc(1, sizeof(transp_t), "_allocate_memory: transp_window", &LogInfo);
 
 	/* Set the size of our transpiration window. */
 	if(Globals->transp_window > MAX_WINDOW){
-		LogError(logfp, LOGWARN, "Requested transp_window (%d) > %d. Setting transp_window to %d.", 
+		LogError(&LogInfo, LOGWARN, "Requested transp_window (%d) > %d. Setting transp_window to %d.", 
 		         Globals->transp_window, MAX_WINDOW, MAX_WINDOW);
 		transp_window->size = MAX_WINDOW;
 	} else {
 		transp_window->size = Globals->transp_window;
 	}
 
-	transp_window->ratios = (RealF*) Mem_Calloc(transp_window->size, sizeof(RealF), "_allocate_memory: transp_window->ratios");
-	transp_window->transp = (RealF*) Mem_Calloc(transp_window->size, sizeof(RealF), "_allocate_memory: transp_window->transp");
-	transp_window->SoS_array = (RealF*) Mem_Calloc(transp_window->size, sizeof(RealF), "_allocate_memory: transp_window->SoS_array");
+	transp_window->ratios = (RealF*) Mem_Calloc(transp_window->size, sizeof(RealF), 
+									 "_allocate_memory: transp_window->ratios", &LogInfo);
+	transp_window->transp = (RealF*) Mem_Calloc(transp_window->size, sizeof(RealF), 
+									 "_allocate_memory: transp_window->transp", &LogInfo);
+	transp_window->SoS_array = (RealF*) Mem_Calloc(transp_window->size, sizeof(RealF), 
+									 "_allocate_memory: transp_window->SoS_array", &LogInfo);
 
-	SXW = (SXW_t*) Mem_Calloc(1, sizeof(SXW_t), "_allocate_memory: SXW");
-	SXWResources = (SXW_resourceType*) Mem_Calloc(1, sizeof(SXW_resourceType), "_allocate_memory: SXWResources");
+	SXW = (SXW_t*) Mem_Calloc(1, sizeof(SXW_t), "_allocate_memory: SXW", &LogInfo);
+	SXWResources = (SXW_resourceType*) Mem_Calloc(1, sizeof(SXW_resourceType), 
+				   					   "_allocate_memory: SXWResources", &LogInfo);
 
-	SXWResources->_resource_cur = (RealF *)Mem_Calloc(SuperGlobals.max_rgroups, sizeof(RealF), "_allocate_memory: _resource_cur");
+	SXWResources->_resource_cur = (RealF *)Mem_Calloc(SuperGlobals.max_rgroups, sizeof(RealF), 
+				   					   "_allocate_memory: _resource_cur", &LogInfo);
 }
 
 /* Returns a pointer to the local SXW variable. */
@@ -479,22 +503,23 @@ static void  _read_files( void ) {
   /* read list of input files.   */
   FILE *fin;
   int i, nfiles = SXW_NFILES;
+  char inbuf[MAX_FILENAMESIZE];
 
   SXW->f_files = Parm_name(F_SXW);  /* aliased */
   MyFileName = SXW->f_files;
-  fin = OpenFile(MyFileName,"r");
+  fin = OpenFile(MyFileName,"r", &LogInfo);
 
   for(i=0; i < nfiles; i++) {
     if (!GetALine(fin, inbuf)) break;
-    *_sxwfiles[i] = Str_Dup(Str_TrimLeftQ(inbuf));
+    *_sxwfiles[i] = Str_Dup(Str_TrimLeftQ(inbuf), &LogInfo);
   }
 
   if (i < nfiles) {
-    LogError(logfp, LOGFATAL, "STEPWAT: %s: Insufficient files found",
+    LogError(&LogInfo, LOGFATAL, "STEPWAT: %s: Insufficient files found",
             MyFileName);
   }
 
-  CloseFile(&fin);
+  CloseFile(&fin, &LogInfo);
 
 
 }
@@ -506,17 +531,18 @@ static void  _read_roots_max(void) {
 	char *p;
 	char *name;
 	FILE *fp;
+	char inbuf[MAX_FILENAMESIZE];
         
-        name = (char *)Mem_Calloc(SuperGlobals.max_groupnamelen + 1, sizeof(char), "_read_roots_max");
+        name = (char *)Mem_Calloc(SuperGlobals.max_groupnamelen + 1, sizeof(char), "_read_roots_max", &LogInfo);
 
 	MyFileName = SXW->f_roots;
-	fp = OpenFile(MyFileName, "r");
+	fp = OpenFile(MyFileName, "r", &LogInfo);
 
 	while (GetALine(fp, inbuf)) {
 		p = strtok(inbuf, " \t"); /* g'teed to work via GetALine() */
 
 		if ((g = RGroup_Name2Index(p)) < 0) {
-			LogError(logfp, LOGFATAL, "%s: Invalid group name (%s) found.",
+			LogError(&LogInfo, LOGFATAL, "%s: Invalid group name (%s) found.",
 					MyFileName, p);
 		}
 		strcpy(name, p);
@@ -527,18 +553,18 @@ static void  _read_roots_max(void) {
 			lyr++;
 		}
 		if (lyr != SXW->NTrLyrs) {
-			LogError(logfp, LOGFATAL,
+			LogError(&LogInfo, LOGFATAL,
 					"%s: Group : %s : Missing layer values. Match up with soils.in file. Include zeros if necessary. Layers needed %u. Layers defined %u",
 					MyFileName, name, SXW->NTrLyrs, lyr);
 		}
 	}
 
 	if (cnt < Globals->grpCount) {
-		LogError(logfp, LOGFATAL, "%s: Not enough valid groups found.",
+		LogError(&LogInfo, LOGFATAL, "%s: Not enough valid groups found.",
 				MyFileName);
 	}
 
-	CloseFile(&fp);
+	CloseFile(&fp, &LogInfo);
         
         Mem_Free(name);
 }
@@ -551,23 +577,24 @@ static void _read_phen(void) {
   TimeInt m;
   char *p;
   FILE *fp;
+  char inbuf[MAX_FILENAMESIZE];
 
   MyFileName = SXW->f_phen;
-  fp = OpenFile(MyFileName,"r");
+  fp = OpenFile(MyFileName,"r", &LogInfo);
 
 
   while( GetALine(fp, inbuf) ) {
     p = strtok(inbuf," \t"); /* g'teed to work via GetALine() */
 
     if ( (g=RGroup_Name2Index(p)) <0 ) {
-      LogError(logfp, LOGFATAL,
+      LogError(&LogInfo, LOGFATAL,
                "%s: Invalid group name (%s) found.", MyFileName, p);
     }
     cnt++;
     m = Jan;
     while ((p=strtok(NULL," \t")) ) {
       if (m > Dec) {
-        LogError(logfp, LOGFATAL,
+        LogError(&LogInfo, LOGFATAL,
                  "%s: More than 12 months of data found.", MyFileName);
       }
       SXWResources->_phen[Igp(g,m)] = atof(p);
@@ -577,11 +604,11 @@ static void _read_phen(void) {
   }
 
   if (cnt < Globals->grpCount) {
-    LogError(logfp, LOGFATAL,
+    LogError(&LogInfo, LOGFATAL,
              "%s: Not enough valid groups found.", MyFileName);
   }
 
-  CloseFile(&fp);
+  CloseFile(&fp, &LogInfo);
 
 }
 
@@ -606,8 +633,10 @@ static void _read_prod(void) {
 	IntUS count = 0;
 	char *p;
 	char * pch;
+	char inbuf[MAX_FILENAMESIZE];
+
 	MyFileName = SXW->f_prod;
-	fp = OpenFile(MyFileName, "r");
+	fp = OpenFile(MyFileName, "r", &LogInfo);
 
     /* Read LITTER values for each group for each month */
 	while (GetALine(fp, inbuf)) {
@@ -616,14 +645,14 @@ static void _read_prod(void) {
 
 		p = strtok(inbuf, " \t"); /* guaranteed to work via GetALine() */
 		if ((g = RGroup_Name2Index(p)) < 0) {
-			LogError(logfp, LOGFATAL, "%s: Invalid group name for LITTER (%s).",
+			LogError(&LogInfo, LOGFATAL, "%s: Invalid group name for LITTER (%s).",
 					MyFileName, p);
 		}
 
 		month = Jan;
 		while ((p = strtok(NULL, " \t"))) {
 			if (month > Dec) {
-				LogError(logfp, LOGFATAL,
+				LogError(&LogInfo, LOGFATAL,
 						"%s: More than 12 months of data found for LITTER.", MyFileName);
 			}
 			SXWResources->_prod_litter[g][month] = atof(p);
@@ -636,7 +665,7 @@ static void _read_prod(void) {
 	}
 
 	if (count < Globals->grpCount) {
-		LogError(logfp, LOGFATAL, "%s: Not enough valid groups found for LITTER values.",
+		LogError(&LogInfo, LOGFATAL, "%s: Not enough valid groups found for LITTER values.",
 				 MyFileName);
 	}
 
@@ -652,13 +681,13 @@ static void _read_prod(void) {
 		p = strtok(inbuf, " \t"); /* guaranteed to work via GetALine() */
 
 		if ((g = RGroup_Name2Index(p)) < 0) {
-			LogError(logfp, LOGFATAL, "%s: Invalid group name for biomass (%s) found.",
+			LogError(&LogInfo, LOGFATAL, "%s: Invalid group name for biomass (%s) found.",
 					MyFileName, p);
 		}
 		month = Jan;
 		while ((p = strtok(NULL, " \t"))) {
 			if (month > Dec) {
-				LogError(logfp, LOGFATAL,
+				LogError(&LogInfo, LOGFATAL,
 						"%s: More than 12 months of data found.", MyFileName);
 			}
 			SXWResources->_prod_bmass[Igp(g, month)] = atof(p);
@@ -670,7 +699,7 @@ static void _read_prod(void) {
 	}
 
 	if (count < Globals->grpCount) {
-		LogError(logfp, LOGFATAL, "%s: Not enough valid groups found.",
+		LogError(&LogInfo, LOGFATAL, "%s: Not enough valid groups found.",
 				MyFileName);
 	}
 
@@ -686,14 +715,14 @@ static void _read_prod(void) {
 		p = strtok(inbuf, " \t"); /* guaranteed to work via GetALine() */
 
 		if ((g = RGroup_Name2Index(p)) < 0) {
-			LogError(logfp, LOGFATAL,
+			LogError(&LogInfo, LOGFATAL,
 					"%s: Invalid group name for pctlive (%s) found.",
 					MyFileName, p);
 		}
 		month = Jan;
 		while ((p = strtok(NULL, " \t"))) {
 			if (month > Dec) {
-				LogError(logfp, LOGFATAL,
+				LogError(&LogInfo, LOGFATAL,
 						"%s: More than 12 months of data found.", MyFileName);
 			}
 			SXWResources->_prod_pctlive[Igp(g, month)] = atof(p);
@@ -705,12 +734,12 @@ static void _read_prod(void) {
 	}
 
 	if (count < Globals->grpCount) {
-		LogError(logfp, LOGFATAL, "%s: Not enough valid groups found.",
+		LogError(&LogInfo, LOGFATAL, "%s: Not enough valid groups found.",
 				MyFileName);
 	}
 
 	GetALine(fp, inbuf); /* toss [end] keyword */
-	CloseFile(&fp);
+	CloseFile(&fp, &LogInfo);
 }
 
 static void _read_watin(void) {
@@ -728,23 +757,25 @@ static void _read_watin(void) {
    FILE *f;
    int lineno = 0;
    Bool found = FALSE;
+   char inbuf[MAX_FILENAMESIZE], outString[MAX_FILENAMESIZE];
 
    MyFileName = SXW->f_watin;
-   f = OpenFile(MyFileName, "r");
+   f = OpenFile(MyFileName, "r", &LogInfo);
 
 
    while( GetALine(f, inbuf) ) {
      if (++lineno == (eOutput + 2)) {
-       strcpy(_swOutDefName, DirName(SXW->f_watin));
+	   DirName(SXW->f_watin, outString);
+       strcpy(_swOutDefName, outString);
        strcat(_swOutDefName, inbuf);
        found = TRUE;
        break;
      }
    }
-   CloseFile(&f);
+   CloseFile(&f, &LogInfo);
 
    if (!found) {
-     LogError(logfp, LOGFATAL,
+     LogError(&LogInfo, LOGFATAL,
               "%s: Too few files (%d)", MyFileName, lineno);
    }
 
@@ -768,16 +799,16 @@ static void _make_roots_arrays(void) {
   char *fstr = "_make_roots_array()";
 
   size  = SXW->NGrps * SXW->NTrLyrs;
-  SXWResources->_roots_max     = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
+  SXWResources->_roots_max     = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr, &LogInfo);
 
   size = SXW->NGrps * SXW->NPds * SXW->NTrLyrs;
-  SXWResources->_rootsXphen       = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
-  SXWResources->_roots_active     = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
-  SXWResources->_roots_active_rel = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
+  SXWResources->_rootsXphen       = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr, &LogInfo);
+  SXWResources->_roots_active     = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr, &LogInfo);
+  SXWResources->_roots_active_rel = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr, &LogInfo);
 
   //4 - Grass,Frob,Tree,Shrub
   size = NVEGTYPES * SXW->NPds * SXW->NTrLyrs;
-  SXWResources->_roots_active_sum = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
+  SXWResources->_roots_active_sum = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr, &LogInfo);
 }
 
 static void _make_phen_arrays(void) {
@@ -786,7 +817,7 @@ static void _make_phen_arrays(void) {
   char *fstr = "_make_phen_arrays()";
 
   size = SXW->NGrps * MAX_MONTHS;
-  SXWResources->_phen = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
+  SXWResources->_phen = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr, &LogInfo);
 
 }
 
@@ -804,13 +835,15 @@ static void _make_prod_arrays(void) {
 	char *fstr = "_make_phen_arrays()";
 
 	size = SXW->NGrps * MAX_MONTHS;
-	SXWResources->_prod_bmass = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
-	SXWResources->_prod_pctlive = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
+	SXWResources->_prod_bmass = (RealD *) Mem_Calloc(size, sizeof(RealD), 
+										             fstr, &LogInfo);
+	SXWResources->_prod_pctlive = (RealD *) Mem_Calloc(size, sizeof(RealD), 
+											           fstr, &LogInfo);
 
     /* Allocate the _prod_litter 2D array, where rows are rgroups and columns are months. */
-    SXWResources->_prod_litter = (RealD**) Mem_Calloc(SXW->NGrps, sizeof(RealD*), fstr);
+    SXWResources->_prod_litter = (RealD**) Mem_Calloc(SXW->NGrps, sizeof(RealD*), fstr, &LogInfo);
     for(i = 0; i < SXW->NGrps; ++i){
-        SXWResources->_prod_litter[i] = (RealD*) Mem_Calloc(MAX_MONTHS, sizeof(RealD), fstr);
+        SXWResources->_prod_litter[i] = (RealD*) Mem_Calloc(MAX_MONTHS, sizeof(RealD), fstr, &LogInfo);
     }
 }
 
@@ -823,10 +856,10 @@ static void _make_transp_arrays(void) {
 	int size, k;
 
   size = SXW->NPds * SXW->NSoLyrs; // monthly values for each soil layer
-	SXW->transpTotal = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
+	SXW->transpTotal = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr, &LogInfo);
 
 	ForEachVegType(k) {
-		SXW->transpVeg[k] = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr);
+		SXW->transpVeg[k] = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr, &LogInfo);
 	}
 }
 
@@ -839,7 +872,7 @@ static void _make_swc_array(void) {
 	char *fstr = "_make_swc_array()";
 	int size = SXW->NPds * SXW->NSoLyrs; // monthly values for each soil layer
 
-	SXW->swc = (RealF *) Mem_Calloc(size, sizeof(RealF *), fstr);
+	SXW->swc = (RealF *) Mem_Calloc(size, sizeof(RealF *), fstr, &LogInfo);
 }
 
 static void _read_debugfile(void) {
@@ -871,13 +904,13 @@ static void _read_debugfile(void) {
 	char *date, str[102];
 	int cnt = 0;
 	TimeInt i;
-	char name[256] = {0};
+	char name[256] = {0}, inbuf[MAX_FILENAMESIZE], errstr[MAX_ERROR];
 
-	f = OpenFile(SXW->debugfile, "r");
+	f = OpenFile(SXW->debugfile, "r", &LogInfo);
 
 	/* get name of output file */
 	if (!GetALine(f, inbuf)) {
-		CloseFile(&f);
+		CloseFile(&f, &LogInfo);
 		return;
 	}
 	strcpy(_debugout, inbuf);
@@ -900,19 +933,19 @@ static void _read_debugfile(void) {
 	}
 	strcat(errstr, "Note that data will always be appended,\n");
 	strcat(errstr, "so clear file contents before re-use.\n");
-	LogError(logfp, LOGNOTE, errstr);
+	LogError(&LogInfo, LOGNOTE, errstr);
 
-	CloseFile(&f);
+	CloseFile(&f, &LogInfo);
 
 	/* now empty the file prior to the run */
 	strcat(name, _debugout);
-	f = OpenFile(strcat(name, ".output.out"), "w");
-	CloseFile(&f);
+	f = OpenFile(strcat(name, ".output.out"), "w", &LogInfo);
+	CloseFile(&f, &LogInfo);
 
 	name[0] = 0;
 	strcat(name, _debugout);
-	f = OpenFile(strcat(name, ".input.out"), "w");
-	CloseFile(&f);
+	f = OpenFile(strcat(name, ".input.out"), "w", &LogInfo);
+	CloseFile(&f, &LogInfo);
 
 	connect(_debugout);
 	createTables();
@@ -925,7 +958,7 @@ void debugCleanUp() {
 
 void _print_debuginfo(void) {
 /*======================================================*/
-	SW_VEGPROD *v = &SW_VegProd;
+	SW_VEGPROD *v = &SoilWatAll.VegProd;
 	TimeInt p;
 	LyrIndex t;
 	int l;
@@ -943,7 +976,7 @@ void _print_debuginfo(void) {
 	strcpy(vegProdNames[SW_FORBS], "FORB");
 	char name[256] = {0};
 	strcat(name, _debugout);
-	f = OpenFile(strcat(name, ".output.out"), "a");
+	f = OpenFile(strcat(name, ".output.out"), "a", &LogInfo);
 
 	if (!beenhere) {
 		beenhere = TRUE;
@@ -975,7 +1008,7 @@ void _print_debuginfo(void) {
 			sum += SXW->transpTotal[Ilp(t, p)];
 	}
 
-	fprintf(f, "\n================== %d =============================\n", SW_Model.year);
+	fprintf(f, "\n================== %d =============================\n", SoilWatAll.Model.year);
 	fprintf(f, "MAP = %d(mm)\tMAT = %5.2f(C)\tAET = %5.4f(cm)\tT = %5.4f(cm)\tTADDED = %5.4f(cm)\tAT = %5.4f(cm)\n\n", Env->ppt, Env->temp, SXW->aet, sum, transp_window->added_transp, sum + transp_window->added_transp);
 
 	fprintf(f, "Group     \tRelsize\tPR\tResource_cur\tResource_cur\n");
@@ -1003,7 +1036,7 @@ void _print_debuginfo(void) {
 			days = 30;
 		else if (p == Feb) { //February has either 28 or 29 days
 			days = 28;
-			if (isleapyear(SW_Model.year))
+			if (isleapyear(SoilWatAll.Model.year))
 				days = 29;
 		} // all the other months have 31 days
 
@@ -1092,18 +1125,18 @@ void _print_debuginfo(void) {
 	ForEachTrPeriod(p)
 	{
 		fprintf(f, "%d : ", p + 1);
-		ForEachSoilLayer(t)
+		ForEachSoilLayer(t, SoilWatAll.Site.n_layers)
 			fprintf(f, "\t%5.4f", SXW->swc[Ilp(t, p)]);
 		fprintf(f, "\n");
 	}
 
 	fprintf(f, "\n");
-	CloseFile(&f);
+	CloseFile(&f, &LogInfo);
 }
 
 
 #ifdef DEBUG_MEM
-#include "sw_src/myMemory.h"
+#include "sw_src/include/myMemory.h"
 /*======================================================*/
 void SXW_SetMemoryRefs( void) {
 /* when debugging memory problems, use the bookkeeping
@@ -1166,7 +1199,7 @@ int get_SW2_veg_index(int veg_prod_type) {
  /***********************************************************/
  //returns the number of transpiration layers correctly for each veg_prod_type
 int getNTranspLayers(int veg_prod_type) {
-  return SW_Site.n_transp_lyrs[veg_prod_type];
+  return SoilWatAll.Site.n_transp_lyrs[veg_prod_type];
 }
 
 /** 

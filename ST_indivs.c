@@ -19,11 +19,10 @@
 /* --------------------------------------------------- */
 
 #include <stdlib.h>
-#include <memory.h>
 #include "ST_steppe.h"
 #include "ST_globals.h"
-#include "sw_src/filefuncs.h"
-#include "sw_src/myMemory.h"
+#include "sw_src/include/filefuncs.h"
+#include "sw_src/include/myMemory.h"
 
 
 /******** Modular External Function Declarations ***********/
@@ -100,7 +99,7 @@ Bool indiv_New( SppIndex sp) {
   static int id=0;
 
   if (Species[sp]->est_count == SuperGlobals.max_indivs_per_spp) {
-    LogError(logfp, LOGWARN, "Limit reached: %s is about to get %d "
+    LogError(&LogInfo, LOGWARN, "Limit reached: %s is about to get %d "
                    "indivs (max=%d)\n", Species[sp]->name,
                    Species[sp]->est_count +1,
                    SuperGlobals.max_indivs_per_spp);
@@ -180,7 +179,7 @@ static IndivType *_create ( void) {
   IndivType *p;
 
   p = (IndivType *) Mem_Calloc( 1, sizeof(IndivType),
-                                "indiv_create");
+                                "indiv_create", &LogInfo);
   return (p);
 
 }
@@ -253,7 +252,7 @@ void indiv_proportion_Kill(IndivType *ndv, int killType, RealF proportKilled)
 
 	if( ndv->age > Species[ndv->myspecies]->max_age )
 	{
-	     LogError(logfp, LOGWARN, "%s dies older than max_age (%d > %d). Iter=%d, Year=%d\n",
+	     LogError(&LogInfo, LOGWARN, "%s dies older than max_age (%d > %d). Iter=%d, Year=%d\n",
 			                    Species[ndv->myspecies]->name,
 			                    ndv->age, Species[ndv->myspecies]->max_age,
 			                    Globals->currIter, Globals->currYear);
@@ -367,7 +366,7 @@ void indiv_proportion_Recovery(IndivType *ndv, int killType, RealF proportionRec
      * positive or zero */
     if (LT(ndv->relsize, 0.0)) {
         // this should never happen because `increase` should always be positive
-        LogError(logfp, LOGWARN, "'indiv_proportion_Recovery': an individual of "\
+        LogError(&LogInfo, LOGWARN, "'indiv_proportion_Recovery': an individual of "\
       "%s reached relsize < 0 (increase = %.3f): for " \
       "killType = %d, proportionKilled = %.2f, proportionRecovery = %.2f",
                 Species[ndv->myspecies]->name, increase,
@@ -404,7 +403,7 @@ void indiv_proportion_Recovery(IndivType *ndv, int killType, RealF proportionRec
 void indiv_Kill_Complete( IndivType *ndv, int killType) 
 {
   if( ndv->age > Species[ndv->myspecies]->max_age ) {
-    LogError(logfp, LOGWARN, "%s dies older than max_age (%d > %d). Iter=%d, Year=%d\n",
+    LogError(&LogInfo, LOGWARN, "%s dies older than max_age (%d > %d). Iter=%d, Year=%d\n",
                     Species[ndv->myspecies]->name,
                     ndv->age, Species[ndv->myspecies]->max_age,
                     Globals->currIter, Globals->currYear);
@@ -465,7 +464,7 @@ void _delete (IndivType *ndv)
 
   if ((s->est_count > 0 && s->IndvHead == NULL)
      || (s->est_count == 0 && s->IndvHead != NULL))
-     LogError(logfp, LOGFATAL,
+     LogError(&LogInfo, LOGFATAL,
               "PGMR: Indiv Count out of sync in _delete()");
 
   Mem_Free(ndv);
@@ -494,7 +493,7 @@ void Indiv_SortSize( const byte sorttype,
     case SORT_A: cmpfunc = Indiv_CompSize_A; break;
     case SORT_D: cmpfunc = Indiv_CompSize_D; break;
     default:
-      LogError(logfp, LOGFATAL,
+      LogError(&LogInfo, LOGFATAL,
              "Invalid sort mode in Indiv_SortSize");
   }
 

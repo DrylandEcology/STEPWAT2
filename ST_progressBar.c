@@ -1,31 +1,51 @@
-/**************************************************************************/
-/* ST_progressBar.c
-    Function definitions for a progress bar printed to the terminal.
-    See ST_progressBar.h for a description of how to add a new Status.
-
-    \author Chandler Haukap in August 2019
+/**
+ * \file ST_progressBar.c
+ * \brief Function definitions for a progress bar printed to the terminal.
+ * 
+ * For a description of how to integrate the progress bar into new code,
+ * see \ref ST_progressBar.h.
+ * 
+ * \author Chandler Haukap
+ * \date August 2019
+ * \ingroup PROGRESS_BAR
  */
-/**************************************************************************/
 
 #include "ST_progressBar.h"
-#include "ST_defines.h"
 #include "ST_globals.h"
-#include<string.h>
+#include <string.h>
 
 /*************** Local Function(s). Treat these as private. ***************/
 
 double _calculateProgress(int innerLoopIteration, int outerLoopIteration, Status status);
-double _calculateInitializationProgress(int year);
+double _calculateSpinupProgress(int year);
 double _calculateSimulationProgress(int year, int iteration);
 
 /*********************** Function Definitions *****************************/
 
-/* Log the program's progress using a progress bar.
-	Param iteration: integer greater than 0. Input 0 if and only if the program
-                     is not currently in an iteration loop.
-	Param year: integer greater than 0. Input 0 if and only if the program is
-                not currently in a years loop.
-	Param status: Use the "Status" enum to choose a value.  */
+/**
+ * \brief Log the program's progress using a progress bar.
+ * 
+ * This function expects to be called inside a nested iterations and years
+ * loop, such as the one used in \ref main().
+ * 
+ * You may use this progress bar in a single for loop by setting either 
+ * iteration or year to 0. 
+ * 
+ * Each \ref Status parameter must define their own algorithm for processing
+ * iteration and year. For example, see \ref _calculateSpinupProgress
+ * or \ref _calculateSimulationProgress. For a detailed description of how to 
+ * implement a new \ref Status, see \ref ST_progressBar.h.
+ * 
+ * \param iteration integer greater than 0. Input 0 if and only if the program
+ *                  is not currently in an iteration loop.
+ * \param year integer greater than 0. Input 0 if and only if the program is
+ *             not currently in a years loop.
+ * \param status Use the \ref Status enum to choose a value.
+ * 
+ * \author Chandler Haukap
+ * \date August 2019
+ * \ingroup PROGRESS_BAR
+ */
 void logProgress(int iteration, int year, Status status){
 	static char progressString[256];
 	int index = 0;					// Where we are in progressString
@@ -34,19 +54,19 @@ void logProgress(int iteration, int year, Status status){
 	iteration--;					// iteration loops are 1 indexed, but we need 0 indexing.
 
 	switch(status){
-		case INITIALIZATION:
-			strcpy(progressString, "Initializing |");
-			index += 14;	// We have copied over 16 characters
+		case SPINUP:
+			strcpy(progressString, "Spinning up  |");
+			index += 14;	// We have copied over 14 characters
             needsProgressBar = TRUE;
 			break;
 		case SIMULATION:
 			strcpy(progressString, "Simulating   |");
-			index += 14;	// We have copied over 12 characters
+			index += 14;	// We have copied over 14 characters
 			needsProgressBar = TRUE;
 			break;
 		case OUTPUT:
-			strcpy(progressString, "Writing files");
-			index += 13;	// We have copied over 12 characters
+			strcpy(progressString, "Writing files...                   ");
+			index += 13;	// We have copied over 13 characters
 			break;
 		case DONE:
 			strcpy(progressString, "Done");
@@ -87,19 +107,28 @@ void logProgress(int iteration, int year, Status status){
 	}
 }
 
-/* Returns a double between 0 and 100 representing how close the program is to completing a given loop.
+/**
+ * \brief Calculates the program's progress inside of a looping structure.
  *
  * \param innerLoopIteration is the iteration of the inner loop.
  * \param outerLoopIteration is the iteration of the outer loop.
- * \param status: Use the "status" enumerator. Valid options are SPINUP or SIMULATION. 
+ * \param status Use the "status" enumerator. Valid options are SPINUP or 
+ *               SIMULATION. 
  * 
- * Example usage for a loop with the structure "For iterations { for years {...} }":
- * _calculateProgress(<current year>, <current iteration>, SIMULATION);
+ * \return A double between 0 and 100 representing how close the program is to
+ *         completing the given loop(s).
+ * 
+ * The \ref Status you choose determines how innerLoopIteration and 
+ * outerLoopIteration will be used to calculate an overall percentage.
+ * 
+ * \author Chandler Haukap
+ * \date August 2019
+ * \ingroup PROGRESS_BAR_PRIVATE
  */
 double _calculateProgress(int innerLoopIteration, int outerLoopIteration, Status status){
 	double percentComplete;
-	if(status == INITIALIZATION){
-		percentComplete = _calculateInitializationProgress(innerLoopIteration);
+	if(status == SPINUP){
+		percentComplete = _calculateSpinupProgress(innerLoopIteration);
 	} else if(status == SIMULATION) {
 		percentComplete = _calculateSimulationProgress(innerLoopIteration, outerLoopIteration);
 	} else {
@@ -108,14 +137,47 @@ double _calculateProgress(int innerLoopIteration, int outerLoopIteration, Status
 	return percentComplete;
 }
 
-/* Algorithm for calculating how far along initialization is.
-   Returns a percentage between 0 and 100. */
-double _calculateInitializationProgress(int year){
-    return (year / (double) SuperGlobals.runInitializationYears) * 100;
+/**
+ * \brief Algorithm for calculating how far along spinup is.
+ * 
+ * This function is intended to be called by \ref _calculateProgress when
+ * the SPINUP \ref Status is used. Note that while 
+ * \ref _calculateProgress takes two loop parameters this function only needs
+ * one, because [spinup](\ref SPINUP) always runs for 1
+ * iteration.
+ * 
+ * \param year The current year in the "years" loop that spinup is
+ *             running.
+ * 
+ * \return A double between 0 and 100 where 100 means "Spinup 
+ *         complete". 
+ * 
+ * \author Chandler Haukap
+ * \date August 2019
+ * \ingroup PROGRESS_BAR_PRIVATE
+ */
+double _calculateSpinupProgress(int year){
+    return (year / (double) SuperGlobals.runSpinupYears) * 100;
 }
 
-/* Algorithm for calculating how far along the simulation is.
-   Returns a percentage between 0 and 100. */
+/**
+ * \brief Algorithm for calculating how far along the main simulation is.
+ * 
+ * The main simulation is expected to use 2 nested for loops: one for the
+ * iteration and one for the year. This function therefore takes two parameters
+ * and uses [SuperGlobals.runModelYears](\ref SuperGlobals) and 
+ * [SuperGlobals.runModelIterations](\ref SuperGlobals) to determine a 
+ * percentage.
+ * 
+ * \param year The current year of the inner loop
+ * \param iteration The current iteration of the outer loop.
+ * 
+ * \return A double between 0 and 100 where 100 means "Simulation complete". 
+ * 
+ * \author Chandler Haukap
+ * \date August 2019
+ * \ingroup PROGRESS_BAR_PRIVATE
+ */
 double _calculateSimulationProgress(int year, int iteration){
     double prog = ((iteration * SuperGlobals.runModelYears) + year) 
 						  / (double) (SuperGlobals.runModelIterations * SuperGlobals.runModelYears);

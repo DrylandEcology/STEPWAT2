@@ -1,26 +1,24 @@
-/********************************************************/
-/********************************************************/
-/*  Source file: sxw_module.h
- *  Type: header
- *  Application: STEPWAT - plant community dynamics simulator
- *               coupled with the  SOILWAT model.
- *  Purpose: Contains declarations relevant for the SXW_
- *           "module" made up of several source files.
- *  Applies to: sxw.c sxw_steppe.c sxw_soilwat.c */
-/*  History:
- *     (22-May-2002) -- INITIAL CODING - cwb */
-/********************************************************/
-/********************************************************/
+/**
+ * \file sxw_module.h
+ * \brief Contains declarations for relevant \ref SXW functions from several
+ *        different source files.
+ * 
+ * Ideally this file would be incorporated into \ref sxw.h to make one header
+ * file for the entire SXW module. 
+ * 
+ * \author CWB (initial coding)
+ * \date 22 May 2002
+ * \ingroup SXW
+ */
 
 #ifndef SXW_MODULE_DEF
 #define SXW_MODULE_DEF
 
-#include "sw_src/SW_Control.h"
-#include "sw_src/SW_Model.h"
-#include "sw_src/SW_VegProd.h"
-#include "sw_src/SW_Site.h"
-#include "sw_src/SW_SoilWater.h"
-#include "sw_src/SW_Files.h"
+#include "sw_src/include/SW_Control.h"
+#include "sw_src/include/SW_Model.h"
+#include "sw_src/include/SW_VegProd.h"
+#include "sw_src/include/SW_SoilWater.h"
+#include "sw_src/include/SW_Files.h"
 
 /* some macros for the production conversion array */
 #define PC_Bmass 0
@@ -36,6 +34,7 @@ void _sxw_update_root_tables( RealF sizes[] );
 
 /* These functions are found in sxw_soilwat.c */
 void  _sxw_sw_setup(RealF sizes[]);
+void  _sxw_generate_weather(void);
 void  _sxw_sw_run(void);
 void  _sxw_sw_clear_transp(void);
 

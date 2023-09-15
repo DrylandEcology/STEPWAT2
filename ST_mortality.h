@@ -10,8 +10,8 @@
 #ifndef MORTALITY_H
 #define MORTALITY_H
 
-#include "sw_src/generic.h"
-#include "sw_src/pcg/pcg_basic.h"
+#include "sw_src/include/generic.h"
+#include "sw_src/external/pcg/pcg_basic.h"
 
 /* --------------------------- Exported Structs ---------------------------- */
 
@@ -58,15 +58,15 @@ typedef struct WildfireClimate_st {
 
 /**
  * \brief Information used when simulating the cheatgrass-wildfire loop.
- * 
+ *
  * The biggest determinant in cheatgrass driven wildfire is precipitation,
- * specifically precipitation in Spring and Winter. This struct stores the 
+ * specifically precipitation in Spring and Winter. This struct stores the
  * values from previous Spring and Winter precipitation as well as the running
  * averages of both.
- * 
+ *
  * Note that "year" in this context refers to the water year, which runs from
  * October to September.
- * 
+ *
  * \sa _updateCheatgrassPrecip, where this struct is updated each year.
  * \author Chandler Haukap
  * \date 13 January 2020

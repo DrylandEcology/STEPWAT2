@@ -16,6 +16,7 @@
 *.exe
 *.o
 *.so
+obj
 
 # Packages #
 ############

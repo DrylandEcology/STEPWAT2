@@ -1,12 +1,17 @@
-/* \file ST_stats.h 
- * \author Chandler Haukap in August 2019
+/**
+ * \file ST_stats.h 
+ * \brief Defines all structs used in ST_stats.c
  * 
- * This file defines all structs used in ST_stats.c.
  * It was created to allow the gridded code to instantiate accumulators
  * without including ST_stats.c. 
  * 
  * To read the documentation related to creating this file see issues
- * #259 and #266 on GitHub */
+ * #259 and #266 on GitHub 
+ * 
+ * \author Chandler Haukap
+ * \date August 2019
+ * \ingroup STATISTICS
+ */
 
 #ifndef STATS_STRUCT_DEF
 #define STATS_STRUCT_DEF
@@ -41,7 +46,6 @@ void stat_Collect_SMort ( void ) ;
 void stat_Output_YrMorts( void ) ;
 void stat_Output_AllMorts( void) ;
 void stat_Output_AllBmass(void) ;
-void stat_Output_Seed_Dispersal(const char * filename, const char sep);
 void stat_free_mem( void );
 void stat_Copy_Accumulators(StatType* newDist, StatType* newPpt, StatType* newTemp, StatType* newGrp,
                             StatType* newGsize, StatType* newGpr, StatType* newGmort, StatType* newGestab,

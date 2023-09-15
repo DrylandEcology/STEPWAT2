@@ -12,18 +12,16 @@
 /*                INCLUDES / DEFINES                   */
 /* --------------------------------------------------- */
 
-#include <stdio.h>
 #include <string.h>
 #include "ST_steppe.h"
 #include "ST_globals.h"
-#include "sw_src/filefuncs.h"
-#include "sw_src/myMemory.h"
+#include "sw_src/include/filefuncs.h"
+#include "sw_src/include/myMemory.h"
 
 
 /******** Modular External Function Declarations ***********/
 /* -- truly global functions are declared in functions.h --*/
 /***********************************************************/
-#include "sw_src/SW_Model.h" // externs `SW_Model`
 
 
 /*------------------------------------------------------*/
@@ -36,7 +34,8 @@
 
 
 /**
- * \brief Outputs the current year's values to the file denoted in \ref Globals.bmass.fp_year
+ * \brief Outputs the current year's values to the file denoted in 
+ *        [Globals.bmass.fp_year](\ref Globals)
  * 
  * \param year is the year that these values are being printed. This is 1 indexed.
  * 
@@ -52,11 +51,11 @@ void output_Bmass_Yearly( Int year ) {
   
   if (!BmassFlags.yearly) return;
 
-  fields = (char **)Mem_Calloc(MAX_OUTFIELDS, sizeof(char *), "output_Bmass_Yearly");
-  s = (char *)Mem_Calloc(MAX_FIELDLEN + 1, sizeof(char), "output_Bmass_Yearly");
+  fields = (char **)Mem_Calloc(MAX_OUTFIELDS, sizeof(char *), "output_Bmass_Yearly", &LogInfo);
+  s = (char *)Mem_Calloc(MAX_FIELDLEN + 1, sizeof(char), "output_Bmass_Yearly", &LogInfo);
   
   for (i = 0; i < MAX_OUTFIELDS; i++) {
-      fields[i] = (char *)Mem_Calloc(MAX_FIELDLEN + 1, sizeof(char), "output_Bmass_Yearly");
+      fields[i] = (char *)Mem_Calloc(MAX_FIELDLEN + 1, sizeof(char), "output_Bmass_Yearly", &LogInfo);
   }
   
   if(Globals->currYear == 1) // At year one we need a header.
@@ -108,7 +107,7 @@ void output_Bmass_Yearly( Int year ) {
     sprintf(filename, "%s%0*d.csv", Parm_name(F_BMassPre),
                                  Globals->bmass.suffixwidth,
                                  Globals->currIter);
-    Globals->bmass.fp_year = OpenFile(filename, "a");
+    Globals->bmass.fp_year = OpenFile(filename, "a", &LogInfo);
 
     /* Write data line to already opened file */
     for (i=0; i< fc-1; i++) {
@@ -117,14 +116,14 @@ void output_Bmass_Yearly( Int year ) {
 
     if (i) fprintf(Globals->bmass.fp_year,"%s\n", fields[i]);
     fflush(Globals->bmass.fp_year);
-    CloseFile(&Globals->bmass.fp_year);
+    CloseFile(&Globals->bmass.fp_year, &LogInfo);
 
     fc = 0; //reset fc for first line of data.
   }
   /* ------------- end setting up header -------------- */
 
   if (BmassFlags.yr) {
-    sprintf(fields[fc++], "%d", SW_Model.year);
+    sprintf(fields[fc++], "%d", SoilWatAll.Model.year);
   }
 
   if (BmassFlags.dist) {
@@ -178,7 +177,7 @@ void output_Bmass_Yearly( Int year ) {
   sprintf(filename, "%s%0*d.csv", Parm_name(F_BMassPre),
                                  Globals->bmass.suffixwidth,
                                  Globals->currIter);
-  Globals->bmass.fp_year = OpenFile(filename, "a");
+  Globals->bmass.fp_year = OpenFile(filename, "a", &LogInfo);
 
   /* Write data line to already opened file */
   for (i=0; i< fc-1; i++) {
@@ -187,7 +186,7 @@ void output_Bmass_Yearly( Int year ) {
 
   if (i) fprintf(Globals->bmass.fp_year,"%s\n", fields[i]);
   fflush(Globals->bmass.fp_year);
-  CloseFile(&Globals->bmass.fp_year);
+  CloseFile(&Globals->bmass.fp_year, &LogInfo);
   
   for (i = 0; i < MAX_OUTFIELDS; i++) {
       Mem_Free(fields[i]);
@@ -199,7 +198,8 @@ void output_Bmass_Yearly( Int year ) {
 
 
 /**
- * \brief Outputs the current year's values to the file denoted in \ref Globals.mort.fp_year
+ * \brief Outputs the current year's values to the file specified in
+ *        [Globals->mort.fp_year](\ref Globals)
  * 
  * Prints mortality values. These values are indexed by age at death.
  * 
@@ -210,7 +210,7 @@ void output_Mort_Yearly( void ) {
 	char filename[FILENAME_MAX];
 
 	sprintf(filename, "%s%0*d.csv", Parm_name(F_MortPre), Globals->mort.suffixwidth, Globals->currIter);
-	Globals->mort.fp_year = OpenFile(filename, "a");
+	Globals->mort.fp_year = OpenFile(filename, "a", &LogInfo);
 	FILE *f = Globals->mort.fp_year;
 
 	if (!MortFlags.yearly)
@@ -271,5 +271,5 @@ void output_Mort_Yearly( void ) {
 		fprintf(f, "\n");
 	}
 
-	CloseFile(&Globals->mort.fp_year);
+	CloseFile(&Globals->mort.fp_year, &LogInfo);
 }

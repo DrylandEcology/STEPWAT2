@@ -1,29 +1,26 @@
-/********************************************************/
-/********************************************************/
-/*  Source file: environs.c
- *  Type: module
- *  Application: STEPPE - plant community dynamics simulator
- *  Purpose: Controls all environmental phenomenon from
- *           creating ppt and temp to creating the
- *           disturbances. */
-/*  History:
- *     (6/15/2000) -- INITIAL CODING - cwb */
-/********************************************************/
-/********************************************************/
+/** 
+ * \file ST_environs.c
+ * \brief Controls all environmental phenomenon from creating ppt and temp to 
+ *        creating the disturbances.
+ * 
+ * \author CWB (initial coding)
+ * \date 15 June 2000
+ * \ingroup ENVIRONMENT
+ */
 
 /* =================================================== */
 /*                INCLUDES / DEFINES                   */
 /* --------------------------------------------------- */
 
-#include <math.h>
+#include <string.h>
+
 #include "ST_steppe.h"
 #include "ST_globals.h"
-#include "sw_src/pcg/pcg_basic.h"
-#include "sw_src/rands.h"
+#include "sw_src/external/pcg/pcg_basic.h"
+#include "sw_src/include/rands.h"
 #include "sxw.h" // externs `*SXW`
 #include "sxw_funcs.h"
-#include "sw_src/filefuncs.h"
-#include "sw_src/Times.h"
+#include "sw_src/include/filefuncs.h"
 
 /*********** Locally Used Function Declarations ************/
 /***********************************************************/
@@ -137,7 +134,7 @@ static void _make_ppt( void) {
 
   if (Env->gsppt <= 0)
   {
-    LogError(logfp, LOGWARN, "Zero growing season precipitation in "\
+    LogError(&LogInfo, LOGWARN, "Zero growing season precipitation in "\
       "year = %d of iteration = %d", Globals->currYear, Globals->currIter);
     Env->gsppt = 0;
   }

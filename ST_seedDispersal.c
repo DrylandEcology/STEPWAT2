@@ -1,342 +1,423 @@
-/*********************************************************************************
- * ST_seedDispersal.c
- * 
- * Contains definitions for all functions belonging to the seed dispersal module.
- *********************************************************************************/
+/**
+ * \file ST_seedDispersal.c
+ * \brief Function definitions for all seed dispersal specific functions.
+ *
+ * Note that this module uses the underscore prefix to denote "private"
+ * functions and variables.
+ *
+ * \author Chandler Haukap
+ * \date 17 December 2019
+ * \ingroup SEED_DISPERSAL_PRIVATE
+ */
 
 #include "ST_globals.h"
 #include "ST_defines.h"
 #include "ST_grid.h"
 #include "ST_seedDispersal.h"
-#include "sw_src/rands.h"
-#include "sw_src/myMemory.h"
+#include "sw_src/include/rands.h"
+#include "sw_src/include/myMemory.h"
+#include "sw_src/include/rands.h"
 
-int _do_bulk_dispersal(SppIndex sp);
-void _do_precise_dispersal(int leftoverSeeds, SppIndex sp);
-float _cell_dist(int row1, int row2, int col1, int col2, float cellLen);
-
+float _distance(int x1, int y1, int x2, int y2, float cellWidth);
+Bool _shouldProduceSeeds(SppIndex sp);
+float _rateOfDispersal(float PMD, float maxHeight, float maxDistance);
+float _probabilityOfDispersal(float rate, float height, float distance);
+float _maxDispersalDistance(float height);
+void _recordDispersalEvent(int year, int iteration, int fromCell, int toCell,
+                           const char* name);
 
 /* =================================================== */
 /*                  Global Variables                   */
 /* --------------------------------------------------- */
 
-/* RNG unique to seed dispersal. */
+/**
+ * \brief If TRUE then seed dispersal will be used.
+ * \ingroup SEED_DISPERSAL
+ */
+Bool UseSeedDispersal;
+
+/**
+ * \brief If TRUE this module will record information about when and where
+ *        seeds are being dispersed.
+ *
+ * \ingroup SEED_DISPERSAL
+ */
+Bool recordDispersalEvents;
+
+/**
+ * \brief A module level variable pointing to the first \ref DispersalEvent.
+ * \ingroup SEED_DISPERSAL_PRIVATE
+ */
+DispersalEvent* _firstEvent = NULL;
+
+/**
+ * \brief A module level variable pointing to the last \ref DispersalEvent.
+ * \ingroup SEED_DISPERSAL_PRIVATE
+ */
+DispersalEvent* _lastEvent = NULL;
+
+/**
+ * \brief The random number generator for the seed dispersal module.
+ * \ingroup SEED_DISPERSAL_PRIVATE
+ */
 pcg32_random_t dispersal_rng;
 
-/* TRUE if we should run seed dispersal between years during the main simulation. */
-Bool UseSeedDispersal = 0;
+/**
+ * \brief TRUE if \ref dispersal_rng has already been seeded.
+ * \ingroup SEED_DISPERSAL_PRIVATE
+ */
+Bool isRNGSeeded = FALSE;
 
+/**
+ * \brief Output full Seed Dispersal output
+ */
+Bool outputSDData;
 
+/**
+ * \brief Disperse seeds between cells.
+ *
+ * Iterates through all senders and recipients and determines which cells
+ * received seeds. If a cell does receive seeds for a given species,
+ * Species[sp]->seedsPresent will be set to TRUE.
+ *
+ * \param year the year of the simulation. This is input as a parameter because
+ *             disperseSeeds() is typically called before the gridded mode
+ *             updates the year for each cell.
+ *
+ * \sideeffect
+ *    For all cells and all species Species[sp]->seedsPresent will be set to
+ *    TRUE if a seed reached the cell and FALSE if no seeds reached the cell.
+ *
+ * \author Chandler Haukap
+ * \date 18 December 2019
+ * \ingroup SEED_DISPERSAL
+ */
+void disperseSeeds(int year) {
+  SppIndex sp;
+  CellType *receiverCell;
+  int row, col;
+  int receiverRow, receiverCol;
+  // The probability of dispersal
+  double Pd;
+  // The rate of dispersal
+  double rate;
+  // The height of the tallest individual
+  double height;
+  // The distance between a potential sender and recipient
+  double distance;
 
-/* Derives the probabilities that a given cell will disperse seeds to any other cell.
-   results of this function can be accessed using
-   gridCells[a][b].mySeedDispersal[s].dispersalProb[c][d]
-   where (a,b) are the coordinates of the sender,
-   (b, c) are the coordinates of the receiver,
-   and s is the species. */
-void initDispersalParameters(void)
-{
-	int senderRow, senderCol, receiverRow, receiverCol, MAXDP, maxCells;
-	SppIndex sp;
-	double MAXD; /* maximum seed dispersal distance for a given species */
-	double maxRate; /* Dispersability of the seeds */
-	double plotWidth; /* width of the plots (all plots are equal and square) */
-	double distanceBetweenPlots; /* distance between the sender and the receiver */
-    CellType* sender;
+  if (!isRNGSeeded) {
+	  // FIXME: seed with appropriate iter, year, and cell_id
+	  // RNG ID 6, see `set_all_rngs()`
+	  RandSeed(SuperGlobals.randseed, RNG_INITSEQ(6, 0, 0, 0), &dispersal_rng);
+	  isRNGSeeded = TRUE;
+  }
 
-	// FIXME: seed with appropriate iter, year, and cell_id
-	// RNG ID 6, see `set_all_rngs()`
-	RandSeed(SuperGlobals.randseed, RNG_INITSEQ(6, 0, 0, 0), &dispersal_rng);
-
-	/* sender denotes that these loops refer to the cell distributing seeds */
-	for(senderRow = 0; senderCol < grid_Rows; ++senderRow){
-		for(senderCol = 0; senderCol < grid_Cols; ++senderCol){
-			/* Cell is loaded to ensure the global Species pointer points to a valid SpeciesType so the
-               ForEachSpecies loop is able to iterate. */
-			load_cell(senderRow, senderCol);
-            sender = &gridCells[senderRow][senderCol];
-
-			/* Allocate seed dispersal information. */
-			sender->mySeedDispersal = Mem_Calloc(MAX_SPECIES, sizeof(Grid_SD_St), "initDispersalParameters");
-
-			ForEachSpecies(sp){
-				if (!(Species[sp]->use_me && Species[sp]->use_dispersal)){
-					continue;
-				}
-
-				/* These are the three values we need to calculate the probability of dispersal
-                 * according to EQ 5 in Coffin & Lauenroth 1989. */
-				MAXD = ((Species[sp]->sd_H * Species[sp]->sd_VW) / Species[sp]->sd_VT) / 100.0; // divided by 100 to convert from cm to m.
-				maxRate = -(log(0.005) / MAXD);
-				plotWidth = sqrt(Globals->plotsize);
-                MAXDP = (int) ceil(MAXD / plotWidth); //MAXD in terms of plots... rounds up to the nearest integer
-                maxCells = (int) pow((MAXDP * 2) + 1.0, 2.0);
-
-				/* Allocate the dispersalProb 2d array */
-				sender->mySeedDispersal[sp].dispersalProb = Mem_Calloc(grid_Rows, 
-							sizeof(double*), "initDispersalParameters: dispersalProb");
-				for(receiverRow = 0; receiverRow < grid_Rows; ++receiverRow){
-					sender->mySeedDispersal[sp].dispersalProb[receiverRow] = 
-								Mem_Calloc(grid_Cols, sizeof(double), "initDispersalParameters: dispersalProb[i]");
-				}
-
-				/* Loop through all possible recipients of seeds. */
-				for(receiverRow = 0; receiverRow < grid_Rows; ++receiverRow){
-					for(receiverCol = 0; receiverCol < grid_Cols; ++receiverCol){
-						if(senderRow == receiverRow && senderCol == receiverCol){
-							continue; // No need to calculate a probability for dispersal to itself
-						}
-                        
-						distanceBetweenPlots = _cell_dist(senderRow, receiverRow, senderCol, receiverCol, plotWidth);
-
-                        /* The value that we are after should be saved to the sender cell.
-                         * this equation comes directly from equation 4 in Coffin and Lauenroth 1989. */
-						sender->mySeedDispersal[sp].dispersalProb[receiverRow][receiverCol]
-                                    = (distanceBetweenPlots > MAXD) ? (0.0) : (exp(-maxRate * distanceBetweenPlots));
-					}
-				}
-			}
-		}
-	}
-	unload_cell();
-}
-
-/* Perform seed dispersal during the simulation. This is NOT functional yet. */
-void disperseSeeds(void)
-{
-	/************ TODO: overhaul seed dispersal. This block prevents seed dispersal from running. **************/
-	printf("\nSeed dispersal during the simulation is not yet functional.\n"
-		    "Check out GitHub for updates on this feature.\n");
-	UseSeedDispersal = FALSE;
-	return;
-	/***********************************************************************************************************/
-
-/* TODO: discuss this implementation:
-    SppIndex sp;
-    ForEachSpecies(sp){
-        int leftovers = _do_bulk_dispersal(sp);
-        _do_precise_dispersal(leftovers, sp);
+  // Before we do anything we need to reset seedsPresent.
+  for (row = 0; row < grid_Rows; ++row) {
+    for (col = 0; col < grid_Cols; ++col) {
+      load_cell(row, col);
+      ForEachSpecies(sp) { Species[sp]->seedsPresent = FALSE; }
+      unload_cell();
     }
-*/
+  }
 
-/* 
-	float biomass, randomN, LYPPT, presentProb, receivedProb;
-	int i, j, germ, sgerm, year, row, col;
-	SppIndex s;
-	CellType *cell;
+  for (row = 0; row < grid_Rows; ++row) {
+    for (col = 0; col < grid_Cols; ++col) {
+      load_cell(row, col);
 
-    // Load the first cell so we can access seedling_estab_prob and currYear,
-    // which are not specific to each cell.
-    load_cell(0, 0);
+      // This loop refers to the Species array of the SENDER.
+      ForEachSpecies(sp) {
+        // Running this algorithm on Species that didn't request dispersal
+        // wouldn't hurt, but it would be a waste of time.
+    	if(!outputSDData){
+    		if (!Species[sp]->use_dispersal)
+    			continue;
+    	}
 
-	if (Globals->currYear == 1)
-	{ //since we have no previous data to go off of, use the current years...
-		for (i = 0; i < grid_Cells; i++)
-		{
-		    row = i / grid_Cols;
-		    col = i % grid_Cols;
-		    cell = &gridCells[row][col];
+        // If there are no individuals of this species that are of reproductive
+        // age continue.
+        if (!_shouldProduceSeeds(sp))
+          continue;
 
-		    load_cell(row, col);
+        // These variables are independent of recipient.
+        height = getSpeciesHeight(Species[sp]);
+		//printf("height after getSpeciesHeight called Species = %s, height = %f\n ", Species[sp]->name, height);
 
-            ForEachSpecies(s)
-            {
-                if (!(Species[s]->use_me && Species[s]->use_dispersal))
-                    continue;
-                Species[s]->allow_growth = Species[s]->sd_sgerm =
-                        1;// since it's the first year, we have to allow growth...
-                if (UseDisturbances)
-                    // RGroup[x]->killyr is the same for all x
-                    if (1 == RGroup[0]->killyr)
-                        Species[s]->allow_growth = 0;
-                cell->mySeedDispersal[s].lyppt = Env->ppt;
+        rate = _rateOfDispersal(Species[sp]->maxDispersalProbability,
+                                Species[sp]->maxHeight,
+                                _maxDispersalDistance(height));
+
+		//printf("rate after _rateOfDispersal called Species = %s, rate = %f\n ", Species[sp]->name, rate);
+
+        // Iterate through all possible recipients of seeds.
+        for (receiverRow = 0; receiverRow < grid_Rows; ++receiverRow) {
+          for (receiverCol = 0; receiverCol < grid_Cols; ++receiverCol) {
+            receiverCell = &gridCells[receiverRow][receiverCol];
+
+            // This algorithm wouldn't hurt anything but it would waste time.
+            if (!receiverCell->mySpecies[sp]->use_dispersal) {
+              continue;
             }
-        }
-	}
-	else
-	{
-		// figure out whether or not to allow growth for the current year... based upon whether the species already has plants or germination allowed this year and seeds received last year...
-		ForEachSpecies(s)
-		{
 
-			if (!(Species[s]->use_me && Species[s]->use_dispersal))
-				continue;
+            // If this cell already has seeds there is no point in continuing
+            //if (receiverCell->mySpecies[sp]->seedsPresent) {
+            //  continue;
+            //}
 
-			// germination probability
-			randomN = RandUni(&grid_rng);
-			germ = LE(randomN, Species[s]->seedling_estab_prob);
+            // These variables depend on the recipient.
+            distance = _distance(col, row, receiverCol, receiverRow,
+                                 Globals->plotsize);
+            Pd = _probabilityOfDispersal(rate, height, distance);
 
-			year = Globals->currYear - 1;
+            // Stochastically determine if seeds reached the recipient.
+            if (RandUni(&dispersal_rng) < Pd) {
+              // Remember that Species[sp] refers to the sender, but in this
+              // case we are refering to the receiver.
+              receiverCell->mySpecies[sp]->seedsPresent = TRUE;
 
-			for (i = 0; i < grid_Cells; i++)
-			{
-                row = i / grid_Cols;
-                col = i % grid_Cols;
-                cell = &gridCells[row][col];
-
-                load_cell(row, col);
-
-				if (Globals->currYear <= SuperGlobals.runInitializationYears)
-				{
-					cell->mySeedDispersal[s].seeds_present = 1;
-				}
-				else if (Globals->currYear <= SuperGlobals.runInitializationYears
-						 && cell->mySpeciesInit.shouldBeInitialized[s])
-				{
-					cell->mySeedDispersal[s].seeds_present = 1;
-				}
-
-				sgerm = (cell->mySeedDispersal[s].seeds_present
-						|| cell->mySeedDispersal[s].seeds_received) && germ; //refers to whether the species has seeds available from the previous year and conditions are correct for germination this year
-				Species[s]->allow_growth = FALSE;
-				biomass = getSpeciesRelsize(s)
-						* Species[s]->mature_biomass;
-
-				if (UseDisturbances)
-				{
-					if ((sgerm || year < RGroup[0]->killyr
-							|| RGroup[0]->killyr <= 0 || GT(biomass, 0.0))
-					&& (year != RGroup[0].killyr))
-					{
-						//commented above one condition as it was causing a bug there, next year of killing year will make
-						//allow_growth flag to false as 	year = Globals->currYear - 1 , so for example if killing year= 6 and Globals->currYear=7 then here
-						// year variable will be 7-1 =6 that is equal to killing year 6, so this condition (year != RGroup[0].killyr)
-						//will fail and allow_growth will not become TRUE, then when Globals.currYear=8 this allow_growth= FALSE will carry forward and there will no call
-						// to other functions. Last year size will carry forward so in final output year 7 and year 8 will
-						// have same output that is not correct.
-						Species[s]->allow_growth = TRUE;
-					}
-
-				}
-				else if (sgerm || GT(biomass, 0.0))
-					Species[s]->allow_growth = TRUE;
-				Species[s]->sd_sgerm = sgerm; //based upon whether we have received/produced seeds that germinated
-			}
-		}
-
-	}
-
-	// calculate whether or not seeds were received/produced this year, this data is used the next time the function is called
-	ForEachSpecies(s)
-	{
-		if (!(Species[s]->use_me && Species[s]->use_dispersal))
-			continue;
-
-		IndivType* indiv;
-
-		// figure out which species in each cell produced seeds...
-		for (i = 0; i < grid_Cells; i++)
-		{
-            row = i / grid_Cols;
-            col = i % grid_Cols;
-            cell = &gridCells[row][col];
-
-            load_cell(row, col);
-
-			cell->mySeedDispersal[s].seeds_present = cell->mySeedDispersal[s].seeds_received =
-					Species[s]->received_prob = 0;
-
-			biomass = 0;	//getting the biggest individual in the species...
-			ForEachIndiv(indiv, Species[s])
-				if (indiv->relsize * Species[s]->mature_biomass
-						> biomass)
-					biomass = indiv->relsize
-							* Species[s]->mature_biomass;
-
-			if (GE(biomass,
-					Species[s]->mature_biomass
-							* Species[s]->sd_Param1))
-			{
-				randomN = RandUni(&grid_rng);
-
-				LYPPT = cell->mySeedDispersal[s].lyppt;
-				float PPTdry = Species[s]->sd_PPTdry, PPTwet =
-						Species[s]->sd_PPTwet;
-				float Pmin = Species[s]->sd_Pmin, Pmax =
-						Species[s]->sd_Pmax;
-
-				//p3 = Pmin, if LYPPT < PPTdry
-				//p3 = 1 - (1-Pmin) * exp(-d * (LYPPT - PPTdry)) with d = - ln((1 - Pmax)/(1 - Pmin)) / (PPTwet - PPTdry), if PPTdry <= LYPPT <= PPTwet
-				//p3 = Pmax, if LYPPT > PPTwet
-
-				presentProb = 0.0;
-				if (PPTdry <= LYPPT && LYPPT <= PPTwet)
-				{
-					float d = -log(((1 - Pmax) / (1 - Pmin)))
-							/ (PPTwet - PPTdry); //log is the natural log in STD c's math.h
-					presentProb = 1 - (1 - Pmin) * exp((-d * (LYPPT - PPTdry)));
-				}
-				else if (LYPPT < PPTdry)
-					presentProb = Pmin;
-				else if (LYPPT > PPTwet)
-					presentProb = Pmax;
-
-				if (LE(randomN, presentProb))
-					cell->mySeedDispersal[s].seeds_present = 1;
-			}
-		}
-
-		// figure out which species in each cell received seeds...
-		for (i = 0; i < grid_Cells; i++)
-		{
-            row = i / grid_Cols;
-            col = i % grid_Cols;
-            cell = &gridCells[row][col];
-
-            load_cell(row, col);
-
-			if (cell->mySeedDispersal[s].seeds_present)
-				continue;
-			receivedProb = 0;
-
-			for (j = 0; j < cell->mySeedDispersal[s].size; j++)
-				if (cell->mySeedDispersal[cell->mySeedDispersal[s].cells[j]].seeds_present)
-					receivedProb += cell->mySeedDispersal[s].dispersalProb[j];
-
-			randomN = RandUni(&grid_rng);
-			if (LE(randomN, receivedProb) && !ZRO(receivedProb))
-				cell->mySeedDispersal[s].seeds_received = 1;
-			else
-				cell->mySeedDispersal[s].seeds_received = 0;
-
-			Species[s]->received_prob = receivedProb;
-		}
-	}
-
-	unload_cell();
-*/
+              // If the user requested statistics.
+              if(recordDispersalEvents) {
+                _recordDispersalEvent(year, Globals->currIter,
+                                      (row * grid_Cols) + col, (receiverRow *
+                                      grid_Cols) + receiverCol,
+                                      Species[sp]->name);
+              }
+            }
+          } // END for each receiverCol
+        }   // END for each receiverRow
+      }     // END ForEachSpecies(sp)
+      unload_cell();
+    } // END for each col
+  }   // END for each row
 }
 
-int _do_bulk_dispersal(SppIndex sp){
-    return 0;
+/**
+ * \brief Output a summary of every [dispersal event](\ref DispersalEvent) that
+ *        has occurred.
+ *
+ * This function will output a file for every \ref gridCell. The files will
+ * contain one entry for every time the associated cell received seeds from
+ * another [cell](\ref CellType).
+ *
+ * \param filePrefix is the name all of the files should have. The actual names
+ *                   of the files will be "<filePrefix><N>.csv" where N is the
+ *                   number of the [cell](\ref CellType) associated with the
+ *                   file.
+ *
+ * \author Chandler Haukap
+ * \date January 28 2020
+ * \ingroup SEED_DISPERSAL
+ */
+void outputDispersalEvents(char* filePrefix) {
+    char fileName[1024];
+    int i;
+    DispersalEvent* thisEvent = _firstEvent;
+    FILE** files = Mem_Calloc(grid_Rows * grid_Cols, sizeof(FILE*),
+                              "outputDispersalEvents", &LogInfo);
+
+    for(i = 0; i < grid_Rows * grid_Cols; ++i) {
+        sprintf(fileName, "%s%d.csv", filePrefix, i);
+        files[i] = fopen(fileName, "w");
+        fprintf(files[i], "Iteration,Year,From Cell,Species,To Cell\n");
+    }
+
+    while(thisEvent) {
+        fprintf(files[thisEvent->toCell], "%d,%d,%d,%s,%d\n",
+                thisEvent->iteration, thisEvent->year, thisEvent->fromCell,
+                thisEvent->name, thisEvent->toCell);
+
+        thisEvent = thisEvent->next;
+    }
+
+    for(i = 0; i < grid_Rows * grid_Cols; ++i) {
+        fclose(files[i]);
+    }
+    Mem_Free(files);
 }
 
-void _do_precise_dispersal(int leftoverSeeds, SppIndex sp){
-    /* This function is not implemented yet. */
-    return;
+/**
+ * \brief Free the memory allocated in the
+ *        [seed dispersal module](\ref SEED_DISPERSAL)
+ *
+ * This function should be called after running the colonization module to
+ * ensure that no memory leaks occur. It is safe to call multiple times.
+ *
+ * \author Chandler Haukap
+ * \date January 28 2020
+ * \ingroup SEED_DISPERSAL
+ */
+void freeDispersalMemory(void) {
+    DispersalEvent* thisEvent = _firstEvent;
+    DispersalEvent* nextEvent;
+
+    while(thisEvent != NULL){
+        nextEvent = thisEvent->next;
+        Mem_Free(thisEvent);
+        thisEvent = nextEvent;
+    }
+
+    _firstEvent = NULL;
+    _lastEvent = NULL;
 }
 
-/* Returns the distance in meters between two cells. 
-   To calculate the distance between cells (a,b) and (c,d) with plot width w,
-   input _cell_dist(a, c, b, d, w) */
-float _cell_dist(int row1, int row2, int col1, int col2, float cellLen)
-{
-    double rowDist = row1 - row2;
-    double colDist = col1 - col2;
+/**
+ * \brief Calculates the distance between two 2-dimensional points.
+ *
+ * \param x1 The column of the first cell, i.e. it's x coordinate.
+ * \param y1 The row of the first cell, i.e. its y coordinate.
+ * \param x2 The column of the second cell, i.e. its x coordinate.
+ * \param y2 The row of the second cell, i.e. its y coordinate.
+ * \param cellWidth The length of the square cells.
+ *
+ * \return A Double. The distance between the cells.
+ *
+ * \ingroup SEED_DISPERSAL_PRIVATE
+ */
+float _distance(int x1, int y1, int x2, int y2, float cellWidth) {
+  double rowDist = abs((x1 - x2)) * cellWidth;
+  double colDist = abs((y1 - y2)) * cellWidth;
 
-	//returns the distance between the two grid cells
-	if (row1 == row2)
-	{
-		return (abs(colDist) * cellLen);
-	}
-	else if (col1 == col2)
-	{
-		return (abs(rowDist) * cellLen);
-	}
-	else
-	{ // row1 != row2 && col1 != col2
-		//the problem can be thought of in terms of a right triangle...
-		//using the pythagorean theorem: c = sqrt(a^2 + b^2)... c (the hypotenuse) represents the distance that we need.  a is the distance between columns and b is the distance between rows.
-		return sqrt(pow(abs(colDist)*cellLen, 2.0) + pow(abs(rowDist)*cellLen, 2.0));
-	}
+  // returns the distance between the two grid cells
+  if (rowDist == 0) {
+    // If rowdist == 0 these cells are in the same row. Might as well save some
+    // computational power.
+    return colDist;
+  } else if (colDist == 0) {
+    // If colDist == 0 these cells are in the same row. Might as well save some
+    // computational power.
+    return rowDist;
+  } else {
+    // Pythagorean theorem:
+    return sqrt(pow(colDist, 2.0) + pow(rowDist, 2.0));
+  }
+}
+
+/**
+ * \brief Determines if a given species in the [loaded cell](\ref load_cell)
+ *        is capable of producing seeds.
+ *
+ * Note that a cell must be loaded for this function to work.
+ *
+ * \param sp the index in the \ref Species array of the species to test.
+ *
+ * \return TRUE if there is a sexually mature individual of the given species.\n
+ *         FALSE if there is not.
+ *
+ * \ingroup SEED_DISPERSAL_PRIVATE
+ */
+Bool _shouldProduceSeeds(SppIndex sp) {
+  IndivType *thisIndiv;
+  SpeciesType *thisSpecies = Species[sp];
+
+  ForEachIndiv(thisIndiv, thisSpecies) {
+    if (thisIndiv->relsize >= thisSpecies->minReproductiveSize) {
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}
+
+/**
+ * \brief Returns the rate of dispersal.
+ *
+ * \param PMD is the probability of maximum dispersal.
+ * \param height is the average height of an individual of the given
+ *                   species.
+ * \param maxDistance is the maximum distance an individual of this species can
+ *                    disperse seeds.
+ *
+ * \return A float.
+ *
+ * \author Chandler Haukap
+ * \date 17 December 2019
+ * \ingroup SEED_DISPERSAL_PRIVATE
+ */
+float _rateOfDispersal(float PMD, float maxHeight, float maxDistance) {
+  return log((PMD) * maxHeight) / maxDistance;
+}
+
+/**
+ * \brief Returns the probability that seeds will disperse a given distance.
+ *
+ * \param rate is the rate of seed dispersal.
+ * \param height is the height of the tallest individual of the species.
+ * \param distance is the distance the seeds must travel.
+ *
+ * \return A float.
+ *
+ * \author Chandler Haukap
+ * \date 17 December 2019
+ * \ingroup SEED_DISPERSAL_PRIVATE
+ */
+float _probabilityOfDispersal(float rate, float height, float distance) {
+  return exp((rate * distance) / height);
+}
+
+/**
+ * \brief Returns the maximum dispersal distance for a given
+ *        [individual](\ref IndivType).
+ *
+ * This function is stochastic, meaning it will return a different value even if
+ * it is given the same input parameter.
+ *
+ * \param height The height, in cm, of the individual.
+ *
+ * \return A float greater than or equal to 0.
+ *
+ * \sa getSpeciesHeight which will give you the height of the tallest
+ *     individual in a species.
+ *
+ * \author Chandler Haukap
+ * \date 27 February 2020
+ * \ingroup SEED_DISPERSAL_PRIVATE
+ */
+float _maxDispersalDistance(float height) {
+    float constant = 8.337;
+    return RandUniFloatRange(0, 2 * constant * (height/100), &dispersal_rng);
+}
+
+/**
+ * \brief Add a [dispersal event](\ref DispersalEvent) to the linked list of
+ *        dispersal events.
+ *
+ * \param year is the year of the simulation when this event occurred.
+ * \param fromCell is the origin of the seeds.
+ * \param toCell is the recipient of the seeds.
+ * \param name is the name of the species.
+ *
+ * \sideeffect
+ *     This will allocate memory for a new DispersalEvent.
+ *
+ * \author Chandler Haukap
+ * \date 28 January 2020
+ * \ingroup SEED_DISPERSAL_PRIVATE
+ */
+void _recordDispersalEvent(int year, int iteration, int fromCell, int toCell,
+                           const char* name) {
+  // Allocate a new event.
+  DispersalEvent* newEvent = Mem_Calloc(1, sizeof(DispersalEvent),
+                                        "_recordDispersalEvent", &LogInfo);
+
+  // Populate the struct that we just allocated.
+  newEvent->next = NULL;
+  newEvent->year = year;
+  newEvent->iteration = iteration;
+  newEvent->fromCell = fromCell;
+  newEvent->toCell = toCell;
+  newEvent->name[0] = name[0];
+  newEvent->name[1] = name[1];
+  newEvent->name[2] = name[2];
+  newEvent->name[3] = name[3];
+  newEvent->name[4] = '\0';
+
+  // Add the event to the linked list.
+  if(!_firstEvent){
+    _firstEvent = newEvent;
+    _lastEvent = newEvent;
+  } else {
+    _lastEvent->next = newEvent;
+    _lastEvent = newEvent;
+  }
 }

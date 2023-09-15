@@ -1,32 +1,27 @@
-/********************************************************/
-/********************************************************/
-/*  Source file: sxw_environs.c
- *  Type: module
- *  Purpose: Precip and temperature values come from SOILWAT
- *           to be added to STEPPE.
- *  Dependency:  sxw.c
- *  Application: STEPWAT - plant community dynamics simulator
- *               coupled with the  SOILWAT model. */
-/*  History:
- *     (21-May-2002) -- INITIAL CODING - cwb */
-/********************************************************/
-/********************************************************/
+/**
+ * \file: sxw_environs.c
+ * \brief Generates [SOILWAT2](\ref sw_src) precipitation information and 
+ *        passes it to [Steppe](\ref STEPPE).
+ * 
+ * \author CWB (inital programming)
+ * \date 21 May 2002
+ * \ingroup ENVIRONMENT
+ * \ingroup SXW_PRIVATE
+ */
 
 /* =================================================== */
 /*                INCLUDES / DEFINES                   */
 /* --------------------------------------------------- */
 
-#include <stdio.h>
-#include "sw_src/generic.h"
 #include "ST_steppe.h"
 #include "ST_globals.h" // externs `*Env`
-#include "sw_src/SW_Defines.h"
+#include "sw_src/include/SW_Defines.h"
 #include "sxw.h" // externs `*SXW`
 #include "sxw_module.h"
-#include "sw_src/SW_Model.h" // externs SW_Model
-#include "sw_src/SW_Site.h" // externs SW_Site
-#include "sw_src/SW_SoilWater.h" // externs SW_Soilwat
-#include "sw_src/SW_Weather.h" // externs SW_Weather
+#include "sw_src/include/SW_Model.h"
+#include "sw_src/include/SW_Site.h"
+#include "sw_src/include/SW_SoilWater.h"
+#include "sw_src/include/SW_Weather.h"
 
 
 

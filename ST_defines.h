@@ -17,7 +17,7 @@
 #ifndef STEPPE_DEF_H
 #define STEPPE_DEF_H
 
-#include "sw_src/generic.h"
+#include "sw_src/include/generic.h"
 
 /* see #include "ST_structs.h" below */
 
