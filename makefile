@@ -2,7 +2,6 @@ CC  	=	gcc
 CXX   = g++
 
 CFLAGS = \
-	-std=c99 \
 	-DSQLITE_OMIT_LOAD_EXTENSION \
 	-DSQLITE_THREADSAFE=0 \
 	-DSQLITE_WITHOUT_ZONEMALLOC \
@@ -22,6 +21,9 @@ sw2 = SOILWAT2
 lib_sw2 = lib$(sw2).a
 path_sw2 = sw_src
 path_sw2lib = $(path_sw2)/bin
+
+std_c++14 = -std=c++14
+std_c99 = -std=c99
 
 # Note: `-I$(path_sw2)` is required for `#include "external/pcg/pcg_basic.h"`
 # in SOILWAT2 headers that are included by STEPWAT2 code
@@ -88,25 +90,25 @@ $(path_sw2lib)/$(lib_sw2):
 # Note: `-I..` is required for `#include "ST_defines.h"`
 # in SOILWAT2 headers that are included by SOILWAT2 code
 	@(cd $(path_sw2) && $(MAKE) lib \
-		CC="$(CC)" CPPFLAGS="$(CPPFLAGS) -I.." CFLAGS="$(CFLAGS)" AR="$(AR)" \
+		CC="$(CC)" CPPFLAGS="$(CPPFLAGS) -I.." CFLAGS="$(CFLAGS) $(std_c99)" AR="$(AR)" \
 		sw_sources="$(sw2_sources)")
 
 stepwat: $(path_sw2lib)/$(lib_sw2) $(objects_core) | $(dir_obj)
-	$(CC) $(objects_core) $(CFLAGS) $(CPPFLAGS) $(sw_LDLIBS) $(sw_LDFLAGS) -o stepwat
+	$(CC) $(objects_core) $(CFLAGS) $(std_c99) $(CPPFLAGS) $(sw_LDLIBS) $(sw_LDFLAGS) -o stepwat
 	-@cp stepwat testing.sagebrush.master
 	-@cp stepwat testing.sagebrush.master/Stepwat_Inputs
 
 stepwat_test: $(path_sw2lib)/$(lib_sw2) $(objects_core_test) $(objects_test) | $(dir_obj) $(dir_test)
-	$(CXX) $(objects_core_test) $(objects_test) $(CFLAGS) $(CPPFLAGS) $(sw_LDLIBS) $(sw_LDFLAGS) -o stepwat_test
+	$(CXX) $(objects_core_test) $(objects_test) $(std_c++14) $(CFLAGS) $(CPPFLAGS) $(sw_LDLIBS) $(sw_LDFLAGS) -o stepwat_test
 
 obj/%.o: %.c | $(dir_obj)
-	$(CC) $(CFLAGS) $(CPPFLAGS) $(INC_DIRS) -c $< -o $@
+	$(CC) $(CFLAGS) $(std_c99) $(CPPFLAGS) $(INC_DIRS) -c $< -o $@
 
 obj/%.o: %.cc | $(dir_obj)
-	$(CXX) $(CFLAGS) $(CPPFLAGS) $(INC_DIRS) -std=gnu++11 -c $< -o $@
+	$(CXX) $(CFLAGS) $(std_c++14) $(CPPFLAGS) $(INC_DIRS) -c $< -o $@
 
 obj/%_TEST.o: %.c | $(dir_obj) $(dir_test)
-	$(CC) $(CFLAGS) $(CPPFLAGS) $(INC_DIRS) -DSTDEBUG -c $< -o $@
+	$(CC) $(CFLAGS) $(std_c99) $(CPPFLAGS) $(INC_DIRS) -DSTDEBUG -c $< -o $@
 
 
 #--- Create directories
