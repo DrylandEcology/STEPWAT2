@@ -108,7 +108,7 @@ void _sxw_generate_weather(void) {
   deallocateAllWeather(w);
   w->n_years = 1;
   w->startYear = SoilWatAll.Model.startyr + Globals->currYear - 1;
-  allocateAllWeather(w);
+  allocateAllWeather(w, &LogInfo);
 
   if (!w->use_weathergenerator_only) {
     LogError(

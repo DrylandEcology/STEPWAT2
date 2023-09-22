@@ -1106,7 +1106,7 @@ static void _stretched_clonal( GrpIndex rg, Int start, Int last,
 
       /* Making sure PR will always be > 1 here */
       if (total_reduction > 1.0)
-        LogError(&LogInfo, LOGFATAL,
+        LogError(&LogInfo, LOGERROR,
             "PR too large in Mort_StretchClonal()\n");
 
       /* sum up relsizes for total size*/
