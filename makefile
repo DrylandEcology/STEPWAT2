@@ -90,7 +90,7 @@ $(path_sw2lib)/$(lib_sw2):
 # Note: `-I..` is required for `#include "ST_defines.h"`
 # in SOILWAT2 headers that are included by SOILWAT2 code
 	@(cd $(path_sw2) && $(MAKE) lib \
-		CC="$(CC)" CPPFLAGS="$(CPPFLAGS) -I.." CFLAGS="$(CFLAGS) $(std_c99)" AR="$(AR)" \
+		CC="$(CC)" CPPFLAGS="$(CPPFLAGS) -I.." CFLAGS="$(CFLAGS)" set_std="$(std_c99)" AR="$(AR)" \
 		sw_sources="$(sw2_sources)")
 
 stepwat: $(path_sw2lib)/$(lib_sw2) $(objects_core) | $(dir_obj)
