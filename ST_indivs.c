@@ -435,11 +435,7 @@ void _delete (IndivType *ndv)
 
   sp = ndv->myspecies;
   s = Species[sp];
-
-  #ifdef DEBUG_MEM
-    assert(fValidPointer(ndv, sizeof(IndivType)));
-  #endif
-
+  
   /* Detach indiv's data object from list */
   if (ndv == s->IndvHead) {
     if (ndv->Next == NULL)

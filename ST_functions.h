@@ -76,11 +76,4 @@ void Indiv_SortSize( const byte sorttype,
 int Indiv_CompSize_A( const void *key1, const void *key2);
 int Indiv_CompSize_D( const void *key1, const void *key2);
 
-#ifdef DEBUG_MEM
-  void RGroup_SetMemoryRefs(void);
-  void Species_SetMemoryRefs(void);
-  void Parm_SetMemoryRefs(void);
-  void Stat_SetMemoryRefs(void);
-#endif
-
 #endif
