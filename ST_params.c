@@ -195,6 +195,9 @@ static void _model_init( void) {
      Globals->bmass.suffixwidth = Globals->mort.suffixwidth = strlen(tmp);
      SuperGlobals.randseed = (IntL) ((seed) ? -abs(seed) : 0);
    }
+
+   Globals->sppCount = 0;
+   Globals->grpCount = 0;
    
    CloseFile(&f, &LogInfo);
 }
