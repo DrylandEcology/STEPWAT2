@@ -26,6 +26,7 @@
 #include "sw_src/include/generic.h"
 #include "sw_src/include/filefuncs.h"
 #include "sw_src/include/myMemory.h"
+#include "sw_src/include/SW_Main_lib.h"
 #include "sw_src/include/SW_VegProd.h"
 #include "sw_src/include/SW_Control.h"
 #include "sw_src/external/pcg/pcg_basic.h"
@@ -143,7 +144,7 @@ LOG_INFO       LogInfo;
 /** \brief Global struct holding path information of SOILWAT2 (used by SOILWAT2) */
 PATH_INFO      PathInfo;
 /** \brief Local booleans to echo inputs/any output (used by SOILWAT2) */
-Bool           EchoInits, QuietMode;
+Bool           EchoInits;
 
 BmassFlagsType BmassFlags;
 /** \brief Global struct holding mortality output flags. */
@@ -175,7 +176,7 @@ int main(int argc, char **argv) {
   IntS year, iter;
 	Bool killedany;
 
-	LogInfo.logged = FALSE;
+	sw_init_logs(stdout, &LogInfo);
 	atexit(check_log);
 	/* provides a way to inform user that something
 	 * was logged.  see generic.h */
@@ -591,7 +592,7 @@ static void init_args(int argc, char **argv) {
 
   /* Defaults */
   parm_SetFirstName( DFLT_FIRSTFILE);
-  QuietMode = EchoInits = UseSeedDispersal = FALSE;
+  LogInfo.QuietMode = EchoInits = UseSeedDispersal = FALSE;
   LogInfo.logfp = stderr;
 
 
@@ -671,7 +672,7 @@ static void init_args(int argc, char **argv) {
 			break; /* -f */
 
 		case 2:
-			QuietMode = TRUE;
+			LogInfo.QuietMode = TRUE;
 			break; /* -q */
 
 		case 3:
@@ -737,7 +738,7 @@ static void check_log(void) {
 /* =================================================== */
 
   if (LogInfo.logfp != stdout) {
-    if (LogInfo.logged && !QuietMode)
+    if ((LogInfo.stopRun || LogInfo.numWarnings > 0) && !LogInfo.QuietMode)
       fprintf(LogInfo.logfp, "\nCheck logfile for error messages.\n");
 
     CloseFile(&LogInfo.logfp, &LogInfo);
