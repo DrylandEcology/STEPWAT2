@@ -66,9 +66,6 @@
   void files_init(void);
   void maxrgroupspecies_init(void);
 
-  #define chkmem_f
-  #define chkmem_t
-
 /*************** Local Function Declarations ***************/
 /***********************************************************/
 void Plot_Initialize( void);
