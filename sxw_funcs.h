@@ -26,9 +26,4 @@ void SXW_Run_SOILWAT (void);
 void SXW_InitPlot (void);
 void SXW_PrintDebug(Bool cleanup) ;
 
-#ifdef DEBUG_MEM
- void SXW_SetMemoryRefs(void);
-#endif
-
-
 #endif

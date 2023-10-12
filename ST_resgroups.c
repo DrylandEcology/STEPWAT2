@@ -1259,35 +1259,6 @@ IndivType **RGroup_GetIndivs(GrpIndex rg, const char sort, IntS *num)
 	return nlist;
 }
 
-#ifdef DEBUG_MEM
-#include "sw_src/myMemory.h"
-/*======================================================*/
-void RGroup_SetMemoryRefs( void)
-{
-	/* when debugging memory problems, use the bookkeeping
-	 code in myMemory.c
-	 This routine sets the known memory refs in this module
-	 so they can be  checked for leaks, etc.  All refs will
-	 have been cleared by a call to ClearMemoryRefs() before
-	 this, and will be checked via CheckMemoryRefs() after
-	 this, most likely in the main() function.
-
-	 EVERY dynamic allocation must be noted here or the
-	 check will fail (which is the point, to catch unknown
-	 or missing pointers to memory).
-	 */
-	GrpIndex rg;
-
-	ForEachGroup(rg)
-	{
-		NoteMemoryRef(RGroup[rg]);
-		NoteMemoryRef(RGroup[rg]->kills); /* this is set it params() */
-	}
-
-}
-
-#endif
-
 /* COMMENT 1 - Algorithm for rgroup_PartResources() */
 /*
  * Assign minimum resources to each group based on relative

@@ -1134,43 +1134,6 @@ void _print_debuginfo(void) {
 	CloseFile(&f, &LogInfo);
 }
 
-
-#ifdef DEBUG_MEM
-#include "sw_src/include/myMemory.h"
-/*======================================================*/
-void SXW_SetMemoryRefs( void) {
-/* when debugging memory problems, use the bookkeeping
-   code in myMemory.c
- This routine sets the known memory refs so they can be
- checked for leaks, etc.  Includes malloc-ed memory from
- SXW as well as SOILWAT.  All refs will have been cleared
- by a call to ClearMemoryRefs() before this, and will be
- checked via CheckMemoryRefs() after this, most likely in
- the main() function.
-*/
-  TimeInt p;
-  int i, last = SXW_NFILES-1;  /* recall we skipped the first file */
-
-   for (i=0; i < last; i++) {
-     NoteMemoryRef(*_sxwfiles[i]);
-   }
-   NoteMemoryRef(_roots_max);
-   NoteMemoryRef(_roots_rel);
-   NoteMemoryRef(_roots_current);
-   NoteMemoryRef(_rootsXphen);
-   NoteMemoryRef(_roots_active);
-   NoteMemoryRef(_roots_phen_totals);
-   NoteMemoryRef(_phen);
-   NoteMemoryRef(_phen_grp_rel);
-   NoteMemoryRef(_transp_grp_totals);
-   NoteMemoryRef(SXW->transp);
-
-
-   SW_CTL_SetMemoryRefs();
-}
-
-#endif
-
 /** Convert STEPWAT2 indices of SOILWAT2's vegetation type into a
     SOILWAT2 index
 

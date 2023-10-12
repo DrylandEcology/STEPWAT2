@@ -66,16 +66,6 @@
   void files_init(void);
   void maxrgroupspecies_init(void);
 
-#ifdef DEBUG_MEM
-  #define chkmem_f CheckMemoryIntegrity(FALSE);
-  #define chkmem_t CheckMemoryIntegrity(TRUE);
-  void CheckMemoryIntegrity(Bool flag); /* local */
-  void Stat_NoteMemoryRefs(void) ;
-#else
-  #define chkmem_f
-  #define chkmem_t
-#endif
-
 /*************** Local Function Declarations ***************/
 /***********************************************************/
 void Plot_Initialize( void);
@@ -796,28 +786,6 @@ void check_sizes(const char *chkpt) {
     }
 
 }
-
-#ifdef DEBUG_MEM
-void CheckMemoryIntegrity(Bool flag) {
-// DLM - 6/6/2013 : NOTE - The dynamically allocated variables added for the new grid option are not accounted for here.  I haven't bothered to add them because it would add a ton of code and I haven't been using the code to facilitate debugging of memory.  Instead I have been using the valgrind program to debug my memory, as I feel like it is a better solution.  If wanting to use this code to debug memory, memory references would probably have to be set up for the dynamically allocated variables in ST_grid.c as well as the new dynamically allocated grid_Stat variable in ST_stats.c.
-
-
-  ClearMemoryRefs();
-
-  if (flag || Globals.currIter > 1 || Globals.currYear > 1)
-    Stat_SetMemoryRefs();
-
-  RGroup_SetMemoryRefs();
-  Species_SetMemoryRefs();
-  Parm_SetMemoryRefs();
-
-  SXW_SetMemoryRefs();
-  CheckMemoryRefs();
-
-}
-#endif
-
-
 
 #ifdef DEBUG_GROW
 /**************************************************************/
