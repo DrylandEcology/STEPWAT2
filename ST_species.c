@@ -22,6 +22,7 @@
 #include <string.h>
 #include "ST_steppe.h"
 #include "ST_globals.h"
+#include "sw_src/include/SW_datastructs.h"
 #include "sw_src/include/filefuncs.h"
 #include "sw_src/include/myMemory.h"
 #include "sw_src/include/rands.h"
@@ -32,7 +33,7 @@
 /* =================================================== */
 /*                  Global Variables                   */
 /* --------------------------------------------------- */
-pcg32_random_t species_rng;
+sw_random_t species_rng;
 
 
 

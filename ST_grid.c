@@ -69,7 +69,7 @@ char sd_Sep;
 int grid_Cells = 0;
 Bool UseDisturbances = 0, UseSoils = 0, sd_DoOutput = 0; //these are treated like booleans
 
-pcg32_random_t grid_rng;         // Gridded mode's unique RNG.
+sw_random_t grid_rng;         // Gridded mode's unique RNG.
 
 /**
  * \brief The main struct of the gridded mode module.

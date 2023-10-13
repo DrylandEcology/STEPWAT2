@@ -38,7 +38,7 @@
 /* =================================================== */
 /*                  Global Variables                   */
 /* --------------------------------------------------- */
-pcg32_random_t resgroups_rng;
+sw_random_t resgroups_rng;
 
 
 /******** Modular External Function Declarations ***********/

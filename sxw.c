@@ -68,7 +68,6 @@
 #include "sw_src/include/SW_Markov.h"
 #include "sw_src/include/SW_Output.h"
 #include "sw_src/include/rands.h"
-#include "sw_src/external/pcg/pcg_basic.h"
 #include "sw_src/include/SW_Times.h"
 
 
@@ -76,7 +75,7 @@
 /***********************************************************/
 SXW_t* SXW;
 SXW_resourceType* SXWResources;
-pcg32_random_t resource_rng; //rng for swx_resource.c functions.
+sw_random_t resource_rng; //rng for swx_resource.c functions.
 
 
 

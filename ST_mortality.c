@@ -28,7 +28,7 @@
 #include "sw_src/include/myMemory.h"
 #include "ST_steppe.h"
 #include "ST_globals.h"
-#include "sw_src/external/pcg/pcg_basic.h"
+#include "sw_src/include/SW_Defines.h"
 #include "sxw_vars.h"
 
 
@@ -47,7 +47,7 @@
  *
  * \ingroup MORTALITY
  */
-pcg32_random_t mortality_rng;
+sw_random_t mortality_rng;
 
 /* ---------------------------- Exported Flags ----------------------------- */
 

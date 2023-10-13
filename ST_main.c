@@ -28,7 +28,7 @@
 #include "sw_src/include/myMemory.h"
 #include "sw_src/include/SW_VegProd.h"
 #include "sw_src/include/SW_Control.h"
-#include "sw_src/external/pcg/pcg_basic.h"
+#include "sw_src/include/SW_Defines.h"
 
 #include "sxw_funcs.h"
 #include "sxw.h"
