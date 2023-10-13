@@ -130,10 +130,8 @@ void disperseSeeds(int year) {
       ForEachSpecies(sp) {
         // Running this algorithm on Species that didn't request dispersal
         // wouldn't hurt, but it would be a waste of time.
-    	if(!outputSDData){
-    		if (!Species[sp]->use_dispersal)
-    			continue;
-    	}
+    	if (!Species[sp]->use_dispersal)
+    		continue;
 
         // If there are no individuals of this species that are of reproductive
         // age continue.
@@ -161,9 +159,11 @@ void disperseSeeds(int year) {
             }
 
             // If this cell already has seeds there is no point in continuing
-            //if (receiverCell->mySpecies[sp]->seedsPresent) {
-            //  continue;
-            //}
+            if (!outputSDData) {
+                if (receiverCell->mySpecies[sp]->seedsPresent) {
+                    continue;
+                }
+            }
 
             // These variables depend on the recipient.
             distance = _distance(col, row, receiverCol, receiverRow,
