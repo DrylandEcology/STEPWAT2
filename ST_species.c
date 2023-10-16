@@ -166,7 +166,7 @@ void Species_Add_Indiv(SppIndex sp, Int new_indivs)
 	{
 		if (!indiv_New(sp))
 		{
-			LogError(&LogInfo, LOGFATAL, "Unable to add new individual in Species_Add_Indiv()");
+			LogError(&LogInfo, LOGERROR, "Unable to add new individual in Species_Add_Indiv()");
 		}
 
 		Species[sp]->est_count++;
@@ -312,7 +312,7 @@ SppIndex species_New(void)
 
 	if (++Globals->sppCount > MAX_SPECIES)
 	{
-		LogError(&LogInfo, LOGFATAL, "Too many species specified (>%d)!\n"
+		LogError(&LogInfo, LOGERROR, "Too many species specified (>%d)!\n"
 				"You must adjust MAX_SPECIES and recompile!\n",
 		MAX_SPECIES);
 	}

@@ -460,7 +460,7 @@ void _delete (IndivType *ndv)
 
   if ((s->est_count > 0 && s->IndvHead == NULL)
      || (s->est_count == 0 && s->IndvHead != NULL))
-     LogError(&LogInfo, LOGFATAL,
+     LogError(&LogInfo, LOGERROR,
               "PGMR: Indiv Count out of sync in _delete()");
 
   Mem_Free(ndv);
@@ -489,7 +489,7 @@ void Indiv_SortSize( const byte sorttype,
     case SORT_A: cmpfunc = Indiv_CompSize_A; break;
     case SORT_D: cmpfunc = Indiv_CompSize_D; break;
     default:
-      LogError(&LogInfo, LOGFATAL,
+      LogError(&LogInfo, LOGERROR,
              "Invalid sort mode in Indiv_SortSize");
   }
 

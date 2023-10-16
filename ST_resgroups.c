@@ -179,7 +179,8 @@ static RealF _add_annuals(const GrpIndex rg, const SppIndex sp, const RealF last
 
     /* Create a beta random number draw based on alpha and beta for each species
      * (calculated based on mean (s->seedling_estab_prob and variance (s->var)) */
-     var = RandBeta(Species[sp]->alpha, Species[sp]->beta, &resgroups_rng);
+     var = RandBeta(Species[sp]->alpha, Species[sp]->beta, &resgroups_rng,
+                    &LogInfo);
 
     /*Determine number of seedlings to add. If the number of seeds calculated
      * from the random draw is larger than max_seed_estab, max_seed_estab is used instead*/
@@ -987,7 +988,7 @@ GrpIndex RGroup_New(void)
 
 	if (++Globals->grpCount > SuperGlobals.max_rgroups)
 	{
-		LogError(&LogInfo, LOGFATAL, "Too many groups specified (>%d)!\n"
+		LogError(&LogInfo, LOGERROR, "Too many groups specified (>%d)!\n"
 				"You must adjust MAX_RGROUPS in maxrgroupspecies.in!",
 		SuperGlobals.max_rgroups);
 	}
