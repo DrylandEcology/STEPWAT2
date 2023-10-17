@@ -1256,39 +1256,3 @@ void parm_free_memory( void ) {
 	for(i = 0; i < NFILES; i++)
 		Mem_Free(_files[i]);
 }
-
-
-
-#ifdef DEBUG_MEM
-#include "sw_src/myMemory.h"
-/**************************************************************/
-void Parm_SetMemoryRefs( void) {
-/*======================================================*/
-/* when debugging memory problems, use the bookkeeping
-   code in myMemory.c
- This routine sets the known memory refs in this module
- so they can be  checked for leaks, etc.  All refs will
- have been cleared by a call to ClearMemoryRefs() before
- this, and will be checked via CheckMemoryRefs() after
- this, most likely in the main() function.
-
- EVERY dynamic allocation must be noted here or the
- check will fail (which is the point, to catch unknown
- or missing pointers to memory).
-*/
-  ST_FileIndex i;
-  GrpIndex rg;
-  SppIndex sp;
-
-  for(i=F_First; i<= F_MortAvg; i++)
-    NoteMemoryRef(_files[i]);
-
-  ForEachGroup(rg)
-    NoteMemoryRef( RGroup[rg]->kills);
-  ForEachSpecies(sp)
-    NoteMemoryRef( Species[sp]->kills);
-
-  NoteMemoryRef(_files[F_SXW]);
-}
-
-#endif
