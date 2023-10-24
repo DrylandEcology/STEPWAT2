@@ -17,7 +17,7 @@
 /******** These modules are necessary to compile ST_grid.c ********/
 #include "ST_stats.h"
 #include "ST_defines.h"
-#include "sw_src/external/pcg/pcg_basic.h"
+#include "sw_src/include/SW_Defines.h"
 #include "sxw_vars.h"
 #include "sw_src/include/SW_Site.h"
 #include "sw_src/include/SW_SoilWater.h"
@@ -306,7 +306,7 @@ typedef enum
 /* =================================================== */
 /*            Externed Global Variables                */
 /* --------------------------------------------------- */
-extern pcg32_random_t grid_rng;
+extern sw_random_t grid_rng;
 extern CellType** gridCells;
 extern int grid_Rows;
 extern int grid_Cols;

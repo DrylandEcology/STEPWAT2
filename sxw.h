@@ -26,7 +26,6 @@
 
 #include "ST_defines.h"
 #include "sw_src/include/SW_Defines.h"
-#include "sw_src/external/pcg/pcg_basic.h"
 
 
 
@@ -189,7 +188,7 @@ typedef struct temp_SXW_st{
 /* --------------------------------------------------- */
 extern SXW_t *SXW;
 extern SXW_resourceType *SXWResources;
-extern pcg32_random_t resource_rng;
+extern sw_random_t resource_rng;
 extern transp_t *transp_window;
 
 #endif
