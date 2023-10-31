@@ -11,7 +11,7 @@
 #define MORTALITY_H
 
 #include "sw_src/include/generic.h"
-#include "sw_src/external/pcg/pcg_basic.h"
+#include "sw_src/include/SW_Defines.h"
 
 /* --------------------------- Exported Structs ---------------------------- */
 
@@ -166,7 +166,7 @@ typedef enum {
 /* =================================================== */
 /*            Externed Global Variables                */
 /* --------------------------------------------------- */
-extern pcg32_random_t mortality_rng;
+extern sw_random_t mortality_rng;
 extern Bool *_SomeKillage;
 extern Bool UseWildfire;
 

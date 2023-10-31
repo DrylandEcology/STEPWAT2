@@ -137,7 +137,7 @@ clean: cleanobjs cleanbin documentation_clean
 .PHONY: cleanobjs
 cleanobjs:
 	-@find . -type f -name '*.o' -delete
-	-@$(RM) -f $(path_sw2lib)/$(lib_sw2)
+	-@(cd $(path_sw2) && $(MAKE) clean_build)
 
 .PHONY: cleanbin
 cleanbin:

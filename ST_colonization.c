@@ -163,20 +163,20 @@ void initColonization(char* fileName) {
     }
     if(valuesRead != 4 && valuesRead != 5) {
       Mem_Free(tempEvents);
-      LogError(&LogInfo, LOGFATAL, "Error reading colonization file:\n\tIncorrect"
+      LogError(&LogInfo, LOGERROR, "Error reading colonization file:\n\tIncorrect"
                " number of input arguments.\n\tIs it possible you put a space"
                " somewhere? Remember this file cannot contain spaces.");
       return;
     }
     if(fromCell < 0 || toCell > ((grid_Rows * grid_Cols) - 1)) {
       Mem_Free(tempEvents);
-      LogError(&LogInfo, LOGFATAL, "Error reading colonization file:"
+      LogError(&LogInfo, LOGERROR, "Error reading colonization file:"
                "\n\tInvalid cell range ( %d - %d ) specified.", fromCell, toCell);
       return;
     }
     if(startYear < 1 || startYear > SuperGlobals.runModelYears) {
       Mem_Free(tempEvents);
-      LogError(&LogInfo, LOGFATAL, "Error reading colonization file:"
+      LogError(&LogInfo, LOGERROR, "Error reading colonization file:"
                "\n\tInvalid start year (%d) specified.", startYear);
       return;
     }
@@ -184,7 +184,7 @@ void initColonization(char* fileName) {
     load_cell(toCell / grid_Cols, toCell % grid_Cols);
     if(Species_Name2Index(name) == -1) {
       Mem_Free(tempEvents);
-      LogError(&LogInfo, LOGFATAL, "Error reading colonization file:"
+      LogError(&LogInfo, LOGERROR, "Error reading colonization file:"
                "\n\tUnrecognized species name (%s).", name);
       return;
     }

@@ -29,7 +29,6 @@
 #include "sw_src/include/SW_VegProd.h"
 #include "sw_src/include/SW_Files.h"
 #include "sw_src/include/SW_Times.h"
-#include "sw_src/external/pcg/pcg_basic.h"
 
 
 
@@ -307,7 +306,7 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
             // This transpiration will be added
             transp_window->added_transp = (1 - transp_ratio / RandUniFloatRange(min, max, &resource_rng)) * transp_window->average;
             if(transp_window->added_transp < 0){
-                LogError(&LogInfo, LOGNOTE, "sxw_resource: Added transpiration less than 0.\n");
+                LogError(&LogInfo, LOGWARN, "sxw_resource: Added transpiration less than 0.\n");
             }
             //printf("Year %d:\tTranspiration to add: %f\n",Globals->currYear,add_transp);
 

@@ -16,7 +16,7 @@
 
 #include "ST_steppe.h"
 #include "ST_globals.h"
-#include "sw_src/external/pcg/pcg_basic.h"
+#include "sw_src/include/SW_Defines.h"
 #include "sw_src/include/rands.h"
 #include "sxw.h" // externs `*SXW`
 #include "sxw_funcs.h"
@@ -34,7 +34,7 @@ static void _make_disturbance( void);
 /**************************************************************/
 /**************************************************************/
 
-pcg32_random_t environs_rng;
+sw_random_t environs_rng;
 
 
 void Env_Generate( void) {

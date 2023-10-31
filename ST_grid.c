@@ -69,7 +69,7 @@ char sd_Sep;
 int grid_Cells = 0;
 Bool UseDisturbances = 0, UseSoils = 0, sd_DoOutput = 0; //these are treated like booleans
 
-pcg32_random_t grid_rng;         // Gridded mode's unique RNG.
+sw_random_t grid_rng;         // Gridded mode's unique RNG.
 
 /**
  * \brief The main struct of the gridded mode module.
@@ -485,7 +485,7 @@ static void _init_grid_files(void)
 		grid_directories[i] = Str_Dup(Str_TrimLeftQ(buf), &LogInfo);
 	}
 	if (i != N_GRID_DIRECTORIES)
-		LogError(&LogInfo, LOGFATAL, "Invalid files.in");
+		LogError(&LogInfo, LOGERROR, "Invalid files.in");
 
 	for (i = 0; i < N_GRID_FILES; i++)
 	{
@@ -494,7 +494,7 @@ static void _init_grid_files(void)
 		grid_files[i] = Str_Dup(Str_TrimLeftQ(buf), &LogInfo);
 	}
 	if (i != N_GRID_FILES)
-		LogError(&LogInfo, LOGFATAL, "Invalid files.in");
+		LogError(&LogInfo, LOGERROR, "Invalid files.in");
 
 	// opens the log file...
 	if (!strcmp("stdout", grid_files[GRID_FILE_LOGFILE])){
@@ -568,7 +568,7 @@ static void _init_soilwat_outputs(char* fileName) {
   int cell;
   FILE* inFile = fopen(fileName, "r");
   if(!inFile) {
-    LogError(&LogInfo, LOGFATAL, "Could not open SOILWAT2 output cells file."
+    LogError(&LogInfo, LOGERROR, "Could not open SOILWAT2 output cells file."
              "\n\tFile named \"%s\"", fileName);
   }
 
@@ -1171,11 +1171,11 @@ static void _read_disturbances_in(void)
 		}
 
 		if (num != 11)
-			LogError(&LogInfo, LOGFATAL, "Invalid %s file line %d wrong",
+			LogError(&LogInfo, LOGERROR, "Invalid %s file line %d wrong",
 					grid_files[GRID_FILE_DISTURBANCES], i + 2);
 	}
 	if (i != grid_Cells)
-		LogError(&LogInfo, LOGFATAL, "Invalid %s file wrong number of cells",
+		LogError(&LogInfo, LOGERROR, "Invalid %s file wrong number of cells",
 				grid_files[GRID_FILE_DISTURBANCES]);
 
     unload_cell();
@@ -1231,7 +1231,7 @@ static void _read_soils_in(void){
 
 	FILE* f = OpenFile(grid_files[GRID_FILE_SOILS], "r", &LogInfo);
 	if(!GetALine(f, buf)){ // Throw out the header line.
-		LogError(&LogInfo, LOGFATAL, "%s file empty.", grid_files[GRID_FILE_SOILS]);
+		LogError(&LogInfo, LOGERROR, "%s file empty.", grid_files[GRID_FILE_SOILS]);
 	}
 
 	for(i = 0; i < grid_Cells; ++i){
@@ -1240,17 +1240,17 @@ static void _read_soils_in(void){
 		load_cell(row, col);
 
 		if(!GetALine(f, buf)){
-			LogError(&LogInfo, LOGFATAL, "Too few lines in %s", grid_files[GRID_FILE_SOILS]);
+			LogError(&LogInfo, LOGERROR, "Too few lines in %s", grid_files[GRID_FILE_SOILS]);
 		}
 		lineReadReturnValue = _read_soil_line(buf, &tempSoil, 0);
 		if (lineReadReturnValue == SOIL_READ_FAILURE){
-			LogError(&LogInfo, LOGFATAL, "Error reading %s file.", grid_files[GRID_FILE_SOILS]);
+			LogError(&LogInfo, LOGERROR, "Error reading %s file.", grid_files[GRID_FILE_SOILS]);
 		}
 		/* If _read_soil_line didnt return SUCCESS or FAILURE,
 		   it returned a cell number to copy. */
 		else if (lineReadReturnValue != SOIL_READ_SUCCESS){
 			if(lineReadReturnValue > i){
-				LogError(&LogInfo, LOGFATAL, "%s: Attempted to copy values that have not been read yet.\n"
+				LogError(&LogInfo, LOGERROR, "%s: Attempted to copy values that have not been read yet.\n"
 				                          "\tIf you want to copy a soil make sure you define the layers"
 										  "the FIRST time you use it.", grid_files[GRID_FILE_SOILS]);
 			}
@@ -1261,11 +1261,11 @@ static void _read_soils_in(void){
 		else {
 			for(j = 1; j < tempSoil.num_layers; ++j){
 				if(!GetALine(f, buf)){
-					LogError(&LogInfo, LOGFATAL, "Too few lines in %s", grid_files[GRID_FILE_SOILS]);
+					LogError(&LogInfo, LOGERROR, "Too few lines in %s", grid_files[GRID_FILE_SOILS]);
 				}
 				lineReadReturnValue = _read_soil_line(buf, &tempSoil, j);
 				if(lineReadReturnValue != SOIL_READ_SUCCESS){
-					LogError(&LogInfo, LOGFATAL, "Different behavior is specified between layers %d and %d of"
+					LogError(&LogInfo, LOGERROR, "Different behavior is specified between layers %d and %d of"
 					                          " cell %d in file %s. (Perhaps you specified a cell to copy in one"
 											  " but not the other?)", j, j+1, i, grid_files[GRID_FILE_SOILS]);
 				}
@@ -1318,7 +1318,7 @@ static int _read_soil_line(char* buf, SoilType* destination, int layer){
 
 	if(cellNum > grid_Cells){
 		LogError(
-			&LogInfo, LOGFATAL,
+			&LogInfo, LOGERROR,
 			"%s: cell number (id=%d) is larger than number of cells in grid (n=%d).",
 			grid_files[GRID_FILE_SOILS], cellNum, grid_Cells
 		);
@@ -1332,7 +1332,7 @@ static int _read_soil_line(char* buf, SoilType* destination, int layer){
 
 		if(cellToCopy > grid_Cells){
 			LogError(
-				&LogInfo, LOGFATAL,
+				&LogInfo, LOGERROR,
 				"%s: cell to copy (id=%d) not present in grid (n=%d).",
 				grid_files[GRID_FILE_SOILS], cellToCopy, grid_Cells
 			);
@@ -1348,7 +1348,7 @@ static int _read_soil_line(char* buf, SoilType* destination, int layer){
 	if(entriesRead == 16) {
 		if(layerRead > destination->num_layers){
 			LogError(
-				&LogInfo, LOGFATAL,
+				&LogInfo, LOGERROR,
 				"%s: cell %d has too many soil layers (%d for max=%d).",
 				grid_files[GRID_FILE_SOILS], cellNum, layerRead, destination->num_layers
 			);
@@ -1445,7 +1445,7 @@ static void _read_spinup_species(void)
 		copy_cell_col = copy_cell % grid_Cols;
 
 		if (num != 3)
-			LogError(&LogInfo, LOGFATAL, "Invalid %s file", grid_files[GRID_FILE_SPINUP_SPECIES]);
+			LogError(&LogInfo, LOGERROR, "Invalid %s file", grid_files[GRID_FILE_SPINUP_SPECIES]);
 
 		int stringIndex = _get_value_index(buf, ',', 3); //gets us the index of the string that is right after what we just parsed in
 
@@ -1460,7 +1460,7 @@ static void _read_spinup_species(void)
 			continue;
 		}
 		else if (do_copy == 1)
-			LogError(&LogInfo, LOGFATAL,
+			LogError(&LogInfo, LOGERROR,
 					"Invalid %s file line %d invalid copy_cell attempt",
 					grid_files[GRID_FILE_SPINUP_SPECIES], i + 2);
 
@@ -1470,7 +1470,7 @@ static void _read_spinup_species(void)
 		{
 			num = sscanf(&buf[stringIndex], "%d,", &seeds_Avail);
 			if (num != 1){
-				LogError(&LogInfo, LOGFATAL, "Invalid %s file line %d invalid species input",
+				LogError(&LogInfo, LOGERROR, "Invalid %s file line %d invalid species input",
 						 grid_files[GRID_FILE_SPINUP_SPECIES], i + 2);
 			}
 
@@ -1487,7 +1487,7 @@ static void _read_spinup_species(void)
 	}
 
 	if (i != grid_Cells)
-		LogError(&LogInfo, LOGFATAL, "Invalid %s file, not enough cells",
+		LogError(&LogInfo, LOGERROR, "Invalid %s file, not enough cells",
 				grid_files[GRID_FILE_SPINUP_SPECIES]);
 
 	if(!isAnyCellOnForSpinup){
@@ -1543,13 +1543,13 @@ static void _read_grid_setup(void)
     GetALine(f, buf);
     i = sscanf(buf, "%d %d", &grid_Rows, &grid_Cols);
     if (i != 2)
-        LogError(&LogInfo, LOGFATAL,
+        LogError(&LogInfo, LOGERROR,
                  "Invalid grid setup file (rows/cols line wrong)");
 
     grid_Cells = grid_Cols * grid_Rows;
 
     if (grid_Cells > MAX_CELLS)
-        LogError(&LogInfo, LOGFATAL,
+        LogError(&LogInfo, LOGERROR,
                  "Number of cells in grid exceeds MAX_CELLS defined in ST_defines.h");
 
     /* Allocate the 2d array of cells now that we know how many we need */
@@ -1558,48 +1558,48 @@ static void _read_grid_setup(void)
     GetALine(f, buf);
     i = sscanf(buf, "%u", &UseDisturbances);
     if (i != 1)
-        LogError(&LogInfo, LOGFATAL,
+        LogError(&LogInfo, LOGERROR,
                  "Invalid grid setup file (disturbances line wrong)");
 
     GetALine(f, buf);
     i = sscanf(buf, "%u", &UseSoils);
     if (i != 1)
-        LogError(&LogInfo, LOGFATAL, "Invalid grid setup file (soils line wrong)");
+        LogError(&LogInfo, LOGERROR, "Invalid grid setup file (soils line wrong)");
 
     GetALine(f, buf);
     i = sscanf(buf, "%d", &j);
     if (i != 1)
-        LogError(&LogInfo, LOGFATAL,
+        LogError(&LogInfo, LOGERROR,
                  "Invalid grid setup file (seed dispersal line wrong)");
     UseSeedDispersal = itob(j);
 
 	GetALine(f, buf);
 	i = sscanf(buf, "%d", &shouldSpinup);
 	if(i < 1){
-		LogError(&LogInfo, LOGFATAL, "Invalid grid setup file (Spinup line wrong)");
+		LogError(&LogInfo, LOGERROR, "Invalid grid setup file (Spinup line wrong)");
 	}
 
 	GetALine(f, buf);
 	i = sscanf(buf, "%hd", &SuperGlobals.runSpinupYears);
 	if(i < 1){
-		LogError(&LogInfo, LOGFATAL, "Invalid grid setup file (Spinup years line wrong)");
+		LogError(&LogInfo, LOGERROR, "Invalid grid setup file (Spinup years line wrong)");
 	}
 
 	GetALine(f, buf);
 	i = sscanf(buf, "%u", &writeIndividualFiles);
 	if(i < 1){
-		LogError(&LogInfo, LOGFATAL, "Invalid grid setup file (Individual output line wrong)");
+		LogError(&LogInfo, LOGERROR, "Invalid grid setup file (Individual output line wrong)");
 	}
 
 	GetALine(f, buf);
 	if (sscanf(buf, "%u", &recordDispersalEvents) != 1) {
-		LogError(&LogInfo, LOGFATAL,
+		LogError(&LogInfo, LOGERROR,
 				"Invalid %s file: seed dispersal events output line\n", grid_files[GRID_FILE_SETUP]);
     }
 
 	GetALine(f, buf);
 	if (sscanf(buf, "%d", &outputSDData) != 1) {
-		LogError(&LogInfo, LOGFATAL, "Invalid grid setup file (Seed Dispersal Data Output\n");
+		LogError(&LogInfo, LOGERROR, "Invalid grid setup file (Seed Dispersal Data Output\n");
 	}
 
     CloseFile(&f, &LogInfo);
@@ -2010,7 +2010,7 @@ static void _separateSOILWAT2DailyOutput(char* fileName, int* cellNumbers) {
   FILE* inFile = fopen(fileName, "r");
 
   if(!inFile) {
-    LogError(&LogInfo, LOGFATAL, "Issue while separating SOILWAT2 output.\n\tFile"
+    LogError(&LogInfo, LOGERROR, "Issue while separating SOILWAT2 output.\n\tFile"
              "\"%s\" not found.", fileName);
   }
 
@@ -2074,7 +2074,7 @@ static void _separateSOILWAT2MonthlyOutput(char* fileName, int* cellNumbers) {
   FILE* inFile = fopen(fileName, "r");
 
   if(!inFile) {
-    LogError(&LogInfo, LOGFATAL, "Issue while separating SOILWAT2 output.\n\tFile"
+    LogError(&LogInfo, LOGERROR, "Issue while separating SOILWAT2 output.\n\tFile"
              "\"%s\" not found.", fileName);
   }
 
@@ -2136,7 +2136,7 @@ static void _separateSOILWAT2YearlyOutput(char* fileName, int* cellNumbers) {
   FILE* inFile = fopen(fileName, "r");
 
   if(!inFile) {
-    LogError(&LogInfo, LOGFATAL, "Issue while separating SOILWAT2 output.\n\tFile"
+    LogError(&LogInfo, LOGERROR, "Issue while separating SOILWAT2 output.\n\tFile"
              "\"%s\" not found.", fileName);
   }
 
