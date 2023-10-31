@@ -23,9 +23,9 @@
 /* =================================================== */
 /*            Externed Global Variables                */
 /* --------------------------------------------------- */
-extern pcg32_random_t environs_rng; // defined in ST_environs.c
-extern pcg32_random_t resgroups_rng; // defined in  ST_resgroups.c
-extern pcg32_random_t species_rng; // defined in ST_species.c
+extern sw_random_t environs_rng; // defined in ST_environs.c
+extern sw_random_t resgroups_rng; // defined in  ST_resgroups.c
+extern sw_random_t species_rng; // defined in ST_species.c
 
 
 

@@ -60,7 +60,7 @@ DispersalEvent* _lastEvent = NULL;
  * \brief The random number generator for the seed dispersal module.
  * \ingroup SEED_DISPERSAL_PRIVATE
  */
-pcg32_random_t dispersal_rng;
+sw_random_t dispersal_rng;
 
 /**
  * \brief TRUE if \ref dispersal_rng has already been seeded.

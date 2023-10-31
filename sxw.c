@@ -68,7 +68,6 @@
 #include "sw_src/include/SW_Markov.h"
 #include "sw_src/include/SW_Output.h"
 #include "sw_src/include/rands.h"
-#include "sw_src/external/pcg/pcg_basic.h"
 #include "sw_src/include/SW_Times.h"
 
 
@@ -76,7 +75,7 @@
 /***********************************************************/
 SXW_t* SXW;
 SXW_resourceType* SXWResources;
-pcg32_random_t resource_rng; //rng for swx_resource.c functions.
+sw_random_t resource_rng; //rng for swx_resource.c functions.
 
 
 
@@ -515,7 +514,7 @@ static void  _read_files( void ) {
   }
 
   if (i < nfiles) {
-    LogError(&LogInfo, LOGFATAL, "STEPWAT: %s: Insufficient files found",
+    LogError(&LogInfo, LOGERROR, "STEPWAT: %s: Insufficient files found",
             MyFileName);
   }
 
@@ -542,7 +541,7 @@ static void  _read_roots_max(void) {
 		p = strtok(inbuf, " \t"); /* g'teed to work via GetALine() */
 
 		if ((g = RGroup_Name2Index(p)) < 0) {
-			LogError(&LogInfo, LOGFATAL, "%s: Invalid group name (%s) found.",
+			LogError(&LogInfo, LOGERROR, "%s: Invalid group name (%s) found.",
 					MyFileName, p);
 		}
 		strcpy(name, p);
@@ -553,14 +552,14 @@ static void  _read_roots_max(void) {
 			lyr++;
 		}
 		if (lyr != SXW->NTrLyrs) {
-			LogError(&LogInfo, LOGFATAL,
+			LogError(&LogInfo, LOGERROR,
 					"%s: Group : %s : Missing layer values. Match up with soils.in file. Include zeros if necessary. Layers needed %u. Layers defined %u",
 					MyFileName, name, SXW->NTrLyrs, lyr);
 		}
 	}
 
 	if (cnt < Globals->grpCount) {
-		LogError(&LogInfo, LOGFATAL, "%s: Not enough valid groups found.",
+		LogError(&LogInfo, LOGERROR, "%s: Not enough valid groups found.",
 				MyFileName);
 	}
 
@@ -587,14 +586,14 @@ static void _read_phen(void) {
     p = strtok(inbuf," \t"); /* g'teed to work via GetALine() */
 
     if ( (g=RGroup_Name2Index(p)) <0 ) {
-      LogError(&LogInfo, LOGFATAL,
+      LogError(&LogInfo, LOGERROR,
                "%s: Invalid group name (%s) found.", MyFileName, p);
     }
     cnt++;
     m = Jan;
     while ((p=strtok(NULL," \t")) ) {
       if (m > Dec) {
-        LogError(&LogInfo, LOGFATAL,
+        LogError(&LogInfo, LOGERROR,
                  "%s: More than 12 months of data found.", MyFileName);
       }
       SXWResources->_phen[Igp(g,m)] = atof(p);
@@ -604,7 +603,7 @@ static void _read_phen(void) {
   }
 
   if (cnt < Globals->grpCount) {
-    LogError(&LogInfo, LOGFATAL,
+    LogError(&LogInfo, LOGERROR,
              "%s: Not enough valid groups found.", MyFileName);
   }
 
@@ -645,14 +644,14 @@ static void _read_prod(void) {
 
 		p = strtok(inbuf, " \t"); /* guaranteed to work via GetALine() */
 		if ((g = RGroup_Name2Index(p)) < 0) {
-			LogError(&LogInfo, LOGFATAL, "%s: Invalid group name for LITTER (%s).",
+			LogError(&LogInfo, LOGERROR, "%s: Invalid group name for LITTER (%s).",
 					MyFileName, p);
 		}
 
 		month = Jan;
 		while ((p = strtok(NULL, " \t"))) {
 			if (month > Dec) {
-				LogError(&LogInfo, LOGFATAL,
+				LogError(&LogInfo, LOGERROR,
 						"%s: More than 12 months of data found for LITTER.", MyFileName);
 			}
 			SXWResources->_prod_litter[g][month] = atof(p);
@@ -665,7 +664,7 @@ static void _read_prod(void) {
 	}
 
 	if (count < Globals->grpCount) {
-		LogError(&LogInfo, LOGFATAL, "%s: Not enough valid groups found for LITTER values.",
+		LogError(&LogInfo, LOGERROR, "%s: Not enough valid groups found for LITTER values.",
 				 MyFileName);
 	}
 
@@ -681,13 +680,13 @@ static void _read_prod(void) {
 		p = strtok(inbuf, " \t"); /* guaranteed to work via GetALine() */
 
 		if ((g = RGroup_Name2Index(p)) < 0) {
-			LogError(&LogInfo, LOGFATAL, "%s: Invalid group name for biomass (%s) found.",
+			LogError(&LogInfo, LOGERROR, "%s: Invalid group name for biomass (%s) found.",
 					MyFileName, p);
 		}
 		month = Jan;
 		while ((p = strtok(NULL, " \t"))) {
 			if (month > Dec) {
-				LogError(&LogInfo, LOGFATAL,
+				LogError(&LogInfo, LOGERROR,
 						"%s: More than 12 months of data found.", MyFileName);
 			}
 			SXWResources->_prod_bmass[Igp(g, month)] = atof(p);
@@ -699,7 +698,7 @@ static void _read_prod(void) {
 	}
 
 	if (count < Globals->grpCount) {
-		LogError(&LogInfo, LOGFATAL, "%s: Not enough valid groups found.",
+		LogError(&LogInfo, LOGERROR, "%s: Not enough valid groups found.",
 				MyFileName);
 	}
 
@@ -715,14 +714,14 @@ static void _read_prod(void) {
 		p = strtok(inbuf, " \t"); /* guaranteed to work via GetALine() */
 
 		if ((g = RGroup_Name2Index(p)) < 0) {
-			LogError(&LogInfo, LOGFATAL,
+			LogError(&LogInfo, LOGERROR,
 					"%s: Invalid group name for pctlive (%s) found.",
 					MyFileName, p);
 		}
 		month = Jan;
 		while ((p = strtok(NULL, " \t"))) {
 			if (month > Dec) {
-				LogError(&LogInfo, LOGFATAL,
+				LogError(&LogInfo, LOGERROR,
 						"%s: More than 12 months of data found.", MyFileName);
 			}
 			SXWResources->_prod_pctlive[Igp(g, month)] = atof(p);
@@ -734,7 +733,7 @@ static void _read_prod(void) {
 	}
 
 	if (count < Globals->grpCount) {
-		LogError(&LogInfo, LOGFATAL, "%s: Not enough valid groups found.",
+		LogError(&LogInfo, LOGERROR, "%s: Not enough valid groups found.",
 				MyFileName);
 	}
 
@@ -775,7 +774,7 @@ static void _read_watin(void) {
    CloseFile(&f, &LogInfo);
 
    if (!found) {
-     LogError(&LogInfo, LOGFATAL,
+     LogError(&LogInfo, LOGERROR,
               "%s: Too few files (%d)", MyFileName, lineno);
    }
 
@@ -933,7 +932,7 @@ static void _read_debugfile(void) {
 	}
 	strcat(errstr, "Note that data will always be appended,\n");
 	strcat(errstr, "so clear file contents before re-use.\n");
-	LogError(&LogInfo, LOGNOTE, errstr);
+	LogError(&LogInfo, LOGWARN, errstr);
 
 	CloseFile(&f, &LogInfo);
 
