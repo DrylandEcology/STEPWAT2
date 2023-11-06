@@ -21,6 +21,8 @@
 /* --------------------------------------------------- */
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
+#include <math.h>
 
 #include "ST_mortality.h"
 #include "sw_src/include/filefuncs.h"
@@ -672,7 +674,7 @@ void setWildfireClimate(WildfireClimate *newWildfireClimate) {
 void _updateWildfireClimate(double propSummerPrecip, double meanAnnualTemperature, double annualPrecipitation) {
 	// if there have not yet been 10 values added, we cannot calculate a 10 year average.
 	// Instead, we have to manually sum up all of the values and calculate the average.
-	if (wildfireClimate->count < 10) {
+	if (wildfireClimate->count < 3) {
 		wildfireClimate->propSummerPrecip[wildfireClimate->count] = propSummerPrecip;
 		wildfireClimate->meanAnnTemp[wildfireClimate->count] = meanAnnualTemperature;
 		wildfireClimate->annPrecip[wildfireClimate->count] = annualPrecipitation;
@@ -683,24 +685,24 @@ void _updateWildfireClimate(double propSummerPrecip, double meanAnnualTemperatur
 		wildfireClimate->annPrecipAvg = get_running_mean(wildfireClimate->count + 1, wildfireClimate->annPrecipAvg, annualPrecipitation);
 
 	} else {
-		// Once we have seen 10 values, we can begin doing a more efficient 10 year running average calculation.
+		// Once we have seen 3 values, we can begin doing a more efficient 3 year running average calculation.
 		//
 		//               new_average = old_average - (the_oldest_value / n) + (new_value / n)
 		//
-		// By using the modulo operator on the count, we have a cycle of 0 -- 9.
+		// By using the modulo operator on the count, we have a cycle of 0 -- 2.
 		// By indexing using this cycle, we easily find the oldest value and can update the moving average.
 
-		wildfireClimate->propSummerPrecipAvg -= wildfireClimate->propSummerPrecip[wildfireClimate->count % 10] / 10;
-		wildfireClimate->propSummerPrecipAvg += propSummerPrecip / 10;
-		wildfireClimate->propSummerPrecip[wildfireClimate->count % 10] = propSummerPrecip;
+		wildfireClimate->propSummerPrecipAvg -= wildfireClimate->propSummerPrecip[wildfireClimate->count % 3] / 3;
+		wildfireClimate->propSummerPrecipAvg += propSummerPrecip / 3;
+		wildfireClimate->propSummerPrecip[wildfireClimate->count % 3] = propSummerPrecip;
 
-		wildfireClimate->meanAnnTempAvg -= wildfireClimate->meanAnnTemp[wildfireClimate->count % 10] / 10;
-		wildfireClimate->meanAnnTempAvg += meanAnnualTemperature / 10;
-		wildfireClimate->meanAnnTemp[wildfireClimate->count % 10] = meanAnnualTemperature;
+		wildfireClimate->meanAnnTempAvg -= wildfireClimate->meanAnnTemp[wildfireClimate->count % 3] / 3;
+		wildfireClimate->meanAnnTempAvg += meanAnnualTemperature / 3;
+		wildfireClimate->meanAnnTemp[wildfireClimate->count % 3] = meanAnnualTemperature;
 
-		wildfireClimate->annPrecipAvg -= wildfireClimate->annPrecip[wildfireClimate->count % 10] / 10;
-		wildfireClimate->annPrecipAvg += annualPrecipitation / 10;
-		wildfireClimate->annPrecip[wildfireClimate->count % 10] = annualPrecipitation;
+		wildfireClimate->annPrecipAvg -= wildfireClimate->annPrecip[wildfireClimate->count % 3] / 3;
+		wildfireClimate->annPrecipAvg += annualPrecipitation / 3;
+		wildfireClimate->annPrecip[wildfireClimate->count % 3] = annualPrecipitation;
 	}
 
 	wildfireClimate->count++;
@@ -1422,22 +1424,24 @@ double _getWildfireProbability(void) {
   //printf("    pfgAGB = %f\n", pfgAGB);
   //printf("3yr pfgAGB = %f\n", wildfireClimate->pfgAGBAvg);
 
-  // access running average biomass members for use in the wildfire probability formula
+  // access running average biomass for use in the wildfire probability equation
   afgAGB = wildfireClimate->afgAGBAvg;
   pfgAGB = wildfireClimate->pfgAGBAvg;
 
   // calculates wildfire probability
-  if (afgAGB > 167) {
-	  afgAGB = 167;
+  if (afgAGB > 190) {
+	  afgAGB = 190;
   }
 
-  y = -3084 - (3.18 * afgAGB) + (0.02281 * afgAGB * afgAGB)
-	+ (0.05529 * pfgAGB) - (0.0002741 * pfgAGB * pfgAGB)
-	+ (21.57 * wildfireClimate->meanAnnTempAvg) - (0.0378 * wildfireClimate->meanAnnTempAvg * wildfireClimate->meanAnnTempAvg)
-	+ (0.01101 * wildfireClimate->annPrecipAvg) - (0.00001037 * wildfireClimate->annPrecipAvg * wildfireClimate->annPrecipAvg)
-	- (1.352 * wildfireClimate->propSummerPrecipAvg) - (13.59 * wildfireClimate->propSummerPrecipAvg * wildfireClimate->propSummerPrecipAvg)
-	- (0.0000742 * afgAGB * wildfireClimate->annPrecipAvg) + (0.01141 * afgAGB * wildfireClimate->meanAnnTempAvg)
-	- (0.0000002835 * afgAGB * afgAGB * (wildfireClimate->meanAnnTempAvg * wildfireClimate->meanAnnTempAvg)) - (0.0007734 * afgAGB * pfgAGB);
+  // log10 transform variables for wildfire probability equation below
+  double logafgAGB = log10(afgAGB + 1);
+  double logannPrecipAvg = log10(wildfireClimate->annPrecipAvg + 1);
+  double logpropSummerPrecipAvg = log10(wildfireClimate->propSummerPrecipAvg + 0.001);
+
+  y = -92.86 + (14.01 * logafgAGB) - (0.8117 * logafgAGB * logafgAGB)
+	+ sqrt(0.5054 * afgAGB) - (0.03730 * pfgAGB) + (0.02672 * wildfireClimate->meanAnnTempAvg) + (49.25 * logannPrecipAvg)
+	- (8.236 * logannPrecipAvg * logannPrecipAvg) - (7.505 * logpropSummerPrecipAvg) - (3.118 * logpropSummerPrecipAvg * logpropSummerPrecipAvg)
+	- (4.047 * logafgAGB) * logannPrecipAvg;
 
   //printf("MAT = %f\n",  wildfireClimate->meanAnnTempAvg);
   //printf("AP = %f\n",  wildfireClimate->annPrecipAvg);
