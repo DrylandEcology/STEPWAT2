@@ -1434,18 +1434,21 @@ double _getWildfireProbability(void) {
   }
 
   // log10 transform variables for wildfire probability equation below
-  double logafgAGB = log10(afgAGB + 1);
-  double logannPrecipAvg = log10(wildfireClimate->annPrecipAvg + 1);
-  double logpropSummerPrecipAvg = log10(wildfireClimate->propSummerPrecipAvg + 0.001);
+  double logafgAGB = log10(afgAGB + 1.);
+  double logPrecipAvg = log10(wildfireClimate->annPrecipAvg + 1.);
+  double logpropSummerPrecip = log10(wildfireClimate->propSummerPrecipAvg + 0.001);
 
   y = -92.86 + (14.01 * logafgAGB) - (0.8117 * logafgAGB * logafgAGB)
-	+ sqrt(0.5054 * afgAGB) - (0.03730 * pfgAGB) + (0.02672 * wildfireClimate->meanAnnTempAvg) + (49.25 * logannPrecipAvg)
-	- (8.236 * logannPrecipAvg * logannPrecipAvg) - (7.505 * logpropSummerPrecipAvg) - (3.118 * logpropSummerPrecipAvg * logpropSummerPrecipAvg)
-	- (4.047 * logafgAGB) * logannPrecipAvg;
+	+ sqrt(0.5054 * afgAGB) - (0.0373 * pfgAGB) + (0.02672 * wildfireClimate->meanAnnTempAvg) + (49.25 * logPrecipAvg)
+	- (8.236 * logPrecipAvg * logPrecipAvg) - (7.505 * logpropSummerPrecip) - (3.118 * logpropSummerPrecip * logpropSummerPrecip)
+	- (4.047 * logafgAGB) * logPrecipAvg;
 
+  //printf("logafgAGB = %f\n",  logafgAGB);
   //printf("MAT = %f\n",  wildfireClimate->meanAnnTempAvg);
   //printf("AP = %f\n",  wildfireClimate->annPrecipAvg);
+  //printf("logAP = %f\n",  logPrecipAvg);
   //printf("prcpPropSum = %f\n",  wildfireClimate->propSummerPrecipAvg);
+  //printf("logprcpPropSum = %f\n",  logpropSummerPrecip);
   //printf("y = %f\n",  y);
 
   double p = 1 / (1 + exp(-1 * y));
