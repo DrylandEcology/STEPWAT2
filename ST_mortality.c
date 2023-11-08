@@ -1397,6 +1397,9 @@ double _getWildfireProbability(void) {
 
   double afgAGB = 0.0; // annual forb and grass biomass
   double pfgAGB = 0.0; // perennial forb and grass biomass
+  double logafgAGB = 0.0; // log annual forb and grass biomass
+  double logPrecipAvg = 0.0; // log annual precipitation
+  double logpropSummerPrecip = 0.0; //log proportion summer precipitation
   double y = 0.0; // as defined in the documentation "Description of the fire probability model", author: Martin Holdrege
 
   // update wildfireClimate with new proportion precipitation over summer months, annual temperature in Kelvin, and annual precipitation in mm
@@ -1434,9 +1437,9 @@ double _getWildfireProbability(void) {
   }
 
   // log10 transform variables for wildfire probability equation below
-  double logafgAGB = log10(afgAGB + 1.);
-  double logPrecipAvg = log10(wildfireClimate->annPrecipAvg + 1.);
-  double logpropSummerPrecip = log10(wildfireClimate->propSummerPrecipAvg + 0.001);
+  logafgAGB = log10(afgAGB + 1.);
+  logPrecipAvg = log10(wildfireClimate->annPrecipAvg + 1.);
+  logpropSummerPrecip = log10(wildfireClimate->propSummerPrecipAvg + 0.001);
 
   y = -92.86 + (14.01 * logafgAGB) - (0.8117 * logafgAGB * logafgAGB)
 	+ sqrt(0.5054 * afgAGB) - (0.0373 * pfgAGB) + (0.02672 * wildfireClimate->meanAnnTempAvg) + (49.25 * logPrecipAvg)
