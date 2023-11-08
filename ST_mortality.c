@@ -1442,7 +1442,7 @@ double _getWildfireProbability(void) {
   logpropSummerPrecip = log10(wildfireClimate->propSummerPrecipAvg + 0.001);
 
   y = -92.86 + (14.01 * logafgAGB) - (0.8117 * logafgAGB * logafgAGB)
-	+ sqrt(0.5054 * afgAGB) - (0.0373 * pfgAGB) + (0.02672 * wildfireClimate->meanAnnTempAvg) + (49.25 * logPrecipAvg)
+	+ 0.5054 * sqrt(pfgAGB) - (0.0373 * pfgAGB) + (0.02672 * wildfireClimate->meanAnnTempAvg) + (49.25 * logPrecipAvg)
 	- (8.236 * logPrecipAvg * logPrecipAvg) - (7.505 * logpropSummerPrecip) - (3.118 * logpropSummerPrecip * logpropSummerPrecip)
 	- (4.047 * logafgAGB) * logPrecipAvg;
 
