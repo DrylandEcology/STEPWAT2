@@ -303,3 +303,25 @@ static void _make_disturbance( void) {
    }
 
 }
+
+/**
+ * \brief Used to calculate the proportion of yearly precipitation over
+ *        the course of specified months.
+ *
+ * This function is needed for the implementation of wildfire, which is based on
+ * the fraction of precipitation occurring in summer (June-August)
+ *
+ * \param start the start month 0 = January, 11 = December
+ * \param end the end month 0 = January, 11 = December
+ * \return the fraction of precipitation over given months
+ *
+ * \author Michael Novotny
+ * \date August 26 2022
+ */
+RealF precip_fraction(int start, int end) {
+	float precip_over_months = 0;
+	for (int i = start; i < end + 1; i++) {
+		precip_over_months += SXW->ppt_monthly[i];
+	}
+	return (precip_over_months / SXW->ppt);
+}
