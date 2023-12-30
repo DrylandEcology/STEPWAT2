@@ -5,11 +5,11 @@
 1	# use soils csv file? 1 means yes, 0 means no.
 1	# use seed dispersal? 1 means yes, 0 means no.
 1	# use spinup? 1 means yes, 0 means no.
-300     # Number of years to perform spinup. 
-1       # Write separate output files for each cell.
-1	# output all seed dispersal events? 1 means yes, 0 means no.
-0   # output all dispersed seed data? 1 means yes and seeds will continuously recieve seeds
-    ## 0 means cell will not receive more seeds after its first
+300 # Number of years to perform spinup. 
+1   # Write separate output files for each cell.
+1	# Write seed dispersal output? 1 means yes, 0 means no.
+0   # Write complete seed dispersal output (i.e. all cells that sent seeds to all other cells)? 1 means yes.
+    # 0 means no - output will only contain the first cell that sent seeds to all other cells.
 
 
 
