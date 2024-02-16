@@ -225,7 +225,7 @@ void SXW_Init( Bool init_SW, char *f_roots ) {
  * \ingroup SXW
  */
 static void SXW_Reinit(char* SOILWAT_file) {
-	PathInfo.InFiles[eFirst] = strdup(SOILWAT_file);
+	PathInfo.InFiles[eFirst] = Str_Dup(SOILWAT_file, &LogInfo);
  	SW_CTL_setup_model(&SoilWatAll, SoilWatOutputPtrs, &PathInfo, &LogInfo);
 
  	// read user inputs
