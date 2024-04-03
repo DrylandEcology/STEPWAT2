@@ -969,6 +969,7 @@ void free_grid_memory(void)
             Mem_Free(gridCells[i][j].mySoils.trco_grass);
             Mem_Free(gridCells[i][j].mySoils.trco_shrub);
             Mem_Free(gridCells[i][j].mySoils.trco_tree);
+            Mem_Free(gridCells[i][j]._Gwf);
 		}
 	}
 
@@ -1864,16 +1865,17 @@ void _Output_AllCellAvgMort(const char* fileName){
             }
 
             /* print one line of kill frequencies per age */
-            for(age=0; age < Globals->Max_Age; age++) {
                 if (MortFlags.group) {
                     ForEachGroup(rg){
-                        Gmort[rg][age] = get_running_mean(nobs, Gmort[rg][age], gridCells[row][col]._Gmort[rg].s[age].ave);
+                    	for(age = 0; age < RGroup[rg]->max_age; age++)
+                    		Gmort[rg][age] = get_running_mean(nobs, Gmort[rg][age], gridCells[row][col]._Gmort[rg].s[age].ave);
                     }
                 }
                 if (MortFlags.species) {
                     ForEachSpecies(sp) {
-                        Smort[sp][age] = get_running_mean(nobs, Smort[sp][age], gridCells[row][col]._Smort[sp].s[age].ave);
-                    }
+                    	for(age = 0; age < Species[sp]->max_age; age++)
+                    		Smort[sp][age] = get_running_mean(nobs, Smort[sp][age], gridCells[row][col]._Smort[sp].s[age].ave);
+
                 }
             }
         }
