@@ -1060,7 +1060,6 @@ void rgroup_AddSpecies(GrpIndex rg, SppIndex sp)
 	Int i;
 	Bool f = FALSE;
 
-	if(RGroup[rg]->est_count > 0){
 	ForEachEstSpp2( rg, i)
 	{
 		if (RGroup[rg]->est_spp[i] == sp)
@@ -1071,7 +1070,6 @@ void rgroup_AddSpecies(GrpIndex rg, SppIndex sp)
 	}
 	if (!f)
 		RGroup[rg]->est_spp[RGroup[rg]->est_count++] = sp;
-	}
 }
 
 /**
