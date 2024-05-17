@@ -44,7 +44,7 @@ CellType** spinupCells;
  * \brief TRUE if spinup should be run.
  * \ingroup SPINUP
  */
-Bool shouldSpinup;
+int shouldSpinup;
 
 /**
  * \brief TRUE if the program is currently in spinup.

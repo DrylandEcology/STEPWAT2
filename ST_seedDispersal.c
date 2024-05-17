@@ -71,7 +71,7 @@ Bool isRNGSeeded = FALSE;
 /**
  * \brief Output full Seed Dispersal output
  */
-Bool outputSDData;
+int outputSDData;
 
 /**
  * \brief Disperse seeds between cells.
