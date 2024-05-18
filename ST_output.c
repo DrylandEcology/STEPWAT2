@@ -104,7 +104,8 @@ void output_Bmass_Yearly( Int year ) {
         }
       }
     }
-    sprintf(filename, "%s%0*d.csv", Parm_name(F_BMassPre),
+    snprintf(filename, sizeof(Parm_name(F_BMassPre) + Globals->currIter) + Globals->bmass.suffixwidth,
+                                 "%s%0*d.csv", Parm_name(F_BMassPre),
                                  Globals->bmass.suffixwidth,
                                  Globals->currIter);
     Globals->bmass.fp_year = OpenFile(filename, "a", &LogInfo);
@@ -174,7 +175,8 @@ void output_Bmass_Yearly( Int year ) {
         sprintf(fields[fc++],"%d", Species[sp]->est_count);
     }
   }
-  sprintf(filename, "%s%0*d.csv", Parm_name(F_BMassPre),
+  snprintf(filename, sizeof(Parm_name(F_BMassPre) + Globals->currIter) + Globals->bmass.suffixwidth, 
+                                 "%s%0*d.csv", Parm_name(F_BMassPre),
                                  Globals->bmass.suffixwidth,
                                  Globals->currIter);
   Globals->bmass.fp_year = OpenFile(filename, "a", &LogInfo);
@@ -209,7 +211,9 @@ void output_Mort_Yearly( void ) {
 	IntS age, rg, sp;
 	char filename[FILENAME_MAX];
 
-	sprintf(filename, "%s%0*d.csv", Parm_name(F_MortPre), Globals->mort.suffixwidth, Globals->currIter);
+	snprintf(filename, sizeof(Parm_name(F_MortPre) + Globals->currIter) + Globals->mort.suffixwidth, 
+                        "%s%0*d.csv", Parm_name(F_MortPre), 
+                        Globals->mort.suffixwidth, Globals->currIter);
 	Globals->mort.fp_year = OpenFile(filename, "a", &LogInfo);
 	FILE *f = Globals->mort.fp_year;
 

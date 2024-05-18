@@ -554,8 +554,9 @@ static void _init_SXW_inputs(Bool init_SW, char *f_roots)
 	if (init_SW)
 	{
 		char aString[2048];
+
 		sprintf(aString, "%s/%s", grid_directories[GRID_DIRECTORY_STEPWAT_INPUTS], SoilWatAll.Weather.name_prefix);
-		sprintf(SoilWatAll.Weather.name_prefix, "%s", aString); //updates the directory correctly for the weather files so soilwat can find them
+		snprintf(SoilWatAll.Weather.name_prefix, sizeof(aString) + 1, "%s", aString); //updates the directory correctly for the weather files so soilwat can find them
 	}
 }
 
