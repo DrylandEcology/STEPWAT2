@@ -261,7 +261,7 @@ void runGrid(void)
 	// SOILWAT resets SoilWatAll.Weather.name_prefix every iteration. This is not the behavior we want
 	// so the name is stored here.
 	char SW_prefix_permanent[MAX_FILENAMESIZE - 5]; // see `SW_WEATHER`: subtract 4-digit 'year' file type extension
-	snprintf(SW_prefix_permanent, sizeof(SW_prefix_permanent) + 1, "%s/%s", 
+	snprintf(SW_prefix_permanent, sizeof(grid_directories[GRID_DIRECTORY_STEPWAT_INPUTS]) + sizeof(SoilWatAll.Weather.name_prefix), "%s/%s",
 			grid_directories[GRID_DIRECTORY_STEPWAT_INPUTS],
 			SoilWatAll.Weather.name_prefix);
 
@@ -556,7 +556,7 @@ static void _init_SXW_inputs(Bool init_SW, char *f_roots)
 		char aString[2048];
 
 		sprintf(aString, "%s/%s", grid_directories[GRID_DIRECTORY_STEPWAT_INPUTS], SoilWatAll.Weather.name_prefix);
-		snprintf(SoilWatAll.Weather.name_prefix, sizeof(aString) + 1, "%s", aString); //updates the directory correctly for the weather files so soilwat can find them
+		snprintf(SoilWatAll.Weather.name_prefix, sizeof(aString), "%s", aString); //updates the directory correctly for the weather files so soilwat can find them
 	}
 }
 
