@@ -30,6 +30,7 @@
 #include "sw_src/include/SW_VegProd.h"
 #include "sw_src/include/SW_Control.h"
 #include "sw_src/include/SW_Defines.h"
+#include "sw_src/include/SW_Domain.h"
 
 #include "sxw_funcs.h"
 #include "sxw.h"
@@ -125,14 +126,14 @@ PlotType       *Plot;
 ModelType      *Globals;
 /** \brief Global struct holding biomass output flags. */
 GlobalType     SuperGlobals;
+/** \brief Global struct holding variables describing the domain */
+SW_DOMAIN      SoilWatDomain;
 /** \brief Global struct holding SOILWAT2 variables*/
 SW_ALL         SoilWatAll;
 /** \brief Global struct holding pointers to output subroutines */
 SW_OUTPUT_POINTERS SoilWatOutputPtrs[SW_OUTNKEYS];
 /** \brief Global struct holding log information (used by SOILWAT2) */
 LOG_INFO       LogInfo;
-/** \brief Global struct holding path information of SOILWAT2 (used by SOILWAT2) */
-PATH_INFO      PathInfo;
 /** \brief Local booleans to echo inputs/any output (used by SOILWAT2) */
 Bool           EchoInits;
 
@@ -170,6 +171,9 @@ int main(int argc, char **argv) {
 	atexit(check_log);
 	/* provides a way to inform user that something
 	 * was logged.  see generic.h */
+    
+    SW_DOM_init_ptrs(&SoilWatDomain);
+    SW_CTL_init_ptrs(&SoilWatAll);
 
   SoilWatAll.GenOutput.prepare_IterationSummary = FALSE; // dont want to get soilwat output unless -o flag
   SoilWatAll.GenOutput.storeAllIterations = FALSE; // dont want to store all soilwat output iterations unless -i flag
@@ -194,17 +198,19 @@ int main(int argc, char **argv) {
 	parm_Initialize();
         
 	SXW_Init(TRUE, NULL); // allocate SOILWAT2-memory
-	SW_OUT_set_ncol(SoilWatAll.Site.n_layers, SoilWatAll.Site.n_evap_lyrs,
- 					SoilWatAll.VegEstab.count, SoilWatAll.GenOutput.ncol_OUT); // set number of output columns
+	SW_OUT_set_ncol(SoilWatDomain.nMaxSoilLayers, SoilWatDomain.nMaxEvapLayers,
+                    SoilWatAll.VegEstab.count, SoilWatAll.GenOutput.ncol_OUT,
+                    SoilWatAll.GenOutput.nvar_OUT, SoilWatAll.GenOutput.nsl_OUT,
+                    SoilWatAll.GenOutput.npft_OUT); // set number of output columns
  	SW_OUT_set_colnames(SoilWatAll.Site.n_layers, SoilWatAll.VegEstab.parms,
  						SoilWatAll.GenOutput.ncol_OUT,
  						SoilWatAll.GenOutput.colnames_OUT, &LogInfo); // set column names for output files
  	if (SoilWatAll.GenOutput.prepare_IterationSummary) {
  		SW_OUT_create_summary_files(&SoilWatAll.FileStatus, SoilWatAll.Output,
- 									&SoilWatAll.GenOutput, PathInfo.InFiles,
+ 									&SoilWatAll.GenOutput, SoilWatDomain.PathInfo.InFiles,
  									SoilWatAll.Site.n_layers, &LogInfo);
  		// allocate `p_OUT` and `p_OUTsd` arrays to aggregate SOILWAT2 output across iterations
- 		setGlobalSTEPWAT2_OutputVariables(SoilWatAll.Output, &SoilWatAll.GenOutput, &LogInfo);
+ 		SW_OUT_construct_outarray(&SoilWatAll.GenOutput, SoilWatAll.Output, &LogInfo);
  	}
         
 	/* Connect to ST db and insert static data */
@@ -220,8 +226,9 @@ int main(int argc, char **argv) {
                 
 		if (SoilWatAll.GenOutput.storeAllIterations) {
  			SW_OUT_create_iteration_files(&SoilWatAll.FileStatus,
- 				SoilWatAll.Output, iter, &SoilWatAll.GenOutput, PathInfo.InFiles,
- 				SoilWatAll.Site.n_layers, &LogInfo);
+ 				SoilWatAll.Output, iter, &SoilWatAll.GenOutput,
+                SoilWatDomain.PathInfo.InFiles, SoilWatAll.Site.n_layers,
+                &LogInfo);
 		}
 
 		if (SoilWatAll.GenOutput.prepare_IterationSummary) {
@@ -334,7 +341,8 @@ int main(int argc, char **argv) {
   }
 
   SW_OUT_close_files(&SoilWatAll.FileStatus, &SoilWatAll.GenOutput, &LogInfo);
-  SW_CTL_clear_model(TRUE, &SoilWatAll, &PathInfo);; // de-allocate all memory
+  SW_DOM_deconstruct(&SoilWatDomain);
+  SW_CTL_clear_model(TRUE, &SoilWatAll); // de-allocate all memory
   free_all_sxw_memory();
   freeMortalityMemory();
 
@@ -498,44 +506,44 @@ void deallocate_Globals(Bool isGriddedMode){
 	SppIndex sp;
 
 	if(!isGriddedMode){
-		Mem_Free(Env);
-		Mem_Free(Succulent);
-		Mem_Free(Globals);
-		Mem_Free(Plot);
-		Mem_Free(_SomeKillage);
+		free(Env);
+		free(Succulent);
+		free(Globals);
+		free(Plot);
+		free(_SomeKillage);
 	}
 	
 	/* Free Species */
 	ForEachSpecies(sp){
 		/* Start by freeing any pointers in the Species struct */
-		Mem_Free(Species[sp]->kills);
-		Mem_Free(Species[sp]->seedprod);
-		Mem_Free(Species[sp]->name);
+		free(Species[sp]->kills);
+		free(Species[sp]->seedprod);
+		free(Species[sp]->name);
 		IndivType *indv = Species[sp]->IndvHead, *next;
 		/* Next free the linked list of individuals */
 		while(indv){
 			next = indv->Next;
-			Mem_Free(indv);
+			free(indv);
 			indv = next;
 		}
-		Mem_Free(indv);
+		free(indv);
 		/* Finally free the actual species */
-		Mem_Free(Species[sp]);
+		free(Species[sp]);
 	}
 	/* Then free the entire array */
-	Mem_Free(Species); 
+	free(Species); 
 
 	/* Free RGroup */
 	ForEachGroup(rg){
 		/* Free all pointers in the RGroup struct */
-		Mem_Free(RGroup[rg]->est_spp);
-		Mem_Free(RGroup[rg]->kills);
-		Mem_Free(RGroup[rg]->name);
-		Mem_Free(RGroup[rg]->species);
-		Mem_Free(RGroup[rg]);
+		free(RGroup[rg]->est_spp);
+		free(RGroup[rg]->kills);
+		free(RGroup[rg]->name);
+		free(RGroup[rg]->species);
+		free(RGroup[rg]);
 	}
 	/* Then free the entire array */
-	Mem_Free(RGroup);
+	free(RGroup);
 }
 
 /** \brief Translates the input flags to in program flags.

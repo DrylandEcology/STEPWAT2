@@ -38,6 +38,7 @@
 /*                INCLUDES / DEFINES                   */
 /* --------------------------------------------------- */
 
+#include <stdlib.h>
 
 #include "sw_src/include/generic.h"
 #include "sw_src/include/filefuncs.h"
@@ -363,5 +364,5 @@ static void _update_productivity(RealF sizes[]) {
         }
     }
 
-    Mem_Free(bmassg);
+    free(bmassg);
 }

@@ -11,6 +11,8 @@
  * \ingroup SPINUP_PRIVATE
  */
 
+#include <stdlib.h>
+
 // ST_spinup.h contains declarations for runSpinup and
 // loadSpinupConditions
 #include "ST_spinup.h"
@@ -150,7 +152,7 @@ void runSpinup(void){
     ChDir(grid_directories[GRID_DIRECTORY_STEPWAT_INPUTS]);
     SXW_Reset(gridCells[0][0].mySXW->f_watin);
     //TODO: This is a shortcut. swc history is not used and shouldn't be until this is fixed.
-    Mem_Free(SoilWatAll.SoilWat.hist.file_prefix);
+    free(SoilWatAll.SoilWat.hist.file_prefix);
     SoilWatAll.SoilWat.hist.file_prefix = NULL;
     ChDir("..");
 

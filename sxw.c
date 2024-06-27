@@ -68,7 +68,8 @@
 #include "sw_src/include/SW_Markov.h"
 #include "sw_src/include/SW_Output.h"
 #include "sw_src/include/rands.h"
-#include "sw_src/include/SW_Times.h"
+#include "sw_src/include/Times.h"
+#include "sw_src/include/SW_Domain.h"
 
 
 /*************** Global Variable Declarations ***************/
@@ -163,7 +164,7 @@ void SXW_Init( Bool init_SW, char *f_roots ) {
 	  //Copy the directory for the sxwroots files
 	  DirName(*_sxwfiles[0], roots);
 	  strcat(roots, f_roots);
-	  Mem_Free(*_sxwfiles[0]);
+	  free(*_sxwfiles[0]);
 	  _sxwfiles[0] = &SXW->f_roots;
 	  *_sxwfiles[0] = Str_Dup(roots, &LogInfo);
   }
@@ -225,21 +226,47 @@ void SXW_Init( Bool init_SW, char *f_roots ) {
  * \ingroup SXW
  */
 static void SXW_Reinit(char* SOILWAT_file) {
-	PathInfo.InFiles[eFirst] = Str_Dup(SOILWAT_file, &LogInfo);
- 	SW_CTL_setup_model(&SoilWatAll, SoilWatOutputPtrs, &PathInfo, &LogInfo);
+	SoilWatDomain.PathInfo.InFiles[eFirst] = Str_Dup(SOILWAT_file, &LogInfo);
+
+    SW_CTL_setup_domain(0, &SoilWatDomain, &LogInfo);
+ 	SW_CTL_setup_model(&SoilWatAll, SoilWatOutputPtrs, &LogInfo);
+
+    SW_MDL_get_ModelRun(&SoilWatAll.Model, &SoilWatDomain, NULL, &LogInfo);
 
  	// read user inputs
  	SoilWatAll.Model.runModelIterations = SuperGlobals.runModelIterations;
  	SoilWatAll.Model.runModelYears = SuperGlobals.runModelYears;
- 	SW_CTL_read_inputs_from_disk(&SoilWatAll, &PathInfo, &LogInfo);
+
+ 	SW_CTL_read_inputs_from_disk(&SoilWatAll, &SoilWatDomain.PathInfo, &LogInfo);
 
  	// initialize simulation run (based on user inputs)
  	SW_CTL_init_run(&SoilWatAll, &LogInfo);
+
+    SW_DOM_soilProfile(
+        &SoilWatDomain.hasConsistentSoilLayerDepths,
+        &SoilWatDomain.nMaxSoilLayers,
+        &SoilWatDomain.nMaxEvapLayers,
+        SoilWatDomain.depthsAllSoilLayers,
+        SoilWatAll.Site.n_layers,
+        SoilWatAll.Site.n_evap_lyrs,
+        SoilWatAll.Site.depths,
+        &LogInfo
+    );
+
+    SW_OUT_setup_output(
+        SoilWatDomain.nMaxSoilLayers,
+        SoilWatDomain.nMaxEvapLayers,
+        &SoilWatAll.VegEstab,
+        &SoilWatAll.GenOutput,
+        &LogInfo
+    );
 
  	// initialize output: transfer between STEPPE and SOILWAT2
  	SW_OUT_set_SXWrequests(SoilWatAll.GenOutput.timeSteps_SXW,
  						   &SoilWatAll.GenOutput.used_OUTNPERIODS,
  						   SoilWatAll.Output, &LogInfo);
+
+    SW_CTL_alloc_outptrs(&SoilWatAll, &LogInfo);
 }
 
 
@@ -257,7 +284,8 @@ static void SXW_Reinit(char* SOILWAT_file) {
  * \ingroup SXW
  */
 void SXW_Reset(char* SOILWAT_file) {
-	SW_CTL_clear_model(FALSE, &SoilWatAll, &PathInfo); // don't reset output arrays
+    SW_DOM_deconstruct(&SoilWatDomain);
+	SW_CTL_clear_model(FALSE, &SoilWatAll); // don't reset output arrays
 	SXW_Reinit(SOILWAT_file);
 }
 
@@ -326,7 +354,7 @@ void SXW_Run_SOILWAT(void) {
     /* Set annual precipitation and annual temperature */
     _sxw_set_environs();
 
-    Mem_Free(sizes);
+    free(sizes);
 }
 
 void SXW_SW_Setup_Echo(void) {
@@ -509,7 +537,7 @@ static void  _read_files( void ) {
   fin = OpenFile(MyFileName,"r", &LogInfo);
 
   for(i=0; i < nfiles; i++) {
-    if (!GetALine(fin, inbuf)) break;
+    if (!GetALine(fin, inbuf, MAX_FILENAMESIZE)) break;
     *_sxwfiles[i] = Str_Dup(Str_TrimLeftQ(inbuf), &LogInfo);
   }
 
@@ -537,7 +565,7 @@ static void  _read_roots_max(void) {
 	MyFileName = SXW->f_roots;
 	fp = OpenFile(MyFileName, "r", &LogInfo);
 
-	while (GetALine(fp, inbuf)) {
+	while (GetALine(fp, inbuf, MAX_FILENAMESIZE)) {
 		p = strtok(inbuf, " \t"); /* g'teed to work via GetALine() */
 
 		if ((g = RGroup_Name2Index(p)) < 0) {
@@ -565,7 +593,7 @@ static void  _read_roots_max(void) {
 
 	CloseFile(&fp, &LogInfo);
         
-        Mem_Free(name);
+        free(name);
 }
 
 static void _read_phen(void) {
@@ -582,7 +610,7 @@ static void _read_phen(void) {
   fp = OpenFile(MyFileName,"r", &LogInfo);
 
 
-  while( GetALine(fp, inbuf) ) {
+  while( GetALine(fp, inbuf, MAX_FILENAMESIZE) ) {
     p = strtok(inbuf," \t"); /* g'teed to work via GetALine() */
 
     if ( (g=RGroup_Name2Index(p)) <0 ) {
@@ -638,7 +666,7 @@ static void _read_prod(void) {
 	fp = OpenFile(MyFileName, "r", &LogInfo);
 
     /* Read LITTER values for each group for each month */
-	while (GetALine(fp, inbuf)) {
+	while (GetALine(fp, inbuf, MAX_FILENAMESIZE)) {
 		pch = strstr(inbuf, "[end]");
 		if(pch != NULL) break;
 
@@ -669,11 +697,11 @@ static void _read_prod(void) {
 	}
 
     /* Read BIOMASS values for each group for each month */
-	GetALine(fp,inbuf); /* toss [end] keyword */
+	GetALine(fp,inbuf, MAX_FILENAMESIZE); /* toss [end] keyword */
 	month = Jan;
     count = 0;
 
-	while (GetALine(fp, inbuf)) {
+	while (GetALine(fp, inbuf, MAX_FILENAMESIZE)) {
 		pch = strstr(inbuf, "[end]");
 		if(pch != NULL)
 			break;
@@ -703,11 +731,11 @@ static void _read_prod(void) {
 	}
 
     /* Read PCTLIVE values for each group for each month */
-	GetALine(fp, inbuf); /* toss [end] keyword */
+	GetALine(fp, inbuf, MAX_FILENAMESIZE); /* toss [end] keyword */
 	month = Jan;
 	count=0;
 
-	while (GetALine(fp, inbuf)) {
+	while (GetALine(fp, inbuf, MAX_FILENAMESIZE)) {
 		pch = strstr(inbuf, "[end]");
 		if (pch != NULL)
 			break;
@@ -737,7 +765,7 @@ static void _read_prod(void) {
 				MyFileName);
 	}
 
-	GetALine(fp, inbuf); /* toss [end] keyword */
+	GetALine(fp, inbuf, MAX_FILENAMESIZE); /* toss [end] keyword */
 	CloseFile(&fp, &LogInfo);
 }
 
@@ -762,7 +790,7 @@ static void _read_watin(void) {
    f = OpenFile(MyFileName, "r", &LogInfo);
 
 
-   while( GetALine(f, inbuf) ) {
+   while( GetALine(f, inbuf, MAX_FILENAMESIZE) ) {
      if (++lineno == (eOutput + 2)) {
 	   DirName(SXW->f_watin, outString);
        strcpy(_swOutDefName, outString);
@@ -908,14 +936,14 @@ static void _read_debugfile(void) {
 	f = OpenFile(SXW->debugfile, "r", &LogInfo);
 
 	/* get name of output file */
-	if (!GetALine(f, inbuf)) {
+	if (!GetALine(f, inbuf, MAX_FILENAMESIZE)) {
 		CloseFile(&f, &LogInfo);
 		return;
 	}
 	strcpy(_debugout, inbuf);
 
 	/* get output years */
-	while (GetALine(f, inbuf)) {
+	while (GetALine(f, inbuf, MAX_FILENAMESIZE)) {
 		_debugyrs[cnt++] = atoi(strtok(inbuf, " \t")); /* g'teed via getaline() */
 		while (NULL != (date = strtok(NULL, " \t"))) {
 			_debugyrs[cnt++] = atoi(date);
@@ -1183,36 +1211,36 @@ void free_all_sxw_memory( void ) {
 	int k;
 
 	/* Free transp_window */
-	Mem_Free(transp_window->ratios);
-	Mem_Free(transp_window->transp);
-	Mem_Free(transp_window->SoS_array);
-	Mem_Free(transp_window);
+	free(transp_window->ratios);
+	free(transp_window->transp);
+	free(transp_window->SoS_array);
+	free(transp_window);
 
     /* Free SXWResources */
-	Mem_Free(SXWResources->_phen);
-	Mem_Free(SXWResources->_prod_bmass);
-	Mem_Free(SXWResources->_prod_pctlive);
-	Mem_Free(SXWResources->_resource_cur);
-	Mem_Free(SXWResources->_roots_active);
-	Mem_Free(SXWResources->_roots_active_rel);
-	Mem_Free(SXWResources->_roots_active_sum);
-	Mem_Free(SXWResources->_roots_max);
-	Mem_Free(SXWResources->_rootsXphen);
+	free(SXWResources->_phen);
+	free(SXWResources->_prod_bmass);
+	free(SXWResources->_prod_pctlive);
+	free(SXWResources->_resource_cur);
+	free(SXWResources->_roots_active);
+	free(SXWResources->_roots_active_rel);
+	free(SXWResources->_roots_active_sum);
+	free(SXWResources->_roots_max);
+	free(SXWResources->_rootsXphen);
     for(k = 0; k < SXW->NGrps; ++k){
-        Mem_Free(SXWResources->_prod_litter[k]);
+        free(SXWResources->_prod_litter[k]);
     }
-    Mem_Free(SXWResources->_prod_litter);
-	Mem_Free(SXWResources);
+    free(SXWResources->_prod_litter);
+	free(SXWResources);
 
 	/* Free SXW */
-	Mem_Free(SXW->f_roots);
-	Mem_Free(SXW->f_phen);
-	Mem_Free(SXW->f_prod);
-	Mem_Free(SXW->f_watin);
-	Mem_Free(SXW->transpTotal);
+	free(SXW->f_roots);
+	free(SXW->f_phen);
+	free(SXW->f_prod);
+	free(SXW->f_watin);
+	free(SXW->transpTotal);
 	ForEachVegType(k) {
-		Mem_Free(SXW->transpVeg[k]);
+		free(SXW->transpVeg[k]);
 	}
-	Mem_Free(SXW->swc);
-	Mem_Free(SXW);
+	free(SXW->swc);
+	free(SXW);
 }

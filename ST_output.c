@@ -13,6 +13,8 @@
 /* --------------------------------------------------- */
 
 #include <string.h>
+#include <stdlib.h>
+
 #include "ST_steppe.h"
 #include "ST_globals.h"
 #include "sw_src/include/filefuncs.h"
@@ -189,11 +191,11 @@ void output_Bmass_Yearly( Int year ) {
   CloseFile(&Globals->bmass.fp_year, &LogInfo);
   
   for (i = 0; i < MAX_OUTFIELDS; i++) {
-      Mem_Free(fields[i]);
+      free(fields[i]);
   }
   
-  Mem_Free(s);
-  Mem_Free(fields);
+  free(s);
+  free(fields);
 }
 
 

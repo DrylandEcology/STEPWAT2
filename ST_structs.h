@@ -25,6 +25,7 @@
 
 #include "sw_src/include/generic.h"
 #include "ST_mortality.h"
+#include <stdio.h>
 
 /**
  * \brief Holds information on perennial plant individuals. 

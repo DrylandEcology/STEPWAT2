@@ -1,8 +1,16 @@
 # List of input files for SOILWAT2
 # This is the first file read.
 
+#netCDF input - currently only for SOILWAT2
+Input-nc/files_nc.in
+Input-nc/desc_nc.in
+Input-nc/SW2_netCDF_output_variables.tsv
+
+#Domain
+Input/domain.in
+
 # Model
-Input/years.in	# years for model operation
+Input/modelrun.in	# years for model operation
 Output/logfile.log	# errors or important info (can also be stdout)
 
 #Site

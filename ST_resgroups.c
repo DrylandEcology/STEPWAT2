@@ -27,6 +27,8 @@
  * --------------------------------------------------- */
 #include <math.h>
 #include <string.h>
+#include <stdlib.h>
+
 #include "ST_steppe.h"
 #include "ST_globals.h"
 #include "sw_src/include/myMemory.h"
@@ -190,7 +192,7 @@ static RealF _add_annuals(const GrpIndex rg, const SppIndex sp, const RealF last
     }
     else
     {
-        num_est = min(viable_seeds * var, s->max_seed_estab);
+        num_est = MIN(viable_seeds * var, s->max_seed_estab);
         //printf("Species name=%s , num_est   =%u \n",s->name,  num_est);
     }
 
@@ -421,7 +423,7 @@ void rgroup_ResPartIndiv(void) {
         size_obase[rg] = (g->use_extra_res) ? size_base[rg] : 0.;
         //printf("size_obase = %f\n", size_obase[rg]);
 
-        Mem_Free(indivs);
+        free(indivs);
 
     } /* end ForEachGroup() */
 
@@ -489,12 +491,12 @@ void rgroup_ResPartIndiv(void) {
 
         //printf("g->res_extra after = %f\n,Group = %s \n",RGroup[rg]->name,  g->res_extra);
 
-        Mem_Free(indivs);
+        free(indivs);
 
     } /* end ForEachGroup() */
     
-    Mem_Free(size_obase);
-    Mem_Free(size_base);
+    free(size_obase);
+    free(size_base);
 }
 
 /**
@@ -880,7 +882,7 @@ void RGroup_Update_GrpResProp(GrpIndex rg)
 	for (n = 0; n < numindvs; n++)
 		indivs[n]->grp_res_prop = indivs[n]->relsize / sumsize;
 
-	Mem_Free(indivs);
+	free(indivs);
 
 	/* double check some assumptions */
 	if (RGroup[rg]->est_count < 0)
@@ -1121,7 +1123,7 @@ void copy_rgroup(const GroupType* src, GroupType* dest){
 
     /* -------------- Copy any arrays -------------- */
     if(MortFlags.summary){
-        Mem_Free(dest->kills);
+        free(dest->kills);
         dest->kills = (IntUS*) Mem_Calloc(GrpMaxAge(src->grp_num), sizeof(IntUS), 
                                "copy_rgroup: kills", &LogInfo);
         for(i = 0; i < GrpMaxAge(src->grp_num); ++i){
@@ -1129,7 +1131,7 @@ void copy_rgroup(const GroupType* src, GroupType* dest){
         }
     }
 
-    Mem_Free(dest->est_spp);
+    free(dest->est_spp);
     dest->est_spp = (SppIndex*) Mem_Calloc(src->est_count, sizeof(SppIndex), 
                                 "copy_rgroup: est_spp", &LogInfo);
     for(i = 0; i < src->est_count; ++i){

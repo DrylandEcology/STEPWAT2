@@ -39,6 +39,8 @@
 /* --------------------------------------------------- */
 
 #include <string.h>
+#include <stdlib.h>
+
 #include "ST_steppe.h"
 #include "sw_src/include/filefuncs.h"
 #include "sw_src/include/myMemory.h"
@@ -429,74 +431,74 @@ void stat_free_mem( void ) {
 
   	if(BmassFlags.grpb)
   		ForEachGroup(gp) {
-  			Mem_Free(_Grp[gp].s);
-  			if (BmassFlags.size) Mem_Free(_Gsize[gp].s);
-  			if (BmassFlags.pr) Mem_Free(_Gpr[gp].s);
-            if (BmassFlags.graz) Mem_Free(_Grazed[gp].s);
+  			free(_Grp[gp].s);
+  			if (BmassFlags.size) free(_Gsize[gp].s);
+  			if (BmassFlags.pr) free(_Gpr[gp].s);
+            if (BmassFlags.graz) free(_Grazed[gp].s);
   		}
 
     if (BmassFlags.sppb || BmassFlags.indv) {
         ForEachSpecies(sp) {
             if(BmassFlags.sppb)
-                Mem_Free(_Spp[sp].s);
+                free(_Spp[sp].s);
             if(BmassFlags.indv)
-                    Mem_Free(_Indv[sp].s);
+                    free(_Indv[sp].s);
         }
     }
 
     if (BmassFlags.wildfire || BmassFlags.prescribedfire){
-      Mem_Free(_Gwf->wildfire);
+      free(_Gwf->wildfire);
       ForEachGroup(gp) {
-        Mem_Free(_Gwf->prescribedFire[gp]);
+        free(_Gwf->prescribedFire[gp]);
   		}
-      Mem_Free(_Gwf->prescribedFire);
+      free(_Gwf->prescribedFire);
     }
 
   	if (BmassFlags.dist) {
-      Mem_Free(_Dist->s);
-      Mem_Free(_Dist);
+      free(_Dist->s);
+      free(_Dist);
     }
   	if (BmassFlags.ppt) {
-      Mem_Free(_Ppt->s);
-      Mem_Free(_Ppt);
+      free(_Ppt->s);
+      free(_Ppt);
     }
   	if (BmassFlags.tmp) {
-      Mem_Free(_Temp->s);
-      Mem_Free(_Temp);
+      free(_Temp->s);
+      free(_Temp);
     }
 
   	if(BmassFlags.grpb) {
-  		Mem_Free(_Grp);
-  		if (BmassFlags.size) Mem_Free(_Gsize);
-  		if (BmassFlags.size) Mem_Free(_Gpr);
-        if (BmassFlags.graz) Mem_Free(_Grazed);
+  		free(_Grp);
+  		if (BmassFlags.size) free(_Gsize);
+  		if (BmassFlags.size) free(_Gpr);
+        if (BmassFlags.graz) free(_Grazed);
   	}
   	if (MortFlags.group) {
   		ForEachGroup(gp) {
-  			Mem_Free(_Gmort[gp].s);
-  			Mem_Free(_Gestab[gp].s);
+  			free(_Gmort[gp].s);
+  			free(_Gestab[gp].s);
   		}
-  		Mem_Free(_Gmort);
-  		Mem_Free(_Gestab);
+  		free(_Gmort);
+  		free(_Gestab);
   	}
   	if(BmassFlags.sppb) {
-  		Mem_Free(_Spp);
+  		free(_Spp);
   	}
-    if (BmassFlags.indv) Mem_Free(_Indv);
+    if (BmassFlags.indv) free(_Indv);
   	if (MortFlags.species) {
   		ForEachSpecies(sp) {
-  			Mem_Free(_Smort[sp].s);
-  			Mem_Free(_Sestab[sp].s);
+  			free(_Smort[sp].s);
+  			free(_Sestab[sp].s);
   		}
-  		Mem_Free(_Smort);
-  		Mem_Free(_Sestab);
+  		free(_Smort);
+  		free(_Sestab);
   	}
 
 
 	if (UseSeedDispersal && UseGrid) {
 		ForEachSpecies(sp)
-			Mem_Free(_Sreceived[sp].s);
-		Mem_Free(_Sreceived);
+			free(_Sreceived[sp].s);
+		free(_Sreceived);
 	}
 
 
@@ -935,10 +937,10 @@ void make_header_with_std( char *buf) {
     strcat(buf, tbuf);
 
     for (i = 0; i < MAX_OUTFIELDS * 2; i++) {
-        Mem_Free(fields[i]);
+        free(fields[i]);
     }
     
-    Mem_Free(fields);
+    free(fields);
 }
 
 /**
@@ -1031,8 +1033,8 @@ void make_header( char *buf) {
     strcat(buf, tbuf);
 
     for (i = 0; i < MAX_OUTFIELDS * 2; i++) {
-        Mem_Free(fields[i]);
+        free(fields[i]);
     }
     
-    Mem_Free(fields);
+    free(fields);
 }

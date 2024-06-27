@@ -21,6 +21,7 @@
 /* --------------------------------------------------- */
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 
 #include "ST_mortality.h"
 #include "sw_src/include/filefuncs.h"
@@ -496,7 +497,7 @@ void initCheatgrassPrecip(void) {
  */
 void freeMortalityMemory(void) {
   if(cheatgrassPrecip){
-    Mem_Free(cheatgrassPrecip);
+    free(cheatgrassPrecip);
   }
 }
 
@@ -720,7 +721,7 @@ static void _pat( const SppIndex sp) {
 
     if (k >= 0) *_SomeKillage = TRUE;
     
-    Mem_Free(kills);
+    free(kills);
 }
 
 
@@ -838,7 +839,7 @@ static void _succulents( const SppIndex sp) {
 
   if (Species[sp]->est_count) *_SomeKillage = TRUE;
   
-  Mem_Free(kills);
+  free(kills);
 }
 
 
@@ -895,7 +896,7 @@ static void _slow_growth( const SppIndex sp) {
            && RandUni(&mortality_rng) <= pm)
          kills[++k] = ndv;
     } else
-      ndv->slow_yrs = max( ndv->slow_yrs -1, 0);
+      ndv->slow_yrs = MAX( ndv->slow_yrs -1, 0);
 
   }
 
@@ -904,7 +905,7 @@ static void _slow_growth( const SppIndex sp) {
 
   if (k >= 0) *_SomeKillage = TRUE;
   
-  Mem_Free(kills);
+  free(kills);
 }
 
 /**
@@ -962,7 +963,7 @@ static void _age_independent( const SppIndex sp) {
 
   if (k >= 0) *_SomeKillage = TRUE;
 
-  Mem_Free(kills);
+  free(kills);
 
 }
 
@@ -1029,7 +1030,7 @@ static void _no_resources( GrpIndex rg) {
    * exits before doing anything. */
   _stretched_clonal( rg, i, n-1, indv_list);
 
-  Mem_Free( indv_list);
+  free( indv_list);
 
 }
 
@@ -1078,7 +1079,7 @@ static void _stretched_clonal( GrpIndex rg, Int start, Int last,
   }
   if (np < 0)
   {
-    Mem_Free(clist);
+    free(clist);
     return;  /* Exit if no clonals remain alive in this rgroup */
   }
 
@@ -1093,7 +1094,7 @@ static void _stretched_clonal( GrpIndex rg, Int start, Int last,
       nk = (Int) floor(((RealF) (np+1) * 0.9)); /* EQN 9 from Coffin and Lauenroth (1990) */
 
       /* Kill until we reach quota or number of plants*/
-      nk = min( nk, (np+1));
+      nk = MIN( nk, (np+1));
       for( i = 0; i < nk; i++) {
         indiv_Kill_Complete(clist[i], 11);
       }
@@ -1135,7 +1136,7 @@ static void _stretched_clonal( GrpIndex rg, Int start, Int last,
     } /* end if pm*/
   } /* end if y >= 1*/
 
-  Mem_Free(clist);
+  free(clist);
 }
 
 /**
