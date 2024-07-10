@@ -129,9 +129,7 @@ GlobalType     SuperGlobals;
 /** \brief Global struct holding variables describing the domain */
 SW_DOMAIN      SoilWatDomain;
 /** \brief Global struct holding SOILWAT2 variables*/
-SW_ALL         SoilWatAll;
-/** \brief Global struct holding pointers to output subroutines */
-SW_OUTPUT_POINTERS SoilWatOutputPtrs[SW_OUTNKEYS];
+SW_RUN         SoilWatRun;
 /** \brief Global struct holding log information (used by SOILWAT2) */
 LOG_INFO       LogInfo;
 /** \brief Local booleans to echo inputs/any output (used by SOILWAT2) */
@@ -173,10 +171,10 @@ int main(int argc, char **argv) {
 	 * was logged.  see generic.h */
     
     SW_DOM_init_ptrs(&SoilWatDomain);
-    SW_CTL_init_ptrs(&SoilWatAll);
+    SW_CTL_init_ptrs(&SoilWatRun);
 
-  SoilWatAll.GenOutput.prepare_IterationSummary = FALSE; // dont want to get soilwat output unless -o flag
-  SoilWatAll.GenOutput.storeAllIterations = FALSE; // dont want to store all soilwat output iterations unless -i flag
+  SuperGlobals.prepare_IterationSummary = FALSE; // dont want to get soilwat output unless -o flag
+  SuperGlobals.storeAllIterations = FALSE; // dont want to store all soilwat output iterations unless -i flag
   STdebug_requested = FALSE;
 
 	init_args(argc, argv); // read input arguments and intialize proper flags
@@ -184,7 +182,7 @@ int main(int argc, char **argv) {
 	printf("STEPWAT  init_args() executed successfully \n");
 
 	if (UseGrid) {
-        writeSOILWAT2Output = SoilWatAll.GenOutput.prepare_IterationSummary;
+        writeSOILWAT2Output = SuperGlobals.prepare_IterationSummary;
 		runGrid();
 		return 0;
 	}
@@ -199,18 +197,18 @@ int main(int argc, char **argv) {
         
 	SXW_Init(TRUE, NULL); // allocate SOILWAT2-memory
 	SW_OUT_set_ncol(SoilWatDomain.nMaxSoilLayers, SoilWatDomain.nMaxEvapLayers,
-                    SoilWatAll.VegEstab.count, SoilWatAll.GenOutput.ncol_OUT,
-                    SoilWatAll.GenOutput.nvar_OUT, SoilWatAll.GenOutput.nsl_OUT,
-                    SoilWatAll.GenOutput.npft_OUT); // set number of output columns
- 	SW_OUT_set_colnames(SoilWatAll.Site.n_layers, SoilWatAll.VegEstab.parms,
- 						SoilWatAll.GenOutput.ncol_OUT,
- 						SoilWatAll.GenOutput.colnames_OUT, &LogInfo); // set column names for output files
- 	if (SoilWatAll.GenOutput.prepare_IterationSummary) {
- 		SW_OUT_create_summary_files(&SoilWatAll.FileStatus, SoilWatAll.Output,
- 									&SoilWatAll.GenOutput, SoilWatDomain.PathInfo.InFiles,
- 									SoilWatAll.Site.n_layers, &LogInfo);
- 		// allocate `p_OUT` and `p_OUTsd` arrays to aggregate SOILWAT2 output across iterations
- 		SW_OUT_construct_outarray(&SoilWatAll.GenOutput, SoilWatAll.Output, &LogInfo);
+                    SoilWatRun.VegEstab.count, SoilWatDomain.OutDom.ncol_OUT,
+                    SoilWatDomain.OutDom.nvar_OUT, SoilWatDomain.OutDom.nsl_OUT,
+                    SoilWatDomain.OutDom.npft_OUT); // set number of output columns
+ 	SW_OUT_set_colnames(SoilWatRun.Site.n_layers, SoilWatRun.VegEstab.parms,
+ 						SoilWatDomain.OutDom.ncol_OUT,
+ 						SoilWatDomain.OutDom.colnames_OUT, &LogInfo); // set column names for output files
+
+ 	if (SuperGlobals.prepare_IterationSummary) {
+ 		SW_OUT_create_summary_files(&SoilWatDomain.OutDom, &SoilWatRun.FileStatus,
+                                    SoilWatDomain.PathInfo.InFiles, SoilWatRun.Site.n_layers,
+                                    &LogInfo);
+        SW_OUT_construct_outarray(&SoilWatDomain.OutDom, &SoilWatRun.OutRun, &LogInfo);
  	}
         
 	/* Connect to ST db and insert static data */
@@ -222,17 +220,16 @@ int main(int argc, char **argv) {
 	for (iter = 1; iter <= SuperGlobals.runModelIterations; iter++) {
 		Plot_Initialize();
 
-		Globals->currIter = SoilWatAll.GenOutput.currIter = iter;
-                
-		if (SoilWatAll.GenOutput.storeAllIterations) {
- 			SW_OUT_create_iteration_files(&SoilWatAll.FileStatus,
- 				SoilWatAll.Output, iter, &SoilWatAll.GenOutput,
-                SoilWatDomain.PathInfo.InFiles, SoilWatAll.Site.n_layers,
-                &LogInfo);
+		Globals->currIter = SoilWatRun.OutRun.currIter = iter;
+
+		if (SuperGlobals.storeAllIterations) {
+ 			SW_OUT_create_iteration_files(&SoilWatDomain.OutDom, &SoilWatRun.FileStatus,
+                                          iter, SoilWatDomain.PathInfo.InFiles,
+                                          SoilWatRun.Site.n_layers, &LogInfo);
 		}
 
-		if (SoilWatAll.GenOutput.prepare_IterationSummary) {
- 			SoilWatAll.GenOutput.print_IterationSummary = 
+		if (SuperGlobals.prepare_IterationSummary) {
+ 			SoilWatDomain.OutDom.print_IterationSummary =
 				(Bool) (Globals->currIter == SuperGlobals.runModelIterations);
 		}
 
@@ -316,7 +313,7 @@ int main(int argc, char **argv) {
 		{
 			// don't reset in last iteration because we need to close files
 			// before clearing/de-allocated SOILWAT2-memory
-			SXW_Reset(SXW->f_watin);
+			SXW_Reset(SXW->f_watin, FALSE);
 		}
 	} /* end model run for this iteration*/
 
@@ -340,15 +337,15 @@ int main(int argc, char **argv) {
     SXW_PrintDebug(1);
   }
 
-  SW_OUT_close_files(&SoilWatAll.FileStatus, &SoilWatAll.GenOutput, &LogInfo);
+  SW_OUT_close_files(&SoilWatRun.FileStatus, &SoilWatDomain.OutDom, &LogInfo);
   SW_DOM_deconstruct(&SoilWatDomain);
-  SW_CTL_clear_model(TRUE, &SoilWatAll); // de-allocate all memory
+  SW_CTL_clear_model(TRUE, &SoilWatRun); // de-allocate all memory
   free_all_sxw_memory();
   freeMortalityMemory();
 
 	deallocate_Globals(FALSE);
 
-    // This isn't wrapped in an if statement on purpose. 
+    // This isn't wrapped in an if statement on purpose.
     // We should print "Done" either way.
     logProgress(0, 0, DONE);
 
@@ -483,7 +480,7 @@ void set_all_rngs(
 	/* Initialize RNGs with seed/state and sequence identifier that is
 		 reproducible and unique among RNGs, iterations, and year
 		 but not grid cells */
-	RandSeed(initstate, RNG_INITSEQ(8, iter, year, 0), &SoilWatAll.Markov.markov_rng);
+	RandSeed(initstate, RNG_INITSEQ(8, iter, year, 0), &SoilWatRun.Markov.markov_rng);
 }
 
 
@@ -688,12 +685,12 @@ static void init_args(int argc, char **argv) {
 
 		case 6:
       		printf("storing SOILWAT output aggregated across-iterations (-o flag)\n");
-      		SoilWatAll.GenOutput.prepare_IterationSummary = TRUE;
+      		SuperGlobals.prepare_IterationSummary = TRUE;
 			break; /* -o */
 
     	case 7: // -i
       		printf("storing SOILWAT output for each iteration (-i flag)\n");
-      		SoilWatAll.GenOutput.storeAllIterations = TRUE;
+      		SuperGlobals.storeAllIterations = TRUE;
       		break;
 
 		case 8: // -s

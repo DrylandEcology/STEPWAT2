@@ -125,7 +125,7 @@ void output_Bmass_Yearly( Int year ) {
   /* ------------- end setting up header -------------- */
 
   if (BmassFlags.yr) {
-    sprintf(fields[fc++], "%d", SoilWatAll.Model.year);
+    sprintf(fields[fc++], "%d", SoilWatRun.Model.year);
   }
 
   if (BmassFlags.dist) {

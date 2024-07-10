@@ -734,6 +734,9 @@ struct superglobals_st {
           nCells;		/* number of cells to use in Grid, only applicable if grid function is being used */
 
     IntL randseed;
+
+    Bool prepare_IterationSummary,
+         storeAllIterations;
 };
 
 #endif
