@@ -226,8 +226,6 @@ void SXW_Init( Bool init_SW, char *f_roots ) {
  * \ingroup SXW
  */
 static void SXW_Reinit(char* SOILWAT_file, Bool zeroOutArrays) {
-    RealD **temp_p = NULL, **temp_psd = NULL;
-
 	SoilWatDomain.PathInfo.InFiles[eFirst] = Str_Dup(SOILWAT_file, &LogInfo);
 
     SW_CTL_setup_domain(0, &SoilWatDomain, &LogInfo);
