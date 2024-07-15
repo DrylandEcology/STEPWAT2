@@ -463,7 +463,7 @@ void _delete (IndivType *ndv)
      LogError(&LogInfo, LOGERROR,
               "PGMR: Indiv Count out of sync in _delete()");
 
-  Mem_Free(ndv);
+  free(ndv);
 }
 
 /**

@@ -12,6 +12,7 @@
 /*                INCLUDES / DEFINES                   */
 /* --------------------------------------------------- */
 
+#include <stdlib.h>
 
 #include "sw_src/include/generic.h"
 #include "sw_src/include/rands.h"
@@ -111,7 +112,7 @@ void _sxw_update_resource(void) {
 		SXWResources->_resource_cur[g] = SXWResources->_resource_cur[g] * RGroup[g]->_bvt;
 	}
 
-    Mem_Free(sizes_live);
+    free(sizes_live);
 }
 
 void _sxw_update_root_tables( RealF sizes_live[] ) {

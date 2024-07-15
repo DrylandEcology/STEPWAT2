@@ -11,6 +11,8 @@
  * \ingroup SPINUP_PRIVATE
  */
 
+#include <stdlib.h>
+
 // ST_spinup.h contains declarations for runSpinup and
 // loadSpinupConditions
 #include "ST_spinup.h"
@@ -148,10 +150,10 @@ void runSpinup(void){
     } /* end model run for this year*/
 
     ChDir(grid_directories[GRID_DIRECTORY_STEPWAT_INPUTS]);
-    SXW_Reset(gridCells[0][0].mySXW->f_watin);
+    SXW_Reset(gridCells[0][0].mySXW->f_watin, TRUE);
     //TODO: This is a shortcut. swc history is not used and shouldn't be until this is fixed.
-    Mem_Free(SoilWatAll.SoilWat.hist.file_prefix);
-    SoilWatAll.SoilWat.hist.file_prefix = NULL;
+    free(SoilWatRun.SoilWat.hist.file_prefix);
+    SoilWatRun.SoilWat.hist.file_prefix = NULL;
     ChDir("..");
 
 	_endSpinup();
@@ -299,7 +301,7 @@ static void _run_spinup(void)
     UseSeedDispersal = FALSE;
 
     // This is a flag from SOILWAT2. It MUST be FALSE during spinup.
-    SoilWatAll.GenOutput.prepare_IterationSummary = FALSE;
+    SuperGlobals.prepare_IterationSummary = FALSE;
 
 	Bool killedany;             // killedany for mortality functions
 
