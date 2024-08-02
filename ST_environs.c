@@ -194,7 +194,7 @@ static void _set_temp_reduction( void) {
     tp[3] = Globals->tempparm[i][2];
     tp[0] = Env->temp + tp[1];
     Env->temp_reduction[i] = tp[2]*tp[0] + tp[3] * (tp[0]*tp[0]);
-    Env->temp_reduction[i] = max(0., Env->temp_reduction[i]);
+    Env->temp_reduction[i] = MAX(0., Env->temp_reduction[i]);
   }
 
   if (Env->temp < 9.5 ) {

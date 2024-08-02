@@ -16,6 +16,6 @@ TEST(ST_Mortality_test, Simulate_prescribed_fire_when_killfreq_startyr_is_0) {
     // If killfreq_startyr == 0, do not simulate fire.
     EXPECT_EQ(RGroup[rg]->prescribedfire, 0);
 
-    Mem_Free((void *)RGroup[rg]);
-    Mem_Free((void *)RGroup);
+    free((void *)RGroup[rg]);
+    free((void *)RGroup);
 }

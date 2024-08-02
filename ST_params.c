@@ -111,7 +111,7 @@ char *Parm_name( ST_FileIndex i) {
 void parm_SetFirstName( char *s) {
 /*======================================================*/
 
-  if (_files[F_First]) Mem_Free( _files[F_First]);
+  if (_files[F_First]) free( _files[F_First]);
   _files[F_First] = Str_Dup(s, &LogInfo);
 
 }
@@ -123,7 +123,7 @@ void parm_SetName( char *s, int which) {
 
 	if(which > (NFILES - 1) || which < 0)
 		return;
-	if (_files[which]) Mem_Free( _files[which]);
+	if (_files[which]) free( _files[which]);
   	_files[which] = Str_Dup(s, &LogInfo);
 
 }
@@ -143,7 +143,7 @@ void files_init( void ) {
   f = OpenFile(MyFileName, "r", &LogInfo);
 
   for(i=F_Log; i <= last; i++) {
-    if ( ! GetALine(f, inbuf)) break;
+    if ( ! GetALine(f, inbuf, MAX_FILENAMESIZE)) break;
     _files[i] = Str_Dup(Str_TrimLeftQ(inbuf), &LogInfo);
     //printf("FILES: %d : %s\n", i, _files[i]);
   }
@@ -175,7 +175,7 @@ static void _model_init( void) {
    f = OpenFile(MyFileName, "r", &LogInfo);
    /* ----------------------------------------------------*/
    /* scan for the first line*/
-   if (!GetALine(f, inbuf)) {
+   if (!GetALine(f, inbuf, MAX_FILENAMESIZE)) {
      LogError(&LogInfo, LOGERROR, "%s: No data found!\n", MyFileName);
    } else {
      sscanf( inbuf, "%s %d %d",
@@ -220,7 +220,7 @@ static void _env_init( void) {
    MyFileName = Parm_name(F_Env);
    f = OpenFile(MyFileName, "r", &LogInfo);
 
-   while( GetALine(f, inbuf)) {
+   while( GetALine(f, inbuf, MAX_FILENAMESIZE)) {
 
       switch(++index) {
         case 1:
@@ -297,7 +297,7 @@ static void _plot_init( void) {
 
    /* ----------------------------------------------------*/
    /* scan for the first line*/
-   if (!GetALine(f, inbuf)) {
+   if (!GetALine(f, inbuf, MAX_FILENAMESIZE)) {
      LogError(&LogInfo, LOGERROR, "%s: No data found!\n", MyFileName);
    }
 
@@ -370,8 +370,8 @@ static void _check_species( void) {
       if ( g->extirp && g->extirp < s->max_age)
         s->max_age = g->extirp;
 */
-      maxage = max(s->max_age, maxage);
-      minage = min(s->max_age, minage);
+      maxage = MAX(s->max_age, maxage);
+      minage = MIN(s->max_age, minage);
       g->max_bmass += s->mature_biomass;
     }
 
@@ -409,7 +409,7 @@ static void _check_species( void) {
         /* find max age of the group and size the kills array */
         ForEachGroupSpp( sp, rg, i) {
           RGroup[rg]->max_age = (Species[sp]->max_age)
-                                ? max(Species[sp]->max_age,
+                                ? MAX(Species[sp]->max_age,
                                       RGroup[rg]->max_age)
                                 : Globals->Max_Age;
         }
@@ -466,7 +466,7 @@ static void _bmassflags_init( void) {
    MyFileName = Parm_name(F_BMassFlag);
    fin = OpenFile(MyFileName, "r", &LogInfo);
 
-   if (!GetALine(fin, inbuf)) {
+   if (!GetALine(fin, inbuf, MAX_FILENAMESIZE)) {
      LogError(&LogInfo, LOGERROR, "%s: No data found!\n", MyFileName);
    }
 
@@ -603,7 +603,7 @@ static void _mortflags_init( void) {
    MyFileName = Parm_name(F_MortFlag);
    fin = OpenFile(MyFileName, "r", &LogInfo);
 
-   if (!GetALine(fin, inbuf)) {
+   if (!GetALine(fin, inbuf, MAX_FILENAMESIZE)) {
      LogError(&LogInfo, LOGERROR, "%s No data found!\n", MyFileName);
 
    }
@@ -707,7 +707,7 @@ void maxrgroupspecies_init( void) {
 
     /* Resource group limits */
 
-    if (!GetALine(f, inbuf)) {
+    if (!GetALine(f, inbuf, MAX_FILENAMESIZE)) {
        LogError(&LogInfo, LOGERROR, "%s: Could not read maximum resource groups allowed.", MyFileName);
     }
 
@@ -715,7 +715,7 @@ void maxrgroupspecies_init( void) {
        LogError(&LogInfo, LOGERROR, "%s: Could not read maximum resource groups allowed.", MyFileName);
     }
 
-    if (!GetALine(f, inbuf)) {
+    if (!GetALine(f, inbuf, MAX_FILENAMESIZE)) {
        LogError(&LogInfo, LOGERROR, "%s: Could not read maximum resource group name length.", MyFileName);
     }
 
@@ -725,7 +725,7 @@ void maxrgroupspecies_init( void) {
 
     /* Species limits */
 
-    if (!GetALine(f, inbuf)) {
+    if (!GetALine(f, inbuf, MAX_FILENAMESIZE)) {
        LogError(&LogInfo, LOGERROR, "%s: Could not read maximum species allowed per resource group.", MyFileName);
     }
 
@@ -733,7 +733,7 @@ void maxrgroupspecies_init( void) {
        LogError(&LogInfo, LOGERROR, "%s: Could not read maximum species allowed per resource group.", MyFileName);
     }
 
-    if (!GetALine(f, inbuf)) {
+    if (!GetALine(f, inbuf, MAX_FILENAMESIZE)) {
        LogError(&LogInfo, LOGERROR, "%s: Could not read maximum individuals allowed per species.", MyFileName);
     }
 
@@ -741,7 +741,7 @@ void maxrgroupspecies_init( void) {
        LogError(&LogInfo, LOGERROR, "%s: Could not read maximum individuals allowed per species.", MyFileName);
     }
 
-    if (!GetALine(f, inbuf)) {
+    if (!GetALine(f, inbuf, MAX_FILENAMESIZE)) {
        LogError(&LogInfo, LOGERROR, "%s: Could not read maximum species name length.", MyFileName);
     }
 
@@ -795,7 +795,7 @@ static void _rgroup_init( void) {
    /* ------------------------------------------------------------*/
    /* Install all the defined groups, except for dry/wet/norm parms */
    groupsok = FALSE;
-   while( GetALine(f,inbuf)) {
+   while( GetALine(f,inbuf, MAX_FILENAMESIZE)) {
      if (!isnull(strstr(inbuf,"[end]"))) {
         groupsok = TRUE;
         break;
@@ -831,7 +831,7 @@ static void _rgroup_init( void) {
    /* ------------------------------------------------------------*/
    /* Install  dry/wet/norm parms for defined groups */
    groupsok = FALSE;
-   while( GetALine(f,inbuf)) {
+   while( GetALine(f,inbuf, MAX_FILENAMESIZE)) {
      if (!isnull(strstr(inbuf,"[end]"))) {
         groupsok = TRUE;
         break;
@@ -853,7 +853,7 @@ static void _rgroup_init( void) {
 
    /* ------------------------------------------------------------*/
    /* Get succulent growth modifiers*/
-   GetALine(f, inbuf);
+   GetALine(f, inbuf, MAX_FILENAMESIZE);
    x=sscanf( inbuf, "%s %f %f %f %f",
              name, &wslope, &wint, &dslope, &dint);
    if (x < 5) {
@@ -865,10 +865,10 @@ static void _rgroup_init( void) {
 
    /* ------------------------------------------------------------ */
    /* Get wildfire parameters */
-   GetALine(f,inbuf);
+   GetALine(f,inbuf, MAX_FILENAMESIZE);
 
    groupsok = FALSE;
-   while(GetALine(f,inbuf)) {
+   while(GetALine(f,inbuf, MAX_FILENAMESIZE)) {
      if (!isnull(strstr(inbuf,"[end]"))) {
         groupsok = TRUE;
         
@@ -882,7 +882,7 @@ static void _rgroup_init( void) {
      } 
    }/* end while*/
 
-   Mem_Free(name);
+   free(name);
    
    CloseFile(&f, &LogInfo);
 }
@@ -1039,7 +1039,7 @@ static void _species_init( void) {
                   "_species_init", &LogInfo);
 
    while( readspp) {
-      if( ! GetALine(f, inbuf )) {sppok=FALSE;break;}
+      if( ! GetALine(f, inbuf, MAX_FILENAMESIZE)) {sppok=FALSE;break;}
       if ( ! isnull( strstr(inbuf,"[end]")) ) {
          readspp=FALSE;
          continue;
@@ -1114,7 +1114,7 @@ static void _species_init( void) {
    /* ------ read the additional annuals' establishment parameters */
    sppok = readspp = TRUE;
    while( readspp) {
-     if( ! GetALine(f, inbuf )) {sppok=FALSE; break;}
+     if( ! GetALine(f, inbuf, MAX_FILENAMESIZE)) {sppok=FALSE; break;}
      if ( ! isnull( strstr(inbuf,"[end]")) ) {
         readspp=FALSE;
         continue;
@@ -1170,7 +1170,7 @@ static void _species_init( void) {
    /* ------ read the vegetative propagation parameters */
    sppok = readspp = TRUE;
    while( readspp) {
-      if( ! GetALine(f, inbuf )) {sppok=FALSE; break;}
+      if( ! GetALine(f, inbuf, MAX_FILENAMESIZE)) {sppok=FALSE; break;}
       if ( ! isnull( strstr(inbuf,"[end]")) ) {
          readspp=FALSE;
          continue;
@@ -1203,7 +1203,7 @@ static void _species_init( void) {
   /* ------- read the seed dispersal parameters ------ */
   sppok = readspp = TRUE;
   while( readspp ) {
-    if( !GetALine(f, inbuf) ) {
+    if( !GetALine(f, inbuf, MAX_FILENAMESIZE) ) {
       sppok=FALSE; break;
     }
     if( !isnull(strstr(inbuf,"[end]")) ) {
@@ -1232,7 +1232,7 @@ static void _species_init( void) {
 	  LogError(&LogInfo, LOGERROR, "%s: Incorrect/incomplete input in species seed dispersal input", MyFileName);
   }
    
-   Mem_Free(name);
+   free(name);
 
    CloseFile(&f, &LogInfo);
 }
@@ -1244,7 +1244,7 @@ static void _species_init( void) {
 	last--; // have to save sxw.in for later //
 
 	for (i = 0; i <= last; i++) {
-		Mem_Free(_files[i]);
+		free(_files[i]);
 	}
 
 }*/
@@ -1254,5 +1254,5 @@ void parm_free_memory( void ) {
 	//function to free memory allocated in this module
 	int i;
 	for(i = 0; i < NFILES; i++)
-		Mem_Free(_files[i]);
+		free(_files[i]);
 }

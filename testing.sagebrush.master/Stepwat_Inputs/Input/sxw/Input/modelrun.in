@@ -1,0 +1,9 @@
+#---- Site location and topography
+
+-108.5826	# longitude (degrees; W < 0; E > 0)
+				# (currently not used by simulation, but useful for site documentation)
+47.06581	# latitude (degrees; N > 0; S < 0)
+1039		# elevation (m a.s.l.)
+0		# slope (degrees): no slope = 0, vertical surface = 90
+999		# aspect = surface azimuth angle (degrees): S=0, E=-90, N=±180, W=90;
+		# ignored if slope = 0 or aspect takes a missing value, i.e., NAN or 999
