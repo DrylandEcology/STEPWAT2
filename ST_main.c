@@ -501,14 +501,6 @@ void allocate_Globals(void){
 void deallocate_Globals(Bool isGriddedMode){
 	GrpIndex rg;
 	SppIndex sp;
-
-	if(!isGriddedMode){
-		free(Env);
-		free(Succulent);
-		free(Globals);
-		free(Plot);
-		free(_SomeKillage);
-	}
 	
 	/* Free Species */
 	ForEachSpecies(sp){
@@ -541,6 +533,14 @@ void deallocate_Globals(Bool isGriddedMode){
 	}
 	/* Then free the entire array */
 	free(RGroup);
+
+	if(!isGriddedMode){
+			free(Env);
+			free(Succulent);
+			free(Globals);
+			free(Plot);
+			free(_SomeKillage);
+		}
 }
 
 /** \brief Translates the input flags to in program flags.
