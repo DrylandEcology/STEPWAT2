@@ -131,13 +131,15 @@ typedef struct grid_cell_st
 	Grid_Init_Species_St mySpeciesInit;
 	/** \brief This cell's cheatgrass-wildfire parameters. */
 	CheatgrassPrecip* myCheatgrassPrecip;
+	/* WildfireClimate (from mortality) corresponding to this cell */
+	WildfireClimate *myWildfireClimate;
 
 	/** \brief TRUE if an individual was killed this year. */
 	Bool* someKillage;
 
-	/** \brief this cell's version of the \ref UseCheatgrassWildfire variable
+	/** \brief this cell's version of the \ref UseWildfire variable
 	 *         from the \ref MORTALITY module. */
-	Bool UseCheatgrassWildfire;
+	Bool UseWildfire;
 	
 	/* ---------------- accumulators -------------------- */
 
