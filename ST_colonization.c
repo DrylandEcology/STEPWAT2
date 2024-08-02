@@ -8,6 +8,8 @@
  * \ingroup COLONIZATION_PRIVATE
  */
 
+#include <stdlib.h>
+
 #include "ST_colonization.h"
 #include "sw_src/include/myMemory.h"
 #include "sw_src/include/filefuncs.h"
@@ -124,10 +126,10 @@ void initColonization(char* fileName) {
                                              "initColonization", &LogInfo);
 
   // Throw away the header
-  GetALine(file, inbuf);
+  GetALine(file, inbuf, 128);
 
   // Read the entire file.
-  while(GetALine(file, inbuf)) {
+  while(GetALine(file, inbuf, 128)) {
     // Assume the event includes multiple cells.
     valuesRead = sscanf(inbuf, "%d-%d,%d,%d,%s", &fromCell, &toCell,&startYear,
                         &duration, name);
@@ -162,20 +164,20 @@ void initColonization(char* fileName) {
       break;
     }
     if(valuesRead != 4 && valuesRead != 5) {
-      Mem_Free(tempEvents);
+      free(tempEvents);
       LogError(&LogInfo, LOGERROR, "Error reading colonization file:\n\tIncorrect"
                " number of input arguments.\n\tIs it possible you put a space"
                " somewhere? Remember this file cannot contain spaces.");
       return;
     }
     if(fromCell < 0 || toCell > ((grid_Rows * grid_Cols) - 1)) {
-      Mem_Free(tempEvents);
+      free(tempEvents);
       LogError(&LogInfo, LOGERROR, "Error reading colonization file:"
                "\n\tInvalid cell range ( %d - %d ) specified.", fromCell, toCell);
       return;
     }
     if(startYear < 1 || startYear > SuperGlobals.runModelYears) {
-      Mem_Free(tempEvents);
+      free(tempEvents);
       LogError(&LogInfo, LOGERROR, "Error reading colonization file:"
                "\n\tInvalid start year (%d) specified.", startYear);
       return;
@@ -183,7 +185,7 @@ void initColonization(char* fileName) {
     // For the species info we need to have a cell loaded.
     load_cell(toCell / grid_Cols, toCell % grid_Cols);
     if(Species_Name2Index(name) == -1) {
-      Mem_Free(tempEvents);
+      free(tempEvents);
       LogError(&LogInfo, LOGERROR, "Error reading colonization file:"
                "\n\tUnrecognized species name (%s).", name);
       return;
@@ -201,13 +203,13 @@ void initColonization(char* fileName) {
 
   // Ensure we never leak memory
   if(_allEvents) {
-    Mem_Free(_allEvents);
+    free(_allEvents);
     _allEvents = 0;
   }
 
   // If there were no events specified we are done.
   if(_numberOfEvents == 0) {
-    Mem_Free(tempEvents);
+    free(tempEvents);
     fclose(file);
     return;
   }
@@ -238,7 +240,7 @@ void initColonization(char* fileName) {
   }
 
   // Free up the memory we used.
-  Mem_Free(tempEvents);
+  free(tempEvents);
   fclose(file);
 }
 
@@ -254,7 +256,7 @@ void initColonization(char* fileName) {
  */
 void freeColonizationMemory(void) {
   if(_allEvents){
-    Mem_Free(_allEvents);
+    free(_allEvents);
     _allEvents = 0;
   }
 }
