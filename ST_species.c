@@ -354,7 +354,7 @@ void copy_species(const SpeciesType* src, SpeciesType* dest){
 	/* ---- Reallocate and copy any arrays ---- */
 	// kills: Note that this array is allocated if and only if MortFlags.summary.
 	if(src->max_age > 1 && src->use_me && MortFlags.summary){
-		Mem_Free(dest->kills);
+		free(dest->kills);
 		dest->kills = (IntUS*) Mem_Calloc(src->max_age, sizeof(IntUS), 
 							   "copy_species: kills", &LogInfo);
 		for(i = 0; i < src->max_age; ++i){
@@ -362,7 +362,7 @@ void copy_species(const SpeciesType* src, SpeciesType* dest){
 		}
 	}
 	// seedprod
-	Mem_Free(dest->seedprod);
+	free(dest->seedprod);
 	dest->seedprod = (IntUS*) Mem_Calloc(src->viable_yrs, sizeof(IntUS), 
 						   "copy_species: seedprod", &LogInfo);
 	for(i = 0; i < src->viable_yrs; ++i){
@@ -419,7 +419,7 @@ void copy_species(const SpeciesType* src, SpeciesType* dest){
 	destIndv = dest->IndvHead;
 	while(destIndv){
 		next = destIndv->Next;
-		Mem_Free(destIndv);
+		free(destIndv);
 		destIndv = next;
 	}
 

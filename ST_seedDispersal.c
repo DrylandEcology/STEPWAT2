@@ -10,6 +10,8 @@
  * \ingroup SEED_DISPERSAL_PRIVATE
  */
 
+#include <stdlib.h>
+
 #include "ST_globals.h"
 #include "ST_defines.h"
 #include "ST_grid.h"
@@ -233,7 +235,7 @@ void outputDispersalEvents(char* filePrefix) {
     for(i = 0; i < grid_Rows * grid_Cols; ++i) {
         fclose(files[i]);
     }
-    Mem_Free(files);
+    free(files);
 }
 
 /**
@@ -253,7 +255,7 @@ void freeDispersalMemory(void) {
 
     while(thisEvent != NULL){
         nextEvent = thisEvent->next;
-        Mem_Free(thisEvent);
+        free(thisEvent);
         thisEvent = nextEvent;
     }
 
