@@ -29,7 +29,7 @@
 #include "sxw_funcs.h"
 #include "ST_globals.h"
 #include "sxw_vars.h"
-#include "ST_mortality.h" // externs `UseCheatgrassWildfire`
+#include "ST_mortality.h" // externs `UseWildfire`
 
 
 /******** Modular External Function Declarations ***********/
@@ -195,6 +195,9 @@ static void _model_init( void) {
      Globals->bmass.suffixwidth = Globals->mort.suffixwidth = strlen(tmp);
      SuperGlobals.randseed = (IntL) ((seed) ? -abs(seed) : 0);
    }
+
+   Globals->sppCount = 0;
+   Globals->grpCount = 0;
    
    CloseFile(&f, &LogInfo);
 }
@@ -872,9 +875,9 @@ static void _rgroup_init( void) {
         break;
      }
 
-     x=sscanf( inbuf, "%u", &UseCheatgrassWildfire);
+     x=sscanf( inbuf, "%u", &UseWildfire);
      if (x != 1) {
-       LogError(&LogInfo, LOGERROR, "%s: Cheatgrass-Wildfire flag not read.",
+       LogError(&LogInfo, LOGERROR, "%s: Wildfire flag not read.",
                MyFileName);
      } 
    }/* end while*/
