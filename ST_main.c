@@ -431,7 +431,9 @@ void Plot_Initialize(void) {
 		RGroup[rg]->extirpated = FALSE;
 	}
 
+	/* Note, currently initCheatgrassPrecip is not being used, but retained for the time being */
 	initCheatgrassPrecip();
+	initWildfireClimate();
 	SXW_InitPlot();
 }
 

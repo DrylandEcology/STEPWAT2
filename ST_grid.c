@@ -52,7 +52,7 @@
 #include "ST_progressBar.h"
 #include "ST_colonization.h"
 #include "ST_seedDispersal.h" // externs `UseSeedDispersal`
-#include "ST_mortality.h" // externs `mortality_rng`, `*_SomeKillage`, `UseCheatgrassWildfire`
+#include "ST_mortality.h" // externs `mortality_rng`, `*_SomeKillage`, `UseWildfire`
 #include "sw_src/include/SW_Output.h"
 #include "sw_src/include/SW_Output_outtext.h"
 #include "sw_src/include/SW_Output_outarray.h"
@@ -704,6 +704,11 @@ static void _allocate_gridCells(int rows, int cols){
 			setCheatgrassPrecip(0);
 			initCheatgrassPrecip();
 			gridCells[i][j].myCheatgrassPrecip = getCheatgrassPrecip();
+
+			// Allocate wildfireClimate for Mortality
+			setWildfireClimate(NULL);
+			initWildfireClimate();
+			gridCells[i][j].myWildfireClimate = getWildfireClimate();
 		}
 	}
 }
@@ -1026,8 +1031,11 @@ void load_cell(int row, int col){
 	/* This cell's cheatgrass-wildfire parameters */
 	setCheatgrassPrecip(gridCells[row][col].myCheatgrassPrecip);
 
+	/* This cell's wildfireClimate */
+	setWildfireClimate(gridCells[row][col].myWildfireClimate);
+
 	_SomeKillage = gridCells[row][col].someKillage;
-	UseCheatgrassWildfire = gridCells[row][col].UseCheatgrassWildfire;
+	UseWildfire = gridCells[row][col].UseWildfire;
 
 	/* Copy this cell's accumulators into the local accumulators in ST_stats.c */
 	stat_Copy_Accumulators(gridCells[row][col]._Dist, gridCells[row][col]._Ppt, gridCells[row][col]._Temp,
@@ -1162,7 +1170,7 @@ static void _read_disturbances_in(void)
 				&RGroup[rg]->killyr, &RGroup[rg]->killfreq_startyr,
 				&RGroup[rg]->killfreq, &RGroup[rg]->extirp,
 				&RGroup[rg]->grazingfrq, &RGroup[rg]->grazingfreq_startyr,
-				&gridCells[row][col].UseCheatgrassWildfire);
+				&gridCells[row][col].UseWildfire);
 		}
 
 		if (num != 11)
