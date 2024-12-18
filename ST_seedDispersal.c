@@ -142,13 +142,13 @@ void disperseSeeds(int year) {
 
         // These variables are independent of recipient.
         height = getSpeciesHeight(Species[sp]);
-		//printf("height after getSpeciesHeight called Species = %s, height = %f\n ", Species[sp]->name, height);
+		printf("height after getSpeciesHeight called Species = %s, height = %f\n ", Species[sp]->name, height);
 
         rate = _rateOfDispersal(Species[sp]->maxDispersalProbability,
                                 Species[sp]->maxHeight,
                                 _maxDispersalDistance(height));
 
-		//printf("rate after _rateOfDispersal called Species = %s, rate = %f\n ", Species[sp]->name, rate);
+		printf("rate after _rateOfDispersal called Species = %s, rate = %f\n ", Species[sp]->name, rate);
 
         // Iterate through all possible recipients of seeds.
         for (receiverRow = 0; receiverRow < grid_Rows; ++receiverRow) {
@@ -170,7 +170,12 @@ void disperseSeeds(int year) {
             // These variables depend on the recipient.
             distance = _distance(col, row, receiverCol, receiverRow,
                                  Globals->plotsize);
+
+    		printf("distance = %f\n ", distance);
+
             Pd = _probabilityOfDispersal(rate, height, distance);
+
+    		printf("Pd Species = %s, Pd = %f\n ", Species[sp]->name, Pd);
 
             // Stochastically determine if seeds reached the recipient.
             if (RandUni(&dispersal_rng) < Pd) {
@@ -354,7 +359,7 @@ float _rateOfDispersal(float PMD, float maxHeight, float maxDistance) {
  * \ingroup SEED_DISPERSAL_PRIVATE
  */
 float _probabilityOfDispersal(float rate, float height, float distance) {
-  return exp((rate * distance) / height);
+  return exp((rate * distance) / (height/100));
 }
 
 /**

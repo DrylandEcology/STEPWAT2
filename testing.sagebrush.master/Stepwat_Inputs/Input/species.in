@@ -172,7 +172,7 @@
 # PMD = Probability of Maximum Dispersal. The probability that a seed disperses MAXD meters
 #
 # name 	Use	MRS		HMax	PMD		HSlope
- artr	1	0.5	    240.0	0.005	0.00181
+ artr	1	0.5	   50.0		0.005	0.00181
  trdu 	0	0.5	 	25.0	0.005	0.8302
  cryp 	0	0.5	 	25.0	0.005	0.8302
  amre 	0	0.5	 	25.0	0.005	0.8302

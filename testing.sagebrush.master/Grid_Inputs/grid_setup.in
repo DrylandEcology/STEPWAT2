@@ -8,7 +8,7 @@
 300 # Number of years to perform spinup. 
 1   # Write separate output files for each cell.
 1	# Write seed dispersal output? 1 means yes, 0 means no.
-0   # Write complete seed dispersal output (i.e. all cells that sent seeds to all other cells)? 1 means yes.
+1   # Write complete seed dispersal output (i.e. all cells that sent seeds to all other cells)? 1 means yes.
     # 0 means no - output will only contain the first cell that sent seeds to all other cells.
 
 
