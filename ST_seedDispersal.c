@@ -337,7 +337,7 @@ Bool _shouldProduceSeeds(SppIndex sp) {
  * \ingroup SEED_DISPERSAL_PRIVATE
  */
 float _rateOfDispersal(float PMD, float maxHeight, float maxDistance) {
-  return log((PMD) * maxHeight) / maxDistance;
+  return log((PMD) * (maxHeight/100)) / maxDistance;
 }
 
 /**
