@@ -56,6 +56,7 @@ static void _setNameLen(char *dest, char *src, Int len);
 static void _rgroup_init( void);
 static void _species_init( void);
 static void _check_species( void);
+static void _bmassqm_init( void);
 static void _bmassflags_init( void);
 static void _mortflags_init( void);
 static void _model_init( void);
@@ -78,7 +79,7 @@ static void _rgroup_addsucculent( char name[],
 
 /************ Module Variable Declarations ******************/
 /***********************************************************/
-  #define NFILES 15
+  #define NFILES 16
 
 static char *_files[NFILES];
 char *MyFileName;
@@ -93,6 +94,7 @@ void parm_Initialize() {
   _model_init();
   _env_init();
   _plot_init();
+  _bmassqm_init();
   _bmassflags_init();
   _mortflags_init();
   _rgroup_init();
@@ -426,6 +428,151 @@ static void _check_species( void) {
   }
 }
 
+/**************************************************************/
+static void _bmassqm_init(void) {
+/*======================================================*/
+
+    FILE *fin;
+    int scanRes;
+    int nPointItems = 4;
+    int nExpectItems;
+    double quantile, bmass_rad, bmass_stepwat;
+    char pftName[MAX_FILENAMESIZE] = {'\0'};
+    double aPrevQuantile;
+    double pPrevQuantile;
+    int annualIndex = 0;
+    int perennialIndex = 0;
+    int lineno = 0;
+    int *readNumPoints;
+    const int minNumPoints = 3;
+
+    char inBuf[MAX_FILENAMESIZE] = {'\0'};
+    char *MyFileName = Parm_name(F_BMassQM);
+
+    fin = OpenFile(MyFileName, "r", &LogInfo);
+
+    while(GetALine(fin, inBuf, MAX_FILENAMESIZE)) {
+        lineno++;
+        if (lineno <= 2) {
+            /* Read number of provided points */
+            readNumPoints = (lineno == 1) ? &BmassQM.n_points_annual :
+                                            &BmassQM.n_points_perennial;
+            scanRes = sscanf(inBuf, "%d", readNumPoints);
+
+            nExpectItems = 1;
+        } else {
+            /* Read points */
+            nExpectItems = nPointItems;
+            scanRes = sscanf(inBuf, "%lf %s %lf %lf",
+                            &quantile, pftName, &bmass_rad, &bmass_stepwat);
+        }
+
+        if (scanRes != nExpectItems) {
+            LogError(
+                &LogInfo,
+                LOGERROR,
+                "%s: Expected %s of input.",
+                MyFileName,
+                (nExpectItems == 1) ? "one column" : "four columns"
+            );
+            return;
+        }
+
+        if (lineno <= 2 && *readNumPoints < minNumPoints) {
+            LogError(
+                &LogInfo,
+                LOGERROR,
+                "%s: Number of values for annual and perennial biomass "
+                "must be > 0.",
+                MyFileName
+            );
+            return;
+        }
+
+        switch(lineno) {
+            case 1: /* Allocate memory for annual biomass */
+                BmassQM.rap_annual_points =
+                        (double *) Mem_Calloc(*readNumPoints, sizeof(double),
+                                              "_bmassqm_init()", &LogInfo);
+                BmassQM.stepwat_annual_points =
+                        (double *) Mem_Calloc(*readNumPoints, sizeof(double),
+                                              "_bmassqm_init()", &LogInfo);
+                break;
+            case 2: /* Allocate memory for perennial biomass */
+                BmassQM.rap_perennial_points =
+                        (double *) Mem_Calloc(*readNumPoints, sizeof(double),
+                                              "_bmassqm_init()", &LogInfo);
+                BmassQM.stepwat_perennial_points =
+                        (double *) Mem_Calloc(*readNumPoints, sizeof(double),
+                                              "_bmassqm_init()", &LogInfo);
+                break;
+            default: /* Read either annual and perennial biomass */
+                if (strcmp(pftName, "afgAGB") == 0) {
+                    BmassQM.rap_annual_points[annualIndex] = bmass_rad;
+                    BmassQM.stepwat_annual_points[annualIndex] = bmass_stepwat;
+
+                    if (annualIndex > 0 && LE(quantile, aPrevQuantile)) {
+                        LogError(
+                            &LogInfo,
+                            LOGERROR,
+                            "%s: Annual quantile list is out of order."
+                        );
+                        return;
+                    }
+                    aPrevQuantile = quantile;
+
+                    annualIndex++;
+                } else if (strcmp(pftName, "pfgAGB") == 0) {
+                    BmassQM.rap_perennial_points[perennialIndex] = bmass_rad;
+                    BmassQM.stepwat_perennial_points[perennialIndex] = bmass_stepwat;
+
+                    if (perennialIndex > 0 && LE(quantile, pPrevQuantile)) {
+                        LogError(
+                            &LogInfo,
+                            LOGERROR,
+                            "%s: Annual quantile list is out of order."
+                        );
+                        return;
+                    }
+                    pPrevQuantile = quantile;
+
+                    perennialIndex++;
+                } else {
+                    LogError(
+                        &LogInfo,
+                        LOGERROR,
+                        "%s: Unkown name in the column 'PFT' on line %d.",
+                        MyFileName,
+                        lineno
+                    );
+                    return;
+                }
+                break;
+        }
+    }
+
+    if (annualIndex != BmassQM.n_points_annual) {
+        LogError(
+            &LogInfo,
+            LOGERROR,
+            "%s: The number of annual biomass rows specified (%d) were "
+            "not provided (%d).",
+            MyFileName,
+            BmassQM.n_points_annual,
+            annualIndex
+        );
+    } else if (perennialIndex != BmassQM.n_points_perennial) {
+        LogError(
+            &LogInfo,
+            LOGERROR,
+            "%s: The number of perennial biomass rows specified (%d) were "
+            "not provided (%d).",
+            MyFileName,
+            BmassQM.n_points_perennial,
+            perennialIndex
+        );
+    }
+}
 
 /**************************************************************/
 static void _bmassflags_init( void) {
