@@ -436,10 +436,14 @@ static void _bmassqm_init(void) {
     int scanRes;
     int nPointItems = 4;
     int nExpectItems;
-    double quantile, bmass_rad, bmass_stepwat;
+    double quantile, bmass_rap, bmass_stepwat;
     char pftName[MAX_FILENAMESIZE] = {'\0'};
     double aPrevQuantile;
     double pPrevQuantile;
+    double aPrevRAP;
+    double aPrevSTEP;
+    double pPrevRAP;
+    double pPrevSTEP;
     int annualIndex = 0;
     int perennialIndex = 0;
     int lineno = 0;
@@ -464,7 +468,7 @@ static void _bmassqm_init(void) {
             /* Read points */
             nExpectItems = nPointItems;
             scanRes = sscanf(inBuf, "%lf %s %lf %lf",
-                            &quantile, pftName, &bmass_rad, &bmass_stepwat);
+                            &quantile, pftName, &bmass_rap, &bmass_stepwat);
         }
 
         if (scanRes != nExpectItems) {
@@ -508,33 +512,86 @@ static void _bmassqm_init(void) {
                 break;
             default: /* Read either annual and perennial biomass */
                 if (strcmp(pftName, "afgAGB") == 0) {
-                    BmassQM.rap_annual_points[annualIndex] = bmass_rad;
+                    BmassQM.rap_annual_points[annualIndex] = bmass_rap;
                     BmassQM.stepwat_annual_points[annualIndex] = bmass_stepwat;
 
-                    if (annualIndex > 0 && LE(quantile, aPrevQuantile)) {
+                    // Check that the annual values are in ascending order
+                    // by checking the quantile, RAP and STEPWAT2 points
+                    if (annualIndex > 0) {
+                      if (LE(quantile, aPrevQuantile)) {
+                          LogError(
+                              &LogInfo,
+                              LOGERROR,
+                              "%s: Annual quantile list is out of order.",
+                              MyFileName
+                          );
+                      } else if (LE(bmass_rap, aPrevRAP)) {
                         LogError(
                             &LogInfo,
                             LOGERROR,
-                            "%s: Annual quantile list is out of order."
+                            "%s: Annual RAP biomass on line %d is <= to the "
+                            "previous value.",
+                            MyFileName,
+                            lineno
                         );
+                      } else if (LE(bmass_stepwat, aPrevSTEP)) {
+                        LogError(
+                            &LogInfo,
+                            LOGERROR,
+                            "%s: Annual stepwat biomass on line %d is <= to "
+                            "the previous value.",
+                            MyFileName,
+                            lineno
+                        );
+                      }
+                      if (LogInfo.stopRun) {
                         return;
+                      }
                     }
                     aPrevQuantile = quantile;
+                    aPrevRAP = bmass_rap;
+                    aPrevSTEP = bmass_stepwat;
 
                     annualIndex++;
                 } else if (strcmp(pftName, "pfgAGB") == 0) {
-                    BmassQM.rap_perennial_points[perennialIndex] = bmass_rad;
+                    BmassQM.rap_perennial_points[perennialIndex] = bmass_rap;
                     BmassQM.stepwat_perennial_points[perennialIndex] = bmass_stepwat;
 
-                    if (perennialIndex > 0 && LE(quantile, pPrevQuantile)) {
+                    // Check that the perennial values are in ascending order
+                    // by checking the quantile, RAP and STEPWAT2 points
+                    if (perennialIndex > 0) {
+                      if (LE(quantile, pPrevQuantile)) {
+                          LogError(
+                              &LogInfo,
+                              LOGERROR,
+                              "%s: Annual quantile list is out of order."
+                          );
+                      } else if (LE(bmass_rap, pPrevRAP)) {
                         LogError(
                             &LogInfo,
                             LOGERROR,
-                            "%s: Annual quantile list is out of order."
+                            "%s: Perennial RAP biomass on line %d is <= to "
+                            "the previous value.",
+                            MyFileName,
+                            lineno
                         );
+                      } else if (LE(bmass_stepwat, pPrevSTEP)) {
+                        LogError(
+                            &LogInfo,
+                            LOGERROR,
+                            "%s: Perennial stepwat biomass on line %d is <= "
+                            "to the previous value.",
+                            MyFileName,
+                            lineno
+                        );
+                      }
+                      if (LogInfo.stopRun) {
                         return;
+                      }
                     }
                     pPrevQuantile = quantile;
+                    pPrevRAP = bmass_rap;
+                    pPrevSTEP = bmass_stepwat;
 
                     perennialIndex++;
                 } else {
