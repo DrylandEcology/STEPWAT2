@@ -262,10 +262,6 @@ typedef enum
     GRID_FILE_SPINUP_SPECIES,
 	/** \brief Location in \ref grid_files of the colonization file name. */
 	GRID_FILE_COLONIZATION,
-    /** \brief Locatoin in \ref grid_files of the quantile mapping file name 
-        \note This is currently here to match with the nongridded mode and 
-              the program does not overwrite model.in before failing */
-    GRID_FILE_QUANTILE_MAP,
 
     /** \brief Location in \ref grid_files of the SOILWAT2 output cells file. */
     GRID_FILE_SOILWAT2_OUTPUT,
