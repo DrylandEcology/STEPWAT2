@@ -512,6 +512,12 @@ void deallocate_Globals(Bool isGriddedMode){
 		free(Globals);
 		free(Plot);
 		free(_SomeKillage);
+
+		/* Free BmassQM */
+		free(BmassQM.rap_annual_points);
+		free(BmassQM.rap_perennial_points);
+		free(BmassQM.stepwat_annual_points);
+		free(BmassQM.stepwat_perennial_points);
 	}
 	
 	/* Free Species */
@@ -545,12 +551,6 @@ void deallocate_Globals(Bool isGriddedMode){
 	}
 	/* Then free the entire array */
 	free(RGroup);
-
-    /* Free BmassQM */
-    free(BmassQM.rap_annual_points);
-    free(BmassQM.rap_perennial_points);
-    free(BmassQM.stepwat_annual_points);
-    free(BmassQM.stepwat_perennial_points);
 }
 
 /** \brief Translates the input flags to in program flags.
