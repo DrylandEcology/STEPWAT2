@@ -1383,8 +1383,11 @@ void killMaxage(void) {
 }
 
 /**
- * \brief Conduct quantile mapping to convert a three-year annual or
- * perennial biomass average from satellite to STEPWAT2 biomass
+ * \brief This function will conduct quantile mapping (STEPWAT2 to RAP)
+ * on three-year average of annual or perennial biomass values prior
+ * to inputting the values into the fire equation from Holdrege et al.
+ * 2024. Note, this function is only for adjusting three-year annual and
+ * perennial biomass average for the fire equation, and is not used elsewhere.
  *
  * \param biomassAvg Running three-year average of yearly biomass to
  * translate from stepwat to satellite data
@@ -1394,6 +1397,8 @@ void killMaxage(void) {
  * from (annual or perennial)
  * \param numPoints The number of points that were provided for both
  * satellite and stepwat biomass points
+ *
+ * \return Mapped three-year biomass value from STEPWAT2 to RAP
  */
 double biomass_quantile_map(
     double biomassAvg, double rap_points[], double stepwat_points[],
@@ -1487,7 +1492,6 @@ double _getWildfireProbability(void) {
                                 );
 
   // calculates wildfire probability
-  // Note: With the current quantile mapping, this is not useful
   if (afgAGB > 190) {
 	  afgAGB = 190;
   }
