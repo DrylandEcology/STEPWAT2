@@ -506,18 +506,21 @@ void deallocate_Globals(Bool isGriddedMode){
 	GrpIndex rg;
 	SppIndex sp;
 
+	double **bMassQMFreeArray[] = {
+		&BmassQM.rap_annual_points,
+		&BmassQM.rap_perennial_points,
+		&BmassQM.stepwat_annual_points,
+		&BmassQM.stepwat_perennial_points
+	};
+	const int numBmassFreeElems = 4;
+	int bMassIndex;
+
 	if(!isGriddedMode){
 		free(Env);
 		free(Succulent);
 		free(Globals);
 		free(Plot);
 		free(_SomeKillage);
-
-		/* Free BmassQM */
-		free(BmassQM.rap_annual_points);
-		free(BmassQM.rap_perennial_points);
-		free(BmassQM.stepwat_annual_points);
-		free(BmassQM.stepwat_perennial_points);
 	}
 	
 	/* Free Species */
@@ -551,6 +554,14 @@ void deallocate_Globals(Bool isGriddedMode){
 	}
 	/* Then free the entire array */
 	free(RGroup);
+
+	/* Free BmassQM */
+	for (bMassIndex = 0; bMassIndex < numBmassFreeElems; bMassIndex++) {
+		if (!isnull(*bMassQMFreeArray[bMassIndex])) {
+			free(*bMassQMFreeArray[bMassIndex]);
+			*bMassQMFreeArray[bMassIndex] = NULL;
+		}
+	}
 }
 
 /** \brief Translates the input flags to in program flags.
