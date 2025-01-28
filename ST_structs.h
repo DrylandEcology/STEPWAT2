@@ -650,6 +650,23 @@ struct globals_st {
 };
 
 /**
+ * \brief Dyanmically allocated points used for quantile mapping
+ *
+ * \sa BmassQM
+ *
+ * \ingroup STEPPE
+ */
+struct bmassqm_st {
+  int n_points_annual,
+      n_points_perennial;
+
+  double *rap_annual_points,
+         *rap_perennial_points,
+         *stepwat_annual_points,
+         *stepwat_perennial_points;
+};
+
+/**
  * \brief Flags for what biomass files we would like output.
  * 
  * These flags are specified in inputs and used heavily in ST_stats.c.

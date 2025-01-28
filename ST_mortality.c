@@ -86,6 +86,10 @@ static void _age_independent( const SppIndex sp);
 static void _stretched_clonal( GrpIndex rg, Int start, Int last, 
                               IndivType *nlist[]);
 void _updateCheatgrassPrecip(int year);
+double biomass_quantile_map(
+    double biomassAvg, double rap_points[], double stepwat_points[],
+    int numPoints
+);
 double _getWildfireProbability(void);
 Bool _simulateWildfire(void);
 Bool _simulatePrescribedFire(void);
@@ -1379,6 +1383,52 @@ void killMaxage(void) {
 }
 
 /**
+ * \brief This function will conduct quantile mapping (STEPWAT2 to RAP)
+ * on three-year average of annual or perennial biomass values prior
+ * to inputting the values into the fire equation from Holdrege et al.
+ * 2024. Note, this function is only for adjusting three-year annual and
+ * perennial biomass average for the fire equation, and is not used elsewhere.
+ *
+ * \param biomassAvg Running three-year average of yearly biomass to
+ * translate from stepwat to satellite data
+ * \param rap_points A list of satellite biomass points to interpolate
+ * to (annual or perennial)
+ * \param stepwat_points A list of stepwat biomass points to interpolate
+ * from (annual or perennial)
+ * \param numPoints The number of points that were provided for both
+ * satellite and stepwat biomass points
+ *
+ * \return Mapped three-year biomass value from STEPWAT2 to RAP
+ */
+double biomass_quantile_map(
+    double biomassAvg, double rap_points[], double stepwat_points[],
+    int numPoints
+) {
+    int point = 0;
+    double fraction = 1.;
+    double delta = 0.;
+    double newSatBiomass = biomassAvg;
+
+    if (GE(biomassAvg, stepwat_points[numPoints - 1])) {
+        newSatBiomass = rap_points[numPoints - 1];
+    } else if (LE(biomassAvg, stepwat_points[0])) {
+        newSatBiomass = rap_points[0];
+    } else {
+        while (point + 1 < numPoints &&
+            LT(stepwat_points[point + 1], biomassAvg)) {
+            point++;
+        }
+
+        fraction = (biomassAvg - stepwat_points[point]) /
+                    (stepwat_points[point + 1] - stepwat_points[point]);
+        delta = rap_points[point + 1] - rap_points[point];
+        newSatBiomass = rap_points[point] + delta * fraction;
+    }
+
+    return newSatBiomass;
+}
+
+/**
  * \brief Calculates the probability of wildfire, which is driven by annual forb and grass biomass, perennial grass and forb biomass, annual precipitation, mean annual temperature, and the fraction of precipitation falling in the summer months (June-August).
  * 
  * \return A double between 0 and 1 representing the probability of a wildfire.
@@ -1428,9 +1478,18 @@ double _getWildfireProbability(void) {
   //printf("    pfgAGB = %f\n", pfgAGB);
   //printf("3yr pfgAGB = %f\n", wildfireClimate->pfgAGBAvg);
 
-  // access running average biomass for use in the wildfire probability equation
-  afgAGB = wildfireClimate->afgAGBAvg;
-  pfgAGB = wildfireClimate->pfgAGBAvg;
+  // quantile map the running average biomass for use in the wildfire probability equation
+  afgAGB = biomass_quantile_map(wildfireClimate->afgAGBAvg,
+                                  BmassQM.rap_annual_points,
+                                  BmassQM.stepwat_annual_points,
+                                  BmassQM.n_points_annual
+                                );
+
+  pfgAGB = biomass_quantile_map(wildfireClimate->pfgAGBAvg,
+                                  BmassQM.rap_perennial_points,
+                                  BmassQM.stepwat_perennial_points,
+                                  BmassQM.n_points_perennial
+                                );
 
   // calculates wildfire probability
   if (afgAGB > 190) {

@@ -1,0 +1,67 @@
+# Quantile mapping input file STEPPEWAT
+
+# Purpose: This file contains data to quantile map STEPWAT2 biomass
+# to the scale of data from the rangeland analysis platform (RAP).
+# This is to adjust biomass values prior to inputting the values
+# into the fire equation from Holdrege et al. 2024, which
+# was fit to RAP data. Note, this is only for adjusting
+# input to the fire equation, and does not effect biomass
+# elsewhere. 
+
+# Data source (update this description if values are updated): 
+# The quantiles provided below are based on the following--
+# interpolated STEPWAT2 biomass values of annual forbs and grasses (afgAGB) and
+# perennial forbs and grasses (pfgAGB), for simulations
+# run in November 2023 (fire1_eind1_c4grass1_co20),
+# all grazing levels were used (L, M, H, VH). Interpolated biomass
+# data (Renne multivariate matching algorithm) were used for calculating the quantiles ('Biomass_stepwat'). 
+# Interpolation was done using the same matching criteria
+# used in palmquist et al 2021 and Renne et al 2024. 
+# Only grid-cells that had a matching quality (euclidean distance) <0.5 and
+# that were also included in Holdrege et al. 2024 (Fire Ecology) were used. 
+# Quantiles of the RAP biomass data ('Biomass_rap') were calculated using running three year
+# (1 km) averages of biomass. The datafile from Holdrege et al. 2024 was
+# used for this, except only a subset of the grid cells were used (i.e., areas with good matching quality, see above).
+# A select number of quantiles were chosen, to limit the total number of quantiles needed,
+# while still representing the cumulative distribution function well.
+
+# Anything after the first pound sign is a comment
+# Blank lines, white space, and comments may be used freely,
+# however, the order of input (rows) is important.
+
+# Number of annual and perennial points that will be provided below and quantity must match
+# Note: These values must be > 2
+12         # Annual biomass
+12         # Perennial biomass
+
+# Quantile = Dividing points within the dataset's probability curve
+# PFT = Specifies which functional group the following points represent. This can only be afgABG (annuals) or pfgAGB (perennials).
+# Biomass_rap = Biomass from the rangeland analysis platform that stepwat biomass will be mapped to
+# Biomass_stepwat = Biomass data that STEPWAT2 uses to map from to Biomass_rap
+# Note: The data should be in increasing order for both annual and perennial biomass data
+# Quantile  PFT    Biomass_rap  Biomass_stepwat
+0          afgAGB    0.0           6.94
+0.1        afgAGB    0.64          15.1
+0.3        afgAGB    2.9           19.17
+0.4        afgAGB    4.31          26.37
+0.5        afgAGB    6.11          40.24
+0.6        afgAGB    8.56          50.3
+0.7        afgAGB    12.21         58.28
+0.8        afgAGB    18.04         66.9
+0.9        afgAGB    29.35         77.52
+0.98       afgAGB    58.62         86.23
+0.995      afgAGB    82.68         89.47
+1          afgAGB    172.44        93.35
+
+0          pfgAGB    0.0           16.69
+0.1        pfgAGB    6.52          26.07
+0.3        pfgAGB    18.93         45.91
+0.4        pfgAGB    25.66         49.34
+0.5        pfgAGB    33.57         55.52
+0.6        pfgAGB    42.89         62.75
+0.7        pfgAGB    54.42         71.45
+0.8        pfgAGB    69.71         95.13
+0.9        pfgAGB    88.57         108.06
+0.98       pfgAGB    116.52        115.16
+0.995      pfgAGB    136.07        121.78
+1          pfgAGB    309.82        145.93
