@@ -1219,18 +1219,19 @@ static void _read_soils_in(void){
 	/* tempSoil is allocated the maximum amount of memory that a SoilType could need.
 	   It will serve to read in parameters. */
 	SoilType tempSoil;
-	tempSoil.depth = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil", &LogInfo);
-	tempSoil.evco = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil", &LogInfo);
-	tempSoil.gravel = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil", &LogInfo);
-	tempSoil.imperm = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil", &LogInfo);
-	tempSoil.matricd = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil", &LogInfo);
-	tempSoil.pclay = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil", &LogInfo);
-	tempSoil.psand = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil", &LogInfo);
-	tempSoil.soiltemp = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil", &LogInfo);
-	tempSoil.trco_forb = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil", &LogInfo);
-	tempSoil.trco_grass = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil", &LogInfo);
-	tempSoil.trco_shrub = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil", &LogInfo);
-	tempSoil.trco_tree = Mem_Calloc(MAX_LAYERS, sizeof(RealF), "_read_soils_in: tempSoil", &LogInfo);
+	tempSoil.depth = Mem_Calloc(MAX_LAYERS, sizeof(RealD), "_read_soils_in: tempSoil", &LogInfo);
+	tempSoil.evco = Mem_Calloc(MAX_LAYERS, sizeof(RealD), "_read_soils_in: tempSoil", &LogInfo);
+	tempSoil.gravel = Mem_Calloc(MAX_LAYERS, sizeof(RealD), "_read_soils_in: tempSoil", &LogInfo);
+	tempSoil.imperm = Mem_Calloc(MAX_LAYERS, sizeof(RealD), "_read_soils_in: tempSoil", &LogInfo);
+	tempSoil.matricd = Mem_Calloc(MAX_LAYERS, sizeof(RealD), "_read_soils_in: tempSoil", &LogInfo);
+	tempSoil.pclay = Mem_Calloc(MAX_LAYERS, sizeof(RealD), "_read_soils_in: tempSoil", &LogInfo);
+	tempSoil.psand = Mem_Calloc(MAX_LAYERS, sizeof(RealD), "_read_soils_in: tempSoil", &LogInfo);
+	tempSoil.soiltemp = Mem_Calloc(MAX_LAYERS, sizeof(RealD), "_read_soils_in: tempSoil", &LogInfo);
+	tempSoil.trco_forb = Mem_Calloc(MAX_LAYERS, sizeof(RealD), "_read_soils_in: tempSoil", &LogInfo);
+	tempSoil.trco_grass = Mem_Calloc(MAX_LAYERS, sizeof(RealD), "_read_soils_in: tempSoil", &LogInfo);
+	tempSoil.trco_shrub = Mem_Calloc(MAX_LAYERS, sizeof(RealD), "_read_soils_in: tempSoil", &LogInfo);
+	tempSoil.trco_tree = Mem_Calloc(MAX_LAYERS, sizeof(RealD), "_read_soils_in: tempSoil", &LogInfo);
+	tempSoil.fractionWeight_om = Mem_Calloc(MAX_LAYERS, sizeof(RealD), "_read_soils_in: tempSoil", &LogInfo);
 
 	FILE* f = OpenFile(grid_files[GRID_FILE_SOILS], "r", &LogInfo);
 	if(!GetALine(f, buf, 4096)){ // Throw out the header line.
@@ -1293,6 +1294,7 @@ static void _read_soils_in(void){
 	free(tempSoil.matricd);
 	free(tempSoil.pclay);
 	free(tempSoil.psand);
+	free(tempSoil.fractionWeight_om);
 }
 
 /**
@@ -1310,14 +1312,15 @@ static void _read_soils_in(void){
  */
 static int _read_soil_line(char* buf, SoilType* destination, int layer){
 	int entriesRead, cellToCopy, cellNum, layerRead;
-	entriesRead = sscanf(buf, "%d,,%d,%d,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%s",
+	entriesRead = sscanf(buf, "%d,,%d,%d,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%s",
 			                    &cellNum, &destination->num_layers, &layerRead, &destination->depth[layer],
 								&destination->matricd[layer], &destination->gravel[layer],
 								&destination->evco[layer], &destination->trco_grass[layer],
 								&destination->trco_shrub[layer], &destination->trco_tree[layer],
 								&destination->trco_forb[layer], &destination->psand[layer],
 								&destination->pclay[layer], &destination->imperm[layer],
-								&destination->soiltemp[layer], destination->rootsFile);
+								&destination->soiltemp[layer], &destination->fractionWeight_om[layer],
+                                destination->rootsFile);
 
 	if(cellNum > grid_Cells){
 		LogError(
@@ -1348,7 +1351,7 @@ static int _read_soil_line(char* buf, SoilType* destination, int layer){
 		}
 	}
 
-	if(entriesRead == 16) {
+	if(entriesRead == 17) {
 		if(layerRead > destination->num_layers){
 			LogError(
 				&LogInfo, LOGERROR,
@@ -1379,18 +1382,19 @@ void _copy_soils(SoilType* src, SoilType* dest){
 	int i;
 
 	dest->num_layers = src->num_layers;
-	dest->gravel = Mem_Calloc(src->num_layers, sizeof(RealF), "_copy_Soils: gravel", &LogInfo);
-	dest->depth = Mem_Calloc(src->num_layers, sizeof(RealF), "_copy_Soils: depth", &LogInfo);
-	dest->matricd = Mem_Calloc(src->num_layers, sizeof(RealF), "_copy_Soils: matricd", &LogInfo);
-	dest->evco = Mem_Calloc(src->num_layers, sizeof(RealF), "_copy_Soils: evco", &LogInfo);
-	dest->trco_grass = Mem_Calloc(src->num_layers, sizeof(RealF), "_copy_Soils: trco_grass", &LogInfo);
-	dest->trco_shrub = Mem_Calloc(src->num_layers, sizeof(RealF), "_copy_Soils: trco_shrub", &LogInfo);
-	dest->trco_tree = Mem_Calloc(src->num_layers, sizeof(RealF), "_copy_Soils: trco_tree", &LogInfo);
-	dest->trco_forb = Mem_Calloc(src->num_layers, sizeof(RealF), "_copy_Soils: trco_forb", &LogInfo);
-	dest->psand = Mem_Calloc(src->num_layers, sizeof(RealF), "_copy_Soils: psand", &LogInfo);
-	dest->pclay = Mem_Calloc(src->num_layers, sizeof(RealF), "_copy_Soils: pclay", &LogInfo);
-	dest->imperm = Mem_Calloc(src->num_layers, sizeof(RealF), "_copy_Soils: imperm", &LogInfo);
-	dest->soiltemp = Mem_Calloc(src->num_layers, sizeof(RealF), "_copy_Soils: soiltemp", &LogInfo);
+	dest->gravel = Mem_Calloc(src->num_layers, sizeof(RealD), "_copy_Soils: gravel", &LogInfo);
+	dest->depth = Mem_Calloc(src->num_layers, sizeof(RealD), "_copy_Soils: depth", &LogInfo);
+	dest->matricd = Mem_Calloc(src->num_layers, sizeof(RealD), "_copy_Soils: matricd", &LogInfo);
+	dest->evco = Mem_Calloc(src->num_layers, sizeof(RealD), "_copy_Soils: evco", &LogInfo);
+	dest->trco_grass = Mem_Calloc(src->num_layers, sizeof(RealD), "_copy_Soils: trco_grass", &LogInfo);
+	dest->trco_shrub = Mem_Calloc(src->num_layers, sizeof(RealD), "_copy_Soils: trco_shrub", &LogInfo);
+	dest->trco_tree = Mem_Calloc(src->num_layers, sizeof(RealD), "_copy_Soils: trco_tree", &LogInfo);
+	dest->trco_forb = Mem_Calloc(src->num_layers, sizeof(RealD), "_copy_Soils: trco_forb", &LogInfo);
+	dest->psand = Mem_Calloc(src->num_layers, sizeof(RealD), "_copy_Soils: psand", &LogInfo);
+	dest->pclay = Mem_Calloc(src->num_layers, sizeof(RealD), "_copy_Soils: pclay", &LogInfo);
+	dest->imperm = Mem_Calloc(src->num_layers, sizeof(RealD), "_copy_Soils: imperm", &LogInfo);
+	dest->soiltemp = Mem_Calloc(src->num_layers, sizeof(RealD), "_copy_Soils: soiltemp", &LogInfo);
+	dest->fractionWeight_om = Mem_Calloc(src->num_layers, sizeof(RealD), "_copy_Soils: fractionWeight_om", &LogInfo);
 
 	for(i = 0; i < src->num_layers; ++i){
 		dest->gravel[i] = src->gravel[i];
@@ -1405,6 +1409,7 @@ void _copy_soils(SoilType* src, SoilType* dest){
 		dest->pclay[i] = src->pclay[i];
 		dest->imperm[i] = src->imperm[i];
 		dest->soiltemp[i] = src->soiltemp[i];
+		dest->fractionWeight_om[i] = src->fractionWeight_om[i];
 	}
 }
 
