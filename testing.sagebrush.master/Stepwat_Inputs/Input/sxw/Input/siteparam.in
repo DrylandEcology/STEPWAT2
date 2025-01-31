@@ -63,19 +63,19 @@
 0.00070		# constant for cs (soil-thermal conductivity) equation, 0.00070 in Parton's equation
 0.00030		# constant for cs equation, 0.00030 in Parton's equation
 0.18		# constant for sh (specific heat capacity) equation, 0.18 in Parton's equation
-4.15		# constant soil temperature (Celsius) at the lower boundary (max depth); approximate by mean annual air temperature of site
+6.69		# constant soil temperature (Celsius) at the lower boundary (max depth); approximate by mean annual air temperature of site
 15.		# deltaX parameter for soil_temperature function, default is 15.  (distance between profile points in cm)  max depth (the next number) should be evenly divisible by this number
 990.		# max depth for the soil_temperature function equation, default is 990.  this number should be evenly divisible by deltaX
-1		# flag, 1 to calculate soil_temperature, 0 to not calculate soil_temperature
+0		# flag, 1 to calculate soil_temperature, 0 to not calculate soil_temperature
 1       # Method for average surface temperature:
         #     0, default prior to v8.1.0 (Parton 1978)
         #     1, default since v8.1.0 (Parton 1984)
 
 # ---- CO2 Settings ----
 # Activate (1) / deactivate (0) biomass multiplier
-1
+0
 # Activate (1) / deactivate (0) water-usage efficiency multiplier
-1
+0
 # Name of CO2 scenario: see input file `carbon.in`
 RCP85
 
@@ -125,4 +125,4 @@ Cosby1984AndOthers  # Specify pedotransfer function
 #	ndx	depth (cm)
 	1	20
 	2	40
-	3	100
+	3	80
