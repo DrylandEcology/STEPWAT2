@@ -1,5 +1,5 @@
 [submodule "sw_src"]
 	path = sw_src
 	url = https://github.com/DrylandEcology/SOILWAT2.git
-	branch = release/devel_v8.1.0
+	branch = master
         ignore = dirty
