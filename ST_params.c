@@ -56,6 +56,7 @@ static void _setNameLen(char *dest, char *src, Int len);
 static void _rgroup_init( void);
 static void _species_init( void);
 static void _check_species( void);
+static void _bmassqm_init( void);
 static void _bmassflags_init( void);
 static void _mortflags_init( void);
 static void _model_init( void);
@@ -78,7 +79,7 @@ static void _rgroup_addsucculent( char name[],
 
 /************ Module Variable Declarations ******************/
 /***********************************************************/
-  #define NFILES 15
+  #define NFILES 16
 
 static char *_files[NFILES];
 char *MyFileName;
@@ -93,6 +94,7 @@ void parm_Initialize() {
   _model_init();
   _env_init();
   _plot_init();
+  _bmassqm_init();
   _bmassflags_init();
   _mortflags_init();
   _rgroup_init();
@@ -426,6 +428,208 @@ static void _check_species( void) {
   }
 }
 
+/**************************************************************/
+static void _bmassqm_init(void) {
+/*======================================================*/
+
+    FILE *fin;
+    int scanRes;
+    int nPointItems = 4;
+    int nExpectItems;
+    double quantile, bmass_rap, bmass_stepwat;
+    char pftName[MAX_FILENAMESIZE] = {'\0'};
+    double aPrevQuantile;
+    double pPrevQuantile;
+    double aPrevRAP;
+    double aPrevSTEP;
+    double pPrevRAP;
+    double pPrevSTEP;
+    int annualIndex = 0;
+    int perennialIndex = 0;
+    int lineno = 0;
+    int *readNumPoints;
+    const int minNumPoints = 3;
+
+    char inBuf[MAX_FILENAMESIZE] = {'\0'};
+    char *MyFileName = Parm_name(F_BMassQM);
+
+    fin = OpenFile(MyFileName, "r", &LogInfo);
+
+    while(GetALine(fin, inBuf, MAX_FILENAMESIZE)) {
+        lineno++;
+        if (lineno <= 2) {
+            /* Read number of provided points */
+            readNumPoints = (lineno == 1) ? &BmassQM.n_points_annual :
+                                            &BmassQM.n_points_perennial;
+            scanRes = sscanf(inBuf, "%d", readNumPoints);
+
+            nExpectItems = 1;
+        } else {
+            /* Read points */
+            nExpectItems = nPointItems;
+            scanRes = sscanf(inBuf, "%lf %s %lf %lf",
+                            &quantile, pftName, &bmass_rap, &bmass_stepwat);
+        }
+
+        if (scanRes != nExpectItems) {
+            LogError(
+                &LogInfo,
+                LOGERROR,
+                "%s: Expected %s of input.",
+                MyFileName,
+                (nExpectItems == 1) ? "one column" : "four columns"
+            );
+            return;
+        }
+
+        if (lineno <= 2 && *readNumPoints < minNumPoints) {
+            LogError(
+                &LogInfo,
+                LOGERROR,
+                "%s: Number of values for annual and perennial biomass "
+                "must be > 0.",
+                MyFileName
+            );
+            return;
+        }
+
+        switch(lineno) {
+            case 1: /* Allocate memory for annual biomass */
+                BmassQM.rap_annual_points =
+                        (double *) Mem_Calloc(*readNumPoints, sizeof(double),
+                                              "_bmassqm_init()", &LogInfo);
+                BmassQM.stepwat_annual_points =
+                        (double *) Mem_Calloc(*readNumPoints, sizeof(double),
+                                              "_bmassqm_init()", &LogInfo);
+                break;
+            case 2: /* Allocate memory for perennial biomass */
+                BmassQM.rap_perennial_points =
+                        (double *) Mem_Calloc(*readNumPoints, sizeof(double),
+                                              "_bmassqm_init()", &LogInfo);
+                BmassQM.stepwat_perennial_points =
+                        (double *) Mem_Calloc(*readNumPoints, sizeof(double),
+                                              "_bmassqm_init()", &LogInfo);
+                break;
+            default: /* Read either annual and perennial biomass */
+                if (strcmp(pftName, "afgAGB") == 0) {
+                    BmassQM.rap_annual_points[annualIndex] = bmass_rap;
+                    BmassQM.stepwat_annual_points[annualIndex] = bmass_stepwat;
+
+                    // Check that the annual values are in ascending order
+                    // by checking the quantile, RAP and STEPWAT2 points
+                    if (annualIndex > 0) {
+                      if (LE(quantile, aPrevQuantile)) {
+                          LogError(
+                              &LogInfo,
+                              LOGERROR,
+                              "%s: Annual quantile list is out of order.",
+                              MyFileName
+                          );
+                      } else if (LE(bmass_rap, aPrevRAP)) {
+                        LogError(
+                            &LogInfo,
+                            LOGERROR,
+                            "%s: Annual RAP biomass on line %d is <= to the "
+                            "previous value.",
+                            MyFileName,
+                            lineno
+                        );
+                      } else if (LE(bmass_stepwat, aPrevSTEP)) {
+                        LogError(
+                            &LogInfo,
+                            LOGERROR,
+                            "%s: Annual stepwat biomass on line %d is <= to "
+                            "the previous value.",
+                            MyFileName,
+                            lineno
+                        );
+                      }
+                      if (LogInfo.stopRun) {
+                        return;
+                      }
+                    }
+                    aPrevQuantile = quantile;
+                    aPrevRAP = bmass_rap;
+                    aPrevSTEP = bmass_stepwat;
+
+                    annualIndex++;
+                } else if (strcmp(pftName, "pfgAGB") == 0) {
+                    BmassQM.rap_perennial_points[perennialIndex] = bmass_rap;
+                    BmassQM.stepwat_perennial_points[perennialIndex] = bmass_stepwat;
+
+                    // Check that the perennial values are in ascending order
+                    // by checking the quantile, RAP and STEPWAT2 points
+                    if (perennialIndex > 0) {
+                      if (LE(quantile, pPrevQuantile)) {
+                          LogError(
+                              &LogInfo,
+                              LOGERROR,
+                              "%s: Annual quantile list is out of order."
+                          );
+                      } else if (LE(bmass_rap, pPrevRAP)) {
+                        LogError(
+                            &LogInfo,
+                            LOGERROR,
+                            "%s: Perennial RAP biomass on line %d is <= to "
+                            "the previous value.",
+                            MyFileName,
+                            lineno
+                        );
+                      } else if (LE(bmass_stepwat, pPrevSTEP)) {
+                        LogError(
+                            &LogInfo,
+                            LOGERROR,
+                            "%s: Perennial stepwat biomass on line %d is <= "
+                            "to the previous value.",
+                            MyFileName,
+                            lineno
+                        );
+                      }
+                      if (LogInfo.stopRun) {
+                        return;
+                      }
+                    }
+                    pPrevQuantile = quantile;
+                    pPrevRAP = bmass_rap;
+                    pPrevSTEP = bmass_stepwat;
+
+                    perennialIndex++;
+                } else {
+                    LogError(
+                        &LogInfo,
+                        LOGERROR,
+                        "%s: Unkown name in the column 'PFT' on line %d.",
+                        MyFileName,
+                        lineno
+                    );
+                    return;
+                }
+                break;
+        }
+    }
+
+    if (annualIndex != BmassQM.n_points_annual) {
+        LogError(
+            &LogInfo,
+            LOGERROR,
+            "%s: The number of annual biomass rows specified (%d) were "
+            "not provided (%d).",
+            MyFileName,
+            BmassQM.n_points_annual,
+            annualIndex
+        );
+    } else if (perennialIndex != BmassQM.n_points_perennial) {
+        LogError(
+            &LogInfo,
+            LOGERROR,
+            "%s: The number of perennial biomass rows specified (%d) were "
+            "not provided (%d).",
+            MyFileName,
+            BmassQM.n_points_perennial,
+            perennialIndex
+        );
+    }
+}
 
 /**************************************************************/
 static void _bmassflags_init( void) {
@@ -551,28 +755,24 @@ static void _bmassflags_init( void) {
   DirName(Parm_name(F_BMassAvg), bMassAvgFile);
   if (DirExists(bMassAvgFile)) {
     strcpy(inbuf, Parm_name(F_BMassAvg));
-    if (!RemoveFiles(inbuf, &LogInfo) )
+    if (!RemoveFiles(inbuf, FALSE, &LogInfo) )
       LogError(&LogInfo, LOGWARN, "Can't remove old average biomass output file %s\n%s",
                 inbuf, strerror(errno) );
 
-  } else if (!MkDir(bMassAvgFile, &LogInfo) ) {
-    LogError(&LogInfo, LOGERROR,
-              "Can't make output path for average biomass file: %s\n%s",
-              bMassAvgFile, strerror(errno));
+  } else {
+    MkDir(bMassAvgFile, &LogInfo);
   }
 
   DirName(Parm_name(F_BMassPre), bMassPreFile);
   if (DirExists(bMassPreFile)) {
     strcpy(inbuf, Parm_name(F_BMassPre));
     strcat(inbuf, "*.csv");
-    if (!RemoveFiles(inbuf, &LogInfo) )
+    if (!RemoveFiles(inbuf, FALSE, &LogInfo) )
       LogError(&LogInfo, LOGWARN, "Can't remove old biomass output files %s\n%s",
                 inbuf, strerror(errno) );
 
-  } else if (!MkDir(bMassPreFile, &LogInfo)) {
-      LogError(&LogInfo, LOGERROR,
-                "Can't make output path for yearly biomass files: %s\n%s",
-                bMassPreFile, strerror(errno) );
+  } else {
+    MkDir(bMassPreFile, &LogInfo);
   }
 
 }
@@ -660,28 +860,24 @@ static void _mortflags_init( void) {
     DirName(Parm_name(F_MortAvg), mortAvgFile);
     if (DirExists(mortAvgFile)) {
       strcpy(inbuf, Parm_name(F_MortAvg));
-      if (!RemoveFiles(inbuf, &LogInfo) )
+      if (!RemoveFiles(inbuf, FALSE, &LogInfo) )
         LogError(&LogInfo, LOGWARN, "Can't remove old average biomass output file %s\n%s",
                   inbuf, strerror(errno) );
 
-    } else if (!MkDir(mortAvgFile, &LogInfo)) {
-      LogError(&LogInfo, LOGERROR,
-                "Can't make output path for average biomass file: %s\n%s",
-                mortAvgFile, strerror(errno));
+    } else {
+      MkDir(mortAvgFile, &LogInfo);
     }
 
     DirName(Parm_name(F_MortAvg), mortPreFile);
     if (DirExists(mortPreFile)) {
       strcpy(inbuf, Parm_name(F_MortPre));
       strcat(inbuf, "*.csv");
-      if (!RemoveFiles(inbuf, &LogInfo) )
+      if (!RemoveFiles(inbuf, FALSE, &LogInfo) )
         LogError(&LogInfo, LOGWARN, "Can't remove old biomass output files %s\n%s",
                   inbuf, strerror(errno) );
 
-    } else if (!MkDir(mortPreFile, &LogInfo) ) {
-        LogError(&LogInfo, LOGERROR,
-                  "Can't make output path for yearly biomass files: %s\n%s",
-                  mortPreFile, strerror(errno) );
+    } else {
+        MkDir(mortPreFile, &LogInfo);
     }
 
 }

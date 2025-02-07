@@ -29,6 +29,7 @@ extern EnvType        *Env;
 extern PlotType       *Plot;
 extern ModelType      *Globals;
 extern BmassFlagsType BmassFlags;
+extern BmassQMType    BmassQM;
 extern MortFlagsType  MortFlags;
 extern GlobalType     SuperGlobals;
 extern SW_DOMAIN      SoilWatDomain;

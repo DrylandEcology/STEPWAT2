@@ -136,6 +136,8 @@ LOG_INFO       LogInfo;
 Bool           EchoInits;
 
 BmassFlagsType BmassFlags;
+/** \brief Global struct holding biomass quantile mapping information */
+BmassQMType BmassQM;
 /** \brief Global struct holding mortality output flags. */
 MortFlagsType  MortFlags;
 
@@ -205,9 +207,9 @@ int main(int argc, char **argv) {
  						SoilWatDomain.OutDom.colnames_OUT, &LogInfo); // set column names for output files
 
  	if (SuperGlobals.prepare_IterationSummary) {
- 		SW_OUT_create_summary_files(&SoilWatDomain.OutDom, &SoilWatRun.FileStatus,
-                                    SoilWatDomain.PathInfo.InFiles, SoilWatRun.Site.n_layers,
-                                    &LogInfo);
+ 		SW_OUT_create_summary_files(&SoilWatDomain.OutDom, &SoilWatRun.SW_PathOutputs,
+                                    SoilWatDomain.SW_PathInputs.txtInFiles,
+                                    SoilWatRun.Site.n_layers, &LogInfo);
         SW_OUT_construct_outarray(&SoilWatDomain.OutDom, &SoilWatRun.OutRun, &LogInfo);
  	}
         
@@ -223,8 +225,8 @@ int main(int argc, char **argv) {
 		Globals->currIter = SoilWatRun.OutRun.currIter = iter;
 
 		if (SuperGlobals.storeAllIterations) {
- 			SW_OUT_create_iteration_files(&SoilWatDomain.OutDom, &SoilWatRun.FileStatus,
-                                          iter, SoilWatDomain.PathInfo.InFiles,
+ 			SW_OUT_create_iteration_files(&SoilWatDomain.OutDom, &SoilWatRun.SW_PathOutputs,
+                                          iter, SoilWatDomain.SW_PathInputs.txtInFiles,
                                           SoilWatRun.Site.n_layers, &LogInfo);
 		}
 
@@ -337,7 +339,7 @@ int main(int argc, char **argv) {
     SXW_PrintDebug(1);
   }
 
-  SW_OUT_close_files(&SoilWatRun.FileStatus, &SoilWatDomain.OutDom, &LogInfo);
+  SW_OUT_close_files(&SoilWatRun.SW_PathOutputs, &SoilWatDomain.OutDom, &LogInfo);
   SW_DOM_deconstruct(&SoilWatDomain);
   SW_CTL_clear_model(TRUE, &SoilWatRun); // de-allocate all memory
   free_all_sxw_memory();
@@ -504,6 +506,15 @@ void deallocate_Globals(Bool isGriddedMode){
 	GrpIndex rg;
 	SppIndex sp;
 
+	double **bMassQMFreeArray[] = {
+		&BmassQM.rap_annual_points,
+		&BmassQM.rap_perennial_points,
+		&BmassQM.stepwat_annual_points,
+		&BmassQM.stepwat_perennial_points
+	};
+	const int numBmassFreeElems = 4;
+	int bMassIndex;
+
 	if(!isGriddedMode){
 		free(Env);
 		free(Succulent);
@@ -543,6 +554,14 @@ void deallocate_Globals(Bool isGriddedMode){
 	}
 	/* Then free the entire array */
 	free(RGroup);
+
+	/* Free BmassQM */
+	for (bMassIndex = 0; bMassIndex < numBmassFreeElems; bMassIndex++) {
+		if (!isnull(*bMassQMFreeArray[bMassIndex])) {
+			free(*bMassQMFreeArray[bMassIndex]);
+			*bMassQMFreeArray[bMassIndex] = NULL;
+		}
+	}
 }
 
 /** \brief Translates the input flags to in program flags.

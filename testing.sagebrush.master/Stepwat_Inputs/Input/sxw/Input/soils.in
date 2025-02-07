@@ -10,17 +10,18 @@
 # %clay = (frac) proportion of clay in layer (0-1.0).
 # imperm = (frac) proportion of 'impermeability' to water percolation(/infiltration/drainage) in layer (0-1.0)
 # soiltemp = the initial temperature of each soil layer (in celcius), from the day before the simulation starts
+# %om = (frac, 0-1) proportion of organic matter by weight
 # Note that the evco and trco columns must sum to 1.0 or they will
 # be normalized.
 # Soil texture data for 3 top layers from Trace's MT data. Rest of soil texture from STATSGO.
 # Note: matricd, evco, soil temp for all soil layers from Bradford & Lauenroth 2006 Appendix.
 
-# depth    matricd    gravel_content    evco    	trco_grass    		trco_shrub    trco_tree    		trco_forb    %sand    %clay    imperm    soiltemp
- 10.000      1.430      0.000          0.500        0.306575568         0.211234509        0.100        0.306575568    0.450    0.18     0.000       0.186
- 20.000      1.410      0.000          0.350        0.213538459         0.168060003        0.250        0.213538459    0.480    0.19     0.000       0.372
- 30.000      1.390      0.000          0.150        0.148735509         0.133709996        0.300        0.148735509    0.530    0.16     0.000       0.744
- 40.000      1.390      0.000          0.000        0.103598443         0.106380832        0.200        0.103598443    0.530    0.16     0.000       1.116
- 60.000      1.380      0.000          0.000        0.122420124         0.151975847        0.100        0.122420124    0.530    0.16     0.000       1.488
- 80.000      1.150      0.000          0.000        0.059392272         0.096199668        0.050        0.059392272    0.530    0.16     0.000       2.232
- 100.00      1.310      0.000          0.000        0.028814231         0.060893731        0.000        0.028814231    0.530    0.16     0.000       2.975
- 150.00      1.310      0.000          0.000        0.016925393         0.071545414        0.000        0.016925393    0.530    0.16     0.000       2.975
+# depth    matricd    gravel_content    evco    	trco_grass    		trco_shrub    trco_tree    		trco_forb    %sand    %clay    imperm    soiltemp    %om
+ 10.000      1.430      0.000          0.500        0.306575568         0.211234509        0.100        0.306575568    0.450    0.18     0.000       0.186       0.0
+ 20.000      1.410      0.000          0.350        0.213538459         0.168060003        0.250        0.213538459    0.480    0.19     0.000       0.372       0.0
+ 30.000      1.390      0.000          0.150        0.148735509         0.133709996        0.300        0.148735509    0.530    0.16     0.000       0.744       0.0
+ 40.000      1.390      0.000          0.000        0.103598443         0.106380832        0.200        0.103598443    0.530    0.16     0.000       1.116       0.0
+ 60.000      1.380      0.000          0.000        0.122420124         0.151975847        0.100        0.122420124    0.530    0.16     0.000       1.488       0.0
+ 80.000      1.150      0.000          0.000        0.059392272         0.096199668        0.050        0.059392272    0.530    0.16     0.000       2.232       0.0
+ 100.00      1.310      0.000          0.000        0.028814231         0.060893731        0.000        0.028814231    0.530    0.16     0.000       2.975       0.0
+ 150.00      1.310      0.000          0.000        0.016925393         0.071545414        0.000        0.016925393    0.530    0.16     0.000       2.975       0.0

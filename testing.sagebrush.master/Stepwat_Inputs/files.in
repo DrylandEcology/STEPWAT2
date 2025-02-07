@@ -8,6 +8,7 @@ Input/plot.in		#for the plot
 Input/rgroup.in		#for the rgroup (resource-group-level information)
 Input/species.in	#for the species information
 
+Input/biomass_qm.in     #for the biomass quantile mapping
 Input/bmassflags.in	#biomass flags... (for setting up the output I think)
 Output/bmasspre.csv #output
 Output/bmassavg.csv	#output
