@@ -263,9 +263,9 @@ void runGrid(void)
 	// SOILWAT resets SoilWatRun.Weather.name_prefix every iteration. This is not the behavior we want
 	// so the name is stored here.
 	char SW_prefix_permanent[MAX_FILENAMESIZE - 5]; // see `SW_WEATHER`: subtract 4-digit 'year' file type extension
-	sprintf(SW_prefix_permanent, "%s/%s", 
-			grid_directories[GRID_DIRECTORY_STEPWAT_INPUTS],
-			SoilWatRun.Weather.name_prefix);
+	sprintf(SW_prefix_permanent, "%s/%s",
+				grid_directories[GRID_DIRECTORY_STEPWAT_INPUTS],
+				SoilWatRun.Weather.name_prefix);
 
 
   _init_soilwat_outputs(grid_files[GRID_FILE_SOILWAT2_OUTPUT]);
@@ -557,6 +557,7 @@ static void _init_SXW_inputs(Bool init_SW, char *f_roots)
 	if (init_SW)
 	{
 		char aString[2048];
+
 		sprintf(aString, "%s/%s", grid_directories[GRID_DIRECTORY_STEPWAT_INPUTS], SoilWatRun.Weather.name_prefix);
 		sprintf(SoilWatRun.Weather.name_prefix, "%s", aString); //updates the directory correctly for the weather files so soilwat can find them
 	}
@@ -977,6 +978,7 @@ void free_grid_memory(void)
             free(gridCells[i][j].mySoils.trco_grass);
             free(gridCells[i][j].mySoils.trco_shrub);
             free(gridCells[i][j].mySoils.trco_tree);
+            free(gridCells[i][j]._Gwf);
 		}
 	}
 
@@ -1880,16 +1882,17 @@ void _Output_AllCellAvgMort(const char* fileName){
             }
 
             /* print one line of kill frequencies per age */
-            for(age=0; age < Globals->Max_Age; age++) {
                 if (MortFlags.group) {
                     ForEachGroup(rg){
-                        Gmort[rg][age] = get_running_mean(nobs, Gmort[rg][age], gridCells[row][col]._Gmort[rg].s[age].ave);
+                    	for(age = 0; age < RGroup[rg]->max_age; age++)
+                    		Gmort[rg][age] = get_running_mean(nobs, Gmort[rg][age], gridCells[row][col]._Gmort[rg].s[age].ave);
                     }
                 }
                 if (MortFlags.species) {
                     ForEachSpecies(sp) {
-                        Smort[sp][age] = get_running_mean(nobs, Smort[sp][age], gridCells[row][col]._Smort[sp].s[age].ave);
-                    }
+                    	for(age = 0; age < Species[sp]->max_age; age++)
+                    		Smort[sp][age] = get_running_mean(nobs, Smort[sp][age], gridCells[row][col]._Smort[sp].s[age].ave);
+
                 }
             }
         }
