@@ -241,7 +241,7 @@ typedef enum {DepthNonComp, DepthShallow, DepthMedium, DepthDeep, DepthLast}
  * \ingroup STEPPE
  */
 typedef enum {F_First, F_Log, F_Model, F_Env, F_Plot, F_RGroup, F_Species,
-              F_BMassFlag, F_BMassPre, F_BMassAvg,
+              F_BMassQM, F_BMassFlag, F_BMassPre, F_BMassAvg,
               F_MortFlag,  F_MortPre,  F_MortAvg,
               F_SXW, F_MaxRGroupSpecies, F_EXE}
   ST_FileIndex;
@@ -413,6 +413,7 @@ typedef struct environs_st EnvType;
 typedef struct plot_st PlotType;
 typedef struct globals_st ModelType;
 typedef struct bmassflags_st BmassFlagsType;
+typedef struct bmassqm_st BmassQMType;
 typedef struct mortflags_st MortFlagsType;
 typedef struct superglobals_st GlobalType;
 

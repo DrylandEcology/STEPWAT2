@@ -262,6 +262,7 @@ typedef enum
     GRID_FILE_SPINUP_SPECIES,
 	/** \brief Location in \ref grid_files of the colonization file name. */
 	GRID_FILE_COLONIZATION,
+
     /** \brief Location in \ref grid_files of the SOILWAT2 output cells file. */
     GRID_FILE_SOILWAT2_OUTPUT,
 

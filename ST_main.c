@@ -136,6 +136,8 @@ LOG_INFO       LogInfo;
 Bool           EchoInits;
 
 BmassFlagsType BmassFlags;
+/** \brief Global struct holding biomass quantile mapping information */
+BmassQMType BmassQM;
 /** \brief Global struct holding mortality output flags. */
 MortFlagsType  MortFlags;
 
@@ -504,6 +506,15 @@ void deallocate_Globals(Bool isGriddedMode){
 	GrpIndex rg;
 	SppIndex sp;
 	
+	double **bMassQMFreeArray[] = {
+		&BmassQM.rap_annual_points,
+		&BmassQM.rap_perennial_points,
+		&BmassQM.stepwat_annual_points,
+		&BmassQM.stepwat_perennial_points
+	};
+	const int numBmassFreeElems = 4;
+	int bMassIndex;
+
 	/* Free Species */
 	ForEachSpecies(sp){
 		/* Start by freeing any pointers in the Species struct */
@@ -543,6 +554,14 @@ void deallocate_Globals(Bool isGriddedMode){
 			free(Plot);
 			free(_SomeKillage);
 		}
+		
+	/* Free BmassQM */
+	for (bMassIndex = 0; bMassIndex < numBmassFreeElems; bMassIndex++) {
+		if (!isnull(*bMassQMFreeArray[bMassIndex])) {
+			free(*bMassQMFreeArray[bMassIndex]);
+			*bMassQMFreeArray[bMassIndex] = NULL;
+		}
+	}
 }
 
 /** \brief Translates the input flags to in program flags.
