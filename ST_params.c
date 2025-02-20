@@ -162,6 +162,8 @@ void files_init( void ) {
     	LogInfo.logfp = stdout;
   	else
     	LogInfo.logfp = OpenFile(_files[F_Log], "w", &LogInfo);
+
+    LogInfoSW.logfp = LogInfo.logfp;
    }
 
 }

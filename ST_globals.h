@@ -35,6 +35,7 @@ extern GlobalType     SuperGlobals;
 extern SW_DOMAIN      SoilWatDomain;
 extern SW_RUN SoilWatRun;
 extern LOG_INFO LogInfo;
+extern LOG_INFO LogInfoSW;
 
 extern Bool UseGrid;
 extern Bool UseProgressBar;
