@@ -109,7 +109,7 @@ void _sxw_generate_weather(void) {
   deallocateAllWeather(&w->allHist);
   w->n_years = 1;
   w->startYear = SoilWatRun.Model.startyr + Globals->currYear - 1;
-  SW_WTH_allocateAllWeather(&w->allHist, w->n_years, &LogInfo);
+  SW_WTH_allocateAllWeather(&w->allHist, w->n_years, &LogInfoSW);
 
   if (!w->use_weathergenerator_only) {
     LogError(
@@ -142,11 +142,11 @@ void _sxw_generate_weather(void) {
     SoilWatRun.Model.elevation,
     SoilWatRun.Model.cum_monthdays,
     SoilWatRun.Model.days_in_month,
-    &LogInfo
+    &LogInfoSW
     );
 
   finalizeAllWeather(&SoilWatRun.Markov, w, SoilWatRun.Model.cum_monthdays,
-                      SoilWatRun.Model.days_in_month, &LogInfo); // run the weather
+                      SoilWatRun.Model.days_in_month, &LogInfoSW); // run the weather
 }
 
 
@@ -162,7 +162,8 @@ void _sxw_sw_run(void) {
    // Copy global values to SOILWAT2's SW_ALL to work with correct values
    SoilWatRun.Model.runModelIterations = SuperGlobals.runModelIterations;
    SoilWatRun.Model.runModelYears = SuperGlobals.runModelYears;
- 	SW_CTL_run_current_year(&SoilWatRun, &SoilWatDomain.OutDom, &LogInfo);
+ 	SW_CTL_run_current_year(&SoilWatRun, &SoilWatDomain.OutDom, &LogInfoSW);
+
 
    // Copy the results of SOILWAT2's SXW values
    for(lyrno = 0; lyrno < SXW->NSoLyrs; lyrno++) {
