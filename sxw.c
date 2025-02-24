@@ -226,9 +226,9 @@ void SXW_Init( Bool init_SW, char *f_roots ) {
  * \ingroup SXW
  */
 static void SXW_Reinit(char* SOILWAT_file, Bool zeroOutArrays) {
-	SoilWatDomain.SW_PathInputs.txtInFiles[eFirst] = Str_Dup(SOILWAT_file, &LogInfo);
+	SoilWatDomain.SW_PathInputs.txtInFiles[eFirst] = Str_Dup(SOILWAT_file, &LogInfoSW);
 
-    SW_CTL_setup_domain(0, FALSE, &SoilWatDomain, &LogInfo);
+    SW_CTL_setup_domain(0, FALSE, &SoilWatDomain, &LogInfoSW);
 
     // Update output domain with STEPWAT2's version of
     // prepare_IterationSummary and storeAllIterations
@@ -236,9 +236,9 @@ static void SXW_Reinit(char* SOILWAT_file, Bool zeroOutArrays) {
     SoilWatDomain.OutDom.print_SW_Output = SuperGlobals.storeAllIterations;
     SoilWatDomain.OutDom.storeAllIterations = SuperGlobals.storeAllIterations;
 
- 	SW_CTL_setup_model(&SoilWatRun, &SoilWatDomain.OutDom, zeroOutArrays, &LogInfo);
+ 	SW_CTL_setup_model(&SoilWatRun, &SoilWatDomain.OutDom, zeroOutArrays, &LogInfoSW);
 
-    SW_MDL_get_ModelRun(&SoilWatRun.Model, &SoilWatDomain, NULL, &LogInfo);
+    SW_MDL_get_ModelRun(&SoilWatRun.Model, &SoilWatDomain, NULL, &LogInfoSW);
 
  	// read user inputs
  	SoilWatRun.Model.runModelIterations = SuperGlobals.runModelIterations;
@@ -246,10 +246,10 @@ static void SXW_Reinit(char* SOILWAT_file, Bool zeroOutArrays) {
 
  	SW_CTL_read_inputs_from_disk(&SoilWatRun, &SoilWatDomain,
                                  &SoilWatDomain.hasConsistentSoilLayerDepths,
-                                 &LogInfo);
+                                 &LogInfoSW);
 
  	// initialize simulation run (based on user inputs)
- 	SW_CTL_init_run(&SoilWatRun, swTRUE, &LogInfo);
+ 	SW_CTL_init_run(&SoilWatRun, swTRUE, &LogInfoSW);
 
     SW_DOM_soilProfile(
         &SoilWatDomain.netCDFInput,
@@ -261,7 +261,7 @@ static void SXW_Reinit(char* SOILWAT_file, Bool zeroOutArrays) {
         SoilWatRun.Site.n_layers,
         SoilWatRun.Site.n_evap_lyrs,
         SoilWatRun.Site.soils.depths,
-        &LogInfo
+        &LogInfoSW
     );
 
     SW_OUT_setup_output(
@@ -269,13 +269,13 @@ static void SXW_Reinit(char* SOILWAT_file, Bool zeroOutArrays) {
         SoilWatDomain.nMaxEvapLayers,
         &SoilWatRun.VegEstab,
         &SoilWatDomain.OutDom,
-        &LogInfo
+        &LogInfoSW
     );
 
  	// initialize output: transfer between STEPPE and SOILWAT2
- 	SW_OUT_set_SXWrequests(&SoilWatDomain.OutDom, &LogInfo);
+ 	SW_OUT_set_SXWrequests(&SoilWatDomain.OutDom, &LogInfoSW);
 
-    SW_CTL_alloc_outptrs(&SoilWatRun, &LogInfo);
+    SW_CTL_alloc_outptrs(&SoilWatRun, &LogInfoSW);
 }
 
 

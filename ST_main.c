@@ -130,8 +130,10 @@ GlobalType     SuperGlobals;
 SW_DOMAIN      SoilWatDomain;
 /** \brief Global struct holding SOILWAT2 variables*/
 SW_RUN         SoilWatRun;
-/** \brief Global struct holding log information (used by SOILWAT2) */
+/** \brief Global struct holding log information (used by STEPWAT2) */
 LOG_INFO       LogInfo;
+/** \brief Global struct holding log information (used by SOILWAT2) */
+LOG_INFO       LogInfoSW;
 /** \brief Local booleans to echo inputs/any output (used by SOILWAT2) */
 Bool           EchoInits;
 
@@ -169,6 +171,7 @@ int main(int argc, char **argv) {
 
 	sw_init_logs(stdout, &LogInfo);
 	atexit(check_log);
+	sw_init_logs(stdout, &LogInfoSW);
 	/* provides a way to inform user that something
 	 * was logged.  see generic.h */
     
@@ -186,6 +189,8 @@ int main(int argc, char **argv) {
 	if (UseGrid) {
         writeSOILWAT2Output = SuperGlobals.prepare_IterationSummary;
 		runGrid();
+		sw_write_warnings("", &LogInfo);
+		sw_write_warnings("(SW) ", &LogInfoSW);
 		return 0;
 	}
 
@@ -346,6 +351,9 @@ int main(int argc, char **argv) {
   freeMortalityMemory();
 
 	deallocate_Globals(FALSE);
+
+    sw_write_warnings("", &LogInfo);
+    sw_write_warnings("(SW) ", &LogInfoSW);
 
     // This isn't wrapped in an if statement on purpose.
     // We should print "Done" either way.
@@ -740,6 +748,7 @@ static void init_args(int argc, char **argv) {
 
 	} /* end for(i) */
 
+  LogInfoSW.logfp = LogInfo.logfp;
 
 }
 

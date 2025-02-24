@@ -73,8 +73,7 @@ TIMESTEP dy mo yr # must be lowercase
       BIOMASS     AVG       DY       1     end      vegetation      /* vegetation: cover (%) for trees, shrubs, forbs, grasses; biomass (g/m2 as component of total) for total, trees, shrubs, forbs, grasses, and litter; live biomass (g/m2 as component of total) total, trees, shrubs, forbs, grasses; leaf area index LAI (m2/m2) */
 
 # Simulation output directory/filenames
-Output/			# Path for output files: / for same directory, or e.g., Output/; PROGRAMMER NOTE: This is currently the 13th position; if this changes then update function SW_Files.c/SW_F_read()
-sw_output/logfile.log	        # Output file to which warnings, errors, and other important information is written (can also be stdout); relative to output directory
+Output/			# Path for output files: / for same directory, or e.g., Output/
 
 sw_output/sw2_daily.csv	        # Output file if daily output time period was selected; relative to output directory
 sw_output/sw2_weekly.csv	        # Output file if weekly output time period was selected; relative to output directory
