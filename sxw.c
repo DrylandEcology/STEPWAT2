@@ -249,7 +249,7 @@ static void SXW_Reinit(char* SOILWAT_file, Bool zeroOutArrays) {
                                  &LogInfoSW);
 
  	// initialize simulation run (based on user inputs)
- 	SW_CTL_init_run(&SoilWatRun, swTRUE, &LogInfoSW);
+ 	SW_CTL_init_run(&SoilWatRun, &LogInfoSW);
 
     SW_DOM_soilProfile(
         &SoilWatDomain.netCDFInput,

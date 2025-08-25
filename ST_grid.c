@@ -272,7 +272,7 @@ void runGrid(void)
     SW_OUT_set_ncol(SoilWatDomain.nMaxSoilLayers, SoilWatDomain.nMaxEvapLayers,
                     SoilWatRun.VegEstabIn.count, SoilWatDomain.OutDom.ncol_OUT,
                     SoilWatDomain.OutDom.nvar_OUT, SoilWatDomain.OutDom.nsl_OUT,
-                    SoilWatDomain.OutDom.npft_OUT); // set number of output columns
+                    SoilWatDomain.OutDom.npft_OUT, &LogInfo); // set number of output columns
 	SW_OUT_set_colnames(SoilWatRun.RunIn.SiteRunIn.n_layers, SoilWatRun.VegEstabIn.parms,
  						SoilWatDomain.OutDom.ncol_OUT,
  						SoilWatDomain.OutDom.colnames_OUT, &LogInfo); // set column names for output files
