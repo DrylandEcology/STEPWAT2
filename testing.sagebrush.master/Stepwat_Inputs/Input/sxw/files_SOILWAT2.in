@@ -11,6 +11,7 @@ Input/domain.in
 
 # Model
 Input/modelrun.in	# years for model operation
+Output/sw_output/logfile.log	# Output file to which warnings, errors, and other important information is written (can also be stdout)
 
 #Site
 Input/siteparam.in	# site parameters

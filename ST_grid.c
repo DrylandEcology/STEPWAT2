@@ -507,6 +507,8 @@ static void _init_grid_files(void)
         LogInfo.logfp = OpenFile(grid_files[GRID_FILE_LOGFILE], "w", &LogInfo);
     }
 
+    LogInfoSW.logfp = LogInfo.logfp;
+
 	CloseFile(&f, &LogInfo);
 }
 

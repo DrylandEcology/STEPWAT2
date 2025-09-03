@@ -162,6 +162,8 @@ void files_init( void ) {
     	LogInfo.logfp = stdout;
   	else
     	LogInfo.logfp = OpenFile(_files[F_Log], "w", &LogInfo);
+
+    LogInfoSW.logfp = LogInfo.logfp;
    }
 
 }
@@ -666,6 +668,7 @@ static void _bmassflags_init( void) {
    char z;
    char inbuf[MAX_FILENAMESIZE], bMassAvgFile[FILENAME_MAX],
         bMassPreFile[FILENAME_MAX];
+   int const maxDepthRemove = 10;
 
    MyFileName = Parm_name(F_BMassFlag);
    fin = OpenFile(MyFileName, "r", &LogInfo);
@@ -755,7 +758,7 @@ static void _bmassflags_init( void) {
   DirName(Parm_name(F_BMassAvg), bMassAvgFile);
   if (DirExists(bMassAvgFile)) {
     strcpy(inbuf, Parm_name(F_BMassAvg));
-    if (!RemoveFiles(inbuf, FALSE, &LogInfo) )
+    if (!RemoveFiles(inbuf, FALSE, maxDepthRemove, &LogInfo) )
       LogError(&LogInfo, LOGWARN, "Can't remove old average biomass output file %s\n%s",
                 inbuf, strerror(errno) );
 
@@ -767,7 +770,7 @@ static void _bmassflags_init( void) {
   if (DirExists(bMassPreFile)) {
     strcpy(inbuf, Parm_name(F_BMassPre));
     strcat(inbuf, "*.csv");
-    if (!RemoveFiles(inbuf, FALSE, &LogInfo) )
+    if (!RemoveFiles(inbuf, FALSE, maxDepthRemove, &LogInfo) )
       LogError(&LogInfo, LOGWARN, "Can't remove old biomass output files %s\n%s",
                 inbuf, strerror(errno) );
 
@@ -798,6 +801,7 @@ static void _mortflags_init( void) {
    char z;
    char inbuf[MAX_FILENAMESIZE], mortAvgFile[FILENAME_MAX],
         mortPreFile[FILENAME_MAX];
+   int const maxDepthRemove = 10;
 
 
    MyFileName = Parm_name(F_MortFlag);
@@ -860,7 +864,7 @@ static void _mortflags_init( void) {
     DirName(Parm_name(F_MortAvg), mortAvgFile);
     if (DirExists(mortAvgFile)) {
       strcpy(inbuf, Parm_name(F_MortAvg));
-      if (!RemoveFiles(inbuf, FALSE, &LogInfo) )
+      if (!RemoveFiles(inbuf, FALSE, maxDepthRemove, &LogInfo) )
         LogError(&LogInfo, LOGWARN, "Can't remove old average biomass output file %s\n%s",
                   inbuf, strerror(errno) );
 
@@ -872,7 +876,7 @@ static void _mortflags_init( void) {
     if (DirExists(mortPreFile)) {
       strcpy(inbuf, Parm_name(F_MortPre));
       strcat(inbuf, "*.csv");
-      if (!RemoveFiles(inbuf, FALSE, &LogInfo) )
+      if (!RemoveFiles(inbuf, FALSE, maxDepthRemove, &LogInfo) )
         LogError(&LogInfo, LOGWARN, "Can't remove old biomass output files %s\n%s",
                   inbuf, strerror(errno) );
 
