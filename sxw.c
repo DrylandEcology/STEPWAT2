@@ -228,6 +228,13 @@ void SXW_Init( Bool init_SW, char *f_roots ) {
 static void SXW_Reinit(char* SOILWAT_file, Bool zeroOutArrays) {
 	SoilWatDomain.SW_PathInputs.txtInFiles[eFirst] = Str_Dup(SOILWAT_file, &LogInfoSW);
 
+    // STEPWAT2 uses the directory part of SOILWAT2's "firstfile" to locate
+    // SOILWAT2's input files
+    DirName(
+        SoilWatDomain.SW_PathInputs.txtInFiles[eFirst],
+        SoilWatDomain.SW_PathInputs.SW_ProjDir
+    );
+
     SW_CTL_setup_domain(0, 0, FALSE, &SoilWatDomain, &LogInfo);
 
     // Update output domain with STEPWAT2's version of
