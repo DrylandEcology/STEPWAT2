@@ -277,8 +277,8 @@ void runGrid(void)
  						SoilWatDomain.OutDom.ncol_OUT,
  						SoilWatDomain.OutDom.colnames_OUT, &LogInfo); // set column names for output files
    if (_getNumberSOILWAT2OutputCells() > 0) {
- 		SW_OUT_create_summary_files(&SoilWatDomain.OutDom, &SoilWatRun.FileStatus,
-                                    SoilWatDomain.PathInfo.InFiles, SoilWatRun.Site.n_layers,
+ 		SW_OUT_create_summary_files(&SoilWatDomain.OutDom, &SoilWatRun.SW_PathOutputs,
+                                    SoilWatDomain.SW_PathInputs.txtInFiles, SoilWatRun.Site.n_layers,
                                     &LogInfo);
         SW_OUT_construct_outarray(&SoilWatDomain.OutDom, &SoilWatRun.OutRun, &LogInfo);
     }
@@ -1056,14 +1056,14 @@ void load_cell(int row, int col){
 	if(gridCells[row][col].mySoils.num_layers > 0){
 		RealD soilRegionsLowerBounds[3] = { 30, 70, 100 };
 		set_soillayers(&SoilWatRun.VegProd, &SoilWatRun.Site,
- 			gridCells[row][col].mySoils.num_layers, gridCells[row][col].mySoils.depth,
- 			gridCells[row][col].mySoils.matricd, gridCells[row][col].mySoils.gravel,
- 			gridCells[row][col].mySoils.evco, gridCells[row][col].mySoils.trco_grass,
- 			gridCells[row][col].mySoils.trco_shrub, gridCells[row][col].mySoils.trco_tree,
- 			gridCells[row][col].mySoils.trco_forb, gridCells[row][col].mySoils.psand,
- 			gridCells[row][col].mySoils.pclay, gridCells[row][col].mySoils.imperm,
- 			gridCells[row][col].mySoils.soiltemp, 3, soilRegionsLowerBounds,
- 			&LogInfo);
+		gridCells[row][col].mySoils.num_layers, gridCells[row][col].mySoils.depth,
+		gridCells[row][col].mySoils.matricd, gridCells[row][col].mySoils.gravel,
+		gridCells[row][col].mySoils.evco, gridCells[row][col].mySoils.trco_grass,
+		gridCells[row][col].mySoils.trco_shrub, gridCells[row][col].mySoils.trco_tree,
+		gridCells[row][col].mySoils.trco_forb, gridCells[row][col].mySoils.psand,
+		gridCells[row][col].mySoils.pclay, gridCells[row][col].mySoils.imperm,
+		gridCells[row][col].mySoils.soiltemp, gridCells[row][col].mySoils.soiltemp,
+		3, soilRegionsLowerBounds, &LogInfo);
 	}
 
 	// Zero SOILWAT2 variables (weather, flow, soil temperature, soil moisture)
