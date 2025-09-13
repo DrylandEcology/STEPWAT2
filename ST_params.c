@@ -83,6 +83,7 @@ static void _rgroup_addsucculent( char name[],
 
 static char *_files[NFILES];
 char *MyFileName;
+int const maxDepthRemove = 10;
 
 /**************************************************************/
 /* fdpierson: This function should only be called once, otherwise
@@ -755,28 +756,30 @@ static void _bmassflags_init( void) {
   DirName(Parm_name(F_BMassAvg), bMassAvgFile);
   if (DirExists(bMassAvgFile)) {
     strcpy(inbuf, Parm_name(F_BMassAvg));
-    if (!RemoveFiles(inbuf, &LogInfo) )
+    if (!RemoveFiles(inbuf, FALSE, maxDepthRemove, &LogInfo) )
       LogError(&LogInfo, LOGWARN, "Can't remove old average biomass output file %s\n%s",
                 inbuf, strerror(errno) );
 
-  } else if (!MkDir(bMassAvgFile, &LogInfo) ) {
-    LogError(&LogInfo, LOGERROR,
+  } else {
+    MkDir(bMassAvgFile, &LogInfo);
+   /* LogError(&LogInfo, LOGERROR,
               "Can't make output path for average biomass file: %s\n%s",
-              bMassAvgFile, strerror(errno));
+              bMassAvgFile, strerror(errno));*/
   }
 
   DirName(Parm_name(F_BMassPre), bMassPreFile);
   if (DirExists(bMassPreFile)) {
     strcpy(inbuf, Parm_name(F_BMassPre));
     strcat(inbuf, "*.csv");
-    if (!RemoveFiles(inbuf, &LogInfo) )
+    if (!RemoveFiles(inbuf, FALSE, maxDepthRemove, &LogInfo) )
       LogError(&LogInfo, LOGWARN, "Can't remove old biomass output files %s\n%s",
                 inbuf, strerror(errno) );
 
-  } else if (!MkDir(bMassPreFile, &LogInfo)) {
-      LogError(&LogInfo, LOGERROR,
+  } else{
+    MkDir(bMassPreFile, &LogInfo);
+     /* LogError(&LogInfo, LOGERROR,
                 "Can't make output path for yearly biomass files: %s\n%s",
-                bMassPreFile, strerror(errno) );
+                bMassPreFile, strerror(errno) );*/
   }
 
 }
@@ -802,7 +805,7 @@ static void _mortflags_init( void) {
    char z;
    char inbuf[MAX_FILENAMESIZE], mortAvgFile[FILENAME_MAX],
         mortPreFile[FILENAME_MAX];
-
+   
 
    MyFileName = Parm_name(F_MortFlag);
    fin = OpenFile(MyFileName, "r", &LogInfo);
@@ -864,28 +867,30 @@ static void _mortflags_init( void) {
     DirName(Parm_name(F_MortAvg), mortAvgFile);
     if (DirExists(mortAvgFile)) {
       strcpy(inbuf, Parm_name(F_MortAvg));
-      if (!RemoveFiles(inbuf, &LogInfo) )
+      if (!RemoveFiles(inbuf, FALSE, maxDepthRemove, &LogInfo) )
         LogError(&LogInfo, LOGWARN, "Can't remove old average biomass output file %s\n%s",
                   inbuf, strerror(errno) );
 
-    } else if (!MkDir(mortAvgFile, &LogInfo)) {
-      LogError(&LogInfo, LOGERROR,
+    } else{
+      MkDir(mortAvgFile, &LogInfo);
+      /*LogError(&LogInfo, LOGERROR,
                 "Can't make output path for average biomass file: %s\n%s",
-                mortAvgFile, strerror(errno));
+                mortAvgFile, strerror(errno));*/
     }
 
     DirName(Parm_name(F_MortAvg), mortPreFile);
     if (DirExists(mortPreFile)) {
       strcpy(inbuf, Parm_name(F_MortPre));
       strcat(inbuf, "*.csv");
-      if (!RemoveFiles(inbuf, &LogInfo) )
+      if (!RemoveFiles(inbuf, FALSE, maxDepthRemove, &LogInfo) )
         LogError(&LogInfo, LOGWARN, "Can't remove old biomass output files %s\n%s",
                   inbuf, strerror(errno) );
 
-    } else if (!MkDir(mortPreFile, &LogInfo) ) {
-        LogError(&LogInfo, LOGERROR,
+    } {
+        MkDir(mortPreFile, &LogInfo);
+        /*LogError(&LogInfo, LOGERROR,
                   "Can't make output path for yearly biomass files: %s\n%s",
-                  mortPreFile, strerror(errno) );
+                  mortPreFile, strerror(errno) );*/
     }
 
 }
