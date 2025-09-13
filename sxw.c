@@ -226,9 +226,9 @@ void SXW_Init( Bool init_SW, char *f_roots ) {
  * \ingroup SXW
  */
 static void SXW_Reinit(char* SOILWAT_file, Bool zeroOutArrays) {
-	SoilWatDomain.PathInfo.InFiles[eFirst] = Str_Dup(SOILWAT_file, &LogInfo);
+	SoilWatDomain.SW_PathInputs.txtInFiles[eFirst] = Str_Dup(SOILWAT_file, &LogInfo);
 
-    SW_CTL_setup_domain(0, &SoilWatDomain, &LogInfo);
+    SW_CTL_setup_domain(0,FALSE, &SoilWatDomain, &LogInfo);
 
     // Update output domain with STEPWAT2's version of
     // prepare_IterationSummary and storeAllIterations
@@ -245,21 +245,23 @@ static void SXW_Reinit(char* SOILWAT_file, Bool zeroOutArrays) {
  	SoilWatRun.Model.runModelYears = SuperGlobals.runModelYears;
 
  	SW_CTL_read_inputs_from_disk(&SoilWatRun, &SoilWatDomain.OutDom,
-                                 &SoilWatDomain.PathInfo, &LogInfo);
+                                 &SoilWatDomain.hasConsistentSoilLayerDepths, &LogInfo);
 
  	// initialize simulation run (based on user inputs)
- 	SW_CTL_init_run(&SoilWatRun, &LogInfo);
+ 	SW_CTL_init_run(&SoilWatRun,swTRUE, &LogInfo);
 
-    SW_DOM_soilProfile(
-        &SoilWatDomain.hasConsistentSoilLayerDepths,
-        &SoilWatDomain.nMaxSoilLayers,
-        &SoilWatDomain.nMaxEvapLayers,
-        SoilWatDomain.depthsAllSoilLayers,
-        SoilWatRun.Site.n_layers,
-        SoilWatRun.Site.n_evap_lyrs,
-        SoilWatRun.Site.depths,
-        &LogInfo
-    );
+   SW_DOM_soilProfile(
+	&SoilWatDomain.netCDFInput,
+	&SoilWatDomain.SW_PathInputs,
+    SoilWatDomain.hasConsistentSoilLayerDepths,
+    &SoilWatDomain.nMaxSoilLayers,
+    &SoilWatDomain.nMaxEvapLayers,
+    SoilWatDomain.depthsAllSoilLayers,
+    SoilWatRun.Site.n_layers,
+    SoilWatRun.Site.n_evap_lyrs,
+    SoilWatRun.Site.soils.depths,
+    &LogInfo
+);
 
     SW_OUT_setup_output(
         SoilWatDomain.nMaxSoilLayers,
@@ -410,8 +412,8 @@ void SXW_SW_Setup_Echo(void) {
  	fprintf(f,"Forb\tTree\tShrub\tGrass\n");
  	ForEachSoilLayer(i, s->n_layers)
  	{// %u %u %u %u s->lyr[i]->my_transp_rgn_forb, s->lyr[i]->my_transp_rgn_tree, s->lyr[i]->my_transp_rgn_shrub, s->lyr[i]->my_transp_rgn_grass
- 		fprintf(f,"%6.2f %6.2f %6.2f %6.2f\n", s->transp_coeff[2][i],
-				s->transp_coeff[0][i], s->transp_coeff[1][i], s->transp_coeff[3][i]);
+ 		fprintf(f,"%6.2f %6.2f %6.2f %6.2f\n", s->soils.transp_coeff[2][i],
+				s->soils.transp_coeff[0][i], s->soils.transp_coeff[1][i], s->soils.transp_coeff[3][i]);
  	}
 
   // adding values to sxw structure for use in ST_stats.c
