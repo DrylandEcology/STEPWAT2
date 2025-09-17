@@ -293,9 +293,9 @@ void insertInputSoils() {
 	beginTransaction();
 	ForEachSoilLayer(l, SoilWatRun.Site.n_layers)
  	{
- 		insertSXWinputSoilsRow(Year, Iteration, l+1, s->soils.transp_coeff[l][0], 
-							   s->soils.transp_coeff[l][1], s->soils.transp_coeff[l][3],
-							   s->soils.transp_coeff[l][2]);
+ 		insertSXWinputSoilsRow(Year, Iteration, l+1, s->transp_coeff[l][0], 
+							   s->transp_coeff[l][1], s->transp_coeff[l][3],
+							   s->transp_coeff[l][2]);
  	}
 	endTransaction();
 }
