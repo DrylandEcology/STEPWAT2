@@ -11,7 +11,7 @@ Input/domain.in
 
 # Model
 Input/modelrun.in	# years for model operation
-Output/logfile.log	# errors or important info (can also be stdout)
+Output/sw_output/logfile.log	# Output file to which warnings, errors, and other important information is written (can also be stdout)
 
 #Site
 Input/siteparam.in	# site parameters
@@ -36,14 +36,4 @@ Input/carbon.in
 Input/swcsetup.in	# params for handling measured swc
 
 #Output
-Output/	# 'relative' path for output files: / for same directory, or e.g., Output/; PROGRAMMER NOTE: This is currently the 13th position; if this changes then update function SW_Files.c/SW_F_read()
 Input/outsetup.in	# define output quantities
-Output/sw_output/sw2_daily.csv	#output
-Output/sw_output/sw2_weekly.csv	#output
-Output/sw_output/sw2_monthly.csv	#output
-Output/sw_output/sw2_yearly.csv	#output
-
-Output/sw_output/sw2_daily_slyrs.csv	#output
-Output/sw_output/sw2_weekly_slyrs.csv	#output
-Output/sw_output/sw2_monthly_slyrs.csv	#output
-Output/sw_output/sw2_yearly_slyrs.csv	#output

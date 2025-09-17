@@ -44,40 +44,43 @@ typedef struct Soil_st
 	char rootsFile[20];
 	/** \brief Depth in cm of each soil layer. Size of array defined by 
 	 *         num_layers.  */
-    RealF *depth;
+    RealD *depth;
     /** \brief matricd of each soil layer. Size of array defined by 
 	 *         num_layers.  */
-    RealF *matricd;
+    RealD *matricd;
 	/** \brief Percent gravel for each soil layer. Size of array defined by 
 	 *         num_layers.  */
-    RealF *gravel;
+    RealD *gravel;
 	/** \brief evco of each soil layer. Size of array defined by 
 	 *         num_layers.  */
-    RealF *evco;
+    RealD *evco;
 	/** \brief trco for grass of each soil layer. Size of array defined by 
 	 *         num_layers.  */
-    RealF *trco_grass;
+    RealD *trco_grass;
 	/** \brief trco for shrubs of each soil layer. Size of array defined by 
 	 *         num_layers.  */
-    RealF *trco_shrub;
+    RealD *trco_shrub;
 	/** \brief trco for trees of each soil layer. Size of array defined by 
 	 *         num_layers.  */
-    RealF *trco_tree;
+    RealD *trco_tree;
 	/** \brief trco for forbs of each soil layer. Size of array defined by 
 	 *         num_layers.  */
-    RealF *trco_forb;
+    RealD *trco_forb;
 	/** \brief Percent sand for each soil layer. Size of array defined by 
 	 *         num_layers.  */
-    RealF *psand;
+    RealD *psand;
 	/** \brief Percent clay for each soil layer. size of array defined by 
 	 *         num_layers.  */
-    RealF *pclay;
+    RealD *pclay;
 	/** \brief impermiability of each soil layer. size of array defined by 
 	 *         num_layers.  */
-    RealF *imperm;
+    RealD *imperm;
 	/** \brief temperature of each soil layer. size of array defined by 
 	 *         num_layers.  */
-    RealF *soiltemp;
+    RealD *soiltemp;
+	/** \brief temperature of each soil layer. size of array defined by 
+	 *         num_layers.  */
+    RealD *fractionWeight_om;
 } SoilType;
 
 /** 
