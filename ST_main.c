@@ -204,18 +204,18 @@ int main(int argc, char **argv) {
         
 	SXW_Init(TRUE, NULL); // allocate SOILWAT2-memory
 	SW_OUT_set_ncol(SoilWatDomain.nMaxSoilLayers, SoilWatDomain.nMaxEvapLayers,
-                    SoilWatRun.VegEstab.count, SoilWatDomain.OutDom.ncol_OUT,
+                    SoilWatRun.VegEstabIn.count, SoilWatDomain.OutDom.ncol_OUT,
                     SoilWatDomain.OutDom.nvar_OUT, SoilWatDomain.OutDom.nsl_OUT,
-                    SoilWatDomain.OutDom.npft_OUT); // set number of output columns
- 	SW_OUT_set_colnames(SoilWatRun.Site.n_layers, SoilWatRun.VegEstab.parms,
+                    SoilWatDomain.OutDom.npft_OUT, &LogInfo); // set number of output columns
+ 	SW_OUT_set_colnames(SoilWatRun.RunIn.SiteRunIn.n_layers, SoilWatRun.VegEstabIn.parms,
  						SoilWatDomain.OutDom.ncol_OUT,
  						SoilWatDomain.OutDom.colnames_OUT, &LogInfo); // set column names for output files
 
  	if (SuperGlobals.prepare_IterationSummary) {
  		SW_OUT_create_summary_files(&SoilWatDomain.OutDom, &SoilWatRun.SW_PathOutputs,
                                     SoilWatDomain.SW_PathInputs.txtInFiles,
-                                    SoilWatRun.Site.n_layers, &LogInfo);
-        SW_OUT_construct_outarray(&SoilWatDomain.OutDom, &SoilWatRun.OutRun, &LogInfo);
+                                    SoilWatRun.RunIn.SiteRunIn.n_layers, &LogInfo);
+        SW_OUT_construct_outarray(1, &SoilWatDomain.OutDom, &SoilWatRun.OutRun, &LogInfo);
  	}
         
 	/* Connect to ST db and insert static data */
@@ -232,7 +232,7 @@ int main(int argc, char **argv) {
 		if (SuperGlobals.storeAllIterations) {
  			SW_OUT_create_iteration_files(&SoilWatDomain.OutDom, &SoilWatRun.SW_PathOutputs,
                                           iter, SoilWatDomain.SW_PathInputs.txtInFiles,
-                                          SoilWatRun.Site.n_layers, &LogInfo);
+                                          SoilWatRun.RunIn.SiteRunIn.n_layers, &LogInfo);
 		}
 
 		if (SuperGlobals.prepare_IterationSummary) {
@@ -492,7 +492,7 @@ void set_all_rngs(
 	/* Initialize RNGs with seed/state and sequence identifier that is
 		 reproducible and unique among RNGs, iterations, and year
 		 but not grid cells */
-	RandSeed(initstate, RNG_INITSEQ(8, iter, year, 0), &SoilWatRun.Markov.markov_rng);
+	RandSeed(initstate, RNG_INITSEQ(8, iter, year, 0), &SoilWatRun.MarkovIn.markov_rng);
 }
 
 

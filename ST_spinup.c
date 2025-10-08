@@ -152,8 +152,8 @@ void runSpinup(void){
     ChDir(grid_directories[GRID_DIRECTORY_STEPWAT_INPUTS]);
     SXW_Reset(gridCells[0][0].mySXW->f_watin, TRUE);
     //TODO: This is a shortcut. swc history is not used and shouldn't be until this is fixed.
-    free(SoilWatRun.SoilWat.hist.file_prefix);
-    SoilWatRun.SoilWat.hist.file_prefix = NULL;
+    free(SoilWatRun.SoilWatIn.hist.file_prefix);
+    SoilWatRun.SoilWatIn.hist.file_prefix = NULL;
     ChDir("..");
 
 	_endSpinup();
