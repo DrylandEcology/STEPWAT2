@@ -22,6 +22,11 @@
 1            # Wind speed
 1            # Relative humidity
 
+#--- Flags to fix small problems in weather inputs
+0           # Swap min/max if min > max (air temperature, relative humidity)
+0           # Reset percentages to 100% if > 100% (relative humidity, cloud cover)
+0           # Reset observed to extraterrestrial solar radiation if observed > extraterrestrial
+
 
 #--- Flags describing daily weather input files "weath.YYYY":
 # 0 = Variable is absent
