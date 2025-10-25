@@ -258,7 +258,7 @@ int main(int argc, char **argv) {
 
 			rgroup_PartResources();
 
-			if (!isnull(SXW->debugfile) ) SXW_PrintDebug(0);
+			if (!isnull(debugfile) ) SXW_PrintDebug(0);
 
 			rgroup_Grow();
 
@@ -339,7 +339,7 @@ int main(int argc, char **argv) {
 		ST_disconnect();
 	}
 
-  if (!isnull(SXW->debugfile)){
+  if (!isnull(debugfile)){
     printf("entering debugfile\n");
     SXW_PrintDebug(1);
   }
@@ -725,7 +725,7 @@ static void init_args(int argc, char **argv) {
 		case 8: // -s
 			if (strlen(argv[a]) > 1){
 				printf("Generating SXW debug file\n");
-				SXW->debugfile = Str_Dup(&argv[a][1], &LogInfo);
+				debugfile = Str_Dup(&argv[a][2], &LogInfo);
 			}
 			break;
 	  
