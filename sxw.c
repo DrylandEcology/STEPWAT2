@@ -77,6 +77,7 @@
 SXW_t* SXW;
 SXW_resourceType* SXWResources;
 sw_random_t resource_rng; //rng for swx_resource.c functions.
+char *debugfile;
 
 
 
@@ -156,7 +157,7 @@ void SXW_Init( Bool init_SW, char *f_roots ) {
    _sxwfiles[2] = &SXW->f_prod;
    _sxwfiles[3] = &SXW->f_watin;
 
-  SXW->debugfile = NULL;
+  
   SXW->NGrps = Globals->grpCount;
 
   _read_files();
@@ -171,8 +172,7 @@ void SXW_Init( Bool init_SW, char *f_roots ) {
   SXW->NPds = MAX_MONTHS;
   _read_watin();
 
-  if (SXW->debugfile)
-	  _read_debugfile();
+ 
 
 
   if (init_SW)
@@ -183,6 +183,9 @@ void SXW_Init( Bool init_SW, char *f_roots ) {
     // e.g., among grid cells or among iterations
 		SXW_Reset(SXW->f_watin, TRUE);
   }
+  if (debugfile)
+	  _read_debugfile();
+   
 
   SXW->NTrLyrs = SoilWatRun.SiteSim.n_transp_lyrs[0];
   if(SoilWatRun.SiteSim.n_transp_lyrs[1] > SXW->NTrLyrs)
@@ -951,8 +954,7 @@ static void _read_debugfile(void) {
 	int cnt = 0;
 	TimeInt i;
 	char name[256] = {0}, inbuf[MAX_FILENAMESIZE], errstr[MAX_ERROR];
-
-	f = OpenFile(SXW->debugfile, "r", &LogInfo);
+	f = OpenFile(debugfile, "r", &LogInfo);
 
 	/* get name of output file */
 	if (!GetALine(f, inbuf, MAX_FILENAMESIZE)) {
