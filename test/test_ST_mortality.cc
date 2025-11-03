@@ -8,15 +8,18 @@ TEST(ST_Mortality_test, Simulate_prescribed_fire_when_killfreq_startyr_is_0) {
     LOG_INFO local_log;
     sw_init_logs(NULL, &local_log);
 
+    Globals = (ModelType*) Mem_Calloc(1, sizeof(ModelType), "allocate_Globals: Globals", &LogInfo);
     RGroup = (GroupType **)Mem_Calloc(1, sizeof(GroupType *), nullptr, &local_log);
     RGroup[rg] = (GroupType *)Mem_Calloc(1, sizeof(GroupType), nullptr, &local_log);
     RGroup[rg]->killfreq_startyr = 0;
+    Globals->grpCount = 1;
 
     simulatePrescribedFire();
 
     // If killfreq_startyr == 0, do not simulate fire.
     EXPECT_EQ(RGroup[rg]->prescribedfire, 0);
 
+    free(Globals);
     free((void *)RGroup[rg]);
     free((void *)RGroup);
 }
