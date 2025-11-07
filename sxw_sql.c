@@ -595,6 +595,7 @@ static void insertSXWoutputTranspirationRow(int Year, int Iteration, int Layer, 
 void insertTranspiration() {
 	int l;
 	int p;
+	int k;
 	double m[12];
 	int Year = SoilWatRun.ModelSim.year;
 	int Iteration = Globals->currIter;
@@ -608,39 +609,21 @@ void insertTranspiration() {
 		insertSXWoutputTranspirationRow(Year,Iteration,l+1,0,m[0],m[1],m[2],m[3],m[4],m[5],m[6],m[7],m[8],m[9],m[10],m[11]);
 	}
 
-	//Tree - 1
-	for (l = 0; l < SXW->NSoLyrs; l++) {
-		for(p=0;p<12;p++) {
-			m[p] = SXW->transpVeg[SW_TREES][Ilp(l, p)];
-		}
-		insertSXWoutputTranspirationRow(Year,Iteration,l+1,1,m[0],m[1],m[2],m[3],m[4],m[5],m[6],m[7],m[8],m[9],m[10],m[11]);
-	}
+    ForEachVegType(k) {
+        for (l = 0; l < SXW->NSoLyrs; l++) {
+            for(p=0;p<12;p++) {
+                m[p] = SXW->transpVeg[k][Ilp(l, p)];
+            }
+            insertSXWoutputTranspirationRow(
+                Year,
+                Iteration,
+                l + 1,
+                k + 1,
+                m[0],m[1],m[2],m[3],m[4],m[5],m[6],m[7],m[8],m[9],m[10],m[11]
+            );
+        }
+    }
 
-	//Shrub - 2
-	for (l = 0; l < SXW->NSoLyrs; l++) {
-		for(p=0;p<12;p++) {
-			m[p] = SXW->transpVeg[SW_SHRUB][Ilp(l, p)];
-		}
-		insertSXWoutputTranspirationRow(Year,Iteration,l+1,2,m[0],m[1],m[2],m[3],m[4],m[5],m[6],m[7],m[8],m[9],m[10],m[11]);
-	}
-
-	//Grass - 3
-	for (l = 0; l < SXW->NSoLyrs; l++) {
-		for (p = 0; p < 12; p++) {
-			m[p] = SXW->transpVeg[SW_GRASS][Ilp(l, p)];
-		}
-		insertSXWoutputTranspirationRow(Year, Iteration, l+1, 3, m[0], m[1], m[2],
-				m[3], m[4], m[5], m[6], m[7], m[8], m[9], m[10], m[11]);
-	}
-
-	//Forb - 4
-	for (l = 0; l < SXW->NSoLyrs; l++) {
-		for (p = 0; p < 12; p++) {
-			m[p] = SXW->transpVeg[SW_FORBS][Ilp(l, p)];
-		}
-		insertSXWoutputTranspirationRow(Year, Iteration, l+1, 4, m[0], m[1], m[2],
-				m[3], m[4], m[5], m[6], m[7], m[8], m[9], m[10], m[11]);
-	}
 	endTransaction();
 }
 

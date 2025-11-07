@@ -54,19 +54,25 @@ typedef struct Soil_st
 	/** \brief evco of each soil layer. Size of array defined by 
 	 *         num_layers.  */
     RealD *evco;
-	/** \brief trco for grass of each soil layer. Size of array defined by 
-	 *         num_layers.  */
-    RealD *trco_grass;
-	/** \brief trco for shrubs of each soil layer. Size of array defined by 
+	/** \brief trco for needle-leaved trees of each soil layer.
+	 *         Size of array defined by num_layers.  */
+    RealD *trco_treeNL;
+	/** \brief trco for broad-leaved trees of each soil layer.
+	 *         Size of array defined by num_layers.  */
+    RealD *trco_treeBL;
+	/** \brief trco for shrubs of each soil layer. Size of array defined by
 	 *         num_layers.  */
     RealD *trco_shrub;
-	/** \brief trco for trees of each soil layer. Size of array defined by 
-	 *         num_layers.  */
-    RealD *trco_tree;
-	/** \brief trco for forbs of each soil layer. Size of array defined by 
+	/** \brief trco for forbs of each soil layer. Size of array defined by
 	 *         num_layers.  */
     RealD *trco_forb;
-	/** \brief Percent sand for each soil layer. Size of array defined by 
+	/** \brief trco for C3-grass of each soil layer. Size of array defined by
+	 *         num_layers.  */
+    RealD *trco_grassC3;
+	/** \brief trco for C4-grass of each soil layer. Size of array defined by
+	 *         num_layers.  */
+    RealD *trco_grassC4;
+	/** \brief Percent sand for each soil layer. Size of array defined by
 	 *         num_layers.  */
     RealD *psand;
 	/** \brief Percent clay for each soil layer. size of array defined by 
