@@ -147,6 +147,7 @@ void SXW_Init( Bool init_SW, char *f_roots ) {
    * 	roots file. This is for the gridded version where soils needs to
    * 	match sxwroots.in
    */
+    int k;
 	char roots[MAX_FILENAMESIZE] = { '\0' };
 
 	// FIXME: seed with appropriate iter, year, and cell_id
@@ -188,15 +189,16 @@ void SXW_Init( Bool init_SW, char *f_roots ) {
 		SXW_Reset(SXW->f_watin, TRUE);
   }
 
-  SXW->NTrLyrs = SoilWatRun.SiteSim.n_transp_lyrs[0];
-  if(SoilWatRun.SiteSim.n_transp_lyrs[1] > SXW->NTrLyrs)
-  SXW->NTrLyrs = SoilWatRun.SiteSim.n_transp_lyrs[1];
-  if(SoilWatRun.SiteSim.n_transp_lyrs[3] > SXW->NTrLyrs)
-  SXW->NTrLyrs = SoilWatRun.SiteSim.n_transp_lyrs[3];
-  if(SoilWatRun.SiteSim.n_transp_lyrs[2] > SXW->NTrLyrs)
-	  SXW->NTrLyrs = SoilWatRun.SiteSim.n_transp_lyrs[2];
+    // Find the SOILWAT2 vegetation type with the deepest rooting profile
+    SXW->NTrLyrs = SoilWatRun.SiteSim.n_transp_lyrs[0];
 
-  SXW->NSoLyrs = SoilWatRun.RunIn.SiteRunIn.n_layers;
+    ForEachVegType(k) {
+        if (SoilWatRun.SiteSim.n_transp_lyrs[k] > SXW->NTrLyrs) {
+            SXW->NTrLyrs = SoilWatRun.SiteSim.n_transp_lyrs[k];
+        }
+    }
+
+    SXW->NSoLyrs = SoilWatRun.RunIn.SiteRunIn.n_layers;
 
   /* Print general information to stdout.
      If we are using gridded mode this functionallity will be handled in ST_grid.c */
@@ -381,69 +383,62 @@ void SXW_Run_SOILWAT(void) {
 }
 
 void SXW_SW_Setup_Echo(void) {
- 	char name[256] = {0};
- 	strcat(name, _debugout);
- 	FILE *f = OpenFile(strcat(name, ".input.out"), "a", &LogInfo);
- 	int i;
- 	fprintf(f, "\n================== %d ==============================\n", SoilWatRun.ModelSim.year);
- 	fprintf(f,"Fractions Grass:%f Shrub:%f Tree:%f Forb:%f BareGround:%f\n",
-            SoilWatRun.RunIn.VegProdRunIn.veg[3].cov.fCover,
-			SoilWatRun.RunIn.VegProdRunIn.veg[1].cov.fCover,
-            SoilWatRun.RunIn.VegProdRunIn.veg[0].cov.fCover,
-            SoilWatRun.RunIn.VegProdRunIn.veg[2].cov.fCover,
-			SoilWatRun.RunIn.VegProdRunIn.bare_cov.fCover);
- 	fprintf(f,"Monthly Production Values\n");
- 	fprintf(f,"Grass\n");
- 	fprintf(f,"Month\tLitter\tBiomass\tPLive\tLAI_conv\n");
- 	for (i = 0; i < 12; i++) {
- 		fprintf(f,"%u\t%f\t%f\t%f\t%f\n", i + 1, SoilWatRun.RunIn.VegProdRunIn.veg[3].litter[i],
- 				SoilWatRun.RunIn.VegProdRunIn.veg[3].biomass[i], SoilWatRun.RunIn.VegProdRunIn.veg[3].pct_live[i],
- 				SoilWatRun.RunIn.VegProdRunIn.veg[3].lai_conv[i]);
- 	}
+    char name[256] = {0};
+    strcat(name, _debugout);
+    FILE *f = OpenFile(strcat(name, ".input.out"), "a", &LogInfo);
+    int i;
+    int k;
 
- 	fprintf(f,"Shrub\n");
- 	fprintf(f,"Month\tLitter\tBiomass\tPLive\tLAI_conv\n");
- 	for (i = 0; i < 12; i++) {
- 		fprintf(f,"%u\t%f\t%f\t%f\t%f\n", i + 1, SoilWatRun.RunIn.VegProdRunIn.veg[1].litter[i],
- 				SoilWatRun.RunIn.VegProdRunIn.veg[1].biomass[i], SoilWatRun.RunIn.VegProdRunIn.veg[1].pct_live[i],
- 				SoilWatRun.RunIn.VegProdRunIn.veg[1].lai_conv[i]);
- 	}
+    fprintf(
+        f,
+        "\n================== %d ==============================\n",
+        SoilWatRun.ModelSim.year
+    );
 
- 	fprintf(f,"Tree\n");
- 	fprintf(f,"Month\tLitter\tBiomass\tPLive\tLAI_conv\n");
- 	for (i = 0; i < 12; i++) {
- 		fprintf(f,"%u\t%f\t%f\t%f\t%f\n", i + 1, SoilWatRun.RunIn.VegProdRunIn.veg[0].litter[i],
- 				SoilWatRun.RunIn.VegProdRunIn.veg[0].biomass[i], SoilWatRun.RunIn.VegProdRunIn.veg[0].pct_live[i],
- 				SoilWatRun.RunIn.VegProdRunIn.veg[0].lai_conv[i]);
- 	}
+    fprintf(f, "Fractions\n\tType\tCover\n");
+    ForEachVegType(k) {
+        fprintf(
+            f,
+            "\t%s\t%f\n",
+            key2veg[k],
+            SoilWatRun.RunIn.VegProdRunIn.veg[k].cov.fCover
+        );
+    }
+    fprintf(
+        f, "\tBareGround: %f\n\n", SoilWatRun.RunIn.VegProdRunIn.bare_cov.fCover
+    );
 
- 	fprintf(f,"Forb\n");
- 	fprintf(f,"Month\tLitter\tBiomass\tPLive\tLAI_conv\n");
- 	for (i = 0; i < 12; i++) {
- 		fprintf(f,"%u\t%f\t%f\t%f\t%f\n", i + 1, SoilWatRun.RunIn.VegProdRunIn.veg[2].litter[i],
- 				SoilWatRun.RunIn.VegProdRunIn.veg[2].biomass[i], SoilWatRun.RunIn.VegProdRunIn.veg[2].pct_live[i],
- 				SoilWatRun.RunIn.VegProdRunIn.veg[2].lai_conv[i]);
- 	}
+    fprintf(f, "Monthly Production Values\n");
+    ForEachVegType(k) {
+        fprintf(f, "%s\n", key2veg[k]);
+        fprintf(f, "Month\tLitter\tBiomass\tPLive\tLAI_conv\n");
+        for (i = 0; i < 12; i++) {
+            fprintf(
+                f,
+                "%u\t%f\t%f\t%f\t%f\n",
+                i + 1,
+                SoilWatRun.RunIn.VegProdRunIn.veg[k].litter[i],
+                SoilWatRun.RunIn.VegProdRunIn.veg[k].biomass[i],
+                SoilWatRun.RunIn.VegProdRunIn.veg[k].pct_live[i],
+                SoilWatRun.RunIn.VegProdRunIn.veg[k].lai_conv[i]
+            );
+        }
+    }
+    fprintf(f, "\n");
 
- 	SW_SOIL_RUN_INPUTS *s = &SoilWatRun.RunIn.SoilRunIn;
- 	fprintf(f,"Soils Transp_coeff\n");
- 	fprintf(f,"Forb\tTree\tShrub\tGrass\n");
- 	ForEachSoilLayer(i, SoilWatRun.RunIn.SiteRunIn.n_layers)
- 	{// %u %u %u %u s->lyr[i]->my_transp_rgn_forb, s->lyr[i]->my_transp_rgn_tree, s->lyr[i]->my_transp_rgn_shrub, s->lyr[i]->my_transp_rgn_grass
- 		fprintf(f,"%6.2f %6.2f %6.2f %6.2f\n", s->transp_coeff[2][i],
-				s->transp_coeff[0][i], s->transp_coeff[1][i],
-                s->transp_coeff[3][i]);
- 	}
+    fprintf(f, "Soils Transp_coeff\nLayer");
+    ForEachVegType(k) { fprintf(f, "\t%s", key2veg[k]); }
+    fprintf(f, "\n");
+    ForEachSoilLayer(i, SoilWatRun.RunIn.SiteRunIn.n_layers) {
+        fprintf(f, "%u", i + 1);
+        ForEachVegType(k) {
+            fprintf(f, "\t%f", SoilWatRun.RunIn.SoilRunIn.transp_coeff[k][i]);
+        }
+        fprintf(f, "\n");
+    }
+    fprintf(f, "\n");
 
-  // adding values to sxw structure for use in ST_stats.c
-  /*SXW->grass_cover = SW_VegProd.grass.conv_stcr;
-  SXW->shrub_cover = SW_VegProd.shrub.conv_stcr;
-  SXW->tree_cover = SW_VegProd.tree.conv_stcr;
-  SXW->forbs_cover = SW_VegProd.forb.conv_stcr;*/
-
-
-	fprintf(f, "\n");
-	CloseFile(&f, &LogInfo);
+    CloseFile(&f, &LogInfo);
 }
 
 /**
