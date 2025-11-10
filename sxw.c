@@ -249,7 +249,10 @@ static void SXW_Reinit(char* SOILWAT_file, Bool zeroOutArrays) {
     SoilWatDomain.OutDom.print_SW_Output = SuperGlobals.storeAllIterations;
     SoilWatDomain.OutDom.storeAllIterations = SuperGlobals.storeAllIterations;
 
- 	SW_CTL_setup_model(&SoilWatRun, &SoilWatDomain.OutDom, zeroOutArrays, &LogInfoSW);
+    // Some of SOILWAT2's dynamic memory requires full information on start/end years
+    SoilWatDomain.endyr = SoilWatDomain.startyr + SuperGlobals.runModelYears;
+
+    SW_CTL_setup_model(&SoilWatRun, &SoilWatDomain.OutDom, zeroOutArrays, &LogInfoSW);
 
     SW_MDL_get_ModelRun(&SoilWatRun.ModelIn, &SoilWatDomain, NULL, &LogInfo);
 
