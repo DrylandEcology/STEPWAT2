@@ -186,7 +186,14 @@ void SXW_Init( Bool init_SW, char *f_roots ) {
     // by SOILWAT2 in global variables, e.g., `SoilWatRun`,
     // as long as these variables are reused/shared,
     // e.g., among grid cells or among iterations
-		SXW_Reset(SXW->f_watin, TRUE);
+    SXW_Reset(SXW->f_watin, TRUE);
+
+    // Create directory for SOILWAT2 output files and remove old files
+    if (DirExists(SoilWatDomain.SW_PathInputs.outputPrefix)) {
+        SW_F_CleanOutDir(SoilWatDomain.SW_PathInputs.outputPrefix, &LogInfo);
+    } else {
+        MkDir(SoilWatDomain.SW_PathInputs.outputPrefix, &LogInfo);
+    }
   }
 
     // Find the SOILWAT2 vegetation type with the deepest rooting profile
@@ -241,7 +248,7 @@ static void SXW_Reinit(char* SOILWAT_file, Bool zeroOutArrays) {
         SoilWatDomain.SW_PathInputs.SW_ProjDir
     );
 
-    SW_CTL_setup_domain(0, 0, FALSE, &SoilWatDomain, &LogInfo);
+    SW_CTL_setup_domain(ST_rank, 0, FALSE, &SoilWatDomain, &LogInfo);
 
     // Update output domain with STEPWAT2's version of
     // prepare_IterationSummary and storeAllIterations
@@ -261,7 +268,6 @@ static void SXW_Reinit(char* SOILWAT_file, Bool zeroOutArrays) {
  	SoilWatRun.ModelIn.runModelYears = SuperGlobals.runModelYears;
 
     SW_CTL_read_inputs_from_disk(
-        ST_rank,
         &SoilWatRun,
         &SoilWatDomain,
         &SoilWatDomain.hasConsistentSoilLayerDepths,
