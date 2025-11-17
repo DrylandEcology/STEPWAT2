@@ -184,15 +184,15 @@ void SXW_Init( Bool init_SW, char *f_roots ) {
 		SXW_Reset(SXW->f_watin, TRUE);
   }
 
-  SXW->NTrLyrs = SoilWatRun.Site.n_transp_lyrs[0];
-  if(SoilWatRun.Site.n_transp_lyrs[1] > SXW->NTrLyrs)
-  SXW->NTrLyrs = SoilWatRun.Site.n_transp_lyrs[1];
-  if(SoilWatRun.Site.n_transp_lyrs[3] > SXW->NTrLyrs)
-  SXW->NTrLyrs = SoilWatRun.Site.n_transp_lyrs[3];
-  if(SoilWatRun.Site.n_transp_lyrs[2] > SXW->NTrLyrs)
-	  SXW->NTrLyrs = SoilWatRun.Site.n_transp_lyrs[2];
+  SXW->NTrLyrs = SoilWatRun.SiteSim.n_transp_lyrs[0];
+  if(SoilWatRun.SiteSim.n_transp_lyrs[1] > SXW->NTrLyrs)
+  SXW->NTrLyrs = SoilWatRun.SiteSim.n_transp_lyrs[1];
+  if(SoilWatRun.SiteSim.n_transp_lyrs[3] > SXW->NTrLyrs)
+  SXW->NTrLyrs = SoilWatRun.SiteSim.n_transp_lyrs[3];
+  if(SoilWatRun.SiteSim.n_transp_lyrs[2] > SXW->NTrLyrs)
+	  SXW->NTrLyrs = SoilWatRun.SiteSim.n_transp_lyrs[2];
 
-  SXW->NSoLyrs = SoilWatRun.Site.n_layers;
+  SXW->NSoLyrs = SoilWatRun.RunIn.SiteRunIn.n_layers;
 
   /* Print general information to stdout.
      If we are using gridded mode this functionallity will be handled in ST_grid.c */
@@ -228,7 +228,14 @@ void SXW_Init( Bool init_SW, char *f_roots ) {
 static void SXW_Reinit(char* SOILWAT_file, Bool zeroOutArrays) {
 	SoilWatDomain.SW_PathInputs.txtInFiles[eFirst] = Str_Dup(SOILWAT_file, &LogInfoSW);
 
-    SW_CTL_setup_domain(0, FALSE, &SoilWatDomain, &LogInfoSW);
+    // STEPWAT2 uses the directory part of SOILWAT2's "firstfile" to locate
+    // SOILWAT2's input files
+    DirName(
+        SoilWatDomain.SW_PathInputs.txtInFiles[eFirst],
+        SoilWatDomain.SW_PathInputs.SW_ProjDir
+    );
+
+    SW_CTL_setup_domain(0, 0, FALSE, &SoilWatDomain, &LogInfo);
 
     // Update output domain with STEPWAT2's version of
     // prepare_IterationSummary and storeAllIterations
@@ -238,18 +245,18 @@ static void SXW_Reinit(char* SOILWAT_file, Bool zeroOutArrays) {
 
  	SW_CTL_setup_model(&SoilWatRun, &SoilWatDomain.OutDom, zeroOutArrays, &LogInfoSW);
 
-    SW_MDL_get_ModelRun(&SoilWatRun.Model, &SoilWatDomain, NULL, &LogInfoSW);
+    SW_MDL_get_ModelRun(&SoilWatRun.ModelIn, &SoilWatDomain, NULL, &LogInfo);
 
  	// read user inputs
- 	SoilWatRun.Model.runModelIterations = SuperGlobals.runModelIterations;
- 	SoilWatRun.Model.runModelYears = SuperGlobals.runModelYears;
+ 	SoilWatRun.ModelSim.runModelIterations = SuperGlobals.runModelIterations;
+ 	SoilWatRun.ModelIn.runModelYears = SuperGlobals.runModelYears;
 
  	SW_CTL_read_inputs_from_disk(&SoilWatRun, &SoilWatDomain,
                                  &SoilWatDomain.hasConsistentSoilLayerDepths,
                                  &LogInfoSW);
 
  	// initialize simulation run (based on user inputs)
- 	SW_CTL_init_run(&SoilWatRun, swTRUE, &LogInfoSW);
+ 	SW_CTL_init_run(&SoilWatRun, &LogInfoSW);
 
     SW_DOM_soilProfile(
         &SoilWatDomain.netCDFInput,
@@ -258,24 +265,23 @@ static void SXW_Reinit(char* SOILWAT_file, Bool zeroOutArrays) {
         &SoilWatDomain.nMaxSoilLayers,
         &SoilWatDomain.nMaxEvapLayers,
         SoilWatDomain.depthsAllSoilLayers,
-        SoilWatRun.Site.n_layers,
-        SoilWatRun.Site.n_evap_lyrs,
-        SoilWatRun.Site.soils.depths,
-        &LogInfoSW
+        SoilWatRun.RunIn.SiteRunIn.n_layers,
+        SoilWatRun.SiteSim.n_evap_lyrs,
+        SoilWatRun.RunIn.SoilRunIn.depths,
+        &LogInfo
     );
 
     SW_OUT_setup_output(
         SoilWatDomain.nMaxSoilLayers,
         SoilWatDomain.nMaxEvapLayers,
-        &SoilWatRun.VegEstab,
+        SoilWatRun.VegEstabIn.count,
+        SoilWatRun.VegEstabIn.parms,
         &SoilWatDomain.OutDom,
         &LogInfoSW
     );
 
  	// initialize output: transfer between STEPPE and SOILWAT2
  	SW_OUT_set_SXWrequests(&SoilWatDomain.OutDom, &LogInfoSW);
-
-    SW_CTL_alloc_outptrs(&SoilWatRun, &LogInfoSW);
 }
 
 
@@ -371,51 +377,54 @@ void SXW_SW_Setup_Echo(void) {
  	strcat(name, _debugout);
  	FILE *f = OpenFile(strcat(name, ".input.out"), "a", &LogInfo);
  	int i;
- 	fprintf(f, "\n================== %d ==============================\n", SoilWatRun.Model.year);
- 	fprintf(f,"Fractions Grass:%f Shrub:%f Tree:%f Forb:%f BareGround:%f\n", SoilWatRun.VegProd.veg[3].cov.fCover,
-			SoilWatRun.VegProd.veg[1].cov.fCover, SoilWatRun.VegProd.veg[0].cov.fCover, SoilWatRun.VegProd.veg[2].cov.fCover,
-			SoilWatRun.VegProd.bare_cov.fCover);
+ 	fprintf(f, "\n================== %d ==============================\n", SoilWatRun.ModelSim.year);
+ 	fprintf(f,"Fractions Grass:%f Shrub:%f Tree:%f Forb:%f BareGround:%f\n",
+            SoilWatRun.RunIn.VegProdRunIn.veg[3].cov.fCover,
+			SoilWatRun.RunIn.VegProdRunIn.veg[1].cov.fCover,
+            SoilWatRun.RunIn.VegProdRunIn.veg[0].cov.fCover,
+            SoilWatRun.RunIn.VegProdRunIn.veg[2].cov.fCover,
+			SoilWatRun.RunIn.VegProdRunIn.bare_cov.fCover);
  	fprintf(f,"Monthly Production Values\n");
  	fprintf(f,"Grass\n");
  	fprintf(f,"Month\tLitter\tBiomass\tPLive\tLAI_conv\n");
  	for (i = 0; i < 12; i++) {
- 		fprintf(f,"%u\t%f\t%f\t%f\t%f\n", i + 1, SoilWatRun.VegProd.veg[3].litter[i],
- 				SoilWatRun.VegProd.veg[3].biomass[i], SoilWatRun.VegProd.veg[3].pct_live[i],
- 				SoilWatRun.VegProd.veg[3].lai_conv[i]);
+ 		fprintf(f,"%u\t%f\t%f\t%f\t%f\n", i + 1, SoilWatRun.RunIn.VegProdRunIn.veg[3].litter[i],
+ 				SoilWatRun.RunIn.VegProdRunIn.veg[3].biomass[i], SoilWatRun.RunIn.VegProdRunIn.veg[3].pct_live[i],
+ 				SoilWatRun.RunIn.VegProdRunIn.veg[3].lai_conv[i]);
  	}
 
  	fprintf(f,"Shrub\n");
  	fprintf(f,"Month\tLitter\tBiomass\tPLive\tLAI_conv\n");
  	for (i = 0; i < 12; i++) {
- 		fprintf(f,"%u\t%f\t%f\t%f\t%f\n", i + 1, SoilWatRun.VegProd.veg[1].litter[i],
- 				SoilWatRun.VegProd.veg[1].biomass[i], SoilWatRun.VegProd.veg[1].pct_live[i],
- 				SoilWatRun.VegProd.veg[1].lai_conv[i]);
+ 		fprintf(f,"%u\t%f\t%f\t%f\t%f\n", i + 1, SoilWatRun.RunIn.VegProdRunIn.veg[1].litter[i],
+ 				SoilWatRun.RunIn.VegProdRunIn.veg[1].biomass[i], SoilWatRun.RunIn.VegProdRunIn.veg[1].pct_live[i],
+ 				SoilWatRun.RunIn.VegProdRunIn.veg[1].lai_conv[i]);
  	}
 
  	fprintf(f,"Tree\n");
  	fprintf(f,"Month\tLitter\tBiomass\tPLive\tLAI_conv\n");
  	for (i = 0; i < 12; i++) {
- 		fprintf(f,"%u\t%f\t%f\t%f\t%f\n", i + 1, SoilWatRun.VegProd.veg[0].litter[i],
- 				SoilWatRun.VegProd.veg[0].biomass[i], SoilWatRun.VegProd.veg[0].pct_live[i],
- 				SoilWatRun.VegProd.veg[0].lai_conv[i]);
+ 		fprintf(f,"%u\t%f\t%f\t%f\t%f\n", i + 1, SoilWatRun.RunIn.VegProdRunIn.veg[0].litter[i],
+ 				SoilWatRun.RunIn.VegProdRunIn.veg[0].biomass[i], SoilWatRun.RunIn.VegProdRunIn.veg[0].pct_live[i],
+ 				SoilWatRun.RunIn.VegProdRunIn.veg[0].lai_conv[i]);
  	}
 
  	fprintf(f,"Forb\n");
  	fprintf(f,"Month\tLitter\tBiomass\tPLive\tLAI_conv\n");
  	for (i = 0; i < 12; i++) {
- 		fprintf(f,"%u\t%f\t%f\t%f\t%f\n", i + 1, SoilWatRun.VegProd.veg[2].litter[i],
- 				SoilWatRun.VegProd.veg[2].biomass[i], SoilWatRun.VegProd.veg[2].pct_live[i],
- 				SoilWatRun.VegProd.veg[2].lai_conv[i]);
+ 		fprintf(f,"%u\t%f\t%f\t%f\t%f\n", i + 1, SoilWatRun.RunIn.VegProdRunIn.veg[2].litter[i],
+ 				SoilWatRun.RunIn.VegProdRunIn.veg[2].biomass[i], SoilWatRun.RunIn.VegProdRunIn.veg[2].pct_live[i],
+ 				SoilWatRun.RunIn.VegProdRunIn.veg[2].lai_conv[i]);
  	}
 
- 	SW_SITE *s = &SoilWatRun.Site;
+ 	SW_SOIL_RUN_INPUTS *s = &SoilWatRun.RunIn.SoilRunIn;
  	fprintf(f,"Soils Transp_coeff\n");
  	fprintf(f,"Forb\tTree\tShrub\tGrass\n");
- 	ForEachSoilLayer(i, s->n_layers)
+ 	ForEachSoilLayer(i, SoilWatRun.RunIn.SiteRunIn.n_layers)
  	{// %u %u %u %u s->lyr[i]->my_transp_rgn_forb, s->lyr[i]->my_transp_rgn_tree, s->lyr[i]->my_transp_rgn_shrub, s->lyr[i]->my_transp_rgn_grass
- 		fprintf(f,"%6.2f %6.2f %6.2f %6.2f\n", s->soils.transp_coeff[2][i],
-				s->soils.transp_coeff[0][i], s->soils.transp_coeff[1][i],
-                s->soils.transp_coeff[3][i]);
+ 		fprintf(f,"%6.2f %6.2f %6.2f %6.2f\n", s->transp_coeff[2][i],
+				s->transp_coeff[0][i], s->transp_coeff[1][i],
+                s->transp_coeff[3][i]);
  	}
 
   // adding values to sxw structure for use in ST_stats.c
@@ -449,7 +458,7 @@ void SXW_PrintDebug(Bool cleanup) {
 		debugCleanUp();
 	} else {
 		for (i = 0; i < _debugyrs_cnt; i++) {
-			if (SoilWatRun.Model.year == _debugyrs[i]) {
+			if (SoilWatRun.ModelSim.year == _debugyrs[i]) {
 				SXW_SW_Setup_Echo();
 				_print_debuginfo();
 				break;
@@ -467,7 +476,7 @@ void SXW_PrintDebug(Bool cleanup) {
 		insertInputSoils();
 		insertOutputVars(SXWResources->_resource_cur, transp_window->added_transp);
 		insertRgroupInfo(SXWResources->_resource_cur);
-		insertOutputProd(&SoilWatRun.VegProd);
+		insertOutputProd(&SoilWatRun.VegProdSim);
 		insertRootsSum(SXWResources->_roots_active_sum);
 		insertRootsRelative(SXWResources->_roots_active_rel);
 		insertTranspiration();
@@ -995,7 +1004,7 @@ void debugCleanUp() {
 
 void _print_debuginfo(void) {
 /*======================================================*/
-	SW_VEGPROD *v = &SoilWatRun.VegProd;
+	SW_VEGPROD_SIM *v = &SoilWatRun.VegProdSim;
 	TimeInt p;
 	LyrIndex t;
 	int l;
@@ -1045,7 +1054,7 @@ void _print_debuginfo(void) {
 			sum += SXW->transpTotal[Ilp(t, p)];
 	}
 
-	fprintf(f, "\n================== %d =============================\n", SoilWatRun.Model.year);
+	fprintf(f, "\n================== %d =============================\n", SoilWatRun.ModelSim.year);
 	fprintf(f, "MAP = %d(mm)\tMAT = %5.2f(C)\tAET = %5.4f(cm)\tT = %5.4f(cm)\tTADDED = %5.4f(cm)\tAT = %5.4f(cm)\n\n", Env->ppt, Env->temp, SXW->aet, sum, transp_window->added_transp, sum + transp_window->added_transp);
 
 	fprintf(f, "Group     \tRelsize\tPR\tResource_cur\tResource_cur\n");
@@ -1073,7 +1082,7 @@ void _print_debuginfo(void) {
 			days = 30;
 		else if (p == Feb) { //February has either 28 or 29 days
 			days = 28;
-			if (isleapyear(SoilWatRun.Model.year))
+			if (isleapyear(SoilWatRun.ModelSim.year))
 				days = 29;
 		} // all the other months have 31 days
 
@@ -1162,7 +1171,7 @@ void _print_debuginfo(void) {
 	ForEachTrPeriod(p)
 	{
 		fprintf(f, "%d : ", p + 1);
-		ForEachSoilLayer(t, SoilWatRun.Site.n_layers)
+		ForEachSoilLayer(t, SoilWatRun.RunIn.SiteRunIn.n_layers)
 			fprintf(f, "\t%5.4f", SXW->swc[Ilp(t, p)]);
 		fprintf(f, "\n");
 	}
@@ -1199,7 +1208,7 @@ int get_SW2_veg_index(int veg_prod_type) {
  /***********************************************************/
  //returns the number of transpiration layers correctly for each veg_prod_type
 int getNTranspLayers(int veg_prod_type) {
-  return SoilWatRun.Site.n_transp_lyrs[veg_prod_type];
+  return SoilWatRun.SiteSim.n_transp_lyrs[veg_prod_type];
 }
 
 /** 

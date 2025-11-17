@@ -22,7 +22,7 @@ lib_sw2 = lib$(sw2).a
 path_sw2 = sw_src
 path_sw2lib = $(path_sw2)/bin
 
-std_c++14 = -std=c++14
+std_tests = -std=c++17
 std_c99 = -std=c99
 
 # Note: `-I$(path_sw2)` is required for `#include "external/pcg/pcg_basic.h"`
@@ -99,13 +99,13 @@ stepwat: $(path_sw2lib)/$(lib_sw2) $(objects_core) | $(dir_obj)
 	-@cp stepwat testing.sagebrush.master/Stepwat_Inputs
 
 stepwat_test: $(path_sw2lib)/$(lib_sw2) $(objects_core_test) $(objects_test) | $(dir_obj) $(dir_test)
-	$(CXX) $(objects_core_test) $(objects_test) $(std_c++14) $(CFLAGS) $(CPPFLAGS) $(sw_LDLIBS) $(sw_LDFLAGS) -o stepwat_test
+	$(CXX) $(objects_core_test) $(objects_test) $(std_tests) $(CFLAGS) $(CPPFLAGS) $(sw_LDLIBS) $(sw_LDFLAGS) -o stepwat_test
 
 obj/%.o: %.c | $(dir_obj)
 	$(CC) $(CFLAGS) $(std_c99) $(CPPFLAGS) $(INC_DIRS) -c $< -o $@
 
 obj/%.o: %.cc | $(dir_obj)
-	$(CXX) $(CFLAGS) $(std_c++14) $(CPPFLAGS) $(INC_DIRS) -c $< -o $@
+	$(CXX) $(CFLAGS) $(std_tests) $(CPPFLAGS) $(INC_DIRS) -c $< -o $@
 
 obj/%_TEST.o: %.c | $(dir_obj) $(dir_test)
 	$(CC) $(CFLAGS) $(std_c99) $(CPPFLAGS) $(INC_DIRS) -DSTDEBUG -c $< -o $@

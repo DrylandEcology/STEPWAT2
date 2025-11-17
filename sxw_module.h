@@ -57,7 +57,7 @@ void insertInputProd(void);
 void insertInputSoils(void);
 void insertOutputVars(RealF * _resource_cur, RealF added_transp);
 void insertRgroupInfo(RealF * _resource_cur);
-void insertOutputProd(SW_VEGPROD *v);
+void insertOutputProd(SW_VEGPROD_SIM *v);
 void insertRootsSum(RealD * _roots_active_sum);
 void insertRootsRelative(RealD * _roots_active_rel);
 void insertTranspiration(void);
