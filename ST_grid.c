@@ -391,11 +391,8 @@ void runGrid(void)
 		for(i = 0; i < grid_Rows; ++i){
 			for(j = 0; j < grid_Cols; ++j){
 				load_cell(i, j);
-                int realYears = SuperGlobals.runModelYears;
-                SuperGlobals.runModelYears *= _getNumberSOILWAT2OutputCells();
 				SXW_Reset(gridCells[i][j].mySXW->f_watin, FALSE);
 				unload_cell();
-                SuperGlobals.runModelYears = realYears;
 			}
 		}
 		free(SoilWatRun.SoilWatIn.hist.file_prefix);
@@ -552,10 +549,7 @@ static void _init_grid_inputs(void)
  */
 static void _init_SXW_inputs(Bool init_SW, char *f_roots)
 {
-    int realYears = SuperGlobals.runModelYears;
-    SuperGlobals.runModelYears *= (grid_Cols * grid_Rows);
 	SXW_Init(init_SW, f_roots);	// initializes soilwat
-    SuperGlobals.runModelYears = realYears;
 	if (init_SW)
 	{
 		char aString[2048];
