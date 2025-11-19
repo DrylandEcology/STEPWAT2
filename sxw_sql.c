@@ -39,13 +39,14 @@ static void beginTransaction(void);
 static void endTransaction(void);
 static void prepareStatements(void);
 static void finalizeStatements(void);
+static void createTables(void);
 
-static void beginTransaction() {
+static void beginTransaction(void) {
 	char * sErrMsg = 0;
 	sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, &sErrMsg);
 }
 
-static void endTransaction() {
+static void endTransaction(void) {
 	char * sErrMsg = 0;
 	sqlite3_exec(db, "END TRANSACTION", NULL, NULL, &sErrMsg);
 }
@@ -68,7 +69,7 @@ static void sqlcheck(int rc, char *zErrMsg) {
 	}
 }
 
-void connect(char *debugout) {
+void SXW_connect(char *debugout) {
 	int rc;
 	char name[256] = { 0 };
 	char *zErrMsg = 0;
@@ -85,9 +86,11 @@ void connect(char *debugout) {
 
 	sqlite3_exec(db, "PRAGMA synchronous = OFF", NULL, NULL, &zErrMsg);
 	sqlite3_exec(db, "PRAGMA journal_mode = MEMORY", NULL, NULL, &zErrMsg);
+
+	createTables();
 }
 
-void disconnect() {
+void SXW_disconnect(void) {
 	finalizeStatements();
 	sqlite3_close(db);
 }
@@ -109,7 +112,7 @@ static void insertRgroups(void) {
 	endTransaction();
 }
 
-void insertSXWPhen(void) {
+static void insertSXWPhen(void) {
 	int rc,m;
 	GrpIndex g;
 	char *zErrMsg = 0;
@@ -128,7 +131,7 @@ void insertSXWPhen(void) {
 	endTransaction();
 }
 
-void insertSXWProd(void) {
+static void insertSXWProd(void) {
 	int rc,m;
 	GrpIndex g;
 	char *zErrMsg = 0;
@@ -148,7 +151,7 @@ void insertSXWProd(void) {
 	endTransaction();
 }
 
-void insertInfo() {
+static void insertInfo(void) {
 	int rc;
 	char *zErrMsg = 0;
 	sql[0] = 0;
@@ -172,7 +175,7 @@ static void insertRootsXphenRow(GrpIndex g, int Layer, double var_Jan, double va
 	sqlcheck(rc, zErrMsg);
 }
 
-void insertRootsXphen(double * _rootsXphen) {
+static void insertRootsXphen(double * _rootsXphen) {
 	int r, l, p;
 	int nLyrs;
 	double m[12];
@@ -214,7 +217,7 @@ static void insertSXWinputVarsRow(int year, int iter, double vegCover[], double 
 	//sqlcheck(rc, zErrMsg);
 }
 
-void insertInputVars() {
+void insertSXWInputVars(void) {
 	int Year = SoilWatRun.ModelSim.year;
 	int Iteration = Globals->currIter;
 	SW_VEGPROD_RUN_INPUTS *v = &SoilWatRun.RunIn.VegProdRunIn;
@@ -252,7 +255,7 @@ static void insertSXWinputProdRow(int year, int iter, int VegProdType, int Month
 	sqlite3_reset(stmt_InputProd);
 }
 
-void insertInputProd() {
+void insertSXWInputProd(void) {
 	int Year = SoilWatRun.ModelSim.year;
 	int Iteration = Globals->currIter;
 	int p;
@@ -299,7 +302,7 @@ static void insertSXWinputSoilsRow(int year, int iter, int Layer, double trco[])
 	sqlite3_reset(stmt_InputSoils);
 }
 
-void insertInputSoils() {
+void insertSXWInputSoils(void) {
 	int Year = SoilWatRun.ModelSim.year;
 	int Iteration = Globals->currIter;
 	int l;
@@ -308,11 +311,12 @@ void insertInputSoils() {
 	double trco[NVEGTYPES];
 
 	beginTransaction();
-	ForEachSoilLayer(l, SoilWatRun.RunIn.SiteRunIn.n_layers)
- 	{
- 		ForEachVegType(k) trco[k] = s->transp_coeff[k][l];
- 		insertSXWinputSoilsRow(Year, Iteration, l+1, trco);
- 	}
+	ForEachSoilLayer(l, SoilWatRun.RunIn.SiteRunIn.n_layers) {
+        ForEachVegType(k) {
+            trco[k] = s->transp_coeff[k][l];
+        }
+        insertSXWinputSoilsRow(Year, Iteration, l+1, trco);
+    }
 	endTransaction();
 }
 
@@ -342,7 +346,7 @@ static void insertSXWoutputVarsRow(int year, int iter, int MAP_mm, double MAT_C,
 	sqlite3_reset(stmt_OutVars);
 }
 
-void insertOutputVars(RealF * _resource_cur, RealF added_transp) {
+void insertSXWOutputVars(RealF * _resource_cur, RealF added_transp) {
 	int Year = SoilWatRun.ModelSim.year;
 	int Iteration = Globals->currIter;
 	int p;
@@ -392,7 +396,7 @@ static void insertSXWoutputRgroupRow(int year, int iter, int RGroupID, double Bi
 	sqlite3_reset(stmt_OutRgroup);
 }
 
-void insertRgroupInfo(RealF * _resource_cur) {
+void insertSXWRgroupInfo(RealF * _resource_cur) {
 	int Year = SoilWatRun.ModelSim.year;
 	int Iteration = Globals->currIter;
 	int r;
@@ -414,7 +418,7 @@ static void insertSXWoutputProdRow(int year, int iter, int Month, double BMass, 
 	sqlcheck(rc, zErrMsg);
 }
 
-void insertOutputProd(SW_VEGPROD_SIM *v) {
+void insertSXWOutputProd(SW_VEGPROD_SIM *v) {
 	int p;
 	int k;
 	int Year = SoilWatRun.ModelSim.year;
@@ -488,7 +492,7 @@ static void insertSXWoutputRootsSumRow(int Year, int Iteration, int Layer, int V
 	sqlite3_reset(stmt_OutRootsSum);
 }
 
-void insertRootsSum(RealD * _roots_active_sum) {
+void insertSXWRootsSum(RealD * _roots_active_sum) {
 	int l;
 	int p;
 	int i;
@@ -542,7 +546,7 @@ static void insertSXWoutputRootsRelativeRow(int Year, int Iteration, int Layer, 
 	sqlite3_reset(stmt_OutRootsRel);
 }
 
-void insertRootsRelative(RealD * _roots_active_rel) {
+void insertSXWRootsRelative(RealD * _roots_active_rel) {
 	int l;
 	int p;
 	int g;
@@ -598,7 +602,7 @@ static void insertSXWoutputTranspirationRow(int Year, int Iteration, int Layer, 
 	sqlite3_reset(stmt_OutTransp);
 }
 
-void insertTranspiration() {
+void insertSXWTranspiration(void) {
 	int l;
 	int p;
 	int k;
@@ -663,7 +667,7 @@ static void insertSXWoutputSWCBulkRow(int Year, int Iteration, int Layer, double
 	sqlite3_reset(stmt_OutSWC);
 }
 
-void insertSWCBulk() {
+void insertSXWSWCBulk(void) {
 	int l;
 	int p;
 	double m[12];
@@ -821,7 +825,7 @@ static void prepareStatements(void) {
 	sqlite3_prepare_v2(db, sql, 1024, &stmt_OutSWC, NULL);
 }
 
-static void finalizeStatements() {
+static void finalizeStatements(void) {
 	sqlite3_finalize(stmt_InputVars);
 	sqlite3_finalize(stmt_InputProd);
 	sqlite3_finalize(stmt_InputSoils);
@@ -834,7 +838,7 @@ static void finalizeStatements() {
 	sqlite3_finalize(stmt_OutSWC);
 }
 
-void createTables() {
+static void createTables(void) {
 	int rc;
 	char *zErrMsg = 0;
     char buffer[512];
@@ -984,6 +988,11 @@ void createTables() {
 	rc = sqlite3_exec(db, table_OutputSWCBulk, callback, 0, &zErrMsg);
 	sqlcheck(rc, zErrMsg);
 
-	insertRgroups();
 	prepareStatements();
+
+	insertInfo();
+	insertRgroups();
+	insertSXWPhen();
+	insertSXWProd();
+	insertRootsXphen(SXWResources->_rootsXphen);
 }

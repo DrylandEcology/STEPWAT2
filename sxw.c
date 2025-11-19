@@ -464,7 +464,6 @@ RealF SXW_GetTranspiration( GrpIndex rg) {
 void SXW_PrintDebug(Bool cleanup) {
 /*======================================================*/
 	TimeInt i;
-	static Bool beenhere = FALSE;
 
 	if(cleanup) {
 		debugCleanUp();
@@ -476,23 +475,6 @@ void SXW_PrintDebug(Bool cleanup) {
 				break;
 			}
 		}
-		if (!beenhere) {
-			beenhere = TRUE;
-			insertInfo();
-			insertSXWPhen();
-			insertSXWProd();
-			insertRootsXphen(SXWResources->_rootsXphen);
-		}
-		insertInputVars();
-		insertInputProd();
-		insertInputSoils();
-		insertOutputVars(SXWResources->_resource_cur, transp_window->added_transp);
-		insertRgroupInfo(SXWResources->_resource_cur);
-		insertOutputProd(&SoilWatRun.VegProdSim);
-		insertRootsSum(SXWResources->_roots_active_sum);
-		insertRootsRelative(SXWResources->_roots_active_rel);
-		insertTranspiration();
-		insertSWCBulk();
 	}
 }
 
@@ -1004,14 +986,10 @@ static void _read_debugfile(void) {
 	strcat(name, _debugout);
 	f = OpenFile(strcat(name, ".input.out"), "w", &LogInfo);
 	CloseFile(&f, &LogInfo);
-
-	connect(_debugout);
-	createTables();
 }
 
 void debugCleanUp() {
   printf("in debugCleanUp\n");
-	disconnect();
 }
 
 void _print_debuginfo(void) {
