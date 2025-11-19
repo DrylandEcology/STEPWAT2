@@ -180,8 +180,8 @@ static void prepareStatements() {
 
 	sprintf(sql, "INSERT INTO RGroupsYearInfo (Year, Iteration, RGroupID, Estabs, KillYr, YrsNegPR, mmExtraRes, ResRequired, ResAvail, ResExtra, PR, RelSize, EstSppCount, Extirpated, RegenOk) VALUES (@Year, @Iteration, @RGroupID, @Estabs, @KillYr, @YrsNegPR, @mmExtraRes, @ResRequired, @ResAvail, @ResExtra, @PR, @RelSize, @EstSppCount, @Extirpated, @RegenOk);");
 	sqlite3_prepare_v2(db, sql, 1024, &stmt_RGroupsYearInfo, NULL);
-        
-	sprintf(sql, "INSERT INTO SpeciesYearInfo (Year, Iteration, SpeciesID, EstabCount, Estabs, RelSize, ExtraGrowth, ReceivedProb, AllowGrowth, sdSGerm) VALUES (@Year, @Iteration, @SpeciesID, @EstabCount, @Estabs, @RelSize, @ExtraGrowth, @ReceivedProb, @AllowGrowth, @sdSGerm);");
+
+	sprintf(sql, "INSERT INTO SpeciesYearInfo (Year, Iteration, SpeciesID, EstabCount, Estabs, RelSize, ExtraGrowth, ReceivedProb, sdSGerm, Height) VALUES (@Year, @Iteration, @SpeciesID, @EstabCount, @Estabs, @RelSize, @ExtraGrowth, @ReceivedProb, @sdSGerm, @Height);");
 	sqlite3_prepare_v2(db, sql, 1024, &stmt_SpeciesYearInfo, NULL);
 
 	sprintf(sql, "INSERT INTO Indiv (IndivID, Iteration, CreatedYear, SpeciesID, RGroupID) VALUES (@IndivID, @Iteration, @CreatedYear, @SpeciesID, @RGroupID);");
@@ -363,7 +363,7 @@ void insertIndiv(IndivType *ind) {
  * 
  * \ingroup SQL
  */
-static void insertSpeciesYearInfoRow(int Year, int Iteration, int SpeciesID, int EstabCount, int Estabs, float RelSize, float ExtraGrowth, float ReceivedProb, int sdSGerm) {
+static void insertSpeciesYearInfoRow(int Year, int Iteration, int SpeciesID, int EstabCount, int Estabs, float RelSize, float ExtraGrowth, float ReceivedProb, int sdSGerm, float Height) {
 	sqlite3_bind_int(stmt_SpeciesYearInfo, 1, Year);
 	sqlite3_bind_int(stmt_SpeciesYearInfo, 2, Iteration);
 	sqlite3_bind_int(stmt_SpeciesYearInfo, 3, SpeciesID);
@@ -373,6 +373,7 @@ static void insertSpeciesYearInfoRow(int Year, int Iteration, int SpeciesID, int
 	sqlite3_bind_double(stmt_SpeciesYearInfo, 7, ExtraGrowth);
 	sqlite3_bind_double(stmt_SpeciesYearInfo, 8, ReceivedProb);
 	sqlite3_bind_int(stmt_SpeciesYearInfo, 9, sdSGerm);
+	sqlite3_bind_double(stmt_SpeciesYearInfo, 10, Height);
 
 	sqlite3_step(stmt_SpeciesYearInfo);
 	sqlite3_clear_bindings(stmt_SpeciesYearInfo);
@@ -392,7 +393,18 @@ static void insertSpeciesYearInfoRow(int Year, int Iteration, int SpeciesID, int
  */
 void insertSpecieYearInfo(SppIndex s) {
 	SpeciesType *sp = Species[s];
-	insertSpeciesYearInfoRow(Globals->currYear, Globals->currIter, s+1, sp->est_count, sp->estabs, getSpeciesRelsize(s), sp->extragrowth, sp->received_prob, sp->seedsPresent);
+	insertSpeciesYearInfoRow(
+		Globals->currYear,
+		Globals->currIter,
+		s + 1,
+		sp->est_count,
+		sp->estabs,
+		getSpeciesRelsize(s),
+		sp->extragrowth,
+		sp->received_prob,
+		sp->seedsPresent,
+		getSpeciesHeight(sp)
+	);
 }
 
 /**
@@ -501,19 +513,74 @@ static void insertSpecies(void) {
 	{
 		sp = Species[s];
 		sql[0] = 0;
-		sprintf(sql,
-				"INSERT INTO Species (SpeciesID, RGroupID, NAME, MaxAge, ViableYrs, MaxSeedEstab, MaxVegUnits, MaxSlow, SPnum, MaxRate, IntrinRate, RelSeedlingsSize, SeedlingBiomass, MatureBiomass, SeedlingEstabProbOld, SeedlingEstabProb, AnnMortProb, CohortSurv, ExpDecay, ProbVeggrow1, ProbVeggrow2, ProbVeggrow3, ProbVeggrow4, minReproductiveSize, Height, TempClassID, DisturbClassID, isClonal, UseTempResponse, UseMe, UseDispersal) VALUES (%d, %d, '%s', %d, %d, %d, %d, %d, %d, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %d, %d, %d, %d, %d, %d);",
-				s + 1, sp->res_grp + 1, sp->name, sp->max_age, sp->viable_yrs,
-				sp->max_seed_estab, sp->max_vegunits, sp->max_slow, sp->sp_num,
-				sp->max_rate, sp->intrin_rate, sp->relseedlingsize,
-				sp->seedling_biomass, sp->mature_biomass,
-				sp->seedling_estab_prob_old, sp->seedling_estab_prob,
-				sp->ann_mort_prob, sp->cohort_surv, sp->exp_decay,
-				sp->prob_veggrow[0], sp->prob_veggrow[1], sp->prob_veggrow[2],
-				sp->prob_veggrow[3], sp->minReproductiveSize,
-				getSpeciesHeight(sp), sp->tempclass, sp->disturbclass,
-				sp->isclonal, sp->use_temp_response, sp->use_me, 
-				sp->use_dispersal);
+		sprintf(
+			sql,
+			"INSERT INTO Species ("
+			"SpeciesID,"
+			"RGroupID,"
+			"NAME,"
+			"MaxAge,"
+			"ViableYrs,"
+			"MaxSeedEstab,"
+			"MaxVegUnits,"
+			"MaxSlow,"
+			"SPnum,"
+			"MaxRate,"
+			"IntrinRate,"
+			"RelSeedlingsSize,"
+			"SeedlingBiomass,"
+			"MatureBiomass,"
+			"SeedlingEstabProbOld,"
+			"SeedlingEstabProb,"
+			"AnnMortProb,"
+			"CohortSurv,"
+			"ExpDecay,"
+			"ProbVeggrow1,"
+			"ProbVeggrow2,"
+			"ProbVeggrow3,"
+			"ProbVeggrow4,"
+			"minReproductiveSize,"
+			"TempClassID,"
+			"DisturbClassID,"
+			"isClonal,"
+			"UseTempResponse,"
+			"UseMe,"
+			"UseDispersal"
+			") VALUES ("
+			"%d, %d, '%s', %d, %d, %d, %d, %d, %d, %f, %f, %f, %f, %f, %f, "
+			"%f, %f, %f, %f, %f, %f, %f, %f, %f, %d, %d, %d, %d, %d, %d"
+			");",
+			s + 1,
+			sp->res_grp + 1,
+			sp->name,
+			sp->max_age,
+			sp->viable_yrs,
+			sp->max_seed_estab,
+			sp->max_vegunits,
+			sp->max_slow,
+			sp->sp_num,
+			sp->max_rate,
+			sp->intrin_rate,
+			sp->relseedlingsize,
+			sp->seedling_biomass,
+			sp->mature_biomass,
+			sp->seedling_estab_prob_old,
+			sp->seedling_estab_prob,
+			sp->ann_mort_prob,
+			sp->cohort_surv,
+			sp->exp_decay,
+			sp->prob_veggrow[0],
+			sp->prob_veggrow[1],
+			sp->prob_veggrow[2],
+			sp->prob_veggrow[3],
+			sp->minReproductiveSize,
+			sp->tempclass,
+			sp->disturbclass,
+			sp->isclonal,
+			sp->use_temp_response,
+			sp->use_me,
+			sp->use_dispersal
+		);
 		rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
 		sqlcheck(rc, zErrMsg);
 	}
@@ -714,8 +781,51 @@ static void createTables(void) {
 	char *table_rgroups = "CREATE TABLE RGroups(RGroupID INT PRIMARY KEY NOT NULL, NAME TEXT NOT NULL, MaxStretch INT, MaxSppEstab INT, MaxSpp INT, MaxAge INT, StartYr INT, KillFreq REAL, Extirp INT, GrpNum INT, VegProdType INT, MinResReq REAL, MaxDensity REAL, MaxPerSqm REAL, MaxBmass REAL, XGrow REAL, SlowRate REAL, PptSlope1 REAL, PptSlope2 REAL, PptSlope3 REAL, PptIntcpt1 REAL, PptIntcpt2 REAL, PptIntcpt3 REAL, Succulent INT, UseExtraRes INT, UseMe INT, UseMort INT, EstAnnually INT, DepthClassID INT );";
 	char *table_rgroupsYearInfo = "CREATE TABLE RGroupsYearInfo(Year INT NOT NULL, Iteration INT NOT NULL, RGroupID INT NOT NULL, Estabs INT, KillYr INT, YrsNegPR INT, mmExtraRes INT, ResRequired REAL, ResAvail REAL, ResExtra REAL, PR REAL, RelSize REAL, EstSppCount REAL, Extirpated INT, RegenOk INT, PRIMARY KEY(Year, Iteration, RGroupID));";
 
-	char *table_species = "CREATE TABLE Species(SpeciesID INT PRIMARY KEY NOT NULL, RGroupID INT NOT NULL, NAME TEXT NOT NULL, MaxAge INT, ViableYrs INT, MaxSeedEstab INT, MaxVegUnits INT, MaxSlow INT, SPnum INT, MaxRate REAL, IntrinRate REAL, RelSeedlingsSize REAL, SeedlingBiomass REAL, MatureBiomass REAL, SeedlingEstabProbOld REAL, SeedlingEstabProb REAL, AnnMortProb REAL, CohortSurv REAL, ExpDecay REAL, ProbVeggrow1 REAL, ProbVeggrow2 REAL, ProbVeggrow3 REAL, ProbVeggrow4 REAL, minReproductiveSize REAL, sdPPTdry REAL, sdPPTwet REAL, sdPmin REAL, sdPmax REAL, sdH REAL, sdVT REAL, TempClassID INT, DisturbClassID INT, isClonal INT, UseTempResponse INT, UseMe INT, UseDispersal INT);";
-	char *table_speciesYearInfo = "CREATE TABLE SpeciesYearInfo(Year INT NOT NULL, Iteration INT NOT NULL, SpeciesID INT NOT NULL, EstabCount INT, Estabs INT, RelSize REAL, ExtraGrowth REAL, ReceivedProb REAL, AllowGrowth INT, sdSGerm INT, PRIMARY KEY(Year, Iteration, SpeciesID));";
+	char *table_species = "CREATE TABLE Species("
+		"SpeciesID INT PRIMARY KEY NOT NULL,"
+		"RGroupID INT NOT NULL,"
+		"NAME TEXT NOT NULL,"
+		"MaxAge INT,"
+		"ViableYrs INT,"
+		"MaxSeedEstab INT,"
+		"MaxVegUnits INT,"
+		"MaxSlow INT,"
+		"SPnum INT,"
+		"MaxRate REAL,"
+		"IntrinRate REAL,"
+		"RelSeedlingsSize REAL,"
+		"SeedlingBiomass REAL,"
+		"MatureBiomass REAL,"
+		"SeedlingEstabProbOld REAL,"
+		"SeedlingEstabProb REAL,"
+		"AnnMortProb REAL,"
+		"CohortSurv REAL,"
+		"ExpDecay REAL,"
+		"ProbVeggrow1 REAL,"
+		"ProbVeggrow2 REAL,"
+		"ProbVeggrow3 REAL,"
+		"ProbVeggrow4 REAL,"
+		"minReproductiveSize REAL,"
+		"TempClassID INT,"
+		"DisturbClassID INT,"
+		"isClonal INT,"
+		"UseTempResponse INT,"
+		"UseMe INT,"
+		"UseDispersal INT"
+		");";
+	char *table_speciesYearInfo = "CREATE TABLE SpeciesYearInfo("
+		"Year INT NOT NULL,"
+		"Iteration INT NOT NULL,"
+		"SpeciesID INT NOT NULL,"
+		"EstabCount INT,"
+		"Estabs INT,"
+		"RelSize REAL,"
+		"ExtraGrowth REAL,"
+		"ReceivedProb REAL,"
+		"sdSGerm INT,"
+		"Height REAL,"
+		"PRIMARY KEY(Year, Iteration, SpeciesID)"
+		");";
 
 	char *table_indiv = "CREATE TABLE Indiv(IndivID INT NOT NULL, Iteration INT NOT NULL, CreatedYear INT NOT NULL, SpeciesID INT NOT NULL, RGroupID INT NOT NULL, KilledYear INT, KillTypeID INT, PRIMARY KEY(IndivID, Iteration, CreatedYear, SpeciesID));";
 	char *table_indivYearInfo = "CREATE TABLE IndivYearInfo(Year INT NOT NULL, IndivID INT NOT NULL, MortalityTypeID INT, age INT, mmExtraRes INT, SlowYrs INT, YrsNegPR INT, Killed INT, RelSize REAL, GrpResProp REAL, ResRequired REAL, ResAvail REAL, ResExtra REAL, PR REAL, GrowthRate REAL, ProbVeggrow REAL, PRIMARY KEY(Year, IndivID));";
