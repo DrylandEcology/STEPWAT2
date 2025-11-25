@@ -57,6 +57,17 @@ rgroups_used <- rgroups[ids]
 
 
 #--- Comparisons ------
+tagTest <- if (identical(basename(dir), "Output")) {
+  "test"
+} else {
+  sub("Output_", "", basename(dir))
+}
+tagRef <- if (identical(basename(dir), "Output_ref")) {
+  "reference"
+} else {
+  sub("Output_", "", basename(dir_ref))
+}
+
 nrgu <- length(rgroups_used)
 
 colors_rg <- grDevices::hcl.colors(nrgu, palette = "viridis")
@@ -72,7 +83,12 @@ n_panels <- c(3, 2)
 
 fname_tsc <- file.path(
   dirname(dir),
-  paste0("Fig_TimeSeriesComparison_", format(Sys.time(), "%Y%m%d-%H%M"), ".pdf")
+  paste0(
+    "Fig_TimeSeriesComparison_",
+    tagRef, "-vs-", tagTest, "_",
+    format(Sys.time(), "%Y%m%d-%H%M"),
+    ".pdf"
+  )
 )
 
 if (!file.exists(fname_tsc)) {
@@ -93,7 +109,7 @@ if (!file.exists(fname_tsc)) {
     x[, rgroups_used],
     type = "l",
     xlab = "Simulation time [Years]",
-    ylab = "Biomass of test run [g/m2]",
+    ylab = paste("Biomass of", tagTest, "[g/m2]"),
     col = colors_rg,
     lty = lty_rg,
     main = "Biomass time-series"
@@ -110,7 +126,7 @@ if (!file.exists(fname_tsc)) {
     x_ref[, rgroups_used],
     type = "l",
     xlab = "Simulation time [Years]",
-    ylab = "Biomass of reference run [g/m2]",
+    ylab = paste("Biomass of", tagRef, "[g/m2]"),
     col = colors_rg,
     lty = lty_rg
   )
@@ -121,7 +137,7 @@ if (!file.exists(fname_tsc)) {
     type = "l",
     log = "y",
     xlab = "Simulation time [Years]",
-    ylab = "Biomass of test run [g/m2]",
+    ylab = paste("Biomass of", tagTest, "[g/m2]"),
     col = colors_rg,
     lty = lty_rg,
     main = "Biomass time-series on log-scale"
@@ -132,7 +148,7 @@ if (!file.exists(fname_tsc)) {
     type = "l",
     log = "y",
     xlab = "Simulation time [Years]",
-    ylab = "Biomass of reference run [g/m2]",
+    ylab = paste("Biomass of", tagRef, "[g/m2]"),
     col = colors_rg,
     lty = lty_rg
   )
@@ -143,7 +159,7 @@ if (!file.exists(fname_tsc)) {
     type = "l",
     ylim = c(0, 200),
     xlab = "Simulation time [Years]",
-    ylab = "Biomass of test run [g/m2]",
+    ylab = paste("Biomass of", tagTest, "[g/m2]"),
     col = colors_rg,
     lty = lty_rg,
     main = "Biomass time-series on trimmed scale"
@@ -154,7 +170,7 @@ if (!file.exists(fname_tsc)) {
     type = "l",
     ylim = c(0, 200),
     xlab = "Simulation time [Years]",
-    ylab = "Biomass of reference run [g/m2]",
+    ylab = paste("Biomass of", tagRef, "[g/m2]"),
     col = colors_rg,
     lty = lty_rg
   )
@@ -170,7 +186,12 @@ n_panels <- c(nrgu, 2)
 
 fname_scc <- file.path(
   dirname(dir),
-  paste0("Fig_ScatterComparison_", format(Sys.time(), "%Y%m%d-%H%M"), ".pdf")
+  paste0(
+    "Fig_ScatterComparison_",
+    tagRef, "-vs-", tagTest, "_",
+    format(Sys.time(), "%Y%m%d-%H%M"),
+    ".pdf"
+  )
 )
 
 if (!file.exists(fname_scc)) {
@@ -199,11 +220,11 @@ if (!file.exists(fname_scc)) {
       xlim = vlim,
       ylim = vlim,
       xlab = paste(
-        "\nBiomass of reference run [g/m2]\nmean =",
+        "\nBiomass of", tagRef, "[g/m2]\nmean =",
         round(meanxref[k], 2)
       ),
       ylab = paste(
-        "Biomass of test run [g/m2]\nmean =",
+        "Biomass of", tagTest, "[g/m2]\nmean =",
         round(meanx[k], 2)
       ),
       main = rgroups_used[k]
@@ -219,7 +240,7 @@ if (!file.exists(fname_scc)) {
       col = colors_rg[k],
       xlim = vlim,
       xlab = paste(
-        "\nBiomass of reference - test [g/m2]\nmean =",
+        "\nBiomass of", tagRef, "-", tagTest, "[g/m2]\nmean =",
         round(mean(diffs), 2)
       ),
       main = rgroups_used[k]

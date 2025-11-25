@@ -34,6 +34,7 @@
 
 #include "sxw_funcs.h"
 #include "sxw.h"
+#include "sxw_module.h" // for SXW_connect
 #include "sw_src/include/SW_Output.h"
 #include "sw_src/include/SW_Output_outtext.h"
 #include "sw_src/include/SW_Output_outarray.h"
@@ -221,6 +222,9 @@ int main(int argc, char **argv) {
 	/* Connect to ST db and insert static data */
 	if(STdebug_requested){
 	    ST_connect("Output/stdebug");
+        if (SuperGlobals.storeAllIterations) {
+            SXW_connect("Output/sw_output/sxwdebug");
+        }
 	}
 
 	/* --- Begin a new iteration ------ */
@@ -303,6 +307,19 @@ int main(int argc, char **argv) {
 				ForEachGroup(rg){
 					insertRGroupYearInfo(rg);
 				}
+				//SXW
+				if (SuperGlobals.storeAllIterations) {
+					insertSXWInputVars();
+					insertSXWInputProd();
+					insertSXWInputSoils();
+					insertSXWOutputVars(SXWResources->_resource_cur, transp_window->added_transp);
+					insertSXWRgroupInfo(SXWResources->_resource_cur);
+					insertSXWOutputProd(&SoilWatRun.VegProdSim);
+					insertSXWRootsSum(SXWResources->_roots_active_sum);
+					insertSXWRootsRelative(SXWResources->_roots_active_rel);
+					insertSXWTranspiration();
+					insertSXWSWCBulk();
+				}
 			}
 		} /* end model run for this year*/
 
@@ -337,6 +354,9 @@ int main(int argc, char **argv) {
     /* Disconnect from the database */
 	if(STdebug_requested){
 		ST_disconnect();
+        if (SuperGlobals.storeAllIterations) {
+            SXW_disconnect();
+        }
 	}
 
   if (!isnull(SXW->debugfile)){

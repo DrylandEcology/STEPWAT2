@@ -1,7 +1,7 @@
 /**
  * \file sxw_sql.c
  * \brief Outputs \ref SXW information to an SQL database.
- * 
+ *
  * \author Ryan J. Murphy
  * \date 15 January 2015
  * \ingroup SQL
@@ -12,6 +12,7 @@
 #include <sqlite3.h>
 #include "ST_steppe.h"
 #include "ST_globals.h"
+#include "sw_src/include/myMemory.h" // for sw_memccpy_inc, reportFullBuffer
 #include "sw_src/include/SW_Model.h"
 #include "sw_src/include/SW_Site.h"
 #include "sw_src/include/SW_VegProd.h"
@@ -38,13 +39,14 @@ static void beginTransaction(void);
 static void endTransaction(void);
 static void prepareStatements(void);
 static void finalizeStatements(void);
+static void createTables(void);
 
-static void beginTransaction() {
+static void beginTransaction(void) {
 	char * sErrMsg = 0;
 	sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, &sErrMsg);
 }
 
-static void endTransaction() {
+static void endTransaction(void) {
 	char * sErrMsg = 0;
 	sqlite3_exec(db, "END TRANSACTION", NULL, NULL, &sErrMsg);
 }
@@ -67,7 +69,7 @@ static void sqlcheck(int rc, char *zErrMsg) {
 	}
 }
 
-void connect(char *debugout) {
+void SXW_connect(char *debugout) {
 	int rc;
 	char name[256] = { 0 };
 	char *zErrMsg = 0;
@@ -84,9 +86,11 @@ void connect(char *debugout) {
 
 	sqlite3_exec(db, "PRAGMA synchronous = OFF", NULL, NULL, &zErrMsg);
 	sqlite3_exec(db, "PRAGMA journal_mode = MEMORY", NULL, NULL, &zErrMsg);
+
+	createTables();
 }
 
-void disconnect() {
+void SXW_disconnect(void) {
 	finalizeStatements();
 	sqlite3_close(db);
 }
@@ -108,7 +112,7 @@ static void insertRgroups(void) {
 	endTransaction();
 }
 
-void insertSXWPhen(void) {
+static void insertSXWPhen(void) {
 	int rc,m;
 	GrpIndex g;
 	char *zErrMsg = 0;
@@ -127,7 +131,7 @@ void insertSXWPhen(void) {
 	endTransaction();
 }
 
-void insertSXWProd(void) {
+static void insertSXWProd(void) {
 	int rc,m;
 	GrpIndex g;
 	char *zErrMsg = 0;
@@ -138,7 +142,7 @@ void insertSXWProd(void) {
 	{
 	for(m=0;m<12;m++) {
 		sql[0] = 0;
-		sprintf(sql, "INSERT INTO sxwprod (RGroupID, Month, BMASS, LITTER, PCTLIVE) VALUES (%d, %d, %f, %f, %f);", 
+		sprintf(sql, "INSERT INTO sxwprod (RGroupID, Month, BMASS, LITTER, PCTLIVE) VALUES (%d, %d, %f, %f, %f);",
 					  g+1, m+1, SXWResources->_prod_bmass[Igp(g,m)], SXWResources->_prod_litter[g][m], SXWResources->_prod_pctlive[Igp(g,m)]);
 		rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
 		sqlcheck(rc, zErrMsg);
@@ -147,7 +151,7 @@ void insertSXWProd(void) {
 	endTransaction();
 }
 
-void insertInfo() {
+static void insertInfo(void) {
 	int rc;
 	char *zErrMsg = 0;
 	sql[0] = 0;
@@ -171,7 +175,7 @@ static void insertRootsXphenRow(GrpIndex g, int Layer, double var_Jan, double va
 	sqlcheck(rc, zErrMsg);
 }
 
-void insertRootsXphen(double * _rootsXphen) {
+static void insertRootsXphen(double * _rootsXphen) {
 	int r, l, p;
 	int nLyrs;
 	double m[12];
@@ -191,18 +195,18 @@ void insertRootsXphen(double * _rootsXphen) {
 	endTransaction();
 }
 
-static void insertSXWinputVarsRow(int year, int iter, double fracGrass, double fracShrub, double fracTree, double fracForb, double fracBareGround) {
+static void insertSXWinputVarsRow(int year, int iter, double vegCover[], double fracBareGround) {
 	//int rc;
 	//char *zErrMsg = 0;
 	//sql[0] = 0;
+	int k;
 
 	sqlite3_bind_int(stmt_InputVars, 1, year);
 	sqlite3_bind_int(stmt_InputVars, 2, iter);
-	sqlite3_bind_double(stmt_InputVars, 3, fracGrass);
-	sqlite3_bind_double(stmt_InputVars, 4, fracShrub);
-	sqlite3_bind_double(stmt_InputVars, 5, fracTree);
-	sqlite3_bind_double(stmt_InputVars, 6, fracForb);
-	sqlite3_bind_double(stmt_InputVars, 7, fracBareGround);
+	ForEachVegType(k) {
+		sqlite3_bind_double(stmt_InputVars, 3 + k, vegCover[k]);
+	}
+	sqlite3_bind_double(stmt_InputVars, 3 + NVEGTYPES, fracBareGround);
 
 	sqlite3_step(stmt_InputVars);
 	sqlite3_clear_bindings(stmt_InputVars);
@@ -213,13 +217,18 @@ static void insertSXWinputVarsRow(int year, int iter, double fracGrass, double f
 	//sqlcheck(rc, zErrMsg);
 }
 
-void insertInputVars() {
+void insertSXWInputVars(void) {
 	int Year = SoilWatRun.ModelSim.year;
 	int Iteration = Globals->currIter;
 	SW_VEGPROD_RUN_INPUTS *v = &SoilWatRun.RunIn.VegProdRunIn;
 
+	double vegCover[NVEGTYPES];
+	int k;
+
+	ForEachVegType(k) vegCover[k] = v->veg[k].cov.fCover;
+
 	beginTransaction();
-	insertSXWinputVarsRow(Year, Iteration, v->veg[3].cov.fCover, v->veg[1].cov.fCover, v->veg[0].cov.fCover, v->veg[2].cov.fCover, v->bare_cov.fCover);
+	insertSXWinputVarsRow(Year, Iteration, vegCover, v->bare_cov.fCover);
 	endTransaction();
 }
 
@@ -246,23 +255,32 @@ static void insertSXWinputProdRow(int year, int iter, int VegProdType, int Month
 	sqlite3_reset(stmt_InputProd);
 }
 
-void insertInputProd() {
+void insertSXWInputProd(void) {
 	int Year = SoilWatRun.ModelSim.year;
 	int Iteration = Globals->currIter;
 	int p;
+	int k;
 	SW_VEGPROD_RUN_INPUTS *v = &SoilWatRun.RunIn.VegProdRunIn;
 
 	beginTransaction();
 	ForEachTrPeriod(p) {
-		insertSXWinputProdRow(Year, Iteration, 1, p+1, v->veg[0].litter[p], v->veg[0].biomass[p], v->veg[0].pct_live[p], v->veg[0].lai_conv[p]);
-		insertSXWinputProdRow(Year, Iteration, 2, p+1, v->veg[1].litter[p], v->veg[1].biomass[p], v->veg[1].pct_live[p], v->veg[1].lai_conv[p]);
-		insertSXWinputProdRow(Year, Iteration, 3, p+1, v->veg[3].litter[p], v->veg[3].biomass[p], v->veg[3].pct_live[p], v->veg[3].lai_conv[p]);
-		insertSXWinputProdRow(Year, Iteration, 4, p+1, v->veg[2].litter[p], v->veg[2].biomass[p], v->veg[2].pct_live[p], v->veg[2].lai_conv[p]);
+		ForEachVegType(k) {
+			insertSXWinputProdRow(
+				Year,
+				Iteration,
+				k + 1,
+				p + 1,
+				v->veg[k].litter[p],
+				v->veg[k].biomass[p],
+				v->veg[k].pct_live[p],
+				v->veg[k].lai_conv[p]
+			);
+		}
 	}
 	endTransaction();
 }
 
-static void insertSXWinputSoilsRow(int year, int iter, int Layer, double Tree_trco, double Shrub_trco, double Grass_trco, double Forb_trco) {
+static void insertSXWinputSoilsRow(int year, int iter, int Layer, double trco[]) {
 	/*int rc;
 	char *zErrMsg = 0;
 	sql[0] = 0;
@@ -270,33 +288,35 @@ static void insertSXWinputSoilsRow(int year, int iter, int Layer, double Tree_tr
 	sprintf(sql, "INSERT INTO sxwInputSoils (Year,Iteration,Layer,Tree_trco,Shrub_trco,Grass_trco,Forb_trco) VALUES (%d, %d, %d, %.3f, %.3f, %.3f, %.3f);", year, iter, Layer, Tree_trco,Shrub_trco,Grass_trco,Forb_trco);
 	rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
 	sqlcheck(rc, zErrMsg);*/
+	int k;
 
 	sqlite3_bind_int(stmt_InputSoils, 1, year);
 	sqlite3_bind_int(stmt_InputSoils, 2, iter);
 	sqlite3_bind_int(stmt_InputSoils, 3, Layer);
-	sqlite3_bind_double(stmt_InputSoils, 4, Tree_trco);
-	sqlite3_bind_double(stmt_InputSoils, 5, Shrub_trco);
-	sqlite3_bind_double(stmt_InputSoils, 6, Grass_trco);
-	sqlite3_bind_double(stmt_InputSoils, 7, Forb_trco);
+	ForEachVegType(k) {
+		sqlite3_bind_double(stmt_InputSoils, 4 + k, trco[k]);
+	}
 
 	sqlite3_step(stmt_InputSoils);
 	sqlite3_clear_bindings(stmt_InputSoils);
 	sqlite3_reset(stmt_InputSoils);
 }
 
-void insertInputSoils() {
+void insertSXWInputSoils(void) {
 	int Year = SoilWatRun.ModelSim.year;
 	int Iteration = Globals->currIter;
 	int l;
+	int k;
 	SW_SOIL_RUN_INPUTS *s = &SoilWatRun.RunIn.SoilRunIn;
+	double trco[NVEGTYPES];
 
 	beginTransaction();
-	ForEachSoilLayer(l, SoilWatRun.RunIn.SiteRunIn.n_layers)
- 	{
- 		insertSXWinputSoilsRow(Year, Iteration, l+1, s->transp_coeff[l][0],
-							   s->transp_coeff[l][1], s->transp_coeff[l][3],
-							   s->transp_coeff[l][2]);
- 	}
+	ForEachSoilLayer(l, SoilWatRun.RunIn.SiteRunIn.n_layers) {
+        ForEachVegType(k) {
+            trco[k] = s->transp_coeff[k][l];
+        }
+        insertSXWinputSoilsRow(Year, Iteration, l+1, trco);
+    }
 	endTransaction();
 }
 
@@ -326,7 +346,7 @@ static void insertSXWoutputVarsRow(int year, int iter, int MAP_mm, double MAT_C,
 	sqlite3_reset(stmt_OutVars);
 }
 
-void insertOutputVars(RealF * _resource_cur, RealF added_transp) {
+void insertSXWOutputVars(RealF * _resource_cur, RealF added_transp) {
 	int Year = SoilWatRun.ModelSim.year;
 	int Iteration = Globals->currIter;
 	int p;
@@ -376,7 +396,7 @@ static void insertSXWoutputRgroupRow(int year, int iter, int RGroupID, double Bi
 	sqlite3_reset(stmt_OutRgroup);
 }
 
-void insertRgroupInfo(RealF * _resource_cur) {
+void insertSXWRgroupInfo(RealF * _resource_cur) {
 	int Year = SoilWatRun.ModelSim.year;
 	int Iteration = Globals->currIter;
 	int r;
@@ -398,8 +418,9 @@ static void insertSXWoutputProdRow(int year, int iter, int Month, double BMass, 
 	sqlcheck(rc, zErrMsg);
 }
 
-void insertOutputProd(SW_VEGPROD_SIM *v) {
+void insertSXWOutputProd(SW_VEGPROD_SIM *v) {
 	int p;
+	int k;
 	int Year = SoilWatRun.ModelSim.year;
 	int Iteration = Globals->currIter;
 
@@ -419,24 +440,13 @@ void insertOutputProd(SW_VEGPROD_SIM *v) {
 		} // all the other months have 31 days
 
 		for (i = doy; i < (doy + days); i++) { //accumulating the monthly values...
-			lai_live += (v->veg[0].lai_live_daily[i])
-					+ (v->veg[1].lai_live_daily[i])
-					+ (v->veg[3].lai_live_daily[i])
-					+ (v->veg[2].lai_live_daily[i]);
-			bLAI_total += (v->veg[0].bLAI_total_daily[i]) + (v->veg[1].bLAI_total_daily[i])
-					+ (v->veg[3].bLAI_total_daily[i]) + (v->veg[2].bLAI_total_daily[i]);
-			total_agb += (v->veg[0].total_agb_daily[i])
-					+ (v->veg[1].total_agb_daily[i])
-					+ (v->veg[3].total_agb_daily[i])
-					+ (v->veg[2].total_agb_daily[i]);
-			pct_live += (v->veg[0].pct_live_daily[i])
-					+ (v->veg[1].pct_live_daily[i])
-					+ (v->veg[3].pct_live_daily[i])
-					+ (v->veg[2].pct_live_daily[i]);
-			biomass += (v->veg[0].biomass_daily[i])
-					+ (v->veg[1].biomass_daily[i])
-					+ (v->veg[3].biomass_daily[i])
-					+ (v->veg[2].biomass_daily[i]);
+			ForEachVegType(k) {
+				lai_live += (v->veg[k].lai_live_daily[i]);
+				bLAI_total += (v->veg[k].bLAI_total_daily[i]);
+				total_agb += (v->veg[k].total_agb_daily[i]);
+				pct_live += (v->veg[k].pct_live_daily[i]);
+				biomass += (v->veg[k].biomass_daily[i]);
+			}
 		}
 		doy += days; //updating the doy
 
@@ -482,7 +492,7 @@ static void insertSXWoutputRootsSumRow(int Year, int Iteration, int Layer, int V
 	sqlite3_reset(stmt_OutRootsSum);
 }
 
-void insertRootsSum(RealD * _roots_active_sum) {
+void insertSXWRootsSum(RealD * _roots_active_sum) {
 	int l;
 	int p;
 	int i;
@@ -536,7 +546,7 @@ static void insertSXWoutputRootsRelativeRow(int Year, int Iteration, int Layer, 
 	sqlite3_reset(stmt_OutRootsRel);
 }
 
-void insertRootsRelative(RealD * _roots_active_rel) {
+void insertSXWRootsRelative(RealD * _roots_active_rel) {
 	int l;
 	int p;
 	int g;
@@ -592,9 +602,10 @@ static void insertSXWoutputTranspirationRow(int Year, int Iteration, int Layer, 
 	sqlite3_reset(stmt_OutTransp);
 }
 
-void insertTranspiration() {
+void insertSXWTranspiration(void) {
 	int l;
 	int p;
+	int k;
 	double m[12];
 	int Year = SoilWatRun.ModelSim.year;
 	int Iteration = Globals->currIter;
@@ -608,39 +619,21 @@ void insertTranspiration() {
 		insertSXWoutputTranspirationRow(Year,Iteration,l+1,0,m[0],m[1],m[2],m[3],m[4],m[5],m[6],m[7],m[8],m[9],m[10],m[11]);
 	}
 
-	//Tree - 1
-	for (l = 0; l < SXW->NSoLyrs; l++) {
-		for(p=0;p<12;p++) {
-			m[p] = SXW->transpVeg[SW_TREES][Ilp(l, p)];
-		}
-		insertSXWoutputTranspirationRow(Year,Iteration,l+1,1,m[0],m[1],m[2],m[3],m[4],m[5],m[6],m[7],m[8],m[9],m[10],m[11]);
-	}
+    ForEachVegType(k) {
+        for (l = 0; l < SXW->NSoLyrs; l++) {
+            for(p=0;p<12;p++) {
+                m[p] = SXW->transpVeg[k][Ilp(l, p)];
+            }
+            insertSXWoutputTranspirationRow(
+                Year,
+                Iteration,
+                l + 1,
+                k + 1,
+                m[0],m[1],m[2],m[3],m[4],m[5],m[6],m[7],m[8],m[9],m[10],m[11]
+            );
+        }
+    }
 
-	//Shrub - 2
-	for (l = 0; l < SXW->NSoLyrs; l++) {
-		for(p=0;p<12;p++) {
-			m[p] = SXW->transpVeg[SW_SHRUB][Ilp(l, p)];
-		}
-		insertSXWoutputTranspirationRow(Year,Iteration,l+1,2,m[0],m[1],m[2],m[3],m[4],m[5],m[6],m[7],m[8],m[9],m[10],m[11]);
-	}
-
-	//Grass - 3
-	for (l = 0; l < SXW->NSoLyrs; l++) {
-		for (p = 0; p < 12; p++) {
-			m[p] = SXW->transpVeg[SW_GRASS][Ilp(l, p)];
-		}
-		insertSXWoutputTranspirationRow(Year, Iteration, l+1, 3, m[0], m[1], m[2],
-				m[3], m[4], m[5], m[6], m[7], m[8], m[9], m[10], m[11]);
-	}
-
-	//Forb - 4
-	for (l = 0; l < SXW->NSoLyrs; l++) {
-		for (p = 0; p < 12; p++) {
-			m[p] = SXW->transpVeg[SW_FORBS][Ilp(l, p)];
-		}
-		insertSXWoutputTranspirationRow(Year, Iteration, l+1, 4, m[0], m[1], m[2],
-				m[3], m[4], m[5], m[6], m[7], m[8], m[9], m[10], m[11]);
-	}
 	endTransaction();
 }
 
@@ -674,7 +667,7 @@ static void insertSXWoutputSWCBulkRow(int Year, int Iteration, int Layer, double
 	sqlite3_reset(stmt_OutSWC);
 }
 
-void insertSWCBulk() {
+void insertSXWSWCBulk(void) {
 	int l;
 	int p;
 	double m[12];
@@ -691,16 +684,123 @@ void insertSWCBulk() {
 	endTransaction();
 }
 
-static void prepareStatements() {
-	sql[0] = 0;
+static void prepareStatements(void) {
+    char buffer[512];
+    size_t writeSize;
+    char *writePtr;
+    char *endWritePtr;
+    Bool fullBuffer;
+    int k;
 
-	sprintf(sql, "INSERT INTO sxwInputVars (Year,Iteration,FracGrass,FracShrub,FracTree,FracForb,FracBareGround) VALUES (@Year,@Iteration,@FracGrass,@FracShrub,@FracTree,@FracForb,@FracBareGround);");
+    // Construct sxwInputVars
+    sql[0] = '\0';
+    writePtr = sql;
+    writeSize = 1024; // array size of sql
+    endWritePtr = sql + sizeof sql - 1;
+    fullBuffer = swFALSE;
+
+    fullBuffer = sw_memccpy_inc(
+        (void **) &writePtr,
+        endWritePtr,
+        (void *) "INSERT INTO sxwInputVars (Year,Iteration",
+        '\0',
+        &writeSize
+    );
+    if (fullBuffer) reportFullBuffer(LOGERROR, &LogInfo);
+
+    ForEachVegType(k) {
+        (void) snprintf(
+            buffer, sizeof buffer, ",FracCover_%s", key2veg[k]
+        );
+        fullBuffer = sw_memccpy_inc(
+            (void **) &writePtr, endWritePtr, (void *) buffer, '\0', &writeSize
+        );
+        if (fullBuffer) reportFullBuffer(LOGERROR, &LogInfo);
+    }
+
+    fullBuffer = sw_memccpy_inc(
+        (void **) &writePtr,
+        endWritePtr,
+        (void *) ",FracCover_BareGround) VALUES (@Year,@Iteration",
+        '\0',
+        &writeSize
+    );
+    if (fullBuffer) reportFullBuffer(LOGERROR, &LogInfo);
+
+    ForEachVegType(k) {
+        (void) snprintf(
+            buffer, sizeof buffer, ",@FracCover_%s", key2veg[k]
+        );
+        fullBuffer = sw_memccpy_inc(
+            (void **) &writePtr, endWritePtr, (void *) buffer, '\0', &writeSize
+        );
+        if (fullBuffer) reportFullBuffer(LOGERROR, &LogInfo);
+    }
+
+    fullBuffer = sw_memccpy_inc(
+        (void **) &writePtr,
+        endWritePtr,
+        (void *) ",@FracCover_BareGround);",
+        '\0',
+        &writeSize
+    );
+    if (fullBuffer) reportFullBuffer(LOGERROR, &LogInfo);
+
 	sqlite3_prepare_v2(db, sql, 1024, &stmt_InputVars, NULL);
 
 	sprintf(sql, "INSERT INTO sxwInputProd (Year,Iteration,VegProdType,Month,Litter,Biomass,PLive,LAI_conv) VALUES (@Year,@Iteration,@VegProdType,@Month,@Litter,@Biomass,@PLive,@LAI_conv);");
 	sqlite3_prepare_v2(db, sql, 1024, &stmt_InputProd, NULL);
 
-	sprintf(sql, "INSERT INTO sxwInputSoils (Year,Iteration,Layer,Tree_trco,Shrub_trco,Grass_trco,Forb_trco) VALUES (@Year,@Iteration,@Layer,@Tree_trco,@Shrub_trco,@Grass_trco,@Forb_trco);");
+    // Construct sxwInputSoils
+    sql[0] = '\0';
+    writePtr = sql;
+    writeSize = 1024; // array size of sql
+    endWritePtr = sql + sizeof sql - 1;
+    fullBuffer = swFALSE;
+
+    fullBuffer = sw_memccpy_inc(
+        (void **) &writePtr,
+        endWritePtr,
+        (void *) "INSERT INTO sxwInputSoils (Year,Iteration,Layer",
+        '\0',
+        &writeSize
+    );
+    if (fullBuffer) reportFullBuffer(LOGERROR, &LogInfo);
+
+    ForEachVegType(k) {
+        (void) snprintf(
+            buffer, sizeof buffer, ",%s_trco", key2veg[k]
+        );
+        fullBuffer = sw_memccpy_inc(
+            (void **) &writePtr, endWritePtr, (void *) buffer, '\0', &writeSize
+        );
+        if (fullBuffer) reportFullBuffer(LOGERROR, &LogInfo);
+    }
+
+    fullBuffer = sw_memccpy_inc(
+        (void **) &writePtr,
+        endWritePtr,
+        (void *) ") VALUES (@Year,@Iteration,@Layer",
+        '\0',
+        &writeSize
+    );
+    if (fullBuffer) reportFullBuffer(LOGERROR, &LogInfo);
+
+    ForEachVegType(k) {
+        (void) snprintf(
+            buffer, sizeof buffer, ",@%s_trco", key2veg[k]
+        );
+        fullBuffer = sw_memccpy_inc(
+            (void **) &writePtr, endWritePtr, (void *) buffer, '\0', &writeSize
+        );
+        if (fullBuffer) reportFullBuffer(LOGERROR, &LogInfo);
+    }
+
+    fullBuffer = sw_memccpy_inc(
+        (void **) &writePtr, endWritePtr, (void *) ");", '\0', &writeSize
+    );
+    if (fullBuffer) reportFullBuffer(LOGERROR, &LogInfo);
+
 	sqlite3_prepare_v2(db, sql, 1024, &stmt_InputSoils, NULL);
 
 	sprintf(sql, "INSERT INTO sxwOutputVars (Year,Iteration,MAP_mm,MAT_C,AET_cm,T_cm,ADT_cm,AT_cm,TotalRelsize,TotalPR,TotalTransp) VALUES (@Year,@Iteration,@MAP_mm,@MAT_C,@AET_cm,@T_cm,@ADT_cm,@AT_cm,@TotalRelsize,@TotalPR,@TotalTransp);");
@@ -725,7 +825,7 @@ static void prepareStatements() {
 	sqlite3_prepare_v2(db, sql, 1024, &stmt_OutSWC, NULL);
 }
 
-static void finalizeStatements() {
+static void finalizeStatements(void) {
 	sqlite3_finalize(stmt_InputVars);
 	sqlite3_finalize(stmt_InputProd);
 	sqlite3_finalize(stmt_InputSoils);
@@ -738,9 +838,15 @@ static void finalizeStatements() {
 	sqlite3_finalize(stmt_OutSWC);
 }
 
-void createTables() {
+static void createTables(void) {
 	int rc;
 	char *zErrMsg = 0;
+    char buffer[512];
+    size_t writeSize;
+    char *writePtr;
+    char *endWritePtr;
+    Bool fullBuffer;
+    int k;
 
 	char *table_PrjInfo = "CREATE TABLE info(StartYear INT, Years INT, Iterations INT, RGroups INT, TranspirationLayers INT, SoilLayers INT, PlotSize REAL, BVT REAL);";
 	char *table_rgroups = "CREATE TABLE RGroups(ID INT PRIMARY KEY NOT NULL, NAME TEXT NOT NULL, VegProdType INT NOT NULL);";
@@ -752,12 +858,10 @@ void createTables() {
 	char *table_rootsRelative =
 			"CREATE TABLE sxwRootsRelative(YEAR INT NOT NULL, Iteration INT NOT NULL, Layer INT NOT NULL, RGroupID INT NOT NULL, January REAL, February REAL, March REAL, April REAL, May REAL, June REAL, July REAL, August REAL, September REAL, October REAL, November REAL, December REAL, PRIMARY KEY(Year, Iteration, Layer, RGroupID));";
 
-	char *table_InputVars =
-			"CREATE TABLE sxwInputVars(Year INT NOT NULL, Iteration INT NOT NULL, FracGrass REAL, FracShrub REAL, FracTree REAL, FracForb REAL, FracBareGround REAL, PRIMARY KEY(Year, Iteration));";
+	char table_InputVars[1024];
 	char *table_InputProd =
 			"CREATE TABLE sxwInputProd(Year INT NOT NULL, Iteration INT NOT NULL, VegProdType INT NOT NULL, Month INT NOT NULL, Litter REAL, Biomass REAL, PLive REAL, LAI_conv REAL, PRIMARY KEY(Year, Iteration, VegProdType, Month));";
-	char *table_InputSoils =
-			"CREATE TABLE sxwInputSoils(Year INT NOT NULL, Iteration INT NOT NULL, Layer INT NOT NULL, Tree_trco REAL, Shrub_trco REAL, Grass_trco REAL, Forb_trco REAL, PRIMARY KEY(Year, Iteration, Layer));";
+	char table_InputSoils[1024];
 	char *table_OutputVars =
 			"CREATE TABLE sxwOutputVars(Year INT NOT NULL, Iteration INT NOT NULL, MAP_mm INT, MAT_C REAL, AET_cm REAL, T_cm REAL, ADT_cm REAL, AT_cm REAL, TotalRelsize REAL, TotalPR REAL, TotalTransp REAL, PRIMARY KEY(Year, Iteration));";
 	char *table_OutputRgroup =
@@ -768,6 +872,76 @@ void createTables() {
 			"CREATE TABLE sxwOutputTranspiration(YEAR INT NOT NULL, Iteration INT NOT NULL, Layer INT NOT NULL, VegProdType INT NOT NULL, January REAL, February REAL, March REAL, April REAL, May REAL, June REAL, July REAL, August REAL, September REAL, October REAL, November REAL, December REAL, PRIMARY KEY(Year, Iteration, Layer, VegProdType));";
 	char *table_OutputSWCBulk =
 			"CREATE TABLE sxwOutputSWCBulk(YEAR INT NOT NULL, Iteration INT NOT NULL, Layer INT NOT NULL, January REAL, February REAL, March REAL, April REAL, May REAL, June REAL, July REAL, August REAL, September REAL, October REAL, November REAL, December REAL, PRIMARY KEY(Year, Iteration, Layer));";
+
+    // Construct table_InputVars
+    table_InputVars[0] = '\0';
+    writePtr = table_InputVars;
+    writeSize = 1024; // array size of table_InputVars
+    endWritePtr = table_InputVars + sizeof table_InputVars - 1;
+    fullBuffer = swFALSE;
+
+    fullBuffer = sw_memccpy_inc(
+        (void **) &writePtr,
+        endWritePtr,
+        (void *) "CREATE TABLE sxwInputVars(Year INT NOT NULL, Iteration INT NOT NULL",
+        '\0',
+        &writeSize
+    );
+    if (fullBuffer) reportFullBuffer(LOGERROR, &LogInfo);
+
+    ForEachVegType(k) {
+        (void) snprintf(
+            buffer, sizeof buffer, ", FracCover_%s REAL", key2veg[k]
+        );
+        fullBuffer = sw_memccpy_inc(
+            (void **) &writePtr, endWritePtr, (void *) buffer, '\0', &writeSize
+        );
+        if (fullBuffer) reportFullBuffer(LOGERROR, &LogInfo);
+    }
+
+    fullBuffer = sw_memccpy_inc(
+        (void **) &writePtr,
+        endWritePtr,
+        (void *) ", FracCover_BareGround REAL, PRIMARY KEY(Year, Iteration));",
+        '\0',
+        &writeSize
+    );
+    if (fullBuffer) reportFullBuffer(LOGERROR, &LogInfo);
+
+    // Construct table_InputSoils
+    table_InputSoils[0] = '\0';
+    writePtr = table_InputSoils;
+    writeSize = 1024; // array size of table_InputSoils
+    endWritePtr = table_InputSoils + sizeof table_InputSoils - 1;
+    fullBuffer = swFALSE;
+
+    fullBuffer = sw_memccpy_inc(
+        (void **) &writePtr,
+        endWritePtr,
+        (void *) "CREATE TABLE sxwInputSoils(Year INT NOT NULL, Iteration INT NOT NULL, Layer INT NOT NULL",
+        '\0',
+        &writeSize
+    );
+    if (fullBuffer) reportFullBuffer(LOGERROR, &LogInfo);
+
+    ForEachVegType(k) {
+        (void) snprintf(
+            buffer, sizeof buffer, ", %s_trco REAL", key2veg[k]
+        );
+        fullBuffer = sw_memccpy_inc(
+            (void **) &writePtr, endWritePtr, (void *) buffer, '\0', &writeSize
+        );
+        if (fullBuffer) reportFullBuffer(LOGERROR, &LogInfo);
+    }
+
+    fullBuffer = sw_memccpy_inc(
+        (void **) &writePtr,
+        endWritePtr,
+        (void *) ", PRIMARY KEY(Year, Iteration, Layer));",
+        '\0',
+        &writeSize
+    );
+    if (fullBuffer) reportFullBuffer(LOGERROR, &LogInfo);
 
 	rc = sqlite3_exec(db, table_PrjInfo, callback, 0, &zErrMsg);
 	sqlcheck(rc, zErrMsg);
@@ -814,6 +988,11 @@ void createTables() {
 	rc = sqlite3_exec(db, table_OutputSWCBulk, callback, 0, &zErrMsg);
 	sqlcheck(rc, zErrMsg);
 
-	insertRgroups();
 	prepareStatements();
+
+	insertInfo();
+	insertRgroups();
+	insertSXWPhen();
+	insertSXWProd();
+	insertRootsXphen(SXWResources->_rootsXphen);
 }
