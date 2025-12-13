@@ -96,6 +96,10 @@ static char *MyFileName;
 static char **_sxwfiles[SXW_NFILES];
 static char _debugout[256];
 static TimeInt _debugyrs[100], _debugyrs_cnt;
+// STEPWAT2 does not utilize SOILWAT2's MPI-based parallelization
+static const int ST_rank = ROOT_PROC;
+
+
 
 /*************** Local Function Declarations ***************/
 /***********************************************************/
@@ -144,6 +148,7 @@ void SXW_Init( Bool init_SW, char *f_roots ) {
    * 	roots file. This is for the gridded version where soils needs to
    * 	match sxwroots.in
    */
+    int k;
 	char roots[MAX_FILENAMESIZE] = { '\0' };
 
 	// FIXME: seed with appropriate iter, year, and cell_id
@@ -181,21 +186,29 @@ void SXW_Init( Bool init_SW, char *f_roots ) {
     // by SOILWAT2 in global variables, e.g., `SoilWatRun`,
     // as long as these variables are reused/shared,
     // e.g., among grid cells or among iterations
-		SXW_Reset(SXW->f_watin, TRUE);
+    SXW_Reset(SXW->f_watin, TRUE);
+
+    // Create directory for SOILWAT2 output files and remove old files
+    if (DirExists(SoilWatDomain.SW_PathInputs.outputPrefix)) {
+        SW_F_CleanOutDir(SoilWatDomain.SW_PathInputs.outputPrefix, &LogInfo);
+    } else {
+        MkDir(SoilWatDomain.SW_PathInputs.outputPrefix, &LogInfo);
+    }
   }
   if (debugfile)
 	  _read_debugfile();
    
 
-  SXW->NTrLyrs = SoilWatRun.SiteSim.n_transp_lyrs[0];
-  if(SoilWatRun.SiteSim.n_transp_lyrs[1] > SXW->NTrLyrs)
-  SXW->NTrLyrs = SoilWatRun.SiteSim.n_transp_lyrs[1];
-  if(SoilWatRun.SiteSim.n_transp_lyrs[3] > SXW->NTrLyrs)
-  SXW->NTrLyrs = SoilWatRun.SiteSim.n_transp_lyrs[3];
-  if(SoilWatRun.SiteSim.n_transp_lyrs[2] > SXW->NTrLyrs)
-	  SXW->NTrLyrs = SoilWatRun.SiteSim.n_transp_lyrs[2];
+    // Find the SOILWAT2 vegetation type with the deepest rooting profile
+    SXW->NTrLyrs = SoilWatRun.SiteSim.n_transp_lyrs[0];
 
-  SXW->NSoLyrs = SoilWatRun.RunIn.SiteRunIn.n_layers;
+    ForEachVegType(k) {
+        if (SoilWatRun.SiteSim.n_transp_lyrs[k] > SXW->NTrLyrs) {
+            SXW->NTrLyrs = SoilWatRun.SiteSim.n_transp_lyrs[k];
+        }
+    }
+
+    SXW->NSoLyrs = SoilWatRun.RunIn.SiteRunIn.n_layers;
 
   /* Print general information to stdout.
      If we are using gridded mode this functionallity will be handled in ST_grid.c */
@@ -238,7 +251,7 @@ static void SXW_Reinit(char* SOILWAT_file, Bool zeroOutArrays) {
         SoilWatDomain.SW_PathInputs.SW_ProjDir
     );
 
-    SW_CTL_setup_domain(0, 0, FALSE, &SoilWatDomain, &LogInfo);
+    SW_CTL_setup_domain(ST_rank, 0, FALSE, &SoilWatDomain, &LogInfo);
 
     // Update output domain with STEPWAT2's version of
     // prepare_IterationSummary and storeAllIterations
@@ -246,7 +259,10 @@ static void SXW_Reinit(char* SOILWAT_file, Bool zeroOutArrays) {
     SoilWatDomain.OutDom.print_SW_Output = SuperGlobals.storeAllIterations;
     SoilWatDomain.OutDom.storeAllIterations = SuperGlobals.storeAllIterations;
 
- 	SW_CTL_setup_model(&SoilWatRun, &SoilWatDomain.OutDom, zeroOutArrays, &LogInfoSW);
+    // Some of SOILWAT2's dynamic memory requires full information on start/end years
+    SoilWatDomain.endyr = SoilWatDomain.startyr + SuperGlobals.runModelYears;
+
+    SW_CTL_setup_model(&SoilWatRun, &SoilWatDomain.OutDom, zeroOutArrays, &LogInfoSW);
 
     SW_MDL_get_ModelRun(&SoilWatRun.ModelIn, &SoilWatDomain, NULL, &LogInfo);
 
@@ -254,9 +270,12 @@ static void SXW_Reinit(char* SOILWAT_file, Bool zeroOutArrays) {
  	SoilWatRun.ModelSim.runModelIterations = SuperGlobals.runModelIterations;
  	SoilWatRun.ModelIn.runModelYears = SuperGlobals.runModelYears;
 
- 	SW_CTL_read_inputs_from_disk(&SoilWatRun, &SoilWatDomain,
-                                 &SoilWatDomain.hasConsistentSoilLayerDepths,
-                                 &LogInfoSW);
+    SW_CTL_read_inputs_from_disk(
+        &SoilWatRun,
+        &SoilWatDomain,
+        &SoilWatDomain.hasConsistentSoilLayerDepths,
+        &LogInfoSW
+       );
 
  	// initialize simulation run (based on user inputs)
  	SW_CTL_init_run(&SoilWatRun, &LogInfoSW);
@@ -376,69 +395,62 @@ void SXW_Run_SOILWAT(void) {
 }
 
 void SXW_SW_Setup_Echo(void) {
- 	char name[256] = {0};
- 	strcat(name, _debugout);
- 	FILE *f = OpenFile(strcat(name, ".input.out"), "a", &LogInfo);
- 	int i;
- 	fprintf(f, "\n================== %d ==============================\n", SoilWatRun.ModelSim.year);
- 	fprintf(f,"Fractions Grass:%f Shrub:%f Tree:%f Forb:%f BareGround:%f\n",
-            SoilWatRun.RunIn.VegProdRunIn.veg[3].cov.fCover,
-			SoilWatRun.RunIn.VegProdRunIn.veg[1].cov.fCover,
-            SoilWatRun.RunIn.VegProdRunIn.veg[0].cov.fCover,
-            SoilWatRun.RunIn.VegProdRunIn.veg[2].cov.fCover,
-			SoilWatRun.RunIn.VegProdRunIn.bare_cov.fCover);
- 	fprintf(f,"Monthly Production Values\n");
- 	fprintf(f,"Grass\n");
- 	fprintf(f,"Month\tLitter\tBiomass\tPLive\tLAI_conv\n");
- 	for (i = 0; i < 12; i++) {
- 		fprintf(f,"%u\t%f\t%f\t%f\t%f\n", i + 1, SoilWatRun.RunIn.VegProdRunIn.veg[3].litter[i],
- 				SoilWatRun.RunIn.VegProdRunIn.veg[3].biomass[i], SoilWatRun.RunIn.VegProdRunIn.veg[3].pct_live[i],
- 				SoilWatRun.RunIn.VegProdRunIn.veg[3].lai_conv[i]);
- 	}
+    char name[256] = {0};
+    strcat(name, _debugout);
+    FILE *f = OpenFile(strcat(name, ".input.out"), "a", &LogInfo);
+    int i;
+    int k;
 
- 	fprintf(f,"Shrub\n");
- 	fprintf(f,"Month\tLitter\tBiomass\tPLive\tLAI_conv\n");
- 	for (i = 0; i < 12; i++) {
- 		fprintf(f,"%u\t%f\t%f\t%f\t%f\n", i + 1, SoilWatRun.RunIn.VegProdRunIn.veg[1].litter[i],
- 				SoilWatRun.RunIn.VegProdRunIn.veg[1].biomass[i], SoilWatRun.RunIn.VegProdRunIn.veg[1].pct_live[i],
- 				SoilWatRun.RunIn.VegProdRunIn.veg[1].lai_conv[i]);
- 	}
+    fprintf(
+        f,
+        "\n================== %d ==============================\n",
+        SoilWatRun.ModelSim.year
+    );
 
- 	fprintf(f,"Tree\n");
- 	fprintf(f,"Month\tLitter\tBiomass\tPLive\tLAI_conv\n");
- 	for (i = 0; i < 12; i++) {
- 		fprintf(f,"%u\t%f\t%f\t%f\t%f\n", i + 1, SoilWatRun.RunIn.VegProdRunIn.veg[0].litter[i],
- 				SoilWatRun.RunIn.VegProdRunIn.veg[0].biomass[i], SoilWatRun.RunIn.VegProdRunIn.veg[0].pct_live[i],
- 				SoilWatRun.RunIn.VegProdRunIn.veg[0].lai_conv[i]);
- 	}
+    fprintf(f, "Fractions\n\tType\tCover\n");
+    ForEachVegType(k) {
+        fprintf(
+            f,
+            "\t%s\t%f\n",
+            key2veg[k],
+            SoilWatRun.RunIn.VegProdRunIn.veg[k].cov.fCover
+        );
+    }
+    fprintf(
+        f, "\tBareGround: %f\n\n", SoilWatRun.RunIn.VegProdRunIn.bare_cov.fCover
+    );
 
- 	fprintf(f,"Forb\n");
- 	fprintf(f,"Month\tLitter\tBiomass\tPLive\tLAI_conv\n");
- 	for (i = 0; i < 12; i++) {
- 		fprintf(f,"%u\t%f\t%f\t%f\t%f\n", i + 1, SoilWatRun.RunIn.VegProdRunIn.veg[2].litter[i],
- 				SoilWatRun.RunIn.VegProdRunIn.veg[2].biomass[i], SoilWatRun.RunIn.VegProdRunIn.veg[2].pct_live[i],
- 				SoilWatRun.RunIn.VegProdRunIn.veg[2].lai_conv[i]);
- 	}
+    fprintf(f, "Monthly Production Values\n");
+    ForEachVegType(k) {
+        fprintf(f, "%s\n", key2veg[k]);
+        fprintf(f, "Month\tLitter\tBiomass\tPLive\tLAI_conv\n");
+        for (i = 0; i < 12; i++) {
+            fprintf(
+                f,
+                "%u\t%f\t%f\t%f\t%f\n",
+                i + 1,
+                SoilWatRun.RunIn.VegProdRunIn.veg[k].litter[i],
+                SoilWatRun.RunIn.VegProdRunIn.veg[k].biomass[i],
+                SoilWatRun.RunIn.VegProdRunIn.veg[k].pct_live[i],
+                SoilWatRun.RunIn.VegProdRunIn.veg[k].lai_conv[i]
+            );
+        }
+    }
+    fprintf(f, "\n");
 
- 	SW_SOIL_RUN_INPUTS *s = &SoilWatRun.RunIn.SoilRunIn;
- 	fprintf(f,"Soils Transp_coeff\n");
- 	fprintf(f,"Forb\tTree\tShrub\tGrass\n");
- 	ForEachSoilLayer(i, SoilWatRun.RunIn.SiteRunIn.n_layers)
- 	{// %u %u %u %u s->lyr[i]->my_transp_rgn_forb, s->lyr[i]->my_transp_rgn_tree, s->lyr[i]->my_transp_rgn_shrub, s->lyr[i]->my_transp_rgn_grass
- 		fprintf(f,"%6.2f %6.2f %6.2f %6.2f\n", s->transp_coeff[2][i],
-				s->transp_coeff[0][i], s->transp_coeff[1][i],
-                s->transp_coeff[3][i]);
- 	}
+    fprintf(f, "Soils Transp_coeff\nLayer");
+    ForEachVegType(k) { fprintf(f, "\t%s", key2veg[k]); }
+    fprintf(f, "\n");
+    ForEachSoilLayer(i, SoilWatRun.RunIn.SiteRunIn.n_layers) {
+        fprintf(f, "%u", i + 1);
+        ForEachVegType(k) {
+            fprintf(f, "\t%f", SoilWatRun.RunIn.SoilRunIn.transp_coeff[k][i]);
+        }
+        fprintf(f, "\n");
+    }
+    fprintf(f, "\n");
 
-  // adding values to sxw structure for use in ST_stats.c
-  /*SXW->grass_cover = SW_VegProd.grass.conv_stcr;
-  SXW->shrub_cover = SW_VegProd.shrub.conv_stcr;
-  SXW->tree_cover = SW_VegProd.tree.conv_stcr;
-  SXW->forbs_cover = SW_VegProd.forb.conv_stcr;*/
-
-
-	fprintf(f, "\n");
-	CloseFile(&f, &LogInfo);
+    CloseFile(&f, &LogInfo);
 }
 
 /**
@@ -455,7 +467,6 @@ RealF SXW_GetTranspiration( GrpIndex rg) {
 void SXW_PrintDebug(Bool cleanup) {
 /*======================================================*/
 	TimeInt i;
-	static Bool beenhere = FALSE;
 
 	if(cleanup) {
 		debugCleanUp();
@@ -467,23 +478,6 @@ void SXW_PrintDebug(Bool cleanup) {
 				break;
 			}
 		}
-		if (!beenhere) {
-			beenhere = TRUE;
-			insertInfo();
-			insertSXWPhen();
-			insertSXWProd();
-			insertRootsXphen(SXWResources->_rootsXphen);
-		}
-		insertInputVars();
-		insertInputProd();
-		insertInputSoils();
-		insertOutputVars(SXWResources->_resource_cur, transp_window->added_transp);
-		insertRgroupInfo(SXWResources->_resource_cur);
-		insertOutputProd(&SoilWatRun.VegProdSim);
-		insertRootsSum(SXWResources->_roots_active_sum);
-		insertRootsRelative(SXWResources->_roots_active_rel);
-		insertTranspiration();
-		insertSWCBulk();
 	}
 }
 
@@ -994,14 +988,10 @@ static void _read_debugfile(void) {
 	strcat(name, _debugout);
 	f = OpenFile(strcat(name, ".input.out"), "w", &LogInfo);
 	CloseFile(&f, &LogInfo);
-
-	connect(_debugout);
-	createTables();
 }
 
 void debugCleanUp() {
   printf("in debugCleanUp\n");
-	disconnect();
 }
 
 void _print_debuginfo(void) {
@@ -1010,6 +1000,7 @@ void _print_debuginfo(void) {
 	TimeInt p;
 	LyrIndex t;
 	int l;
+	int k;
 	FILE *f;
 	GrpIndex r;
 	RealF sum = 0.;
@@ -1017,11 +1008,6 @@ void _print_debuginfo(void) {
 	RealF sum2 = 0.;
 	RealF sum3 = 0.;
 	static Bool beenhere = FALSE;
-	char vegProdNames[NVEGTYPES][7];
-	strcpy(vegProdNames[SW_TREES], "TREE");
-	strcpy(vegProdNames[SW_SHRUB], "SHRUB");
-	strcpy(vegProdNames[SW_GRASS], "GRASS");
-	strcpy(vegProdNames[SW_FORBS], "FORB");
 	char name[256] = {0};
 	strcat(name, _debugout);
 	f = OpenFile(strcat(name, ".output.out"), "a", &LogInfo);
@@ -1088,25 +1074,18 @@ void _print_debuginfo(void) {
 				days = 29;
 		} // all the other months have 31 days
 
-		for (i = doy; i < (doy + days); i++) { //accumulating the monthly values...
-			lai_live += (v->veg[0].lai_live_daily[i])
-					+ (v->veg[1].lai_live_daily[i])
-					+ (v->veg[3].lai_live_daily[i])
-					+ (v->veg[2].lai_live_daily[i]);
-			bLAI_total += (v->veg[0].bLAI_total_daily[i]) + (v->veg[1].bLAI_total_daily[i])
-					+ (v->veg[3].bLAI_total_daily[i]) + (v->veg[2].bLAI_total_daily[i]);
-			total_agb += (v->veg[0].total_agb_daily[i])
-					+ (v->veg[1].total_agb_daily[i])
-					+ (v->veg[3].total_agb_daily[i])
-					+ (v->veg[2].total_agb_daily[i]);
-			pct_live += (v->veg[0].pct_live_daily[i])
-					+ (v->veg[1].pct_live_daily[i])
-					+ (v->veg[3].pct_live_daily[i])
-					+ (v->veg[2].pct_live_daily[i]);
-			biomass += (v->veg[0].biomass_daily[i])
-					+ (v->veg[1].biomass_daily[i])
-					+ (v->veg[3].biomass_daily[i])
-					+ (v->veg[2].biomass_daily[i]);
+		for (i = doy; i < (doy + days); i++) {
+            //accumulating the monthly values...
+            // Note: if the goal is the get vegetation totals, then
+            //   these SOILWAT2 variables should be weighted by `fcover`,
+            //   for instance, as summed in sumof_vpd()
+            ForEachVegType(k) {
+                lai_live += v->veg[k].lai_live_daily[i];
+                bLAI_total += v->veg[k].bLAI_total_daily[i];
+                total_agb += v->veg[k].total_agb_daily[i];
+                pct_live += v->veg[k].pct_live_daily[i];
+                biomass += v->veg[k].biomass_daily[i];
+            }
 		}
 		doy += days; //updating the doy
 		//biomass = (v->tree.biomass[p]) + (v->shrub.biomass[p])
@@ -1125,7 +1104,7 @@ void _print_debuginfo(void) {
 	}
 
 	ForEachVegType(t) {
-		fprintf(f, "\n------ Active Roots (sum) %s -------\n", vegProdNames[t]);
+		fprintf(f, "\n------ Active Roots (sum) %s -------\n", key2veg[t]);
 		fprintf(f, "Layer:");
 		ForEachTrPeriod(p)
 			fprintf(f, "\t%d", p + 1);
@@ -1185,22 +1164,31 @@ void _print_debuginfo(void) {
 /** Convert STEPWAT2 indices of SOILWAT2's vegetation type into a
     SOILWAT2 index
 
-    @param veg_prod_type 1 for tree, 2 for shrub, 3 for grass, 4 for forb
-      (see comments for "veg_prod_type" in `rgroup.in`).
+    @param veg_prod_type (see comments for "veg_prod_type" in `rgroup.in`)
+                 - 1 for needle-leaved tree,
+                 - 2 for shrub,
+                 - 3 for C3-grass,
+                 - 4 for forb,
+                 - 5 for C4-grass,
+                 - 6 for broad-leaved tree
 
-    @return One of the SOILWAT2 defined values `SW_TREES`, `SW_SHRUB`,
-      `SW_FORBS`, `SW_GRASS` or -1 if no match.
-      See `SW_Defines.h` for definitions.
+    @return One of the SOILWAT2 defined values (see `SW_Defines.h`)
+      `SW_TREENL`, `SW_TREEBL`, `SW_SHRUB`, `SW_FORBS`, `SW_GRASS3`, `SW_GRASS4`
+      or -1 if no match.
 */
 int get_SW2_veg_index(int veg_prod_type) {
   if (veg_prod_type == 1)
-    return SW_TREES;
+    return SW_TREENL;
   else if (veg_prod_type == 2)
     return SW_SHRUB;
   else if (veg_prod_type == 3)
-    return SW_GRASS;
+    return SW_GRASS3;
   else if (veg_prod_type == 4)
     return SW_FORBS;
+  else if (veg_prod_type == 5)
+    return SW_GRASS4;
+  else if (veg_prod_type == 6)
+    return SW_TREEBL;
 
   return -1;
 }

@@ -30,7 +30,13 @@
 # xgrow = extra growth factor; if > 0, plants can convert "extra" ppt
 #         into ephemeral (this year's) biomass by
 #         grams_extra_biomass = mm_extra_ppt * xgrow_factor
-# veg_prod_type = 1 for tree, 2 for shrub, 3 for grass & 4 for forb.  Refer to Soilwat2’s VegProd types in VegProd.h.
+# veg_prod_type = translate to SOILWAT2 vegetation types, i.e.,
+#                 1 for needle-leaved tree,
+#                 2 for shrub,
+#                 3 for C3-grass,
+#                 4 for forb,
+#                 5 for C4-grass,
+#                 6 for broad-leaved tree
 # killyr = kill all members of this group at end of this year.
 #          0 == don't kill
 # killfreq_startyr = start year for killing due to fire, which will continue at the specified kill frequency

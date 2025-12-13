@@ -45,23 +45,18 @@ void _sxw_set_environs(void);
 void _sxw_test(void);
 
 //sql
-void connect(char *debugout);
-void createTables(void);
-void disconnect(void);
-void insertInfo(void);
-void insertRootsXphen(double * _rootsXphen);
-void insertSXWPhen(void);
-void insertSXWProd(void);
-void insertInputVars(void);
-void insertInputProd(void);
-void insertInputSoils(void);
-void insertOutputVars(RealF * _resource_cur, RealF added_transp);
-void insertRgroupInfo(RealF * _resource_cur);
-void insertOutputProd(SW_VEGPROD_SIM *v);
-void insertRootsSum(RealD * _roots_active_sum);
-void insertRootsRelative(RealD * _roots_active_rel);
-void insertTranspiration(void);
-void insertSWCBulk(void);
+void SXW_connect(char *debugout);
+void SXW_disconnect(void);
+void insertSXWInputVars(void);
+void insertSXWInputProd(void);
+void insertSXWInputSoils(void);
+void insertSXWOutputVars(RealF * _resource_cur, RealF added_transp);
+void insertSXWRgroupInfo(RealF * _resource_cur);
+void insertSXWOutputProd(SW_VEGPROD_SIM *v);
+void insertSXWRootsSum(RealD * _roots_active_sum);
+void insertSXWRootsRelative(RealD * _roots_active_rel);
+void insertSXWTranspiration(void);
+void insertSXWSWCBulk(void);
 
 
 #endif

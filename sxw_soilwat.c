@@ -23,8 +23,8 @@
  *                 other affected variables.  See notes in
  *                 sxw.c.
  *	08/01/2012 - DLM - updated _update_productivity() function
- *          to use the 3 different VegProds now used in soilwat 
- * 
+ *          to use the different VegProds now used in soilwat
+ *
  * \author CWB (initial programming)
  * \date 14 April 2002
  * \author DLM
@@ -208,77 +208,34 @@ static void _update_transp_coeff(void) {
      */
     GrpIndex g;
     LyrIndex l;
+    unsigned int k;
     RealF sum[NVEGTYPES] = {0.};
 
-    ForEachTranspLayer(l, SoilWatRun.SiteSim.n_transp_lyrs, SW_TREES) {
-        SoilWatRun.RunIn.SoilRunIn.transp_coeff[SW_TREES][l] = 0.;
+    ForEachVegType(k) {
+        ForEachTranspLayer(l, SoilWatRun.SiteSim.n_transp_lyrs, k) {
+            SoilWatRun.RunIn.SoilRunIn.transp_coeff[k][l] = 0.;
 
-        ForEachGroup(g) {
-          if (RGroup[g]->veg_prod_type == SW_TREES)
-              if (getNTranspLayers(SW_TREES))
-                  SoilWatRun.RunIn.SoilRunIn.transp_coeff[SW_TREES][l] +=
-                      (RealF) SXWResources->_roots_max[Ilg(l, g)] *
-                            RGroup[g]->rgroupFractionOfVegTypeBiomass;
+            ForEachGroup(g) {
+                if (RGroup[g]->veg_prod_type == k) {
+                    if (getNTranspLayers(k)) {
+                        SoilWatRun.RunIn.SoilRunIn.transp_coeff[k][l] +=
+                            SXWResources->_roots_max[Ilg(l, g)] *
+                                RGroup[g]->rgroupFractionOfVegTypeBiomass;
+                    }
+                }
+            }
+
+            sum[k] += SoilWatRun.RunIn.SoilRunIn.transp_coeff[k][l];
         }
-        sum[SW_TREES] += SoilWatRun.RunIn.SoilRunIn.transp_coeff[SW_TREES][l];
-    }
-
-    ForEachTranspLayer(l, SoilWatRun.SiteSim.n_transp_lyrs, SW_SHRUB) {
-        SoilWatRun.RunIn.SoilRunIn.transp_coeff[SW_SHRUB][l] = 0.;
-
-        ForEachGroup(g)
-        if (RGroup[g]->veg_prod_type == SW_SHRUB) {
-            if (getNTranspLayers(SW_SHRUB))
-                SoilWatRun.RunIn.SoilRunIn.transp_coeff[SW_SHRUB][l] +=
-                    (RealF) SXWResources->_roots_max[Ilg(l, g)] *
-                        RGroup[g]->rgroupFractionOfVegTypeBiomass;
-
-            /*printf("* lyr=%d, group=%s(%d), type=%d, tl=%d, rootmax=%f, relsize2=%f, trco=%f\n",
-              l, RGroup[g]->name, g, RGroup[g]->veg_prod_type, getNTranspLayers(RGroup[g]->veg_prod_type),
-              SXWResources->_roots_max[Ilg(l, g)], getRGroupRelsize(g), y->transp_coeff[SW_SHRUB]);
-             */
-        }
-        sum[SW_SHRUB] += SoilWatRun.RunIn.SoilRunIn.transp_coeff[SW_SHRUB][l];
-    }
-
-    ForEachTranspLayer(l, SoilWatRun.SiteSim.n_transp_lyrs, SW_GRASS) {
-        SoilWatRun.RunIn.SoilRunIn.transp_coeff[SW_GRASS][l] = 0.;
-
-        ForEachGroup(g) {
-          if (RGroup[g]->veg_prod_type == SW_GRASS)
-              if (getNTranspLayers(SW_GRASS))
-                  SoilWatRun.RunIn.SoilRunIn.transp_coeff[SW_GRASS][l] +=
-                       (RealF) SXWResources->_roots_max[Ilg(l, g)] *
-                            RGroup[g]->rgroupFractionOfVegTypeBiomass;
-         }
-         sum[SW_GRASS] += SoilWatRun.RunIn.SoilRunIn.transp_coeff[SW_GRASS][l];
-    }
-
-    ForEachTranspLayer(l, SoilWatRun.SiteSim.n_transp_lyrs, SW_FORBS) {
-        SoilWatRun.RunIn.SoilRunIn.transp_coeff[SW_FORBS][l] = 0.;
-
-        ForEachGroup(g) {
-          if (RGroup[g]->veg_prod_type == SW_FORBS)
-              if (getNTranspLayers(SW_FORBS))
-                  SoilWatRun.RunIn.SoilRunIn.transp_coeff[SW_FORBS][l] +=
-                     (RealF) SXWResources->_roots_max[Ilg(l, g)] *
-                        RGroup[g]->rgroupFractionOfVegTypeBiomass;
-        }
-        sum[SW_FORBS] += SoilWatRun.RunIn.SoilRunIn.transp_coeff[SW_FORBS][l];
     }
 
     /* normalize coefficients to 1.0 If sum is 0, then the transp_coeff is also 0. */
-    ForEachTranspLayer(l, SoilWatRun.SiteSim.n_transp_lyrs, SW_TREES) {
-      if (!ZRO(sum[SW_TREES])) SoilWatRun.RunIn.SoilRunIn.transp_coeff[SW_TREES][l] /= sum[SW_TREES];
-    }
-    ForEachTranspLayer(l, SoilWatRun.SiteSim.n_transp_lyrs, SW_SHRUB) {
-      if (!ZRO(sum[SW_SHRUB])) SoilWatRun.RunIn.SoilRunIn.transp_coeff[SW_SHRUB][l] /= sum[SW_SHRUB];
-    }
-    ForEachTranspLayer(l, SoilWatRun.SiteSim.n_transp_lyrs, SW_GRASS) {
-      if (!ZRO(sum[SW_GRASS])) SoilWatRun.RunIn.SoilRunIn.transp_coeff[SW_GRASS][l] /= sum[SW_GRASS];
-    }
-    ForEachTranspLayer(l, SoilWatRun.SiteSim.n_transp_lyrs, SW_FORBS) {
-      if (!ZRO(sum[SW_FORBS])) SoilWatRun.RunIn.SoilRunIn.transp_coeff[SW_FORBS][l] /= sum[SW_FORBS];
+    ForEachVegType(k) {
+        ForEachTranspLayer(l, SoilWatRun.SiteSim.n_transp_lyrs, k) {
+            if (!ZRO(sum[k])) {
+                SoilWatRun.RunIn.SoilRunIn.transp_coeff[k][l] /= sum[k];
+            }
+        }
     }
 
     /*printf("'_update_transp_coeff': ShrubTranspCoef: ");
@@ -357,12 +314,15 @@ static void _update_productivity(RealF sizes[]) {
         if (GT(totbmass, 0.)) {
             ForEachGroup(g) {
               k = RGroup[g]->veg_prod_type;
-              v->veg[k].pct_live[m] += SXWResources->_prod_pctlive[Igp(g, m)] * RGroup[g]->rgroupFractionOfVegTypeBiomass;
 
-              v->veg[k].biomass[m] += SXWResources->_prod_bmass[Igp(g, m)] * 
-                                      bmassg[g] / v->veg[k].cov.fCover;
+              if (GT(v->veg[k].cov.fCover, 0.)) {
+                v->veg[k].pct_live[m] += SXWResources->_prod_pctlive[Igp(g, m)] * RGroup[g]->rgroupFractionOfVegTypeBiomass;
 
-              v->veg[k].litter[m] += vegTypeBiomass[k] * SXWResources->_prod_litter[g][m];
+                v->veg[k].biomass[m] += SXWResources->_prod_bmass[Igp(g, m)] *
+                                        bmassg[g] / v->veg[k].cov.fCover;
+
+                v->veg[k].litter[m] += vegTypeBiomass[k] * SXWResources->_prod_litter[g][m];
+              }
             }
         }
     }
