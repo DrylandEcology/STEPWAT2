@@ -195,8 +195,7 @@ void SXW_Init( Bool init_SW, char *f_roots ) {
         MkDir(SoilWatDomain.SW_PathInputs.outputPrefix, &LogInfo);
     }
   }
-  if (debugfile)
-	  _read_debugfile();
+
    
 
     // Find the SOILWAT2 vegetation type with the deepest rooting profile
@@ -224,7 +223,8 @@ void SXW_Init( Bool init_SW, char *f_roots ) {
   _read_prod();
 
   _sxw_root_phen();
-
+  if (debugfile)
+	  _read_debugfile();
 #ifdef TESTING
   _sxw_test();
   exit(0);
@@ -988,10 +988,12 @@ static void _read_debugfile(void) {
 	strcat(name, _debugout);
 	f = OpenFile(strcat(name, ".input.out"), "w", &LogInfo);
 	CloseFile(&f, &LogInfo);
+	SXW_connect(_debugout);
 }
 
 void debugCleanUp() {
   printf("in debugCleanUp\n");
+  SXW_disconnect();
 }
 
 void _print_debuginfo(void) {
