@@ -478,6 +478,16 @@ void SXW_PrintDebug(Bool cleanup) {
 				break;
 			}
 		}
+				insertSXWInputVars();
+				insertSXWInputProd();
+				insertSXWInputSoils();
+				insertSXWOutputVars(SXWResources->_resource_cur, transp_window->added_transp);
+				insertSXWRgroupInfo(SXWResources->_resource_cur);
+				insertSXWOutputProd(&SoilWatRun.VegProdSim);
+				insertSXWRootsSum(SXWResources->_roots_active_sum);
+				insertSXWRootsRelative(SXWResources->_roots_active_rel);
+				insertSXWTranspiration();
+				insertSXWSWCBulk();
 	}
 }
 
