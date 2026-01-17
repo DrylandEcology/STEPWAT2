@@ -27,7 +27,7 @@
 /* --------------------------------------------------- */
 
 extern CellType** spinupCells;
-extern int shouldSpinup;
+extern Bool shouldSpinup;
 extern Bool DuringSpinup;
 
 

@@ -1622,7 +1622,7 @@ static void _read_grid_setup(void)
     UseSeedDispersal = itob(j);
 
 	GetALine(f, buf, 1024);
-	i = sscanf(buf, "%d", &shouldSpinup);
+	i = sscanf(buf, "%u", &shouldSpinup);
 	if(i < 1){
 		LogError(&LogInfo, LOGERROR, "Invalid grid setup file (Spinup line wrong)");
 	}
@@ -1646,7 +1646,7 @@ static void _read_grid_setup(void)
     }
 
 	GetALine(f, buf, 1024);
-	if (sscanf(buf, "%d", &outputSDData) != 1) {
+	if (sscanf(buf, "%u", &outputSDData) != 1) {
 		LogError(&LogInfo, LOGERROR, "Invalid grid setup file (Seed Dispersal Data Output\n");
 	}
 
