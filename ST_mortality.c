@@ -1302,13 +1302,15 @@ void killAnnuals( void) {
   Int i;
 
   ForEachGroup(rg) {
+	if(RGroup[rg]->est_count > 0){
     if (RGroup[rg]->max_age == 1) {
-      for(i=RGroup[rg]->est_count, sp=RGroup[rg]->est_spp[i-1]; i>0; sp=RGroup[rg]->est_spp[(--i) - 1]){
-               Species_Annual_Kill(sp, 4);
-          }
+      for (i = RGroup[rg]->est_count; i > 0; --i) {
+          sp = RGroup[rg]->est_spp[i - 1];
+          Species_Annual_Kill(sp, 4);
+}
       }
     }
-
+  }
 }
 
 /**
@@ -1372,14 +1374,24 @@ void killExtraGrowth(void) {
 void killMaxage(void) {
     SppIndex s;
     IndivType *i;
+    IndivType *p;
+    IndivType *holder;
+   ForEachSpecies(s) {
 
-    ForEachSpecies(s) {
+        p = NULL;
         ForEachIndiv(i, Species[s]) {
-            if (i->age == Species[s]->max_age) {
-                indiv_Kill_Complete(i, 12);
+            p = i;
+        }
+
+        while (p != NULL) {
+            holder = p->Prev; 
+            if (p->age == Species[s]->max_age) {
+                indiv_Kill_Complete(p, 12);
             }
+            p = holder;
         }
     }
+
 }
 
 /**

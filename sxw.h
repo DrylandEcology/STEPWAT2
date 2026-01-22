@@ -65,8 +65,7 @@ typedef struct stepwat_st {
         *f_prod,   /* biomass to prod. conv. nos. */
         *f_watin;  /* soilwat's input file */
 
-  // ------ DEBUG stuff:
-  char *debugfile; /* added in ST_Main(), read to get debug instructions */
+  
 } SXW_t;
 
 /** 
@@ -190,5 +189,7 @@ extern SXW_t *SXW;
 extern SXW_resourceType *SXWResources;
 extern sw_random_t resource_rng;
 extern transp_t *transp_window;
+// ------ DEBUG stuff:
+extern char *debugfile; /* added in ST_Main(), read to get debug instructions */
 
 #endif

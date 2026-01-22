@@ -262,7 +262,7 @@ int main(int argc, char **argv) {
 
 			rgroup_PartResources();
 
-			if (!isnull(SXW->debugfile) ) SXW_PrintDebug(0);
+			if (!isnull(debugfile) ) SXW_PrintDebug(0);
 
 			rgroup_Grow();
 
@@ -359,7 +359,7 @@ int main(int argc, char **argv) {
         }
 	}
 
-  if (!isnull(SXW->debugfile)){
+  if (!isnull(debugfile)){
     printf("entering debugfile\n");
     SXW_PrintDebug(1);
   }
@@ -533,7 +533,7 @@ void allocate_Globals(void){
 void deallocate_Globals(Bool isGriddedMode){
 	GrpIndex rg;
 	SppIndex sp;
-
+	
 	double **bMassQMFreeArray[] = {
 		&BmassQM.rap_annual_points,
 		&BmassQM.rap_perennial_points,
@@ -543,14 +543,6 @@ void deallocate_Globals(Bool isGriddedMode){
 	const int numBmassFreeElems = 4;
 	int bMassIndex;
 
-	if(!isGriddedMode){
-		free(Env);
-		free(Succulent);
-		free(Globals);
-		free(Plot);
-		free(_SomeKillage);
-	}
-	
 	/* Free Species */
 	ForEachSpecies(sp){
 		/* Start by freeing any pointers in the Species struct */
@@ -583,6 +575,14 @@ void deallocate_Globals(Bool isGriddedMode){
 	/* Then free the entire array */
 	free(RGroup);
 
+	if(!isGriddedMode){
+			free(Env);
+			free(Succulent);
+			free(Globals);
+			free(Plot);
+			free(_SomeKillage);
+		}
+		
 	/* Free BmassQM */
 	for (bMassIndex = 0; bMassIndex < numBmassFreeElems; bMassIndex++) {
 		if (!isnull(*bMassQMFreeArray[bMassIndex])) {
@@ -745,7 +745,7 @@ static void init_args(int argc, char **argv) {
 		case 8: // -s
 			if (strlen(argv[a]) > 1){
 				printf("Generating SXW debug file\n");
-				SXW->debugfile = Str_Dup(&argv[a][1], &LogInfo);
+				debugfile = Str_Dup(&argv[a][2], &LogInfo);
 			}
 			break;
 	  

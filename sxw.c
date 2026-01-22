@@ -77,6 +77,7 @@
 SXW_t* SXW;
 SXW_resourceType* SXWResources;
 sw_random_t resource_rng; //rng for swx_resource.c functions.
+char *debugfile;
 
 
 
@@ -161,7 +162,7 @@ void SXW_Init( Bool init_SW, char *f_roots ) {
    _sxwfiles[2] = &SXW->f_prod;
    _sxwfiles[3] = &SXW->f_watin;
 
-  SXW->debugfile = NULL;
+  
   SXW->NGrps = Globals->grpCount;
 
   _read_files();
@@ -176,8 +177,7 @@ void SXW_Init( Bool init_SW, char *f_roots ) {
   SXW->NPds = MAX_MONTHS;
   _read_watin();
 
-  if (SXW->debugfile)
-	  _read_debugfile();
+ 
 
 
   if (init_SW)
@@ -195,6 +195,8 @@ void SXW_Init( Bool init_SW, char *f_roots ) {
         MkDir(SoilWatDomain.SW_PathInputs.outputPrefix, &LogInfo);
     }
   }
+
+   
 
     // Find the SOILWAT2 vegetation type with the deepest rooting profile
     SXW->NTrLyrs = SoilWatRun.SiteSim.n_transp_lyrs[0];
@@ -221,7 +223,8 @@ void SXW_Init( Bool init_SW, char *f_roots ) {
   _read_prod();
 
   _sxw_root_phen();
-
+  if (debugfile)
+	  _read_debugfile();
 #ifdef TESTING
   _sxw_test();
   exit(0);
@@ -475,6 +478,16 @@ void SXW_PrintDebug(Bool cleanup) {
 				break;
 			}
 		}
+				insertSXWInputVars();
+				insertSXWInputProd();
+				insertSXWInputSoils();
+				insertSXWOutputVars(SXWResources->_resource_cur, transp_window->added_transp);
+				insertSXWRgroupInfo(SXWResources->_resource_cur);
+				insertSXWOutputProd(&SoilWatRun.VegProdSim);
+				insertSXWRootsSum(SXWResources->_roots_active_sum);
+				insertSXWRootsRelative(SXWResources->_roots_active_rel);
+				insertSXWTranspiration();
+				insertSXWSWCBulk();
 	}
 }
 
@@ -945,8 +958,7 @@ static void _read_debugfile(void) {
 	int cnt = 0;
 	TimeInt i;
 	char name[256] = {0}, inbuf[MAX_FILENAMESIZE], errstr[MAX_ERROR];
-
-	f = OpenFile(SXW->debugfile, "r", &LogInfo);
+	f = OpenFile(debugfile, "r", &LogInfo);
 
 	/* get name of output file */
 	if (!GetALine(f, inbuf, MAX_FILENAMESIZE)) {
@@ -986,10 +998,12 @@ static void _read_debugfile(void) {
 	strcat(name, _debugout);
 	f = OpenFile(strcat(name, ".input.out"), "w", &LogInfo);
 	CloseFile(&f, &LogInfo);
+	SXW_connect(_debugout);
 }
 
 void debugCleanUp() {
   printf("in debugCleanUp\n");
+  SXW_disconnect();
 }
 
 void _print_debuginfo(void) {

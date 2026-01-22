@@ -1034,7 +1034,10 @@ void rgroup_DropSpecies(SppIndex sp)
 	{ /* note the < symbol not <= */
 		for (j = i; j < RGroup[rg]->est_count; j++)
 		{
-			RGroup[rg]->est_spp[j] = RGroup[rg]->est_spp[j + 1];
+			if(j>=(RGroup[rg]->est_count - 1))
+				RGroup[rg]->est_spp[j] = 0;
+			else
+				RGroup[rg]->est_spp[j] = RGroup[rg]->est_spp[j + 1];
 		}
 		RGroup[rg]->est_count--;
 	}
@@ -1132,7 +1135,7 @@ void copy_rgroup(const GroupType* src, GroupType* dest){
     }
 
     free(dest->est_spp);
-    dest->est_spp = (SppIndex*) Mem_Calloc(src->est_count, sizeof(SppIndex), 
+    dest->est_spp = (SppIndex*) Mem_Calloc(SuperGlobals.max_spp_per_grp, sizeof(SppIndex),
                                 "copy_rgroup: est_spp", &LogInfo);
     for(i = 0; i < src->est_count; ++i){
         dest->est_spp[i] = src->est_spp[i];

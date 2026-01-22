@@ -975,6 +975,7 @@ void free_grid_memory(void)
             free(gridCells[i][j].mySoils.trco_forb);
             free(gridCells[i][j].mySoils.trco_grassC3);
             free(gridCells[i][j].mySoils.trco_grassC4);
+            free(gridCells[i][j]._Gwf);
 		}
 	}
 
@@ -1621,7 +1622,7 @@ static void _read_grid_setup(void)
     UseSeedDispersal = itob(j);
 
 	GetALine(f, buf, 1024);
-	i = sscanf(buf, "%d", &shouldSpinup);
+	i = sscanf(buf, "%u", &shouldSpinup);
 	if(i < 1){
 		LogError(&LogInfo, LOGERROR, "Invalid grid setup file (Spinup line wrong)");
 	}
@@ -1645,7 +1646,7 @@ static void _read_grid_setup(void)
     }
 
 	GetALine(f, buf, 1024);
-	if (sscanf(buf, "%d", &outputSDData) != 1) {
+	if (sscanf(buf, "%u", &outputSDData) != 1) {
 		LogError(&LogInfo, LOGERROR, "Invalid grid setup file (Seed Dispersal Data Output\n");
 	}
 
@@ -1919,16 +1920,17 @@ void _Output_AllCellAvgMort(const char* fileName){
             }
 
             /* print one line of kill frequencies per age */
-            for(age=0; age < Globals->Max_Age; age++) {
                 if (MortFlags.group) {
                     ForEachGroup(rg){
-                        Gmort[rg][age] = get_running_mean(nobs, Gmort[rg][age], gridCells[row][col]._Gmort[rg].s[age].ave);
+                    	for(age = 0; age < RGroup[rg]->max_age; age++)
+                    		Gmort[rg][age] = get_running_mean(nobs, Gmort[rg][age], gridCells[row][col]._Gmort[rg].s[age].ave);
                     }
                 }
                 if (MortFlags.species) {
                     ForEachSpecies(sp) {
-                        Smort[sp][age] = get_running_mean(nobs, Smort[sp][age], gridCells[row][col]._Smort[sp].s[age].ave);
-                    }
+                    	for(age = 0; age < Species[sp]->max_age; age++)
+                    		Smort[sp][age] = get_running_mean(nobs, Smort[sp][age], gridCells[row][col]._Smort[sp].s[age].ave);
+
                 }
             }
         }
