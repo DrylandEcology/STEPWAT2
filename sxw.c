@@ -261,6 +261,7 @@ static void SXW_Reinit(char* SOILWAT_file, Bool zeroOutArrays) {
 
     // Some of SOILWAT2's dynamic memory requires full information on start/end years
     SoilWatDomain.endyr = SoilWatDomain.startyr + SuperGlobals.runModelYears;
+    SoilWatDomain.endend = Time_get_lastdoy_y(SoilWatDomain.endyr);
 
     SW_CTL_setup_model(&SoilWatRun, &SoilWatDomain.OutDom, zeroOutArrays, &LogInfoSW);
 
