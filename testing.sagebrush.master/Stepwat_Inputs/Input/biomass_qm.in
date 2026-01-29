@@ -13,7 +13,7 @@
 # interpolated STEPWAT2 biomass values of annual forbs and grasses (afgAGB) and
 # perennial forbs and grasses (pfgAGB), for simulations
 # run in November 2023 (fire1_eind1_c4grass1_co20),
-# all grazing levels were used (L, M, H, VH). Interpolated biomass
+# all but the very high grazing level was used (L, M, H). Interpolated biomass
 # data (Renne multivariate matching algorithm) were used for calculating the quantiles ('Biomass_stepwat'). 
 # Interpolation was done using the same matching criteria
 # used in palmquist et al 2021 and Renne et al 2024. 
@@ -40,28 +40,28 @@
 # Biomass_stepwat = Biomass data that STEPWAT2 uses to map from to Biomass_rap
 # Note: The data should be in increasing order for both annual and perennial biomass data
 # Quantile  PFT    Biomass_rap  Biomass_stepwat
-0          afgAGB    0.0           6.94
-0.1        afgAGB    0.64          15.1
-0.3        afgAGB    2.9           19.17
-0.4        afgAGB    4.31          26.37
-0.5        afgAGB    6.11          40.24
-0.6        afgAGB    8.56          50.3
-0.7        afgAGB    12.21         58.28
-0.8        afgAGB    18.04         66.9
-0.9        afgAGB    29.35         77.52
-0.98       afgAGB    58.62         86.23
-0.995      afgAGB    82.68         89.47
-1          afgAGB    172.44        93.35
+0	        afgAGB	  0	          6.49
+0.1	      afgAGB	  0.64	      14.48
+0.3	      afgAGB	  2.9	        18.38
+0.4	      afgAGB	  4.31	      23.77
+0.5       afgAGB	  6.11	      37.96
+0.6	      afgAGB	  8.56	      45.45
+0.7	      afgAGB	  12.21	      53.98
+0.8	      afgAGB	  18.04	      63.03
+0.9	      afgAGB	  29.35	      69.16
+0.98	    afgAGB	  58.62	      76.48
+0.995	    afgAGB	  82.68	      83.03
+1	        afgAGB	  172.44	    87.28
 
-0          pfgAGB    0.0           16.69
-0.1        pfgAGB    6.52          26.07
-0.3        pfgAGB    18.93         45.91
-0.4        pfgAGB    25.66         49.34
-0.5        pfgAGB    33.57         55.52
-0.6        pfgAGB    42.89         62.75
-0.7        pfgAGB    54.42         71.45
-0.8        pfgAGB    69.71         95.13
-0.9        pfgAGB    88.57         108.06
-0.98       pfgAGB    116.52        115.16
-0.995      pfgAGB    136.07        121.78
-1          pfgAGB    309.82        145.93
+0	        pfgAGB	  0	          13.71
+0.1	      pfgAGB	  6.52	      21.8
+0.3	      pfgAGB	  18.93	      41.19
+0.4	      pfgAGB	  25.66	      46.63
+0.5	      pfgAGB	  33.57	      51.77
+0.6	      pfgAGB	  42.89	      57.89
+0.7	      pfgAGB	  54.42	      67.89
+0.8	      pfgAGB	  69.71	      81.59
+0.9	      pfgAGB	  88.57	      98.22
+0.98	    pfgAGB	  116.52	    114.58
+0.995	    pfgAGB	  136.07	    123.15
+1	        pfgAGB	  309.82	    140.67
