@@ -160,12 +160,7 @@ void disperseSeeds(int year) {
               continue;
             }
 
-            // If this cell already has seeds there is no point in continuing
-            if (!outputSDData) {
-                if (receiverCell->mySpecies[sp]->seedsPresent) {
-                    continue;
-                }
-            }
+            
 
             // These variables depend on the recipient.
             distance = _distance(col, row, receiverCol, receiverRow,
@@ -179,10 +174,10 @@ void disperseSeeds(int year) {
 
             // Stochastically determine if seeds reached the recipient.
             if (RandUni(&dispersal_rng) < Pd) {
-              // Remember that Species[sp] refers to the sender, but in this
-              // case we are refering to the receiver.
-              receiverCell->mySpecies[sp]->seedsPresent = TRUE;
-
+              
+              // If this cell already has seeds there is no point in continuing
+            if (!outputSDData && receiverCell->mySpecies[sp]->seedsPresent)continue;
+                
               // If the user requested statistics.
               if(recordDispersalEvents) {
                 _recordDispersalEvent(year, Globals->currIter,
@@ -190,6 +185,9 @@ void disperseSeeds(int year) {
                                       grid_Cols) + receiverCol,
                                       Species[sp]->name);
               }
+              // Remember that Species[sp] refers to the sender, but in this
+              // case we are refering to the receiver.
+              receiverCell->mySpecies[sp]->seedsPresent = TRUE;
             }
           } // END for each receiverCol
         }   // END for each receiverRow
