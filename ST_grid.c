@@ -1664,7 +1664,7 @@ void _Output_AllCellAvgBmass(const char * filename){
 	SppIndex sp;	//for iterating
 
 	/* One accumulator for every accumulator in ST_stats.c */
-	float ppt, pptstd, pptsos, temp, tempstd, tempsos, dist, wildfire, grp[SuperGlobals.max_rgroups], grpstd[SuperGlobals.max_rgroups],
+	double ppt, pptstd, pptsos, temp, tempstd, tempsos, dist, wildfire, grp[SuperGlobals.max_rgroups], grpstd[SuperGlobals.max_rgroups],
 		  grpsos[SuperGlobals.max_rgroups], gsize[SuperGlobals.max_rgroups], gpr[SuperGlobals.max_rgroups],
 		  gprsos[SuperGlobals.max_rgroups], gprstd[SuperGlobals.max_rgroups], graze[SuperGlobals.max_rgroups],
 		  prescribedfire[SuperGlobals.max_rgroups], spp[SuperGlobals.max_spp_per_grp * SuperGlobals.max_rgroups],
@@ -1721,14 +1721,13 @@ void _Output_AllCellAvgBmass(const char * filename){
 				/* ------------- Accumulate requested output ----------------- */
 				nobs++;
 				if(BmassFlags.ppt) {
-
-					float old_ppt_ave = ppt;
+					double old_ppt_ave = ppt;
 					ppt = get_running_mean(nobs, ppt, gridCells[i][j]._Ppt->s[year].ave);
 					pptsos += get_running_sqr(old_ppt_ave, ppt, gridCells[i][j]._Ppt->s[year].ave);
 					pptstd = final_running_sd(nobs, pptsos);
 				}
 				if(BmassFlags.tmp) {
-					float old_temp_ave = temp;
+					double old_temp_ave = temp;
 					temp = get_running_mean(nobs, temp, gridCells[i][j]._Temp->s[year].ave);
 					tempsos += get_running_sqr(old_temp_ave, temp, gridCells[i][j]._Temp->s[year].ave);
 					tempstd = final_running_sd(nobs, tempsos);
@@ -1744,7 +1743,7 @@ void _Output_AllCellAvgBmass(const char * filename){
 						wildfire += gridCells[i][j]._Gwf->wildfire[year];
 					}
 					ForEachGroup(rg){
-						float old_grp_ave = grp[rg];
+						double old_grp_ave = grp[rg];
 						grp[rg] = get_running_mean(nobs, grp[rg], gridCells[i][j]._Grp[rg].s[year].ave);
 						grpsos[rg] += get_running_sqr(old_grp_ave, grp[rg], gridCells[i][j]._Grp[rg].s[year].ave);
 						grpstd[rg] = final_running_sd(nobs, grpsos[rg]);
@@ -1752,7 +1751,7 @@ void _Output_AllCellAvgBmass(const char * filename){
 							gsize[rg] += gridCells[i][j]._Gsize[rg].s[year].ave;
 						}
 						if(BmassFlags.pr){
-							float old_gpr_ave = gpr[rg];
+							double old_gpr_ave = gpr[rg];
 							gpr[rg] = get_running_mean(nobs, gpr[rg], gridCells[i][j]._Gpr[rg].s[year].ave);
 							gprsos[rg] += get_running_sqr(old_gpr_ave, gpr[rg], gridCells[i][j]._Gpr[rg].s[year].ave);
 							gprstd[rg] = final_running_sd(nobs, gprsos[rg]);
