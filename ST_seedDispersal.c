@@ -163,8 +163,6 @@ void disperseSeeds(int year) {
             // These variables depend on the recipient.
             distance = _distance(col, row, receiverCol, receiverRow,
                                  Globals->plotsize);
-
-
             Pd = _probabilityOfDispersal(rate, height, distance);
 
 
