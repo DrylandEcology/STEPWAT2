@@ -132,10 +132,8 @@ void disperseSeeds(int year) {
       ForEachSpecies(sp) {
         // Running this algorithm on Species that didn't request dispersal
         // wouldn't hurt, but it would be a waste of time.
-    	if(!outputSDData){
-    		if (!Species[sp]->use_dispersal)
-    			continue;
-    	}
+    	if (!Species[sp]->use_dispersal)
+    		continue;
 
         // If there are no individuals of this species that are of reproductive
         // age continue.
@@ -144,13 +142,11 @@ void disperseSeeds(int year) {
 
         // These variables are independent of recipient.
         height = getSpeciesHeight(Species[sp]);
-		//printf("height after getSpeciesHeight called Species = %s, height = %f\n ", Species[sp]->name, height);
 
         rate = _rateOfDispersal(Species[sp]->maxDispersalProbability,
                                 Species[sp]->maxHeight,
                                 _maxDispersalDistance(height));
 
-		//printf("rate after _rateOfDispersal called Species = %s, rate = %f\n ", Species[sp]->name, rate);
 
         // Iterate through all possible recipients of seeds.
         for (receiverRow = 0; receiverRow < grid_Rows; ++receiverRow) {
@@ -162,22 +158,20 @@ void disperseSeeds(int year) {
               continue;
             }
 
-            // If this cell already has seeds there is no point in continuing
-            //if (receiverCell->mySpecies[sp]->seedsPresent) {
-            //  continue;
-            //}
+            
 
             // These variables depend on the recipient.
             distance = _distance(col, row, receiverCol, receiverRow,
                                  Globals->plotsize);
             Pd = _probabilityOfDispersal(rate, height, distance);
 
+
             // Stochastically determine if seeds reached the recipient.
             if (RandUni(&dispersal_rng) < Pd) {
-              // Remember that Species[sp] refers to the sender, but in this
-              // case we are refering to the receiver.
-              receiverCell->mySpecies[sp]->seedsPresent = TRUE;
-
+              
+              // If this cell already has seeds there is no point in continuing
+            if (!outputSDData && receiverCell->mySpecies[sp]->seedsPresent)continue;
+                
               // If the user requested statistics.
               if(recordDispersalEvents) {
                 _recordDispersalEvent(year, Globals->currIter,
@@ -185,6 +179,9 @@ void disperseSeeds(int year) {
                                       grid_Cols) + receiverCol,
                                       Species[sp]->name);
               }
+              // Remember that Species[sp] refers to the sender, but in this
+              // case we are refering to the receiver.
+              receiverCell->mySpecies[sp]->seedsPresent = TRUE;
             }
           } // END for each receiverCol
         }   // END for each receiverRow
@@ -337,7 +334,7 @@ Bool _shouldProduceSeeds(SppIndex sp) {
  * \ingroup SEED_DISPERSAL_PRIVATE
  */
 float _rateOfDispersal(float PMD, float maxHeight, float maxDistance) {
-  return log((PMD) * maxHeight) / maxDistance;
+  return log((PMD) * (maxHeight/100)) / maxDistance;
 }
 
 /**
@@ -354,7 +351,7 @@ float _rateOfDispersal(float PMD, float maxHeight, float maxDistance) {
  * \ingroup SEED_DISPERSAL_PRIVATE
  */
 float _probabilityOfDispersal(float rate, float height, float distance) {
-  return exp((rate * distance) / height);
+  return exp((rate * distance) / (height/100));
 }
 
 /**
