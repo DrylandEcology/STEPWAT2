@@ -235,10 +235,16 @@ struct species_st {
        *         biomass. Constant read in from inputs.
        * \ingroup SEED_DISPERSAL */
         heightSlope,
-      /** \brief The probability that a species disperses seeds 
-       *         \ref maxDispersalDistance meters away. 
-       *  \ingroup SEED_DISPERSAL */
-        maxDispersalProbability;
+      /** \brief Shape parameter controlling tail fatness (kurtosis),
+        *         affecting long-distance dispersal.
+        *  \ingroup SEED_DISPERSAL */
+        B,
+      /** \brief Average wind speed.
+        *  \ingroup SEED_DISPERSAL */
+        U,
+      /** \brief Terminal velocity of seeds.
+        *  \ingroup SEED_DISPERSAL */
+        V;
       /** \brief Temperature class for this species.
        * \sa TempClass */
   TempClass tempclass;

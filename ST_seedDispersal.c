@@ -143,7 +143,7 @@ void disperseSeeds(int year) {
         // These variables are independent of recipient.
         height = getSpeciesHeight(Species[sp]);
 
-        rate = _rateOfDispersal(Species[sp]->maxDispersalProbability,
+        rate = _rateOfDispersal(0.005,
                                 Species[sp]->maxHeight,
                                 _maxDispersalDistance(height));
 
