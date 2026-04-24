@@ -23,7 +23,8 @@
 float _distance(int x1, int y1, int x2, int y2, float cellWidth);
 Bool _shouldProduceSeeds(SppIndex sp);
 float _rateOfDispersal(float PMD, float maxHeight, float maxDistance);
-float _probabilityOfDispersal(float rate, float height, float distance);
+float _probabilityOfDispersal(float KL, float A);
+double _dispersal_kernel(double r, double a, double b);
 float _maxDispersalDistance(float height);
 void _recordDispersalEvent(int year, int iteration, int fromCell, int toCell,
                            const char* name);
@@ -101,12 +102,14 @@ void disperseSeeds(int year) {
   int receiverRow, receiverCol;
   // The probability of dispersal
   double Pd;
-  // The rate of dispersal
-  double rate;
   // The height of the tallest individual
   double height;
   // The distance between a potential sender and recipient
   double distance;
+
+  double a;
+
+  double kl;
 
   if (!isRNGSeeded) {
 	  // FIXME: seed with appropriate iter, year, and cell_id
@@ -143,11 +146,8 @@ void disperseSeeds(int year) {
         // These variables are independent of recipient.
         height = getSpeciesHeight(Species[sp]);
 
-        rate = _rateOfDispersal(0.005,
-                                Species[sp]->maxHeight,
-                                _maxDispersalDistance(height));
 
-
+        a = height*Species[sp]->U / Species[sp]->V;
         // Iterate through all possible recipients of seeds.
         for (receiverRow = 0; receiverRow < grid_Rows; ++receiverRow) {
           for (receiverCol = 0; receiverCol < grid_Cols; ++receiverCol) {
@@ -163,8 +163,8 @@ void disperseSeeds(int year) {
             // These variables depend on the recipient.
             distance = _distance(col, row, receiverCol, receiverRow,
                                  Globals->plotsize);
-            Pd = _probabilityOfDispersal(rate, height, distance);
-
+            kl = _dispersal_kernel(distance,a,Species[sp]->B);
+            Pd = _probabilityOfDispersal(kl, Globals->plotsize);
 
             // Stochastically determine if seeds reached the recipient.
             if (RandUni(&dispersal_rng) < Pd) {
@@ -350,8 +350,20 @@ float _rateOfDispersal(float PMD, float maxHeight, float maxDistance) {
  * \date 17 December 2019
  * \ingroup SEED_DISPERSAL_PRIVATE
  */
-float _probabilityOfDispersal(float rate, float height, float distance) {
-  return exp((rate * distance) / (height/100));
+float _probabilityOfDispersal(float KL, float A) {
+  return KL*A;
+}
+
+double _dispersal_kernel(double r, double a, double b){
+    if (r < 0) return 0.0;
+
+    double numerator = b;
+    double a_sq = a * a;
+    double denominator = 2.0 * swPI * a_sq * tgamma(2.0 / b);
+
+    double exponent = -pow(r / a, b);
+
+    return (numerator / denominator) * exp(exponent);
 }
 
 /**
