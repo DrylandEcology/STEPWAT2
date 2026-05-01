@@ -1224,7 +1224,7 @@ static void _species_init( void) {
        viable,
        pseed;
    RealF irate, ratep, estab, minb, maxb, cohort, xdecay,
-         p1, p2, p3, p4, HMAX, HSlope, B, U, V;
+         p1, p2, p3, p4, HMAX, HSlope, B, U, V,seedN,seedT;
    float var;
    char clonal[5];
 
@@ -1411,8 +1411,8 @@ static void _species_init( void) {
       continue;
     }
 
-    x = sscanf( inbuf, "%s %hd %f %f %f %f %f %f",
-                name, &turnondispersal, &p1, &HMAX, &HSlope,&B,&U, &V); 
+    x = sscanf( inbuf, "%s %hd %f %f %f %f %f %f %f %f",
+                name, &turnondispersal, &p1, &HMAX, &HSlope,&B,&U, &V, &seedN,&seedT);
     if(x < 6) {
       LogError(&LogInfo, LOGERROR, "%s: Too few columns in species seed dispersal inputs", MyFileName);
     }
@@ -1429,6 +1429,8 @@ static void _species_init( void) {
     Species[sp]->B = B;
     Species[sp]->U = U;
     Species[sp]->V = V;
+    Species[sp]->seedN = seedN;
+    Species[sp]->seedT = seedT;
   }
   if(!sppok) {
 	  LogError(&LogInfo, LOGERROR, "%s: Incorrect/incomplete input in species seed dispersal input", MyFileName);

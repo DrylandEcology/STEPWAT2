@@ -244,7 +244,13 @@ struct species_st {
         U,
       /** \brief Terminal velocity of seeds.
         *  \ingroup SEED_DISPERSAL */
-        V;
+        V,
+      /** \brief The mean yearly seed production of a reproductive plant individual
+        *  \ingroup SEED_DISPERSAL */
+        seedN,
+      /** \brief The seed production threshold that adjusts the probability of establishment.
+        *  \ingroup SEED_DISPERSAL */
+        seedT;
       /** \brief Temperature class for this species.
        * \sa TempClass */
   TempClass tempclass;

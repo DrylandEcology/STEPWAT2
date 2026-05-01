@@ -404,6 +404,8 @@ void copy_species(const SpeciesType* src, SpeciesType* dest){
     dest->B = src->B;
 	dest->U = src->U;
 	dest->V = src->V;
+	dest->seedN = src->seedN;
+	dest->seedT = src->seedT;
 	dest->seedbank = src->seedbank;
 	dest->seedling_biomass = src->seedling_biomass;
 	dest->seedling_estab_prob = src->seedling_estab_prob;

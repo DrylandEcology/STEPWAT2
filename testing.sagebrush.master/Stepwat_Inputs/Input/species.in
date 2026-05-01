@@ -167,26 +167,28 @@
 # B = shape parameter, controls kurtosis and the fatness of the tail (i.e. the importance of long-distance dispersal).
 # U = average wind speed.
 # V =  terminal velocity of seeds.
+# seedN = The mean yearly seed production of a reproductive plant individual.
+# seedT = The seed production threshold upon which the probability of establishment is adjusted.
 #
-# name  Use  MRS   HMax    HSlope    B    U     V
-artr    1    0.5   50.0    0.00181   1.9  5     1.15
-trdu    0    0.5   25.0    0.8302    1.9  5     1.15
-cryp    0    0.5   25.0    0.8302    1.9  5     1.15
-amre    0    0.5   25.0    0.8302    1.9  5     1.15
-chen    0    0.5   180.0   0.8302    1.9  5     1.15
-acmi    0    0.5   25.0    0.8302    1.9  5     1.15
-phho    0    0.5   4.0     0.8302    1.9  5     1.15
-arfr    0    0.5   30.0    0.8302    1.9  5     1.15
-lipu    0    0.5   30.0    0.8302    1.9  5     1.15
-brte    0    0.5   90.0    0.7674    1.9  5     1.15
-vuoc    0    0.5   40.0    0.7674    1.9  5     1.15
-pssp    0    0.5   24.5    0.7674    1.9  5     1.15
-koma    0    0.5   24.5    0.7674    1.9  5     1.15
-bogr    0    0.5   12.0    4.4117    1.9  5     1.15
-spcr    0    0.5   24.5    0.7674    1.9  5     1.15
-gusa    0    0.5   40.0    0.00181   1.9  5     1.15
-chvi    0    0.5   100.0   0.00181   1.9  5     1.15
-oppo    0    0.5   40.0    0.8302    1.9  5     1.15
+# name  Use  MRS   HMax    HSlope    B    U     V     seedN  seedT
+artr    1    0.5   50.0    0.00181   1.9  5     1.15  250    50
+trdu    0    0.5   25.0    0.8302    1.9  5     1.15  250    50
+cryp    0    0.5   25.0    0.8302    1.9  5     1.15  250    50
+amre    0    0.5   25.0    0.8302    1.9  5     1.15  250    50
+chen    0    0.5   180.0   0.8302    1.9  5     1.15  250    50
+acmi    0    0.5   25.0    0.8302    1.9  5     1.15  250    50
+phho    0    0.5   4.0     0.8302    1.9  5     1.15  250    50
+arfr    0    0.5   30.0    0.8302    1.9  5     1.15  250    50
+lipu    0    0.5   30.0    0.8302    1.9  5     1.15  250    50
+brte    0    0.5   90.0    0.7674    1.9  5     1.15  250    50
+vuoc    0    0.5   40.0    0.7674    1.9  5     1.15  250    50
+pssp    0    0.5   24.5    0.7674    1.9  5     1.15  250    50
+koma    0    0.5   24.5    0.7674    1.9  5     1.15  250    50
+bogr    0    0.5   12.0    4.4117    1.9  5     1.15  250    50
+spcr    0    0.5   24.5    0.7674    1.9  5     1.15  250    50
+gusa    0    0.5   40.0    0.00181   1.9  5     1.15  250    50
+chvi    0    0.5   100.0   0.00181   1.9  5     1.15  250    50
+oppo    0    0.5   40.0    0.8302    1.9  5     1.15  250    50
 
 [end]	# this marks the end of the seed-dispersal parameters
 
