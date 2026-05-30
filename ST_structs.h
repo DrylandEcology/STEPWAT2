@@ -156,7 +156,8 @@ struct species_st {
          seedbank,
       /** \brief Average number of seeds produced by annual species per 1g of biomass, per 1m^2 and per year.
        * internally re-calculated as seeds per 1 g biomass per plot and per year. */
-         pseed;
+         pseed,
+        eind_seedlim;
       /** \brief relsize from the previous year, used for annual establishment. 
        * \sa rgroup_Establish() */
   RealF lastyear_relsize,
@@ -169,7 +170,8 @@ struct species_st {
         alpha,
       /** \brief Beta parameter for random number draw from beta distribution in establishment of annual species.
        * \sa _add_annuals() */
-      beta;
+        beta,
+        pestab_seedlim;
       /** \brief Variance parameter of the beta distribution for establishment of annual species. */
   float var;
       /** \brief Head of a doubly-linked list of all individuals of this species. 
@@ -179,6 +181,7 @@ struct species_st {
        * \sa ST_seedDispersal.c 
        * \ingroup SEED_DISPERSAL */
   Bool seedsPresent;
+  Int seedCount;
 
   /**** Quantities that DO NOT change during model runs *****/
 
