@@ -111,6 +111,7 @@ void disperseSeeds(int year) {
 
   double kl;
 
+  double Pa;
   if (!isRNGSeeded) {
 	  // FIXME: seed with appropriate iter, year, and cell_id
 	  // RNG ID 6, see `set_all_rngs()`
@@ -122,7 +123,12 @@ void disperseSeeds(int year) {
   for (row = 0; row < grid_Rows; ++row) {
     for (col = 0; col < grid_Cols; ++col) {
       load_cell(row, col);
-      ForEachSpecies(sp) { Species[sp]->seedsPresent = FALSE; }
+      ForEachSpecies(sp) { 
+        Species[sp]->seedsPresent = FALSE; 
+        Species[sp]->seedCount =0; 
+        Species[sp]->pestab_seedlim = 0;
+        Species[sp]->eind_seedlim = 0;
+      }
       unload_cell();
     }
   }
@@ -165,10 +171,10 @@ void disperseSeeds(int year) {
                                  Globals->plotsize);
             kl = _dispersal_kernel(distance,a,Species[sp]->B);
             Pd = _probabilityOfDispersal(kl, Globals->plotsize);
-
+            Pa = 1 - pow(1-Pd,Species[sp]->seedN);
+            receiverCell->mySpecies[sp]->seedCount += (Species[sp]->seedN * Pd);
             // Stochastically determine if seeds reached the recipient.
-            if (RandUni(&dispersal_rng) < Pd) {
-              
+            if (RandUni(&dispersal_rng) < Pa) {
               // If this cell already has seeds there is no point in continuing
             if (!outputSDData && receiverCell->mySpecies[sp]->seedsPresent)continue;
                 
@@ -189,6 +195,20 @@ void disperseSeeds(int year) {
       unload_cell();
     } // END for each col
   }   // END for each row
+  for (row = 0; row < grid_Rows; ++row) {
+    for (col = 0; col < grid_Cols; ++col) {
+      load_cell(row, col);
+      ForEachSpecies(sp) { 
+         if(Species[sp]->seedCount < Species[sp]->seedT){
+                Species[sp]->pestab_seedlim = Species[sp]->seedling_estab_prob * fmin(1.0,(Species[sp]->seedCount/Species[sp]->seedT));
+              }
+          if(Species[sp]->seedCount < Species[sp]->max_seed_estab){
+            Species[sp]->eind_seedlim =  Species[sp]->seedCount;
+          }
+      }
+      unload_cell();
+    }
+  }
 }
 
 /**
