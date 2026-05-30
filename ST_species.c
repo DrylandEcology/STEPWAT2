@@ -89,12 +89,14 @@ static SpeciesType *_create(void);
  */
 IntS Species_NumEstablish(SppIndex sp)
 {
-    // If we are using seed dispersal
+	RealF pestab = (Species[sp]->pestab_seedlim != 0) ? Species[sp]->pestab_seedlim : Species[sp]->seedling_estab_prob;
+    IntUS eind = (Species[sp]->eind_seedlim != 0) ? Species[sp]->eind_seedlim : Species[sp]->max_seed_estab;
+	// If we are using seed dispersal
     if(UseSeedDispersal && Species[sp]->use_dispersal){
         if(Species[sp]->seedsPresent && 
-           RandUni(&species_rng) <= Species[sp]->seedling_estab_prob){
+           RandUni(&species_rng) <= pestab){
 			// printf("** %s used dispersal **\n", Species[sp]->name);
-            return (IntS) RandUniIntRange(1, Species[sp]->max_seed_estab, 
+            return (IntS) RandUniIntRange(1, eind, 
 										  &species_rng);
         } else {
 			// printf("%s tried dispersal but was unsuccessfull\n", Species[sp]->name);
@@ -105,13 +107,13 @@ IntS Species_NumEstablish(SppIndex sp)
     // If we are forcing this species to establish every year
     if(RGroup[Species[sp]->res_grp]->est_annually){
 		// printf("%s forced establishment\n", Species[sp]->name);
-        return (IntS) RandUniIntRange(1, Species[sp]->max_seed_estab, &species_rng);
+        return (IntS) RandUniIntRange(1, eind, &species_rng);
     }
 
     // Otherwise, run normal establishment
-    if(RandUni(&species_rng) <= Species[sp]->seedling_estab_prob){
+    if(RandUni(&species_rng) <=pestab){
 		// printf("%s used traditional establishment\n", Species[sp]->name);
-        return (IntS) RandUniIntRange(1, Species[sp]->max_seed_estab, &species_rng);
+        return (IntS) RandUniIntRange(1, eind, &species_rng);
     }
 
     // If we didn't get caught by any of the three "if" statements above then
