@@ -280,7 +280,7 @@ void runGrid(void)
  		SW_OUT_create_summary_files(&SoilWatDomain.OutDom, &SoilWatRun.SW_PathOutputs,
                                     SoilWatDomain.SW_PathInputs.txtInFiles,
                                     SoilWatRun.RunIn.SiteRunIn.n_layers, &LogInfo);
-        SW_OUT_construct_outarray(1, &SoilWatDomain.OutDom, &SoilWatRun.OutRun, &LogInfo);
+        SW_OUT_construct_outarray(grid_Cols * grid_Rows, &SoilWatDomain.OutDom, &SoilWatRun.OutRun, &LogInfo);
     }
 
 	for (iter = 1; iter <= SuperGlobals.runModelIterations; iter++)
@@ -1046,7 +1046,7 @@ void load_cell(int row, int col){
 	/* Copy this cell's SXW variables into the local variables in sxw.c */
 	copy_sxw_variables(gridCells[row][col].mySXW, gridCells[row][col].mySXWResources, gridCells[row][col].myTranspWindow);
 
-    SuperGlobals.prepare_IterationSummary = gridCells[row][col].generateSWOutput;
+    SoilWatDomain.OutDom.prepare_IterationSummary = gridCells[row][col].generateSWOutput;
 
 	// If we have read in the soil information num_layers will be > 0.
 	// Otherwise we haven't read the file so there is no point wasting time on this.
@@ -2049,7 +2049,7 @@ static void _separateSOILWAT2Output(void){
 static void _separateSOILWAT2DailyOutput(char* fileName, int* cellNumbers) {
   int thisDay, lastDay = 0, junk, outFileIndex;
   size_t bufsize = 9000;
-  char junkBuffer[4096];
+  char junkBuffer[5000];
   int numCells = _getNumberSOILWAT2OutputCells();
   FILE** outFiles = Mem_Calloc(numCells, sizeof(FILE*),
                                "_separateSOILWAT2DailyOutput", &LogInfo);
@@ -2073,7 +2073,7 @@ static void _separateSOILWAT2DailyOutput(char* fileName, int* cellNumbers) {
   // Separate the file
   outFileIndex = 0;
   while(getline(&buffer, &bufsize, inFile) > 0) {
-    sscanf(buffer, "%d,%d,%s", &junk, &thisDay, junkBuffer);
+    sscanf(buffer, "%d,%d,%4999s", &junk, &thisDay, junkBuffer);
     if(lastDay > thisDay) {
       outFileIndex = (outFileIndex + 1) % numCells;
       lastDay = 0;
