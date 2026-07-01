@@ -22,7 +22,6 @@
 
 float _distance(int x1, int y1, int x2, int y2, float cellWidth);
 Bool _shouldProduceSeeds(SppIndex sp);
-float _rateOfDispersal(float PMD, float maxHeight, float maxDistance);
 float _probabilityOfDispersal(float KL, float A);
 double _dispersal_kernel(double r, double a, double b);
 float _maxDispersalDistance(float height);
@@ -338,24 +337,6 @@ Bool _shouldProduceSeeds(SppIndex sp) {
   return FALSE;
 }
 
-/**
- * \brief Returns the rate of dispersal.
- *
- * \param PMD is the probability of maximum dispersal.
- * \param height is the average height of an individual of the given
- *                   species.
- * \param maxDistance is the maximum distance an individual of this species can
- *                    disperse seeds.
- *
- * \return A float.
- *
- * \author Chandler Haukap
- * \date 17 December 2019
- * \ingroup SEED_DISPERSAL_PRIVATE
- */
-float _rateOfDispersal(float PMD, float maxHeight, float maxDistance) {
-  return log((PMD) * (maxHeight/100)) / maxDistance;
-}
 
 /**
  * \brief Returns the probability that seeds will disperse a given distance.
