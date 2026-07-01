@@ -161,7 +161,7 @@
 # Use = flag to turn seed dispersal on/off for this species(0 is off, 1 is on)
 # MRS = Minimum reproductive size. The minimum percent of maximum biomass at which an
 #       individual can produce seeds.
-# HMax = The maximum height of an individual (centimeters).
+# HMax = The maximum height of an individual (meters).
 # HSlope = The slope of the allometric relationship between height and biomass (centimeters / gram).
 # MAXD = The maximum distance, in meters, a seed can travel.
 # B = shape parameter, controls kurtosis and the fatness of the tail (i.e. the importance of long-distance dispersal).
@@ -171,24 +171,24 @@
 # seedT = The seed production threshold upon which the probability of establishment is adjusted.
 #
 # name  Use  MRS   HMax    HSlope    B    U     V     seedN  seedT
-artr    1    0.5   50.0    0.00181   1.9  5     1.15  250    50
-trdu    0    0.5   25.0    0.8302    1.9  5     1.15  250    50
-cryp    0    0.5   25.0    0.8302    1.9  5     1.15  250    50
-amre    0    0.5   25.0    0.8302    1.9  5     1.15  250    50
-chen    0    0.5   180.0   0.8302    1.9  5     1.15  250    50
-acmi    0    0.5   25.0    0.8302    1.9  5     1.15  250    50
-phho    0    0.5   4.0     0.8302    1.9  5     1.15  250    50
-arfr    0    0.5   30.0    0.8302    1.9  5     1.15  250    50
-lipu    0    0.5   30.0    0.8302    1.9  5     1.15  250    50
-brte    0    0.5   90.0    0.7674    1.9  5     1.15  250    50
-vuoc    0    0.5   40.0    0.7674    1.9  5     1.15  250    50
-pssp    0    0.5   24.5    0.7674    1.9  5     1.15  250    50
-koma    0    0.5   24.5    0.7674    1.9  5     1.15  250    50
-bogr    0    0.5   12.0    4.4117    1.9  5     1.15  250    50
-spcr    0    0.5   24.5    0.7674    1.9  5     1.15  250    50
-gusa    0    0.5   40.0    0.00181   1.9  5     1.15  250    50
-chvi    0    0.5   100.0   0.00181   1.9  5     1.15  250    50
-oppo    0    0.5   40.0    0.8302    1.9  5     1.15  250    50
+artr    1    0.5   0.50    0.00181   1.9  5     1.15  250    50
+trdu    0    0.5   0.25    0.8302    1.9  5     1.15  250    50
+cryp    0    0.5   0.25    0.8302    1.9  5     1.15  250    50
+amre    0    0.5   0.25    0.8302    1.9  5     1.15  250    50
+chen    0    0.5   1.80   0.8302    1.9  5     1.15  250    50
+acmi    0    0.5   0.25    0.8302    1.9  5     1.15  250    50
+phho    0    0.5   0.04     0.8302    1.9  5     1.15  250    50
+arfr    0    0.5   0.30    0.8302    1.9  5     1.15  250    50
+lipu    0    0.5   0.30    0.8302    1.9  5     1.15  250    50
+brte    0    0.5   0.90    0.7674    1.9  5     1.15  250    50
+vuoc    0    0.5   0.40    0.7674    1.9  5     1.15  250    50
+pssp    0    0.5   0.245    0.7674    1.9  5     1.15  250    50
+koma    0    0.5   0.245    0.7674    1.9  5     1.15  250    50
+bogr    0    0.5   0.12    4.4117    1.9  5     1.15  250    50
+spcr    0    0.5   0.245    0.7674    1.9  5     1.15  250    50
+gusa    0    0.5   0.40    0.00181   1.9  5     1.15  250    50
+chvi    0    0.5   1.0   0.00181   1.9  5     1.15  250    50
+oppo    0    0.5   0.40    0.8302    1.9  5     1.15  250    50
 
 [end]	# this marks the end of the seed-dispersal parameters
 
