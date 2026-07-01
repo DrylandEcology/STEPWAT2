@@ -263,7 +263,7 @@ RealF getSpeciesRelsize(SppIndex sp)
  * \param sp A pointer to the \ref SpeciesType.
  * 
  * \return A float. The height of the tallest individual of the species in 
- *         centimeters.
+ *         meters.
  * 
  * \author Chandler Haukap
  * 
