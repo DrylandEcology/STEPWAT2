@@ -177,7 +177,7 @@ int main(int argc, char **argv) {
 	 * was logged.  see generic.h */
     
     SW_DOM_init_ptrs(&SoilWatDomain);
-    SW_CTL_init_ptrs(&SoilWatRun);
+    SW_CTL_init_ptrs(&SoilWatDomain, &SoilWatRun);
 
   SuperGlobals.prepare_IterationSummary = FALSE; // dont want to get soilwat output unless -o flag
   SuperGlobals.storeAllIterations = FALSE; // dont want to store all soilwat output iterations unless -i flag
@@ -204,19 +204,20 @@ int main(int argc, char **argv) {
 	parm_Initialize();
         
 	SXW_Init(TRUE, NULL); // allocate SOILWAT2-memory
-	SW_OUT_set_ncol(SoilWatDomain.nMaxSoilLayers, SoilWatRun.VegEstabIn.count,
-                    SoilWatDomain.OutDom.ncol_OUT, SoilWatDomain.OutDom.nvar_OUT,
-                    SoilWatDomain.OutDom.nsl_OUT, SoilWatDomain.OutDom.npft_OUT,
-                    &LogInfo); // set number of output columns
- 	SW_OUT_set_colnames(SoilWatRun.RunIn.SiteRunIn.n_layers, SoilWatRun.VegEstabIn.parms,
+
+    // set number of output columns
+    SW_OUT_set_out_counts(SoilWatDomain.nMaxSoilLayers, SoilWatRun.VegEstabIn.count,
+                    &SoilWatDomain.OutDom); 
+    SW_OUT_sum_ncols(&SoilWatDomain, &LogInfo);
+	SW_OUT_set_colnames(SoilWatRun.RunIn.SiteRunIn.n_layers, &SoilWatRun.VegEstabIn.parms,
  						SoilWatDomain.OutDom.ncol_OUT,
- 						SoilWatDomain.OutDom.colnames_OUT, &LogInfo); // set column names for output files
+ 						SoilWatDomain.OutDom.colnames_OUT, &LogInfo);
 
  	if (SuperGlobals.prepare_IterationSummary) {
- 		SW_OUT_create_summary_files(&SoilWatDomain.OutDom, &SoilWatRun.SW_PathOutputs,
+ 		SW_OUT_create_summary_files(&SoilWatDomain.OutDom, SoilWatRun.SW_PathOutputs,
                                     SoilWatDomain.SW_PathInputs.txtInFiles,
                                     SoilWatRun.RunIn.SiteRunIn.n_layers, &LogInfo);
-        SW_OUT_construct_outarray(1, &SoilWatDomain.OutDom, &SoilWatRun.OutRun, &LogInfo);
+        SW_OUT_construct_outarray(&SoilWatDomain.OutDom, SoilWatDomain.nActiveSuidsProc, SoilWatRun.OutRun, &LogInfo);
  	}
         
 	/* Connect to ST db and insert static data */
@@ -231,10 +232,10 @@ int main(int argc, char **argv) {
 	for (iter = 1; iter <= SuperGlobals.runModelIterations; iter++) {
 		Plot_Initialize();
 
-		Globals->currIter = SoilWatRun.OutRun.currIter = iter;
+		Globals->currIter = SoilWatRun.OutRun->currIter = iter;
 
 		if (SuperGlobals.storeAllIterations) {
- 			SW_OUT_create_iteration_files(&SoilWatDomain.OutDom, &SoilWatRun.SW_PathOutputs,
+ 			SW_OUT_create_iteration_files(&SoilWatDomain.OutDom, SoilWatRun.SW_PathOutputs,
                                           iter, SoilWatDomain.SW_PathInputs.txtInFiles,
                                           SoilWatRun.RunIn.SiteRunIn.n_layers, &LogInfo);
 		}
@@ -364,7 +365,7 @@ int main(int argc, char **argv) {
     SXW_PrintDebug(1);
   }
 
-  SW_OUT_close_files(&SoilWatRun.SW_PathOutputs, &SoilWatDomain.OutDom, &LogInfo);
+  SW_OUT_close_files(SoilWatRun.SW_PathOutputs, &SoilWatDomain.OutDom, &LogInfo);
   SW_DOM_deconstruct(&SoilWatDomain);
   SW_CTL_clear_model(TRUE, &SoilWatRun); // de-allocate all memory
   free_all_sxw_memory();

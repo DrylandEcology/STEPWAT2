@@ -244,8 +244,8 @@ void runGrid(void)
 	_init_grid_inputs();			// reads the grid inputs in & initializes the global grid variables
 	initColonization(grid_files[GRID_FILE_COLONIZATION]);
 	//SWC hist file prefix needs to be cleared
-	free(SoilWatRun.SoilWatIn.hist.file_prefix);
-	SoilWatRun.SoilWatIn.hist.file_prefix = NULL;
+	free(SoilWatRun.SoilWatIn->hist.file_prefix);
+	SoilWatRun.SoilWatIn->hist.file_prefix = NULL;
 
 	printGeneralInfo();
 
@@ -260,27 +260,28 @@ void runGrid(void)
 		ChDir("..");
 	}
 
-	// SOILWAT resets SoilWatRun.WeatherIn.name_prefix every iteration. This is not the behavior we want
+	// SOILWAT resets SoilWatRun.WeatherIn->name_prefix every iteration. This is not the behavior we want
 	// so the name is stored here.
 	char SW_prefix_permanent[MAX_FILENAMESIZE - 5]; // see `SW_WEATHER`: subtract 4-digit 'year' file type extension
-	sprintf(SW_prefix_permanent, "%s/%s", 
+	sprintf(SW_prefix_permanent, "%s/%s",
 			grid_directories[GRID_DIRECTORY_STEPWAT_INPUTS],
-			SoilWatRun.WeatherIn.name_prefix);
+			SoilWatRun.WeatherIn->name_prefix);
 
 
   _init_soilwat_outputs(grid_files[GRID_FILE_SOILWAT2_OUTPUT]);
-    SW_OUT_set_ncol(SoilWatDomain.nMaxSoilLayers, SoilWatRun.VegEstabIn.count,
-                    SoilWatDomain.OutDom.ncol_OUT, SoilWatDomain.OutDom.nvar_OUT,
-                    SoilWatDomain.OutDom.nsl_OUT, SoilWatDomain.OutDom.npft_OUT,
-                    &LogInfo); // set number of output columns
-	SW_OUT_set_colnames(SoilWatRun.RunIn.SiteRunIn.n_layers, SoilWatRun.VegEstabIn.parms,
+
+    // set number of output columns
+    SW_OUT_set_out_counts(SoilWatDomain.nMaxSoilLayers, SoilWatRun.VegEstabIn.count,
+                    &SoilWatDomain.OutDom);
+    SW_OUT_sum_ncols(&SoilWatDomain, &LogInfo);
+	SW_OUT_set_colnames(SoilWatRun.RunIn.SiteRunIn.n_layers, &SoilWatRun.VegEstabIn.parms,
  						SoilWatDomain.OutDom.ncol_OUT,
- 						SoilWatDomain.OutDom.colnames_OUT, &LogInfo); // set column names for output files
+ 						SoilWatDomain.OutDom.colnames_OUT, &LogInfo);
    if (_getNumberSOILWAT2OutputCells() > 0) {
- 		SW_OUT_create_summary_files(&SoilWatDomain.OutDom, &SoilWatRun.SW_PathOutputs,
+ 		SW_OUT_create_summary_files(&SoilWatDomain.OutDom, SoilWatRun.SW_PathOutputs,
                                     SoilWatDomain.SW_PathInputs.txtInFiles,
                                     SoilWatRun.RunIn.SiteRunIn.n_layers, &LogInfo);
-        SW_OUT_construct_outarray(1, &SoilWatDomain.OutDom, &SoilWatRun.OutRun, &LogInfo);
+        SW_OUT_construct_outarray(&SoilWatDomain.OutDom, SoilWatDomain.nActiveSuidsProc, SoilWatRun.OutRun, &LogInfo);
     }
 
 	for (iter = 1; iter <= SuperGlobals.runModelIterations; iter++)
@@ -289,14 +290,14 @@ void runGrid(void)
 		 * 06/15/2016 (akt) Added resetting correct historical weather file path,
 		 * as it was resetting to original path value (that was not correct for grid version)from input file after every iteration
 		 */
-		sprintf(SoilWatRun.WeatherIn.name_prefix, "%s", SW_prefix_permanent); //updates the directory of the weather files so SOILWAT2 can find them
+		sprintf(SoilWatRun.WeatherIn->name_prefix, "%s", SW_prefix_permanent); //updates the directory of the weather files so SOILWAT2 can find them
 
 		// Initialize the plot for each grid cell
 		for (i = 0; i < grid_Rows; i++){
 			for (j = 0; j < grid_Cols; j++){
 				load_cell(i, j);
 				Plot_Initialize();
-				Globals->currIter = SoilWatRun.OutRun.currIter = iter;
+				Globals->currIter = SoilWatRun.OutRun->currIter = iter;
 
                 if (_getNumberSOILWAT2OutputCells() > 0) {
 			        SoilWatDomain.OutDom.print_IterationSummary =
@@ -395,8 +396,8 @@ void runGrid(void)
 				unload_cell();
 			}
 		}
-		free(SoilWatRun.SoilWatIn.hist.file_prefix);
-		SoilWatRun.SoilWatIn.hist.file_prefix = NULL;
+		free(SoilWatRun.SoilWatIn->hist.file_prefix);
+		SoilWatRun.SoilWatIn->hist.file_prefix = NULL;
 		ChDir("..");
 
 	} /* end iterations */
@@ -553,8 +554,8 @@ static void _init_SXW_inputs(Bool init_SW, char *f_roots)
 	if (init_SW)
 	{
 		char aString[2048];
-		sprintf(aString, "%s/%s", grid_directories[GRID_DIRECTORY_STEPWAT_INPUTS], SoilWatRun.WeatherIn.name_prefix);
-		sprintf(SoilWatRun.WeatherIn.name_prefix, "%s", aString); //updates the directory correctly for the weather files so soilwat can find them
+		sprintf(aString, "%s/%s", grid_directories[GRID_DIRECTORY_STEPWAT_INPUTS], SoilWatRun.WeatherIn->name_prefix);
+		sprintf(SoilWatRun.WeatherIn->name_prefix, "%s", aString); //updates the directory correctly for the weather files so soilwat can find them
 	}
 }
 
@@ -677,10 +678,10 @@ void rereadInputs(void){
  */
 static void _allocate_gridCells(int rows, int cols){
 	int i, j;
-	gridCells = (CellType**) Mem_Calloc(rows, sizeof(CellType*), 
+	gridCells = (CellType**) Mem_Calloc(rows, sizeof(CellType*),
 				"_allocate_gridCells: rows", &LogInfo);
 	for(i = 0; i < rows; ++i){
-		gridCells[i] = (CellType*) Mem_Calloc(cols, sizeof(CellType), 
+		gridCells[i] = (CellType*) Mem_Calloc(cols, sizeof(CellType),
 						"_allocate_gridCells: columns", &LogInfo);
 	}
 
@@ -690,10 +691,10 @@ static void _allocate_gridCells(int rows, int cols){
 		for(j = 0; j < grid_Cols; ++j){
 			// shouldBeInitialized is a dynamically allocated array
 			gridCells[i][j].mySpeciesInit.shouldSpinup = (int*)
-				Mem_Calloc(MAX_SPECIES, sizeof(int), 
+				Mem_Calloc(MAX_SPECIES, sizeof(int),
 				          "_allocate_gridCells: mySpeciesInit", &LogInfo);
 
-			gridCells[i][j].someKillage = (Bool*) Mem_Calloc(1, sizeof(Bool), 
+			gridCells[i][j].someKillage = (Bool*) Mem_Calloc(1, sizeof(Bool),
 										  "_allocate_gridCells: someKillage", &LogInfo);
 
 			// Allocate the cheatgrassPrecip variable for the Mortality module
@@ -1053,12 +1054,12 @@ void load_cell(int row, int col){
 	if(gridCells[row][col].mySoils.num_layers > 0){
 		RealD soilRegionsLowerBounds[3] = { 30, 70, 100 };
         set_soillayers(
-            &SoilWatRun.VegProdIn,
-            &SoilWatRun.SiteIn,
+            SoilWatRun.VegProdIn,
+            SoilWatRun.SiteIn,
             &SoilWatRun.RunIn.SiteRunIn,
             &SoilWatRun.SiteSim,
             &SoilWatRun.RunIn.SoilRunIn,
-            SoilWatRun.VegProdIn.veg,
+            &SoilWatRun.VegProdIn->veg,
             gridCells[row][col].mySoils.num_layers,
             gridCells[row][col].mySoils.depth,
             gridCells[row][col].mySoils.matricd,
@@ -1094,12 +1095,13 @@ void load_cell(int row, int col){
 	// the previous year (and not be zeroed out).
 	// FIXME: remove once SOILWAT2 is re-entrant or
 	// gridded code manages SOILWAT2 globals.
-	SW_WTH_init_run(&SoilWatRun.WeatherSim);
+	SW_WTH_init_run(SoilWatRun.WeatherIn, &SoilWatRun.WeatherSim);
 	//SW_SIT_init_run();
 	SW_FLW_init_run(&SoilWatRun.SoilWatSim);
 	SW_ST_init_run(&SoilWatRun.StRegSimVals);
 	SW_SWC_init_run(&SoilWatRun.SoilWatSim, &SoilWatRun.SiteSim,
- 					&SoilWatRun.WeatherSim.temp_snow, &SoilWatRun.WeatherSim.snow_age, SoilWatRun.RunIn.SiteRunIn.n_layers);
+ 					&SoilWatRun.WeatherSim.temp_snow, &SoilWatRun.WeatherSim.snow_age,
+                    SoilWatRun.RunIn.SiteRunIn.n_layers);
 }
 
 /**
@@ -1766,7 +1768,7 @@ void _Output_AllCellAvgBmass(const char * filename){
 					ForEachSpecies(sp){
 						if(BmassFlags.sppb)
 							spp[sp] += gridCells[i][j]._Spp[sp].s[year].ave;
-						if (BmassFlags.indv) 
+						if (BmassFlags.indv)
 							indv[sp] += gridCells[i][j]._Indv[sp].s[year].ave;
 					} // End ForEachSpecies
 				} // End sppb

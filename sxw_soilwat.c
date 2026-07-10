@@ -80,10 +80,10 @@ void _sxw_sw_setup (RealF sizes[]) {
 
   for (doy = 1; doy <= MAX_DAYS; doy++) {
     ForEachVegType(k) {
-      v->veg[k].litter_daily[doy] = 0.;
-      v->veg[k].biomass_daily[doy] = 0.;
-      v->veg[k].pct_live_daily[doy] = 0.;
-      v->veg[k].lai_conv_daily[doy] = 0.;
+      v->veg.litter_daily[k][doy] = 0.;
+      v->veg.biomass_daily[k][doy] = 0.;
+      v->veg.pct_live_daily[k][doy] = 0.;
+      v->veg.lai_conv_daily[k][doy] = 0.;
     }
   }
 }
@@ -91,7 +91,7 @@ void _sxw_sw_setup (RealF sizes[]) {
 /** @brief Handle the weather generator to create new daily weather for current year
 
   This function takes the place of SOILWAT2's `SW_WTH_read()` and
-  `SW_WTH_finalize_all_weather()`.
+  the weather will be generated when running the next year in SOILWAT2.
 
   Note: `Env_Generate()` (via `_sxw_sw_run()`) sets SOILWAT2's "year"
   (`SW_Model.year`) to `SW_Model.startyr + Globals->currYear - 1`.
@@ -103,13 +103,14 @@ void _sxw_sw_setup (RealF sizes[]) {
   each grid cell would store a local copy of `SW_Weather`.
 */
 void _sxw_generate_weather(void) {
-  SW_WEATHER_INPUTS *w = &SoilWatRun.WeatherIn;
+  SW_WEATHER_INPUTS *w = SoilWatRun.WeatherIn;
   SW_WEATHER_HIST **wh = &SoilWatRun.RunIn.weathRunAllHist;
+  SW_WEATHER_SIM *ws = &SoilWatRun.WeatherSim;
   SW_SKY_INPUTS *sky = &SoilWatRun.RunIn.SkyRunIn;
 
   deallocateAllWeather(&SoilWatRun.RunIn.weathRunAllHist);
   w->n_years = 1;
-  w->startYear = SoilWatRun.ModelIn.startyr + Globals->currYear - 1;
+  w->startYear = SoilWatRun.ModelIn->startyr + Globals->currYear - 1;
   SW_WTH_allocateAllWeather(wh, w->n_years, &LogInfoSW);
 
   if (!w->use_weathergenerator_only) {
@@ -142,29 +143,37 @@ void _sxw_generate_weather(void) {
     sky->windspeed,
     sky->r_humidity,
     SoilWatRun.RunIn.ModelRunIn.elevation,
-    SoilWatRun.ModelSim.cum_monthdays,
-    SoilWatRun.ModelSim.days_in_month,
+    SoilWatRun.ModelSim->cum_monthdays,
+    SoilWatRun.ModelSim->days_in_month,
     &LogInfoSW
     );
-
-  finalizeAllWeather(&SoilWatRun.MarkovIn, w, *wh, SoilWatRun.ModelSim.cum_monthdays,
-                      SoilWatRun.ModelSim.days_in_month, &LogInfoSW); // run the weather
 }
 
 
 void _sxw_sw_run(void) {
 /*======================================================*/
-   SW_OUT_RUN *OutRun = &SoilWatRun.OutRun;
+   SW_OUT_RUN *OutRun = SoilWatRun.OutRun;
    LyrIndex lyrno;
    TimeInt month;
    int vegType;
+   TimeInt startYr;
+   TimeInt endYr;
 
- 	SoilWatRun.ModelSim.year = SoilWatRun.ModelIn.startyr + Globals->currYear-1;
+ 	SoilWatRun.ModelSim->year = SoilWatRun.ModelIn->startyr + Globals->currYear-1;
+    startYr = endYr = SoilWatRun.ModelSim->year;
 
    // Copy global values to SOILWAT2's SW_ALL to work with correct values
-   SoilWatRun.ModelSim.runModelIterations = SuperGlobals.runModelIterations;
-   SoilWatRun.ModelIn.runModelYears = SuperGlobals.runModelYears;
- 	SW_CTL_run_current_year(&SoilWatRun, &SoilWatDomain.OutDom, &LogInfoSW);
+   SoilWatRun.ModelSim->runModelIterations = SuperGlobals.runModelIterations;
+   SoilWatRun.ModelIn->runModelYears = SuperGlobals.runModelYears;
+
+   SW_CTL_run_single_site(
+    startYr,
+    endYr,
+    &SoilWatDomain,
+    &SoilWatRun,
+    &SoilWatRun,
+    &LogInfo
+   );
 
 
    // Copy the results of SOILWAT2's SXW values
@@ -277,7 +286,7 @@ static void _update_productivity(RealF sizes[]) {
     // to total biomass
     if (GT(totbmass, 0.)) {
         ForEachVegType(k) {
-          v->veg[k].cov.fCover = vegTypeBiomass[k] / totbmass;
+          v->veg.cov[k].fCover = vegTypeBiomass[k] / totbmass;
         }
 
         //TODO: figure how to calculate bareground fraction.
@@ -285,7 +294,7 @@ static void _update_productivity(RealF sizes[]) {
     } else {
 
         ForEachVegType(k) {
-            v->veg[k].cov.fCover = 0.0;
+            v->veg.cov[k].fCover = 0.0;
         }
         v->bare_cov.fCover = 1;
     }
@@ -306,22 +315,22 @@ static void _update_productivity(RealF sizes[]) {
     ForEachMonth(m) {
 
         ForEachVegType(k) {
-            v->veg[k].pct_live[m] = 0.;
-            v->veg[k].biomass[m] = 0.;
-            v->veg[k].litter[m] = 0.;
+            v->veg.pct_live[k][m] = 0.;
+            v->veg.biomass[k][m] = 0.;
+            v->veg.litter[k][m] = 0.;
         }
 
         if (GT(totbmass, 0.)) {
             ForEachGroup(g) {
               k = RGroup[g]->veg_prod_type;
 
-              if (GT(v->veg[k].cov.fCover, 0.)) {
-                v->veg[k].pct_live[m] += SXWResources->_prod_pctlive[Igp(g, m)] * RGroup[g]->rgroupFractionOfVegTypeBiomass;
+              if (GT(v->veg.cov[k].fCover, 0.)) {
+                v->veg.pct_live[k][m] += SXWResources->_prod_pctlive[Igp(g, m)] * RGroup[g]->rgroupFractionOfVegTypeBiomass;
 
-                v->veg[k].biomass[m] += SXWResources->_prod_bmass[Igp(g, m)] *
-                                        bmassg[g] / v->veg[k].cov.fCover;
+                v->veg.biomass[k][m] += SXWResources->_prod_bmass[Igp(g, m)] *
+                                        bmassg[g] / v->veg.cov[k].fCover;
 
-                v->veg[k].litter[m] += vegTypeBiomass[k] * SXWResources->_prod_litter[g][m];
+                v->veg.litter[k][m] += vegTypeBiomass[k] * SXWResources->_prod_litter[g][m];
               }
             }
         }

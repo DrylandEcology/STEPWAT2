@@ -70,6 +70,7 @@
 #include "sw_src/include/rands.h"
 #include "sw_src/include/Times.h"
 #include "sw_src/include/SW_Domain.h"
+#include "sw_src/include/SW_Main_lib.h"
 
 
 /*************** Global Variable Declarations ***************/
@@ -242,6 +243,9 @@ void SXW_Init( Bool init_SW, char *f_roots ) {
  * \ingroup SXW
  */
 static void SXW_Reinit(char* SOILWAT_file, Bool zeroOutArrays) {
+    const TimeInt runSimLen = 0; // Whole simulation
+    const int worldSize = 1;
+    
 	SoilWatDomain.SW_PathInputs.txtInFiles[eFirst] = Str_Dup(SOILWAT_file, &LogInfoSW);
 
     // STEPWAT2 uses the directory part of SOILWAT2's "firstfile" to locate
@@ -251,7 +255,7 @@ static void SXW_Reinit(char* SOILWAT_file, Bool zeroOutArrays) {
         SoilWatDomain.SW_PathInputs.SW_ProjDir
     );
 
-    SW_CTL_setup_domain(ST_rank, 0, FALSE, &SoilWatDomain, &LogInfo);
+    SW_CTL_setup_domain(ST_rank, worldSize, FALSE, runSimLen, &SoilWatDomain, &LogInfo);
 
     // Update output domain with STEPWAT2's version of
     // prepare_IterationSummary and storeAllIterations
@@ -263,13 +267,13 @@ static void SXW_Reinit(char* SOILWAT_file, Bool zeroOutArrays) {
     SoilWatDomain.endyr = SoilWatDomain.startyr + SuperGlobals.runModelYears;
     SoilWatDomain.endend = Time_get_lastdoy_y(SoilWatDomain.endyr);
 
-    SW_CTL_setup_model(&SoilWatRun, &SoilWatDomain.OutDom, zeroOutArrays, &LogInfoSW);
+    SW_CTL_setup_model(&SoilWatRun, zeroOutArrays, &LogInfoSW);
 
-    SW_MDL_get_ModelRun(&SoilWatRun.ModelIn, &SoilWatDomain, NULL, &LogInfo);
+    SW_MDL_get_ModelRun(SoilWatRun.ModelIn, &SoilWatDomain, NULL, &LogInfo);
 
  	// read user inputs
- 	SoilWatRun.ModelSim.runModelIterations = SuperGlobals.runModelIterations;
- 	SoilWatRun.ModelIn.runModelYears = SuperGlobals.runModelYears;
+ 	SoilWatRun.ModelSim->runModelIterations = SuperGlobals.runModelIterations;
+ 	SoilWatRun.ModelIn->runModelYears = SuperGlobals.runModelYears;
 
     SW_CTL_read_inputs_from_disk(
         &SoilWatRun,
@@ -279,7 +283,7 @@ static void SXW_Reinit(char* SOILWAT_file, Bool zeroOutArrays) {
        );
 
  	// initialize simulation run (based on user inputs)
- 	SW_CTL_init_run(&SoilWatRun, &LogInfoSW);
+ 	SW_CTL_init_run(&SoilWatRun, &LogInfoSW, &LogInfoSW);
 
     SW_DOM_soilProfile(
         &SoilWatDomain.netCDFInput,
@@ -292,13 +296,7 @@ static void SXW_Reinit(char* SOILWAT_file, Bool zeroOutArrays) {
         &LogInfo
     );
 
-    SW_OUT_setup_output(
-        SoilWatDomain.nMaxSoilLayers,
-        SoilWatRun.VegEstabIn.count,
-        SoilWatRun.VegEstabIn.parms,
-        &SoilWatDomain.OutDom,
-        &LogInfoSW
-    );
+    sw_setup_prog_data(worldSize, swFALSE, &SoilWatRun, &SoilWatDomain, &LogInfo);
 
  	// initialize output: transfer between STEPPE and SOILWAT2
  	SW_OUT_set_SXWrequests(&SoilWatDomain.OutDom, &LogInfoSW);
@@ -402,7 +400,7 @@ void SXW_SW_Setup_Echo(void) {
     fprintf(
         f,
         "\n================== %d ==============================\n",
-        SoilWatRun.ModelSim.year
+        SoilWatRun.ModelSim->year
     );
 
     fprintf(f, "Fractions\n\tType\tCover\n");
@@ -411,7 +409,7 @@ void SXW_SW_Setup_Echo(void) {
             f,
             "\t%s\t%f\n",
             key2veg[k],
-            SoilWatRun.RunIn.VegProdRunIn.veg[k].cov.fCover
+            SoilWatRun.RunIn.VegProdRunIn.veg.cov[k].fCover
         );
     }
     fprintf(
@@ -427,10 +425,10 @@ void SXW_SW_Setup_Echo(void) {
                 f,
                 "%u\t%f\t%f\t%f\t%f\n",
                 i + 1,
-                SoilWatRun.RunIn.VegProdRunIn.veg[k].litter[i],
-                SoilWatRun.RunIn.VegProdRunIn.veg[k].biomass[i],
-                SoilWatRun.RunIn.VegProdRunIn.veg[k].pct_live[i],
-                SoilWatRun.RunIn.VegProdRunIn.veg[k].lai_conv[i]
+                SoilWatRun.RunIn.VegProdRunIn.veg.litter[k][i],
+                SoilWatRun.RunIn.VegProdRunIn.veg.biomass[k][i],
+                SoilWatRun.RunIn.VegProdRunIn.veg.pct_live[k][i],
+                SoilWatRun.RunIn.VegProdRunIn.veg.lai_conv[k][i]
             );
         }
     }
@@ -470,7 +468,7 @@ void SXW_PrintDebug(Bool cleanup) {
 		debugCleanUp();
 	} else {
 		for (i = 0; i < _debugyrs_cnt; i++) {
-			if (SoilWatRun.ModelSim.year == _debugyrs[i]) {
+			if (SoilWatRun.ModelSim->year == _debugyrs[i]) {
 				SXW_SW_Setup_Echo();
 				_print_debuginfo();
 				break;
@@ -1052,7 +1050,7 @@ void _print_debuginfo(void) {
 			sum += SXW->transpTotal[Ilp(t, p)];
 	}
 
-	fprintf(f, "\n================== %d =============================\n", SoilWatRun.ModelSim.year);
+	fprintf(f, "\n================== %d =============================\n", SoilWatRun.ModelSim->year);
 	fprintf(f, "MAP = %d(mm)\tMAT = %5.2f(C)\tAET = %5.4f(cm)\tT = %5.4f(cm)\tTADDED = %5.4f(cm)\tAT = %5.4f(cm)\n\n", Env->ppt, Env->temp, SXW->aet, sum, transp_window->added_transp, sum + transp_window->added_transp);
 
 	fprintf(f, "Group     \tRelsize\tPR\tResource_cur\tResource_cur\n");
@@ -1080,7 +1078,7 @@ void _print_debuginfo(void) {
 			days = 30;
 		else if (p == Feb) { //February has either 28 or 29 days
 			days = 28;
-			if (isleapyear(SoilWatRun.ModelSim.year))
+			if (isleapyear(SoilWatRun.ModelSim->year))
 				days = 29;
 		} // all the other months have 31 days
 
@@ -1090,11 +1088,11 @@ void _print_debuginfo(void) {
             //   these SOILWAT2 variables should be weighted by `fcover`,
             //   for instance, as summed in sumof_vpd()
             ForEachVegType(k) {
-                lai_live += v->veg[k].lai_live_daily[i];
-                bLAI_total += v->veg[k].bLAI_total_daily[i];
-                total_agb += v->veg[k].total_agb_daily[i];
-                pct_live += v->veg[k].pct_live_daily[i];
-                biomass += v->veg[k].biomass_daily[i];
+                lai_live += v->veg.lai_live_daily[k][i];
+                bLAI_total += v->veg.bLAI_total_daily[k][i];
+                total_agb += v->veg.total_agb_daily[k][i];
+                pct_live += v->veg.pct_live_daily[k][i];
+                biomass += v->veg.biomass_daily[k][i];
             }
 		}
 		doy += days; //updating the doy

@@ -5,6 +5,8 @@
 Input-nc/files_nc.in
 Input-nc/desc_nc.in
 Input-nc/SW2_netCDF_output_variables.tsv
+Input-nc/cached_state.nc
+Input-nc/system.in
 
 #Domain
 Input/domain.in
