@@ -300,8 +300,9 @@ static void _run_spinup(void)
     Bool myUseSeedDispersal = UseSeedDispersal;
     UseSeedDispersal = FALSE;
 
-    // This is a flag from SOILWAT2. It MUST be FALSE during spinup.
+    // These flags from SOILWAT2. MUST be FALSE during spinup.
     SoilWatDomain.OutDom.prepare_IterationSummary = FALSE;
+	SoilWatDomain.OutDom.print_SW_Output = FALSE;
 
 	Bool killedany;             // killedany for mortality functions
 
