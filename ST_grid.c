@@ -231,10 +231,6 @@ void runGrid(void)
 	Bool killedany;
 	IntS year, iter;
 
-  if(SuperGlobals.storeAllIterations) {
-    printf("WARNING: SOILWAT2 iteration output unavailable for gridded mode.\n");
-    SuperGlobals.storeAllIterations = FALSE;
-  }
 
 	_init_grid_files();				// reads in files.in file
 	_read_maxrgroupspecies();       // reads in maxrgroupspecies.in file
@@ -291,6 +287,11 @@ void runGrid(void)
 		 */
 		sprintf(SoilWatRun.WeatherIn.name_prefix, "%s", SW_prefix_permanent); //updates the directory of the weather files so SOILWAT2 can find them
 
+		if (SuperGlobals.storeAllIterations) {
+ 			SW_OUT_create_iteration_files(&SoilWatDomain.OutDom, &SoilWatRun.SW_PathOutputs,
+                                          iter, SoilWatDomain.SW_PathInputs.txtInFiles,
+                                          SoilWatRun.RunIn.SiteRunIn.n_layers, &LogInfo);
+		}
 		// Initialize the plot for each grid cell
 		for (i = 0; i < grid_Rows; i++){
 			for (j = 0; j < grid_Cols; j++){
