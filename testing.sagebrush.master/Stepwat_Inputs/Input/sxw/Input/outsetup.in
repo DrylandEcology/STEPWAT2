@@ -73,6 +73,7 @@ TIMESTEP dy mo yr # must be lowercase
       BIOMASS     AVG       DY       1     end      vegetation      /* vegetation: cover (%) for trees, shrubs, forbs, grasses; biomass (g/m2 as component of total) for total, trees, shrubs, forbs, grasses, and litter; live biomass (g/m2 as component of total) total, trees, shrubs, forbs, grasses; leaf area index LAI (m2/m2) */
    DERIVEDSUM     SUM       DY       1     end      derivedsum      /* cumulative derived metrics: cwd, ddd5C30bar000to100cm, wdd5C15bar000to100cm */
    DERIVEDAVG     AVG       DY       1     end      derivedavg      /* average derived metrics: swa30bar000to100cm, swa39bar000to100cm */
+   ENERGYAVG     AVG       DY       1     end       energyavg      /* surface albedo */
 
 # Simulation output directory/filenames
 Output/			# Path for output files: / for same directory, or e.g., Output/
