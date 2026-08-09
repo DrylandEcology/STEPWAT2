@@ -265,10 +265,10 @@ void runGrid(void)
 
 
   _init_soilwat_outputs(grid_files[GRID_FILE_SOILWAT2_OUTPUT]);
-    SW_OUT_set_ncol(SoilWatDomain.nMaxSoilLayers, SoilWatDomain.nMaxEvapLayers,
-                    SoilWatRun.VegEstabIn.count, SoilWatDomain.OutDom.ncol_OUT,
-                    SoilWatDomain.OutDom.nvar_OUT, SoilWatDomain.OutDom.nsl_OUT,
-                    SoilWatDomain.OutDom.npft_OUT, &LogInfo); // set number of output columns
+    SW_OUT_set_ncol(SoilWatDomain.nMaxSoilLayers, SoilWatRun.VegEstabIn.count,
+                    SoilWatDomain.OutDom.ncol_OUT, SoilWatDomain.OutDom.nvar_OUT,
+                    SoilWatDomain.OutDom.nsl_OUT, SoilWatDomain.OutDom.npft_OUT,
+                    &LogInfo); // set number of output columns
 	SW_OUT_set_colnames(SoilWatRun.RunIn.SiteRunIn.n_layers, SoilWatRun.VegEstabIn.parms,
  						SoilWatDomain.OutDom.ncol_OUT,
  						SoilWatDomain.OutDom.colnames_OUT, &LogInfo); // set column names for output files
@@ -1056,6 +1056,7 @@ void load_cell(int row, int col){
         set_soillayers(
             &SoilWatRun.VegProdIn,
             &SoilWatRun.SiteIn,
+            &SoilWatRun.RunIn.SiteRunIn,
             &SoilWatRun.SiteSim,
             &SoilWatRun.RunIn.SoilRunIn,
             SoilWatRun.VegProdIn.veg,
@@ -1099,7 +1100,7 @@ void load_cell(int row, int col){
 	SW_FLW_init_run(&SoilWatRun.SoilWatSim);
 	SW_ST_init_run(&SoilWatRun.StRegSimVals);
 	SW_SWC_init_run(&SoilWatRun.SoilWatSim, &SoilWatRun.SiteSim,
- 					&SoilWatRun.WeatherSim.temp_snow, SoilWatRun.RunIn.SiteRunIn.n_layers);
+ 					&SoilWatRun.WeatherSim.temp_snow, &SoilWatRun.WeatherSim.snow_age, SoilWatRun.RunIn.SiteRunIn.n_layers);
 }
 
 /**

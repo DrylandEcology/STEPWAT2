@@ -16,20 +16,47 @@
 15.0		# swc_wet : [cm/cm] if < 1.0, [-bars] if >= 1.0.
 
 #---- Diffuse recharge and runoff/runon
-0		# reset (1/0): do/don't reset soil water content for each year
-1		# deepdrain (1/0): allow/disallow deep drainage (diffuse recharge)
-1.0		# multiplier for PET (e.g., for climate change scenarios)
-0.0		# proportion of ponded surface water removed as daily runoff (value ranges between 0 and 1; 0=no loss of surface water, 1=all ponded water lost via runoff)
-0.0		# proportion of water that arrives at surface added as daily runon [from a hypothetical identical neighboring site] (value ranges between 0 and +inf; 0=no runon, >0: runon is occuring)
+0       # reset (1/0): do/don't reset soil water content for each year
+1       # deepdrain (1/0): allow/disallow deep drainage (diffuse recharge)
+0.0     # proportion of ponded surface water removed as daily runoff
+        #   (0-1; 0=no loss of surface water, 1=all ponded water lost via runoff)
+0.0     # proportion of water that arrives at surface added as daily runon
+        #   [from a hypothetical identical neighboring site]
+        #   (value ranges between 0 and +inf; 0=no runon, >0: runon is occuring)
+
+#---- Energy, albedo and atmospheric demand
+1.0     # multiplier for PET (e.g., for climate change scenarios)
+
+0.01    # Ground surface roughness length (z_0g) [m]
+        #   default 0.01 for bare soil (Niu & Yang 2007)
+
+0       # method for surface albedo (methodAlbedo)
+        #   0 (albedoFixed), cover-weighted sum over PFTs and bare ground
+        #       with fixed values (before v8.4.0)
+        #   1 (albedoDynamic1), dynamic vegetation, soil and snow albedos
+        #       (recommended since v8.4.0)
+
+0.85    # Fresh snow albedo (alpha_snow_max) [unitless] (Livneh et al. 2010)
+0.46    # Soil albedo at zero moisture (alpha_soil_dry) [unitless]
+0.15    # Saturated soil albedo (alpha_soil_sat) [unitless]
+5.1     # Shape parameter for soil albedo darkening with moisture
+        #   (paramSoilAlbedoDarkening) [unitless].
+        #   Default estimated from Gascoin et al. 2009 decay term
+        #   exp(-B_g * theta) with B_g = 12.7,
+        #   while soil_albedo() uses exp(-B_sw2 * theta / theta_sat);
+        #   assuming theta_sat = 0.4, then B_sw2 = 12.7 * 0.4 = 5.1
 
 #---- Snow simulation
 # based on the SWAT2K model by Neitsch et al. (2005)
 # Current values are RMSE optimized based on 10 random SNOTEL sites for western US
-0.61		# TminAccu2 = Avg. air temp below which ppt is snow ( C)
-1.54		# TmaxCrit = Snow temperature at which snow melt starts ( C)
-0.1		# lambdasnow = Relative contribution of avg. air temperature to todays snow temperture vs. yesterday's snow temperature (0-1)
-0.0		# RmeltMin = Minimum snow melt rate on winter solstice (cm/day/C)
-0.27		# RmeltMax = Maximum snow melt rate on summer solstice (cm/day/C)
+0.61    # TminAccu2 = Avg. air temp below which ppt is snow ( C)
+1.54    # TmaxCrit = Snow temperature at which snow melt starts ( C)
+0.1     # lambdasnow = Relative contribution of avg. air temperature to
+        #   todays snow temperture vs. yesterday's snow temperature (0-1)
+0.0     # RmeltMin = Minimum snow melt rate on winter solstice (cm/day/C)
+0.27    # RmeltMax = Maximum snow melt rate on summer solstice (cm/day/C)
+1.0     # Shape factor of snow fractional cover relationship with snow density
+        #   (snowFractionalCoverMeltingFactor) [unitless] (Niu & Yang 2007)
 
 #---- Hydraulic conductivity
 0.02		# Parameter (cm / day) for unsaturated hydraulic conductivity,
@@ -56,24 +83,27 @@
 
 #---- Surface and soil temperature
 # from Parton 1978, ch. 2.2.2 Temperature-profile Submodel
-300.		# biomass limiter, 300 g/m^2 in Parton's equation for T1(avg daily temperature at the top of the soil)
-15.		# constant for T1 equation (used if biomass <= biomass limiter), 15 in Parton's equation
--4.		# constant for T1 equation (used if biomass > biomass limiter), -4 in Parton's equation
-600.		# constant for T1 equation (used if biomass > biomass limiter), 600 in Parton's equation
-0.00070		# constant for cs (soil-thermal conductivity) equation, 0.00070 in Parton's equation
-0.00030		# constant for cs equation, 0.00030 in Parton's equation
-0.18		# constant for sh (specific heat capacity) equation, 0.18 in Parton's equation
-6.69		# constant soil temperature (Celsius) at the lower boundary (max depth); approximate by mean annual air temperature of site
-15.		# deltaX parameter for soil_temperature function, default is 15.  (distance between profile points in cm)  max depth (the next number) should be evenly divisible by this number
-990.		# max depth for the soil_temperature function equation, default is 990.  this number should be evenly divisible by deltaX
-0		# flag, 1 to calculate soil_temperature, 0 to not calculate soil_temperature
+300.    # biomass limiter, 300 g/m^2 in Parton's equation for T1(avg daily temperature at the top of the soil)
+15.     # constant for T1 equation (used if biomass <= biomass limiter), 15 in Parton's equation
+-4.     # constant for T1 equation (used if biomass > biomass limiter), -4 in Parton's equation
+600.    # constant for T1 equation (used if biomass > biomass limiter), 600 in Parton's equation
+0.00070 # constant for cs (soil-thermal conductivity) equation, 0.00070 in Parton's equation
+0.00030 # constant for cs equation, 0.00030 in Parton's equation
+0.18    # constant for sh (specific heat capacity) equation, 0.18 in Parton's equation
+6.69    # constant soil temperature (Celsius) at the lower boundary (max depth); approximate by mean annual air temperature of site
+15.     # deltaX parameter for soil_temperature function, default is 15.  (distance between profile points in cm)  max depth (the next number) should be evenly divisible by this number
+990.    # max depth for the soil_temperature function equation, default is 990.  this number should be evenly divisible by deltaX
+
+0       # flag, 1 to calculate soil_temperature, 0 to not calculate soil_temperature
+
 1       # Method for average surface temperature:
-        #     0, default prior to v8.1.0 (Parton 1978)
-        #     1, default since v8.1.0 (Parton 1984)
+        #   0, default prior to v8.1.0 (Parton 1978)
+        #   1, default since v8.1.0 (Parton 1984)
 
 0       # Method for soil temperature at maximum depth:
-        #     0, user provided value (default prior to v8.3.0)
-        #     1, dynamically calculated from a moving long-term mean annual air temperature (recommended since v8.3.0)
+        #   0, user provided value (default prior to v8.3.0)
+        #   1, dynamically calculated from a moving long-term mean annual
+        #       air temperature (recommended since v8.3.0)
 
 # ---- CO2 Settings ----
 # Activate (1) / deactivate (0) biomass multiplier
@@ -88,10 +118,18 @@ RCP85
 # Simulated soil layer number determination:
 #   txt-mode: layers provided in "soils.in" and "swrc_params.in"
 
-1   # 1 = depths/thickness of soil layers are equal among sites/gridcells
+1   # 0 = depth/thickness of soil layers vary among sites/gridcells
+    # 1 = depths/thickness of soil layers are equal among sites/gridcells
 
-# Are inputs of density representing bulk soil (type 1) or the matric component (type 0)?
-0
+0   # Soil density inputs represent bulk soil (type 1) or the matric component (type 0)?
+
+# Method for potential soil evaporation coefficients
+0   # 0 = Inputs for evco provided via "soils.in"
+    # 1 = Estimation of evco from relationship with soil properties
+
+# Method for rooting profile inputs
+0   # 0 = Inputs for trco provided via "soils.in"
+    # 1 = Estimation of trco with equation and parameters from "veg.in"
 
 
 # --- Organic matter ---

@@ -8,12 +8,12 @@ Input-nc/SW2_netCDF_output_variables.tsv
 
 #Domain
 Input/domain.in
+Input/modelrun.in	# years for model operation
 
 # Model
-Input/modelrun.in	# years for model operation
 Output/sw_output/logfile.log	# Output file to which warnings, errors, and other important information is written (can also be stdout)
 
-#Site
+#Logs
 Input/siteparam.in	# site parameters
 Input/soils.in	# soil layer definitions
 Input/swrc_params.in		# Input for soil water retention curve (used if pdf_type = 0, i.e., pedotransfer functions are not used)
