@@ -286,17 +286,14 @@ static void SXW_Reinit(char* SOILWAT_file, Bool zeroOutArrays) {
         &SoilWatDomain.SW_PathInputs,
         SoilWatDomain.hasConsistentSoilLayerDepths,
         &SoilWatDomain.nMaxSoilLayers,
-        &SoilWatDomain.nMaxEvapLayers,
         SoilWatDomain.depthsAllSoilLayers,
         SoilWatRun.RunIn.SiteRunIn.n_layers,
-        SoilWatRun.SiteSim.n_evap_lyrs,
         SoilWatRun.RunIn.SoilRunIn.depths,
         &LogInfo
     );
 
     SW_OUT_setup_output(
         SoilWatDomain.nMaxSoilLayers,
-        SoilWatDomain.nMaxEvapLayers,
         SoilWatRun.VegEstabIn.count,
         SoilWatRun.VegEstabIn.parms,
         &SoilWatDomain.OutDom,

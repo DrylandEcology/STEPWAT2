@@ -148,7 +148,7 @@ void _sxw_generate_weather(void) {
     );
 
   finalizeAllWeather(&SoilWatRun.MarkovIn, w, *wh, SoilWatRun.ModelSim.cum_monthdays,
-                      SoilWatRun.ModelSim.days_in_month, NULL, FALSE, &LogInfoSW); // run the weather
+                      SoilWatRun.ModelSim.days_in_month, &LogInfoSW); // run the weather
 }
 
 
