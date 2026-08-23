@@ -89,8 +89,8 @@ static SpeciesType *_create(void);
  */
 IntS Species_NumEstablish(SppIndex sp)
 {
-	RealF pestab = (Species[sp]->pestab_seedlim != 0) ? Species[sp]->pestab_seedlim : Species[sp]->seedling_estab_prob;
-    IntUS eind = (Species[sp]->eind_seedlim != 0) ? Species[sp]->eind_seedlim : Species[sp]->max_seed_estab;
+	RealF pestab = (Species[sp]->pestabActive) ? Species[sp]->pestab_seedlim : Species[sp]->seedling_estab_prob;
+    IntUS eind = (Species[sp]->eindActive) ? Species[sp]->eind_seedlim : Species[sp]->max_seed_estab;
 	// If we are using seed dispersal
     if(UseSeedDispersal && Species[sp]->use_dispersal){
         if(Species[sp]->seedsPresent && 
