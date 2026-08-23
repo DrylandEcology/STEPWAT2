@@ -127,6 +127,12 @@ void disperseSeeds(int year) {
         Species[sp]->seedCount =0; 
         Species[sp]->pestab_seedlim = 0;
         Species[sp]->eind_seedlim = 0;
+        Species[sp]->alpha_seedlim = 0;
+        Species[sp]->beta_seedlim = 0;
+        Species[sp]->alphaBetaActive = FALSE;
+        Species[sp]->eindActive = FALSE;
+        Species[sp]->pestabActive = FALSE;
+        Species[sp]->noEstablish = FALSE;
       }
       unload_cell();
     }
@@ -171,7 +177,7 @@ void disperseSeeds(int year) {
             kl = _dispersal_kernel(distance,a,Species[sp]->B);
             Pd = _probabilityOfDispersal(kl, Globals->plotsize);
             Pa = 1 - pow(1-Pd,Species[sp]->seedN);
-            receiverCell->mySpecies[sp]->seedCount += (Species[sp]->seedN * Pd);
+            receiverCell->mySpecies[sp]->seedCount += round(Species[sp]->seedN * Pd);
             // Stochastically determine if seeds reached the recipient.
             if (RandUni(&dispersal_rng) < Pa) {
               // If this cell already has seeds there is no point in continuing
@@ -198,11 +204,34 @@ void disperseSeeds(int year) {
     for (col = 0; col < grid_Cols; ++col) {
       load_cell(row, col);
       ForEachSpecies(sp) { 
+        if(Species[sp]->seedCount == 0){
+         Species[sp]->noEstablish = TRUE;
+          continue;
+        }
          if(Species[sp]->seedCount < Species[sp]->seedT){
                 Species[sp]->pestab_seedlim = Species[sp]->seedling_estab_prob * fmin(1.0,(Species[sp]->seedCount/Species[sp]->seedT));
+
+                if(Species[sp]->max_age == 1){
+                  RealF tempVar = Species[sp]->var;
+                  //recalculate variance 
+                  if(tempVar >= (Species[sp]->pestab_seedlim*(1-Species[sp]->pestab_seedlim))){
+                    RealF concentration = Species[sp]->seedling_estab_prob *(1.0 - Species[sp]->seedling_estab_prob)/tempVar -1.0;
+                    tempVar = Species[sp]->pestab_seedlim * (1.0-Species[sp]->pestab_seedlim)/(concentration+1.0);
+                  }
+                  Species[sp]->alpha_seedlim = ((pow(Species[sp]->pestab_seedlim, 2)
+                            - pow(Species[sp]->pestab_seedlim, 3))
+                           / tempVar)
+                          - Species[sp]->pestab_seedlim;
+                  Species[sp]->beta_seedlim = (Species[sp]->alpha_seedlim / Species[sp]->pestab_seedlim)
+                          - Species[sp]->alpha_seedlim;
+
+                  Species[sp]->alphaBetaActive = TRUE;
+                }
+                Species[sp]->pestabActive = TRUE;
               }
           if(Species[sp]->seedCount < Species[sp]->max_seed_estab){
             Species[sp]->eind_seedlim =  Species[sp]->seedCount;
+              Species[sp]->eindActive = TRUE;
           }
       }
       unload_cell();
