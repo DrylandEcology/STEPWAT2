@@ -171,6 +171,8 @@ struct species_st {
       /** \brief Beta parameter for random number draw from beta distribution in establishment of annual species.
        * \sa _add_annuals() */
         beta,
+        alpha_seedlim,
+        beta_seedlim,
         pestab_seedlim;
       /** \brief Variance parameter of the beta distribution for establishment of annual species. */
   float var;
@@ -180,7 +182,11 @@ struct species_st {
       /** \brief Whether seeds where produced/received and germinated this year. 
        * \sa ST_seedDispersal.c 
        * \ingroup SEED_DISPERSAL */
-  Bool seedsPresent;
+  Bool seedsPresent,
+      eindActive,
+      pestabActive,
+      alphaBetaActive,
+      noEstablish;
   Int seedCount;
 
   /**** Quantities that DO NOT change during model runs *****/
