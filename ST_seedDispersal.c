@@ -127,11 +127,11 @@ void disperseSeeds(int year) {
         Species[sp]->seedCount =0; 
         Species[sp]->pestab_seedlim = 0;
         Species[sp]->eind_seedlim = 0;
-        Species[sp]->alpha_seedlim = 0;
-        Species[sp]->beta_seedlim = 0;
-        Species[sp]->alphaBetaActive = FALSE;
-        Species[sp]->eindActive = FALSE;
-        Species[sp]->pestabActive = FALSE;
+        Species[sp]->alpha_temp = 0;
+        Species[sp]->beta_temp = 0;
+        Species[sp]->rescaleAlphaBeta = FALSE;
+        Species[sp]->rescalePestab = FALSE;
+        Species[sp]->rescaleEind = FALSE;
         Species[sp]->noEstablish = FALSE;
       }
       unload_cell();
@@ -212,26 +212,33 @@ void disperseSeeds(int year) {
                 Species[sp]->pestab_seedlim = Species[sp]->seedling_estab_prob * fmin(1.0,(Species[sp]->seedCount/Species[sp]->seedT));
 
                 if(Species[sp]->max_age == 1){
+                  // Preserve the default variance for the recalculation of alpha and beta.
                   RealF tempVar = Species[sp]->var;
-                  //recalculate variance 
+                  // Recalculate the variance if it is invalid for the rescaled
+                  // establishment probability while preserving the original concentration.
                   if(tempVar >= (Species[sp]->pestab_seedlim*(1-Species[sp]->pestab_seedlim))){
+                    // Calculate the concentration of the original beta distribution.
                     RealF concentration = Species[sp]->seedling_estab_prob *(1.0 - Species[sp]->seedling_estab_prob)/tempVar -1.0;
+                    // Rescale the variance using the new establishment probability
+                    // while preserving the original beta distribution concentration.
                     tempVar = Species[sp]->pestab_seedlim * (1.0-Species[sp]->pestab_seedlim)/(concentration+1.0);
                   }
-                  Species[sp]->alpha_seedlim = ((pow(Species[sp]->pestab_seedlim, 2)
+                  // Recalculate the beta distribution parameters using the rescaled
+                  // establishment probability and variance.
+                  Species[sp]->alpha_temp = ((pow(Species[sp]->pestab_seedlim, 2)
                             - pow(Species[sp]->pestab_seedlim, 3))
                            / tempVar)
                           - Species[sp]->pestab_seedlim;
-                  Species[sp]->beta_seedlim = (Species[sp]->alpha_seedlim / Species[sp]->pestab_seedlim)
-                          - Species[sp]->alpha_seedlim;
+                  Species[sp]->beta_temp = (Species[sp]->alpha_temp / Species[sp]->pestab_seedlim)
+                          - Species[sp]->alpha_temp;
 
-                  Species[sp]->alphaBetaActive = TRUE;
+                  Species[sp]->rescaleAlphaBeta = TRUE;
                 }
-                Species[sp]->pestabActive = TRUE;
+                Species[sp]->rescalePestab = TRUE;
               }
           if(Species[sp]->seedCount < Species[sp]->max_seed_estab){
             Species[sp]->eind_seedlim =  Species[sp]->seedCount;
-              Species[sp]->eindActive = TRUE;
+              Species[sp]->rescaleEind = TRUE;
           }
       }
       unload_cell();

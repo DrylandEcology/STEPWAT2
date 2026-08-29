@@ -157,6 +157,8 @@ struct species_st {
       /** \brief Average number of seeds produced by annual species per 1g of biomass, per 1m^2 and per year.
        * internally re-calculated as seeds per 1 g biomass per plot and per year. */
          pseed,
+         /** \brief Eind_seedlim parameter for when eind gets recalculated during seed count limitation.
+       * \sa SEED_DISPERSAL */
         eind_seedlim;
       /** \brief relsize from the previous year, used for annual establishment. 
        * \sa rgroup_Establish() */
@@ -171,8 +173,14 @@ struct species_st {
       /** \brief Beta parameter for random number draw from beta distribution in establishment of annual species.
        * \sa _add_annuals() */
         beta,
-        alpha_seedlim,
-        beta_seedlim,
+        /** \brief Stores the recalculated alpha value during seed count limitation.
+       * \sa _add_annuals() */
+        alpha_temp,
+        /** \brief Stores the recalculated beta value during seed count limitation.
+       * \sa _add_annuals() */
+        beta_temp,
+        /** \brief Stores the recalculated establishment probability during seed count limitation.
+       * \sa SEED_DISPERSAL */
         pestab_seedlim;
       /** \brief Variance parameter of the beta distribution for establishment of annual species. */
   float var;
@@ -183,10 +191,20 @@ struct species_st {
        * \sa ST_seedDispersal.c 
        * \ingroup SEED_DISPERSAL */
   Bool seedsPresent,
-      eindActive,
-      pestabActive,
-      alphaBetaActive,
+  /** \brief Indicates that the recalculated eind value should be used following seed count limitation.
+       * \sa SEED_DISPERSAL */
+      rescaleEind,
+      /** \brief Indicates that the recalculated pestab value should be used following seed count limitation.
+       * \sa SEED_DISPERSAL */
+      rescalePestab,
+      /** \brief Indicates that the recalculated alpha and beta values should be used following seed count limitation.
+       * \sa SEED_DISPERSAL */
+      rescaleAlphaBeta,
+      /** \brief Indicates that no establishment can occur for the species during the current year because the seed count is zero.
+       * \sa Establisment */
       noEstablish;
+      /** \brief Stores the number of seeds available during the seed dispersal process.
+       * \sa SEED_DISPERSAL */
   Int seedCount;
 
   /**** Quantities that DO NOT change during model runs *****/
