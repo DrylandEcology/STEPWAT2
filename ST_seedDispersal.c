@@ -26,7 +26,7 @@ float _probabilityOfDispersal(float KL, float A);
 double _dispersal_kernel(double r, double a, double b);
 float _maxDispersalDistance(float height);
 void _recordDispersalEvent(int year, int iteration, int fromCell, int toCell,
-                           const char* name);
+                           const char* name, int seedN);
 
 /* =================================================== */
 /*                  Global Variables                   */
@@ -177,7 +177,8 @@ void disperseSeeds(int year) {
             kl = _dispersal_kernel(distance,a,Species[sp]->B);
             Pd = _probabilityOfDispersal(kl, Globals->plotsize);
             Pa = 1 - pow(1-Pd,Species[sp]->seedN);
-            receiverCell->mySpecies[sp]->seedCount += round(Species[sp]->seedN * Pd);
+            Int seeds = round(Species[sp]->seedN * Pd);
+            receiverCell->mySpecies[sp]->seedCount += seeds;
             // Stochastically determine if seeds reached the recipient.
             if (RandUni(&dispersal_rng) < Pa) {
               // If this cell already has seeds there is no point in continuing
@@ -188,7 +189,7 @@ void disperseSeeds(int year) {
                 _recordDispersalEvent(year, Globals->currIter,
                                       (row * grid_Cols) + col, (receiverRow *
                                       grid_Cols) + receiverCol,
-                                      Species[sp]->name);
+                                      Species[sp]->name, seeds);
               }
               // Remember that Species[sp] refers to the sender, but in this
               // case we are refering to the receiver.
@@ -273,13 +274,13 @@ void outputDispersalEvents(char* filePrefix) {
     for(i = 0; i < grid_Rows * grid_Cols; ++i) {
         sprintf(fileName, "%s%d.csv", filePrefix, i);
         files[i] = fopen(fileName, "w");
-        fprintf(files[i], "Iteration,Year,From Cell,Species,To Cell\n");
+        fprintf(files[i], "Iteration,Year,From Cell,Species,To Cell,SeedN\n");
     }
 
     while(thisEvent) {
-        fprintf(files[thisEvent->toCell], "%d,%d,%d,%s,%d\n",
+        fprintf(files[thisEvent->toCell], "%d,%d,%d,%s,%d,%d\n",
                 thisEvent->iteration, thisEvent->year, thisEvent->fromCell,
-                thisEvent->name, thisEvent->toCell);
+                thisEvent->name, thisEvent->toCell,thisEvent->seedN);
 
         thisEvent = thisEvent->next;
     }
@@ -434,6 +435,7 @@ float _maxDispersalDistance(float height) {
  * \param fromCell is the origin of the seeds.
  * \param toCell is the recipient of the seeds.
  * \param name is the name of the species.
+ * \param seedN is the number of seeds dispersed from the origin cell to the recipient cell.
  *
  * \sideeffect
  *     This will allocate memory for a new DispersalEvent.
@@ -443,7 +445,7 @@ float _maxDispersalDistance(float height) {
  * \ingroup SEED_DISPERSAL_PRIVATE
  */
 void _recordDispersalEvent(int year, int iteration, int fromCell, int toCell,
-                           const char* name) {
+                           const char* name, int seedN) {
   // Allocate a new event.
   DispersalEvent* newEvent = Mem_Calloc(1, sizeof(DispersalEvent),
                                         "_recordDispersalEvent", &LogInfo);
@@ -454,6 +456,7 @@ void _recordDispersalEvent(int year, int iteration, int fromCell, int toCell,
   newEvent->iteration = iteration;
   newEvent->fromCell = fromCell;
   newEvent->toCell = toCell;
+  newEvent->seedN = seedN;
   newEvent->name[0] = name[0];
   newEvent->name[1] = name[1];
   newEvent->name[2] = name[2];

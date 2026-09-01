@@ -32,6 +32,7 @@ typedef struct dispersal_event_st {
     int iteration;
     int fromCell;
     int toCell;
+    int seedN;
     char name[5];
     struct dispersal_event_st* next;
 } DispersalEvent;
