@@ -156,7 +156,10 @@ struct species_st {
          seedbank,
       /** \brief Average number of seeds produced by annual species per 1g of biomass, per 1m^2 and per year.
        * internally re-calculated as seeds per 1 g biomass per plot and per year. */
-         pseed;
+         pseed,
+         /** \brief Eind_seedlim parameter for when eind gets recalculated during seed count limitation.
+       * \sa SEED_DISPERSAL */
+        eind_seedlim;
       /** \brief relsize from the previous year, used for annual establishment. 
        * \sa rgroup_Establish() */
   RealF lastyear_relsize,
@@ -169,7 +172,16 @@ struct species_st {
         alpha,
       /** \brief Beta parameter for random number draw from beta distribution in establishment of annual species.
        * \sa _add_annuals() */
-      beta;
+        beta,
+        /** \brief Stores the recalculated alpha value during seed count limitation.
+       * \sa _add_annuals() */
+        alpha_temp,
+        /** \brief Stores the recalculated beta value during seed count limitation.
+       * \sa _add_annuals() */
+        beta_temp,
+        /** \brief Stores the recalculated establishment probability during seed count limitation.
+       * \sa SEED_DISPERSAL */
+        pestab_seedlim;
       /** \brief Variance parameter of the beta distribution for establishment of annual species. */
   float var;
       /** \brief Head of a doubly-linked list of all individuals of this species. 
@@ -178,7 +190,22 @@ struct species_st {
       /** \brief Whether seeds where produced/received and germinated this year. 
        * \sa ST_seedDispersal.c 
        * \ingroup SEED_DISPERSAL */
-  Bool seedsPresent;
+  Bool seedsPresent,
+  /** \brief Indicates that the recalculated eind value should be used following seed count limitation.
+       * \sa SEED_DISPERSAL */
+      rescaleEind,
+      /** \brief Indicates that the recalculated pestab value should be used following seed count limitation.
+       * \sa SEED_DISPERSAL */
+      rescalePestab,
+      /** \brief Indicates that the recalculated alpha and beta values should be used following seed count limitation.
+       * \sa SEED_DISPERSAL */
+      rescaleAlphaBeta,
+      /** \brief Indicates that no establishment can occur for the species during the current year because the seed count is zero.
+       * \sa Establisment */
+      noEstablish;
+      /** \brief Stores the number of seeds available during the seed dispersal process.
+       * \sa SEED_DISPERSAL */
+  Int seedCount;
 
   /**** Quantities that DO NOT change during model runs *****/
 
@@ -235,10 +262,22 @@ struct species_st {
        *         biomass. Constant read in from inputs.
        * \ingroup SEED_DISPERSAL */
         heightSlope,
-      /** \brief The probability that a species disperses seeds 
-       *         \ref maxDispersalDistance meters away. 
-       *  \ingroup SEED_DISPERSAL */
-        maxDispersalProbability;
+      /** \brief Shape parameter controlling tail fatness (kurtosis),
+        *         affecting long-distance dispersal.
+        *  \ingroup SEED_DISPERSAL */
+        B,
+      /** \brief Average wind speed.
+        *  \ingroup SEED_DISPERSAL */
+        U,
+      /** \brief Terminal velocity of seeds.
+        *  \ingroup SEED_DISPERSAL */
+        V,
+      /** \brief The mean yearly seed production of a reproductive plant individual
+        *  \ingroup SEED_DISPERSAL */
+        seedN,
+      /** \brief The seed production threshold that adjusts the probability of establishment.
+        *  \ingroup SEED_DISPERSAL */
+        seedT;
       /** \brief Temperature class for this species.
        * \sa TempClass */
   TempClass tempclass;

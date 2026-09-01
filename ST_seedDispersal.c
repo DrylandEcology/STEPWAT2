@@ -22,11 +22,11 @@
 
 float _distance(int x1, int y1, int x2, int y2, float cellWidth);
 Bool _shouldProduceSeeds(SppIndex sp);
-float _rateOfDispersal(float PMD, float maxHeight, float maxDistance);
-float _probabilityOfDispersal(float rate, float height, float distance);
+float _probabilityOfDispersal(float KL, float A);
+double _dispersal_kernel(double r, double a, double b);
 float _maxDispersalDistance(float height);
 void _recordDispersalEvent(int year, int iteration, int fromCell, int toCell,
-                           const char* name);
+                           const char* name, int seedN);
 
 /* =================================================== */
 /*                  Global Variables                   */
@@ -101,13 +101,16 @@ void disperseSeeds(int year) {
   int receiverRow, receiverCol;
   // The probability of dispersal
   double Pd;
-  // The rate of dispersal
-  double rate;
   // The height of the tallest individual
   double height;
   // The distance between a potential sender and recipient
   double distance;
 
+  double a;
+
+  double kl;
+
+  double Pa;
   if (!isRNGSeeded) {
 	  // FIXME: seed with appropriate iter, year, and cell_id
 	  // RNG ID 6, see `set_all_rngs()`
@@ -119,7 +122,18 @@ void disperseSeeds(int year) {
   for (row = 0; row < grid_Rows; ++row) {
     for (col = 0; col < grid_Cols; ++col) {
       load_cell(row, col);
-      ForEachSpecies(sp) { Species[sp]->seedsPresent = FALSE; }
+      ForEachSpecies(sp) { 
+        Species[sp]->seedsPresent = FALSE; 
+        Species[sp]->seedCount =0; 
+        Species[sp]->pestab_seedlim = 0;
+        Species[sp]->eind_seedlim = 0;
+        Species[sp]->alpha_temp = 0;
+        Species[sp]->beta_temp = 0;
+        Species[sp]->rescaleAlphaBeta = FALSE;
+        Species[sp]->rescalePestab = FALSE;
+        Species[sp]->rescaleEind = FALSE;
+        Species[sp]->noEstablish = FALSE;
+      }
       unload_cell();
     }
   }
@@ -143,11 +157,8 @@ void disperseSeeds(int year) {
         // These variables are independent of recipient.
         height = getSpeciesHeight(Species[sp]);
 
-        rate = _rateOfDispersal(Species[sp]->maxDispersalProbability,
-                                Species[sp]->maxHeight,
-                                _maxDispersalDistance(height));
 
-
+        a = height*Species[sp]->U / Species[sp]->V;
         // Iterate through all possible recipients of seeds.
         for (receiverRow = 0; receiverRow < grid_Rows; ++receiverRow) {
           for (receiverCol = 0; receiverCol < grid_Cols; ++receiverCol) {
@@ -163,12 +174,13 @@ void disperseSeeds(int year) {
             // These variables depend on the recipient.
             distance = _distance(col, row, receiverCol, receiverRow,
                                  Globals->plotsize);
-            Pd = _probabilityOfDispersal(rate, height, distance);
-
-
+            kl = _dispersal_kernel(distance,a,Species[sp]->B);
+            Pd = _probabilityOfDispersal(kl, Globals->plotsize);
+            Pa = 1 - pow(1-Pd,Species[sp]->seedN);
+            Int seeds = round(Species[sp]->seedN * Pd);
+            receiverCell->mySpecies[sp]->seedCount += seeds;
             // Stochastically determine if seeds reached the recipient.
-            if (RandUni(&dispersal_rng) < Pd) {
-              
+            if (RandUni(&dispersal_rng) < Pa) {
               // If this cell already has seeds there is no point in continuing
             if (!outputSDData && receiverCell->mySpecies[sp]->seedsPresent)continue;
                 
@@ -177,7 +189,7 @@ void disperseSeeds(int year) {
                 _recordDispersalEvent(year, Globals->currIter,
                                       (row * grid_Cols) + col, (receiverRow *
                                       grid_Cols) + receiverCol,
-                                      Species[sp]->name);
+                                      Species[sp]->name, seeds);
               }
               // Remember that Species[sp] refers to the sender, but in this
               // case we are refering to the receiver.
@@ -189,6 +201,50 @@ void disperseSeeds(int year) {
       unload_cell();
     } // END for each col
   }   // END for each row
+  for (row = 0; row < grid_Rows; ++row) {
+    for (col = 0; col < grid_Cols; ++col) {
+      load_cell(row, col);
+      ForEachSpecies(sp) { 
+        if(Species[sp]->seedCount == 0){
+         Species[sp]->noEstablish = TRUE;
+          continue;
+        }
+         if(Species[sp]->seedCount < Species[sp]->seedT){
+                Species[sp]->pestab_seedlim = Species[sp]->seedling_estab_prob * fmin(1.0,(Species[sp]->seedCount/Species[sp]->seedT));
+
+                if(Species[sp]->max_age == 1){
+                  // Preserve the default variance for the recalculation of alpha and beta.
+                  RealF tempVar = Species[sp]->var;
+                  // Recalculate the variance if it is invalid for the rescaled
+                  // establishment probability while preserving the original concentration.
+                  if(tempVar >= (Species[sp]->pestab_seedlim*(1-Species[sp]->pestab_seedlim))){
+                    // Calculate the concentration of the original beta distribution.
+                    RealF concentration = Species[sp]->seedling_estab_prob *(1.0 - Species[sp]->seedling_estab_prob)/tempVar -1.0;
+                    // Rescale the variance using the new establishment probability
+                    // while preserving the original beta distribution concentration.
+                    tempVar = Species[sp]->pestab_seedlim * (1.0-Species[sp]->pestab_seedlim)/(concentration+1.0);
+                  }
+                  // Recalculate the beta distribution parameters using the rescaled
+                  // establishment probability and variance.
+                  Species[sp]->alpha_temp = ((pow(Species[sp]->pestab_seedlim, 2)
+                            - pow(Species[sp]->pestab_seedlim, 3))
+                           / tempVar)
+                          - Species[sp]->pestab_seedlim;
+                  Species[sp]->beta_temp = (Species[sp]->alpha_temp / Species[sp]->pestab_seedlim)
+                          - Species[sp]->alpha_temp;
+
+                  Species[sp]->rescaleAlphaBeta = TRUE;
+                }
+                Species[sp]->rescalePestab = TRUE;
+              }
+          if(Species[sp]->seedCount < Species[sp]->max_seed_estab){
+            Species[sp]->eind_seedlim =  Species[sp]->seedCount;
+              Species[sp]->rescaleEind = TRUE;
+          }
+      }
+      unload_cell();
+    }
+  }
 }
 
 /**
@@ -218,13 +274,13 @@ void outputDispersalEvents(char* filePrefix) {
     for(i = 0; i < grid_Rows * grid_Cols; ++i) {
         sprintf(fileName, "%s%d.csv", filePrefix, i);
         files[i] = fopen(fileName, "w");
-        fprintf(files[i], "Iteration,Year,From Cell,Species,To Cell\n");
+        fprintf(files[i], "Iteration,Year,From Cell,Species,To Cell,SeedN\n");
     }
 
     while(thisEvent) {
-        fprintf(files[thisEvent->toCell], "%d,%d,%d,%s,%d\n",
+        fprintf(files[thisEvent->toCell], "%d,%d,%d,%s,%d,%d\n",
                 thisEvent->iteration, thisEvent->year, thisEvent->fromCell,
-                thisEvent->name, thisEvent->toCell);
+                thisEvent->name, thisEvent->toCell,thisEvent->seedN);
 
         thisEvent = thisEvent->next;
     }
@@ -318,24 +374,6 @@ Bool _shouldProduceSeeds(SppIndex sp) {
   return FALSE;
 }
 
-/**
- * \brief Returns the rate of dispersal.
- *
- * \param PMD is the probability of maximum dispersal.
- * \param height is the average height of an individual of the given
- *                   species.
- * \param maxDistance is the maximum distance an individual of this species can
- *                    disperse seeds.
- *
- * \return A float.
- *
- * \author Chandler Haukap
- * \date 17 December 2019
- * \ingroup SEED_DISPERSAL_PRIVATE
- */
-float _rateOfDispersal(float PMD, float maxHeight, float maxDistance) {
-  return log((PMD) * (maxHeight/100)) / maxDistance;
-}
 
 /**
  * \brief Returns the probability that seeds will disperse a given distance.
@@ -350,8 +388,20 @@ float _rateOfDispersal(float PMD, float maxHeight, float maxDistance) {
  * \date 17 December 2019
  * \ingroup SEED_DISPERSAL_PRIVATE
  */
-float _probabilityOfDispersal(float rate, float height, float distance) {
-  return exp((rate * distance) / (height/100));
+float _probabilityOfDispersal(float KL, float A) {
+  return KL*A;
+}
+
+double _dispersal_kernel(double r, double a, double b){
+    if (r < 0) return 0.0;
+
+    double numerator = b;
+    double a_sq = a * a;
+    double denominator = 2.0 * swPI * a_sq * tgamma(2.0 / b);
+
+    double exponent = -pow(r / a, b);
+
+    return (numerator / denominator) * exp(exponent);
 }
 
 /**
@@ -385,6 +435,7 @@ float _maxDispersalDistance(float height) {
  * \param fromCell is the origin of the seeds.
  * \param toCell is the recipient of the seeds.
  * \param name is the name of the species.
+ * \param seedN is the number of seeds dispersed from the origin cell to the recipient cell.
  *
  * \sideeffect
  *     This will allocate memory for a new DispersalEvent.
@@ -394,7 +445,7 @@ float _maxDispersalDistance(float height) {
  * \ingroup SEED_DISPERSAL_PRIVATE
  */
 void _recordDispersalEvent(int year, int iteration, int fromCell, int toCell,
-                           const char* name) {
+                           const char* name, int seedN) {
   // Allocate a new event.
   DispersalEvent* newEvent = Mem_Calloc(1, sizeof(DispersalEvent),
                                         "_recordDispersalEvent", &LogInfo);
@@ -405,6 +456,7 @@ void _recordDispersalEvent(int year, int iteration, int fromCell, int toCell,
   newEvent->iteration = iteration;
   newEvent->fromCell = fromCell;
   newEvent->toCell = toCell;
+  newEvent->seedN = seedN;
   newEvent->name[0] = name[0];
   newEvent->name[1] = name[1];
   newEvent->name[2] = name[2];
