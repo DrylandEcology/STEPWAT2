@@ -22,11 +22,16 @@
 
 float _distance(int x1, int y1, int x2, int y2, float cellWidth);
 Bool _shouldProduceSeeds(SppIndex sp);
-float _rateOfDispersal(float PMD, float maxHeight, float maxDistance);
-float _probabilityOfDispersal(float rate, float height, float distance);
+float _probabilityOfDispersal(float KL, float A);
+double _dispersal_kernel(double r, double a, double b);
 float _maxDispersalDistance(float height);
 void _recordDispersalEvent(int year, int iteration, int fromCell, int toCell,
-                           const char* name);
+                           const char* name, int seedN);
+void _initSeedAvailability(char* filePrefix,int N);
+void _freeSeedAvailability(void);
+void _recordSeedAvailability(int iterations,int year,const char* name,int cell,
+                              int seedsReceived,int seedsProduced, int eind,double pestab);
+void _flushSeedAvailability(void);
 
 /* =================================================== */
 /*                  Global Variables                   */
@@ -74,6 +79,10 @@ Bool isRNGSeeded = FALSE;
  * \brief Output full Seed Dispersal output
  */
 Bool outputSDData;
+/** @brief Flag indicating whether seed availability output is enabled. */
+Bool outputSeedAvailability;
+/** @brief Manages the buffered seed availability data and CSV output file. */
+SeedAvailability seedAvailability;
 
 /**
  * \brief Disperse seeds between cells.
@@ -101,13 +110,16 @@ void disperseSeeds(int year) {
   int receiverRow, receiverCol;
   // The probability of dispersal
   double Pd;
-  // The rate of dispersal
-  double rate;
   // The height of the tallest individual
   double height;
   // The distance between a potential sender and recipient
   double distance;
 
+  double a;
+
+  double kl;
+
+  double Pa;
   if (!isRNGSeeded) {
 	  // FIXME: seed with appropriate iter, year, and cell_id
 	  // RNG ID 6, see `set_all_rngs()`
@@ -119,7 +131,19 @@ void disperseSeeds(int year) {
   for (row = 0; row < grid_Rows; ++row) {
     for (col = 0; col < grid_Cols; ++col) {
       load_cell(row, col);
-      ForEachSpecies(sp) { Species[sp]->seedsPresent = FALSE; }
+      ForEachSpecies(sp) { 
+        Species[sp]->seedsPresent = FALSE; 
+        Species[sp]->seedCount =0; 
+        Species[sp]->seedsProduced = 0;
+        Species[sp]->pestab_seedlim = 0;
+        Species[sp]->eind_seedlim = 0;
+        Species[sp]->alpha_temp = 0;
+        Species[sp]->beta_temp = 0;
+        Species[sp]->rescaleAlphaBeta = FALSE;
+        Species[sp]->rescalePestab = FALSE;
+        Species[sp]->rescaleEind = FALSE;
+        Species[sp]->noEstablish = FALSE;
+      }
       unload_cell();
     }
   }
@@ -143,11 +167,8 @@ void disperseSeeds(int year) {
         // These variables are independent of recipient.
         height = getSpeciesHeight(Species[sp]);
 
-        rate = _rateOfDispersal(Species[sp]->maxDispersalProbability,
-                                Species[sp]->maxHeight,
-                                _maxDispersalDistance(height));
 
-
+        a = height*Species[sp]->U / Species[sp]->V;
         // Iterate through all possible recipients of seeds.
         for (receiverRow = 0; receiverRow < grid_Rows; ++receiverRow) {
           for (receiverCol = 0; receiverCol < grid_Cols; ++receiverCol) {
@@ -163,12 +184,14 @@ void disperseSeeds(int year) {
             // These variables depend on the recipient.
             distance = _distance(col, row, receiverCol, receiverRow,
                                  Globals->plotsize);
-            Pd = _probabilityOfDispersal(rate, height, distance);
-
-
+            kl = _dispersal_kernel(distance,a,Species[sp]->B);
+            Pd = _probabilityOfDispersal(kl, Globals->plotsize);
+            Pa = 1 - pow(1-Pd,Species[sp]->seedN);
+            Int seeds = round(Species[sp]->seedN * Pd);
+            receiverCell->mySpecies[sp]->seedCount += seeds;
+            Species[sp]->seedsProduced += seeds;
             // Stochastically determine if seeds reached the recipient.
-            if (RandUni(&dispersal_rng) < Pd) {
-              
+            if (RandUni(&dispersal_rng) < Pa) {
               // If this cell already has seeds there is no point in continuing
             if (!outputSDData && receiverCell->mySpecies[sp]->seedsPresent)continue;
                 
@@ -177,7 +200,7 @@ void disperseSeeds(int year) {
                 _recordDispersalEvent(year, Globals->currIter,
                                       (row * grid_Cols) + col, (receiverRow *
                                       grid_Cols) + receiverCol,
-                                      Species[sp]->name);
+                                      Species[sp]->name, seeds);
               }
               // Remember that Species[sp] refers to the sender, but in this
               // case we are refering to the receiver.
@@ -189,6 +212,60 @@ void disperseSeeds(int year) {
       unload_cell();
     } // END for each col
   }   // END for each row
+  for (row = 0; row < grid_Rows; ++row) {
+    for (col = 0; col < grid_Cols; ++col) {
+      load_cell(row, col);
+      ForEachSpecies(sp) { 
+        if(!Species[sp]->use_dispersal)continue;
+
+        if(Species[sp]->seedCount == 0){
+         Species[sp]->noEstablish = TRUE;
+         if(outputSeedAvailability){
+           _recordSeedAvailability(Globals->currIter,year,Species[sp]->name,(row * grid_Cols) + col,Species[sp]->seedCount,Species[sp]->seedsProduced,0,0);
+         }
+         continue;
+        }
+         if(Species[sp]->seedCount < Species[sp]->seedT){
+                Species[sp]->pestab_seedlim = Species[sp]->seedling_estab_prob * fmin(1.0,(Species[sp]->seedCount/Species[sp]->seedT));
+
+                if(Species[sp]->max_age == 1){
+                  // Preserve the default variance for the recalculation of alpha and beta.
+                  RealF tempVar = Species[sp]->var;
+                  // Recalculate the variance if it is invalid for the rescaled
+                  // establishment probability while preserving the original concentration.
+                  if(tempVar >= (Species[sp]->pestab_seedlim*(1-Species[sp]->pestab_seedlim))){
+                    // Calculate the concentration of the original beta distribution.
+                    RealF concentration = Species[sp]->seedling_estab_prob *(1.0 - Species[sp]->seedling_estab_prob)/tempVar -1.0;
+                    // Rescale the variance using the new establishment probability
+                    // while preserving the original beta distribution concentration.
+                    tempVar = Species[sp]->pestab_seedlim * (1.0-Species[sp]->pestab_seedlim)/(concentration+1.0);
+                  }
+                  // Recalculate the beta distribution parameters using the rescaled
+                  // establishment probability and variance.
+                  Species[sp]->alpha_temp = ((pow(Species[sp]->pestab_seedlim, 2)
+                            - pow(Species[sp]->pestab_seedlim, 3))
+                           / tempVar)
+                          - Species[sp]->pestab_seedlim;
+                  Species[sp]->beta_temp = (Species[sp]->alpha_temp / Species[sp]->pestab_seedlim)
+                          - Species[sp]->alpha_temp;
+
+                  Species[sp]->rescaleAlphaBeta = TRUE;
+                }
+                Species[sp]->rescalePestab = TRUE;
+              }
+          if(Species[sp]->seedCount < Species[sp]->max_seed_estab){
+            Species[sp]->eind_seedlim =  Species[sp]->seedCount;
+              Species[sp]->rescaleEind = TRUE;
+          }
+          IntUS eind = Species[sp]->rescaleEind? Species[sp]->eind_seedlim: Species[sp]->max_seed_estab;
+          RealF pestab = Species[sp]->rescalePestab? Species[sp]->pestab_seedlim : Species[sp]->seedling_estab_prob;
+         if(outputSeedAvailability){
+           _recordSeedAvailability(Globals->currIter,year,Species[sp]->name,(row * grid_Cols) + col,Species[sp]->seedCount,Species[sp]->seedsProduced,eind,pestab);
+         }
+      }
+      unload_cell();
+    }
+  }
 }
 
 /**
@@ -218,13 +295,13 @@ void outputDispersalEvents(char* filePrefix) {
     for(i = 0; i < grid_Rows * grid_Cols; ++i) {
         sprintf(fileName, "%s%d.csv", filePrefix, i);
         files[i] = fopen(fileName, "w");
-        fprintf(files[i], "Iteration,Year,From Cell,Species,To Cell\n");
+        fprintf(files[i], "Iteration,Year,From Cell,Species,To Cell,SeedN\n");
     }
 
     while(thisEvent) {
-        fprintf(files[thisEvent->toCell], "%d,%d,%d,%s,%d\n",
+        fprintf(files[thisEvent->toCell], "%d,%d,%d,%s,%d,%d\n",
                 thisEvent->iteration, thisEvent->year, thisEvent->fromCell,
-                thisEvent->name, thisEvent->toCell);
+                thisEvent->name, thisEvent->toCell,thisEvent->seedN);
 
         thisEvent = thisEvent->next;
     }
@@ -247,6 +324,9 @@ void outputDispersalEvents(char* filePrefix) {
  * \ingroup SEED_DISPERSAL
  */
 void freeDispersalMemory(void) {
+    if(outputDispersalEvents){
+      _freeSeedAvailability();
+    }
     DispersalEvent* thisEvent = _firstEvent;
     DispersalEvent* nextEvent;
 
@@ -258,6 +338,18 @@ void freeDispersalMemory(void) {
 
     _firstEvent = NULL;
     _lastEvent = NULL;
+}
+/**
+ * @brief Initializes memory used for seed dispersal output.
+ *
+ * Initializes the seed availability output buffer when seed availability
+ * output is enabled. The buffer is initialized using the configured seed
+ * availability file prefix and the number of model years in the simulation.
+ */
+void initDispersalMemory(void){
+    if(outputSeedAvailability){
+      _initSeedAvailability(grid_files[GRID_FILE_PREFIX_SEEDAVAILABILITY],SuperGlobals.runModelYears);
+    }
 }
 
 /**
@@ -318,24 +410,6 @@ Bool _shouldProduceSeeds(SppIndex sp) {
   return FALSE;
 }
 
-/**
- * \brief Returns the rate of dispersal.
- *
- * \param PMD is the probability of maximum dispersal.
- * \param height is the average height of an individual of the given
- *                   species.
- * \param maxDistance is the maximum distance an individual of this species can
- *                    disperse seeds.
- *
- * \return A float.
- *
- * \author Chandler Haukap
- * \date 17 December 2019
- * \ingroup SEED_DISPERSAL_PRIVATE
- */
-float _rateOfDispersal(float PMD, float maxHeight, float maxDistance) {
-  return log((PMD) * (maxHeight/100)) / maxDistance;
-}
 
 /**
  * \brief Returns the probability that seeds will disperse a given distance.
@@ -350,8 +424,20 @@ float _rateOfDispersal(float PMD, float maxHeight, float maxDistance) {
  * \date 17 December 2019
  * \ingroup SEED_DISPERSAL_PRIVATE
  */
-float _probabilityOfDispersal(float rate, float height, float distance) {
-  return exp((rate * distance) / (height/100));
+float _probabilityOfDispersal(float KL, float A) {
+  return KL*A;
+}
+
+double _dispersal_kernel(double r, double a, double b){
+    if (r < 0) return 0.0;
+
+    double numerator = b;
+    double a_sq = a * a;
+    double denominator = 2.0 * swPI * a_sq * tgamma(2.0 / b);
+
+    double exponent = -pow(r / a, b);
+
+    return (numerator / denominator) * exp(exponent);
 }
 
 /**
@@ -385,6 +471,7 @@ float _maxDispersalDistance(float height) {
  * \param fromCell is the origin of the seeds.
  * \param toCell is the recipient of the seeds.
  * \param name is the name of the species.
+ * \param seedN is the number of seeds dispersed from the origin cell to the recipient cell.
  *
  * \sideeffect
  *     This will allocate memory for a new DispersalEvent.
@@ -394,7 +481,7 @@ float _maxDispersalDistance(float height) {
  * \ingroup SEED_DISPERSAL_PRIVATE
  */
 void _recordDispersalEvent(int year, int iteration, int fromCell, int toCell,
-                           const char* name) {
+                           const char* name, int seedN) {
   // Allocate a new event.
   DispersalEvent* newEvent = Mem_Calloc(1, sizeof(DispersalEvent),
                                         "_recordDispersalEvent", &LogInfo);
@@ -405,6 +492,7 @@ void _recordDispersalEvent(int year, int iteration, int fromCell, int toCell,
   newEvent->iteration = iteration;
   newEvent->fromCell = fromCell;
   newEvent->toCell = toCell;
+  newEvent->seedN = seedN;
   newEvent->name[0] = name[0];
   newEvent->name[1] = name[1];
   newEvent->name[2] = name[2];
@@ -419,4 +507,144 @@ void _recordDispersalEvent(int year, int iteration, int fromCell, int toCell,
     _lastEvent->next = newEvent;
     _lastEvent = newEvent;
   }
+}
+/**
+ * @brief Initializes the seed availability output buffer and output file.
+ *
+ * Determines the number of species using seed dispersal and calculates the
+ * requested buffer capacity based on the number of grid cells, active species,
+ * and N. The buffer capacity is limited by SEED_AVAIL_BUFFER_BYTES to prevent
+ * excessive memory allocation for large simulations.
+ *
+ * Allocates the seed availability data buffer, creates the CSV output file,
+ * and initializes the output state.
+ *
+ * @param filePrefix Prefix used to create the seed availability CSV filename.
+ * @param N Number of years of seed availability records to buffer when the
+ *          requested capacity does not exceed the maximum buffer size.
+ */
+void _initSeedAvailability(char *filePrefix, int N){
+  SppIndex sp;
+  int speciesActive = 0;
+  load_cell(0,0);
+  ForEachSpecies(sp){
+    if(Species[sp]->use_dispersal) speciesActive++;
+  }
+  unload_cell();
+  size_t minCapacity = N*(grid_Cols*grid_Rows)*speciesActive;
+  size_t maxCapacity =  SEED_AVAIL_BUFFER_BYTES / sizeof(SeedAvailabilityData);
+  seedAvailability.capacity = minCapacity < maxCapacity ? minCapacity : maxCapacity;
+ 
+  seedAvailability.data = Mem_Calloc(seedAvailability.capacity, sizeof(SeedAvailabilityData),"_initSeedAvailability", &LogInfo);
+  char seedAvailabilityPrefix[1024];
+  sprintf(seedAvailabilityPrefix, "%s.csv", filePrefix);
+  seedAvailability.file  = fopen(seedAvailabilityPrefix, "w");
+  seedAvailability.position = 0;
+  seedAvailability.headerSet = FALSE;
+
+
+}
+/**
+ * @brief Finalizes and frees seed availability output resources.
+ *
+ * Flushes any records remaining in the seed availability buffer, closes the
+ * output file, frees the allocated data buffer, and resets the seed
+ * availability output state.
+ */
+void _freeSeedAvailability(void){
+   // Write any remaining buffered data
+    if (seedAvailability.position > 0) {
+        _flushSeedAvailability();
+    }
+
+    // Close output file
+    if (seedAvailability.file != NULL) {
+        fclose(seedAvailability.file);
+        seedAvailability.file = NULL;
+    }
+
+    // Free allocated buffer
+    if (seedAvailability.data != NULL) {
+        free(seedAvailability.data);
+        seedAvailability.data = NULL;
+    }
+
+    // Reset state
+    seedAvailability.position = 0;
+    seedAvailability.capacity = 0;
+    seedAvailability.headerSet = FALSE;
+}
+/**
+ * @brief Records a seed availability event in the output buffer.
+ *
+ * Stores the seed availability information for a species and grid cell in the
+ * next available buffer position. When the buffer reaches capacity, the
+ * buffered records are written to the CSV output file and the buffer is reused.
+ *
+ * The CSV header is written when the first record is received.
+ *
+ * @param iterations Current simulation iteration.
+ * @param year Current simulation year.
+ * @param name Species name.
+ * @param cell Grid cell identifier.
+ * @param seedsReceived Number of seeds received by the species in the cell.
+ * @param seedsProduced Number of seeds produced by the species in the cell.
+ * @param eind Effective maximum number of individuals allowed to establish.
+ * @param pestab Effective seedling establishment probability.
+ */
+void _recordSeedAvailability(int iterations, int year, const char *name, int cell, int seedsReceived, int seedsProduced, int eind, double pestab){
+  if(!seedAvailability.headerSet){
+     fprintf(seedAvailability.file, "Iteration,Year,Species,Cell,Seeds Received,Seeds Produced,Eind,Pestab\n");
+    seedAvailability.headerSet = TRUE;
+  }
+  SeedAvailabilityData *newEvent =
+        &seedAvailability.data[seedAvailability.position++];
+
+    newEvent->iteration = iterations;
+    newEvent->year = year;
+    newEvent->cell = cell;
+
+    newEvent->name[0] = name[0];
+    newEvent->name[1] = name[1];
+    newEvent->name[2] = name[2];
+    newEvent->name[3] = name[3];
+    newEvent->name[4] = '\0';
+
+    newEvent->seedsReceived = seedsReceived;
+    newEvent->seedsProduced = seedsProduced;
+    newEvent->eind = eind;
+    newEvent->pestab = pestab;
+
+    if (seedAvailability.position == seedAvailability.capacity) {
+      _flushSeedAvailability();
+    }
+}
+/**
+ * @brief Writes buffered seed availability records to the output file.
+ *
+ * Writes all currently stored seed availability records to the CSV file and
+ * resets the buffer position so that the allocated buffer can be reused.
+ *
+ * This function does not close the output file or free the data buffer.
+ */
+void _flushSeedAvailability(void){
+
+   for (size_t i = 0; i < seedAvailability.position; i++) {
+        SeedAvailabilityData *event = &seedAvailability.data[i];
+
+        fprintf(
+            seedAvailability.file,
+            "%d,%d,%s,%d,%d,%d,%d,%f\n",
+            event->iteration,
+            event->year,
+            event->name,
+            event->cell,
+            event->seedsReceived,
+            event->seedsProduced,
+            event->eind,
+            event->pestab
+        );
+    }
+
+    seedAvailability.position = 0;
 }
