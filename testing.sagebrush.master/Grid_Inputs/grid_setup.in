@@ -10,6 +10,6 @@
 1	# Write seed dispersal output files? 1 means yes, 0 means no.
 1   # Write complete seed dispersal output (i.e. all cells that sent seeds to all other cells)? 1 means yes.
     # 0 means no - output will only contain the first cell that sent seeds to all other cells.
-
+1   #Write seed availability output for each cell? 1 means yes, 0 means no.
 
 
