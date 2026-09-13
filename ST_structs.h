@@ -205,7 +205,11 @@ struct species_st {
       noEstablish;
       /** \brief Stores the number of seeds available during the seed dispersal process.
        * \sa SEED_DISPERSAL */
-  Int seedCount;
+  Int seedCount,
+      /**
+      * @brief Number of seeds produced by the species.
+      */
+      seedsProduced;
 
   /**** Quantities that DO NOT change during model runs *****/
 

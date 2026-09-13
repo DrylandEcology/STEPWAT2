@@ -27,6 +27,11 @@ double _dispersal_kernel(double r, double a, double b);
 float _maxDispersalDistance(float height);
 void _recordDispersalEvent(int year, int iteration, int fromCell, int toCell,
                            const char* name, int seedN);
+void _initSeedAvailability(char* filePrefix,int N);
+void _freeSeedAvailability(void);
+void _recordSeedAvailability(int iterations,int year,const char* name,int cell,
+                              int seedsReceived,int seedsProduced, int eind,double pestab);
+void _flushSeedAvailability(void);
 
 /* =================================================== */
 /*                  Global Variables                   */
@@ -74,6 +79,10 @@ Bool isRNGSeeded = FALSE;
  * \brief Output full Seed Dispersal output
  */
 Bool outputSDData;
+/** @brief Flag indicating whether seed availability output is enabled. */
+Bool outputSeedAvailability;
+/** @brief Manages the buffered seed availability data and CSV output file. */
+SeedAvailability seedAvailability;
 
 /**
  * \brief Disperse seeds between cells.
@@ -125,6 +134,7 @@ void disperseSeeds(int year) {
       ForEachSpecies(sp) { 
         Species[sp]->seedsPresent = FALSE; 
         Species[sp]->seedCount =0; 
+        Species[sp]->seedsProduced = 0;
         Species[sp]->pestab_seedlim = 0;
         Species[sp]->eind_seedlim = 0;
         Species[sp]->alpha_temp = 0;
@@ -179,6 +189,7 @@ void disperseSeeds(int year) {
             Pa = 1 - pow(1-Pd,Species[sp]->seedN);
             Int seeds = round(Species[sp]->seedN * Pd);
             receiverCell->mySpecies[sp]->seedCount += seeds;
+            Species[sp]->seedsProduced += seeds;
             // Stochastically determine if seeds reached the recipient.
             if (RandUni(&dispersal_rng) < Pa) {
               // If this cell already has seeds there is no point in continuing
@@ -205,9 +216,14 @@ void disperseSeeds(int year) {
     for (col = 0; col < grid_Cols; ++col) {
       load_cell(row, col);
       ForEachSpecies(sp) { 
+        if(!Species[sp]->use_dispersal)continue;
+
         if(Species[sp]->seedCount == 0){
          Species[sp]->noEstablish = TRUE;
-          continue;
+         if(outputSeedAvailability){
+           _recordSeedAvailability(Globals->currIter,year,Species[sp]->name,(row * grid_Cols) + col,Species[sp]->seedCount,Species[sp]->seedsProduced,0,0);
+         }
+         continue;
         }
          if(Species[sp]->seedCount < Species[sp]->seedT){
                 Species[sp]->pestab_seedlim = Species[sp]->seedling_estab_prob * fmin(1.0,(Species[sp]->seedCount/Species[sp]->seedT));
@@ -241,6 +257,11 @@ void disperseSeeds(int year) {
             Species[sp]->eind_seedlim =  Species[sp]->seedCount;
               Species[sp]->rescaleEind = TRUE;
           }
+          IntUS eind = Species[sp]->rescaleEind? Species[sp]->eind_seedlim: Species[sp]->max_seed_estab;
+          RealF pestab = Species[sp]->rescalePestab? Species[sp]->pestab_seedlim : Species[sp]->seedling_estab_prob;
+         if(outputSeedAvailability){
+           _recordSeedAvailability(Globals->currIter,year,Species[sp]->name,(row * grid_Cols) + col,Species[sp]->seedCount,Species[sp]->seedsProduced,eind,pestab);
+         }
       }
       unload_cell();
     }
@@ -303,6 +324,9 @@ void outputDispersalEvents(char* filePrefix) {
  * \ingroup SEED_DISPERSAL
  */
 void freeDispersalMemory(void) {
+    if(outputDispersalEvents){
+      _freeSeedAvailability();
+    }
     DispersalEvent* thisEvent = _firstEvent;
     DispersalEvent* nextEvent;
 
@@ -314,6 +338,18 @@ void freeDispersalMemory(void) {
 
     _firstEvent = NULL;
     _lastEvent = NULL;
+}
+/**
+ * @brief Initializes memory used for seed dispersal output.
+ *
+ * Initializes the seed availability output buffer when seed availability
+ * output is enabled. The buffer is initialized using the configured seed
+ * availability file prefix and the number of model years in the simulation.
+ */
+void initDispersalMemory(void){
+    if(outputSeedAvailability){
+      _initSeedAvailability(grid_files[GRID_FILE_PREFIX_SEEDAVAILABILITY],SuperGlobals.runModelYears);
+    }
 }
 
 /**
@@ -471,4 +507,144 @@ void _recordDispersalEvent(int year, int iteration, int fromCell, int toCell,
     _lastEvent->next = newEvent;
     _lastEvent = newEvent;
   }
+}
+/**
+ * @brief Initializes the seed availability output buffer and output file.
+ *
+ * Determines the number of species using seed dispersal and calculates the
+ * requested buffer capacity based on the number of grid cells, active species,
+ * and N. The buffer capacity is limited by SEED_AVAIL_BUFFER_BYTES to prevent
+ * excessive memory allocation for large simulations.
+ *
+ * Allocates the seed availability data buffer, creates the CSV output file,
+ * and initializes the output state.
+ *
+ * @param filePrefix Prefix used to create the seed availability CSV filename.
+ * @param N Number of years of seed availability records to buffer when the
+ *          requested capacity does not exceed the maximum buffer size.
+ */
+void _initSeedAvailability(char *filePrefix, int N){
+  SppIndex sp;
+  int speciesActive = 0;
+  load_cell(0,0);
+  ForEachSpecies(sp){
+    if(Species[sp]->use_dispersal) speciesActive++;
+  }
+  unload_cell();
+  size_t minCapacity = N*(grid_Cols*grid_Rows)*speciesActive;
+  size_t maxCapacity =  SEED_AVAIL_BUFFER_BYTES / sizeof(SeedAvailabilityData);
+  seedAvailability.capacity = minCapacity < maxCapacity ? minCapacity : maxCapacity;
+ 
+  seedAvailability.data = Mem_Calloc(seedAvailability.capacity, sizeof(SeedAvailabilityData),"_initSeedAvailability", &LogInfo);
+  char seedAvailabilityPrefix[1024];
+  sprintf(seedAvailabilityPrefix, "%s.csv", filePrefix);
+  seedAvailability.file  = fopen(seedAvailabilityPrefix, "w");
+  seedAvailability.position = 0;
+  seedAvailability.headerSet = FALSE;
+
+
+}
+/**
+ * @brief Finalizes and frees seed availability output resources.
+ *
+ * Flushes any records remaining in the seed availability buffer, closes the
+ * output file, frees the allocated data buffer, and resets the seed
+ * availability output state.
+ */
+void _freeSeedAvailability(void){
+   // Write any remaining buffered data
+    if (seedAvailability.position > 0) {
+        _flushSeedAvailability();
+    }
+
+    // Close output file
+    if (seedAvailability.file != NULL) {
+        fclose(seedAvailability.file);
+        seedAvailability.file = NULL;
+    }
+
+    // Free allocated buffer
+    if (seedAvailability.data != NULL) {
+        free(seedAvailability.data);
+        seedAvailability.data = NULL;
+    }
+
+    // Reset state
+    seedAvailability.position = 0;
+    seedAvailability.capacity = 0;
+    seedAvailability.headerSet = FALSE;
+}
+/**
+ * @brief Records a seed availability event in the output buffer.
+ *
+ * Stores the seed availability information for a species and grid cell in the
+ * next available buffer position. When the buffer reaches capacity, the
+ * buffered records are written to the CSV output file and the buffer is reused.
+ *
+ * The CSV header is written when the first record is received.
+ *
+ * @param iterations Current simulation iteration.
+ * @param year Current simulation year.
+ * @param name Species name.
+ * @param cell Grid cell identifier.
+ * @param seedsReceived Number of seeds received by the species in the cell.
+ * @param seedsProduced Number of seeds produced by the species in the cell.
+ * @param eind Effective maximum number of individuals allowed to establish.
+ * @param pestab Effective seedling establishment probability.
+ */
+void _recordSeedAvailability(int iterations, int year, const char *name, int cell, int seedsReceived, int seedsProduced, int eind, double pestab){
+  if(!seedAvailability.headerSet){
+     fprintf(seedAvailability.file, "Iteration,Year,Species,Cell,Seeds Received,Seeds Produced,Eind,Pestab\n");
+    seedAvailability.headerSet = TRUE;
+  }
+  SeedAvailabilityData *newEvent =
+        &seedAvailability.data[seedAvailability.position++];
+
+    newEvent->iteration = iterations;
+    newEvent->year = year;
+    newEvent->cell = cell;
+
+    newEvent->name[0] = name[0];
+    newEvent->name[1] = name[1];
+    newEvent->name[2] = name[2];
+    newEvent->name[3] = name[3];
+    newEvent->name[4] = '\0';
+
+    newEvent->seedsReceived = seedsReceived;
+    newEvent->seedsProduced = seedsProduced;
+    newEvent->eind = eind;
+    newEvent->pestab = pestab;
+
+    if (seedAvailability.position == seedAvailability.capacity) {
+      _flushSeedAvailability();
+    }
+}
+/**
+ * @brief Writes buffered seed availability records to the output file.
+ *
+ * Writes all currently stored seed availability records to the CSV file and
+ * resets the buffer position so that the allocated buffer can be reused.
+ *
+ * This function does not close the output file or free the data buffer.
+ */
+void _flushSeedAvailability(void){
+
+   for (size_t i = 0; i < seedAvailability.position; i++) {
+        SeedAvailabilityData *event = &seedAvailability.data[i];
+
+        fprintf(
+            seedAvailability.file,
+            "%d,%d,%s,%d,%d,%d,%d,%f\n",
+            event->iteration,
+            event->year,
+            event->name,
+            event->cell,
+            event->seedsReceived,
+            event->seedsProduced,
+            event->eind,
+            event->pestab
+        );
+    }
+
+    seedAvailability.position = 0;
 }
