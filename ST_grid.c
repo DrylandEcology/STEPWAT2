@@ -243,6 +243,7 @@ void runGrid(void)
     _init_stepwat_inputs();			// reads the stepwat inputs in
 	_init_grid_inputs();			// reads the grid inputs in & initializes the global grid variables
 	initColonization(grid_files[GRID_FILE_COLONIZATION]);
+	initDispersalMemory(); 	// Initialize memory used for seed dispersal output. 
 	//SWC hist file prefix needs to be cleared
 	free(SoilWatRun.SoilWatIn.hist.file_prefix);
 	SoilWatRun.SoilWatIn.hist.file_prefix = NULL;
@@ -1649,6 +1650,11 @@ static void _read_grid_setup(void)
 	GetALine(f, buf, 1024);
 	if (sscanf(buf, "%u", &outputSDData) != 1) {
 		LogError(&LogInfo, LOGERROR, "Invalid grid setup file (Seed Dispersal Data Output\n");
+	}
+
+	GetALine(f, buf, 1024);
+	if (sscanf(buf, "%u", &outputSeedAvailability) != 1) {
+		LogError(&LogInfo, LOGERROR, "Invalid grid setup file (Seed Availiability Data Output\n");
 	}
 
     CloseFile(&f, &LogInfo);
