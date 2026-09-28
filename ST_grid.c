@@ -1658,6 +1658,12 @@ static void _read_grid_setup(void)
 	}
 
     CloseFile(&f, &LogInfo);
+	// If seed dispersal is disabled, set its output flags to false to avoid writing empty files.
+	if(!UseSeedDispersal){
+		recordDispersalEvents = FALSE;
+		outputSDData = FALSE;
+		outputSeedAvailability = FALSE;
+	}
 }
 
 /**
