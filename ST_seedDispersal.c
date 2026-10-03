@@ -167,7 +167,7 @@ void disperseSeeds(int year) {
         // These variables are independent of recipient.
         height = getSpeciesHeight(Species[sp]);
 
-
+        // Calculate the scale parameter
         a = height*Species[sp]->U / Species[sp]->V;
         // Iterate through all possible recipients of seeds.
         for (receiverRow = 0; receiverRow < grid_Rows; ++receiverRow) {
@@ -184,9 +184,12 @@ void disperseSeeds(int year) {
             // These variables depend on the recipient.
             distance = _distance(col, row, receiverCol, receiverRow,
                                  Globals->plotsize);
+            // Determine how much of the donor's seed pool can reach the receiving cell.
             kl = _dispersal_kernel(distance,a,Species[sp]->B);
             Pd = _probabilityOfDispersal(kl, Globals->plotsize);
+            // Chance that at least one seed reaches the receiving cell.
             Pa = 1 - pow(1-Pd,Species[sp]->seedN);
+            // Add seeds to the receiver and record their production by the donor.
             Int seeds = round(Species[sp]->seedN * Pd);
             receiverCell->mySpecies[sp]->seedCount += seeds;
             Species[sp]->seedsProduced += seeds;
@@ -217,7 +220,7 @@ void disperseSeeds(int year) {
       load_cell(row, col);
       ForEachSpecies(sp) { 
         if(!Species[sp]->use_dispersal)continue;
-
+        // Prevent establishment when no seeds reached the cell.
         if(Species[sp]->seedCount == 0){
          Species[sp]->noEstablish = TRUE;
          if(outputSeedAvailability){
@@ -225,6 +228,8 @@ void disperseSeeds(int year) {
          }
          continue;
         }
+         // Reduce establishment probability when seed availability is below
+        // the species-specific seed threshold.
          if(Species[sp]->seedCount < Species[sp]->seedT){
                 Species[sp]->pestab_seedlim = Species[sp]->seedling_estab_prob * fmin(1.0,(Species[sp]->seedCount/Species[sp]->seedT));
 
@@ -235,6 +240,8 @@ void disperseSeeds(int year) {
                   // establishment probability while preserving the original concentration.
                   if(tempVar >= (Species[sp]->pestab_seedlim*(1-Species[sp]->pestab_seedlim))){
                     // Calculate the concentration of the original beta distribution.
+                    // Concentration represents how tightly the distribution is centered around
+                    // its mean; a higher concentration corresponds to less variance.
                     RealF concentration = Species[sp]->seedling_estab_prob *(1.0 - Species[sp]->seedling_estab_prob)/tempVar -1.0;
                     // Rescale the variance using the new establishment probability
                     // while preserving the original beta distribution concentration.
@@ -253,10 +260,12 @@ void disperseSeeds(int year) {
                 }
                 Species[sp]->rescalePestab = TRUE;
               }
+          // Limit the number of establishment attempts to the seeds available.
           if(Species[sp]->seedCount < Species[sp]->max_seed_estab){
             Species[sp]->eind_seedlim =  Species[sp]->seedCount;
               Species[sp]->rescaleEind = TRUE;
           }
+          // Report the values that will actually be used for establishment.
           IntUS eind = Species[sp]->rescaleEind? Species[sp]->eind_seedlim: Species[sp]->max_seed_estab;
           RealF pestab = Species[sp]->rescalePestab? Species[sp]->pestab_seedlim : Species[sp]->seedling_estab_prob;
          if(outputSeedAvailability){
@@ -412,22 +421,31 @@ Bool _shouldProduceSeeds(SppIndex sp) {
 
 
 /**
- * \brief Returns the probability that seeds will disperse a given distance.
+ * \brief Returns the probability of seed dispersal into a receiving area.
  *
- * \param rate is the rate of seed dispersal.
- * \param height is the height of the tallest individual of the species.
- * \param distance is the distance the seeds must travel.
+ * The dispersal kernel value is scaled by the area of the receiving cell
+ * to determine the probability of a seed reaching that area.
  *
- * \return A float.
+ * \param KL The dispersal kernel value for the distance between cells.
+ * \param A The area of the receiving cell.
  *
- * \author Chandler Haukap
- * \date 17 December 2019
- * \ingroup SEED_DISPERSAL_PRIVATE
+ * \return The probability of a seed dispersing into the receiving area.
  */
 float _probabilityOfDispersal(float KL, float A) {
   return KL*A;
 }
-
+/**
+ * \brief Returns the value of the dispersal kernel at a given distance.
+ *
+ * The kernel describes how seed dispersal decreases with distance from the
+ * donor species using its dispersal shape and scale parameters.
+ *
+ * \param r The distance from the donor species.
+ * \param a The scale parameter of the dispersal kernel.
+ * \param b The shape parameter of the dispersal kernel.
+ *
+ * \return The dispersal kernel value, or 0 if the distance is negative.
+ */
 double _dispersal_kernel(double r, double a, double b){
     if (r < 0) return 0.0;
 
