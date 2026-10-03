@@ -295,6 +295,8 @@ typedef enum
 	/** \brief Location in \ref grid_files of the average mortality file
 	 *         name. */
     GRID_FILE_PREFIX_MORTCELLAVG,
+	/** @brief File prefix for seed availability output. */
+	GRID_FILE_PREFIX_SEEDAVAILABILITY,
 
     /* Automatically generate number of files since enums start at 0 */
     N_GRID_FILES

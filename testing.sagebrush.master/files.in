@@ -19,3 +19,4 @@ Output/mortality			# name of the cell-specific mortality output files
 Output/seedDispersalEvents		# name of the seed dispersal events output files
 Output/all_cell_average_biomass		# name of the all-cell average biomass output file
 Output/all_cell_average_mortality	# name of the all-cell average mortality output file
+Output/seedAvailability     # name of the seed availability output file
