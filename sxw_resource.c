@@ -207,14 +207,6 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
         //printf(" sumUsedByGroup in transp=%f \n",sumUsedByGroup);
     }
 
-    ForEachGroup(g){
-      if(use_by_group[g] != 0){ //Prevents NaN errors
-        //Proportion of total transpiration that this group would receive
-        proportion_total_resources = use_by_group[g] / sumUsedByGroup;
-        //Recalculate this group's resources.
-      }
-    }
-
     //Very small amounts of transpiration remain and not perfectly partitioned to functional groups.
     //This check makes sure any remaining transpiration is divided proportionately among groups.
     ForEachTrPeriod(p) {
@@ -231,6 +223,13 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
         ForEachGroup(g) {
             use_by_group[g] += (use_by_group[g] / sumUsedByGroup) * TranspRemaining;
             //printf("for groupName= %s, after sum use_by_group[g]= %f \n",RGroup[g]->name,use_by_group[g]);
+        }
+    }
+
+    ForEachGroup(g) {
+        if (!ZRO(sumUsedByGroup) || use_by_group[g] != 0) {
+            // Proportion of total transpiration that this group receives
+            proportion_total_resources = use_by_group[g] / sumUsedByGroup;
         }
     }
 }
