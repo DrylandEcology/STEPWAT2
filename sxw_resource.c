@@ -31,6 +31,20 @@
 #include "sw_src/include/SW_Files.h"
 #include "sw_src/include/SW_Times.h"
 
+static RealD *propuptake = NULL;
+
+static unsigned int prop_nIters;
+static unsigned int prop_nYears;
+static unsigned int prop_nGroups;
+static unsigned int prop_nLayers;
+static unsigned int prop_nMonths;
+static unsigned int nextYear = 1;
+
+#define PROP_IDX(i, y, g, l, p) \
+    ((((((size_t)(i) * prop_nYears + (y)) \
+        * prop_nGroups + (g)) \
+        * prop_nLayers + (l)) \
+        * prop_nMonths + (p)))
 
 
 /*************** Global Variable Declarations ***************/
@@ -42,7 +56,7 @@
 /*************** Local Function Declarations ***************/
 /***********************************************************/
 
-static void _transp_contribution_by_group(RealF use_by_group[]);
+static void _transp_contribution_by_group(RealF use_by_group[],RealD proportion_by_layer_month[]);
 
 /***********************************************************/
 /****************** Begin Function Code ********************/
@@ -83,7 +97,9 @@ void _sxw_update_resource(void) {
  * scale resources available (cm) to resources in terms of grams of biomass */
 
   RealF *sizes_live;
+  RealD *proportion_by_layer_month;
   GrpIndex g;
+  TimeInt p;
 
   sizes_live = (RealF *)Mem_Calloc(SuperGlobals.max_rgroups, sizeof(RealF),
                                    "_sxw_update_resource", &LogInfo);
@@ -100,9 +116,44 @@ void _sxw_update_resource(void) {
     /* Update the active relative roots based on current biomass values */
 	_sxw_update_root_tables(sizes_live);
 
-	/* Assign transpiration (resource availability) to each STEPPE functional group */
-	_transp_contribution_by_group(SXWResources->_resource_cur);
+    size_t nEntries =
+    (size_t)Globals->grpCount *
+    SXW->NTrLyrs *
+    SXW->NPds;
 
+ proportion_by_layer_month = (RealD *)Mem_Calloc(
+    nEntries,
+    sizeof(RealD),
+    "_sxw_update_resource",
+    &LogInfo
+);
+
+	/* Assign transpiration (resource availability) to each STEPPE functional group */
+	_transp_contribution_by_group(SXWResources->_resource_cur,proportion_by_layer_month);
+   
+   if(Globals->currIter >0 && (Globals->currYear == nextYear)){ 
+    nextYear++;
+    if(nextYear > SuperGlobals.runModelYears) nextYear =1;
+    ForEachGroup(g) {
+    ForEachTrPeriod(p) {
+        int nLyrs = getNTranspLayers(RGroup[g]->veg_prod_type);
+
+        for (LyrIndex l = 0; l < nLyrs; l++) {
+
+            size_t src = Iglp(g, l, p);
+            size_t dst = PROP_IDX(
+                        Globals->currIter - 1,
+                        Globals->currYear - 1,
+                        g, l, p
+            );
+
+    propuptake[dst] = proportion_by_layer_month[src]; 
+        }
+    }
+    }
+    }
+        free(proportion_by_layer_month);
+        
         /* Scale transpiration resources by a constant, bvt, to convert resources
          * (cm) to biomass that can be supported by those resources (g/cm) */
 	ForEachGroup(g)
@@ -170,7 +221,7 @@ void _sxw_update_root_tables( RealF sizes_live[] ) {
 
 }
 
-static void _transp_contribution_by_group(RealF use_by_group[]) {
+static void _transp_contribution_by_group(RealF use_by_group[],RealD proportion_by_layer_month[]) {
     /*======================================================*/
     /* use_by_group is the amount of transpiration (cm) assigned to each STEPPE
      * functional group. Must call _update_root_tables() before this.
@@ -184,6 +235,18 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
     LyrIndex l;
     RealD *transp, proportion_total_resources = 0.;
     RealF sumUsedByGroup = 0., sumTranspTotal = 0., TranspRemaining = 0.;
+    // Initialize monthly transpiration proportions for all groups and soil layers.
+    size_t nEntries =
+        (size_t) Globals->grpCount *
+        SXW->NTrLyrs *
+        SXW->NPds;
+
+    memset(
+        proportion_by_layer_month,
+        0,
+        nEntries * sizeof(*proportion_by_layer_month)
+    );
+ 
 
     ForEachGroup(g) //Steppe functional group
     {
@@ -199,7 +262,19 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
         ForEachTrPeriod(p) {
             nLyrs = getNTranspLayers(RGroup[g]->veg_prod_type);
             for (l = 0; l < nLyrs; l++) {
-                use_by_group[g] += (RealF) (SXWResources->_roots_active_rel[Iglp(g, l, p)] * transp[Ilp(l, p)]);
+                RealD totalTransp = transp[Ilp(l, p)];
+                RealD groupTransp =
+                    SXWResources->_roots_active_rel[Iglp(g, l, p)]
+                    * totalTransp;
+
+                // Accumulate transpiration for the original annual group allocation.
+                use_by_group[g] += (RealF) groupTransp;
+
+                // Calculate the group's proportion of transpiration for this layer and month.
+                if (!ZRO(totalTransp)) {
+                    proportion_by_layer_month[Iglp(g, l, p)] =
+                        groupTransp / totalTransp;
+                }
             }
         }
 
@@ -232,4 +307,64 @@ static void _transp_contribution_by_group(RealF use_by_group[]) {
             proportion_total_resources = use_by_group[g] / sumUsedByGroup;
         }
     }
+}
+
+void init_propuptake(unsigned int nIters, unsigned int nYears){
+
+    prop_nIters = nIters;
+    prop_nYears = nYears;
+    prop_nGroups = Globals->grpCount;
+    prop_nLayers = SXW->NTrLyrs;
+    prop_nMonths = SXW->NPds;
+
+    size_t total =
+        (size_t)nIters * nYears *
+        prop_nGroups * prop_nLayers * prop_nMonths;
+
+    propuptake = calloc(total, sizeof(*propuptake));
+}
+
+void write_propuptake_csv(void)
+{   
+    FILE *fp = fopen(Parm_name(F_PROPUPTAKE), "w");
+    if (!fp) return;
+
+    fprintf(fp,
+        "Year,Month,Layer,Rgroup,propuptake_mean,propuptake_std\n");
+
+    for (unsigned int y = 0; y < prop_nYears; y++) {
+        for (unsigned int p = 0; p < prop_nMonths; p++) {
+            for (unsigned int l = 0; l < prop_nLayers; l++) {
+                for (unsigned int g = 0; g < prop_nGroups; g++) {
+
+                    double mean = 0.;
+                    double sos = 0.;
+
+                    for (unsigned int i = 0; i < prop_nIters; i++) {
+                        double value =
+                            propuptake[PROP_IDX(i, y, g, l, p)];
+
+                        double oldMean = mean;
+
+                        mean = get_running_mean(i + 1, mean, value);
+
+                        sos += get_running_sqr(
+                            oldMean, mean, value
+                        );
+                    }
+
+                    double std =
+                        final_running_sd(prop_nIters, sos);
+
+                    fprintf(fp, "%u,%u,%u,%s,%.10f,%.10f\n",
+                            y + 1, p + 1, l + 1,
+                            RGroup[g]->name,
+                            mean, std);
+                }
+            }
+        }
+    }
+
+    fclose(fp);
+	free(propuptake);
 }
