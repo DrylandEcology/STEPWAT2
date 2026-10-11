@@ -20,3 +20,4 @@ Output/mortavg.csv	#output
 Input/sxw.in
 
 Input/maxrgroupspecies.in #Determine the memory allocated for resource groups, species, and their names
+Output/propuptake.csv
