@@ -226,6 +226,7 @@ int main(int argc, char **argv) {
             SXW_connect("Output/sw_output/sxwdebug");
         }
 	}
+	init_propuptake(SuperGlobals.runModelIterations,SuperGlobals.runModelYears);
 
 	/* --- Begin a new iteration ------ */
 	for (iter = 1; iter <= SuperGlobals.runModelIterations; iter++) {
@@ -363,6 +364,7 @@ int main(int argc, char **argv) {
     printf("entering debugfile\n");
     SXW_PrintDebug(1);
   }
+  write_propuptake_csv();
 
   SW_OUT_close_files(&SoilWatRun.SW_PathOutputs, &SoilWatDomain.OutDom, &LogInfo);
   SW_DOM_deconstruct(&SoilWatDomain);
