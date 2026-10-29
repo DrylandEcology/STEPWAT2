@@ -246,7 +246,6 @@ static void _transp_contribution_by_group(RealF use_by_group[],RealD proportion_
         0,
         nEntries * sizeof(*proportion_by_layer_month)
     );
- 
 
     ForEachGroup(g) //Steppe functional group
     {
@@ -257,7 +256,7 @@ static void _transp_contribution_by_group(RealF use_by_group[],RealD proportion_
         //according to whether that group has active living roots in each soil layer for each month
         /* Details: for each soil layer `l` and each month (trperiod) `p`, the
            sum of `_roots_active_rel[Iglp(g, l, p)]` across rgroups `g` must
-           be 1; only if they sum to 1, can they can be used as proper weights
+           be 1; only if they sum to 1, can they be used as proper weights
            for `transp[Ilp(l, p)]` to be split up among rgroups */
         ForEachTrPeriod(p) {
             nLyrs = getNTranspLayers(RGroup[g]->veg_prod_type);
@@ -280,6 +279,30 @@ static void _transp_contribution_by_group(RealF use_by_group[],RealD proportion_
 
         sumUsedByGroup += use_by_group[g];
         //printf(" sumUsedByGroup in transp=%f \n",sumUsedByGroup);
+    }
+
+    // Normalize monthly transpiration proportions within each iteration.
+    // For each month-layer combination, proportions across all resource groups
+    // should sum to 1 if at least one group has active relative roots.
+    // Groups with zero proportions remain zero.
+    // If all groups have zero proportions, no resources are allocated.
+    ForEachTrPeriod(p) {
+        for (l = 0; l < SXW->NTrLyrs; l++) {
+            RealD sumProportions = 0.;
+
+            ForEachGroup(g) {
+                sumProportions +=
+                    proportion_by_layer_month[Iglp(g, l, p)];
+            }
+
+            // Redistribute proportions only among groups with nonzero values.
+            if (!ZRO(sumProportions)) {
+                ForEachGroup(g) {
+                    proportion_by_layer_month[Iglp(g, l, p)] /=
+                        sumProportions;
+                }
+            }
+        }
     }
 
     //Very small amounts of transpiration remain and not perfectly partitioned to functional groups.
@@ -325,7 +348,7 @@ void init_propuptake(unsigned int nIters, unsigned int nYears){
 }
 
 void write_propuptake_csv(void)
-{   
+{
     FILE *fp = fopen(Parm_name(F_PROPUPTAKE), "w");
     if (!fp) return;
 
@@ -366,5 +389,5 @@ void write_propuptake_csv(void)
     }
 
     fclose(fp);
-	free(propuptake);
+    free(propuptake);
 }
