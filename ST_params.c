@@ -137,7 +137,7 @@ void files_init( void ) {
 
   FILE *f;
   ST_FileIndex i;
-  ST_FileIndex last = F_PROPUPTAKE;
+  ST_FileIndex last = F_ROOTS_ACTIVE;
   char inbuf[MAX_FILENAMESIZE];
 
   MyFileName = Parm_name(F_First);

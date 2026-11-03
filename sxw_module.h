@@ -31,7 +31,9 @@ void _sxw_root_phen(void);
 void _sxw_update_resource(void);
 void _sxw_update_root_tables( RealF sizes[] );
 void init_propuptake(unsigned int nIters, unsigned int nYears);
+void init_roots_active(unsigned int nIters, unsigned int nYears);
 void write_propuptake_csv(void);
+void write_roots_active_csv(void);
 
 
 /* These functions are found in sxw_soilwat.c */

@@ -32,12 +32,18 @@
 #include "sw_src/include/SW_Times.h"
 
 static RealD *propuptake = NULL;
+static RealD *roots_active_output = NULL;
 
 static unsigned int prop_nIters;
 static unsigned int prop_nYears;
 static unsigned int prop_nGroups;
 static unsigned int prop_nLayers;
 static unsigned int prop_nMonths;
+static unsigned int root_nIters;
+static unsigned int root_nYears;
+static unsigned int root_nGroups;
+static unsigned int root_nLayers;
+static unsigned int root_nMonths;
 static unsigned int nextYear = 1;
 
 #define PROP_IDX(i, y, g, l, p) \
@@ -46,6 +52,9 @@ static unsigned int nextYear = 1;
         * prop_nLayers + (l)) \
         * prop_nMonths + (p)))
 
+ #define ROOT_IDX(i,y,g,l,p) \
+    (((((size_t)(i) * root_nYears + (y)) * root_nGroups \
+        + (g)) * root_nLayers + (l)) * root_nMonths + (p))
 
 /*************** Global Variable Declarations ***************/
 /***********************************************************/
@@ -147,7 +156,16 @@ void _sxw_update_resource(void) {
                         g, l, p
             );
 
+            size_t rootDst = ROOT_IDX(
+                        Globals->currIter - 1,
+                        Globals->currYear - 1,
+                        g, l, p
+                    );
+
+
     propuptake[dst] = proportion_by_layer_month[src]; 
+
+    roots_active_output[rootDst] = SXWResources->_roots_active_rel[src];
         }
     }
     }
@@ -390,4 +408,90 @@ void write_propuptake_csv(void)
 
     fclose(fp);
     free(propuptake);
+}
+
+
+void init_roots_active(unsigned int nIters, unsigned int nYears) {
+
+    root_nIters = nIters;
+    root_nYears = nYears;
+    root_nGroups = Globals->grpCount;
+    root_nLayers = SXW->NTrLyrs;
+    root_nMonths = SXW->NPds;
+
+    size_t total =
+        (size_t)nIters * nYears *
+        root_nGroups * root_nLayers * root_nMonths;
+
+    roots_active_output = calloc(
+        total,
+        sizeof(*roots_active_output)
+    );
+
+    if (roots_active_output == NULL) {
+        fprintf(stderr,
+                "Failed to allocate roots_active_output\n");
+        exit(EXIT_FAILURE);
+    }
+}
+
+
+void write_roots_active_csv(void) {
+
+    FILE *fp = fopen(Parm_name(F_ROOTS_ACTIVE), "w");
+    if (!fp) return;
+
+    fprintf(fp,
+        "Year,Month,Layer,Rgroup,roots_active_rel_mean,roots_active_rel_std\n");
+
+    for (unsigned int y = 0; y < root_nYears; y++) {
+        for (unsigned int p = 0; p < root_nMonths; p++) {
+            for (unsigned int l = 0; l < root_nLayers; l++) {
+                for (unsigned int g = 0; g < root_nGroups; g++) {
+
+                    double mean = 0.;
+                    double sos = 0.;
+
+                    for (unsigned int i = 0; i < root_nIters; i++) {
+
+                        double value =
+                            roots_active_output[
+                                ROOT_IDX(i, y, g, l, p)
+                            ];
+
+                        double oldMean = mean;
+
+                        mean = get_running_mean(
+                            i + 1,
+                            mean,
+                            value
+                        );
+
+                        sos += get_running_sqr(
+                            oldMean,
+                            mean,
+                            value
+                        );
+                    }
+
+                    double std =
+                        final_running_sd(root_nIters, sos);
+
+                    fprintf(fp,
+                            "%u,%u,%u,%s,%.10f,%.10f\n",
+                            y + 1,
+                            p + 1,
+                            l + 1,
+                            RGroup[g]->name,
+                            mean,
+                            std);
+                }
+            }
+        }
+    }
+
+    fclose(fp);
+
+    free(roots_active_output);
+    roots_active_output = NULL;
 }
