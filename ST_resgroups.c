@@ -179,9 +179,11 @@ static RealF _add_annuals(const GrpIndex rg, const SppIndex sp, const RealF last
     /*Get viable seeds from seed bank*/
     viable_seeds = (g->regen_ok) ? _get_annual_maxestab(sp) : 0;
 
+    RealF alpha = (Species[sp]->rescaleAlphaBeta) ? Species[sp]->alpha_temp : Species[sp]->alpha;
+    RealF beta = (Species[sp]->rescaleAlphaBeta) ? Species[sp]->beta_temp : Species[sp]->beta;
     /* Create a beta random number draw based on alpha and beta for each species
      * (calculated based on mean (s->seedling_estab_prob and variance (s->var)) */
-     var = RandBeta(Species[sp]->alpha, Species[sp]->beta, &resgroups_rng,
+     var = RandBeta(alpha, beta, &resgroups_rng,
                     &LogInfo);
 
     /*Determine number of seedlings to add. If the number of seeds calculated
@@ -192,7 +194,8 @@ static RealF _add_annuals(const GrpIndex rg, const SppIndex sp, const RealF last
     }
     else
     {
-        num_est = MIN(viable_seeds * var, s->max_seed_estab);
+        IntUS eind = (s->rescaleEind)?  s->eind_seedlim : s->max_seed_estab;
+        num_est = MIN(viable_seeds * var, eind);
         //printf("Species name=%s , num_est   =%u \n",s->name,  num_est);
     }
 
@@ -265,7 +268,8 @@ static void _add_annual_seedprod(SppIndex sp, RealF lastyear_relsize) {
      * of the number of seeds produced per unit biomass multiplied by species biomass
      * (maximum species biomass * last year's species relative size). */
     if (Globals->currYear == 1) {
-        s->seedprod[0] = RandUniIntRange(1, s->max_seed_estab, &resgroups_rng);
+         IntUS eind = (s->rescaleEind)?  s->eind_seedlim : s->max_seed_estab;
+        s->seedprod[0] = RandUniIntRange(1,eind, &resgroups_rng);
         //printf("Species name=%s ,currYear =1 so new calculated value s->seedprod[%u]= %hu , s->max_seed_estab =%hu\n", s->name, i, s->seedprod[i], s->max_seed_estab);
 
     } else {
@@ -733,7 +737,7 @@ void rgroup_Establish(void) {
             ForEachGroupSpp(sp, rg, i) {
 
                 /* If the species is turned off, continue */
-                if (!Species[sp]->use_me)
+                if (!Species[sp]->use_me|| Species[sp]->noEstablish)
                     continue;
                     
                 /* Establishment for species that belong to annual functional groups*/
