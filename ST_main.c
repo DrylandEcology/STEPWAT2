@@ -367,7 +367,7 @@ int main(int argc, char **argv) {
 
   SW_OUT_close_files(SoilWatRun.SW_PathOutputs, &SoilWatDomain.OutDom, &LogInfo);
   SW_DOM_deconstruct(&SoilWatDomain);
-  SW_CTL_clear_model(TRUE, &SoilWatRun); // de-allocate all memory
+  SW_CTL_clear_model(TRUE, SoilWatDomain.OutDom.nvar_OUT, &SoilWatRun); // de-allocate all memory
   free_all_sxw_memory();
   freeMortalityMemory();
 

@@ -318,7 +318,7 @@ static void SXW_Reinit(char* SOILWAT_file, Bool zeroOutArrays) {
  */
 void SXW_Reset(char* SOILWAT_file, Bool zeroOutArrays) {
     SW_DOM_deconstruct(&SoilWatDomain);
-	SW_CTL_clear_model(FALSE, &SoilWatRun); // don't reset output arrays
+	SW_CTL_clear_model(FALSE, SoilWatDomain.OutDom.nvar_OUT, &SoilWatRun); // don't reset output arrays
 	SXW_Reinit(SOILWAT_file, zeroOutArrays);
 }
 
