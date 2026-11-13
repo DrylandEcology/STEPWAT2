@@ -33,6 +33,7 @@
 
 static RealD *propuptake = NULL;
 static RealD *roots_active_output = NULL;
+static RealD *transp_output = NULL;
 
 static unsigned int prop_nIters;
 static unsigned int prop_nYears;
@@ -44,6 +45,11 @@ static unsigned int root_nYears;
 static unsigned int root_nGroups;
 static unsigned int root_nLayers;
 static unsigned int root_nMonths;
+static unsigned int transp_nIters;
+static unsigned int transp_nYears;
+static unsigned int transp_nGroups;
+static unsigned int transp_nLayers;
+static unsigned int transp_nMonths;
 static unsigned int nextYear = 1;
 
 #define PROP_IDX(i, y, g, l, p) \
@@ -55,6 +61,10 @@ static unsigned int nextYear = 1;
  #define ROOT_IDX(i,y,g,l,p) \
     (((((size_t)(i) * root_nYears + (y)) * root_nGroups \
         + (g)) * root_nLayers + (l)) * root_nMonths + (p))
+
+#define TRANSP_IDX(i,y,g,l,p) \
+    (((((size_t)(i) * transp_nYears + (y)) * transp_nGroups \
+        + (g)) * transp_nLayers + (l)) * transp_nMonths + (p))
 
 /*************** Global Variable Declarations ***************/
 /***********************************************************/
@@ -162,10 +172,22 @@ void _sxw_update_resource(void) {
                         g, l, p
                     );
 
+            size_t transpDst = TRANSP_IDX(
+                    Globals->currIter - 1,
+                    Globals->currYear - 1,
+                    g, l, p
+                );
+
 
     propuptake[dst] = proportion_by_layer_month[src]; 
 
     roots_active_output[rootDst] = SXWResources->_roots_active_rel[src];
+
+    // Store raw transpiration assigned to this group
+                // for the current month and soil layer (cm to mm).
+    transp_output[transpDst] =
+        SXWResources->_roots_active_rel[src] *
+        SXW->transpTotal[Ilp(l, p)] * 10.0;
         }
     }
     }
@@ -494,4 +516,74 @@ void write_roots_active_csv(void) {
 
     free(roots_active_output);
     roots_active_output = NULL;
+}
+
+
+void init_transp_output(unsigned int nIters, unsigned int nYears) {
+
+    transp_nIters = nIters;
+    transp_nYears = nYears;
+    transp_nGroups = Globals->grpCount;
+    transp_nLayers = SXW->NTrLyrs;
+    transp_nMonths = SXW->NPds;
+
+    size_t total =
+        (size_t)nIters * nYears *
+        transp_nGroups * transp_nLayers * transp_nMonths;
+
+    transp_output = calloc(total, sizeof(*transp_output));
+
+    if (transp_output == NULL) {
+        fprintf(stderr, "Failed to allocate transp_output\n");
+        exit(EXIT_FAILURE);
+    }
+}
+
+
+void write_transp_csv(void) {
+
+    FILE *fp = fopen(Parm_name(F_TRANSP), "w");
+    if (!fp) return; 
+
+    fprintf(fp,
+        "Year,Month,Layer,Rgroup,transp_mean,transp_std\n");
+
+    for (unsigned int y = 0; y < transp_nYears; y++) {
+        for (unsigned int p = 0; p < transp_nMonths; p++) {
+            for (unsigned int l = 0; l < transp_nLayers; l++) {
+                for (unsigned int g = 0; g < transp_nGroups; g++) {
+
+                    double mean = 0.;
+                    double sos = 0.;
+
+                    for (unsigned int i = 0; i < transp_nIters; i++) {
+
+                        double value =
+                            transp_output[TRANSP_IDX(i, y, g, l, p)];
+
+                        double oldMean = mean;
+
+                        mean = get_running_mean(i + 1, mean, value);
+
+                        sos += get_running_sqr(
+                            oldMean, mean, value
+                        );
+                    }
+
+                    double std =
+                        final_running_sd(transp_nIters, sos);
+
+                    fprintf(fp, "%u,%u,%u,%s,%.10f,%.10f\n",
+                            y + 1, p + 1, l + 1,
+                            RGroup[g]->name,
+                            mean, std);
+                }
+            }
+        }
+    }
+
+    fclose(fp);
+
+    free(transp_output);
+    transp_output = NULL;
 }

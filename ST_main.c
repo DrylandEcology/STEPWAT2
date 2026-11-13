@@ -228,6 +228,7 @@ int main(int argc, char **argv) {
 	}
 	init_propuptake(SuperGlobals.runModelIterations,SuperGlobals.runModelYears);
 	init_roots_active(SuperGlobals.runModelIterations,SuperGlobals.runModelYears);
+	init_transp_output(SuperGlobals.runModelIterations, SuperGlobals.runModelYears);
 
 	/* --- Begin a new iteration ------ */
 	for (iter = 1; iter <= SuperGlobals.runModelIterations; iter++) {
@@ -367,6 +368,7 @@ int main(int argc, char **argv) {
   }
   write_propuptake_csv();
   write_roots_active_csv();
+  write_transp_csv();
 
   SW_OUT_close_files(&SoilWatRun.SW_PathOutputs, &SoilWatDomain.OutDom, &LogInfo);
   SW_DOM_deconstruct(&SoilWatDomain);
