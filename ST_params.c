@@ -79,7 +79,7 @@ static void _rgroup_addsucculent( char name[],
 
 /************ Module Variable Declarations ******************/
 /***********************************************************/
-  #define NFILES 19
+  #define NFILES 20
 
 static char *_files[NFILES];
 char *MyFileName;
@@ -137,7 +137,7 @@ void files_init( void ) {
 
   FILE *f;
   ST_FileIndex i;
-  ST_FileIndex last = F_TRANSP;
+  ST_FileIndex last = F_ROOTS_ACTIVE_DEPTH;
   char inbuf[MAX_FILENAMESIZE];
 
   MyFileName = Parm_name(F_First);

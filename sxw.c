@@ -856,7 +856,7 @@ static void _make_roots_arrays(void) {
   SXWResources->_rootsXphen       = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr, &LogInfo);
   SXWResources->_roots_active     = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr, &LogInfo);
   SXWResources->_roots_active_rel = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr, &LogInfo);
-
+  SXWResources->_roots_active_rel_depth = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr, &LogInfo);
   //4 - Grass,Frob,Tree,Shrub
   size = NVEGTYPES * SXW->NPds * SXW->NTrLyrs;
   SXWResources->_roots_active_sum = (RealD *) Mem_Calloc(size, sizeof(RealD), fstr, &LogInfo);
@@ -1242,6 +1242,7 @@ void free_all_sxw_memory( void ) {
 	free(SXWResources->_resource_cur);
 	free(SXWResources->_roots_active);
 	free(SXWResources->_roots_active_rel);
+	free(SXWResources->_roots_active_rel_depth);
 	free(SXWResources->_roots_active_sum);
 	free(SXWResources->_roots_max);
 	free(SXWResources->_rootsXphen);

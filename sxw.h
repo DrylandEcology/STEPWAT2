@@ -130,7 +130,9 @@ typedef struct temp_SXW_st{
   RealD * _rootsXphen, /* relative roots X phen in each lyr,grp,pd */
         * _roots_active, // "active" in terms of size and phenology 
                          // relative to the total roots_phen_lyr_group
-        * _roots_active_rel;
+        * _roots_active_rel,
+        *_roots_active_rel_depth
+        ;
 
 
   /* ----- 2D arrays ------- */

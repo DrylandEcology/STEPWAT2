@@ -34,6 +34,7 @@
 static RealD *propuptake = NULL;
 static RealD *roots_active_output = NULL;
 static RealD *transp_output = NULL;
+static RealD *roots_active_depth_output = NULL;
 
 static unsigned int prop_nIters;
 static unsigned int prop_nYears;
@@ -66,6 +67,9 @@ static unsigned int nextYear = 1;
     (((((size_t)(i) * transp_nYears + (y)) * transp_nGroups \
         + (g)) * transp_nLayers + (l)) * transp_nMonths + (p))
 
+#define ROOT_DEPTH_IDX(i,y,g,l,p) \
+    (((((size_t)(i) * root_nYears + (y)) * root_nGroups + (g)) \
+        * root_nLayers + (l)) * root_nMonths + (p))
 /*************** Global Variable Declarations ***************/
 /***********************************************************/
 /* for steppe, see ST_globals.h */
@@ -177,12 +181,18 @@ void _sxw_update_resource(void) {
                     Globals->currYear - 1,
                     g, l, p
                 );
+            size_t depthDst = ROOT_DEPTH_IDX(
+                        Globals->currIter - 1,
+                        Globals->currYear - 1,
+                        g, l, p
+                );
 
 
     propuptake[dst] = proportion_by_layer_month[src]; 
 
     roots_active_output[rootDst] = SXWResources->_roots_active_rel[src];
-
+    
+    roots_active_depth_output[depthDst] = SXWResources->_roots_active_rel_depth[src];
     // Store raw transpiration assigned to this group
                 // for the current month and soil layer (cm to mm).
     transp_output[transpDst] =
@@ -220,7 +230,7 @@ void _sxw_update_root_tables( RealF sizes_live[] ) {
 
 	/* Set some things to zero where 4 refers to Tree, Shrub, Grass, Forb */
 	Mem_Set(SXWResources->_roots_active_sum, 0, NVEGTYPES * SXW->NPds * SXW->NTrLyrs * sizeof(RealD));
-
+    Mem_Set(SXWResources->_roots_active_rel_depth,0,(size_t)Globals->grpCount * SXW->NTrLyrs * SXW->NPds * sizeof(RealD));
         /* Calculate the active roots in each month and soil layer for each STEPPE
          * functional group based on the functional group biomass this year */
 	ForEachGroup(g)
@@ -258,6 +268,27 @@ void _sxw_update_root_tables( RealF sizes_live[] ) {
 			}
 		}
 	}
+    /* Normalize root activity across soil layers for each resource group
+ * and month. This array is used only for output. */
+    ForEachGroup(g) 
+    {
+        nLyrs = getNTranspLayers(RGroup[g]->veg_prod_type);
+
+        ForEachTrPeriod(p)
+        {
+             RealD sum_depth = 0.;
+
+            for (l = 0; l < nLyrs; l++) {
+                sum_depth += SXWResources->_roots_active[Iglp(g, l, p)];
+            }
+
+         for (l = 0; l < nLyrs; l++) {
+                SXWResources->_roots_active_rel_depth[Iglp(g, l, p)] =
+                    ZRO(sum_depth) ? 0.
+                    : SXWResources->_roots_active[Iglp(g, l, p)] / sum_depth;
+         }
+        }
+    }   
 
 }
 
@@ -586,4 +617,83 @@ void write_transp_csv(void) {
 
     free(transp_output);
     transp_output = NULL;
+}
+
+void init_roots_active_depth(unsigned int nIters, unsigned int nYears) {
+
+    size_t total =
+        (size_t)nIters * nYears *
+        root_nGroups * root_nLayers * root_nMonths;
+
+    roots_active_depth_output = calloc(
+        total,
+        sizeof(*roots_active_depth_output)
+    );
+
+    if (roots_active_depth_output == NULL) {
+        fprintf(stderr,
+                "Failed to allocate roots_active_depth_output\n");
+        exit(EXIT_FAILURE);
+    }
+}
+
+
+void write_roots_active_depth_csv(void) {
+
+    FILE *fp = fopen(Parm_name(F_ROOTS_ACTIVE_DEPTH), "w");
+    if (!fp) return;
+
+    fprintf(fp,
+        "Year,Month,Layer,Rgroup,roots_active_rel_depth_mean,roots_active_rel_depth_std\n");
+
+    for (unsigned int y = 0; y < root_nYears; y++) {
+        for (unsigned int p = 0; p < root_nMonths; p++) {
+            for (unsigned int l = 0; l < root_nLayers; l++) {
+                for (unsigned int g = 0; g < root_nGroups; g++) {
+
+                    double mean = 0.;
+                    double sos = 0.;
+
+                    for (unsigned int i = 0; i < root_nIters; i++) {
+
+                        double value =
+                            roots_active_depth_output[
+                                ROOT_DEPTH_IDX(i, y, g, l, p)
+                            ];
+
+                        double oldMean = mean;
+
+                        mean = get_running_mean(
+                            i + 1,
+                            mean,
+                            value
+                        );
+
+                        sos += get_running_sqr(
+                            oldMean,
+                            mean,
+                            value
+                        );
+                    }
+
+                    double std =
+                        final_running_sd(root_nIters, sos);
+
+                    fprintf(fp,
+                            "%u,%u,%u,%s,%.10f,%.10f\n",
+                            y + 1,
+                            p + 1,
+                            l + 1,
+                            RGroup[g]->name,
+                            mean,
+                            std);
+                }
+            }
+        }
+    }
+
+    fclose(fp);
+
+    free(roots_active_depth_output);
+    roots_active_depth_output = NULL;
 }
