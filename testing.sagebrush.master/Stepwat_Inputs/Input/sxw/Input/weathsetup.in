@@ -56,6 +56,11 @@
 			#        (hypothetical) flat horizon averaged over an entire day (24 hour period)
 			#   * 2: `rsds` represents flux density [W / m2] for a
 			#        (hypothetical) flat horizon averaged over the daylight period of the day
+0			# Convention of daily (mean, maximum, minimum) relative humidity inputs
+			# Note: Mean monthly relative humidity (climate.in) is always relative to liquid water
+			#   * 0: relative to saturation over liquid water at all temperatures (WMO convention)
+			#   * 1: relative to saturation over ice at air temperatures at or below 0 C
+			#        (and over liquid water above 0 C)
 
 
 #--- Monthly scaling parameters:

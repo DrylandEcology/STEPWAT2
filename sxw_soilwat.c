@@ -139,6 +139,7 @@ void _sxw_generate_weather(void) {
     w->dailyInputIndices,
     w->dailyInputFlags,
     w->fixWeatherData,
+    w->isRelHumidInputOverIce,
     sky->cloudcov,
     sky->windspeed,
     sky->r_humidity,

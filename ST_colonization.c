@@ -126,10 +126,10 @@ void initColonization(char* fileName) {
                                              "initColonization", &LogInfo);
 
   // Throw away the header
-  GetALine(file, inbuf, 128);
+  GetALine(file, inbuf, 128, &LogInfo);
 
   // Read the entire file.
-  while(GetALine(file, inbuf, 128)) {
+  while(GetALine(file, inbuf, 128, &LogInfo)) {
     // Assume the event includes multiple cells.
     valuesRead = sscanf(inbuf, "%d-%d,%d,%d,%s", &fromCell, &toCell,&startYear,
                         &duration, name);

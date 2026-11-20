@@ -559,7 +559,7 @@ static void  _read_files( void ) {
   fin = OpenFile(MyFileName,"r", &LogInfo);
 
   for(i=0; i < nfiles; i++) {
-    if (!GetALine(fin, inbuf, MAX_FILENAMESIZE)) break;
+    if (!GetALine(fin, inbuf, MAX_FILENAMESIZE, &LogInfo)) break;
     *_sxwfiles[i] = Str_Dup(Str_TrimLeftQ(inbuf), &LogInfo);
   }
 
@@ -587,7 +587,7 @@ static void  _read_roots_max(void) {
 	MyFileName = SXW->f_roots;
 	fp = OpenFile(MyFileName, "r", &LogInfo);
 
-	while (GetALine(fp, inbuf, MAX_FILENAMESIZE)) {
+	while (GetALine(fp, inbuf, MAX_FILENAMESIZE, &LogInfo)) {
 		p = strtok(inbuf, " \t"); /* g'teed to work via GetALine() */
 
 		if ((g = RGroup_Name2Index(p)) < 0) {
@@ -632,7 +632,7 @@ static void _read_phen(void) {
   fp = OpenFile(MyFileName,"r", &LogInfo);
 
 
-  while( GetALine(fp, inbuf, MAX_FILENAMESIZE) ) {
+  while( GetALine(fp, inbuf, MAX_FILENAMESIZE, &LogInfo) ) {
     p = strtok(inbuf," \t"); /* g'teed to work via GetALine() */
 
     if ( (g=RGroup_Name2Index(p)) <0 ) {
@@ -688,7 +688,7 @@ static void _read_prod(void) {
 	fp = OpenFile(MyFileName, "r", &LogInfo);
 
     /* Read LITTER values for each group for each month */
-	while (GetALine(fp, inbuf, MAX_FILENAMESIZE)) {
+	while (GetALine(fp, inbuf, MAX_FILENAMESIZE, &LogInfo)) {
 		pch = strstr(inbuf, "[end]");
 		if(pch != NULL) break;
 
@@ -719,11 +719,11 @@ static void _read_prod(void) {
 	}
 
     /* Read BIOMASS values for each group for each month */
-	GetALine(fp,inbuf, MAX_FILENAMESIZE); /* toss [end] keyword */
+	GetALine(fp,inbuf, MAX_FILENAMESIZE, &LogInfo); /* toss [end] keyword */
 	month = Jan;
     count = 0;
 
-	while (GetALine(fp, inbuf, MAX_FILENAMESIZE)) {
+	while (GetALine(fp, inbuf, MAX_FILENAMESIZE, &LogInfo)) {
 		pch = strstr(inbuf, "[end]");
 		if(pch != NULL)
 			break;
@@ -753,11 +753,11 @@ static void _read_prod(void) {
 	}
 
     /* Read PCTLIVE values for each group for each month */
-	GetALine(fp, inbuf, MAX_FILENAMESIZE); /* toss [end] keyword */
+	GetALine(fp, inbuf, MAX_FILENAMESIZE, &LogInfo); /* toss [end] keyword */
 	month = Jan;
 	count=0;
 
-	while (GetALine(fp, inbuf, MAX_FILENAMESIZE)) {
+	while (GetALine(fp, inbuf, MAX_FILENAMESIZE, &LogInfo)) {
 		pch = strstr(inbuf, "[end]");
 		if (pch != NULL)
 			break;
@@ -787,7 +787,7 @@ static void _read_prod(void) {
 				MyFileName);
 	}
 
-	GetALine(fp, inbuf, MAX_FILENAMESIZE); /* toss [end] keyword */
+	GetALine(fp, inbuf, MAX_FILENAMESIZE, &LogInfo); /* toss [end] keyword */
 	CloseFile(&fp, &LogInfo);
 }
 
@@ -812,7 +812,7 @@ static void _read_watin(void) {
    f = OpenFile(MyFileName, "r", &LogInfo);
 
 
-   while( GetALine(f, inbuf, MAX_FILENAMESIZE) ) {
+   while( GetALine(f, inbuf, MAX_FILENAMESIZE, &LogInfo) ) {
      if (++lineno == (eOutput + 1)) {
 	   DirName(SXW->f_watin, outString);
        strcpy(_swOutDefName, outString);
@@ -957,14 +957,14 @@ static void _read_debugfile(void) {
 	f = OpenFile(debugfile, "r", &LogInfo);
 
 	/* get name of output file */
-	if (!GetALine(f, inbuf, MAX_FILENAMESIZE)) {
+	if (!GetALine(f, inbuf, MAX_FILENAMESIZE, &LogInfo)) {
 		CloseFile(&f, &LogInfo);
 		return;
 	}
 	strcpy(_debugout, inbuf);
 
 	/* get output years */
-	while (GetALine(f, inbuf, MAX_FILENAMESIZE)) {
+	while (GetALine(f, inbuf, MAX_FILENAMESIZE, &LogInfo)) {
 		_debugyrs[cnt++] = atoi(strtok(inbuf, " \t")); /* g'teed via getaline() */
 		while (NULL != (date = strtok(NULL, " \t"))) {
 			_debugyrs[cnt++] = atoi(date);

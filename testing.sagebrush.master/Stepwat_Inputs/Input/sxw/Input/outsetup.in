@@ -76,14 +76,16 @@ TIMESTEP dy mo yr # must be lowercase
    ENERGYAVG     AVG       DY       1     end       energyavg      /* surface albedo */
 
 # Simulation output directory/filenames
-Output/			# Path for output files: / for same directory, or e.g., Output/
+outputDir Output/			# Path for output files: / for same directory, or e.g., Output/
 
-sw_output/sw2_daily.csv	        # Output file if daily output time period was selected; relative to output directory
-sw_output/sw2_weekly.csv	        # Output file if weekly output time period was selected; relative to output directory
-sw_output/sw2_monthly.csv	        # Output file if monthly output time period was selected; relative to output directory
-sw_output/sw2_yearly.csv	        # Output file if yearly output time period was selected; relative to output directory
+dailyOut sw_output/sw2_daily.csv	        # Output file if daily output time period was selected; relative to output directory
+weeklyOut sw_output/sw2_weekly.csv	        # Output file if weekly output time period was selected; relative to output directory
+monthlyOut sw_output/sw2_monthly.csv	        # Output file if monthly output time period was selected; relative to output directory
+seasonalOut sw_output/sw2_seasonal.csv            # Output file if seasonal output time period was selected; relative to output directory
+yearlyOut sw_output/sw2_yearly.csv	        # Output file if yearly output time period was selected; relative to output directory
 
-sw_output/sw2_daily_slyrs.csv	# Output file for soil layer specific variables if daily output time period was selected; relative to output directory
-sw_output/sw2_weekly_slyrs.csv	# Output file for soil layer specific variables if weekly output time period was selected; relative to output directory
-sw_output/sw2_monthly_slyrs.csv	# Output file for soil layer specific variables if monthly output time period was selected; relative to output directory
-sw_output/sw2_yearly_slyrs.csv	# Output file for soil layer specific variables if yearly output time period was selected; relative to output directory
+dailySlyrOut sw_output/sw2_daily_slyrs.csv	  # Output file for soil layer specific variables if daily output time period was selected; relative to output directory
+weeklySlyrOut sw_output/sw2_weekly_slyrs.csv	  # Output file for soil layer specific variables if weekly output time period was selected; relative to output directory
+monthlySlyrOut sw_output/sw2_monthly_slyrs.csv	  # Output file for soil layer specific variables if monthly output time period was selected; relative to output directory
+seasonalSlyrOut sw_output/sw2_seasonal_slyrs.csv  # Output file for soil layer specific variables if seasonal output time period was selected; relative to output directory
+yearlySlyrOut sw_output/sw2_yearly_slyrs.csv	  # Output file for soil layer specific variables if yearly output time period was selected; relative to output directory

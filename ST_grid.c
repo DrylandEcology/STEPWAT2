@@ -481,7 +481,7 @@ static void _init_grid_files(void)
 
 	for (i = 0; i < N_GRID_DIRECTORIES; i++)
 	{ //0 is stepwat directory
-		if (!GetALine(f, buf, 1024))
+		if (!GetALine(f, buf, 1024, &LogInfo))
 			break;
 		grid_directories[i] = Str_Dup(Str_TrimLeftQ(buf), &LogInfo);
 	}
@@ -490,7 +490,7 @@ static void _init_grid_files(void)
 
 	for (i = 0; i < N_GRID_FILES; i++)
 	{
-		if (!GetALine(f, buf, 1024))
+		if (!GetALine(f, buf, 1024, &LogInfo))
 			break;
 		grid_files[i] = Str_Dup(Str_TrimLeftQ(buf), &LogInfo);
 	}
@@ -572,7 +572,7 @@ static void _init_soilwat_outputs(char* fileName) {
              "\n\tFile named \"%s\"", fileName);
   }
 
-  if(!GetALine(inFile, buffer, 2048)) {
+  if(!GetALine(inFile, buffer, 2048, &LogInfo)) {
     fclose(inFile);
     return;
   }
@@ -1055,11 +1055,11 @@ void load_cell(int row, int col){
 		RealD soilRegionsLowerBounds[3] = { 30, 70, 100 };
         set_soillayers(
             SoilWatRun.VegProdIn,
+            &SoilWatRun.VegProdSim,
             SoilWatRun.SiteIn,
             &SoilWatRun.RunIn.SiteRunIn,
             &SoilWatRun.SiteSim,
             &SoilWatRun.RunIn.SoilRunIn,
-            &SoilWatRun.VegProdIn->veg,
             gridCells[row][col].mySoils.num_layers,
             gridCells[row][col].mySoils.depth,
             gridCells[row][col].mySoils.matricd,
@@ -1256,7 +1256,7 @@ static void _read_soils_in(void){
 	tempSoil.trco_grassC4 = Mem_Calloc(MAX_LAYERS, sizeof(RealD), "_read_soils_in: tempSoil", &LogInfo);
 
 	FILE* f = OpenFile(grid_files[GRID_FILE_SOILS], "r", &LogInfo);
-	if(!GetALine(f, buf, 4096)){ // Throw out the header line.
+	if(!GetALine(f, buf, 4096, &LogInfo)){ // Throw out the header line.
 		LogError(&LogInfo, LOGERROR, "%s file empty.", grid_files[GRID_FILE_SOILS]);
 	}
 
@@ -1265,7 +1265,7 @@ static void _read_soils_in(void){
 	    col = i % grid_Cols;
 		load_cell(row, col);
 
-		if(!GetALine(f, buf, 4096)){
+		if(!GetALine(f, buf, 4096, &LogInfo)){
 			LogError(&LogInfo, LOGERROR, "Too few lines in %s", grid_files[GRID_FILE_SOILS]);
 		}
 		lineReadReturnValue = _read_soil_line(buf, &tempSoil, 0);
@@ -1286,7 +1286,7 @@ static void _read_soils_in(void){
 		   Now we must populate the rest. */
 		else {
 			for(j = 1; j < tempSoil.num_layers; ++j){
-				if(!GetALine(f, buf, 4096)){
+				if(!GetALine(f, buf, 4096, &LogInfo)){
 					LogError(&LogInfo, LOGERROR, "Too few lines in %s", grid_files[GRID_FILE_SOILS]);
 				}
 				lineReadReturnValue = _read_soil_line(buf, &tempSoil, j);
@@ -1591,7 +1591,7 @@ static void _read_grid_setup(void)
 
     f = OpenFile(grid_files[GRID_FILE_SETUP], "r", &LogInfo);
 
-    GetALine(f, buf, 1024);
+    GetALine(f, buf, 1024, &LogInfo);
     i = sscanf(buf, "%d %d", &grid_Rows, &grid_Cols);
     if (i != 2)
         LogError(&LogInfo, LOGERROR,
@@ -1606,49 +1606,49 @@ static void _read_grid_setup(void)
     /* Allocate the 2d array of cells now that we know how many we need */
     _allocate_gridCells(grid_Rows, grid_Cols);
 
-    GetALine(f, buf, 1024);
+    GetALine(f, buf, 1024, &LogInfo);
     i = sscanf(buf, "%u", &UseDisturbances);
     if (i != 1)
         LogError(&LogInfo, LOGERROR,
                  "Invalid grid setup file (disturbances line wrong)");
 
-    GetALine(f, buf, 1024);
+    GetALine(f, buf, 1024, &LogInfo);
     i = sscanf(buf, "%u", &UseSoils);
     if (i != 1)
         LogError(&LogInfo, LOGERROR, "Invalid grid setup file (soils line wrong)");
 
-    GetALine(f, buf, 1024);
+    GetALine(f, buf, 1024, &LogInfo);
     i = sscanf(buf, "%d", &j);
     if (i != 1)
         LogError(&LogInfo, LOGERROR,
                  "Invalid grid setup file (seed dispersal line wrong)");
     UseSeedDispersal = itob(j);
 
-	GetALine(f, buf, 1024);
+	GetALine(f, buf, 1024, &LogInfo);
 	i = sscanf(buf, "%u", &shouldSpinup);
 	if(i < 1){
 		LogError(&LogInfo, LOGERROR, "Invalid grid setup file (Spinup line wrong)");
 	}
 
-	GetALine(f, buf, 1024);
+	GetALine(f, buf, 1024, &LogInfo);
 	i = sscanf(buf, "%hd", &SuperGlobals.runSpinupYears);
 	if(i < 1){
 		LogError(&LogInfo, LOGERROR, "Invalid grid setup file (Spinup years line wrong)");
 	}
 
-	GetALine(f, buf, 1024);
+	GetALine(f, buf, 1024, &LogInfo);
 	i = sscanf(buf, "%u", &writeIndividualFiles);
 	if(i < 1){
 		LogError(&LogInfo, LOGERROR, "Invalid grid setup file (Individual output line wrong)");
 	}
 
-	GetALine(f, buf, 1024);
+	GetALine(f, buf, 1024, &LogInfo);
 	if (sscanf(buf, "%u", &recordDispersalEvents) != 1) {
 		LogError(&LogInfo, LOGERROR,
 				"Invalid %s file: seed dispersal events output line\n", grid_files[GRID_FILE_SETUP]);
     }
 
-	GetALine(f, buf, 1024);
+	GetALine(f, buf, 1024, &LogInfo);
 	if (sscanf(buf, "%u", &outputSDData) != 1) {
 		LogError(&LogInfo, LOGERROR, "Invalid grid setup file (Seed Dispersal Data Output\n");
 	}
